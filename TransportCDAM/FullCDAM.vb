@@ -237,7 +237,8 @@
 
             '****need to add in energy cost file input
         End If
-        'once we get to first row for 2010, load the 2010 values into a dictionary, and then update all the model input files
+        'once we get to first row for 2010, load the 2010 values into a dictionary, 
+        'and then update all the model input files
         'load 2010 pop data into pop dictionary
         If DBasePop = True Then
             Do
