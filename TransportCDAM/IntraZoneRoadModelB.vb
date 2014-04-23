@@ -67,66 +67,6 @@
     Dim VKmVType(10) As Double
 
 
-    Public Sub RoadZoneMain()
-
-        Call ZoneSetFiles()
-
-        'read in the elasticities
-        Call ReadZoneElasticities()
-
-        'loop through all the zones in the input file
-        Do
-            'read the input data for the zone
-            ZoneInput = riz.ReadLine
-
-            'check if at end if file
-            If ZoneInput Is Nothing Then
-                Exit Do
-            Else
-                '1.3 get the strategy file
-                StrategyFile = New IO.FileStream(DirPath & "CommonVariablesTR" & Strategy & ".csv", IO.FileMode.Open, IO.FileAccess.Read)
-                stf = New IO.StreamReader(StrategyFile, System.Text.Encoding.Default)
-                'read header row
-                stf.ReadLine()
-
-                'update the input variables
-                Call LoadZoneInput()
-
-                'get external variable values
-                Call GetZoneExtVar()
-
-                'set year counter to one
-                YearCount = 1
-
-                Do Until YearCount > 90
-
-                    'apply zone equation to adjust demand
-                    Call RoadZoneKm()
-
-                    'estimate fuel consumption
-                    Call RoadZoneFuelConsumption()
-
-                    'write output line with new demand figure
-                    Call RoadZoneOutput()
-
-                    'update base values
-                    Call NewBaseValues()
-
-                    'move on to next year
-                    YearCount += 1
-                Loop
-            End If
-            stf.Close()
-        Loop
-
-        'Close input and output files
-        riz.Close()
-        evz.Close()
-        roz.Close()
-        rez.Close()
-
-    End Sub
-
     Public Sub RoadZoneMainNew()
 
         Call ZoneSetFiles()
