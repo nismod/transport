@@ -29,13 +29,13 @@
     Dim PopBase As Double
     Dim GVABase As Double
     Dim CostBase As Double
-    Dim PortExtVar(10, 90) As Double
+    Dim PortExtVar(47, 10, 90) As Double
     Dim LatentFreight(5) As Double 'latent freight demand in the same order
     Dim PortPopRat As Double
     Dim PortGVARat As Double
     Dim PortCostRat As Double
     Dim FreightRat As Double
-    Dim NewFreight(5) As Double
+    Dim NewFreight(47, 5) As Double
     Dim SeaEl(15, 90) As Double
     Dim NewGasOil, NewFuelOil As Double
     Dim AddedCap(5) As Long
@@ -50,25 +50,28 @@
         'get the elasticity values
         Call ReadSeaElasticities()
 
-        'loop through all the flows in the input file
-        Do
+        YearNum = 1
+        Do While YearNum < 91
+
+            SeaInputData = New IO.FileStream(DirPath & "SeaFreightInputData.csv", IO.FileMode.Open, IO.FileAccess.Read)
+            si = New IO.StreamReader(SeaInputData, System.Text.Encoding.Default)
+            'read header row
             InputRow = si.ReadLine
-            'check if at end of file
-            If InputRow Is Nothing Then
-                'if we are then exit loop
-                Exit Do
-                'if not then run model on this port
-            Else
-                'update the input variables
-                Call LoadPortInput()
-                'get external variables for this port
-                Call GetPortExtVar()
-                'set year number to 1 (equivalent to 2011)
-                YearNum = 1
-                'set latent traffic levels to zero
-                Call ResetPortLatent()
-                'loop through all years calculating new port traffic and writing to output file
-                Do While YearNum < 91
+
+            Do
+                InputRow = si.ReadLine
+                'check if at end of file
+                If InputRow Is Nothing Then
+                    'if we are then exit loop
+                    Exit Do
+                    'if not then run model on this port
+                Else
+                    'update the input variables
+                    Call LoadPortInput()
+                    'get external variables for this port this year
+                    Call GetPortExtVar()
+                    'set latent traffic levels to zero
+                    Call ResetPortLatent()
                     'calculate new traffic level, checking for capacity constraint
                     Call NewSeaFreightCalc()
                     'estimate fuel consumption
@@ -76,12 +79,47 @@
                     'write to output file
                     Call WritePortOutput()
                     'update base values
-                    Call UpdatePortBase()
-                    'move on to next year
-                    YearNum += 1
-                Loop
-            End If
+                    'Call UpdatePortBase()
+                End If
+            Loop
+            'move on to next year
+            YearNum += 1
+            si.Close()
         Loop
+
+
+        'loop through all the flows in the input file
+        'Do
+        '    InputRow = si.ReadLine
+        '    'check if at end of file
+        '    If InputRow Is Nothing Then
+        '        'if we are then exit loop
+        '        Exit Do
+        '        'if not then run model on this port
+        '    Else
+        '        'update the input variables
+        '        Call LoadPortInput()
+        '        'get external variables for this port
+        '        Call GetPortExtVar()
+        '        'set year number to 1 (equivalent to 2011)
+        '        YearNum = 1
+        '        'set latent traffic levels to zero
+        '        Call ResetPortLatent()
+        '        'loop through all years calculating new port traffic and writing to output file
+        '        Do While YearNum < 91
+        '            'calculate new traffic level, checking for capacity constraint
+        '            Call NewSeaFreightCalc()
+        '            'estimate fuel consumption
+        '            Call SeaFuelConsumption()
+        '            'write to output file
+        '            Call WritePortOutput()
+        '            'update base values
+        '            Call UpdatePortBase()
+        '            'move on to next year
+        '            YearNum += 1
+        '        Loop
+        '    End If
+        'Loop
 
         'close all files
         si.Close()
@@ -121,7 +159,8 @@
         SeaOutput = New IO.FileStream(DirPath & FilePrefix & "SeaFreightOutputData.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
         so = New IO.StreamWriter(SeaOutput, System.Text.Encoding.Default)
         'write header row
-        row = "PortID, Yeary, LiqBlky, DryBlky, GCargoy, LoLoy, RoRoy, GasOily, FuelOily"
+        row = "Yeary, PortID, LiqBlky, DryBlky, GCargoy, LoLoy, RoRoy, GasOily, FuelOily"
+        'row = "PortID, Yeary, LiqBlky, DryBlky, GCargoy, LoLoy, RoRoy, GasOily, FuelOily"
         so.WriteLine(row)
 
         'get elasticities file
@@ -155,43 +194,117 @@
     End Sub
 
     Sub LoadPortInput()
-        PortDetails = Split(InputRow, ",")
-        PortID = PortDetails(0)
-        BaseFreight(1) = PortDetails(1)
-        BaseFreight(2) = PortDetails(2)
-        BaseFreight(3) = PortDetails(3)
-        BaseFreight(4) = PortDetails(4)
-        BaseFreight(5) = PortDetails(5)
-        BaseCap(1) = PortDetails(6)
-        BaseCap(2) = PortDetails(7)
-        BaseCap(3) = PortDetails(8)
-        BaseCap(4) = PortDetails(9)
-        BaseCap(5) = PortDetails(10)
-        PopBase = PortDetails(11)
-        GVABase = PortDetails(12)
-        CostBase = PortDetails(13)
-        For x = 1 To 5
-            AddedCap(x) = 0
-        Next
+        'read initial input file if year 1, else use updated data
+        If YearNum = 1 Then
+            PortDetails = Split(InputRow, ",")
+            PortID = PortDetails(0)
+            BaseFreight(1) = PortDetails(1)
+            BaseFreight(2) = PortDetails(2)
+            BaseFreight(3) = PortDetails(3)
+            BaseFreight(4) = PortDetails(4)
+            BaseFreight(5) = PortDetails(5)
+            BaseCap(1) = PortDetails(6)
+            BaseCap(2) = PortDetails(7)
+            BaseCap(3) = PortDetails(8)
+            BaseCap(4) = PortDetails(9)
+            BaseCap(5) = PortDetails(10)
+            PopBase = PortDetails(11)
+            GVABase = PortDetails(12)
+            CostBase = PortDetails(13)
+            For x = 1 To 5
+                AddedCap(x) = 0
+            Next
+        Else
+            Dim evindex As Integer
+            Dim cu As Double
+            Dim newcapstring As String
+
+            PortDetails = Split(InputRow, ",")
+            PortID = PortDetails(0)
+
+            FreightType = 1
+            Do While FreightType < 6
+                evindex = FreightType + 1
+                BaseFreight(FreightType) = NewFreight(PortID, FreightType)
+                BaseCap(FreightType) = PortExtVar(PortID, evindex, YearNum - 1)
+                If BuildInfra = True Then
+                    'check if capacity data exists
+                    If BaseCap(FreightType) > -1 Then
+                        'check if capacity utilisation exceeds critical value
+                        cu = BaseFreight(FreightType) / BaseCap(FreightType)
+                        If cu >= CUCritValue Then
+                            'if it does then add additional capacity
+                            BaseCap(FreightType) += 1000
+                            AddedCap(FreightType) += 1000
+                            'write details to output file
+                            Select Case FreightType
+                                Case 1
+                                    newcapstring = PortID & "," & YearNum - 1 & ",1000,0,0,0,0"
+                                Case 2
+                                    newcapstring = PortID & "," & YearNum - 1 & ",0,1000,0,0,0"
+                                Case 3
+                                    newcapstring = PortID & "," & YearNum - 1 & ",0,0,1000,0,0"
+                                Case 4
+                                    newcapstring = PortID & "," & YearNum - 1 & ",0,0,0,1000,0"
+                                Case 5
+                                    newcapstring = PortID & "," & YearNum - 1 & ",0,0,0,0,1000"
+                            End Select
+                            snc.WriteLine(newcapstring)
+                        End If
+                    End If
+                End If
+                FreightType += 1
+            Loop
+            PopBase = PortExtVar(PortID, 7, YearNum - 1)
+            GVABase = PortExtVar(PortID, 8, YearNum - 1)
+            CostBase = PortExtVar(PortID, 9, YearNum - 1)
+        End If
+
+        'PortDetails = Split(InputRow, ",")
+        'PortID = PortDetails(0)
+        'BaseFreight(1) = PortDetails(1)
+        'BaseFreight(2) = PortDetails(2)
+        'BaseFreight(3) = PortDetails(3)
+        'BaseFreight(4) = PortDetails(4)
+        'BaseFreight(5) = PortDetails(5)
+        'BaseCap(1) = PortDetails(6)
+        'BaseCap(2) = PortDetails(7)
+        'BaseCap(3) = PortDetails(8)
+        'BaseCap(4) = PortDetails(9)
+        'BaseCap(5) = PortDetails(10)
+        'PopBase = PortDetails(11)
+        'GVABase = PortDetails(12)
+        'CostBase = PortDetails(13)
+        'For x = 1 To 5
+        '    AddedCap(x) = 0
+        'Next
     End Sub
 
     Sub GetPortExtVar()
-        Dim yearcheck As Long
+        'Dim yearcheck As Long
         Dim row As String
         Dim linedetails() As String
         Dim item As Integer
 
-        yearcheck = 1
-        Do While yearcheck < 91
-            row = se.ReadLine()
-            linedetails = Split(row, ",")
-            item = 0
-            Do Until item > 10
-                PortExtVar(item, yearcheck) = linedetails(item)
-                item += 1
-            Loop
-            yearcheck += 1
+        row = se.ReadLine()
+        linedetails = Split(row, ",")
+        item = 0
+        Do Until item > 10
+            PortExtVar(PortID, item, YearNum) = linedetails(item)
+            item += 1
         Loop
+
+        'yearcheck = 1
+        'Do While yearcheck < 91
+        '    row = se.ReadLine()
+        '    linedetails = Split(row, ",")
+        '    item = 0
+        '    Do Until item > 10
+        '        PortExtVar(item, yearcheck) = linedetails(item)
+        '        item += 1
+        '    Loop
+        '    yearcheck += 1
+        'Loop
 
 
 
@@ -241,7 +354,7 @@
         If BuildInfra = True Then
             item = 2
             Do While item < 7
-                PortExtVar(item, YearNum) += AddedCap(item - 1)
+                PortExtVar(PortID, item, YearNum) += AddedCap(item - 1)
                 item += 1
             Loop
         End If
@@ -257,9 +370,9 @@
                 'pop ratio
                 OldY = PopBase
                 If TripRates = "Strategy" Then
-                    NewY = PortExtVar(7, YearNum) * SeaTripRates(YearNum)
+                    NewY = PortExtVar(PortID, 7, YearNum) * SeaTripRates(YearNum)
                 Else
-                    NewY = PortExtVar(7, YearNum)
+                    NewY = PortExtVar(PortID, 7, YearNum)
                 End If
                 If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
                     OldEl = SeaEl(1 + elindex, YearNum)
@@ -267,62 +380,62 @@
                     PortPopRat = VarRat
                 Else
                     If TripRates = "Strategy" Then
-                        PortPopRat = ((PortExtVar(7, YearNum) * SeaTripRates(YearNum)) / PopBase) ^ SeaEl(1 + elindex, YearNum)
+                        PortPopRat = ((PortExtVar(PortID, 7, YearNum) * SeaTripRates(YearNum)) / PopBase) ^ SeaEl(1 + elindex, YearNum)
                     Else
-                        PortPopRat = (PortExtVar(7, YearNum) / PopBase) ^ SeaEl(1 + elindex, YearNum)
+                        PortPopRat = (PortExtVar(PortID, 7, YearNum) / PopBase) ^ SeaEl(1 + elindex, YearNum)
                     End If
                 End If
                 'gva ratio
                 OldY = GVABase
-                NewY = PortExtVar(8, YearNum)
+                NewY = PortExtVar(PortID, 8, YearNum)
                 If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
                     OldEl = SeaEl(2 + elindex, YearNum)
                     Call VarElCalc()
                     PortGVARat = VarRat
                 Else
-                    PortGVARat = (PortExtVar(8, YearNum) / GVABase) ^ SeaEl(2 + elindex, YearNum)
+                    PortGVARat = (PortExtVar(PortID, 8, YearNum) / GVABase) ^ SeaEl(2 + elindex, YearNum)
                 End If
                 'cost ratio
                 OldY = CostBase
-                NewY = PortExtVar(9, YearNum)
+                NewY = PortExtVar(PortID, 9, YearNum)
                 If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
                     OldEl = SeaEl(3 + elindex, YearNum)
                     Call VarElCalc()
                     PortCostRat = VarRat
                 Else
-                    PortCostRat = (PortExtVar(9, YearNum) / CostBase) ^ SeaEl(3 + elindex, YearNum)
+                    PortCostRat = (PortExtVar(PortID, 9, YearNum) / CostBase) ^ SeaEl(3 + elindex, YearNum)
                 End If
             Else
                 If TripRates = "Strategy" Then
-                    PortPopRat = ((PortExtVar(7, YearNum) * SeaTripRates(YearNum)) / PopBase) ^ SeaEl(1 + elindex, YearNum)
+                    PortPopRat = ((PortExtVar(PortID, 7, YearNum) * SeaTripRates(YearNum)) / PopBase) ^ SeaEl(1 + elindex, YearNum)
                 Else
-                    PortPopRat = (PortExtVar(7, YearNum) / PopBase) ^ SeaEl(1 + elindex, YearNum)
+                    PortPopRat = (PortExtVar(PortID, 7, YearNum) / PopBase) ^ SeaEl(1 + elindex, YearNum)
                 End If
-                PortGVARat = (PortExtVar(8, YearNum) / GVABase) ^ SeaEl(2 + elindex, YearNum)
-                PortCostRat = (PortExtVar(9, YearNum) / CostBase) ^ SeaEl(3 + elindex, YearNum)
+                PortGVARat = (PortExtVar(PortID, 8, YearNum) / GVABase) ^ SeaEl(2 + elindex, YearNum)
+                PortCostRat = (PortExtVar(PortID, 9, YearNum) / CostBase) ^ SeaEl(3 + elindex, YearNum)
             End If
             FreightRat = PortPopRat * PortGVARat * PortCostRat
-            NewFreight(FreightType) = BaseFreight(FreightType) * FreightRat
+            NewFreight(PortID, FreightType) = BaseFreight(FreightType) * FreightRat
             'check if capacity data exists
-            portcap = PortExtVar(evindex, YearNum)
+            portcap = PortExtVar(PortID, evindex, YearNum)
             If portcap > -1 Then
                 'if it does then check if new unconstrained traffic level exceeds the capacity constraint
-                If NewFreight(FreightType) > portcap Then
+                If NewFreight(PortID, FreightType) > portcap Then
                     'if it does then transfer the excess traffic to the latent freight variable
-                    LatentFreight(FreightType) += NewFreight(FreightType) - portcap
+                    LatentFreight(FreightType) += NewFreight(PortID, FreightType) - portcap
                     'set the new traffic level to equal the constraint
-                    NewFreight(FreightType) = portcap
+                    NewFreight(PortID, FreightType) = portcap
                 Else
                     'otherwise, need to check if there is any latent traffic to add in
-                    NewFreight(FreightType) += LatentFreight(FreightType)
+                    NewFreight(PortID, FreightType) += LatentFreight(FreightType)
                     'set latent value to zero
                     LatentFreight(FreightType) = 0
                     'check if new freight traffic level now exceeds the capacity constraint
-                    If NewFreight(FreightType) > portcap Then
+                    If NewFreight(PortID, FreightType) > portcap Then
                         'if it does then transfer the excess traffic to the latent freight variable
-                        LatentFreight(FreightType) = NewFreight(FreightType) - portcap
+                        LatentFreight(FreightType) = NewFreight(PortID, FreightType) - portcap
                         'set the new traffic level to equal the constraint
-                        NewFreight(FreightType) = portcap
+                        NewFreight(PortID, FreightType) = portcap
                     End If
                 End If
             End If
@@ -334,10 +447,10 @@
         Dim totalfreight As Double
 
         'get total freight tonnage, converting LoLo TEU to tons
-        totalfreight = NewFreight(1) + NewFreight(2) + NewFreight(3) + (NewFreight(4) * 4.237035) + NewFreight(5)
+        totalfreight = NewFreight(PortID, 1) + NewFreight(PortID, 2) + NewFreight(PortID, 3) + (NewFreight(PortID, 4) * 4.237035) + NewFreight(PortID, 5)
         'calculate gas oil and fuel oil consumption
-        NewGasOil = totalfreight * 0.00286568 * PortExtVar(10, YearNum)
-        NewFuelOil = totalfreight * 0.00352039 * PortExtVar(10, YearNum)
+        NewGasOil = totalfreight * 0.00286568 * PortExtVar(PortID, 10, YearNum)
+        NewFuelOil = totalfreight * 0.00352039 * PortExtVar(PortID, 10, YearNum)
     End Sub
 
     Sub VarElCalc()
@@ -354,51 +467,52 @@
     Sub WritePortOutput()
         Dim row As String
         'concatenate data into row
-        row = PortID & "," & YearNum & "," & NewFreight(1) & "," & NewFreight(2) & "," & NewFreight(3) & "," & NewFreight(4) & "," & NewFreight(5) & "," & NewGasOil & "," & NewFuelOil
+        row = YearNum & "," & PortID & "," & NewFreight(PortID, 1) & "," & NewFreight(PortID, 2) & "," & NewFreight(PortID, 3) & "," & NewFreight(PortID, 4) & "," & NewFreight(PortID, 5) & "," & NewGasOil & "," & NewFuelOil
+        'row = PortID & "," & YearNum & "," & NewFreight(1) & "," & NewFreight(2) & "," & NewFreight(3) & "," & NewFreight(4) & "," & NewFreight(5) & "," & NewGasOil & "," & NewFuelOil
         'write line to output file
         so.WriteLine(row)
     End Sub
 
-    Sub UpdatePortBase()
-        Dim evindex As Integer
-        Dim cu As Double
-        Dim newcapstring As String
+    'Sub UpdatePortBase()
+    '    Dim evindex As Integer
+    '    Dim cu As Double
+    '    Dim newcapstring As String
 
-        FreightType = 1
-        Do While FreightType < 6
-            evindex = FreightType + 1
-            BaseFreight(FreightType) = NewFreight(FreightType)
-            BaseCap(FreightType) = PortExtVar(evindex, YearNum)
-            If BuildInfra = True Then
-                'check if capacity data exists
-                If BaseCap(FreightType) > -1 Then
-                    'check if capacity utilisation exceeds critical value
-                    cu = BaseFreight(FreightType) / BaseCap(FreightType)
-                    If cu >= CUCritValue Then
-                        'if it does then add additional capacity
-                        BaseCap(FreightType) += 1000
-                        AddedCap(FreightType) += 1000
-                        'write details to output file
-                        Select Case FreightType
-                            Case 1
-                                newcapstring = PortID & "," & YearNum & ",1000,0,0,0,0"
-                            Case 2
-                                newcapstring = PortID & "," & YearNum & ",0,1000,0,0,0"
-                            Case 3
-                                newcapstring = PortID & "," & YearNum & ",0,0,1000,0,0"
-                            Case 4
-                                newcapstring = PortID & "," & YearNum & ",0,0,0,1000,0"
-                            Case 5
-                                newcapstring = PortID & "," & YearNum & ",0,0,0,0,1000"
-                        End Select
-                        snc.WriteLine(newcapstring)
-                    End If
-                End If
-            End If
-            FreightType += 1
-        Loop
-        PopBase = PortExtVar(7, YearNum)
-        GVABase = PortExtVar(8, YearNum)
-        CostBase = PortExtVar(9, YearNum)
-    End Sub
+    '    FreightType = 1
+    '    Do While FreightType < 6
+    '        evindex = FreightType + 1
+    '        BaseFreight(FreightType) = NewFreight(PortID, FreightType)
+    '        BaseCap(FreightType) = PortExtVar(PortID, evindex, YearNum)
+    '        If BuildInfra = True Then
+    '            'check if capacity data exists
+    '            If BaseCap(FreightType) > -1 Then
+    '                'check if capacity utilisation exceeds critical value
+    '                cu = BaseFreight(FreightType) / BaseCap(FreightType)
+    '                If cu >= CUCritValue Then
+    '                    'if it does then add additional capacity
+    '                    BaseCap(FreightType) += 1000
+    '                    AddedCap(FreightType) += 1000
+    '                    'write details to output file
+    '                    Select Case FreightType
+    '                        Case 1
+    '                            newcapstring = PortID & "," & YearNum & ",1000,0,0,0,0"
+    '                        Case 2
+    '                            newcapstring = PortID & "," & YearNum & ",0,1000,0,0,0"
+    '                        Case 3
+    '                            newcapstring = PortID & "," & YearNum & ",0,0,1000,0,0"
+    '                        Case 4
+    '                            newcapstring = PortID & "," & YearNum & ",0,0,0,1000,0"
+    '                        Case 5
+    '                            newcapstring = PortID & "," & YearNum & ",0,0,0,0,1000"
+    '                    End Select
+    '                    snc.WriteLine(newcapstring)
+    '                End If
+    '            End If
+    '        End If
+    '        FreightType += 1
+    '    Loop
+    '    PopBase = PortExtVar(PortID, 7, YearNum)
+    '    GVABase = PortExtVar(PortID, 8, YearNum)
+    '    CostBase = PortExtVar(PortID, 9, YearNum)
+    'End Sub
 End Module

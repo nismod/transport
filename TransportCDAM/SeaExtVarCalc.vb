@@ -21,9 +21,9 @@
     Dim GVAGrowth As Double
     Dim CostGrowth As Double
     Dim YearNum As Long
-    Dim PortBaseData() As String
+    Dim PortBaseData(47, 15) As String
     Dim PortCount As Long
-    Dim PortNewData(9) As String
+    Dim PortNewData(47, 9) As String
     Dim CapID As Long
     Dim CapYear, CapNewYear As Integer
     Dim LBChange, DBChange, GCChange, LLChange, RRChange As Double
@@ -50,7 +50,8 @@
         InputRow = pi.ReadLine
 
         'write header row to output file
-        OutputRow = "Yeary,PortID,LBCapy,DBCapy,GCCapy,LLCapy,RRCapy,GORPopy,GORGvay,Costy,FuelEffy"
+        OutputRow = "PortID,Yeary,LBCapy,DBCapy,GCCapy,LLCapy,RRCapy,GORPopy,GORGvay,Costy,FuelEffy"
+        'OutputRow = "Yeary,PortID,LBCapy,DBCapy,GCCapy,LLCapy,RRCapy,GORPopy,GORGvay,Costy,FuelEffy"
         po.WriteLine(OutputRow)
 
         'set scaling factors - as a default they are just set to be constant over time
@@ -188,11 +189,13 @@
         stf.Close()
 
         'then loop through rest of rows in input data file
-        Do Until PortCount > 47
-            CapChanged = False
-            Call CalcPortData()
-            PortCount += 1
-        Loop
+        Call CalcPortData()
+
+        'Do Until PortCount > 47
+        '    CapChanged = False
+        '    Call CalcPortData()
+        '    PortCount += 1
+        'Loop
 
         pi.Close()
         po.Close()
@@ -232,19 +235,23 @@
     Sub CalcPortData()
         Dim newcount As Integer
         Dim basecount As Integer
-        Dim GORID As Long
+        'Dim GORID As Long
+        Dim GORID(47, 1) As Long
         Dim keylookup As String
         Dim newval As Double
         Dim enestring As String
         Dim enearray As String()
         Dim DieselOld, DieselNew As Double
+        Dim portdata() As String
+        Dim i As Integer
 
         'Load in port base values 
 
-        InputRow = pi.ReadLine
-        PortBaseData = Split(InputRow, ",")
-        GORID = PortBaseData(14)
+        'InputRow = pi.ReadLine
+        'PortBaseData = Split(InputRow, ",")
+        'GORID = PortBaseData(14)
 
+        'initializing sea energy source input file
         If SeaEneSource = "Database" Then
             'v1.3 altered so that scenario file is read directly as an input file
             ZoneEneFile = New IO.FileStream(DBaseEneFile, IO.FileMode.Open, IO.FileAccess.Read)
@@ -265,115 +272,147 @@
             'v1.3 changed to include compulsory capacity changes where construction has already begun
             'all this involves is removing the if newseacap = true clause, because this was already accounted for when generating the intermediate file, and adding a lineread above getcapdata because this sub was amended
 
-            If PortBaseData(0) = CapID Then
-                'if there are any capacity changes for this port, check if there are any capacity changes for this year
+            'read diesel new for the current year
+            If SeaEneSource = "Database" Then
+                enestring = zer.ReadLine
+                enearray = Split(enestring, ",")
+                DieselNew = enearray(2)
+            End If
 
-                If YearNum = CapYear Then
-                    'if there are, then update the capacity variables, and read in the next row from the capacity file
-                    PortNewData(1) = PortBaseData(6) + LBChange
-                    PortNewData(2) = PortBaseData(7) + DBChange
-                    PortNewData(3) = PortBaseData(8) + GCChange
-                    PortNewData(4) = PortBaseData(9) + LLChange
-                    PortNewData(5) = PortBaseData(10) + RRChange
-                    CapChanged = True
-                    CapRow = pncr.ReadLine()
-                    Call GetCapData()
-                ElseIf CapChanged = False Then
+            'open input file for each year
+            PortInputData = New IO.FileStream(DirPath & "SeaFreightInputData.csv", IO.FileMode.Open, IO.FileAccess.Read)
+            pi = New IO.StreamReader(PortInputData, System.Text.Encoding.Default)
+            InputRow = pi.ReadLine
+
+            PortCount = 1
+            Do Until PortCount > 47
+
+                'read initial data if it is year 1
+                CapChanged = False
+                If YearNum = 1 Then
+                    InputRow = pi.ReadLine
+                    portdata = Split(InputRow, ",")
+                    For i = 0 To 14
+                        PortBaseData(PortCount, i) = portdata(i)
+                    Next
+                    GORID(PortCount, 1) = PortBaseData(PortCount, 14)
+                End If
+
+
+                If PortBaseData(PortCount, 0) = CapID Then
+                    'if there are any capacity changes for this port, check if there are any capacity changes for this year
+
+                    If YearNum = CapYear Then
+                        'if there are, then update the capacity variables, and read in the next row from the capacity file
+                        PortNewData(PortCount, 1) = PortBaseData(PortCount, 6) + LBChange
+                        PortNewData(PortCount, 2) = PortBaseData(PortCount, 7) + DBChange
+                        PortNewData(PortCount, 3) = PortBaseData(PortCount, 8) + GCChange
+                        PortNewData(PortCount, 4) = PortBaseData(PortCount, 9) + LLChange
+                        PortNewData(PortCount, 5) = PortBaseData(PortCount, 10) + RRChange
+                        CapChanged = True
+                        CapRow = pncr.ReadLine()
+                        Call GetCapData()
+                    ElseIf CapChanged = False Then
+                        newcount = 1
+                        basecount = 6
+                        Do Until newcount = 6
+                            PortNewData(PortCount, newcount) = PortBaseData(PortCount, basecount)
+                            newcount += 1
+                            basecount += 1
+                        Loop
+                    End If
+                Else
                     newcount = 1
                     basecount = 6
                     Do Until newcount = 6
-                        PortNewData(newcount) = PortBaseData(basecount)
+                        PortNewData(PortCount, newcount) = PortBaseData(PortCount, basecount)
                         newcount += 1
                         basecount += 1
                     Loop
                 End If
-            Else
+
+                If SeaPopSource = "Constant" Then
+                    PortNewData(PortCount, 6) = PortBaseData(PortCount, 11) * PopGrowth
+                End If
+                If SeaPopSource = "File" Then
+                    'seaport model not yet set up for use with scaling files
+                End If
+                If SeaPopSource = "Database" Then
+                    'if year is after 2093 then no population forecasts are available so assume population remains constant
+                    'now modified as population data available up to 2100 - so should never need 'else'
+                    If YearNum < 91 Then
+                        keylookup = YearNum & "_" & GORID(PortCount, 1)
+                        If PopYearLookup.TryGetValue(keylookup, newval) Then
+                            PortNewData(PortCount, 6) = newval
+                        Else
+                            ErrorString = "population found in lookup table for zone " & GORID(PortCount, 1) & " in year " & YearNum
+                            Call DictionaryMissingVal()
+                        End If
+                    Else
+                        PortNewData(PortCount, 6) = PortBaseData(PortCount, 11)
+                    End If
+                End If
+
+                If SeaEcoSource = "Constant" Then
+                    PortNewData(PortCount, 7) = PortBaseData(PortCount, 12) * GVAGrowth
+                ElseIf SeaEcoSource = "File" Then
+                    'seaport model not yet set up for use with scaling files
+                ElseIf SeaEcoSource = "Database" Then
+                    'if year is after 2050 then no gva forecasts are available so assume gva remains constant
+                    'now modified as population data available up to 2100 - so should never need 'else'
+                    If YearNum < 91 Then
+                        keylookup = YearNum & "_" & GORID(PortCount, 1)
+                        If EcoYearLookup.TryGetValue(keylookup, newval) Then
+                            PortNewData(PortCount, 7) = newval
+                        Else
+                            ErrorString = "GVA found in lookup table for zone " & GORID(PortCount, 1) & " in year " & YearNum
+                            Call DictionaryMissingVal()
+                        End If
+                    Else
+                        PortNewData(PortCount, 7) = PortBaseData(PortCount, 12)
+                    End If
+                End If
+
+                If SeaEneSource = "Constant" Then
+                    PortNewData(PortCount, 8) = PortBaseData(PortCount, 13) * CostGrowth
+                ElseIf SeaEneSource = "File" Then
+                    'seaport model not yet set up for use with scaling files
+                ElseIf SeaEneSource = "Database" Then
+                    'v1.4 fuel efficiency change used instead of fuel efficiency
+                    PortNewData(PortCount, 8) = PortBaseData(PortCount, 13) * (DieselNew / DieselOld) * (FuelEff(YearNum) / FuelEff(YearNum - 1))
+                End If
+
+                If SeaEneSource = "Database" Then
+                    PortNewData(PortCount, 9) = FuelEff(YearNum)
+                Else
+                    PortNewData(PortCount, 9) = 1
+                End If
+
+                'write values to output file
+                OutputRow = PortBaseData(PortCount, 0) & "," & YearNum
+                'OutputRow = YearNum & "," & PortBaseData(0)
+                newcount = 1
+                Do Until newcount > 9
+                    OutputRow = OutputRow & "," & PortNewData(PortCount, newcount)
+                    newcount += 1
+                Loop
+                po.WriteLine(OutputRow)
+                'set base values as previous new values
                 newcount = 1
                 basecount = 6
-                Do Until newcount = 6
-                    PortNewData(newcount) = PortBaseData(basecount)
+                Do Until newcount > 8
+                    PortBaseData(PortCount, basecount) = PortNewData(PortCount, newcount)
                     newcount += 1
                     basecount += 1
                 Loop
-            End If
 
-            If SeaPopSource = "Constant" Then
-                PortNewData(6) = PortBaseData(11) * PopGrowth
-            End If
-            If SeaPopSource = "File" Then
-                'seaport model not yet set up for use with scaling files
-            End If
-            If SeaPopSource = "Database" Then
-                'if year is after 2093 then no population forecasts are available so assume population remains constant
-                'now modified as population data available up to 2100 - so should never need 'else'
-                If YearNum < 91 Then
-                    keylookup = YearNum & "_" & GORID
-                    If PopYearLookup.TryGetValue(keylookup, newval) Then
-                        PortNewData(6) = newval
-                    Else
-                        ErrorString = "population found in lookup table for zone " & GORID & " in year " & YearNum
-                        Call DictionaryMissingVal()
-                    End If
-                Else
-                    PortNewData(6) = PortBaseData(11)
-                End If
-            End If
+                PortCount += 1
+            Loop
 
-            If SeaEcoSource = "Constant" Then
-                PortNewData(7) = PortBaseData(12) * GVAGrowth
-            ElseIf SeaEcoSource = "File" Then
-                'seaport model not yet set up for use with scaling files
-            ElseIf SeaEcoSource = "Database" Then
-                'if year is after 2050 then no gva forecasts are available so assume gva remains constant
-                'now modified as population data available up to 2100 - so should never need 'else'
-                If YearNum < 91 Then
-                    keylookup = YearNum & "_" & GORID
-                    If EcoYearLookup.TryGetValue(keylookup, newval) Then
-                        PortNewData(7) = newval
-                    Else
-                        ErrorString = "GVA found in lookup table for zone " & GORID & " in year " & YearNum
-                        Call DictionaryMissingVal()
-                    End If
-                Else
-                    PortNewData(7) = PortBaseData(12)
-                End If
-            End If
-
-            If SeaEneSource = "Constant" Then
-                PortNewData(8) = PortBaseData(13) * CostGrowth
-            ElseIf SeaEneSource = "File" Then
-                'seaport model not yet set up for use with scaling files
-            ElseIf SeaEneSource = "Database" Then
-                enestring = zer.ReadLine
-                enearray = Split(enestring, ",")
-                DieselNew = enearray(2)
-                'v1.4 fuel efficiency change used instead of fuel efficiency
-                PortNewData(8) = PortBaseData(13) * (DieselNew / DieselOld) * (FuelEff(YearNum) / FuelEff(YearNum - 1))
+            If SeaEneSource = "Database" Then
                 DieselOld = DieselNew
             End If
 
-            If SeaEneSource = "Database" Then
-                PortNewData(9) = FuelEff(YearNum)
-            Else
-                PortNewData(9) = 1
-            End If
-
-            'write values to output file
-            OutputRow = YearNum & "," & PortBaseData(0)
-            newcount = 1
-            Do Until newcount > 9
-                OutputRow = OutputRow & "," & PortNewData(newcount)
-                newcount += 1
-            Loop
-            po.WriteLine(OutputRow)
-            'set base values as previous new values
-            newcount = 1
-            basecount = 6
-            Do Until newcount > 8
-                PortBaseData(basecount) = PortNewData(newcount)
-                newcount += 1
-                basecount += 1
-            Loop
             'update year
             YearNum += 1
         Loop

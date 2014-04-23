@@ -237,8 +237,7 @@
 
             '****need to add in energy cost file input
         End If
-        'once we get to first row for 2010, load the 2010 values into a dictionary, 
-        'and then update all the model input files
+        'once we get to first row for 2010, load the 2010 values into a dictionary, and then update all the model input files
         'load 2010 pop data into pop dictionary
         If DBasePop = True Then
             Do
@@ -442,8 +441,7 @@
                     outline = outline + inarray(5) & ","
                     'if getting energy cost data from database then get values from dictionary, otherwise use old value
                     If DBaseEne = True Then
-                        'in first year there are only petrol and diesel vehicles to take account of - 59.8% of cost variable from petrol vehicles 
-                        'and 40.2% from diesel cars
+                        'in first year there are only petrol and diesel vehicles to take account of - 59.8% of cost variable from petrol vehicles and 40.2% from diesel cars
                         'car cost figure is 0.598*P + 0.402*D
                         newval = (0.598 * 36.14) + (0.402 * 36.873)
                         outline = outline & newval & ","

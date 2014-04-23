@@ -135,11 +135,6 @@
                 'reset the latent hourly flows variable, to clean out the previous lot of data
                 ReDim LatentHourlyFlows(20, 24)
 
-                '**debug test
-                If FlowID = 97 Then
-                    FlowID = 97
-                End If
-
                 'update the input variables
                 Call LoadInputRow()
 
@@ -160,11 +155,6 @@
 
                 Do Until YearNum > 90
 
-                    '**debug test
-                    If YearNum = 35 Then
-                        YearNum = 35
-                    End If
-
                     'check if new capacity has been added
                     Call CapChange()
 
@@ -183,6 +173,12 @@
 
                     'write the flows to the output file
                     Call WriteOutputRow()
+
+                    'write the flows to temp file
+                    Call WriteInputFile()
+
+                    'read the flows from the temp file and delete the temp file
+                    Call ReadInputFile()
 
                     'reset the input flow sizes and speeds for the next year
                     Call UpdateInputVars()
@@ -783,10 +779,7 @@
         Do While h < 24
             '***arguably we should iterate across all categories simultaneously, but this will complicate the iteration
             'do iteration for categories within road class 0
-            '**debug test
-            If h = 7 Then
-                h = 7
-            End If
+            
             RoadType = 0
             sc = 0
             ClassFlow = OldHourlyFlows(0, h) + OldHourlyFlows(1, h) + OldHourlyFlows(2, h) + OldHourlyFlows(3, h) + OldHourlyFlows(4, h) + OldHourlyFlows(5, h)
@@ -1347,7 +1340,6 @@
             h += 1
         Loop
     End Sub
-
     Sub WriteOutputRow()
         'v1.2 modification completed - now writes latent demand and number of full hours on each road type
         OutputRow = FlowID & "," & YearNum & "," & TotalFlowNew & "," & MeanSpeedNew & "," & MwayFlowNew & "," & DualFlowNew & "," & SingFlowNew & "," & MWaySpdNew & "," & DualSpdNew & "," & SingSpdNew & ","
@@ -1366,6 +1358,93 @@
         'v1.4 now also writes average cost for each flow type
         OutputRow = OutputRow & "," & MeanCostNew(0) & "," & MeanCostNew(1) & "," & MeanCostNew(2)
         ro.WriteLine(OutputRow)
+    End Sub
+    Sub WriteInputFile()
+        'store outputs in temp file "Flows.csv"
+        'StandardCost 0 - 19 use normal WriteLine function
+        'hour 0 to 23 are stored in array and then WriteLine into the temp file to make it looks better
+
+        Dim i As Integer
+        Dim j As Integer
+        Dim out As String(,)
+        ReDim out(24, 20)
+        Dim FlowFile As IO.FileStream
+        Dim ff As IO.StreamWriter
+
+        'create a temp file "Flows.csv"
+        FlowFile = New IO.FileStream(DirPath & FilePrefix & "Flows.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
+        ff = New IO.StreamWriter(FlowFile, System.Text.Encoding.Default)
+
+        'write header row
+        OutputRow = "FlowID,Yeary,sc0,c1,sc2,sc3,sc4,sc5,sc6,sc7,sc8,sc9,sc10,c11,sc12,sc13,sc14,sc15,sc16,sc17,sc18,sc19"
+        ff.WriteLine(OutputRow)
+
+        'write second row
+        OutputRow = FlowID & "," & YearNum & ","
+        sc = 0
+        Do While sc < 20
+            OutputRow = OutputRow & SpeedCatFlowsNew(sc) & ","
+            h = 0
+            Do While h < 24
+                out(h, sc) = NewHourlyFlows(sc, h)
+                h += 1
+            Loop
+            sc += 1
+        Loop
+        ff.WriteLine(OutputRow)
+
+        'write hour data 0 - 23 
+        For i = 0 To 23
+            OutputRow = "," & "hour" & i & ","
+            For j = 0 To 20
+                OutputRow = OutputRow & out(i, j) & ","
+            Next j
+            ff.WriteLine(OutputRow)
+        Next i
+        ff.Close()
+    End Sub
+    Sub ReadInputFile()
+        Dim InputDetail As Double(,)
+        ReDim InputDetail(25, 20)
+        Dim i As Integer
+        Dim j As Integer
+        Dim result() As String
+        Dim Input As String
+        Dim FlowFile As IO.FileStream
+        Dim ff As IO.StreamReader
+
+        'read the temp file "Flows.csv"
+        FlowFile = New IO.FileStream(DirPath & FilePrefix & "Flows.csv", IO.FileMode.Open, IO.FileAccess.Read)
+        ff = New IO.StreamReader(FlowFile, System.Text.Encoding.Default)
+
+        'read header line
+        ff.ReadLine()
+
+        'read standard cost value and each hour value into array "InputDetail"
+        For i = 0 To 24
+            Input = ff.ReadLine
+            result = Split(Input, ",")
+            For j = 0 To 19
+                InputDetail(i, j) = CDbl(Val(result(j + 2)))
+            Next
+        Next
+
+        'store the values into computer memory
+        sc = 0
+        Do While sc < 20
+            SpeedCatFlowsNew(sc) = InputDetail(0, sc)
+            h = 0
+            Do While h < 24
+                NewHourlyFlows(sc, h) = InputDetail(h + 1, sc)
+                h += 1
+            Loop
+            sc += 1
+        Loop
+        ff.Close()
+
+        'delete the temp file
+        System.IO.File.Delete(DirPath & FilePrefix & "Flows.csv")
+
     End Sub
 
     Sub UpdateInputVars()
