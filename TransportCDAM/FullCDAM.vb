@@ -1,5 +1,5 @@
 ﻿Module FullCDAMv1pt2
-    'this version incorporates EV input from the database
+    'this version incorporates EV input from the database.
 
     Public RunRoadLink As Boolean
     Public RunRoadZone As Boolean
