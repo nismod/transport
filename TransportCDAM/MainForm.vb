@@ -2,7 +2,7 @@
 
     Private Sub Button1_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles Button1.Click
         RunModel = True
-        'Check if file path has been selected - if not then use default
+        'Check if file path has been selected - if not then use default.
         If DirPath = "" Then
             DirPath = "\\soton.ac.uk\ude\PersonalFiles\Users\spb1g09\mydocuments\Southampton Work\ITRC\Transport CDAM\Model Inputs\"
         End If
