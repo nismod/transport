@@ -102,6 +102,13 @@
     Dim ChargeNew(19, 24), ChargeOld(19, 24) As Double
     Dim RdTripRates(1, 90) As Double
     Dim MeanCostNew(2) As Double
+    'these are for the hourly flow file out required by Martino
+    Dim HourlyData As IO.FileStream
+    Dim hd As IO.StreamWriter
+    Dim output As String
+    Dim MWH As Long
+    Dim DCH As Long
+    Dim SCH As Long
 
     Public Sub RoadLinkMain()
         Dim Header As Boolean
@@ -173,6 +180,9 @@
 
                     'write the flows to the output file
                     Call WriteOutputRow()
+
+                    'write the hourly flow output
+                    Call WriteHourlyFile()
 
                     'write the flows to temp file
                     Call WriteInputFile()
@@ -246,6 +256,13 @@
         re = New IO.StreamReader(RoadElasticities, System.Text.Encoding.Default)
         'read header row
         row = re.ReadLine
+
+        'create the required file "HourlyFlows.csv"
+        HourlyData = New IO.FileStream(DirPath & FilePrefix & "HourlyFlows.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
+        hd = New IO.StreamWriter(HourlyData, System.Text.Encoding.Default)
+        'write header
+        output = "FlowID,Yeary,MWH1,MWH2,MWH3,MWH4,MWH5,MWH6,MWH7,MWH8,MWH9,MWH10,MWH11,MWH12,MWH13,MWH14,MWH15,MWH16,MWH17,MWH18,MWH19,MWH20,MWH21,MWH22,MWH23,MWH24,DCH1,DCH2,DCH3,DCH4,DCH5,DCH6,DCH7,DCH8,DCH9,DCH10,DCH11,DCH12,DCH13,DCH14,DCH15,DCH16,DCH17,DCH18,DCH19,DCH20,DCH21,DCH22,DCH23,DCH24,SCH1,SCH2,SCH3,SCH4,SCH5,SCH6,SCH7,SCH8,SCH9,SCH10,SCH11,SCH12,SCH13,SCH14,SCH15,SCH16,SCH17,SCH18,SCH19,SCH20,SCH21,SCH22,SCH23,SCH24"
+        hd.WriteLine(output)
 
         'if the model is building capacity then create new capacity file
         If BuildInfra = True Then
@@ -1339,6 +1356,39 @@
             End If
             h += 1
         Loop
+    End Sub
+    Sub WriteHourlyFile()
+
+        output = FlowID & "," & YearNum & ","
+
+        'Hourly Flow for Motorway
+        h = 0
+        MWH = 0
+        Do While h < 24
+            MWH = NewHourlyFlows(0, h) + NewHourlyFlows(1, h) + NewHourlyFlows(2, h) + NewHourlyFlows(3, h) + NewHourlyFlows(4, h) + NewHourlyFlows(5, h)
+            output = output & MWH & ","
+            h += 1
+        Loop
+
+        'Hourly Flow for dual carriageway
+        h = 0
+        DCH = 0
+        Do While h < 24
+            DCH = NewHourlyFlows(6, h) + NewHourlyFlows(7, h) + NewHourlyFlows(8, h) + NewHourlyFlows(9, h) + NewHourlyFlows(10, h) + NewHourlyFlows(11, h)
+            output = output & DCH & ","
+            h += 1
+        Loop
+
+        'Hourly Flow for single carriageway
+        h = 0
+        SCH = 0
+        Do While h < 24
+            SCH = NewHourlyFlows(12, h) + NewHourlyFlows(13, h) + NewHourlyFlows(14, h) + NewHourlyFlows(15, h) + NewHourlyFlows(16, h) + NewHourlyFlows(17, h) + NewHourlyFlows(18, h) + NewHourlyFlows(19, h)
+            output = output & SCH & ","
+            h += 1
+        Loop
+
+        hd.WriteLine(output)
     End Sub
     Sub WriteOutputRow()
         'v1.2 modification completed - now writes latent demand and number of full hours on each road type
