@@ -1,4 +1,4 @@
-﻿Module FullCDAMv1pt2
+﻿Module FullCDAM
     'this version incorporates EV input from the database.
 
     Public RunRoadLink As Boolean
@@ -816,7 +816,7 @@
                 sin.Close()
             End If
         End If
-        
+
         'once model input files have been updated, then go on to 2011, loop through every year and update/create (probably create) model EV files as we go along
         'but can't loop by year, so create a compound dictionary containing all values for population for years 1 to 90
         'population
