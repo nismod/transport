@@ -203,6 +203,8 @@
         ro.Close()
         ev.Close()
         re.Close()
+        hd.Close()
+
         If BuildInfra = True Then
             rlnc.Close()
         End If
