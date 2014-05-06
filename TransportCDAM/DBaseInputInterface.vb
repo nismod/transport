@@ -1,4 +1,6 @@
-﻿Module DBaseInputInterface
+﻿Imports System.IO
+
+Module DBaseInputInterface
     'this gets the input files from the database, and converts them into a form suitable for input to the model files
 
     'this stores the total population values for each zone with the array index equal to the zoneID, 145 is Scotland and 146 is Wales
@@ -9,7 +11,7 @@
     Dim YearCheck As Long
     Dim DictCreated As Boolean
     Dim DistZoneLookup As New Dictionary(Of String, Long)
-    Dim zp, ze As IO.StreamWriter
+    Dim zp, ze As StreamWriter
     Dim ZoneGVA As Double
     Dim ZoneID As Long
     Dim badregions(10) As String
@@ -59,10 +61,10 @@
     End Sub
 
     Sub GetDBasePop()
-        Dim ScenarioPopFile As IO.FileStream
-        Dim dp As IO.StreamReader
-        Dim GORPopFile As IO.FileStream
-        Dim gp As IO.StreamReader
+        Dim ScenarioPopFile As FileStream
+        Dim dp As StreamReader
+        Dim GORPopFile As FileStream
+        Dim gp As StreamReader
         Dim PopLine As String
         Dim ZonePopRow As String
         Dim zonecount As Long
@@ -73,17 +75,17 @@
         badregioncount = 0
 
         'set up input file
-        ScenarioPopFile = New IO.FileStream(DBasePopFile, IO.FileMode.Open, IO.FileAccess.Read)
-        dp = New IO.StreamReader(ScenarioPopFile, System.Text.Encoding.Default)
+        ScenarioPopFile = New FileStream(DBasePopFile, FileMode.Open, FileAccess.Read)
+        dp = New StreamReader(ScenarioPopFile, System.Text.Encoding.Default)
         'also GOR pop file as these are needed for air node model
         If DBasePopG = True Then
-            GORPopFile = New IO.FileStream(DBasePopGFile, IO.FileMode.Open, IO.FileAccess.Read)
-            gp = New IO.StreamReader(GORPopFile, System.Text.Encoding.Default)
+            GORPopFile = New FileStream(DBasePopGFile, FileMode.Open, FileAccess.Read)
+            gp = New StreamReader(GORPopFile, System.Text.Encoding.Default)
         End If
 
         'set up output file
-        ZonePopFile = New IO.FileStream(DirPath & "ZoneScenarioPopFile.csv", IO.FileMode.Create, IO.FileAccess.Write)
-        zp = New IO.StreamWriter(ZonePopFile, System.Text.Encoding.Default)
+        ZonePopFile = New FileStream(DirPath & "ZoneScenarioPopFile.csv", FileMode.Create, FileAccess.Write)
+        zp = New StreamWriter(ZonePopFile, System.Text.Encoding.Default)
         'write header row
         ZonePopRow = "Year,ITRCZone,Pop"
         zp.WriteLine(ZonePopRow)
@@ -192,7 +194,7 @@
                 ZonePops(129) = ZonePops(146) * 0.030101
                 ZonePops(143) = ZonePops(146) * 0.044437
             End If
-            
+
             'if necessary do the other GOR pops from the GOR pop file
             If DBasePopG = True Then
                 Do
@@ -257,20 +259,20 @@
     End Sub
 
     Sub GetDBaseEco()
-        Dim ScenarioEcoFile As IO.FileStream
-        Dim de As IO.StreamReader
+        Dim ScenarioEcoFile As FileStream
+        Dim de As StreamReader
         Dim ZoneEcoRow As String
         Dim EcoLine As String
 
         badregioncount = 0
-       
+
         'set up input file - file name provided by user in form
-        ScenarioEcoFile = New IO.FileStream(DBaseEcoFile, IO.FileMode.Open, IO.FileAccess.Read)
-        de = New IO.StreamReader(ScenarioEcoFile, System.Text.Encoding.Default)
+        ScenarioEcoFile = New FileStream(DBaseEcoFile, FileMode.Open, FileAccess.Read)
+        de = New StreamReader(ScenarioEcoFile, System.Text.Encoding.Default)
 
         'set up output file
-        ZoneEcoFile = New IO.FileStream(DirPath & "ZoneScenarioEcoFile.csv", IO.FileMode.Create, IO.FileAccess.Write)
-        ze = New IO.StreamWriter(ZoneEcoFile, System.Text.Encoding.Default)
+        ZoneEcoFile = New FileStream(DirPath & "ZoneScenarioEcoFile.csv", FileMode.Create, FileAccess.Write)
+        ze = New StreamWriter(ZoneEcoFile, System.Text.Encoding.Default)
 
         'write header row
         ZoneEcoRow = "Year,ITRCZone,GVA"
@@ -334,14 +336,14 @@
 
     Sub CreateDistLookup()
 
-        Dim DistLookupFile As IO.FileStream
-        Dim dl As IO.StreamReader
+        Dim DistLookupFile As FileStream
+        Dim dl As StreamReader
         Dim LookupLine As String
         Dim LookupArray() As String
 
         If DictCreated = False Then
-            DistLookupFile = New IO.FileStream(DirPath & "DistrictITRCZoneLookup.csv", IO.FileMode.Open, IO.FileAccess.Read)
-            dl = New IO.StreamReader(DistLookupFile, System.Text.Encoding.Default)
+            DistLookupFile = New FileStream(DirPath & "DistrictITRCZoneLookup.csv", FileMode.Open, FileAccess.Read)
+            dl = New StreamReader(DistLookupFile, System.Text.Encoding.Default)
             'read header row
             LookupLine = dl.ReadLine()
             'read first row
@@ -796,7 +798,233 @@
             Case 154
                 ZoneGVA = GorGVA(4)
             Case 155
-                ZoneGVA = GorGVA(5) 
+                ZoneGVA = GorGVA(5)
         End Select
     End Sub
+
+
+    '****************************************************************************************
+    ' Function: ReadData 
+    '
+    ' Purpose: Get an array of data from a csv file - to be replaced with database calls
+    ' 
+    ' Parameters:   Type - type of data (e.g. Road, Rail)
+    '               SubType - subtype of data
+    '               DataArray - array of data to be output
+    '               HasHeaders - TRUE - input file has headers, FALSE - file has no headers
+    '               datatype - variant type of data in array (e.g. string, integer)
+    '               Connection - file path - to be replaced with database connection string
+    '****************************************************************************************
+
+    Function ReadData(ByVal Type As String, ByVal SubType As String, ByRef DataArray(,) As String,
+                       Optional ByVal HasHeaders As Boolean = True,
+                       Optional ByVal datatype As VariantType = VariantType.String,
+                       Optional Connection As String = "") As Boolean
+        Dim TheFileName As String = ""
+        Dim DataFile As FileStream
+        Dim DataRead As StreamReader
+        Dim dbheadings As String
+        Dim dbline As String
+        Dim dbarray() As String
+        Dim iR As Integer = 0, iC As Integer = 0
+        Dim DataRows As Integer = 0, DataColumns As Integer = 0
+
+        'Check if file path has been selected - if not then use default.
+        If Connection = "" Then
+            Connection = "\\soton.ac.uk\ude\PersonalFiles\Users\spb1g09\mydocuments\Southampton Work\ITRC\Transport CDAM\Model Inputs\"
+        End If
+        'Make sure the file path ends with at \
+        If Connection.Substring(Len(Connection) - 1, 1) <> "\" Then
+            Connection = Connection & "\"
+        End If
+
+        'Get the filename of datafile based on Type and SubType
+        'TODO - replace with database calls
+        Select Case Type
+            Case "Demographics"
+                Select Case SubType
+                    Case "Zone"
+                        TheFileName = "ZoneScenarioPopFile.csv"
+                    Case Else
+                End Select
+            Case "Economics"
+                Select Case SubType
+                    Case "Zone"
+                        TheFileName = "ZoneScenarioEcoFile.csv"
+                    Case Else
+                End Select
+            Case "Road"
+                Select Case SubType
+                    Case "Initial"
+                        TheFileName = "RoadInputDataInitial.csv"
+                    Case Else
+                End Select
+            Case Else
+
+        End Select
+
+        'Get file data
+        Try
+            DataFile = New FileStream(Connection & TheFileName, FileMode.Open, FileAccess.Read)
+        Catch exIO As IOException
+            MsgBox("An error was encountered trying to access the file " & Connection & TheFileName)
+        End Try
+        DataRead = New StreamReader(DataFile, System.Text.Encoding.Default)
+        'Get line count
+        DataRows = DataFile.Length
+
+        'read header row
+        dbheadings = DataRead.ReadLine
+        dbarray = Split(dbheadings, ",")
+        DataColumns = dbarray.Length
+
+        'loop through row to det data
+
+        For iR = 0 To DataRows - 1
+            If DataArray Is Nothing Then
+                ReDim DataArray(DataColumns - 1, 0)
+            Else
+                'iActualR is the actual number or data rows (not equal to iR if there are Error rows)
+                ReDim Preserve DataArray(DataColumns - 1, iR)
+            End If
+
+            'Get a line of data from file
+            dbline = DataRead.ReadLine
+            If dbline Is Nothing Then
+                Exit For
+            End If
+            dbarray = Split(dbline, ",")
+            For iC = 0 To DataColumns - 1
+                DataArray(iC, iR) = CStr(UnNull(dbarray(iC).ToString, VariantType.Char))
+            Next
+        Next
+
+        DataRead.Close()
+
+        Return True
+
+    End Function
+
+    '****************************************************************************************
+    ' Function: WriteData 
+    '
+    ' Purpose: Output an array to a csv file - to be replaced with database calls
+    ' 
+    ' Parameters:   Type - type of data (e.g. Road, Rail)
+    '               SubType - subtype of data
+    '               DataArray - array of data to be output
+    '               IsNewFile - TRUE - create a new file, FALSE - update and existing file
+    '               FilePrefix - Optional fileprefix for output file (use date and time otherwise)
+    '               Connection - file path - to be replaced with database connection string
+    '****************************************************************************************
+
+    Function WriteData(ByVal Type As String, ByVal SubType As String, ByRef DataArray(,) As String, ByVal IsNewFile As Boolean,
+                       Optional ByVal FilePrefix As String = "", Optional Connection As String = "") As Boolean
+
+        Dim OutFileName As String = "", TempFileName As String = ""
+        Dim TempFile As FileStream, DataFile As FileStream
+        Dim Template As StreamReader
+        Dim DataWrite As StreamWriter
+        Dim headings As String, Line As String = ""
+        Dim headarray As String()
+        Dim headcount As Integer, fieldcount As Integer
+        Dim ix As Integer, iy As Integer
+
+        'Check if file path has been selected - if not then use default.
+        If Connection = "" Then
+            Connection = "\\soton.ac.uk\ude\PersonalFiles\Users\spb1g09\mydocuments\Southampton Work\ITRC\Transport CDAM\Model Outputs\"
+        End If
+        'Make sure the file path ends with at \
+        If Connection.Substring(Len(Connection) - 1, 1) <> "\" Then
+            Connection = Connection & "\"
+        End If
+
+        'Get the filename of datafile based on Type and SubType
+        'TODO - replace with database calls
+        Select Case Type
+            Case "Road"
+                Select Case SubType
+                    Case "Output"
+                        OutFileName = "RoadOutputData.csv"
+                        TempFileName = "RoadOutputTemplate.csv"
+                    Case Else
+                End Select
+            Case Else
+
+        End Select
+
+        'Check if prefix has been set - if not then use default
+        If FilePrefix = "" Then
+            FilePrefix = System.DateTime.Now.Year & System.DateTime.Now.Month & System.DateTime.Now.Day & System.DateTime.Now.Hour & System.DateTime.Now.Minute & System.DateTime.Now.Second
+        End If
+        'Add File prefix to Output Filename
+        OutFileName = FilePrefix & OutFileName
+        DataFile = File.Create(OutFileName)
+        'DataFile = New FileStream(Connection & OutFileName, FileMode.Open, FileAccess.Write)
+        DataWrite = New StreamWriter(DataFile, System.Text.Encoding.Default)
+        'Get field count from Array
+        fieldcount = UBound(DataArray, 1) + 1
+
+        'TODO - Not needed for SoS version using database
+        'If creating a new file then create headers
+        If IsNewFile Then
+            'Get the file headers from the template version of the output file
+            TempFile = New FileStream(Connection & TempFileName, FileMode.Open, FileAccess.Read)
+            Template = New StreamReader(TempFile, System.Text.Encoding.Default)
+            'read header row from template
+            headings = Template.ReadLine
+            headarray = Split(headings, ",")
+            headcount = headarray.Count
+
+            'Write header line to output file
+            DataWrite.WriteLine(headings)
+
+            'check to make sure field count is the same as the header count
+            If fieldcount <> headcount Then
+                MsgBox("Template fields do not match output data fields")
+                Return False
+            End If
+        End If
+
+
+        'loop through array to generate lines in output file
+        For iy = 0 To UBound(DataArray, 2)
+            'Build a line to write
+            Line = ""
+            For ix = 0 To UBound(DataArray, 1)
+                Line += UnNull(DataArray(ix, iy), VariantType.String) & ","
+            Next
+            'Delete the last comma
+            Line = Line.Substring(0, Len(Line) - 1)
+            'Write the line to the output file
+            DataWrite.Write(Line)
+            DataWrite.Write(vbCrLf)
+        Next
+
+        DataWrite.Close()
+
+        Return True
+
+    End Function
+
+    Public Function UnNull(ByVal vntData As Object, ByVal datatype As VariantType) As Object
+        'default
+        UnNull = vntData
+
+        If IsDBNull(vntData) Or IsNothing(vntData) Then
+            Select Case datatype
+                Case vbString
+                    UnNull = ""
+                Case vbDate
+                    UnNull = "1/1/1900"
+                Case vbSingle, vbInteger, vbLong, vbByte, vbCurrency, vbDecimal, vbDouble
+                    UnNull = 0
+                Case vbBoolean
+                    UnNull = False
+                Case Else
+                    UnNull = ""
+            End Select
+
+        End If
+    End Function
 End Module
