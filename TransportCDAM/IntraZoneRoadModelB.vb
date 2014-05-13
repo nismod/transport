@@ -65,6 +65,7 @@
     Dim AddedLaneKm(4) As Double
     Dim RdTripRates(1) As Double
     Dim VKmVType(10) As Double
+    Dim BuiltLaneKm(4) As Double
 
 
     Public Sub RoadZoneMainNew()
@@ -95,13 +96,15 @@
                 'get external variable values
                 Call GetZoneExtVar()
 
-                'v1.4 modification - reset latent and constrained values
+                'v1.4 modification - reset latent and constrained values 
                 For x = 1 To 4
                     Constrained(x) = False
                     Latentvkm(x) = 0
-                    If BuildInfra = True Then
-                        AddedLaneKm(x) = 0
-                    End If
+                    '130514 - need to reset this anyway
+                    'If BuildInfra = True Then
+                    AddedLaneKm(x) = 0
+                    'End If
+                    BuiltLaneKm(x) = 0
                 Next
 
                 'set year counter to one
@@ -111,11 +114,6 @@
                     'read line from strategy file
                     StratLine = stf.ReadLine
                     StratArray = Split(StratLine, ",")
-
-                    'debug test
-                    If ZoneID = 13 Then
-                        ZoneID = 13
-                    End If
 
                     'apply zone equation to adjust demand
                     Call RoadZoneKm()
@@ -194,6 +192,7 @@
             rzcb.WriteLine(row)
         End If
 
+        '130514 note that at the moment this just reads a blank file - need to remove "fileprefix" from string, and then need to modify form1 and build procedure so that it picks up on additional capacity built (ie those tagged '-1' for year)
         RoadZoneCapNew = New IO.FileStream(DirPath & FilePrefix & "RoadZoneCapChange.csv", IO.FileMode.Open, IO.FileAccess.Read)
         rzcn = New IO.StreamReader(RoadZoneCapNew, System.Text.Encoding.Default)
         'read header row
@@ -201,6 +200,8 @@
         'read first line
         row = rzcn.ReadLine
         If row Is Nothing Then
+            '130514 addition of line
+            RoadCapArray = Split("0,-1", ",")
         Else
             RoadCapArray = Split(row, ",")
         End If
@@ -395,25 +396,23 @@
         End If
 
         'v1.4 mod - check if there is any change in road capacity in this zone and year
+        '130514 modified to take in both prespecified capacity and capacity built as part of TR1
         If RoadCapArray(0) = ZoneID Then
             If RoadCapArray(1) = YearCount Then
-                AddedLaneKm(1) = RoadCapArray(2)
-                AddedLaneKm(2) = RoadCapArray(3) + RoadCapArray(4)
-                AddedLaneKm(3) = RoadCapArray(5)
-                AddedLaneKm(4) = RoadCapArray(6) + RoadCapArray(7)
+                AddedLaneKm(1) += RoadCapArray(2)
+                AddedLaneKm(2) += RoadCapArray(3) + RoadCapArray(4)
+                AddedLaneKm(3) += RoadCapArray(5)
+                AddedLaneKm(4) += RoadCapArray(6) + RoadCapArray(7)
                 capstring = rzcn.ReadLine
                 If capstring Is Nothing Then
                 Else
                     RoadCapArray = Split(capstring, ",")
                 End If
-            Else
-                For a = 1 To 4
-                    AddedLaneKm(a) = 0
-                Next
             End If
-        Else
+        End If
+        If BuildInfra = True Then
             For a = 1 To 4
-                AddedLaneKm(a) = 0
+                AddedLaneKm(a) += BuiltLaneKm(a)
             Next
         End If
 
@@ -1689,29 +1688,35 @@
         HydrogenUsed = 0
 
         'if building capacity then check if new capacity is needed
+        '130514 amount of capacity built altered to 10% of previous total
+        '130514 also split 'added lane km' and 'built lane km' into separate arrays - so added lane km replaced by built lane km here
         If BuildInfra = True Then
+            'first clear 'BuiltLaneKm' array
+            For k = 1 To 4
+                BuiltLaneKm(k) = 0
+            Next
             'check motorways
             If RoadCatTraffic(1) > (0.9 * BaseCatC(1)) Then
-                AddedLaneKm(1) += 100
-                newcaprow = ZoneID & "," & YearCount & ",100,,,"
+                BuiltLaneKm(1) = (NewLaneKm(1) * 0.1)
+                newcaprow = ZoneID & "," & YearCount & "," & BuiltLaneKm(1) & ",,,"
                 rzcb.WriteLine(newcaprow)
             End If
             'check rural a roads
             If RoadCatTraffic(2) > (0.9 * BaseCatC(2)) Then
-                AddedLaneKm(2) += 100
-                newcaprow = ZoneID & "," & YearCount & ",,100,,"
+                BuiltLaneKm(2) = (NewLaneKm(2) * 0.1)
+                newcaprow = ZoneID & "," & YearCount & ",," & BuiltLaneKm(2) & ",,"
                 rzcb.WriteLine(newcaprow)
             End If
             'check rural minor roads
             If RoadCatTraffic(3) > (0.9 * BaseCatC(3)) Then
-                AddedLaneKm(3) += 100
-                newcaprow = ZoneID & "," & YearCount & ",,,100,"
+                BuiltLaneKm(3) = (NewLaneKm(3) * 0.1)
+                newcaprow = ZoneID & "," & YearCount & ",,," & BuiltLaneKm(3) & ","
                 rzcb.WriteLine(newcaprow)
             End If
             'check urban roads
             If RoadCatTraffic(4) > (0.9 * BaseCatC(4)) Then
-                AddedLaneKm(4) += 100
-                newcaprow = ZoneID & "," & YearCount & ",,,,100"
+                BuiltLaneKm(4) = (NewLaneKm(4) * 0.1)
+                newcaprow = ZoneID & "," & YearCount & ",,,," & BuiltLaneKm(4)
                 rzcb.WriteLine(newcaprow)
             End If
         End If
