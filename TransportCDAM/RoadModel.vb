@@ -8,6 +8,9 @@
     'v1.3 also includes smart logistics option for hgv traffic
     'now also includes variable trip rate option
     'v1.4 replaces CostNew(sc) with CostNew(sc,h)
+    'v1.6 recode to calculate by annual timesteps, parameters' dimensions are increased by one to store for each roadlink to avoid override
+    'run time has been increased because the increased dimension requires extra memory and the temp file needs to be read and write for every step, but still acceptable
+
 
     Dim RoadInputData As IO.FileStream
     Dim ri As IO.StreamReader
@@ -119,7 +122,7 @@
     Dim SCH As Long
 
 
-    '-----------------------------------------------------Comments for future works
+    '-----------------------------------------------------v1.6 Comments for future works
     'There are still some parameters in the computer memory for each annual timestep
     'They are RoadTypeLanes(from the previous year), and parameters in UpdateValue sub
     '-----------------------------------------------------
@@ -143,6 +146,7 @@
             'get external variable values
             Call GetExternalValues()
 
+            'get initial input file if year 1, otherwise update from the temp file (previous year calculation)
             Call ReadInput()
 
             'load the elasticities
@@ -156,8 +160,6 @@
                 'modification v1.2 - input file replaced by internally specified values - because these have to be altered for some links
                 'further modification - these are now specified in the input file (and therefore any alterations where base usage exceeds the theoretical maximum have to be made in the input file)
 
-
-                'v2.1 modification completed - hourly flow calculation now moved to here, as only want to split it based on the daily profile once
                 'calculate the starting hourly flows
                 If YearNum = 1 Then
                     Call StartFlows()
@@ -486,7 +488,8 @@
 
     End Sub
     Sub ReadInput()
-
+        'v1.6 read input file for either initial file (year 1) or temp file (previous year's calculation results)
+        'ffr is to read the temp file "Flows.csv" and ffw is to write to the temp file "Flows.csv"
         If YearNum = 1 Then
             RoadInputData = New IO.FileStream(DirPath & "RoadInputData2010.csv", IO.FileMode.Open, IO.FileAccess.Read)
             ri = New IO.StreamReader(RoadInputData, System.Text.Encoding.Default)
@@ -505,22 +508,28 @@
             'read header line
             ffr.ReadLine()
 
+            'reset roadtypeflows for current year
             ReDim RoadTypeFlows(291, 2, 23)
         End If
 
+
         Call LoadInputRow()
 
+        'close initial file if year 1 or close the temp file "Flows.csv"
         If YearNum = 1 Then
             ri.Close()
         Else
             ffr.Close()
+            'delete the temp file to recreate for current year
             System.IO.File.Delete(DirPath & FilePrefix & "Flows.csv")
         End If
 
         'create a temp file "Flows.csv"
         FlowFile = New IO.FileStream(DirPath & FilePrefix & "Flows.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
         ffw = New IO.StreamWriter(FlowFile, System.Text.Encoding.Default)
+
         'write header row
+        'SpeedCatFlowsNew,RoadTypeLaneNew,CostNew,LatentHourlyFlow,ChargeNew,NewHourlyFlow
         OutputRow = "Yeary,FlowID" & ","
         For i = 0 To 19
             OutputRow = OutputRow & "sc" & i & ","
@@ -581,16 +590,6 @@
         RoadTypeLanes(link, 1) = RoadTypeLanesNew(link, 1)
         RoadTypeLanes(link, 2) = RoadTypeLanesNew(link, 2)
 
-        'update value after calculation of the new capacity situation
-        'If YearNum = 1 Then
-        '    RoadTypeLanes(link, 0) = RoadTypeLanesNew(link, 0)
-        '    RoadTypeLanes(link, 1) = RoadTypeLanesNew(link, 1)
-        '    RoadTypeLanes(link, 2) = RoadTypeLanesNew(link, 2)
-        'Else
-        '    RoadTypeLanes(link, 0) = RoadTypeLanesOld(link, 0)
-        '    RoadTypeLanes(link, 1) = RoadTypeLanesOld(link, 1)
-        '    RoadTypeLanes(link, 2) = RoadTypeLanesOld(link, 2)
-        'End If
 
     End Sub
 
@@ -1538,7 +1537,7 @@
     End Sub
     Sub WriteInputFile()
         'store outputs in temp file "Flows.csv"
-        'StandardCost 0 - 19 use normal WriteLine function
+        'SpeedCatFlows 0 - 19 use normal WriteLine function
         'hour 0 to 23 are stored in array and then WriteLine into the temp file to make it looks better
         Dim i As Integer
         Dim j As Integer
