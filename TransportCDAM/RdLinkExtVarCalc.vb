@@ -5,6 +5,7 @@
     '1.3 also now breaks down and calculates the cost variable
     '1.4 corrects the cost calculations - previously was referring to the wrong place in the strategy file
     '1.5 corrects the fuel efficiency calculations
+    '1.6 recode to calculate by annual timesteps, parameters' dimensions are increased by one to store for each roadlink to avoid override
 
     Dim RoadInputData As IO.FileStream
     Dim ri As IO.StreamReader
@@ -84,7 +85,6 @@
 
         'write header row to output file
         OutputRow = "Yeary,FlowID,PopZ1y,PopZ2y,GVAZ1y,GVAZ2y,M1Costy,MLanesy,DLanesy,SLanesy,MaxCapMy,MaxCapDy,MaxCapSy,M2Costy,M3Costy,M4Costy,M5Costy,M6Costy,D1Costy,D2Costy,D3Costy,D4Costy,D5Costy,D6Costy,S1Costy,S2Costy,S3Costy,S4Costy,S5Costy,S6Costy,S7Costy,S8Costy"
-        'OutputRow = "FlowID,Yeary,PopZ1y,PopZ2y,GVAZ1y,GVAZ2y,M1Costy,MLanesy,DLanesy,SLanesy,MaxCapMy,MaxCapDy,MaxCapSy,M2Costy,M3Costy,M4Costy,M5Costy,M6Costy,D1Costy,D2Costy,D3Costy,D4Costy,D5Costy,D6Costy,S1Costy,S2Costy,S3Costy,S4Costy,S5Costy,S6Costy,S7Costy,S8Costy"
         ev.WriteLine(OutputRow)
 
         'if we are using a single scaling factor then set scaling factors - as a default they are just set to be constant over time
@@ -200,10 +200,7 @@
         AddingCap = True
         Call GetCapData()
 
-        'If NewRdLCap = True Then
-        '    Call GetCapData()
-        'End If
-
+        'v1.6 now calculate external variables and write output in annual timesteps
         Call CalcFlowData()
 
         stf.Close()
@@ -319,6 +316,9 @@
             Next
 
             'fuel costs
+            'v1.6 comment
+            'i is road link and there are 291 links in current model
+            'if the number of links are changed, i should be changed and the size of the arrays for each parameter should be changed 
             Dim i As Long
             For i = 1 To 291
                 VehFuelCosts(i, 0, 0) = 0.3064 * 26.604
@@ -442,7 +442,7 @@
 
         Do While Year < 91
 
-            'read line of strategy file
+            'read line of strategy file for each year
             stratstring = stf.ReadLine
             stratarray = Split(stratstring, ",")
 
@@ -460,7 +460,7 @@
             Do Until InputCount > 291
 
                 If Year = 1 Then
-                    'read input file if year 1, data will be updated if not year 1
+                    'v1.6 read input file if year 1, data will be updated if not year 1
                     InputRow = ri.ReadLine
                     InputData = Split(InputRow, ",")
                     FlowID(InputCount, 1) = InputData(0)
@@ -826,6 +826,7 @@
                     '    Next
                     'Next
                     'then multiply these costs by the proportions of vehicles in each fuel type (from strategy file), and aggregate the cost for each vehicle type
+                    'v1.6 CostNew does not need to increase dimension, as it is the output for each step
                     CostsNew(0) = (VehCosts(0, 0) * stratarray(11)) + (VehCosts(0, 5) * stratarray(12)) + (VehCosts(0, 9) * stratarray(13))
                     CostsNew(1) = (VehCosts(1, 0) * stratarray(1)) + (VehCosts(1, 1) * stratarray(2)) + (VehCosts(1, 2) * stratarray(14)) + (VehCosts(1, 3) * stratarray(15)) + (VehCosts(1, 4) * stratarray(16)) + (VehCosts(1, 5) * stratarray(3)) + (VehCosts(1, 8) * stratarray(17)) + (VehCosts(1, 9) * stratarray(18))
                     CostsNew(2) = (VehCosts(2, 0) * stratarray(4)) + (VehCosts(2, 1) * stratarray(5)) + (VehCosts(2, 3) * stratarray(19)) + (VehCosts(2, 4) * stratarray(20)) + (VehCosts(2, 5) * stratarray(6)) + (VehCosts(2, 6) * stratarray(21)) + (VehCosts(2, 7) * stratarray(22))
