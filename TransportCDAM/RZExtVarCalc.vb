@@ -560,7 +560,7 @@
         'define fuel split - this is now specified via the strategy common variables file
         'FuelString = "0.598,0.402,0,0.055,0.945,0,1,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"
         'write to output file
-        OutputRow = ZoneID & "," & Year & "," & PopNew & "," & GVANew & "," & CostNew(0) & "," & LaneKm(ZoneID, 0) & "," & MLaneKm(ZoneID, 0) & "," & RurADLaneKm(ZoneID, 0) & "," & RurASLaneKm(ZoneID, 0) & "," & RurMinLaneKm(ZoneID, 0) & "," & UrbDLaneKm(ZoneID, 0) & "," & UrbSLaneKm(ZoneID, 0) & "," & FuelString & CostNew(1) & "," & CostNew(2) & "," & CostNew(3) & "," & CostNew(4)
+        OutputRow = Year & "," & ZoneID & "," & PopNew & "," & GVANew & "," & CostNew(0) & "," & LaneKm(ZoneID, 0) & "," & MLaneKm(ZoneID, 0) & "," & RurADLaneKm(ZoneID, 0) & "," & RurASLaneKm(ZoneID, 0) & "," & RurMinLaneKm(ZoneID, 0) & "," & UrbDLaneKm(ZoneID, 0) & "," & UrbSLaneKm(ZoneID, 0) & "," & FuelString & CostNew(1) & "," & CostNew(2) & "," & CostNew(3) & "," & CostNew(4)
         ev.WriteLine(OutputRow)
         'set old values as previous new values
         PopOld(ZoneID, 0) = PopNew
