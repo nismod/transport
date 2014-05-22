@@ -213,6 +213,9 @@
         re.Close()
         'hd.Close()
 
+        'delete the temp file to recreate for the final year
+        System.IO.File.Delete(DirPath & FilePrefix & "Flows.csv")
+
         If BuildInfra = True Then
             rlnc.Close()
         End If
