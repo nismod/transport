@@ -12,7 +12,7 @@ Module RailModel
 
     'v1.6 now calculation by annual timesteps
     'need to think about FuelUsed(y,0) if the calculation are seperated for each year
-
+    'two errors in the old code are identified: newcost was not reseted for each link each year, external variable file doesn't read the complete RailLinkElectrificationDates (becasue to link260 year 2017 data)
     Dim RlLinkInputData As IO.FileStream
     Dim rai As IO.StreamReader
     Dim RlLinkExtVar As IO.FileStream
