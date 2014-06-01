@@ -60,6 +60,7 @@
     Dim padflow, padyear As String
     Dim NewTrains As Double
     Dim FuelEffOld(2) As Double
+    Dim Elect As Boolean
 
     Public Sub RailLinkEVMain()
 
@@ -163,7 +164,7 @@
         For v = 0 To (CapCount - 1)
             padflow = String.Format("{0:000}", NewCapDetails(v, 0))
             padyear = String.Format("{0:00}", NewCapDetails(v, 1))
-            sortarray(v) = padflow & "&" & padyear & "&" & v
+            sortarray(v) = padyear & "&" & padflow & "&" & v
         Next
         Array.Sort(sortarray)
         'write all lines to intermediate capacity file
@@ -196,6 +197,8 @@
         'mod - now do this anyway as some schemes are non-discretionary
         'create intermediate file listing timings of scheme implementations
         Call CreateElectrificationList()
+        'initiallize read elelct file
+        Elect = True
         'read the electrification list file as an input file
         RlLinkElSchemes = New IO.FileStream(DirPath & EVFilePrefix & "RailLinkElectrificationDates.csv", IO.FileMode.Open, IO.FileAccess.Read)
         rel = New IO.StreamReader(RlLinkElSchemes, System.Text.Encoding.Default)
@@ -490,6 +493,7 @@
                 ''mod - now do this anyway as some schemes are non-discretionary
                 'If RlElect = True Then
                 'check if in correct year for the current scheme
+Elect:
                 If Year = ElectYear Then
                     'if so check if correct row for the current scheme
                     If FlowID(InputCount, 0) = ElectFlow Then
@@ -498,6 +502,12 @@
                         ElectTracksNew = ElectTracksOld(InputCount, 0) + ElectTracks
                         'read next scheme from list
                         Call GetElectData()
+
+                        'if there is no data left in the Elect file then go to next calculation
+                        If Elect = False Then
+                            GoTo NextYear
+                        End If
+
                     Else
                         ElPNew = ElPOld(InputCount, 0)
                         ElectTracksNew = ElectTracksOld(InputCount, 0)
@@ -506,6 +516,15 @@
                     ElPNew = ElPOld(InputCount, 0)
                     ElectTracksNew = ElectTracksOld(InputCount, 0)
                 End If
+
+                If FlowID(InputCount, 0) = ElectFlow Then
+                    If Year = ElectYear Then
+                        GoTo Elect
+                    Else
+                        GoTo NextYear
+                    End If
+                End If
+NextYear:
                 'Else
                 '    '***1.4 commented out, as don't want any growth if not using list of schemes
                 '    'ElPNew = ElPOld + ElPGrowth#
@@ -563,9 +582,9 @@
                 'v1.4 changed to include compulsory capacity changes where construction has already begun
                 'all this involves is removing the if newrllcap = true clause, because this was already accounted for when generating the intermediate file, and adding a lineread above getcapdata because this sub was amended
 
-                If FlowID(InputCount, 0) = CapID Then
-                    'if there are any capacity changes on this flow, check if there are any capacity changes in this year
-                    If Year = CapYear Then
+                'if there are any capacity changes on this flow, check if there are any capacity changes in this year
+                If Year = CapYear Then
+                    If FlowID(InputCount, 0) = CapID Then
                         'if there are, then update the capacity variables, and read in the next row from the capacity file
                         Tracks(InputCount, 0) += TrackChange
                         'note that MaxTDChange now doesn't work - replaced by strategy common variables file
@@ -913,9 +932,13 @@
         Dim schemearray() As String
 
         schemeline = rel.ReadLine
-        schemearray = Split(schemeline, ",")
-        ElectFlow = schemearray(1)
-        ElectYear = schemearray(0) - 2010
-        ElectTracks = schemearray(2)
+        If schemeline Is Nothing Then
+            Elect = False
+        Else
+            schemearray = Split(schemeline, ",")
+            ElectFlow = schemearray(1)
+            ElectYear = schemearray(0) - 2010
+            ElectTracks = schemearray(2)
+        End If
     End Sub
 End Module
