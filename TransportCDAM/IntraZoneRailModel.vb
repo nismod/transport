@@ -6,6 +6,8 @@
     'it now also includdes a GJT variable
     'it also now includes the option to include variable form elasticities determined by the model
     'now also includes variable trip rate option
+    'v1.6 now calculated by annual timesteps
+    'values from previous year are stored in temp file and read at the start of the calculation for each year
 
     Dim RailZoneInputData As IO.FileStream
     Dim rirlz As IO.StreamReader
@@ -19,23 +21,31 @@
     Dim RlZOutputRow As String
     Dim RlZInput As String
     Dim RlZDetails() As String
-    Dim RlZID As Long
-    Dim FareE As Integer
-    Dim RlZTripsS As Double
-    Dim RlZPop As Double
-    Dim RlZGva As Double
-    Dim RlZCost As Double
-    Dim RlZStat As Long
-    Dim RlZCarFuel As Double
-    Dim RlZExtVar(7, 90) As Double
+    Dim RlZID(144, 0) As Long
+    Dim FareE(144, 0) As Integer
+    Dim RlZTripsS(144, 0) As Double
+    Dim RlZPop(144, 0) As Double
+    Dim RlZGva(144, 0) As Double
+    Dim RlZCost(144, 0) As Double
+    Dim RlZStat(144, 0) As Long
+    Dim RlZCarFuel(144, 0) As Double
+    Dim RlZExtVar(7, 144) As Double
     Dim YearCount As Integer
     Dim NewTripsS As Double
     Dim NewTripTotal As Double
     Dim RlZoneEl(11, 90) As String
-    Dim RlZGJT As Double
+    Dim RlZGJT(144, 0) As Double
     Dim OldY, OldX, OldEl, NewY As Double
     Dim VarRat As Double
     Dim RlzTripRates(90) As Double
+    Dim InputCount As Long
+    Dim RlZFile As IO.FileStream
+    Dim rlzr As IO.StreamReader
+    Dim rlzw As IO.StreamWriter
+    Dim OutputRow As String
+    Dim RlZLine As String
+    Dim RlZArray() As String
+
 
     Public Sub RailZoneMain()
 
@@ -45,40 +55,42 @@
         'read in the elasticies
         Call ReadRlZElasticities()
 
-        'loop through all the zones in the input file
-        Do
-            'read the input data for the zone
-            RlZInput = rirlz.ReadLine
+        YearCount = 1
+        Do Until YearCount > 90
 
-            'check if at end if file
-            If RlZInput Is Nothing Then
-                Exit Do
-            Else
+            'get external variable values
+            Call GetRlZExtVar()
+
+            'read previous year value from temp file if not year 1
+            Call ReadRlZInput()
+
+            InputCount = 1
+
+            Do Until InputCount > 144
                 'update the input variables
                 Call LoadRlZInput()
 
-                'get external variable values
-                Call GetRlZExtVar()
+                'apply zone equation to adjust demand per station, and to get new total demand
+                Call RailZoneTrips()
 
-                'set year counter to one
-                YearCount = 1
+                'write output line
+                Call RailZoneOutput()
 
-                Do Until YearCount > 90
-                    'apply zone equation to adjust demand per station, and to get new total demand
-                    Call RailZoneTrips()
+                'update base values
+                'Call RlZNewBaseValues()
 
-                    'write output line
-                    Call RailZoneOutput()
+                'write to temp file
+                Call WriteRlZUpdate()
 
-                    'update base values
-                    Call RlZNewBaseValues()
+                InputCount += 1
+            Loop
 
-                    'move on to next year
-                    YearCount += 1
-                Loop
+            'close the temp file
+            rlzw.Close()
 
-            End If
+            YearCount += 1
         Loop
+        'loop through all the zones in the input file
 
         'Close input and output files
         rirlz.Close()
@@ -113,7 +125,7 @@
         RailZoneOutputData = New IO.FileStream(DirPath & FilePrefix & "RailZoneOutput.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
         rorlz = New IO.StreamWriter(RailZoneOutputData, System.Text.Encoding.Default)
         'write header row
-        RlZOutputRow = "ZoneID,Yeary,TripsStaty,Stationsy,Tripsy"
+        RlZOutputRow = "Yeary,ZoneID,TripsStaty,Stationsy,Tripsy"
         rorlz.WriteLine(RlZOutputRow)
 
         RailZoneElasticities = New IO.FileStream(DirPath & "Elasticity Files\TR" & Strategy & "\RailZoneElasticities.csv", IO.FileMode.Open, IO.FileAccess.Read)
@@ -137,16 +149,23 @@
     End Sub
 
     Sub LoadRlZInput()
-        RlZDetails = Split(RlZInput, ",")
-        RlZID = RlZDetails(0)
-        FareE = RlZDetails(2)
-        RlZTripsS = RlZDetails(3)
-        RlZPop = RlZDetails(4)
-        RlZGva = RlZDetails(5)
-        RlZCost = RlZDetails(6)
-        RlZStat = RlZDetails(7)
-        RlZCarFuel = RlZDetails(8)
-        RlZGJT = RlZDetails(9)
+
+        If YearCount = 1 Then
+            'read the input data for the zone
+            RlZInput = rirlz.ReadLine
+
+            RlZDetails = Split(RlZInput, ",")
+            RlZID(InputCount, 0) = RlZDetails(0)
+            FareE(InputCount, 0) = RlZDetails(2)
+            RlZTripsS(InputCount, 0) = RlZDetails(3)
+            RlZPop(InputCount, 0) = RlZDetails(4)
+            RlZGva(InputCount, 0) = RlZDetails(5)
+            RlZCost(InputCount, 0) = RlZDetails(6)
+            RlZStat(InputCount, 0) = RlZDetails(7)
+            RlZCarFuel(InputCount, 0) = RlZDetails(8)
+            RlZGJT(InputCount, 0) = RlZDetails(9)
+
+        End If
 
     End Sub
 
@@ -155,26 +174,18 @@
         Dim row As String
         Dim ExtVarRow() As String
         Dim r As Byte
-        Dim YearCount As Integer
 
         rownum = 1
-        YearCount = 1
-        Do While rownum < 91
+        Do While rownum < 145
             'loop through 90 rows in the external variables file, storing the values in the external variable values array
             row = evrlz.ReadLine
             ExtVarRow = Split(row, ",")
-            If ExtVarRow(1) = YearCount Then
-                'as long as the year counter corresponds to the year value in the input data, write values to the array
-                For r = 1 To 6
-                    RlZExtVar(r, rownum) = ExtVarRow(r)
-                Next
-                'the 7th value in the input data is the new trips at new stations, so we skip this, and assign the 8th value (GJT) to the 7th value in the array
-                RlZExtVar(7, rownum) = ExtVarRow(8)
-                rownum += 1
-            Else
-                '****otherwise stop the model and write an error to the log file
-            End If
-            YearCount += 1
+            For r = 2 To 6
+                RlZExtVar(r, rownum) = ExtVarRow(r)
+            Next
+            'the 7th value in the input data is the new trips at new stations, so we skip this, and assign the 8th value (GJT) to the 7th value in the array
+            RlZExtVar(7, rownum) = ExtVarRow(8)
+            rownum += 1
         Loop
     End Sub
     Sub ReadRlZElasticities()
@@ -208,7 +219,7 @@
         Dim NewStatCount As Integer
 
         'Select the appropriate fare elasticity based on the FareE value
-        Select Case FareE
+        Select Case FareE(InputCount, 0)
             Case 1
                 FarEl = RlZoneEl(3, YearCount)
                 GJTEl = RlZoneEl(8, YearCount)
@@ -228,13 +239,13 @@
         'Calculate the values of the various input ratios
         'now includes option to use variable elasticities
         If VariableEl = True Then
-            OldX = RlZTripsS
+            OldX = RlZTripsS(InputCount, 0)
             'pop ratio
-            OldY = RlZPop
+            OldY = RlZPop(InputCount, 0)
             If TripRates = "Strategy" Then
-                NewY = RlZExtVar(2, YearCount) * RlzTripRates(YearCount)
+                NewY = RlZExtVar(2, InputCount) * RlzTripRates(YearCount)
             Else
-                NewY = RlZExtVar(2, YearCount)
+                NewY = RlZExtVar(2, InputCount)
             End If
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
                 OldEl = RlZoneEl(1, YearCount)
@@ -242,81 +253,81 @@
                 PopRat = VarRat
             Else
                 If TripRates = "Strategy" Then
-                    PopRat = ((RlZExtVar(2, YearCount) * RlzTripRates(YearCount)) / RlZPop) ^ RlZoneEl(1, YearCount)
+                    PopRat = ((RlZExtVar(2, InputCount) * RlzTripRates(YearCount)) / RlZPop(InputCount, 0)) ^ RlZoneEl(1, YearCount)
                 Else
-                    PopRat = (RlZExtVar(2, YearCount) / RlZPop) ^ RlZoneEl(1, YearCount)
+                    PopRat = (RlZExtVar(2, InputCount) / RlZPop(InputCount, 0)) ^ RlZoneEl(1, YearCount)
                 End If
 
             End If
             'gva ratio
-            OldY = RlZGva
-            NewY = RlZExtVar(3, YearCount)
+            OldY = RlZGva(InputCount, 0)
+            NewY = RlZExtVar(3, InputCount)
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
                 OldEl = RlZoneEl(2, YearCount)
                 Call VarElCalc()
                 GVARat = VarRat
             Else
-                GVARat = (RlZExtVar(3, YearCount) / RlZGva) ^ RlZoneEl(2, YearCount)
+                GVARat = (RlZExtVar(3, InputCount) / RlZGva(InputCount, 0)) ^ RlZoneEl(2, YearCount)
             End If
             'fare ratio
-            OldY = RlZCost
-            NewY = RlZExtVar(4, YearCount)
+            OldY = RlZCost(InputCount, 0)
+            NewY = RlZExtVar(4, InputCount)
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
                 OldEl = FarEl
                 Call VarElCalc()
                 FarRat = VarRat
             Else
-                FarRat = (RlZExtVar(4, YearCount) / RlZCost) ^ FarEl
+                FarRat = (RlZExtVar(4, InputCount) / RlZCost(InputCount, 0)) ^ FarEl
             End If
             'car fuel ratio
-            OldY = RlZCarFuel
-            NewY = RlZExtVar(6, YearCount)
+            OldY = RlZCarFuel(InputCount, 0)
+            NewY = RlZExtVar(6, InputCount)
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
                 OldEl = RlZoneEl(7, YearCount)
                 Call VarElCalc()
                 CFuelRat = VarRat
             Else
-                CFuelRat = (RlZExtVar(6, YearCount) / RlZCarFuel) ^ RlZoneEl(7, YearCount)
+                CFuelRat = (RlZExtVar(6, InputCount) / RlZCarFuel(InputCount, 0)) ^ RlZoneEl(7, YearCount)
             End If
             'GJT ratio
-            OldY = RlZGJT
-            NewY = RlZExtVar(7, YearCount)
+            OldY = RlZGJT(InputCount, 0)
+            NewY = RlZExtVar(7, InputCount)
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
                 OldEl = GJTEl
                 Call VarElCalc()
                 GJTRat = VarRat
             Else
-                GJTRat = (RlZExtVar(7, YearCount) / RlZGJT) ^ GJTEl
+                GJTRat = (RlZExtVar(7, InputCount) / RlZGJT(InputCount, 0)) ^ GJTEl
             End If
         Else
             If TripRates = "Strategy" Then
-                PopRat = ((RlZExtVar(2, YearCount) * RlzTripRates(YearCount)) / RlZPop) ^ RlZoneEl(1, YearCount)
+                PopRat = ((RlZExtVar(2, InputCount) * RlzTripRates(YearCount)) / RlZPop(InputCount, 0)) ^ RlZoneEl(1, YearCount)
             Else
-                PopRat = (RlZExtVar(2, YearCount) / RlZPop) ^ RlZoneEl(1, YearCount)
+                PopRat = (RlZExtVar(2, InputCount) / RlZPop(InputCount, 0)) ^ RlZoneEl(1, YearCount)
             End If
-            GVARat = (RlZExtVar(3, YearCount) / RlZGva) ^ RlZoneEl(2, YearCount)
-            FarRat = (RlZExtVar(4, YearCount) / RlZCost) ^ FarEl
-            CFuelRat = (RlZExtVar(6, YearCount) / RlZCarFuel) ^ RlZoneEl(7, YearCount)
-            GJTRat = (RlZExtVar(7, YearCount) / RlZGJT) ^ GJTEl
+            GVARat = (RlZExtVar(3, InputCount) / RlZGva(InputCount, 0)) ^ RlZoneEl(2, YearCount)
+            FarRat = (RlZExtVar(4, InputCount) / RlZCost(InputCount, 0)) ^ FarEl
+            CFuelRat = (RlZExtVar(6, InputCount) / RlZCarFuel(InputCount, 0)) ^ RlZoneEl(7, YearCount)
+            GJTRat = (RlZExtVar(7, InputCount) / RlZGJT(InputCount, 0)) ^ GJTEl
         End If
 
         'Combine these ratios to get the trip ratio
         TrpRat = PopRat * GVARat * FarRat * CFuelRat * GJTRat
 
         'Multiply the trip ratio by the previous year's trips per station to get the new trips per station figure
-        NewTripsS = RlZTripsS * TrpRat
+        NewTripsS = RlZTripsS(InputCount, 0) * TrpRat
 
         'check if new stations have been added
-        If RlZExtVar(5, YearCount) > RlZStat Then
+        If RlZExtVar(5, InputCount) > RlZStat(InputCount, 0) Then
             'if so then calculate how many
-            NewStatCount = RlZExtVar(5, YearCount) - RlZStat
+            NewStatCount = RlZExtVar(5, InputCount) - RlZStat(InputCount, 0)
             'calculate the total number of trips in this situation
-            NewTripTotal = (NewTripsS * RlZStat) + (RlZExtVar(7, YearCount) * NewStatCount)
+            NewTripTotal = (NewTripsS * RlZStat(InputCount, 0)) + (RlZExtVar(7, InputCount) * NewStatCount)
             'recalculate the number of trips per station
-            NewTripsS = NewTripTotal / (RlZStat + NewStatCount)
+            NewTripsS = NewTripTotal / (RlZStat(InputCount, 0) + NewStatCount)
         Else
             'otherwise just multiply new trips per station by number of stations to get total trips
-            NewTripTotal = NewTripsS * RlZExtVar(5, YearCount)
+            NewTripTotal = NewTripsS * RlZExtVar(5, InputCount)
         End If
 
     End Sub
@@ -334,7 +345,7 @@
 
     Sub RailZoneOutput()
         'combine output values into output string
-        RlZOutputRow = RlZID & "," & YearCount & "," & NewTripsS & "," & RlZExtVar(5, YearCount) & "," & NewTripTotal
+        RlZOutputRow = YearCount & "," & RlZID(InputCount, 0) & "," & NewTripsS & "," & RlZExtVar(5, InputCount) & "," & NewTripTotal
 
         'write output string to file
         rorlz.WriteLine(RlZOutputRow)
@@ -342,12 +353,80 @@
 
     Sub RlZNewBaseValues()
         'set base values to equal the values from the current year
-        RlZTripsS = NewTripsS
-        RlZPop = RlZExtVar(2, YearCount)
-        RlZGva = RlZExtVar(3, YearCount)
-        RlZCost = RlZExtVar(4, YearCount)
-        RlZStat = RlZExtVar(5, YearCount)
-        RlZCarFuel = RlZExtVar(6, YearCount)
-        RlZGJT = RlZExtVar(7, YearCount)
+        RlZTripsS(InputCount, 0) = NewTripsS
+        RlZPop(InputCount, 0) = RlZExtVar(2, InputCount)
+        RlZGva(InputCount, 0) = RlZExtVar(3, InputCount)
+        RlZCost(InputCount, 0) = RlZExtVar(4, InputCount)
+        RlZStat(InputCount, 0) = RlZExtVar(5, InputCount)
+        RlZCarFuel(InputCount, 0) = RlZExtVar(6, InputCount)
+        RlZGJT(InputCount, 0) = RlZExtVar(7, InputCount)
     End Sub
+
+    Sub ReadRlZInput()
+
+        If YearCount = 1 Then
+            'year 1 will use the initial input file
+        Else
+            'read the temp file "Flows.csv"
+            RlZFile = New IO.FileStream(DirPath & FilePrefix & "RlZones.csv", IO.FileMode.Open, IO.FileAccess.Read)
+            rlzr = New IO.StreamReader(RlZFile, System.Text.Encoding.Default)
+            'read header line
+            rlzr.ReadLine()
+
+            'read temp file for each link
+            InputCount = 1
+
+            Do While InputCount < 145
+
+                RlZLine = rlzr.ReadLine
+                RlZArray = Split(RlZLine, ",")
+
+                RlZID(InputCount, 0) = RlZArray(1)
+                RlZPop(InputCount, 0) = RlZArray(2)
+                RlZGva(InputCount, 0) = RlZArray(3)
+                RlZCost(InputCount, 0) = RlZArray(4)
+                RlZStat(InputCount, 0) = RlZArray(5)
+                RlZCarFuel(InputCount, 0) = RlZArray(6)
+                RlZGJT(InputCount, 0) = RlZArray(7)
+                RlZTripsS(InputCount, 0) = RlZArray(8)
+                FareE(InputCount, 0) = RlZArray(9)
+
+                InputCount += 1
+            Loop
+
+            rlzr.Close()
+            'delete the temp file to recreate for current year
+            System.IO.File.Delete(DirPath & FilePrefix & "RlZones.csv")
+
+        End If
+
+        'create a temp file "Flows.csv"
+        RlZFile = New IO.FileStream(DirPath & FilePrefix & "RlZones.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
+        rlzw = New IO.StreamWriter(RlZFile, System.Text.Encoding.Default)
+
+        'write header row
+
+        OutputRow = "Yeary,FlowID,PopZ1Base,PopZ2Base,GVAZ1Base,GVAZ2Base,OldDelays,RlLinkCost,CarFuel,OldTrains,OldTracks,MaxTDBase,CUOld,CUNew,"
+        rlzw.WriteLine(OutputRow)
+
+    End Sub
+
+    Sub WriteRlZUpdate()
+
+        'set base values to equal the values from the current year
+        RlZPop(InputCount, 0) = RlZExtVar(2, InputCount)
+        RlZGva(InputCount, 0) = RlZExtVar(3, InputCount)
+        RlZCost(InputCount, 0) = RlZExtVar(4, InputCount)
+        RlZStat(InputCount, 0) = RlZExtVar(5, InputCount)
+        RlZCarFuel(InputCount, 0) = RlZExtVar(6, InputCount)
+        RlZGJT(InputCount, 0) = RlZExtVar(7, InputCount)
+        RlZTripsS(InputCount, 0) = NewTripsS
+
+        'write second row
+        OutputRow = YearCount & "," & RlZID(InputCount, 0) & "," & RlZPop(InputCount, 0) & "," & RlZGva(InputCount, 0) & "," & RlZCost(InputCount, 0) & "," & RlZStat(InputCount, 0) & "," & RlZCarFuel(InputCount, 0) & "," & RlZGJT(InputCount, 0) & "," & RlZTripsS(InputCount, 0) & "," & FareE(InputCount, 0) & ","
+
+        rlzw.WriteLine(OutputRow)
+
+    End Sub
+
 End Module
