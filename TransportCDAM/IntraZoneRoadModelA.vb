@@ -309,7 +309,7 @@
                 For x = 1 To 5
                     RVCatTraf(rdtype, x) = BaseRVCatTraf(rdtype, x) * VkmRat(x)
                 Next
-                
+
                 RoadCatTraffic(rdtype) = RVCatTraf(rdtype, 1) + RVCatTraf(rdtype, 2) + RVCatTraf(rdtype, 3) + RVCatTraf(rdtype, 4) + RVCatTraf(rdtype, 5)
 
                 'v1.3 mod - if using smarter choices, smart logistics or urban freight innovations we only set the vehicle type splits in the first year, to avoid car traffic share declining away to nothing
@@ -340,7 +340,7 @@
                         VehTypeSplit(rdtype, x) = RVCatTraf(rdtype, x) / RoadCatTraffic(rdtype)
                     Next
                 End If
-                
+
                 'Set up new road km variable from external variables and calculate resulting change in speed
                 'now includes variable elasticity option
                 If VariableEl = True Then
@@ -1069,7 +1069,7 @@
         RVFFuel(3, 3, 10) = RVFCatTraf(3, 3, 10) * 0.898 * StratArray(59)
         'urban
         RVFFuel(4, 3, 10) = RVFCatTraf(4, 3, 10) * 0.898 * StratArray(59)
-        
+
         'Diesel 4+ axle rigid and artic HGVs
         VClass = "HGV2D"
         'motorway
