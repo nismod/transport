@@ -60,6 +60,10 @@
     Dim OZone, DZone As Long
     Dim ErrDict As String
 
+    Dim ModelType As String
+    Dim Subtype As String
+
+
     Sub FullMain()
 
         'get directory path for files - **now unnecessary as set by user
@@ -931,5 +935,11 @@
         lf.Close()
         MsgBox("Model run failed.  Please consult the log file for details.")
         End
+    End Sub
+    Sub GetInput(type, subtype, inputrow)
+        Select Case type
+            Case "Rail"
+
+        End Select
     End Sub
 End Module
