@@ -98,6 +98,10 @@
         rorlz.Close()
         rerlz.Close()
 
+        rlzr.Close()
+        'delete the temp file
+        System.IO.File.Delete(DirPath & FilePrefix & "RlZones.csv")
+
     End Sub
 
     Sub RlZSetFiles()
