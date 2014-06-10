@@ -493,8 +493,8 @@ NextYear:
             Elect = False
         Else
             elearray = Split(eleline, ",")
-            ElectricZone = elearray(0)
-            ElectricYear = elearray(1) - 2010
+            ElectricZone = elearray(1)
+            ElectricYear = elearray(0) - 2010
             ElectricStations = elearray(2)
         End If
 
