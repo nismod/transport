@@ -8,6 +8,7 @@
     'now also has the option to build new capacity
     'also now can take account of new capacity constructed as result of strategy (ie not just TR1)
     'now also includes variable trip rate option
+    'v1.6 now calculated by annual time steps
 
     Dim RoadZoneInputData As IO.FileStream
     Dim riz As IO.StreamReader
@@ -24,48 +25,55 @@
     Dim rzcb As IO.StreamWriter
     Dim RoadZoneCapNew As IO.FileStream
     Dim rzcn As IO.StreamReader
+    Dim ZoneFile As IO.FileStream
+    Dim zfr As IO.StreamReader
+    Dim zfw As IO.StreamWriter
     Dim RoadCapArray() As String
     Dim ZoneInput As String
     Dim ZoneDetails() As String
     Dim ZoneID As Long
-    Dim BaseVkm As Double
-    Dim ZonePop As Long
-    Dim ZoneGVA As Double
-    Dim ZoneSpeed As Double
-    Dim ZoneCarCost, ZoneLGVCost, ZoneHGV1Cost, ZoneHGV2Cost, ZonePSVCost As Double
-    Dim ZoneExtVar(45, 90) As Double
+    Dim BaseVkm(145, 1) As Double
+    Dim ZonePop(145, 1) As Double
+    Dim ZoneGVA(145, 1) As Double
+    Dim ZoneSpeed(145, 1) As Double
+    Dim ZoneCarCost(145, 1), ZoneLGVCost(145, 1), ZoneHGV1Cost(145, 1), ZoneHGV2Cost(145, 1), ZonePSVCost(145, 1) As Double
+    Dim ZoneExtVar(145, 45) As Double
     Dim YearCount As Integer
     Dim NewVkm As Double
     Dim ZoneOutputRow As String
-    Dim ZoneLaneKm(4) As Double
+    Dim ZoneLaneKm(145, 4) As Double
     Dim ZoneSpdNew As Double
     Dim RdZoneEl(9, 90) As String
     Dim RoadCatProb(4) As Double
     Dim VClass As String
     Dim FuelSpeed As Double
-    Dim BaseSpeed(4) As Double
+    Dim BaseSpeed(145, 4) As Double
     Dim FuelPerKm As Double
     Dim PetrolUsed As Double
     Dim DieselUsed As Double
     Dim ElectricUsed, LPGUsed, CNGUsed, HydrogenUsed As Double
-    Dim BaseRVCatTraf(4, 5), RVCatTraf(4, 5), BaseRoadCatTraffic(4), RoadCatTraffic(4) As Double
-    Dim VehTypeSplit(4, 5) As Double
-    Dim RoadCatKm(4) As Double
+    Dim BaseRVCatTraf(145, 4, 5), RVCatTraf(4, 5), BaseRoadCatTraffic(145, 4), RoadCatTraffic(145, 4) As Double
+    Dim VehTypeSplit(145, 4, 5) As Double
+    Dim RoadCatKm(145, 4) As Double
     Dim OldY, OldX, OldEl, NewY As Double
     Dim VarRat As Double
     Dim PopRat(5), GVARat(5), SpdRat, PetRat(5), VkmRat(5) As Double
     Dim NewLaneKm(4) As Double
     Dim SuppressedTraffic(4, 5) As Double
-    Dim BaseCatSpeed(4), BaseCatB(4), BaseCatC(4), NewCatSpeed(4) As Double
+    Dim BaseCatSpeed(145, 4), BaseCatB(145, 4), BaseCatC(145, 4), NewCatSpeed(145, 4) As Double
     Dim SpeedC, SpeedB, SpeedA As Double
     Dim Constrained(4) As Boolean
-    Dim Latentvkm(4) As Double
+    Dim Latentvkm(145, 4) As Double
     Dim StratLine As String
     Dim StratArray() As String
-    Dim AddedLaneKm(4) As Double
+    Dim AddedLaneKm(145, 4) As Double
     Dim RdTripRates(1) As Double
     Dim VKmVType(10) As Double
-    Dim BuiltLaneKm(4) As Double
+    Dim BuiltLaneKm(145, 4) As Double
+    Dim ZoneLine As String
+    Dim ZoneArray() As String
+    Dim OutputRow As String
+
 
 
     Public Sub RoadZoneMainNew()
@@ -75,64 +83,52 @@
         'read in the elasticities
         Call ReadZoneElasticities()
 
-        'loop through all the zones in the input file
-        Do
-            'read the input data for the zone
-            ZoneInput = riz.ReadLine
+        'set year counter to one
+        YearCount = 1
 
-            'check if at end if file
-            If ZoneInput Is Nothing Then
-                Exit Do
-            Else
-                '1.3 get the strategy file
-                StrategyFile = New IO.FileStream(DirPath & "CommonVariablesTR" & Strategy & ".csv", IO.FileMode.Open, IO.FileAccess.Read)
-                stf = New IO.StreamReader(StrategyFile, System.Text.Encoding.Default)
-                'read header row
-                stf.ReadLine()
+        Do Until YearCount > 90
+            'read line from strategy file
+            StratLine = stf.ReadLine
+            StratArray = Split(StratLine, ",")
+
+            'get external variable values
+            Call GetZoneExtVar()
+
+            'read zone temp file
+            Call ReadZoneInputB()
+
+            ZoneID = 1
+
+            Do Until ZoneID > 144
 
                 'update the input variables
                 Call LoadZoneInput()
 
-                'get external variable values
-                Call GetZoneExtVar()
+                'apply zone equation to adjust demand
+                Call RoadZoneKm()
 
-                'v1.4 modification - reset latent and constrained values 
-                For x = 1 To 4
-                    Constrained(x) = False
-                    Latentvkm(x) = 0
-                    '130514 - need to reset this anyway
-                    'If BuildInfra = True Then
-                    AddedLaneKm(x) = 0
-                    'End If
-                    BuiltLaneKm(x) = 0
-                Next
+                'estimate fuel consumption
+                Call RoadZoneFuelConsumption()
 
-                'set year counter to one
-                YearCount = 1
+                'write output line with new demand figure
+                Call RoadZoneOutput()
 
-                Do Until YearCount > 90
-                    'read line from strategy file
-                    StratLine = stf.ReadLine
-                    StratArray = Split(StratLine, ",")
+                'update base values
+                'v1.6 now this sub only write values to the output if BuildInfra is true
+                Call NewBaseValues()
 
-                    'apply zone equation to adjust demand
-                    Call RoadZoneKm()
+                'write to temp file which will be read for the next year's calculation
+                Call WriteUpdateFileB()
 
-                    'estimate fuel consumption
-                    Call RoadZoneFuelConsumption()
+                ZoneID += 1
+            Loop
 
-                    'write output line with new demand figure
-                    Call RoadZoneOutput()
-
-                    'update base values
-                    Call NewBaseValues()
-
-                    'move on to next year
-                    YearCount += 1
-                Loop
-            End If
-            stf.Close()
+            zfw.Close()
+            'move on to next year
+            YearCount += 1
         Loop
+
+        stf.Close()
 
         'Close input and output files
         riz.Close()
@@ -143,10 +139,13 @@
         If BuildInfra = True Then
             rzcb.Close()
         End If
+        zfr.Close()
+        'delete the temp file to recreate for current year
+        System.IO.File.Delete(DirPath & FilePrefix & "Zones.csv")
 
     End Sub
 
-    Sub ZoneSetFiles()
+    Public Sub ZoneSetFiles()
         Dim row As String
         'This sub selects the input data files
 
@@ -170,7 +169,7 @@
         RoadZoneOutputData = New IO.FileStream(DirPath & FilePrefix & "RoadZoneOutput.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
         roz = New IO.StreamWriter(RoadZoneOutputData, System.Text.Encoding.Default)
         'write header row
-        ZoneOutputRow = "ZoneID,Yeary,Vkmy,Spdy,Petroly,Diesely,Electricy,LPGy,CNGy,Hydrogeny,VKmMwayy,VkmRurAy,VkmRurMiny,VkmUrby,SpdMWayy,SpdRurAy,SpdRurMiny,SpdUrby,VkmPet,VkmDie,VkmPH,VkmDH,VkmPEH,VkmE,VkmLPG,VkmCNG,VkmHyd,VkmFC"
+        ZoneOutputRow = "Yeary,ZoneID,Vkmy,Spdy,Petroly,Diesely,Electricy,LPGy,CNGy,Hydrogeny,VKmMwayy,VkmRurAy,VkmRurMiny,VkmUrby,SpdMWayy,SpdRurAy,SpdRurMiny,SpdUrby,VkmPet,VkmDie,VkmPH,VkmDH,VkmPEH,VkmE,VkmLPG,VkmCNG,VkmHyd,VkmFC"
         roz.WriteLine(ZoneOutputRow)
 
         RoadZoneElasticities = New IO.FileStream(DirPath & "Elasticity Files\TR" & Strategy & "\RoadZoneElasticities.csv", IO.FileMode.Open, IO.FileAccess.Read)
@@ -206,82 +205,105 @@
             RoadCapArray = Split(row, ",")
         End If
 
+        '1.3 get the strategy file
+        StrategyFile = New IO.FileStream(DirPath & "CommonVariablesTR" & Strategy & ".csv", IO.FileMode.Open, IO.FileAccess.Read)
+        stf = New IO.StreamReader(StrategyFile, System.Text.Encoding.Default)
+        'read header row
+        stf.ReadLine()
+
+
     End Sub
 
     Sub LoadZoneInput()
         Dim SumProbKm As Double
 
-        ZoneDetails = Split(ZoneInput, ",")
-        ZoneID = ZoneDetails(0)
-        BaseVkm = ZoneDetails(2)
-        ZonePop = ZoneDetails(3)
-        ZoneGVA = ZoneDetails(4)
-        ZoneSpeed = ZoneDetails(5)
-        ZoneCarCost = ZoneDetails(6)
-        ZoneLGVCost = ZoneDetails(18)
-        ZoneHGV1Cost = ZoneDetails(19)
-        ZoneHGV2Cost = ZoneDetails(20)
-        ZonePSVCost = ZoneDetails(21)
-        ZoneLaneKm(1) = ZoneDetails(8)
-        ZoneLaneKm(2) = CDbl(ZoneDetails(9)) + CDbl(ZoneDetails(10))
-        ZoneLaneKm(3) = ZoneDetails(11)
-        ZoneLaneKm(4) = CDbl(ZoneDetails(12)) + CDbl(ZoneDetails(13))
-        RoadCatProb(1) = ZoneDetails(14)
-        RoadCatProb(2) = ZoneDetails(15)
-        RoadCatProb(3) = ZoneDetails(16)
-        RoadCatProb(4) = ZoneDetails(17)
-        'allocate the vkm to vehicle types and road types based on the initial proportions and on the proportion of traffic on different road types
-        'convert lane km to road km for each road category, where Cat1 is motorways, Cat2 is rural A, Cat3 is rural minor and Cat4 is urban
-        RoadCatKm(1) = ZoneDetails(8) / 6
-        RoadCatKm(2) = (CDbl(ZoneDetails(9)) / 4) + (CDbl(ZoneDetails(10)) / 2)
-        RoadCatKm(3) = ZoneDetails(11) / 2
-        RoadCatKm(4) = (CDbl(ZoneDetails(12)) / 4) + (CDbl(ZoneDetails(13)) / 2)
-        'v1.4 mod - this now comes straight from input file
-        BaseRoadCatTraffic(1) = ZoneDetails(22)
-        BaseRoadCatTraffic(2) = ZoneDetails(23)
-        BaseRoadCatTraffic(3) = ZoneDetails(24)
-        BaseRoadCatTraffic(4) = ZoneDetails(25)
-        'the proportions come from DfT Traffic Statistics Table TRA0204 - see model guide for more details
-        '**if there is a sudden decline in traffic then we probably just want to multiply by rcprob rather than by rcprob*rck/sumpkm
-        'v1.4 mod - calculation of these now much simpler
-        SumProbKm = (RoadCatProb(1) * RoadCatKm(1)) + (RoadCatProb(2) * RoadCatKm(2)) + (RoadCatProb(3) * RoadCatKm(3)) + (RoadCatProb(4) * RoadCatKm(4))
-        BaseRVCatTraf(1, 1) = BaseRoadCatTraffic(1) * 0.755
-        BaseRVCatTraf(2, 1) = BaseRoadCatTraffic(2) * 0.791
-        BaseRVCatTraf(3, 1) = BaseRoadCatTraffic(3) * 0.794
-        BaseRVCatTraf(4, 1) = BaseRoadCatTraffic(4) * 0.829
-        BaseRVCatTraf(1, 2) = BaseRoadCatTraffic(1) * 0.123
-        BaseRVCatTraf(2, 2) = BaseRoadCatTraffic(2) * 0.135
-        BaseRVCatTraf(3, 2) = BaseRoadCatTraffic(3) * 0.174
-        BaseRVCatTraf(4, 2) = BaseRoadCatTraffic(4) * 0.132
-        BaseRVCatTraf(1, 3) = BaseRoadCatTraffic(1) * 0.037
-        BaseRVCatTraf(2, 3) = BaseRoadCatTraffic(2) * 0.03
-        BaseRVCatTraf(3, 3) = BaseRoadCatTraffic(3) * 0.019
-        BaseRVCatTraf(4, 3) = BaseRoadCatTraffic(4) * 0.016
-        BaseRVCatTraf(1, 4) = BaseRoadCatTraffic(1) * 0.081
-        BaseRVCatTraf(2, 4) = BaseRoadCatTraffic(2) * 0.038
-        BaseRVCatTraf(3, 4) = BaseRoadCatTraffic(3) * 0.005
-        BaseRVCatTraf(4, 4) = BaseRoadCatTraffic(4) * 0.006
-        BaseRVCatTraf(1, 5) = BaseRoadCatTraffic(1) * 0.004
-        BaseRVCatTraf(2, 5) = BaseRoadCatTraffic(2) * 0.006
-        BaseRVCatTraf(3, 5) = BaseRoadCatTraffic(3) * 0.009
-        BaseRVCatTraf(4, 5) = BaseRoadCatTraffic(4) * 0.017
-        
-        'v1.4 mod - need to get the base speed for each road category and VkmB and VkmC from input file
-        BaseCatSpeed(1) = ZoneDetails(26)
-        BaseCatSpeed(2) = ZoneDetails(27)
-        BaseCatSpeed(3) = ZoneDetails(28)
-        BaseCatSpeed(4) = ZoneDetails(29)
-        For x = 1 To 4
-            BaseSpeed(x) = BaseCatSpeed(x)
-        Next
-        BaseCatB(1) = ZoneDetails(22)
-        BaseCatB(2) = ZoneDetails(23)
-        BaseCatB(3) = ZoneDetails(24)
-        BaseCatB(4) = ZoneDetails(25)
-        BaseCatC(1) = ZoneDetails(30)
-        BaseCatC(2) = ZoneDetails(31)
-        BaseCatC(3) = ZoneDetails(32)
-        BaseCatC(4) = ZoneDetails(33)
+        If YearCount = 1 Then
+            'read the input data for the zone
+            ZoneInput = riz.ReadLine
+
+            ZoneDetails = Split(ZoneInput, ",")
+            BaseVkm(ZoneID, 1) = ZoneDetails(2)
+            ZonePop(ZoneID, 1) = ZoneDetails(3)
+            ZoneGVA(ZoneID, 1) = ZoneDetails(4)
+            ZoneSpeed(ZoneID, 1) = ZoneDetails(5)
+            ZoneCarCost(ZoneID, 1) = ZoneDetails(6)
+            ZoneLGVCost(ZoneID, 1) = ZoneDetails(18)
+            ZoneHGV1Cost(ZoneID, 1) = ZoneDetails(19)
+            ZoneHGV2Cost(ZoneID, 1) = ZoneDetails(20)
+            ZonePSVCost(ZoneID, 1) = ZoneDetails(21)
+            ZoneLaneKm(ZoneID, 1) = ZoneDetails(8)
+            ZoneLaneKm(ZoneID, 2) = CDbl(ZoneDetails(9)) + CDbl(ZoneDetails(10))
+            ZoneLaneKm(ZoneID, 3) = ZoneDetails(11)
+            ZoneLaneKm(ZoneID, 4) = CDbl(ZoneDetails(12)) + CDbl(ZoneDetails(13))
+            RoadCatProb(1) = ZoneDetails(14)
+            RoadCatProb(2) = ZoneDetails(15)
+            RoadCatProb(3) = ZoneDetails(16)
+            RoadCatProb(4) = ZoneDetails(17)
+            'allocate the vkm to vehicle types and road types based on the initial proportions and on the proportion of traffic on different road types
+            'convert lane km to road km for each road category, where Cat1 is motorways, Cat2 is rural A, Cat3 is rural minor and Cat4 is urban
+            RoadCatKm(ZoneID, 1) = ZoneDetails(8) / 6
+            RoadCatKm(ZoneID, 2) = (CDbl(ZoneDetails(9)) / 4) + (CDbl(ZoneDetails(10)) / 2)
+            RoadCatKm(ZoneID, 3) = ZoneDetails(11) / 2
+            RoadCatKm(ZoneID, 4) = (CDbl(ZoneDetails(12)) / 4) + (CDbl(ZoneDetails(13)) / 2)
+            'v1.4 mod - this now comes straight from input file
+            BaseRoadCatTraffic(ZoneID, 1) = ZoneDetails(22)
+            BaseRoadCatTraffic(ZoneID, 2) = ZoneDetails(23)
+            BaseRoadCatTraffic(ZoneID, 3) = ZoneDetails(24)
+            BaseRoadCatTraffic(ZoneID, 4) = ZoneDetails(25)
+            'the proportions come from DfT Traffic Statistics Table TRA0204 - see model guide for more details
+            '**if there is a sudden decline in traffic then we probably just want to multiply by rcprob rather than by rcprob*rck/sumpkm
+            'v1.4 mod - calculation of these now much simpler
+            SumProbKm = (RoadCatProb(1) * RoadCatKm(ZoneID, 1)) + (RoadCatProb(2) * RoadCatKm(ZoneID, 2)) + (RoadCatProb(3) * RoadCatKm(ZoneID, 3)) + (RoadCatProb(4) * RoadCatKm(ZoneID, 4))
+            BaseRVCatTraf(ZoneID, 1, 1) = BaseRoadCatTraffic(ZoneID, 1) * 0.755
+            BaseRVCatTraf(ZoneID, 2, 1) = BaseRoadCatTraffic(ZoneID, 2) * 0.791
+            BaseRVCatTraf(ZoneID, 3, 1) = BaseRoadCatTraffic(ZoneID, 3) * 0.794
+            BaseRVCatTraf(ZoneID, 4, 1) = BaseRoadCatTraffic(ZoneID, 4) * 0.829
+            BaseRVCatTraf(ZoneID, 1, 2) = BaseRoadCatTraffic(ZoneID, 1) * 0.123
+            BaseRVCatTraf(ZoneID, 2, 2) = BaseRoadCatTraffic(ZoneID, 2) * 0.135
+            BaseRVCatTraf(ZoneID, 3, 2) = BaseRoadCatTraffic(ZoneID, 3) * 0.174
+            BaseRVCatTraf(ZoneID, 4, 2) = BaseRoadCatTraffic(ZoneID, 4) * 0.132
+            BaseRVCatTraf(ZoneID, 1, 3) = BaseRoadCatTraffic(ZoneID, 1) * 0.037
+            BaseRVCatTraf(ZoneID, 2, 3) = BaseRoadCatTraffic(ZoneID, 2) * 0.03
+            BaseRVCatTraf(ZoneID, 3, 3) = BaseRoadCatTraffic(ZoneID, 3) * 0.019
+            BaseRVCatTraf(ZoneID, 4, 3) = BaseRoadCatTraffic(ZoneID, 4) * 0.016
+            BaseRVCatTraf(ZoneID, 1, 4) = BaseRoadCatTraffic(ZoneID, 1) * 0.081
+            BaseRVCatTraf(ZoneID, 2, 4) = BaseRoadCatTraffic(ZoneID, 2) * 0.038
+            BaseRVCatTraf(ZoneID, 3, 4) = BaseRoadCatTraffic(ZoneID, 3) * 0.005
+            BaseRVCatTraf(ZoneID, 4, 4) = BaseRoadCatTraffic(ZoneID, 4) * 0.006
+            BaseRVCatTraf(ZoneID, 1, 5) = BaseRoadCatTraffic(ZoneID, 1) * 0.004
+            BaseRVCatTraf(ZoneID, 2, 5) = BaseRoadCatTraffic(ZoneID, 2) * 0.006
+            BaseRVCatTraf(ZoneID, 3, 5) = BaseRoadCatTraffic(ZoneID, 3) * 0.009
+            BaseRVCatTraf(ZoneID, 4, 5) = BaseRoadCatTraffic(ZoneID, 4) * 0.017
+
+            'v1.4 mod - need to get the base speed for each road category and VkmB and VkmC from input file
+            BaseCatSpeed(ZoneID, 1) = ZoneDetails(26)
+            BaseCatSpeed(ZoneID, 2) = ZoneDetails(27)
+            BaseCatSpeed(ZoneID, 3) = ZoneDetails(28)
+            BaseCatSpeed(ZoneID, 4) = ZoneDetails(29)
+            For x = 1 To 4
+                BaseSpeed(ZoneID, x) = BaseCatSpeed(ZoneID, x)
+            Next
+            BaseCatB(ZoneID, 1) = ZoneDetails(22)
+            BaseCatB(ZoneID, 2) = ZoneDetails(23)
+            BaseCatB(ZoneID, 3) = ZoneDetails(24)
+            BaseCatB(ZoneID, 4) = ZoneDetails(25)
+            BaseCatC(ZoneID, 1) = ZoneDetails(30)
+            BaseCatC(ZoneID, 2) = ZoneDetails(31)
+            BaseCatC(ZoneID, 3) = ZoneDetails(32)
+            BaseCatC(ZoneID, 4) = ZoneDetails(33)
+
+            'v1.4 modification - reset latent and constrained values 
+            For x = 1 To 4
+                Constrained(x) = False
+                Latentvkm(ZoneID, x) = 0
+                '130514 - need to reset this anyway
+                'If BuildInfra = True Then
+                AddedLaneKm(ZoneID, x) = 0
+                'End If
+                BuiltLaneKm(ZoneID, x) = 0
+            Next
+
+        End If
 
     End Sub
 
@@ -290,30 +312,19 @@
         Dim row As String
         Dim ExtVarRow() As String
         Dim r As Byte
-        Dim YearCheck As Integer
 
         rownum = 1
-        YearCheck = 1
-        Do While rownum < 91
+        Do While rownum < 145
             'loop through 90 rows in the external variables file, storing the values in the external variable values array
             row = evz.ReadLine
             ExtVarRow = Split(row, ",")
-            If ExtVarRow(1) = YearCheck Then
-                'as long as the year counter corresponds to the year value in the input data, write values to the array
-                For r = 1 To 45
-                    ZoneExtVar(r, rownum) = ExtVarRow(r)
-                Next
-                rownum += 1
-            Else
-                'otherwise stop the model and write an error to the log file
-                LogLine = "ERROR in intrazonal road model Sub GetZoneExtVar - year counter does not correspond to year value in input data for Zone " & ZoneID & " in year " & YearCount
-                lf.WriteLine(LogLine)
-                LogLine = "Model run prematurely terminated at" & System.DateTime.Now
-                lf.Close()
-                End
-            End If
-            YearCheck += 1
+            'as long as the year counter corresponds to the year value in the input data, write values to the array
+            For r = 1 To 45
+                ZoneExtVar(rownum, r) = ExtVarRow(r)
+            Next
+            rownum += 1
         Loop
+
     End Sub
 
     Sub ReadZoneElasticities()
@@ -354,40 +365,40 @@
             RdTripRates(0) = StratArray(91)
             RdTripRates(1) = StratArray(92)
         End If
-        
+
         'now incorporates variable elasticities - only do this here if we are not using them - otherwise do it in a separate sub
         If VariableEl = False Then
             'Calculate the values of the various input ratios for the different types of road vehicle (speed assumed to be the same for all)
             If TripRates = "Strategy" Then
-                PopRat(1) = ((ZoneExtVar(2, YearCount) * RdTripRates(0)) / ZonePop) ^ RdZoneEl(1, YearCount)
-                PopRat(2) = ((ZoneExtVar(2, YearCount) * RdTripRates(1)) / ZonePop) ^ RdZoneEl(6, YearCount)
-                PopRat(3) = ((ZoneExtVar(2, YearCount) * RdTripRates(1)) / ZonePop) ^ RdZoneEl(6, YearCount)
-                PopRat(4) = ((ZoneExtVar(2, YearCount) * RdTripRates(1)) / ZonePop) ^ RdZoneEl(6, YearCount)
-                PopRat(5) = ((ZoneExtVar(2, YearCount) * RdTripRates(0)) / ZonePop) ^ RdZoneEl(1, YearCount)
+                PopRat(1) = ((ZoneExtVar(ZoneID, 2) * RdTripRates(0)) / ZonePop(ZoneID, 1)) ^ RdZoneEl(1, YearCount)
+                PopRat(2) = ((ZoneExtVar(ZoneID, 2) * RdTripRates(1)) / ZonePop(ZoneID, 1)) ^ RdZoneEl(6, YearCount)
+                PopRat(3) = ((ZoneExtVar(ZoneID, 2) * RdTripRates(1)) / ZonePop(ZoneID, 1)) ^ RdZoneEl(6, YearCount)
+                PopRat(4) = ((ZoneExtVar(ZoneID, 2) * RdTripRates(1)) / ZonePop(ZoneID, 1)) ^ RdZoneEl(6, YearCount)
+                PopRat(5) = ((ZoneExtVar(ZoneID, 2) * RdTripRates(0)) / ZonePop(ZoneID, 1)) ^ RdZoneEl(1, YearCount)
             Else
-                PopRat(1) = (ZoneExtVar(2, YearCount) / ZonePop) ^ RdZoneEl(1, YearCount)
-                PopRat(2) = (ZoneExtVar(2, YearCount) / ZonePop) ^ RdZoneEl(6, YearCount)
-                PopRat(3) = (ZoneExtVar(2, YearCount) / ZonePop) ^ RdZoneEl(6, YearCount)
-                PopRat(4) = (ZoneExtVar(2, YearCount) / ZonePop) ^ RdZoneEl(6, YearCount)
-                PopRat(5) = (ZoneExtVar(2, YearCount) / ZonePop) ^ RdZoneEl(1, YearCount)
+                PopRat(1) = (ZoneExtVar(ZoneID, 2) / ZonePop(ZoneID, 1)) ^ RdZoneEl(1, YearCount)
+                PopRat(2) = (ZoneExtVar(ZoneID, 2) / ZonePop(ZoneID, 1)) ^ RdZoneEl(6, YearCount)
+                PopRat(3) = (ZoneExtVar(ZoneID, 2) / ZonePop(ZoneID, 1)) ^ RdZoneEl(6, YearCount)
+                PopRat(4) = (ZoneExtVar(ZoneID, 2) / ZonePop(ZoneID, 1)) ^ RdZoneEl(6, YearCount)
+                PopRat(5) = (ZoneExtVar(ZoneID, 2) / ZonePop(ZoneID, 1)) ^ RdZoneEl(1, YearCount)
             End If
-            PopRat(1) = (ZoneExtVar(2, YearCount) / ZonePop) ^ RdZoneEl(1, YearCount)
-            PopRat(2) = (ZoneExtVar(2, YearCount) / ZonePop) ^ RdZoneEl(6, YearCount)
-            PopRat(3) = (ZoneExtVar(2, YearCount) / ZonePop) ^ RdZoneEl(6, YearCount)
-            PopRat(4) = (ZoneExtVar(2, YearCount) / ZonePop) ^ RdZoneEl(6, YearCount)
-            PopRat(5) = (ZoneExtVar(2, YearCount) / ZonePop) ^ RdZoneEl(1, YearCount)
-            GVARat(1) = (ZoneExtVar(3, YearCount) / ZoneGVA) ^ RdZoneEl(2, YearCount)
-            GVARat(2) = (ZoneExtVar(3, YearCount) / ZoneGVA) ^ RdZoneEl(7, YearCount)
-            GVARat(3) = (ZoneExtVar(3, YearCount) / ZoneGVA) ^ RdZoneEl(7, YearCount)
-            GVARat(4) = (ZoneExtVar(3, YearCount) / ZoneGVA) ^ RdZoneEl(7, YearCount)
-            GVARat(5) = (ZoneExtVar(3, YearCount) / ZoneGVA) ^ RdZoneEl(2, YearCount)
-            SpdRat = (ZoneSpeed / ZoneSpeed) ^ RdZoneEl(3, YearCount)
+            PopRat(1) = (ZoneExtVar(ZoneID, 2) / ZonePop(ZoneID, 1)) ^ RdZoneEl(1, YearCount)
+            PopRat(2) = (ZoneExtVar(ZoneID, 2) / ZonePop(ZoneID, 1)) ^ RdZoneEl(6, YearCount)
+            PopRat(3) = (ZoneExtVar(ZoneID, 2) / ZonePop(ZoneID, 1)) ^ RdZoneEl(6, YearCount)
+            PopRat(4) = (ZoneExtVar(ZoneID, 2) / ZonePop(ZoneID, 1)) ^ RdZoneEl(6, YearCount)
+            PopRat(5) = (ZoneExtVar(ZoneID, 2) / ZonePop(ZoneID, 1)) ^ RdZoneEl(1, YearCount)
+            GVARat(1) = (ZoneExtVar(ZoneID, 3) / ZoneGVA(ZoneID, 1)) ^ RdZoneEl(2, YearCount)
+            GVARat(2) = (ZoneExtVar(ZoneID, 3) / ZoneGVA(ZoneID, 1)) ^ RdZoneEl(7, YearCount)
+            GVARat(3) = (ZoneExtVar(ZoneID, 3) / ZoneGVA(ZoneID, 1)) ^ RdZoneEl(7, YearCount)
+            GVARat(4) = (ZoneExtVar(ZoneID, 3) / ZoneGVA(ZoneID, 1)) ^ RdZoneEl(7, YearCount)
+            GVARat(5) = (ZoneExtVar(ZoneID, 3) / ZoneGVA(ZoneID, 1)) ^ RdZoneEl(2, YearCount)
+            SpdRat = (ZoneSpeed(ZoneID, 1) / ZoneSpeed(ZoneID, 1)) ^ RdZoneEl(3, YearCount)
             'calculate the ratio for different types of road vehicle
-            PetRat(1) = (ZoneExtVar(4, YearCount) / ZoneCarCost) ^ RdZoneEl(4, YearCount)
-            PetRat(2) = (ZoneExtVar(42, YearCount) / ZoneLGVCost) ^ RdZoneEl(9, YearCount)
-            PetRat(3) = (ZoneExtVar(43, YearCount) / ZoneHGV1Cost) ^ RdZoneEl(9, YearCount)
-            PetRat(4) = (ZoneExtVar(44, YearCount) / ZoneHGV2Cost) ^ RdZoneEl(9, YearCount)
-            PetRat(5) = (ZoneExtVar(45, YearCount) / ZonePSVCost) ^ RdZoneEl(4, YearCount)
+            PetRat(1) = (ZoneExtVar(ZoneID, 4) / ZoneCarCost(ZoneID, 1)) ^ RdZoneEl(4, YearCount)
+            PetRat(2) = (ZoneExtVar(ZoneID, 42) / ZoneLGVCost(ZoneID, 1)) ^ RdZoneEl(9, YearCount)
+            PetRat(3) = (ZoneExtVar(ZoneID, 43) / ZoneHGV1Cost(ZoneID, 1)) ^ RdZoneEl(9, YearCount)
+            PetRat(4) = (ZoneExtVar(ZoneID, 44) / ZoneHGV2Cost(ZoneID, 1)) ^ RdZoneEl(9, YearCount)
+            PetRat(5) = (ZoneExtVar(ZoneID, 45) / ZonePSVCost(ZoneID, 1)) ^ RdZoneEl(4, YearCount)
 
             'Combine these ratios to get the vkm ratios
             For x = 1 To 5
@@ -399,10 +410,10 @@
         '130514 modified to take in both prespecified capacity and capacity built as part of TR1
         If RoadCapArray(0) = ZoneID Then
             If RoadCapArray(1) = YearCount Then
-                AddedLaneKm(1) += RoadCapArray(2)
-                AddedLaneKm(2) += RoadCapArray(3) + RoadCapArray(4)
-                AddedLaneKm(3) += RoadCapArray(5)
-                AddedLaneKm(4) += RoadCapArray(6) + RoadCapArray(7)
+                AddedLaneKm(ZoneID, 1) += RoadCapArray(2)
+                AddedLaneKm(ZoneID, 2) += RoadCapArray(3) + RoadCapArray(4)
+                AddedLaneKm(ZoneID, 3) += RoadCapArray(5)
+                AddedLaneKm(ZoneID, 4) += RoadCapArray(6) + RoadCapArray(7)
                 capstring = rzcn.ReadLine
                 If capstring Is Nothing Then
                 Else
@@ -412,36 +423,36 @@
         End If
         If BuildInfra = True Then
             For a = 1 To 4
-                AddedLaneKm(a) += BuiltLaneKm(a)
+                AddedLaneKm(ZoneID, a) += BuiltLaneKm(ZoneID, a)
             Next
         End If
 
-        NewLaneKm(1) = ZoneExtVar(6, YearCount) + AddedLaneKm(1)
-        NewLaneKm(2) = CDbl(ZoneExtVar(7, YearCount)) + CDbl(ZoneExtVar(8, YearCount)) + AddedLaneKm(2)
-        NewLaneKm(3) = ZoneExtVar(9, YearCount) + AddedLaneKm(3)
-        NewLaneKm(4) = CDbl(ZoneExtVar(10, YearCount)) + CDbl(ZoneExtVar(11, YearCount)) + AddedLaneKm(4)
+        NewLaneKm(1) = ZoneExtVar(ZoneID, 6) + AddedLaneKm(ZoneID, 1)
+        NewLaneKm(2) = CDbl(ZoneExtVar(ZoneID, 7)) + CDbl(ZoneExtVar(ZoneID, 8)) + AddedLaneKm(ZoneID, 2)
+        NewLaneKm(3) = ZoneExtVar(ZoneID, 9) + AddedLaneKm(ZoneID, 3)
+        NewLaneKm(4) = CDbl(ZoneExtVar(ZoneID, 10)) + CDbl(ZoneExtVar(ZoneID, 11)) + AddedLaneKm(ZoneID, 4)
 
         For x = 1 To 4
-            If NewLaneKm(x) <> ZoneLaneKm(x) Then
-                BaseCatB(x) = BaseCatB(x) * (NewLaneKm(x) / ZoneLaneKm(x))
-                BaseCatC(x) = BaseCatC(x) * (NewLaneKm(x) / ZoneLaneKm(x))
-                BaseRoadCatTraffic(x) += Latentvkm(x)
-                Latentvkm(x) = 0
+            If NewLaneKm(x) <> ZoneLaneKm(ZoneID, x) Then
+                BaseCatB(ZoneID, x) = BaseCatB(ZoneID, x) * (NewLaneKm(x) / ZoneLaneKm(ZoneID, x))
+                BaseCatC(ZoneID, x) = BaseCatC(ZoneID, x) * (NewLaneKm(x) / ZoneLaneKm(ZoneID, x))
+                BaseRoadCatTraffic(ZoneID, x) += Latentvkm(ZoneID, x)
+                Latentvkm(ZoneID, x) = 0
                 For y = 1 To 5
-                    BaseRVCatTraf(x, y) = BaseRoadCatTraffic(x) * VehTypeSplit(x, y)
+                    BaseRVCatTraf(ZoneID, x, y) = BaseRoadCatTraffic(ZoneID, x) * VehTypeSplit(ZoneID, x, y)
                 Next
             End If
         Next
 
         'update the maximum capacities based on the strategy files
-        BaseCatB(1) = BaseCatB(1) * StratArray(87)
-        BaseCatB(2) = BaseCatB(2) * StratArray(88)
-        BaseCatB(3) = BaseCatB(3) * StratArray(89)
-        BaseCatB(4) = BaseCatB(4) * StratArray(90)
-        BaseCatC(1) = BaseCatC(1) * StratArray(87)
-        BaseCatC(2) = BaseCatC(2) * StratArray(88)
-        BaseCatC(3) = BaseCatC(3) * StratArray(89)
-        BaseCatC(4) = BaseCatC(4) * StratArray(90)
+        BaseCatB(ZoneID, 1) = BaseCatB(ZoneID, 1) * StratArray(87)
+        BaseCatB(ZoneID, 2) = BaseCatB(ZoneID, 2) * StratArray(88)
+        BaseCatB(ZoneID, 3) = BaseCatB(ZoneID, 3) * StratArray(89)
+        BaseCatB(ZoneID, 4) = BaseCatB(ZoneID, 4) * StratArray(90)
+        BaseCatC(ZoneID, 1) = BaseCatC(ZoneID, 1) * StratArray(87)
+        BaseCatC(ZoneID, 2) = BaseCatC(ZoneID, 2) * StratArray(88)
+        BaseCatC(ZoneID, 3) = BaseCatC(ZoneID, 3) * StratArray(89)
+        BaseCatC(ZoneID, 4) = BaseCatC(ZoneID, 4) * StratArray(90)
 
         'loop through the four road types calculating the traffic levels
         For rdtype = 1 To 4
@@ -455,37 +466,37 @@
                     Call GetVariableElasticities()
                 End If
                 For x = 1 To 5
-                    RVCatTraf(rdtype, x) = BaseRVCatTraf(rdtype, x) * VkmRat(x)
+                    RVCatTraf(rdtype, x) = BaseRVCatTraf(ZoneID, rdtype, x) * VkmRat(x)
                 Next
 
-                RoadCatTraffic(rdtype) = RVCatTraf(rdtype, 1) + RVCatTraf(rdtype, 2) + RVCatTraf(rdtype, 3) + RVCatTraf(rdtype, 4) + RVCatTraf(rdtype, 5)
+                RoadCatTraffic(ZoneID, rdtype) = RVCatTraf(rdtype, 1) + RVCatTraf(rdtype, 2) + RVCatTraf(rdtype, 3) + RVCatTraf(rdtype, 4) + RVCatTraf(rdtype, 5)
 
                 'v1.3 mod - if using smarter choices, smart logistics or urban freight innovations we only set the vehicle type splits in the first year, to avoid car traffic share declining away to nothing
                 If SmarterChoices = True Then
                     If YearCount = 1 Then
                         'set the vehicle type splits
                         For x = 1 To 5
-                            VehTypeSplit(rdtype, x) = RVCatTraf(rdtype, x) / RoadCatTraffic(rdtype)
+                            VehTypeSplit(ZoneID, rdtype, x) = RVCatTraf(rdtype, x) / RoadCatTraffic(ZoneID, rdtype)
                         Next
                     End If
                 ElseIf UrbanFrt = True Then
                     If YearCount = 1 Then
                         'set the vehicle type splits
                         For x = 1 To 5
-                            VehTypeSplit(rdtype, x) = RVCatTraf(rdtype, x) / RoadCatTraffic(rdtype)
+                            VehTypeSplit(ZoneID, rdtype, x) = RVCatTraf(rdtype, x) / RoadCatTraffic(ZoneID, rdtype)
                         Next
                     End If
                 ElseIf SmartFrt = True Then
                     If YearCount = 1 Then
                         'set the vehicle type splits
                         For x = 1 To 5
-                            VehTypeSplit(rdtype, x) = RVCatTraf(rdtype, x) / RoadCatTraffic(rdtype)
+                            VehTypeSplit(ZoneID, rdtype, x) = RVCatTraf(rdtype, x) / RoadCatTraffic(ZoneID, rdtype)
                         Next
                     End If
                 Else
                     'set the vehicle type splits
                     For x = 1 To 5
-                        VehTypeSplit(rdtype, x) = RVCatTraf(rdtype, x) / RoadCatTraffic(rdtype)
+                        VehTypeSplit(ZoneID, rdtype, x) = RVCatTraf(rdtype, x) / RoadCatTraffic(ZoneID, rdtype)
                     Next
                 End If
                 'Set up new road km variable from external variables and calculate resulting change in speed
@@ -509,74 +520,75 @@
                         SpeedB = 13.5
                         SpeedC = 9.07
                 End Select
-                If RoadCatTraffic(rdtype) < BaseCatB(rdtype) Then
+
+                If RoadCatTraffic(ZoneID, rdtype) < BaseCatB(ZoneID, rdtype) Then
                     'if traffic is less than the base point B level then new speed between point A and point B
-                    NewCatSpeed(rdtype) = ((RoadCatTraffic(rdtype) / BaseCatB(rdtype)) * (SpeedB - SpeedA)) + SpeedA
-                    SpdRat = NewCatSpeed(rdtype) / BaseCatSpeed(rdtype)
-                ElseIf RoadCatTraffic(rdtype) <= BaseCatC(rdtype) Then
+                    NewCatSpeed(ZoneID, rdtype) = ((RoadCatTraffic(ZoneID, rdtype) / BaseCatB(ZoneID, rdtype)) * (SpeedB - SpeedA)) + SpeedA
+                    SpdRat = NewCatSpeed(ZoneID, rdtype) / BaseCatSpeed(ZoneID, rdtype)
+                ElseIf RoadCatTraffic(ZoneID, rdtype) <= BaseCatC(ZoneID, rdtype) Then
                     'otherwise if traffic is between base point C level then new speed is between point B and point C
-                    NewCatSpeed(rdtype) = (((RoadCatTraffic(rdtype) - BaseCatB(rdtype)) / (BaseCatC(rdtype) - BaseCatB(rdtype))) * (SpeedC - SpeedB)) + SpeedB
-                    SpdRat = NewCatSpeed(rdtype) / BaseCatSpeed(rdtype)
+                    NewCatSpeed(ZoneID, rdtype) = (((RoadCatTraffic(ZoneID, rdtype) - BaseCatB(ZoneID, rdtype)) / (BaseCatC(ZoneID, rdtype) - BaseCatB(ZoneID, rdtype))) * (SpeedC - SpeedB)) + SpeedB
+                    SpdRat = NewCatSpeed(ZoneID, rdtype) / BaseCatSpeed(ZoneID, rdtype)
                 Else
                     'if traffic is greater than point C level then need to apply constraint
-                    Latentvkm(rdtype) += (RoadCatTraffic(rdtype) - BaseCatC(rdtype))
-                    RoadCatTraffic(rdtype) = BaseCatC(rdtype)
-                    NewCatSpeed(rdtype) = SpeedC
+                    Latentvkm(ZoneID, rdtype) += (RoadCatTraffic(ZoneID, rdtype) - BaseCatC(ZoneID, rdtype))
+                    RoadCatTraffic(ZoneID, rdtype) = BaseCatC(ZoneID, rdtype)
+                    NewCatSpeed(ZoneID, rdtype) = SpeedC
                     SpdRat = 1
                 End If
 
                 '1.4 modification to catch iteration that fails to converge
                 iteratecount = 0
-                starttraffic = RoadCatTraffic(rdtype)
+                starttraffic = RoadCatTraffic(ZoneID, rdtype)
 
                 'iterate between calculation of speed and vkm ratios unti convergence reached
                 Do Until SpdRat >= 0.999 And SpdRat <= 1.001
                     'set the base vkm to equal the previous new vkm
-                    BaseRoadCatTraffic(rdtype) = RoadCatTraffic(rdtype)
+                    BaseRoadCatTraffic(ZoneID, rdtype) = RoadCatTraffic(ZoneID, rdtype)
                     'recalculate the vehicle km figure
                     'now includes variable elasticity option
                     If VariableEl = True Then
-                        OldX = BaseRoadCatTraffic(rdtype)
-                        OldY = BaseCatSpeed(rdtype)
-                        NewY = NewCatSpeed(rdtype)
+                        OldX = BaseRoadCatTraffic(ZoneID, rdtype)
+                        OldY = BaseCatSpeed(ZoneID, rdtype)
+                        NewY = NewCatSpeed(ZoneID, rdtype)
                         If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
                             OldEl = RdZoneEl(3, YearCount)
                             Call VarElCalc()
                             SpdRat = VarRat
                         Else
-                            SpdRat = (NewCatSpeed(rdtype) / BaseCatSpeed(rdtype)) ^ RdZoneEl(3, YearCount)
+                            SpdRat = (NewCatSpeed(ZoneID, rdtype) / BaseCatSpeed(ZoneID, rdtype)) ^ RdZoneEl(3, YearCount)
                         End If
                     Else
-                        SpdRat = (NewCatSpeed(rdtype) / BaseCatSpeed(rdtype)) ^ RdZoneEl(3, YearCount)
+                        SpdRat = (NewCatSpeed(ZoneID, rdtype) / BaseCatSpeed(ZoneID, rdtype)) ^ RdZoneEl(3, YearCount)
                     End If
-                    RoadCatTraffic(rdtype) = SpdRat * BaseRoadCatTraffic(rdtype)
+                    RoadCatTraffic(ZoneID, rdtype) = SpdRat * BaseRoadCatTraffic(ZoneID, rdtype)
                     'set the base speed to equal the previous new speed
-                    BaseCatSpeed(rdtype) = NewCatSpeed(rdtype)
+                    BaseCatSpeed(ZoneID, rdtype) = NewCatSpeed(ZoneID, rdtype)
                     'calculate the resulting change in speed from the new vehicle km figure
-                    If RoadCatTraffic(rdtype) < BaseCatB(rdtype) Then
+                    If RoadCatTraffic(ZoneID, rdtype) < BaseCatB(ZoneID, rdtype) Then
                         'if traffic is less than the base point B level then new speed between point A and point B
-                        NewCatSpeed(rdtype) = ((RoadCatTraffic(rdtype) / BaseCatB(rdtype)) * (SpeedB - SpeedA)) + SpeedA
-                    ElseIf RoadCatTraffic(rdtype) <= BaseCatC(rdtype) Then
+                        NewCatSpeed(ZoneID, rdtype) = ((RoadCatTraffic(ZoneID, rdtype) / BaseCatB(ZoneID, rdtype)) * (SpeedB - SpeedA)) + SpeedA
+                    ElseIf RoadCatTraffic(ZoneID, rdtype) <= BaseCatC(ZoneID, rdtype) Then
                         'otherwise it is between point B and point C
-                        NewCatSpeed(rdtype) = (((RoadCatTraffic(rdtype) - BaseCatB(rdtype)) / (BaseCatC(rdtype) - BaseCatB(rdtype))) * (SpeedC - SpeedB)) + SpeedB
+                        NewCatSpeed(ZoneID, rdtype) = (((RoadCatTraffic(ZoneID, rdtype) - BaseCatB(ZoneID, rdtype)) / (BaseCatC(ZoneID, rdtype) - BaseCatB(ZoneID, rdtype))) * (SpeedC - SpeedB)) + SpeedB
                     Else
-                        Latentvkm(rdtype) += (RoadCatTraffic(rdtype) - BaseCatC(rdtype))
-                        RoadCatTraffic(rdtype) = BaseCatC(rdtype)
-                        NewCatSpeed(rdtype) = SpeedC
+                        Latentvkm(ZoneID, rdtype) += (RoadCatTraffic(ZoneID, rdtype) - BaseCatC(ZoneID, rdtype))
+                        RoadCatTraffic(ZoneID, rdtype) = BaseCatC(ZoneID, rdtype)
+                        NewCatSpeed(ZoneID, rdtype) = SpeedC
                         SpdRat = 1
                         Exit Do
                     End If
-                    'SpdRat = NewCatSpeed(rdtype) / BaseCatSpeed(rdtype)
+                    'SpdRat = NewCatSpeed(zoneid,ZoneID,rdtype) / BaseCatSpeed(rdtype)
                     'v1.4 modification to catch iterations that fail to converge
                     iteratecount += 1
                     If iteratecount = 1000 Then
-                        RoadCatTraffic(rdtype) = starttraffic
-                        If RoadCatTraffic(rdtype) < BaseCatB(rdtype) Then
+                        RoadCatTraffic(ZoneID, rdtype) = starttraffic
+                        If RoadCatTraffic(ZoneID, rdtype) < BaseCatB(ZoneID, rdtype) Then
                             'if traffic is less than the base point B level then new speed between point A and point B
-                            NewCatSpeed(rdtype) = ((RoadCatTraffic(rdtype) / BaseCatB(rdtype)) * (SpeedB - SpeedA)) + SpeedA
+                            NewCatSpeed(ZoneID, rdtype) = ((RoadCatTraffic(ZoneID, rdtype) / BaseCatB(ZoneID, rdtype)) * (SpeedB - SpeedA)) + SpeedA
                         Else
                             'otherwise it is between point B and point C
-                            NewCatSpeed(rdtype) = (((RoadCatTraffic(rdtype) - BaseCatB(rdtype)) / (BaseCatC(rdtype) - BaseCatB(rdtype))) * (SpeedC - SpeedB)) + SpeedB
+                            NewCatSpeed(ZoneID, rdtype) = (((RoadCatTraffic(ZoneID, rdtype) - BaseCatB(ZoneID, rdtype)) / (BaseCatC(ZoneID, rdtype) - BaseCatB(ZoneID, rdtype))) * (SpeedC - SpeedB)) + SpeedB
                         End If
                         Exit Do
                     End If
@@ -584,25 +596,25 @@
 
                 'split the final vkm figure between vehicle types
                 For x = 1 To 5
-                    RVCatTraf(rdtype, x) = RoadCatTraffic(rdtype) * VehTypeSplit(rdtype, x)
+                    RVCatTraf(rdtype, x) = RoadCatTraffic(ZoneID, rdtype) * VehTypeSplit(ZoneID, rdtype, x)
                 Next
 
             Else
-                RoadCatTraffic(rdtype) = 0
+                RoadCatTraffic(ZoneID, rdtype) = 0
                 For x = 1 To 5
                     RVCatTraf(rdtype, x) = 0
                 Next
             End If
         Next
 
-        If RoadCatTraffic(4) > 0 Then
+        If RoadCatTraffic(ZoneID, 4) > 0 Then
             'v1.3 if using smarter choices then scale the urban car traffic accordingly
             If SmarterChoices = True Then
                 'check if we are after the date of introduction
                 If SmartIntro < YearCount Then
                     'if so then subtract the unscaled urban car traffic from the total urban traffic
                     'need to store the suppressed traffic, as otherwise the model will keep suppressing demand by the set % each year, leading to a much greater cumulative decay than anticipated
-                    RoadCatTraffic(4) = RoadCatTraffic(4) - RVCatTraf(4, 1)
+                    RoadCatTraffic(ZoneID, 4) = RoadCatTraffic(ZoneID, 4) - RVCatTraf(4, 1)
                     'then check if we are less than the number of years to take full effect after the date of introduction
                     If (SmartIntro + SmartYears) > YearCount Then
                         SuppressedTraffic(4, 1) = RVCatTraf(4, 1) * (SmartPer * ((YearCount - SmartIntro) / SmartYears))
@@ -613,17 +625,17 @@
                         RVCatTraf(4, 1) = RVCatTraf(4, 1) * (1 - SmartPer)
                     End If
                     'add the scaled car traffic back on to the rest of the urban traffic
-                    RoadCatTraffic(4) += RVCatTraf(4, 1)
+                    RoadCatTraffic(ZoneID, 4) += RVCatTraf(4, 1)
                     'v1.4 recalculate speed
                     SpeedA = 22.24
                     SpeedB = 13.5
                     SpeedC = 9.07
-                    If RoadCatTraffic(4) < BaseCatB(4) Then
+                    If RoadCatTraffic(ZoneID, 4) < BaseCatB(ZoneID, 4) Then
                         'if traffic is less than the base point B level then new speed between point A and point B
-                        NewCatSpeed(4) = ((RoadCatTraffic(4) / BaseCatB(4)) * (SpeedB - SpeedA)) + SpeedA
+                        NewCatSpeed(ZoneID, 4) = ((RoadCatTraffic(ZoneID, 4) / BaseCatB(ZoneID, 4)) * (SpeedB - SpeedA)) + SpeedA
                     Else
                         'otherwise it is between point B and point C
-                        NewCatSpeed(4) = (((RoadCatTraffic(4) - BaseCatB(4)) / (BaseCatC(4) - BaseCatB(4))) * (SpeedC - SpeedB)) + SpeedB
+                        NewCatSpeed(ZoneID, 4) = (((RoadCatTraffic(ZoneID, 4) - BaseCatB(ZoneID, 4)) / (BaseCatC(ZoneID, 4) - BaseCatB(ZoneID, 4))) * (SpeedC - SpeedB)) + SpeedB
                     End If
                 End If
             End If
@@ -634,7 +646,7 @@
                 If UrbFrtIntro < YearCount Then
                     'if so then subtract the unscaled urban LGV/HGV traffic from the total urban traffic
                     'need to store the suppressed traffic, as otherwise the model will keep suppressing demand by the set % each year, leading to a much greater cumulative decay than anticipated
-                    RoadCatTraffic(4) = RoadCatTraffic(4) - (RVCatTraf(4, 2) + RVCatTraf(4, 3) + RVCatTraf(4, 4))
+                    RoadCatTraffic(ZoneID, 4) = RoadCatTraffic(ZoneID, 4) - (RVCatTraf(4, 2) + RVCatTraf(4, 3) + RVCatTraf(4, 4))
                     'then check if we are less than the number of years to take full effect after the date of introduction
                     If (UrbFrtIntro + UrbFrtYears) > YearCount Then
                         SuppressedTraffic(4, 2) = RVCatTraf(4, 2) * (UrbFrtPer * ((YearCount - UrbFrtIntro) / UrbFrtYears))
@@ -653,17 +665,17 @@
                         RVCatTraf(4, 4) = RVCatTraf(4, 4) * (1 - UrbFrtPer)
                     End If
                     'add the scaled freight traffic back on to the rest of the urban traffic
-                    RoadCatTraffic(4) = RoadCatTraffic(4) + RVCatTraf(4, 2) + RVCatTraf(4, 3) + RVCatTraf(4, 4)
+                    RoadCatTraffic(ZoneID, 4) = RoadCatTraffic(ZoneID, 4) + RVCatTraf(4, 2) + RVCatTraf(4, 3) + RVCatTraf(4, 4)
                     'v1.4 recalculate speed
                     SpeedA = 22.24
                     SpeedB = 13.5
                     SpeedC = 9.07
-                    If RoadCatTraffic(4) < BaseCatB(4) Then
+                    If RoadCatTraffic(ZoneID, 4) < BaseCatB(ZoneID, 4) Then
                         'if traffic is less than the base point B level then new speed between point A and point B
-                        NewCatSpeed(4) = ((RoadCatTraffic(4) / BaseCatB(4)) * (SpeedB - SpeedA)) + SpeedA
+                        NewCatSpeed(ZoneID, 4) = ((RoadCatTraffic(ZoneID, 4) / BaseCatB(ZoneID, 4)) * (SpeedB - SpeedA)) + SpeedA
                     Else
                         'otherwise it is between point B and point C
-                        NewCatSpeed(4) = (((RoadCatTraffic(4) - BaseCatB(4)) / (BaseCatC(4) - BaseCatB(4))) * (SpeedC - SpeedB)) + SpeedB
+                        NewCatSpeed(ZoneID, 4) = (((RoadCatTraffic(ZoneID, 4) - BaseCatB(ZoneID, 4)) / (BaseCatC(ZoneID, 4) - BaseCatB(ZoneID, 4))) * (SpeedC - SpeedB)) + SpeedB
                     End If
                 End If
             End If
@@ -675,10 +687,10 @@
             'check if we are after the date of introduction
             If SmFrtIntro < YearCount Then
                 For x = 1 To 3
-                    If RoadCatTraffic(x) > 0 Then
+                    If RoadCatTraffic(ZoneID, x) > 0 Then
                         'if so then subtract the unscaled non-urban HGV traffic from the total urban traffic
                         'need to store the suppressed traffic, as otherwise the model will keep suppressing demand by the set % each year, leading to a much greater cumulative decay than anticipated
-                        RoadCatTraffic(x) = RoadCatTraffic(x) - (RVCatTraf(x, 3) + RVCatTraf(x, 4))
+                        RoadCatTraffic(ZoneID, x) = RoadCatTraffic(ZoneID, x) - (RVCatTraf(x, 3) + RVCatTraf(x, 4))
                         'then check if we are less than the number of years to take full effect after the date of introduction
                         If (SmFrtIntro + SmFrtYears) > YearCount Then
                             For y = 3 To 4
@@ -693,7 +705,7 @@
                             Next
                         End If
                         'add the scaled freight traffic back on to the rest of the road traffic
-                        RoadCatTraffic(x) = RoadCatTraffic(x) + RVCatTraf(x, 3) + RVCatTraf(x, 4)
+                        RoadCatTraffic(ZoneID, x) = RoadCatTraffic(ZoneID, x) + RVCatTraf(x, 3) + RVCatTraf(x, 4)
                         'v1.4 recalculate speed
                         Select Case x
                             Case 1
@@ -713,22 +725,22 @@
                                 SpeedB = 13.5
                                 SpeedC = 9.07
                         End Select
-                        If RoadCatTraffic(x) < BaseCatB(x) Then
+                        If RoadCatTraffic(ZoneID, x) < BaseCatB(ZoneID, x) Then
                             'if traffic is less than the base point B level then new speed between point A and point B
-                            NewCatSpeed(x) = ((RoadCatTraffic(x) / BaseCatB(x)) * (SpeedB - SpeedA)) + SpeedA
+                            NewCatSpeed(ZoneID, x) = ((RoadCatTraffic(ZoneID, x) / BaseCatB(ZoneID, x)) * (SpeedB - SpeedA)) + SpeedA
                         Else
                             'otherwise it is between point B and point C
-                            NewCatSpeed(x) = (((RoadCatTraffic(x) - BaseCatB(x)) / (BaseCatC(x) - BaseCatB(x))) * (SpeedC - SpeedB)) + SpeedB
+                            NewCatSpeed(ZoneID, x) = (((RoadCatTraffic(ZoneID, x) - BaseCatB(ZoneID, x)) / (BaseCatC(ZoneID, x) - BaseCatB(ZoneID, x))) * (SpeedC - SpeedB)) + SpeedB
                         End If
                     End If
                 Next
             End If
         End If
 
-        'calculate the total vkm figure and average speed
 
-        NewVkm = RoadCatTraffic(1) + RoadCatTraffic(2) + RoadCatTraffic(3) + RoadCatTraffic(4)
-        ZoneSpdNew = ((RoadCatTraffic(1) * NewCatSpeed(1)) + (RoadCatTraffic(2) * NewCatSpeed(2)) + (RoadCatTraffic(3) * NewCatSpeed(3)) + (RoadCatTraffic(4) * NewCatSpeed(4))) / NewVkm
+        'calculate the total vkm figure and average speed
+        NewVkm = RoadCatTraffic(ZoneID, 1) + RoadCatTraffic(ZoneID, 2) + RoadCatTraffic(ZoneID, 3) + RoadCatTraffic(ZoneID, 4)
+        ZoneSpdNew = ((RoadCatTraffic(ZoneID, 1) * NewCatSpeed(ZoneID, 1)) + (RoadCatTraffic(ZoneID, 2) * NewCatSpeed(ZoneID, 2)) + (RoadCatTraffic(ZoneID, 3) * NewCatSpeed(ZoneID, 3)) + (RoadCatTraffic(ZoneID, 4) * NewCatSpeed(ZoneID, 4))) / NewVkm
 
     End Sub
 
@@ -736,11 +748,11 @@
         'Calculate the values of the various input ratios for the different types of road vehicle (speed assumed to be the same for all)
 
         'pop1ratio
-        OldY = ZonePop
+        OldY = ZonePop(ZoneID, 1)
         If TripRates = "Strategy" Then
-            NewY = ZoneExtVar(2, YearCount) * RdTripRates(0)
+            NewY = ZoneExtVar(ZoneID, 2) * RdTripRates(0)
         Else
-            NewY = ZoneExtVar(2, YearCount)
+            NewY = ZoneExtVar(ZoneID, 2)
         End If
         If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
             OldEl = RdZoneEl(1, YearCount)
@@ -750,11 +762,11 @@
             PopRat(1) = (NewY / OldY) ^ RdZoneEl(1, YearCount)
         End If
         'pop2ratio
-        OldY = ZonePop
+        OldY = ZonePop(ZoneID, 1)
         If TripRates = "Strategy" Then
-            NewY = ZoneExtVar(2, YearCount) * RdTripRates(1)
+            NewY = ZoneExtVar(ZoneID, 2) * RdTripRates(1)
         Else
-            NewY = ZoneExtVar(2, YearCount)
+            NewY = ZoneExtVar(ZoneID, 2)
         End If
         If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
             OldEl = RdZoneEl(6, YearCount)
@@ -764,11 +776,11 @@
             PopRat(2) = (NewY / OldY) ^ RdZoneEl(6, YearCount)
         End If
         'pop3ratio
-        OldY = ZonePop
+        OldY = ZonePop(ZoneID, 1)
         If TripRates = "Strategy" Then
-            NewY = ZoneExtVar(2, YearCount) * RdTripRates(1)
+            NewY = ZoneExtVar(ZoneID, 2) * RdTripRates(1)
         Else
-            NewY = ZoneExtVar(2, YearCount)
+            NewY = ZoneExtVar(ZoneID, 2)
         End If
         If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
             OldEl = RdZoneEl(6, YearCount)
@@ -778,11 +790,11 @@
             PopRat(3) = (NewY / OldY) ^ RdZoneEl(6, YearCount)
         End If
         'pop4ratio
-        OldY = ZonePop
+        OldY = ZonePop(ZoneID, 1)
         If TripRates = "Strategy" Then
-            NewY = ZoneExtVar(2, YearCount) * RdTripRates(1)
+            NewY = ZoneExtVar(ZoneID, 2) * RdTripRates(1)
         Else
-            NewY = ZoneExtVar(2, YearCount)
+            NewY = ZoneExtVar(ZoneID, 2)
         End If
         If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
             OldEl = RdZoneEl(6, YearCount)
@@ -792,11 +804,11 @@
             PopRat(4) = (NewY / OldY) ^ RdZoneEl(6, YearCount)
         End If
         'pop5ratio
-        OldY = ZonePop
+        OldY = ZonePop(ZoneID, 1)
         If TripRates = "Strategy" Then
-            NewY = ZoneExtVar(2, YearCount) * RdTripRates(0)
+            NewY = ZoneExtVar(ZoneID, 2) * RdTripRates(0)
         Else
-            NewY = ZoneExtVar(2, YearCount)
+            NewY = ZoneExtVar(ZoneID, 2)
         End If
         If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
             OldEl = RdZoneEl(1, YearCount)
@@ -806,111 +818,113 @@
             PopRat(5) = (NewY / OldY) ^ RdZoneEl(1, YearCount)
         End If
         'gva1ratio
-        OldY = ZoneGVA
-        NewY = ZoneExtVar(3, YearCount)
+        OldY = ZoneGVA(ZoneID, 1)
+        NewY = ZoneExtVar(ZoneID, 3)
         If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
             OldEl = RdZoneEl(2, YearCount)
             Call VarElCalc()
             GVARat(1) = VarRat
         Else
-            GVARat(1) = (ZoneExtVar(3, YearCount) / ZoneGVA) ^ RdZoneEl(2, YearCount)
+            GVARat(1) = (ZoneExtVar(ZoneID, 3) / ZoneGVA(ZoneID, 1)) ^ RdZoneEl(2, YearCount)
         End If
         'gva2ratio
-        OldY = ZoneGVA
-        NewY = ZoneExtVar(3, YearCount)
+        OldY = ZoneGVA(ZoneID, 1)
+        NewY = ZoneExtVar(ZoneID, 3)
         If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
             OldEl = RdZoneEl(7, YearCount)
             Call VarElCalc()
             GVARat(2) = VarRat
         Else
-            GVARat(2) = (ZoneExtVar(3, YearCount) / ZoneGVA) ^ RdZoneEl(7, YearCount)
+            GVARat(2) = (ZoneExtVar(ZoneID, 3) / ZoneGVA(ZoneID, 1)) ^ RdZoneEl(7, YearCount)
         End If
         'gva3ratio
-        OldY = ZoneGVA
-        NewY = ZoneExtVar(3, YearCount)
+        OldY = ZoneGVA(ZoneID, 1)
+        NewY = ZoneExtVar(ZoneID, 3)
         If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
             OldEl = RdZoneEl(7, YearCount)
             Call VarElCalc()
             GVARat(3) = VarRat
         Else
-            GVARat(3) = (ZoneExtVar(3, YearCount) / ZoneGVA) ^ RdZoneEl(7, YearCount)
+            GVARat(3) = (ZoneExtVar(ZoneID, 3) / ZoneGVA(ZoneID, 1)) ^ RdZoneEl(7, YearCount)
         End If
         'gva4ratio
-        OldY = ZoneGVA
-        NewY = ZoneExtVar(3, YearCount)
+        OldY = ZoneGVA(ZoneID, 1)
+        NewY = ZoneExtVar(ZoneID, 3)
         If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
             OldEl = RdZoneEl(7, YearCount)
             Call VarElCalc()
             GVARat(4) = VarRat
         Else
-            GVARat(4) = (ZoneExtVar(3, YearCount) / ZoneGVA) ^ RdZoneEl(7, YearCount)
+            GVARat(4) = (ZoneExtVar(ZoneID, 3) / ZoneGVA(ZoneID, 1)) ^ RdZoneEl(7, YearCount)
         End If
         'gva5ratio
-        OldY = ZoneGVA
-        NewY = ZoneExtVar(3, YearCount)
+        OldY = ZoneGVA(ZoneID, 1)
+        NewY = ZoneExtVar(ZoneID, 3)
         If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
             OldEl = RdZoneEl(7, YearCount)
             Call VarElCalc()
             GVARat(5) = VarRat
         Else
-            GVARat(5) = (ZoneExtVar(3, YearCount) / ZoneGVA) ^ RdZoneEl(2, YearCount)
+            GVARat(5) = (ZoneExtVar(ZoneID, 3) / ZoneGVA(ZoneID, 1)) ^ RdZoneEl(2, YearCount)
         End If
         'speed ratio - this is constant
-        SpdRat = (ZoneSpeed / ZoneSpeed) ^ RdZoneEl(3, YearCount)
+        SpdRat = (ZoneSpeed(ZoneID, 1) / ZoneSpeed(ZoneID, 1)) ^ RdZoneEl(3, YearCount)
         'cost1ratio
-        OldY = ZoneCarCost
-        NewY = ZoneExtVar(4, YearCount)
+        OldY = ZoneCarCost(ZoneID, 1)
+        NewY = ZoneExtVar(ZoneID, 4)
         If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
             OldEl = RdZoneEl(4, YearCount)
             Call VarElCalc()
             PetRat(1) = VarRat
         Else
-            PetRat(1) = (ZoneExtVar(4, YearCount) / ZoneCarCost) ^ RdZoneEl(4, YearCount)
+            PetRat(1) = (ZoneExtVar(ZoneID, 4) / ZoneCarCost(ZoneID, 1)) ^ RdZoneEl(4, YearCount)
         End If
         'cost2ratio
-        OldY = ZoneLGVCost
-        NewY = ZoneExtVar(42, YearCount)
+        OldY = ZoneLGVCost(ZoneID, 1)
+        NewY = ZoneExtVar(ZoneID, 42)
         If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
             OldEl = RdZoneEl(9, YearCount)
             Call VarElCalc()
             PetRat(2) = VarRat
         Else
-            PetRat(2) = (ZoneExtVar(42, YearCount) / ZoneLGVCost) ^ RdZoneEl(9, YearCount)
+            PetRat(2) = (ZoneExtVar(ZoneID, 42) / ZoneLGVCost(ZoneID, 1)) ^ RdZoneEl(9, YearCount)
         End If
         'cost3ratio
-        OldY = ZoneHGV1Cost
-        NewY = ZoneExtVar(43, YearCount)
+        OldY = ZoneHGV1Cost(ZoneID, 1)
+        NewY = ZoneExtVar(ZoneID, 43)
         If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
             OldEl = RdZoneEl(9, YearCount)
             Call VarElCalc()
             PetRat(3) = VarRat
         Else
-            PetRat(3) = (ZoneExtVar(43, YearCount) / ZoneHGV1Cost) ^ RdZoneEl(9, YearCount)
+            PetRat(3) = (ZoneExtVar(ZoneID, 43) / ZoneHGV1Cost(ZoneID, 1)) ^ RdZoneEl(9, YearCount)
         End If
         'cost4ratio
-        OldY = ZoneHGV2Cost
-        NewY = ZoneExtVar(44, YearCount)
+        OldY = ZoneHGV2Cost(ZoneID, 1)
+        NewY = ZoneExtVar(ZoneID, 44)
         If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
             OldEl = RdZoneEl(9, YearCount)
             Call VarElCalc()
             PetRat(4) = VarRat
         Else
-            PetRat(4) = (ZoneExtVar(44, YearCount) / ZoneHGV2Cost) ^ RdZoneEl(9, YearCount)
+            PetRat(4) = (ZoneExtVar(ZoneID, 44) / ZoneHGV2Cost(ZoneID, 1)) ^ RdZoneEl(9, YearCount)
         End If
         'cost5ratio
-        OldY = ZonePSVCost
-        NewY = ZoneExtVar(45, YearCount)
+        OldY = ZonePSVCost(ZoneID, 1)
+        NewY = ZoneExtVar(ZoneID, 45)
         If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
             OldEl = RdZoneEl(4, YearCount)
             Call VarElCalc()
             PetRat(5) = VarRat
         Else
-            PetRat(5) = (ZoneExtVar(45, YearCount) / ZonePSVCost) ^ RdZoneEl(4, YearCount)
+            PetRat(5) = (ZoneExtVar(ZoneID, 45) / ZonePSVCost(ZoneID, 1)) ^ RdZoneEl(4, YearCount)
         End If
         'Combine these ratios to get the vkm ratios
         For x = 1 To 5
             VkmRat(x) = PopRat(x) * GVARat(x) * SpdRat * PetRat(x)
         Next
+
+
     End Sub
 
     Sub VarElCalc()
@@ -939,36 +953,36 @@
         'fuel 6 is battery electric, fuel 7 is LPG, fuel 8 is CNG, fuel 9 is hydrogen ICE and fuel 10 is hydrogen fuel cell
         'note that for PHEVs urban roads will use electricity, whereas other roads will use petrol/diesel
         For CatCount = 1 To 4
-            RVFCatTraf(CatCount, 1, 1) = RVCatTraf(CatCount, 1) * ZoneExtVar(12, YearCount)
-            RVFCatTraf(CatCount, 1, 2) = RVCatTraf(CatCount, 1) * ZoneExtVar(13, YearCount)
-            RVFCatTraf(CatCount, 1, 3) = RVCatTraf(CatCount, 1) * ZoneExtVar(25, YearCount)
-            RVFCatTraf(CatCount, 1, 4) = RVCatTraf(CatCount, 1) * ZoneExtVar(26, YearCount)
-            RVFCatTraf(CatCount, 1, 5) = RVCatTraf(CatCount, 1) * ZoneExtVar(27, YearCount)
-            RVFCatTraf(CatCount, 1, 6) = RVCatTraf(CatCount, 1) * ZoneExtVar(14, YearCount)
-            RVFCatTraf(CatCount, 1, 9) = RVCatTraf(CatCount, 1) * ZoneExtVar(28, YearCount)
-            RVFCatTraf(CatCount, 1, 10) = RVCatTraf(CatCount, 1) * ZoneExtVar(29, YearCount)
-            RVFCatTraf(CatCount, 2, 1) = RVCatTraf(CatCount, 2) * ZoneExtVar(15, YearCount)
-            RVFCatTraf(CatCount, 2, 2) = RVCatTraf(CatCount, 2) * ZoneExtVar(16, YearCount)
-            RVFCatTraf(CatCount, 2, 4) = RVCatTraf(CatCount, 2) * ZoneExtVar(30, YearCount)
-            RVFCatTraf(CatCount, 2, 5) = RVCatTraf(CatCount, 2) * ZoneExtVar(31, YearCount)
-            RVFCatTraf(CatCount, 2, 6) = RVCatTraf(CatCount, 2) * ZoneExtVar(17, YearCount)
-            RVFCatTraf(CatCount, 2, 7) = RVCatTraf(CatCount, 2) * ZoneExtVar(32, YearCount)
-            RVFCatTraf(CatCount, 2, 8) = RVCatTraf(CatCount, 2) * ZoneExtVar(33, YearCount)
-            RVFCatTraf(CatCount, 3, 2) = RVCatTraf(CatCount, 3) * ZoneExtVar(18, YearCount)
-            RVFCatTraf(CatCount, 3, 4) = RVCatTraf(CatCount, 3) * ZoneExtVar(39, YearCount)
-            RVFCatTraf(CatCount, 3, 9) = RVCatTraf(CatCount, 3) * ZoneExtVar(40, YearCount)
-            RVFCatTraf(CatCount, 3, 10) = RVCatTraf(CatCount, 3) * ZoneExtVar(41, YearCount)
-            RVFCatTraf(CatCount, 4, 2) = RVCatTraf(CatCount, 4) * ZoneExtVar(18, YearCount)
-            RVFCatTraf(CatCount, 4, 4) = RVCatTraf(CatCount, 4) * ZoneExtVar(39, YearCount)
-            RVFCatTraf(CatCount, 4, 9) = RVCatTraf(CatCount, 4) * ZoneExtVar(40, YearCount)
-            RVFCatTraf(CatCount, 4, 10) = RVCatTraf(CatCount, 4) * ZoneExtVar(41, YearCount)
-            RVFCatTraf(CatCount, 5, 2) = RVCatTraf(CatCount, 5) * ZoneExtVar(20, YearCount)
-            RVFCatTraf(CatCount, 5, 4) = RVCatTraf(CatCount, 5) * ZoneExtVar(34, YearCount)
-            RVFCatTraf(CatCount, 5, 5) = RVCatTraf(CatCount, 5) * ZoneExtVar(35, YearCount)
-            RVFCatTraf(CatCount, 5, 6) = RVCatTraf(CatCount, 5) * ZoneExtVar(21, YearCount)
-            RVFCatTraf(CatCount, 5, 7) = RVCatTraf(CatCount, 5) * ZoneExtVar(36, YearCount)
-            RVFCatTraf(CatCount, 5, 8) = RVCatTraf(CatCount, 5) * ZoneExtVar(37, YearCount)
-            RVFCatTraf(CatCount, 5, 10) = RVCatTraf(CatCount, 5) * ZoneExtVar(38, YearCount)
+            RVFCatTraf(CatCount, 1, 1) = RVCatTraf(CatCount, 1) * ZoneExtVar(ZoneID, 12)
+            RVFCatTraf(CatCount, 1, 2) = RVCatTraf(CatCount, 1) * ZoneExtVar(ZoneID, 13)
+            RVFCatTraf(CatCount, 1, 3) = RVCatTraf(CatCount, 1) * ZoneExtVar(ZoneID, 25)
+            RVFCatTraf(CatCount, 1, 4) = RVCatTraf(CatCount, 1) * ZoneExtVar(ZoneID, 26)
+            RVFCatTraf(CatCount, 1, 5) = RVCatTraf(CatCount, 1) * ZoneExtVar(ZoneID, 27)
+            RVFCatTraf(CatCount, 1, 6) = RVCatTraf(CatCount, 1) * ZoneExtVar(ZoneID, 14)
+            RVFCatTraf(CatCount, 1, 9) = RVCatTraf(CatCount, 1) * ZoneExtVar(ZoneID, 28)
+            RVFCatTraf(CatCount, 1, 10) = RVCatTraf(CatCount, 1) * ZoneExtVar(ZoneID, 29)
+            RVFCatTraf(CatCount, 2, 1) = RVCatTraf(CatCount, 2) * ZoneExtVar(ZoneID, 15)
+            RVFCatTraf(CatCount, 2, 2) = RVCatTraf(CatCount, 2) * ZoneExtVar(ZoneID, 16)
+            RVFCatTraf(CatCount, 2, 4) = RVCatTraf(CatCount, 2) * ZoneExtVar(ZoneID, 30)
+            RVFCatTraf(CatCount, 2, 5) = RVCatTraf(CatCount, 2) * ZoneExtVar(ZoneID, 31)
+            RVFCatTraf(CatCount, 2, 6) = RVCatTraf(CatCount, 2) * ZoneExtVar(ZoneID, 17)
+            RVFCatTraf(CatCount, 2, 7) = RVCatTraf(CatCount, 2) * ZoneExtVar(ZoneID, 32)
+            RVFCatTraf(CatCount, 2, 8) = RVCatTraf(CatCount, 2) * ZoneExtVar(ZoneID, 33)
+            RVFCatTraf(CatCount, 3, 2) = RVCatTraf(CatCount, 3) * ZoneExtVar(ZoneID, 18)
+            RVFCatTraf(CatCount, 3, 4) = RVCatTraf(CatCount, 3) * ZoneExtVar(ZoneID, 39)
+            RVFCatTraf(CatCount, 3, 9) = RVCatTraf(CatCount, 3) * ZoneExtVar(ZoneID, 40)
+            RVFCatTraf(CatCount, 3, 10) = RVCatTraf(CatCount, 3) * ZoneExtVar(ZoneID, 41)
+            RVFCatTraf(CatCount, 4, 2) = RVCatTraf(CatCount, 4) * ZoneExtVar(ZoneID, 18)
+            RVFCatTraf(CatCount, 4, 4) = RVCatTraf(CatCount, 4) * ZoneExtVar(ZoneID, 39)
+            RVFCatTraf(CatCount, 4, 9) = RVCatTraf(CatCount, 4) * ZoneExtVar(ZoneID, 40)
+            RVFCatTraf(CatCount, 4, 10) = RVCatTraf(CatCount, 4) * ZoneExtVar(ZoneID, 41)
+            RVFCatTraf(CatCount, 5, 2) = RVCatTraf(CatCount, 5) * ZoneExtVar(ZoneID, 20)
+            RVFCatTraf(CatCount, 5, 4) = RVCatTraf(CatCount, 5) * ZoneExtVar(ZoneID, 34)
+            RVFCatTraf(CatCount, 5, 5) = RVCatTraf(CatCount, 5) * ZoneExtVar(ZoneID, 35)
+            RVFCatTraf(CatCount, 5, 6) = RVCatTraf(CatCount, 5) * ZoneExtVar(ZoneID, 21)
+            RVFCatTraf(CatCount, 5, 7) = RVCatTraf(CatCount, 5) * ZoneExtVar(ZoneID, 36)
+            RVFCatTraf(CatCount, 5, 8) = RVCatTraf(CatCount, 5) * ZoneExtVar(ZoneID, 37)
+            RVFCatTraf(CatCount, 5, 10) = RVCatTraf(CatCount, 5) * ZoneExtVar(ZoneID, 38)
         Next
 
         'estimate fuel consumption for each vehicle type
@@ -976,107 +990,107 @@
         'Petrol cars
         VClass = "CarP"
         'motorway
-        FuelSpeed = 111.04 * (NewCatSpeed(1) / BaseSpeed(1))
+        FuelSpeed = 111.04 * (NewCatSpeed(ZoneID, 1) / BaseSpeed(ZoneID, 1))
         Call VehicleFuelConsumption()
         RVFFuel(1, 1, 1) = RVFCatTraf(1, 1, 1) * FuelPerKm * StratArray(31)
         'rural a (note that there are different speeds for dual and single carriagesways)
         If RVCatTraf(2, 1) > 0 Then
-            FuelSpeed = (((109.44 * ZoneExtVar(7, YearCount)) + (75.639 * ZoneExtVar(8, YearCount))) / (ZoneExtVar(7, YearCount) + ZoneExtVar(8, YearCount))) * (NewCatSpeed(2) / BaseSpeed(2))
+            FuelSpeed = (((109.44 * ZoneExtVar(ZoneID, 7)) + (75.639 * ZoneExtVar(ZoneID, 8))) / (ZoneExtVar(ZoneID, 7) + ZoneExtVar(ZoneID, 8))) * (NewCatSpeed(ZoneID, 2) / BaseSpeed(ZoneID, 2))
             Call VehicleFuelConsumption()
             RVFFuel(2, 1, 1) = RVFCatTraf(2, 1, 1) * FuelPerKm * StratArray(31)
         Else
             RVFFuel(2, 1, 1) = 0
         End If
         'rural minor
-        FuelSpeed = 75.639 * (NewCatSpeed(3) / BaseSpeed(3))
+        FuelSpeed = 75.639 * (NewCatSpeed(ZoneID, 3) / BaseSpeed(ZoneID, 3))
         Call VehicleFuelConsumption()
         RVFFuel(3, 1, 1) = RVFCatTraf(3, 1, 1) * FuelPerKm * StratArray(31)
         'urban
-        FuelSpeed = 52.143 * (NewCatSpeed(4) / BaseSpeed(4))
+        FuelSpeed = 52.143 * (NewCatSpeed(ZoneID, 4) / BaseSpeed(ZoneID, 4))
         Call VehicleFuelConsumption()
         RVFFuel(4, 1, 1) = RVFCatTraf(4, 1, 1) * FuelPerKm * StratArray(31)
         'Diesel cars
         VClass = "CarD"
         'motorway
-        FuelSpeed = 111.04 * (NewCatSpeed(1) / BaseSpeed(1))
+        FuelSpeed = 111.04 * (NewCatSpeed(ZoneID, 1) / BaseSpeed(ZoneID, 1))
         Call VehicleFuelConsumption()
         RVFFuel(1, 1, 2) = RVFCatTraf(1, 1, 2) * FuelPerKm * StratArray(32)
         'rural a (note that there are different speeds for dual and single carriagesways)
         If RVCatTraf(2, 1) > 0 Then
-            FuelSpeed = (((109.44 * ZoneExtVar(7, YearCount)) + (75.639 * ZoneExtVar(8, YearCount))) / (ZoneExtVar(7, YearCount) + ZoneExtVar(8, YearCount))) * (NewCatSpeed(2) / BaseSpeed(2))
+            FuelSpeed = (((109.44 * ZoneExtVar(ZoneID, 7)) + (75.639 * ZoneExtVar(ZoneID, 8))) / (ZoneExtVar(ZoneID, 7) + ZoneExtVar(ZoneID, 8))) * (NewCatSpeed(ZoneID, 2) / BaseSpeed(ZoneID, 2))
             Call VehicleFuelConsumption()
             RVFFuel(2, 1, 2) = RVFCatTraf(2, 1, 2) * FuelPerKm * StratArray(32)
         Else
             RVFFuel(2, 1, 2) = 0
         End If
         'rural minor
-        FuelSpeed = 75.639 * (NewCatSpeed(3) / BaseSpeed(3))
+        FuelSpeed = 75.639 * (NewCatSpeed(ZoneID, 3) / BaseSpeed(ZoneID, 3))
         Call VehicleFuelConsumption()
         RVFFuel(3, 1, 2) = RVFCatTraf(3, 1, 2) * FuelPerKm * StratArray(32)
         'urban
-        FuelSpeed = 52.143 * (NewCatSpeed(4) / BaseSpeed(4))
+        FuelSpeed = 52.143 * (NewCatSpeed(ZoneID, 4) / BaseSpeed(ZoneID, 4))
         Call VehicleFuelConsumption()
         RVFFuel(4, 1, 2) = RVFCatTraf(4, 1, 2) * FuelPerKm * StratArray(32)
         'Petrol hybrid cars - these are being calculated based on a proportional adjustment of the petrol fuel consumption figures (ie dividing the Brand hybrid figure by the Brand petrol figure and then multiplying by the DfT petrol figure)
         VClass = "CarP"
         'motorway
-        FuelSpeed = 111.04 * (NewCatSpeed(1) / BaseSpeed(1))
+        FuelSpeed = 111.04 * (NewCatSpeed(ZoneID, 1) / BaseSpeed(ZoneID, 1))
         Call VehicleFuelConsumption()
         RVFFuel(1, 1, 3) = RVFCatTraf(1, 1, 3) * (FuelPerKm * (11.2 / 18.6)) * StratArray(43)
         'rural a
         If RVCatTraf(2, 1) > 0 Then
-            FuelSpeed = (((109.44 * ZoneExtVar(7, YearCount)) + (75.639 * ZoneExtVar(8, YearCount))) / (ZoneExtVar(7, YearCount) + ZoneExtVar(8, YearCount))) * (NewCatSpeed(2) / BaseSpeed(2))
+            FuelSpeed = (((109.44 * ZoneExtVar(ZoneID, 7)) + (75.639 * ZoneExtVar(ZoneID, 8))) / (ZoneExtVar(ZoneID, 7) + ZoneExtVar(ZoneID, 8))) * (NewCatSpeed(ZoneID, 2) / BaseSpeed(ZoneID, 2))
             Call VehicleFuelConsumption()
             RVFFuel(2, 1, 3) = RVFCatTraf(2, 1, 3) * (FuelPerKm * (11.2 / 18.6)) * StratArray(43)
         Else
             RVFFuel(2, 1, 3) = 0
         End If
         'rural minor
-        FuelSpeed = 75.639 * (NewCatSpeed(3) / BaseSpeed(3))
+        FuelSpeed = 75.639 * (NewCatSpeed(ZoneID, 3) / BaseSpeed(ZoneID, 3))
         Call VehicleFuelConsumption()
         RVFFuel(3, 1, 3) = RVFCatTraf(3, 1, 3) * (FuelPerKm * (11.2 / 18.6)) * StratArray(43)
         'urban
-        FuelSpeed = 52.143 * (NewCatSpeed(4) / BaseSpeed(4))
+        FuelSpeed = 52.143 * (NewCatSpeed(ZoneID, 4) / BaseSpeed(ZoneID, 4))
         Call VehicleFuelConsumption()
         RVFFuel(4, 1, 3) = RVFCatTraf(4, 1, 3) * (FuelPerKm * (11.2 / 18.6)) * StratArray(43)
         'Diesel hybrid cars  - these are being calculated based on a proportional adjustment of the diesel fuel consumption figures (ie dividing the Brand hybrid figure by the Brand diesel figure and then multiplying by the DfT diesel figure)
         VClass = "CarD"
         'motorway
-        FuelSpeed = 111.04 * (NewCatSpeed(1) / BaseSpeed(1))
+        FuelSpeed = 111.04 * (NewCatSpeed(ZoneID, 1) / BaseSpeed(ZoneID, 1))
         Call VehicleFuelConsumption()
         RVFFuel(1, 1, 4) = RVFCatTraf(1, 1, 4) * (FuelPerKm * (7.5 / 12.4)) * StratArray(44)
         'rural a (note that there are different speeds for dual and single carriagesways)
         If RVCatTraf(2, 1) > 0 Then
-            FuelSpeed = (((109.44 * ZoneExtVar(7, YearCount)) + (75.639 * ZoneExtVar(8, YearCount))) / (ZoneExtVar(7, YearCount) + ZoneExtVar(8, YearCount))) * (NewCatSpeed(2) / BaseSpeed(2))
+            FuelSpeed = (((109.44 * ZoneExtVar(ZoneID, 7)) + (75.639 * ZoneExtVar(ZoneID, 8))) / (ZoneExtVar(ZoneID, 7) + ZoneExtVar(ZoneID, 8))) * (NewCatSpeed(ZoneID, 2) / BaseSpeed(ZoneID, 2))
             Call VehicleFuelConsumption()
             RVFFuel(2, 1, 4) = RVFCatTraf(2, 1, 4) * (FuelPerKm * (7.5 / 12.4)) * StratArray(44)
         Else
             RVFFuel(2, 1, 4) = 0
         End If
         'rural minor
-        FuelSpeed = 75.639 * (NewCatSpeed(3) / BaseSpeed(3))
+        FuelSpeed = 75.639 * (NewCatSpeed(ZoneID, 3) / BaseSpeed(ZoneID, 3))
         Call VehicleFuelConsumption()
         RVFFuel(3, 1, 4) = RVFCatTraf(3, 1, 4) * (FuelPerKm * (7.5 / 12.4)) * StratArray(44)
         'urban
-        FuelSpeed = 52.143 * (NewCatSpeed(4) / BaseSpeed(4))
+        FuelSpeed = 52.143 * (NewCatSpeed(ZoneID, 4) / BaseSpeed(ZoneID, 4))
         Call VehicleFuelConsumption()
         RVFFuel(4, 1, 4) = RVFCatTraf(4, 1, 4) * (FuelPerKm * (7.5 / 12.4)) * StratArray(44)
         'Plug-in hybrid cars - for rural driving these use a proportional adjustment of the Brand figures (petrol/diesel), whereas for urban driving they use the Brand electric figures
         VClass = "CarP"
         'motorway
-        FuelSpeed = 111.04 * (NewCatSpeed(1) / BaseSpeed(1))
+        FuelSpeed = 111.04 * (NewCatSpeed(ZoneID, 1) / BaseSpeed(ZoneID, 1))
         Call VehicleFuelConsumption()
         RVFFuel(1, 1, 5) = RVFCatTraf(1, 1, 5) * (FuelPerKm * (18.1 / 25.9)) * StratArray(45)
         'rural a (note that there are different speeds for dual and single carriagesways)
         If RVCatTraf(2, 1) > 0 Then
-            FuelSpeed = (((109.44 * ZoneExtVar(7, YearCount)) + (75.639 * ZoneExtVar(8, YearCount))) / (ZoneExtVar(7, YearCount) + ZoneExtVar(8, YearCount))) * (NewCatSpeed(2) / BaseSpeed(2))
+            FuelSpeed = (((109.44 * ZoneExtVar(ZoneID, 7)) + (75.639 * ZoneExtVar(ZoneID, 8))) / (ZoneExtVar(ZoneID, 7) + ZoneExtVar(ZoneID, 8))) * (NewCatSpeed(ZoneID, 2) / BaseSpeed(ZoneID, 2))
             Call VehicleFuelConsumption()
             RVFFuel(2, 1, 5) = RVFCatTraf(2, 1, 5) * (FuelPerKm * (18.1 / 25.9)) * StratArray(45)
         Else
             RVFFuel(2, 1, 5) = 0
         End If
         'rural minor
-        FuelSpeed = 75.639 * (NewCatSpeed(3) / BaseSpeed(3))
+        FuelSpeed = 75.639 * (NewCatSpeed(ZoneID, 3) / BaseSpeed(ZoneID, 3))
         Call VehicleFuelConsumption()
         RVFFuel(3, 1, 5) = RVFCatTraf(3, 1, 5) * (FuelPerKm * (18.1 / 25.9)) * StratArray(45)
         'urban
@@ -1112,85 +1126,85 @@
         'Petrol LGVs
         VClass = "LGVP"
         'motorway
-        FuelSpeed = 111.04 * (NewCatSpeed(1) / BaseSpeed(1))
+        FuelSpeed = 111.04 * (NewCatSpeed(ZoneID, 1) / BaseSpeed(ZoneID, 1))
         Call VehicleFuelConsumption()
         RVFFuel(1, 2, 1) = RVFCatTraf(1, 2, 1) * FuelPerKm * StratArray(34)
         'rural a (note that there are different speeds for dual and single carriagesways)
         If RVCatTraf(2, 2) > 0 Then
-            FuelSpeed = (((109.44 * ZoneExtVar(7, YearCount)) + (77.249 * ZoneExtVar(8, YearCount))) / (ZoneExtVar(7, YearCount) + ZoneExtVar(8, YearCount))) * (NewCatSpeed(2) / BaseSpeed(2))
+            FuelSpeed = (((109.44 * ZoneExtVar(ZoneID, 7)) + (77.249 * ZoneExtVar(ZoneID, 8))) / (ZoneExtVar(ZoneID, 7) + ZoneExtVar(ZoneID, 8))) * (NewCatSpeed(ZoneID, 2) / BaseSpeed(ZoneID, 2))
             Call VehicleFuelConsumption()
             RVFFuel(2, 2, 1) = RVFCatTraf(2, 2, 1) * FuelPerKm * StratArray(34)
         Else
             RVFFuel(2, 2, 1) = 0
         End If
         'rural minor
-        FuelSpeed = 77.249 * (NewCatSpeed(3) / BaseSpeed(3))
+        FuelSpeed = 77.249 * (NewCatSpeed(ZoneID, 3) / BaseSpeed(ZoneID, 3))
         Call VehicleFuelConsumption()
         RVFFuel(3, 2, 1) = RVFCatTraf(3, 2, 1) * FuelPerKm * StratArray(34)
         'urban
-        FuelSpeed = 52.786 * (NewCatSpeed(4) / BaseSpeed(4))
+        FuelSpeed = 52.786 * (NewCatSpeed(ZoneID, 4) / BaseSpeed(ZoneID, 4))
         Call VehicleFuelConsumption()
         RVFFuel(4, 2, 1) = RVFCatTraf(4, 2, 1) * FuelPerKm * StratArray(34)
         'Diesel LGVs
         VClass = "LGVD"
         'motorway
-        FuelSpeed = 111.04 * (NewCatSpeed(1) / BaseSpeed(1))
+        FuelSpeed = 111.04 * (NewCatSpeed(ZoneID, 1) / BaseSpeed(ZoneID, 1))
         Call VehicleFuelConsumption()
         RVFFuel(1, 2, 2) = RVFCatTraf(1, 2, 2) * FuelPerKm * StratArray(35)
         'rural a (note that there are different speeds for dual and single carriagesways)
         If RVCatTraf(2, 2) > 0 Then
-            FuelSpeed = (((109.44 * ZoneExtVar(7, YearCount)) + (77.249 * ZoneExtVar(8, YearCount))) / (ZoneExtVar(7, YearCount) + ZoneExtVar(8, YearCount))) * (NewCatSpeed(2) / BaseSpeed(2))
+            FuelSpeed = (((109.44 * ZoneExtVar(ZoneID, 7)) + (77.249 * ZoneExtVar(ZoneID, 8))) / (ZoneExtVar(ZoneID, 7) + ZoneExtVar(ZoneID, 8))) * (NewCatSpeed(ZoneID, 2) / BaseSpeed(ZoneID, 2))
             Call VehicleFuelConsumption()
             RVFFuel(2, 2, 2) = RVFCatTraf(2, 2, 2) * FuelPerKm * StratArray(35)
         Else
             RVFFuel(2, 2, 2) = 0
         End If
         'rural minor
-        FuelSpeed = 77.249 * (NewCatSpeed(3) / BaseSpeed(3))
+        FuelSpeed = 77.249 * (NewCatSpeed(ZoneID, 3) / BaseSpeed(ZoneID, 3))
         Call VehicleFuelConsumption()
         RVFFuel(3, 2, 2) = RVFCatTraf(3, 2, 2) * FuelPerKm * StratArray(35)
         'urban
-        FuelSpeed = 52.786 * (NewCatSpeed(4) / BaseSpeed(4))
+        FuelSpeed = 52.786 * (NewCatSpeed(ZoneID, 4) / BaseSpeed(ZoneID, 4))
         Call VehicleFuelConsumption()
         RVFFuel(4, 2, 2) = RVFCatTraf(4, 2, 2) * FuelPerKm * StratArray(35)
         'diesel hybrid LGVs
         VClass = "LGVD"
         'motorway
-        FuelSpeed = 111.04 * (NewCatSpeed(1) / BaseSpeed(1))
+        FuelSpeed = 111.04 * (NewCatSpeed(ZoneID, 1) / BaseSpeed(ZoneID, 1))
         Call VehicleFuelConsumption()
         RVFFuel(1, 2, 4) = RVFCatTraf(1, 2, 4) * (FuelPerKm * (4.4 / 7.9)) * StratArray(48)
         'rural a (note that there are different speeds for dual and single carriagesways)
         If RVCatTraf(2, 2) > 0 Then
-            FuelSpeed = (((109.44 * ZoneExtVar(7, YearCount)) + (77.249 * ZoneExtVar(8, YearCount))) / (ZoneExtVar(7, YearCount) + ZoneExtVar(8, YearCount))) * (NewCatSpeed(2) / BaseSpeed(2))
+            FuelSpeed = (((109.44 * ZoneExtVar(ZoneID, 7)) + (77.249 * ZoneExtVar(ZoneID, 8))) / (ZoneExtVar(ZoneID, 7) + ZoneExtVar(ZoneID, 8))) * (NewCatSpeed(ZoneID, 2) / BaseSpeed(ZoneID, 2))
             Call VehicleFuelConsumption()
             RVFFuel(2, 2, 4) = RVFCatTraf(2, 2, 4) * (FuelPerKm * (4.4 / 7.9)) * StratArray(48)
         Else
             RVFFuel(2, 2, 4) = 0
         End If
         'rural minor
-        FuelSpeed = 77.249 * (NewCatSpeed(3) / BaseSpeed(3))
+        FuelSpeed = 77.249 * (NewCatSpeed(ZoneID, 3) / BaseSpeed(ZoneID, 3))
         Call VehicleFuelConsumption()
         RVFFuel(3, 2, 4) = RVFCatTraf(3, 2, 4) * (FuelPerKm * (4.4 / 7.9)) * StratArray(48)
         'urban
-        FuelSpeed = 52.786 * (NewCatSpeed(4) / BaseSpeed(4))
+        FuelSpeed = 52.786 * (NewCatSpeed(ZoneID, 4) / BaseSpeed(ZoneID, 4))
         Call VehicleFuelConsumption()
         RVFFuel(4, 2, 4) = RVFCatTraf(4, 2, 4) * (FuelPerKm * (4.4 / 7.9)) * StratArray(48)
         'plug-in hybrid LGVs - for rural driving these use a proportional adjustment of the Brand figures (petrol/diesel), whereas for urban driving they use the Brand electric figures
         VClass = "LGVD"
         'motorway
-        FuelSpeed = 111.04 * (NewCatSpeed(1) / BaseSpeed(1))
+        FuelSpeed = 111.04 * (NewCatSpeed(ZoneID, 1) / BaseSpeed(ZoneID, 1))
         Call VehicleFuelConsumption()
         RVFFuel(1, 2, 5) = RVFCatTraf(1, 2, 5) * (FuelPerKm * (5.8 / 7.9)) * StratArray(49)
         'rural a (note that there are different speeds for dual and single carriagesways)
         If RVCatTraf(2, 2) > 0 Then
-            FuelSpeed = (((109.44 * ZoneExtVar(7, YearCount)) + (77.249 * ZoneExtVar(8, YearCount))) / (ZoneExtVar(7, YearCount) + ZoneExtVar(8, YearCount))) * (NewCatSpeed(2) / BaseSpeed(2))
+            FuelSpeed = (((109.44 * ZoneExtVar(ZoneID, 7)) + (77.249 * ZoneExtVar(ZoneID, 8))) / (ZoneExtVar(ZoneID, 7) + ZoneExtVar(ZoneID, 8))) * (NewCatSpeed(ZoneID, 2) / BaseSpeed(ZoneID, 2))
             Call VehicleFuelConsumption()
             RVFFuel(2, 2, 5) = RVFCatTraf(2, 2, 5) * (FuelPerKm * (5.8 / 7.9)) * StratArray(49)
         Else
             RVFFuel(2, 2, 5) = 0
         End If
         'rural minor
-        FuelSpeed = 77.249 * (NewCatSpeed(3) / BaseSpeed(3))
+        FuelSpeed = 77.249 * (NewCatSpeed(ZoneID, 3) / BaseSpeed(ZoneID, 3))
         Call VehicleFuelConsumption()
         RVFFuel(3, 2, 5) = RVFCatTraf(3, 2, 5) * (FuelPerKm * (5.8 / 7.9)) * StratArray(49)
         'urban
@@ -1226,45 +1240,45 @@
         'Diesel  2-3 axle rigid HGVs
         VClass = "HGV1D"
         'motorway
-        FuelSpeed = 92.537 * (NewCatSpeed(1) / BaseSpeed(1))
+        FuelSpeed = 92.537 * (NewCatSpeed(ZoneID, 1) / BaseSpeed(ZoneID, 1))
         Call VehicleFuelConsumption()
         RVFFuel(1, 3, 2) = RVFCatTraf(1, 3, 2) * FuelPerKm * StratArray(37)
         'rural a (note that there are different speeds for dual and single carriagesways)
         If RVCatTraf(2, 3) > 0 Then
-            FuelSpeed = (((90.928 * ZoneExtVar(7, YearCount)) + (70.811 * ZoneExtVar(8, YearCount))) / (ZoneExtVar(7, YearCount) + ZoneExtVar(8, YearCount))) * (NewCatSpeed(2) / BaseSpeed(2))
+            FuelSpeed = (((90.928 * ZoneExtVar(ZoneID, 7)) + (70.811 * ZoneExtVar(ZoneID, 8))) / (ZoneExtVar(ZoneID, 7) + ZoneExtVar(ZoneID, 8))) * (NewCatSpeed(ZoneID, 2) / BaseSpeed(ZoneID, 2))
             Call VehicleFuelConsumption()
             RVFFuel(2, 3, 2) = RVFCatTraf(2, 3, 2) * FuelPerKm * StratArray(37)
         Else
             RVFFuel(2, 3, 2) = 0
         End If
         'rural minor
-        FuelSpeed = 70.811 * (NewCatSpeed(3) / BaseSpeed(3))
+        FuelSpeed = 70.811 * (NewCatSpeed(ZoneID, 3) / BaseSpeed(ZoneID, 3))
         Call VehicleFuelConsumption()
         RVFFuel(3, 3, 2) = RVFCatTraf(3, 3, 2) * FuelPerKm * StratArray(37)
         'urban
-        FuelSpeed = 51.579 * (NewCatSpeed(4) / BaseSpeed(4))
+        FuelSpeed = 51.579 * (NewCatSpeed(ZoneID, 4) / BaseSpeed(ZoneID, 4))
         Call VehicleFuelConsumption()
         RVFFuel(4, 3, 2) = RVFCatTraf(4, 3, 2) * FuelPerKm * StratArray(37)
         'diesel hybrid small HGVs
         VClass = "HGV1D"
         'motorway
-        FuelSpeed = 92.537 * (NewCatSpeed(1) / BaseSpeed(1))
+        FuelSpeed = 92.537 * (NewCatSpeed(ZoneID, 1) / BaseSpeed(ZoneID, 1))
         Call VehicleFuelConsumption()
         RVFFuel(1, 3, 4) = RVFCatTraf(1, 3, 4) * (FuelPerKm * (15 / 25.9)) * StratArray(57)
         'rural a (note that there are different speeds for dual and single carriagesways)
         If RVCatTraf(2, 3) > 0 Then
-            FuelSpeed = (((90.928 * ZoneExtVar(7, YearCount)) + (70.811 * ZoneExtVar(8, YearCount))) / (ZoneExtVar(7, YearCount) + ZoneExtVar(8, YearCount))) * (NewCatSpeed(2) / BaseSpeed(2))
+            FuelSpeed = (((90.928 * ZoneExtVar(ZoneID, 7)) + (70.811 * ZoneExtVar(ZoneID, 8))) / (ZoneExtVar(ZoneID, 7) + ZoneExtVar(ZoneID, 8))) * (NewCatSpeed(ZoneID, 2) / BaseSpeed(ZoneID, 2))
             Call VehicleFuelConsumption()
             RVFFuel(2, 3, 4) = RVFCatTraf(2, 3, 4) * (FuelPerKm * (15 / 25.9)) * StratArray(57)
         Else
             RVFFuel(2, 3, 4) = 0
         End If
         'rural minor
-        FuelSpeed = 70.811 * (NewCatSpeed(3) / BaseSpeed(3))
+        FuelSpeed = 70.811 * (NewCatSpeed(ZoneID, 3) / BaseSpeed(ZoneID, 3))
         Call VehicleFuelConsumption()
         RVFFuel(3, 3, 4) = RVFCatTraf(3, 3, 4) * (FuelPerKm * (15 / 25.9)) * StratArray(57)
         'urban
-        FuelSpeed = 51.579 * (NewCatSpeed(4) / BaseSpeed(4))
+        FuelSpeed = 51.579 * (NewCatSpeed(ZoneID, 4) / BaseSpeed(ZoneID, 4))
         Call VehicleFuelConsumption()
         RVFFuel(4, 3, 4) = RVFCatTraf(4, 3, 4) * (FuelPerKm * (15 / 25.9)) * StratArray(57)
         'hydrogen ICE small HGVs
@@ -1289,45 +1303,45 @@
         'Diesel 4+ axle rigid and artic HGVs
         VClass = "HGV2D"
         'motorway
-        FuelSpeed = 86.905 * (NewCatSpeed(1) / BaseSpeed(1))
+        FuelSpeed = 86.905 * (NewCatSpeed(ZoneID, 1) / BaseSpeed(ZoneID, 1))
         Call VehicleFuelConsumption()
         RVFFuel(1, 4, 2) = RVFCatTraf(1, 4, 2) * FuelPerKm * StratArray(39)
         'rural a (note that there are different speeds for dual and single carriagesways)
         If RVCatTraf(2, 4) > 0 Then
-            FuelSpeed = (((85.295 * ZoneExtVar(7, YearCount)) + (69.685 * ZoneExtVar(8, YearCount))) / (ZoneExtVar(7, YearCount) + ZoneExtVar(8, YearCount))) * (NewCatSpeed(2) / BaseSpeed(2))
+            FuelSpeed = (((85.295 * ZoneExtVar(ZoneID, 7)) + (69.685 * ZoneExtVar(ZoneID, 8))) / (ZoneExtVar(ZoneID, 7) + ZoneExtVar(ZoneID, 8))) * (NewCatSpeed(ZoneID, 2) / BaseSpeed(ZoneID, 2))
             Call VehicleFuelConsumption()
             RVFFuel(2, 4, 2) = RVFCatTraf(2, 4, 2) * FuelPerKm * StratArray(39)
         Else
             RVFFuel(2, 4, 2) = 0
         End If
         'rural minor
-        FuelSpeed = 69.685 * (NewCatSpeed(3) / BaseSpeed(3))
+        FuelSpeed = 69.685 * (NewCatSpeed(ZoneID, 3) / BaseSpeed(ZoneID, 3))
         Call VehicleFuelConsumption()
         RVFFuel(3, 4, 2) = RVFCatTraf(3, 4, 2) * FuelPerKm * StratArray(39)
         'urban
-        FuelSpeed = 53.511 * (NewCatSpeed(4) / BaseSpeed(4))
+        FuelSpeed = 53.511 * (NewCatSpeed(ZoneID, 4) / BaseSpeed(ZoneID, 4))
         Call VehicleFuelConsumption()
         RVFFuel(4, 4, 2) = RVFCatTraf(4, 4, 2) * FuelPerKm * StratArray(39)
         'diesel hybrid large HGVs
         VClass = "HGV2D"
         'motorway
-        FuelSpeed = 86.905 * (NewCatSpeed(1) / BaseSpeed(1))
+        FuelSpeed = 86.905 * (NewCatSpeed(ZoneID, 1) / BaseSpeed(ZoneID, 1))
         Call VehicleFuelConsumption()
         RVFFuel(1, 4, 4) = RVFCatTraf(1, 4, 4) * (FuelPerKm * (22.1 / 37.6)) * StratArray(60)
         'rural a (note that there are different speeds for dual and single carriagesways)
         If RVCatTraf(2, 4) > 0 Then
-            FuelSpeed = (((85.295 * ZoneExtVar(7, YearCount)) + (69.685 * ZoneExtVar(8, YearCount))) / (ZoneExtVar(7, YearCount) + ZoneExtVar(8, YearCount))) * (NewCatSpeed(2) / BaseSpeed(2))
+            FuelSpeed = (((85.295 * ZoneExtVar(ZoneID, 7)) + (69.685 * ZoneExtVar(ZoneID, 8))) / (ZoneExtVar(ZoneID, 7) + ZoneExtVar(ZoneID, 8))) * (NewCatSpeed(ZoneID, 2) / BaseSpeed(ZoneID, 2))
             Call VehicleFuelConsumption()
             RVFFuel(2, 4, 4) = RVFCatTraf(2, 4, 4) * (FuelPerKm * (22.1 / 37.6)) * StratArray(60)
         Else
             RVFFuel(2, 4, 4) = 0
         End If
         'rural minor
-        FuelSpeed = 69.685 * (NewCatSpeed(3) / BaseSpeed(3))
+        FuelSpeed = 69.685 * (NewCatSpeed(ZoneID, 3) / BaseSpeed(ZoneID, 3))
         Call VehicleFuelConsumption()
         RVFFuel(3, 4, 4) = RVFCatTraf(3, 4, 4) * (FuelPerKm * (22.1 / 37.6)) * StratArray(60)
         'urban
-        FuelSpeed = 53.511 * (NewCatSpeed(4) / BaseSpeed(4))
+        FuelSpeed = 53.511 * (NewCatSpeed(ZoneID, 4) / BaseSpeed(ZoneID, 4))
         Call VehicleFuelConsumption()
         RVFFuel(4, 4, 4) = RVFCatTraf(4, 4, 4) * (FuelPerKm * (22.1 / 37.6)) * StratArray(60)
         'hydrogen ICE large HGVs
@@ -1352,63 +1366,63 @@
         'Diesel PSVs
         VClass = "PSVD"
         'motorway
-        FuelSpeed = 98.17 * (NewCatSpeed(1) / BaseSpeed(1))
+        FuelSpeed = 98.17 * (NewCatSpeed(ZoneID, 1) / BaseSpeed(ZoneID, 1))
         Call VehicleFuelConsumption()
         RVFFuel(1, 5, 2) = RVFCatTraf(1, 5, 2) * FuelPerKm * StratArray(41)
         'rural a (note that there are different speeds for dual and single carriagesways)
         If RVCatTraf(2, 5) > 0 Then
-            FuelSpeed = (((96.561 * ZoneExtVar(7, YearCount)) + (72.42 * ZoneExtVar(8, YearCount))) / (ZoneExtVar(7, YearCount) + ZoneExtVar(8, YearCount))) * (NewCatSpeed(2) / BaseSpeed(2))
+            FuelSpeed = (((96.561 * ZoneExtVar(ZoneID, 7)) + (72.42 * ZoneExtVar(ZoneID, 8))) / (ZoneExtVar(ZoneID, 7) + ZoneExtVar(ZoneID, 8))) * (NewCatSpeed(ZoneID, 2) / BaseSpeed(ZoneID, 2))
             Call VehicleFuelConsumption()
             RVFFuel(2, 5, 2) = RVFCatTraf(2, 5, 2) * FuelPerKm * StratArray(41)
         Else
             RVFFuel(2, 5, 2) = 0
         End If
         'rural minor
-        FuelSpeed = 72.42 * (NewCatSpeed(3) / BaseSpeed(3))
+        FuelSpeed = 72.42 * (NewCatSpeed(ZoneID, 3) / BaseSpeed(ZoneID, 3))
         Call VehicleFuelConsumption()
         RVFFuel(3, 5, 2) = RVFCatTraf(3, 5, 2) * FuelPerKm * StratArray(41)
         'urban
-        FuelSpeed = 48.924 * (NewCatSpeed(4) / BaseSpeed(4))
+        FuelSpeed = 48.924 * (NewCatSpeed(ZoneID, 4) / BaseSpeed(ZoneID, 4))
         Call VehicleFuelConsumption()
         RVFFuel(4, 5, 2) = RVFCatTraf(4, 5, 2) * FuelPerKm * StratArray(41)
         'Diesel hybrid PSVs
         VClass = "PSVD"
         'motorway
-        FuelSpeed = 98.17 * (NewCatSpeed(1) / BaseSpeed(1))
+        FuelSpeed = 98.17 * (NewCatSpeed(ZoneID, 1) / BaseSpeed(ZoneID, 1))
         Call VehicleFuelConsumption()
         RVFFuel(1, 5, 4) = RVFCatTraf(1, 5, 4) * (FuelPerKm * (18.5 / 17.6)) * StratArray(52)
         'rural a (note that there are different speeds for dual and single carriagesways)
         If RVCatTraf(2, 5) > 0 Then
-            FuelSpeed = (((96.561 * ZoneExtVar(7, YearCount)) + (72.42 * ZoneExtVar(8, YearCount))) / (ZoneExtVar(7, YearCount) + ZoneExtVar(8, YearCount))) * (NewCatSpeed(2) / BaseSpeed(2))
+            FuelSpeed = (((96.561 * ZoneExtVar(ZoneID, 7)) + (72.42 * ZoneExtVar(ZoneID, 8))) / (ZoneExtVar(ZoneID, 7) + ZoneExtVar(ZoneID, 8))) * (NewCatSpeed(ZoneID, 2) / BaseSpeed(ZoneID, 2))
             Call VehicleFuelConsumption()
             RVFFuel(2, 5, 4) = RVFCatTraf(2, 5, 4) * (FuelPerKm * (11.9 / 19.6)) * StratArray(52)
         Else
             RVFFuel(2, 5, 4) = 0
         End If
         'rural minor
-        FuelSpeed = 72.42 * (NewCatSpeed(3) / BaseSpeed(3))
+        FuelSpeed = 72.42 * (NewCatSpeed(ZoneID, 3) / BaseSpeed(ZoneID, 3))
         Call VehicleFuelConsumption()
         RVFFuel(3, 5, 4) = RVFCatTraf(3, 5, 4) * (FuelPerKm * (11.9 / 19.6)) * StratArray(52)
         'urban
-        FuelSpeed = 48.924 * (NewCatSpeed(4) / BaseSpeed(4))
+        FuelSpeed = 48.924 * (NewCatSpeed(ZoneID, 4) / BaseSpeed(ZoneID, 4))
         Call VehicleFuelConsumption()
         RVFFuel(4, 5, 4) = RVFCatTraf(4, 5, 4) * (FuelPerKm * (11.9 / 19.6)) * StratArray(52)
         'Plug-in hybrid PSVs
         VClass = "PSVD"
         'motorway
-        FuelSpeed = 98.17 * (NewCatSpeed(1) / BaseSpeed(1))
+        FuelSpeed = 98.17 * (NewCatSpeed(ZoneID, 1) / BaseSpeed(ZoneID, 1))
         Call VehicleFuelConsumption()
         RVFFuel(1, 5, 5) = RVFCatTraf(1, 5, 5) * (FuelPerKm * (11.9 / 19.6)) * StratArray(53)
         'rural a (note that there are different speeds for dual and single carriagesways)
         If RVCatTraf(2, 5) > 0 Then
-            FuelSpeed = (((96.561 * ZoneExtVar(7, YearCount)) + (72.42 * ZoneExtVar(8, YearCount))) / (ZoneExtVar(7, YearCount) + ZoneExtVar(8, YearCount))) * (NewCatSpeed(2) / BaseSpeed(2))
+            FuelSpeed = (((96.561 * ZoneExtVar(ZoneID, 7)) + (72.42 * ZoneExtVar(ZoneID, 8))) / (ZoneExtVar(ZoneID, 7) + ZoneExtVar(ZoneID, 8))) * (NewCatSpeed(ZoneID, 2) / BaseSpeed(ZoneID, 2))
             Call VehicleFuelConsumption()
             RVFFuel(2, 5, 5) = RVFCatTraf(2, 5, 5) * (FuelPerKm * (11.9 / 19.6)) * StratArray(53)
         Else
             RVFFuel(2, 5, 5) = 0
         End If
         'rural minor
-        FuelSpeed = 72.42 * (NewCatSpeed(3) / BaseSpeed(3))
+        FuelSpeed = 72.42 * (NewCatSpeed(ZoneID, 3) / BaseSpeed(ZoneID, 3))
         Call VehicleFuelConsumption()
         RVFFuel(3, 5, 5) = RVFCatTraf(3, 5, 5) * (FuelPerKm * (11.9 / 19.6)) * StratArray(53)
         'urban
@@ -1647,7 +1661,7 @@
 
     Sub RoadZoneOutput()
         'combine output values into output string
-        ZoneOutputRow = ZoneID & "," & YearCount & "," & NewVkm & "," & ZoneSpdNew & "," & PetrolUsed & "," & DieselUsed & "," & ElectricUsed & "," & LPGUsed & "," & CNGUsed & "," & HydrogenUsed & "," & RoadCatTraffic(1) & "," & RoadCatTraffic(2) & "," & RoadCatTraffic(3) & "," & RoadCatTraffic(4) & "," & NewCatSpeed(1) & "," & NewCatSpeed(2) & "," & NewCatSpeed(3) & "," & NewCatSpeed(4)
+        ZoneOutputRow = YearCount & "," & ZoneID & "," & NewVkm & "," & ZoneSpdNew & "," & PetrolUsed & "," & DieselUsed & "," & ElectricUsed & "," & LPGUsed & "," & CNGUsed & "," & HydrogenUsed & "," & RoadCatTraffic(ZoneID, 1) & "," & RoadCatTraffic(ZoneID, 2) & "," & RoadCatTraffic(ZoneID, 3) & "," & RoadCatTraffic(ZoneID, 4) & "," & NewCatSpeed(ZoneID, 1) & "," & NewCatSpeed(ZoneID, 2) & "," & NewCatSpeed(ZoneID, 3) & "," & NewCatSpeed(ZoneID, 4)
 
         For v = 1 To 10
             ZoneOutputRow = ZoneOutputRow & "," & VKmVType(v)
@@ -1663,29 +1677,29 @@
         Dim newcaprow As String
 
         'set base values to equal the values from the current year
-        ZonePop = ZoneExtVar(2, YearCount)
-        ZoneGVA = ZoneExtVar(3, YearCount)
-        ZoneSpeed = ZoneSpdNew
-        ZoneCarCost = ZoneExtVar(4, YearCount)
-        ZoneLGVCost = ZoneExtVar(42, YearCount)
-        ZoneHGV1Cost = ZoneExtVar(43, YearCount)
-        ZoneHGV2Cost = ZoneExtVar(44, YearCount)
-        ZonePSVCost = ZoneExtVar(45, YearCount)
-        BaseVkm = NewVkm
-        ZoneLaneKm(1) = NewLaneKm(1)
-        ZoneLaneKm(2) = NewLaneKm(2)
-        ZoneLaneKm(3) = NewLaneKm(3)
-        ZoneLaneKm(4) = NewLaneKm(4)
-        RoadCatKm(1) = ZoneExtVar(6, YearCount) / 6
-        RoadCatKm(2) = (CDbl(ZoneExtVar(7, YearCount)) / 4) + (CDbl(ZoneExtVar(8, YearCount)) / 2)
-        RoadCatKm(3) = ZoneExtVar(9, YearCount) / 2
-        RoadCatKm(4) = (CDbl(ZoneExtVar(10, YearCount)) / 4) + (CDbl(ZoneExtVar(11, YearCount)) / 2)
-        PetrolUsed = 0
-        DieselUsed = 0
-        ElectricUsed = 0
-        LPGUsed = 0
-        CNGUsed = 0
-        HydrogenUsed = 0
+        'ZonePop = ZoneExtVar(2, YearCount)
+        'ZoneGVA = ZoneExtVar(3, YearCount)
+        'ZoneSpeed = ZoneSpdNew
+        'ZoneCarCost = ZoneExtVar(4, YearCount)
+        'ZoneLGVCost = ZoneExtVar(42, YearCount)
+        'ZoneHGV1Cost = ZoneExtVar(43, YearCount)
+        'ZoneHGV2Cost = ZoneExtVar(44, YearCount)
+        'ZonePSVCost = ZoneExtVar(45, YearCount)
+        'BaseVkm = NewVkm
+        'ZoneLaneKm(1) = NewLaneKm(1)
+        'ZoneLaneKm(2) = NewLaneKm(2)
+        'ZoneLaneKm(3) = NewLaneKm(3)
+        'ZoneLaneKm(4) = NewLaneKm(4)
+        'RoadCatKm(1) = ZoneExtVar(6, YearCount) / 6
+        'RoadCatKm(2) = (CDbl(ZoneExtVar(7, YearCount)) / 4) + (CDbl(ZoneExtVar(8, YearCount)) / 2)
+        'RoadCatKm(3) = ZoneExtVar(9, YearCount) / 2
+        'RoadCatKm(4) = (CDbl(ZoneExtVar(10, YearCount)) / 4) + (CDbl(ZoneExtVar(11, YearCount)) / 2)
+        'PetrolUsed = 0
+        'DieselUsed = 0
+        'ElectricUsed = 0
+        'LPGUsed = 0
+        'CNGUsed = 0
+        'HydrogenUsed = 0
 
         'if building capacity then check if new capacity is needed
         '130514 amount of capacity built altered to 10% of previous total
@@ -1693,52 +1707,118 @@
         If BuildInfra = True Then
             'first clear 'BuiltLaneKm' array
             For k = 1 To 4
-                BuiltLaneKm(k) = 0
+                BuiltLaneKm(ZoneID, k) = 0
             Next
             'check motorways
-            If RoadCatTraffic(1) > (0.9 * BaseCatC(1)) Then
-                BuiltLaneKm(1) = (NewLaneKm(1) * 0.1)
-                newcaprow = ZoneID & "," & YearCount & "," & BuiltLaneKm(1) & ",,,"
+            If RoadCatTraffic(ZoneID, 1) > (0.9 * BaseCatC(ZoneID, 1)) Then
+                BuiltLaneKm(ZoneID, 1) = (NewLaneKm(1) * 0.1)
+                newcaprow = ZoneID & "," & YearCount & "," & BuiltLaneKm(ZoneID, 1) & ",,,"
                 rzcb.WriteLine(newcaprow)
             End If
             'check rural a roads
-            If RoadCatTraffic(2) > (0.9 * BaseCatC(2)) Then
-                BuiltLaneKm(2) = (NewLaneKm(2) * 0.1)
-                newcaprow = ZoneID & "," & YearCount & ",," & BuiltLaneKm(2) & ",,"
+            If RoadCatTraffic(ZoneID, 2) > (0.9 * BaseCatC(ZoneID, 2)) Then
+                BuiltLaneKm(ZoneID, 2) = (NewLaneKm(2) * 0.1)
+                newcaprow = ZoneID & "," & YearCount & ",," & BuiltLaneKm(ZoneID, 2) & ",,"
                 rzcb.WriteLine(newcaprow)
             End If
             'check rural minor roads
-            If RoadCatTraffic(3) > (0.9 * BaseCatC(3)) Then
-                BuiltLaneKm(3) = (NewLaneKm(3) * 0.1)
-                newcaprow = ZoneID & "," & YearCount & ",,," & BuiltLaneKm(3) & ","
+            If RoadCatTraffic(ZoneID, 3) > (0.9 * BaseCatC(ZoneID, 3)) Then
+                BuiltLaneKm(ZoneID, 3) = (NewLaneKm(3) * 0.1)
+                newcaprow = ZoneID & "," & YearCount & ",,," & BuiltLaneKm(ZoneID, 3) & ","
                 rzcb.WriteLine(newcaprow)
             End If
             'check urban roads
-            If RoadCatTraffic(4) > (0.9 * BaseCatC(4)) Then
-                BuiltLaneKm(4) = (NewLaneKm(4) * 0.1)
-                newcaprow = ZoneID & "," & YearCount & ",,,," & BuiltLaneKm(4)
+            If RoadCatTraffic(ZoneID, 4) > (0.9 * BaseCatC(ZoneID, 4)) Then
+                BuiltLaneKm(ZoneID, 4) = (NewLaneKm(4) * 0.1)
+                newcaprow = ZoneID & "," & YearCount & ",,,," & BuiltLaneKm(ZoneID, 4)
                 rzcb.WriteLine(newcaprow)
             End If
         End If
 
-        For x = 1 To 4
-            BaseRoadCatTraffic(x) = RoadCatTraffic(x)
-            BaseCatSpeed(x) = NewCatSpeed(x)
-            For y = 1 To 5
-                BaseRVCatTraf(x, y) = RVCatTraf(x, y)
-            Next
-        Next
-        'add back the suppressed traffic if using smarter choices
+        'For x = 1 To 4
+        '    BaseRoadCatTraffic(ZoneID,x) = RoadCatTraffic(ZoneID,x)
+        '    BaseCatSpeed(x) = NewCatSpeed(x)
+        '    For y = 1 To 5
+        '        BaseRVCatTraf(x, y) = RVCatTraf(x, y)
+        '    Next
+        'Next
+        ''add back the suppressed traffic if using smarter choices
+        'If SmarterChoices = True Then
+        '    BaseRVCatTraf(4, 1) += SuppressedTraffic(4, 1)
+        '    BaseRoadCatTraffic(ZoneID,4) += SuppressedTraffic(4, 1)
+        '    SuppressedTraffic(4, 1) = 0
+        'End If
+
+        'If UrbanFrt = True Then
+        '    For y = 2 To 4
+        '        BaseRVCatTraf(4, y) += SuppressedTraffic(4, y)
+        '        BaseRoadCatTraffic(ZoneID,4) += SuppressedTraffic(4, y)
+        '        SuppressedTraffic(4, y) = 0
+        '    Next
+        'End If
+
+        'If SmartFrt = True Then
+        '    For x = 1 To 3
+        '        For y = 3 To 4
+        '            BaseRVCatTraf(x, y) += SuppressedTraffic(x, y)
+        '            BaseRoadCatTraffic(ZoneID,x) += SuppressedTraffic(x, y)
+        '            SuppressedTraffic(x, y) = 0
+        '        Next
+        '    Next
+        'End If
+
+
+    End Sub
+
+    Sub WriteUpdateFileB()
+        Dim OutputRow As String
+
+        'set base values to equal the values from the current year
+        ZonePop(ZoneID, 1) = ZoneExtVar(ZoneID, 2)
+        ZoneGVA(ZoneID, 1) = ZoneExtVar(ZoneID, 3)
+        ZoneSpeed(ZoneID, 1) = ZoneSpdNew
+        ZoneCarCost(ZoneID, 1) = ZoneExtVar(ZoneID, 4)
+        ZoneLGVCost(ZoneID, 1) = ZoneExtVar(ZoneID, 42)
+        ZoneHGV1Cost(ZoneID, 1) = ZoneExtVar(ZoneID, 43)
+        ZoneHGV2Cost(ZoneID, 1) = ZoneExtVar(ZoneID, 44)
+        ZonePSVCost(ZoneID, 1) = ZoneExtVar(ZoneID, 45)
+        BaseVkm(ZoneID, 1) = NewVkm
+        ZoneLaneKm(ZoneID, 1) = ZoneExtVar(ZoneID, 6)
+        ZoneLaneKm(ZoneID, 2) = CDbl(ZoneExtVar(ZoneID, 7)) + CDbl(ZoneExtVar(ZoneID, 8))
+        ZoneLaneKm(ZoneID, 3) = ZoneExtVar(ZoneID, 9)
+        ZoneLaneKm(ZoneID, 4) = CDbl(ZoneExtVar(ZoneID, 10)) + CDbl(ZoneExtVar(ZoneID, 11))
+        RoadCatKm(ZoneID, 1) = ZoneExtVar(ZoneID, 6) / 6
+        RoadCatKm(ZoneID, 2) = (CDbl(ZoneExtVar(ZoneID, 7)) / 4) + (CDbl(ZoneExtVar(ZoneID, 8)) / 2)
+        RoadCatKm(ZoneID, 3) = ZoneExtVar(ZoneID, 9) / 2
+        RoadCatKm(ZoneID, 4) = (CDbl(ZoneExtVar(ZoneID, 10)) / 4) + (CDbl(ZoneExtVar(ZoneID, 11)) / 2)
+        PetrolUsed = 0
+        DieselUsed = 0
+        ElectricUsed = 0
+        LPGUsed = 0
+        CNGUsed = 0
+        HydrogenUsed = 0
+
+        'write second row
+        OutputRow = YearCount & "," & ZoneID & "," & ZonePop(ZoneID, 1) & "," & ZoneGVA(ZoneID, 1) & "," & ZoneSpeed(ZoneID, 1) & "," & ZoneCarCost(ZoneID, 1) & "," & ZoneLGVCost(ZoneID, 1) & "," & ZoneHGV1Cost(ZoneID, 1) & "," & ZoneHGV2Cost(ZoneID, 1) & "," & ZonePSVCost(ZoneID, 1) & "," & BaseVkm(ZoneID, 1) & "," & ZoneLaneKm(ZoneID, 1) & "," & ZoneLaneKm(ZoneID, 2) & "," & ZoneLaneKm(ZoneID, 3) & "," & ZoneLaneKm(ZoneID, 4) & "," & RoadCatKm(ZoneID, 1) & "," & RoadCatKm(ZoneID, 2) & "," & RoadCatKm(ZoneID, 3) & "," & RoadCatKm(ZoneID, 4) & ","
+        OutputRow = OutputRow & RoadCatTraffic(ZoneID, 1) & "," & RVCatTraf(1, 1) & "," & RVCatTraf(1, 2) & "," & RVCatTraf(1, 3) & "," & RVCatTraf(1, 4) & "," & RVCatTraf(1, 5) & ","
+        OutputRow = OutputRow & RoadCatTraffic(ZoneID, 2) & "," & RVCatTraf(2, 1) & "," & RVCatTraf(2, 2) & "," & RVCatTraf(2, 3) & "," & RVCatTraf(2, 4) & "," & RVCatTraf(2, 5) & ","
+        OutputRow = OutputRow & RoadCatTraffic(ZoneID, 3) & "," & RVCatTraf(3, 1) & "," & RVCatTraf(3, 2) & "," & RVCatTraf(3, 3) & "," & RVCatTraf(3, 4) & "," & RVCatTraf(3, 5) & ","
+        OutputRow = OutputRow & RoadCatTraffic(ZoneID, 4) & "," & RVCatTraf(4, 1) & "," & RVCatTraf(4, 2) & "," & RVCatTraf(4, 3) & "," & RVCatTraf(4, 4) & "," & RVCatTraf(4, 5) & ","
+        OutputRow = OutputRow & SuppressedTraffic(1, 1) & "," & SuppressedTraffic(1, 2) & "," & SuppressedTraffic(1, 3) & "," & SuppressedTraffic(1, 4) & ","
+        OutputRow = OutputRow & SuppressedTraffic(2, 1) & "," & SuppressedTraffic(2, 2) & "," & SuppressedTraffic(2, 3) & "," & SuppressedTraffic(2, 4) & ","
+        OutputRow = OutputRow & SuppressedTraffic(3, 1) & "," & SuppressedTraffic(3, 2) & "," & SuppressedTraffic(3, 3) & "," & SuppressedTraffic(3, 4) & ","
+        OutputRow = OutputRow & SuppressedTraffic(4, 1) & "," & SuppressedTraffic(4, 2) & "," & SuppressedTraffic(4, 3) & "," & SuppressedTraffic(4, 4) & ","
+        OutputRow = OutputRow & NewCatSpeed(ZoneID, 1) & "," & NewCatSpeed(ZoneID, 2) & "," & NewCatSpeed(ZoneID, 3) & "," & NewCatSpeed(ZoneID, 4) & ","
+
+        zfw.WriteLine(OutputRow)
+
+        'clear previous suppressed traffic
         If SmarterChoices = True Then
-            BaseRVCatTraf(4, 1) += SuppressedTraffic(4, 1)
-            BaseRoadCatTraffic(4) += SuppressedTraffic(4, 1)
             SuppressedTraffic(4, 1) = 0
         End If
 
         If UrbanFrt = True Then
             For y = 2 To 4
-                BaseRVCatTraf(4, y) += SuppressedTraffic(4, y)
-                BaseRoadCatTraffic(4) += SuppressedTraffic(4, y)
                 SuppressedTraffic(4, y) = 0
             Next
         End If
@@ -1746,12 +1826,110 @@
         If SmartFrt = True Then
             For x = 1 To 3
                 For y = 3 To 4
-                    BaseRVCatTraf(x, y) += SuppressedTraffic(x, y)
-                    BaseRoadCatTraffic(x) += SuppressedTraffic(x, y)
                     SuppressedTraffic(x, y) = 0
                 Next
             Next
         End If
 
     End Sub
+
+    Sub ReadZoneInputB()
+
+        If YearCount = 1 Then
+            'if year 1, the temp file does not need to be read
+        Else
+            'read the temp file "Zones.csv"
+            ZoneFile = New IO.FileStream(DirPath & FilePrefix & "Zones.csv", IO.FileMode.Open, IO.FileAccess.Read)
+            zfr = New IO.StreamReader(ZoneFile, System.Text.Encoding.Default)
+            'read header line
+            zfr.ReadLine()
+
+            'read values from the temp file
+            ZoneID = 1
+
+            Do While ZoneID < 145
+
+                ZoneLine = zfr.ReadLine
+                ZoneArray = Split(ZoneLine, ",")
+                'set base values to equal the values from the current year
+                ZonePop(ZoneID, 1) = ZoneArray(2)
+                ZoneGVA(ZoneID, 1) = ZoneArray(3)
+                ZoneSpeed(ZoneID, 1) = CDbl(ZoneArray(4))
+                ZoneCarCost(ZoneID, 1) = CDbl(ZoneArray(5))
+                ZoneLGVCost(ZoneID, 1) = CDbl(ZoneArray(6))
+                ZoneHGV1Cost(ZoneID, 1) = CDbl(ZoneArray(7))
+                ZoneHGV2Cost(ZoneID, 1) = CDbl(ZoneArray(8))
+                ZonePSVCost(ZoneID, 1) = CDbl(ZoneArray(9))
+                BaseVkm(ZoneID, 1) = CDbl(ZoneArray(10))
+                ZoneLaneKm(ZoneID, 1) = CDbl(ZoneArray(11))
+                ZoneLaneKm(ZoneID, 2) = CDbl(ZoneArray(12))
+                ZoneLaneKm(ZoneID, 3) = CDbl(ZoneArray(13))
+                ZoneLaneKm(ZoneID, 4) = CDbl(ZoneArray(14))
+                RoadCatKm(ZoneID, 1) = CDbl(ZoneArray(15))
+                RoadCatKm(ZoneID, 2) = CDbl(ZoneArray(16))
+                RoadCatKm(ZoneID, 3) = CDbl(ZoneArray(17))
+                RoadCatKm(ZoneID, 4) = CDbl(ZoneArray(18))
+
+
+                For x = 1 To 4
+                    BaseRoadCatTraffic(ZoneID, x) = CDbl(ZoneArray(19 + 6 * (x - 1)))
+                    BaseCatSpeed(ZoneID, x) = CDbl(ZoneArray(59 + (x - 1)))
+                    For y = 1 To 5
+                        BaseRVCatTraf(ZoneID, x, y) = CDbl(ZoneArray(19 + 6 * (x - 1) + y))
+                    Next
+                Next
+                'add back the suppressed traffic if using smarter choices
+                If SmarterChoices = True Then
+                    BaseRVCatTraf(ZoneID, 4, 1) += CDbl(ZoneArray(55))
+                    BaseRoadCatTraffic(ZoneID, 4) += CDbl(ZoneArray(55))
+                    'SuppressedTraffic(4, 1) = 0
+                End If
+
+                If UrbanFrt = True Then
+                    For y = 2 To 4
+                        BaseRVCatTraf(ZoneID, 4, y) += CDbl(ZoneArray(54 + y))
+                        BaseRoadCatTraffic(ZoneID, 4) += CDbl(ZoneArray(54 + y))
+                        'SuppressedTraffic(4, y) = 0
+                    Next
+                End If
+
+                If SmartFrt = True Then
+                    For x = 1 To 3
+                        For y = 3 To 4
+                            BaseRVCatTraf(ZoneID, x, y) += CDbl(ZoneArray(43 + 4 * (x - 1) + (y - 1)))
+                            BaseRoadCatTraffic(ZoneID, x) += CDbl(ZoneArray(43 + 4 * (x - 1) + (y - 1)))
+                            'SuppressedTraffic(x, y) = 0
+                        Next
+                    Next
+                End If
+                ZoneID += 1
+            Loop
+
+            zfr.Close()
+            'delete the temp file to recreate for current year
+            System.IO.File.Delete(DirPath & FilePrefix & "Zones.csv")
+
+        End If
+
+        'create a temp file "Zones.csv"
+        ZoneFile = New IO.FileStream(DirPath & FilePrefix & "Zones.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
+        zfw = New IO.StreamWriter(ZoneFile, System.Text.Encoding.Default)
+
+        'write header row
+        'SpeedCatFlowsNew,RoadTypeLaneNew,CostNew,LatentHourlyFlow,ChargeNew,NewHourlyFlow
+        OutputRow = "Yeary,ZoneID,ZonePop,ZoneGVA,ZoneSpeed,ZoneCarCost,ZoneLGVCost,ZoneHGV1Cost,ZoneHGV2Cost,ZonePSVCost,BaseVkm,ZoneLaneKm(1),ZoneLaneKm(2),ZoneLaneKm(3),ZoneLaneKm(4),RoadCatKm(1),RoadCatKm(2),RoadCatKm(3),RoadCatKm(4),"
+        OutputRow = OutputRow & "RoadCatTraffic(1),RVCatTraf(1 - 1),RVCatTraf(1 - 2),RVCatTraf(1 - 3),RVCatTraf(1 - 4),RVCatTraf(1 - 5),"
+        OutputRow = OutputRow & "RoadCatTraffic(2),RVCatTraf(2 - 1),RVCatTraf(2 - 2),RVCatTraf(2 - 3),RVCatTraf(2 - 4),RVCatTraf(2 - 5),"
+        OutputRow = OutputRow & "RoadCatTraffic(3),RVCatTraf(3 - 1),RVCatTraf(3 - 2),RVCatTraf(3 - 3),RVCatTraf(3 - 4),RVCatTraf(3 - 5),"
+        OutputRow = OutputRow & "RoadCatTraffic(4),RVCatTraf(4 - 1),RVCatTraf(4 - 2),RVCatTraf(4 - 3),RVCatTraf(4 - 4),RVCatTraf(4 - 5),"
+        OutputRow = OutputRow & "SuppressedTraffic(1 - 1),SuppressedTraffic(1 - 2),SuppressedTraffic(1 - 3),SuppressedTraffic(1 - 4),"
+        OutputRow = OutputRow & "SuppressedTraffic(2 - 1),SuppressedTraffic(2 - 2),SuppressedTraffic(2 - 3),SuppressedTraffic(2 - 4),"
+        OutputRow = OutputRow & "SuppressedTraffic(3 - 1),SuppressedTraffic(3 - 2),SuppressedTraffic(3 - 3),SuppressedTraffic(3 - 4),"
+        OutputRow = OutputRow & "SuppressedTraffic(4 - 1),SuppressedTraffic(4 - 2),SuppressedTraffic(4 - 3),SuppressedTraffic(4 - 4),"
+        OutputRow = OutputRow & "NewCatSpeed(1),NewCatSpeed(2),NewCatSpeed(3),NewCatSpeed(4),"
+
+        zfw.WriteLine(OutputRow)
+
+    End Sub
+
 End Module
