@@ -13,6 +13,8 @@ Module RailModel
     'v1.6 now calculation by annual timesteps
     'need to think about FuelUsed(y,0) if the calculation are seperated for each year
     'two errors in the old code are identified: NEWCOST was not reseted for each link each year, external variable file doesn't read the complete RailLinkElectrificationDates (becasue to link260 year 2017 data)
+    'v1.7 now corporate with Database function, read/write are using the function in database interface
+
     Dim RlLinkInputData As IO.FileStream
     Dim rai As IO.StreamReader
     Dim RlLinkExtVar As IO.FileStream
@@ -77,6 +79,9 @@ Module RailModel
     Dim RlLinkLine As String
     Dim RlLinkArray() As String
     Dim CalcCheck1 As Integer
+    Dim InputArray(238, 17) As String
+    Dim OutputArray(238, 4) As String
+    Dim TempArray(238, 17) As String
 
     Public Sub RailLinkMain()
         'get the input files and create the output files
@@ -92,12 +97,17 @@ Module RailModel
             'get external variables for this year
             Call GetRailLinkExtVar()
 
-            'read from temp file if not year 1
-            Call ReadRlLinkInput()
+            'read from initial file if year 1, otherwise update from temp file
+            If YearNum = 1 Then
+                Call ReadData("Rail", "Link", InputArray, True, , FilePrefix)
+            Else
+                Call ReadData("Rail", "Link", InputArray, False, , FilePrefix)
+            End If
 
             InputCount = 1
 
             Do While InputCount < 239
+
                 'update the input variables
                 Call LoadRailLinkInput()
 
@@ -122,8 +132,8 @@ Module RailModel
                             CUNew(InputCount, 0) = (RlLinkExtVars(11, InputCount) / RlLinkExtVars(1, InputCount)) / RlLinkExtVars(8, InputCount)
                         End If
                         'write the flows to the output file
-                        Call WriteRlLinkOutput()
                         CalcCheck(InputCount, 0) = True
+                        Call WriteRlLinkOutput()
                     End If
                 Else
                     'if not set calculating check to false
@@ -133,17 +143,19 @@ Module RailModel
                     Call WriteRlLinkOutput()
                 End If
 
-                'write temp file for next year
-                Call WriteRailLinkUpdate()
-
                 'reset the input values for the next year
                 Call ResetRailInputs()
 
                 InputCount += 1
             Loop
 
-            'close the temp file
-            rllw.Close()
+            'create file is true if it is the initial year and write to outputfile and temp file
+            If YearNum = 1 Then
+                Call WriteData("Rail", "Link", OutputArray, TempArray, True, FilePrefix)
+            Else
+                Call WriteData("Rail", "Link", OutputArray, TempArray, False, FilePrefix)
+            End If
+
 
             YearNum += 1
         Loop
@@ -154,17 +166,12 @@ Module RailModel
         Next
 
         'close input and output files
-        rai.Close()
         rae.Close()
-        rao.Close()
         ral.Close()
         rafc.Close()
         If BuildInfra = True Then
             ranc.Close()
         End If
-        rllr.Close()
-        'delete the temp file to recreate for current year
-        System.IO.File.Delete(DirPath & FilePrefix & "RlLinks.csv")
 
     End Sub
 
@@ -172,15 +179,6 @@ Module RailModel
 
         Dim stratstring() As String
         Dim yearchecker As Integer
-
-        'set dir path
-        'DirPath = "\\soton.ac.uk\ude\PersonalFiles\Users\spb1g09\mydocuments\Southampton Work\ITRC\Transport CDAM\Model Inputs\"
-
-        'get rail link input data
-        RlLinkInputData = New IO.FileStream(DirPath & "RailLinkInputData2010.csv", IO.FileMode.Open, IO.FileAccess.Read)
-        rai = New IO.StreamReader(RlLinkInputData, System.Text.Encoding.Default)
-        'read the header row
-        InputRow = rai.ReadLine
 
         'get rail external variables file
         If UpdateExtVars = True Then
@@ -194,12 +192,6 @@ Module RailModel
         rae = New IO.StreamReader(RlLinkExtVar, System.Text.Encoding.Default)
         'read the header row
         InputRow = rae.ReadLine
-
-        'create rail link output file
-        RlLinkOutputData = New IO.FileStream(DirPath & FilePrefix & "RailLinkOutputData.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
-        rao = New IO.StreamWriter(RlLinkOutputData, System.Text.Encoding.Default)
-        'write the header row
-        rao.WriteLine("Yeary,FlowID,Trainsy,Delaysy,CUy")
 
         'get rail link elasticities file
         RlLinkElasticities = New IO.FileStream(DirPath & "Elasticity Files\TR" & Strategy & "\RailLinkElasticities.csv", IO.FileMode.Open, IO.FileAccess.Read)
@@ -243,23 +235,20 @@ Module RailModel
     Sub LoadRailLinkInput()
 
         If YearNum = 1 Then
-            InputRow = rai.ReadLine
-
-            RlLinkDetails = Split(InputRow, ",")
-            'assign values to variables
-            FlowNum(InputCount, 0) = RlLinkDetails(0)
-            OldTracks(InputCount, 0) = RlLinkDetails(3)
-            OldTrains(InputCount, 0) = RlLinkDetails(4)
-            PopZ1Base(InputCount, 0) = RlLinkDetails(5)
-            PopZ2Base(InputCount, 0) = RlLinkDetails(6)
-            GVAZ1Base(InputCount, 0) = RlLinkDetails(7)
-            GVAZ2Base(InputCount, 0) = RlLinkDetails(8)
-            OldDelays(InputCount, 0) = RlLinkDetails(9)
-            RlLinkCost(InputCount, 0) = RlLinkDetails(10)
-            CarFuel(InputCount, 0) = RlLinkDetails(11)
-            MaxTDBase(InputCount, 0) = RlLinkDetails(12)
+            'assign values to variables in the order of the initial file
+            FlowNum(InputCount, 0) = InputArray(InputCount, 0)
+            OldTracks(InputCount, 0) = InputArray(InputCount, 3)
+            OldTrains(InputCount, 0) = InputArray(InputCount, 4)
+            PopZ1Base(InputCount, 0) = InputArray(InputCount, 5)
+            PopZ2Base(InputCount, 0) = InputArray(InputCount, 6)
+            GVAZ1Base(InputCount, 0) = InputArray(InputCount, 7)
+            GVAZ2Base(InputCount, 0) = InputArray(InputCount, 8)
+            OldDelays(InputCount, 0) = InputArray(InputCount, 9)
+            RlLinkCost(InputCount, 0) = InputArray(InputCount, 10)
+            CarFuel(InputCount, 0) = InputArray(InputCount, 11)
+            MaxTDBase(InputCount, 0) = InputArray(InputCount, 12)
             If RailCUPeriod = "Hour" Then
-                BusyTrains(InputCount, 0) = RlLinkDetails(17)
+                BusyTrains(InputCount, 0) = InputArray(InputCount, 17)
                 BusyPer(InputCount, 0) = BusyTrains(InputCount, 0) / OldTrains(InputCount, 0)
                 ModelPeakHeadway(InputCount, 0) = RlPeakHeadway
             End If
@@ -268,6 +257,34 @@ Module RailModel
             CalcCheck(InputCount, 0) = True
             'set new delays value to equal base delay value to start with
             NewDelays(InputCount, 0) = OldDelays(InputCount, 0)
+        Else
+            'assign values to variables in the order of the temp file
+            PopZ1Base(InputCount, 0) = InputArray(InputCount, 2)
+            PopZ2Base(InputCount, 0) = InputArray(InputCount, 3)
+            GVAZ1Base(InputCount, 0) = InputArray(InputCount, 4)
+            GVAZ2Base(InputCount, 0) = InputArray(InputCount, 5)
+            OldDelays(InputCount, 0) = InputArray(InputCount, 6)
+            RlLinkCost(InputCount, 0) = InputArray(InputCount, 7)
+            CarFuel(InputCount, 0) = InputArray(InputCount, 8)
+            OldTrains(InputCount, 0) = InputArray(InputCount, 9)
+            OldTracks(InputCount, 0) = InputArray(InputCount, 10)
+            MaxTDBase(InputCount, 0) = InputArray(InputCount, 11)
+
+            FlowNum(InputCount, 0) = InputArray(InputCount, 1)
+            CUOld(InputCount, 0) = InputArray(InputCount, 12)
+            CUNew(InputCount, 0) = InputArray(InputCount, 13)
+
+            BusyTrains(InputCount, 0) = InputArray(InputCount, 14)
+            BusyPer(InputCount, 0) = InputArray(InputCount, 15)
+            ModelPeakHeadway(InputCount, 0) = InputArray(InputCount, 16)
+            CalcCheck1 = InputArray(InputCount, 17)
+
+            If CalcCheck1 = 1 Then
+                CalcCheck(InputCount, 0) = True
+            Else
+                CalcCheck(InputCount, 0) = False
+            End If
+
         End If
 
     End Sub
@@ -541,20 +558,65 @@ Module RailModel
     End Sub
 
     Sub WriteRlLinkOutput()
-        Dim row As String
-
+        'update fuelused
         FuelUsed(YearNum, 0) += ((1 - RlLinkExtVars(9, InputCount)) * NewTrains * 17695 * RlFuelEff(YearNum, 0))
         FuelUsed(YearNum, 1) += (RlLinkExtVars(9, InputCount) * NewTrains * 107421 * RlFuelEff(YearNum, 1))
 
+        'write to outputarray
         If CalcCheck(InputCount, 0) = True Then
-            row = YearNum & "," & FlowNum(InputCount, 0) & "," & NewTrains & "," & NewDelays(InputCount, 0) & "," & CUNew(InputCount, 0)
-            rao.WriteLine(row)
+            OutputArray(InputCount, 0) = YearNum
+            OutputArray(InputCount, 1) = FlowNum(InputCount, 0)
+            OutputArray(InputCount, 2) = NewTrains
+            OutputArray(InputCount, 3) = NewDelays(InputCount, 0)
+            OutputArray(InputCount, 4) = CUNew(InputCount, 0)
         Else
-            row = YearNum & "," & FlowNum(InputCount, 0) & "," & RlLinkExtVars(11, InputCount) & ",1," & CUNew(InputCount, 0)
-            rao.WriteLine(row)
+            OutputArray(InputCount, 0) = YearNum
+            OutputArray(InputCount, 1) = FlowNum(InputCount, 0)
+            OutputArray(InputCount, 2) = RlLinkExtVars(11, InputCount)
+            OutputArray(InputCount, 3) = 1
+            OutputArray(InputCount, 4) = CUNew(InputCount, 0)
+
             NewTrains = RlLinkExtVars(11, InputCount)
             NewDelays(InputCount, 0) = 1
         End If
+
+        'update variables
+        PopZ1Base(InputCount, 0) = RlLinkExtVars(2, InputCount)
+        PopZ2Base(InputCount, 0) = RlLinkExtVars(3, InputCount)
+        GVAZ1Base(InputCount, 0) = RlLinkExtVars(4, InputCount)
+        GVAZ2Base(InputCount, 0) = RlLinkExtVars(5, InputCount)
+        OldDelays(InputCount, 0) = NewDelays(InputCount, 0)
+        RlLinkCost(InputCount, 0) = Newcost
+        CarFuel(InputCount, 0) = RlLinkExtVars(7, InputCount)
+        OldTrains(InputCount, 0) = NewTrains
+        OldTracks(InputCount, 0) = NewTracks
+        MaxTDBase(InputCount, 0) = MaxTDNew
+
+        If CalcCheck(InputCount, 0) = True Then
+            CalcCheck1 = 1
+        Else
+            CalcCheck1 = 0
+        End If
+
+        'write to temparray
+        TempArray(InputCount, 1) = FlowNum(InputCount, 0)
+        TempArray(InputCount, 2) = PopZ1Base(InputCount, 0)
+        TempArray(InputCount, 3) = PopZ2Base(InputCount, 0)
+        TempArray(InputCount, 4) = GVAZ1Base(InputCount, 0)
+        TempArray(InputCount, 5) = GVAZ2Base(InputCount, 0)
+        TempArray(InputCount, 6) = OldDelays(InputCount, 0)
+        TempArray(InputCount, 7) = RlLinkCost(InputCount, 0)
+        TempArray(InputCount, 8) = CarFuel(InputCount, 0)
+        TempArray(InputCount, 9) = OldTrains(InputCount, 0)
+        TempArray(InputCount, 10) = OldTracks(InputCount, 0)
+        TempArray(InputCount, 11) = MaxTDBase(InputCount, 0)
+        TempArray(InputCount, 12) = InputArray(InputCount, 12)
+        TempArray(InputCount, 13) = InputArray(InputCount, 13)
+
+        TempArray(InputCount, 14) = BusyTrains(InputCount, 0)
+        TempArray(InputCount, 15) = BusyPer(InputCount, 0)
+        TempArray(InputCount, 16) = ModelPeakHeadway(InputCount, 0)
+        TempArray(InputCount, 17) = CalcCheck1
 
     End Sub
 
@@ -671,7 +733,7 @@ Module RailModel
         End If
 
         'write second row
-        OutputRow = YearNum & "," & FlowNum(InputCount, 0) & "," & PopZ1Base(InputCount, 0) & "," & PopZ2Base(InputCount, 0) & "," & GVAZ1Base(InputCount, 0) & "," & GVAZ2Base(InputCount, 0) & "," & OldDelays(InputCount, 0) & "," & RlLinkCost(InputCount, 0) & "," & CarFuel(InputCount, 0) & "," & OldTrains(InputCount, 0) & "," & OldTracks(InputCount, 0) & "," & MaxTDBase(InputCount, 0) & "," & CUOld(InputCount, 0) & "," & CUNew(InputCount, 0) & "," & BusyTrains(InputCount, 0) & "," & BusyPer(InputCount, 0) & "," & ModelPeakHeadway(InputCount, 0) & "," & CalcCheck1 & "," & NewDelays(InputCount, 0) & ","
+        OutputRow = YearNum & "," & FlowNum(InputCount, 0) & "," & PopZ1Base(InputCount, 0) & "," & PopZ2Base(InputCount, 0) & "," & GVAZ1Base(InputCount, 0) & "," & GVAZ2Base(InputCount, 0) & "," & OldDelays(InputCount, 0) & "," & RlLinkCost(InputCount, 0) & "," & CarFuel(InputCount, 0) & "," & NewTrains & "," & NewTracks & "," & MaxTDNew & "," & CUOld(InputCount, 0) & "," & CUNew(InputCount, 0) & "," & BusyTrains(InputCount, 0) & "," & BusyPer(InputCount, 0) & "," & ModelPeakHeadway(InputCount, 0) & "," & CalcCheck1 & "," & NewDelays(InputCount, 0) & ","
 
         rllw.WriteLine(OutputRow)
 
