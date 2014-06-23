@@ -816,9 +816,10 @@ Module DBaseInputInterface
     '               Connection - file path - to be replaced with database connection string
     '****************************************************************************************
 
-    Function ReadData(ByVal Type As String, ByVal SubType As String, ByRef DataArray(,) As String,
-                       Optional ByVal HasHeaders As Boolean = True,
+    Function ReadData(ByVal Type As String, ByVal SubType As String, ByRef InputArray(,) As String,
+                       Optional ByVal IsInitialYear As Boolean = True,
                        Optional ByVal datatype As VariantType = VariantType.String,
+                       Optional ByVal FilePrefix As String = "",
                        Optional Connection As String = "") As Boolean
         Dim TheFileName As String = ""
         Dim DataFile As FileStream
@@ -831,7 +832,7 @@ Module DBaseInputInterface
 
         'Check if file path has been selected - if not then use default.
         If Connection = "" Then
-            Connection = "\\soton.ac.uk\ude\PersonalFiles\Users\spb1g09\mydocuments\Southampton Work\ITRC\Transport CDAM\Model Inputs\"
+            Connection = DirPath
         End If
         'Make sure the file path ends with at \
         If Connection.Substring(Len(Connection) - 1, 1) <> "\" Then
@@ -839,67 +840,99 @@ Module DBaseInputInterface
         End If
 
         'Get the filename of datafile based on Type and SubType
+        'Get the initial input data file if it is year 1, otherwise get the temp file
         'TODO - replace with database calls
         Select Case Type
-            Case "Demographics"
-                Select Case SubType
-                    Case "Zone"
-                        TheFileName = "ZoneScenarioPopFile.csv"
-                    Case Else
-                End Select
-            Case "Economics"
-                Select Case SubType
-                    Case "Zone"
-                        TheFileName = "ZoneScenarioEcoFile.csv"
-                    Case Else
-                End Select
             Case "Road"
                 Select Case SubType
-                    Case "Initial"
-                        TheFileName = "RoadInputDataInitial.csv"
-                    Case Else
+                    Case "Zone"
+                        If IsInitialYear = True Then
+                            TheFileName = "RoadZoneInputData2010.csv"
+                        ElseIf IsInitialYear = False Then
+                            TheFileName = "RoadZoneTemp.csv"
+                        End If
+                    Case "Link"
+                        If IsInitialYear = True Then
+                            TheFileName = "RoadInputData2010.csv"
+                        ElseIf IsInitialYear = False Then
+                            TheFileName = "RoadLinkTemp.csv"
+                        End If
                 End Select
-            Case Else
+            Case "Rail"
+                Select Case SubType
+                    Case "Zone"
+                        If IsInitialYear = True Then
+                            TheFileName = "RailZoneInputData2010.csv"
+                        ElseIf IsInitialYear = False Then
+                            TheFileName = "RailZoneTemp.csv"
+                        End If
+                    Case "Link"
+                        If IsInitialYear = True Then
+                            TheFileName = "RailLinkInputData2010.csv"
+                        ElseIf IsInitialYear = False Then
+                            TheFileName = "RailLinkTemp.csv"
+                        End If
+                End Select
+            Case "Sea"
+                If IsInitialYear = True Then
+                    TheFileName = "SeaFreightInputData.csv"
+                ElseIf IsInitialYear = False Then
+                    TheFileName = "SeaTemplate.csv"
+                End If
+            Case "Air"
+                Select Case SubType
+                    Case "Node"
+                        If IsInitialYear = True Then
+                            TheFileName = "AirNodeInputData2010.csv"
+                        ElseIf IsInitialYear = False Then
+                            TheFileName = "AirNodeTemp.csv"
+                        End If
+                    Case "Flow"
+                        If IsInitialYear = True Then
+                            TheFileName = "AirFlowInputData2010.csv"
+                        ElseIf IsInitialYear = False Then
+                            TheFileName = "AirFlowTemp.csv"
+                        End If
+                End Select
 
         End Select
 
+        'get the correct temp file name
+        If IsInitialYear = False Then
+            TheFileName = FilePrefix & TheFileName
+        End If
+
         'Get file data
         Try
-            DataFile = New FileStream(Connection & TheFileName, FileMode.Open, FileAccess.Read)
+            DataFile = New FileStream(Connection & TheFileName, IO.FileMode.Open, IO.FileAccess.Read)
         Catch exIO As IOException
             MsgBox("An error was encountered trying to access the file " & Connection & TheFileName)
         End Try
-        DataRead = New StreamReader(DataFile, System.Text.Encoding.Default)
-        'Get line count
-        DataRows = DataFile.Length
+        DataRead = New IO.StreamReader(DataFile, System.Text.Encoding.Default)
 
         'read header row
         dbheadings = DataRead.ReadLine
         dbarray = Split(dbheadings, ",")
-        DataColumns = dbarray.Length
 
-        'loop through row to det data
-
-        For iR = 0 To DataRows - 1
-            If DataArray Is Nothing Then
-                ReDim DataArray(DataColumns - 1, 0)
-            Else
-                'iActualR is the actual number or data rows (not equal to iR if there are Error rows)
-                ReDim Preserve DataArray(DataColumns - 1, iR)
-            End If
-
+        'loop through row to get data
+        For iR = 1 To UBound(InputArray, 1)
             'Get a line of data from file
             dbline = DataRead.ReadLine
             If dbline Is Nothing Then
                 Exit For
             End If
             dbarray = Split(dbline, ",")
-            For iC = 0 To DataColumns - 1
-                DataArray(iC, iR) = CStr(UnNull(dbarray(iC).ToString, VariantType.Char))
+            For iC = 0 To UBound(InputArray, 2)
+                InputArray(iR, iC) = CStr(UnNull(dbarray(iC).ToString, VariantType.Char))
             Next
         Next
 
         DataRead.Close()
+
+        If IsInitialYear = False Then
+            'delete the temp file to recreate for current year
+            System.IO.File.Delete(Connection & TheFileName)
+        End If
 
         Return True
 
@@ -918,21 +951,23 @@ Module DBaseInputInterface
     '               Connection - file path - to be replaced with database connection string
     '****************************************************************************************
 
-    Function WriteData(ByVal Type As String, ByVal SubType As String, ByRef DataArray(,) As String, ByVal IsNewFile As Boolean,
+    Function WriteData(ByVal Type As String, ByVal SubType As String, ByRef OutputArray(,) As String, ByRef TempArray(,) As String, ByVal IsNewFile As Boolean,
                        Optional ByVal FilePrefix As String = "", Optional Connection As String = "") As Boolean
 
         Dim OutFileName As String = "", TempFileName As String = ""
-        Dim TempFile As FileStream, DataFile As FileStream
-        Dim Template As StreamReader
-        Dim DataWrite As StreamWriter
-        Dim headings As String, Line As String = ""
-        Dim headarray As String()
-        Dim headcount As Integer, fieldcount As Integer
+        Dim TempFile As IO.FileStream
+        Dim TempWrite As StreamWriter
+        Dim OutputFile As IO.FileStream
+        Dim OutputWrite As StreamWriter
+        Dim OutputRead As StreamReader
+        Dim Line As String = ""
         Dim ix As Integer, iy As Integer
+        Dim header As String
+        Dim tempheader As String
 
         'Check if file path has been selected - if not then use default.
         If Connection = "" Then
-            Connection = "\\soton.ac.uk\ude\PersonalFiles\Users\spb1g09\mydocuments\Southampton Work\ITRC\Transport CDAM\Model Outputs\"
+            Connection = DirPath
         End If
         'Make sure the file path ends with at \
         If Connection.Substring(Len(Connection) - 1, 1) <> "\" Then
@@ -944,64 +979,120 @@ Module DBaseInputInterface
         Select Case Type
             Case "Road"
                 Select Case SubType
-                    Case "Output"
-                        OutFileName = "RoadOutputData.csv"
-                        TempFileName = "RoadOutputTemplate.csv"
-                    Case Else
+                    Case "Zone"
+                        OutFileName = "RoadZoneOutputData.csv"
+                        TempFileName = "RoadZoneTemp.csv"
+                        header = "Yeary,ZoneID,Vkmy,Spdy,Petroly,Diesely,Electricy,LPGy,CNGy,Hydrogeny,VKmMwayy,VkmRurAy,VkmRurMiny,VkmUrby,SpdMWayy,SpdRurAy,SpdRurMiny,SpdUrby,VkmPet,VkmDie,VkmPH,VkmDH,VkmPEH,VkmE,VkmLPG,VkmCNG,VkmHyd,VkmFC"
+                        tempheader = "Yeary,ZoneID,ZonePop,ZoneGVA,ZoneSpeed,ZoneCarCost,ZoneLGVCost,ZoneHGV1Cost,ZoneHGV2Cost,ZonePSVCost,BaseVkm,ZoneLaneKm(1),ZoneLaneKm(2),ZoneLaneKm(3),ZoneLaneKm(4),RoadCatKm(1),RoadCatKm(2),RoadCatKm(3),RoadCatKm(4),RoadCatTraffic(1),RVCatTraf(1 - 1),RVCatTraf(1 - 2),RVCatTraf(1 - 3),RVCatTraf(1 - 4),RVCatTraf(1 - 5),RoadCatTraffic(2),RVCatTraf(2 - 1),RVCatTraf(2 - 2),RVCatTraf(2 - 3),RVCatTraf(2 - 4),RVCatTraf(2 - 5),RoadCatTraffic(3),RVCatTraf(3 - 1),RVCatTraf(3 - 2),RVCatTraf(3 - 3),RVCatTraf(3 - 4),RVCatTraf(3 - 5),RoadCatTraffic(4),RVCatTraf(4 - 1),RVCatTraf(4 - 2),RVCatTraf(4 - 3),RVCatTraf(4 - 4),RVCatTraf(4 - 5),SuppressedTraffic(1 - 1),SuppressedTraffic(1 - 2),SuppressedTraffic(1 - 3),SuppressedTraffic(1 - 4),SuppressedTraffic(2 - 1),SuppressedTraffic(2 - 2),SuppressedTraffic(2 - 3),SuppressedTraffic(2 - 4),SuppressedTraffic(3 - 1),SuppressedTraffic(3 - 2),SuppressedTraffic(3 - 3),SuppressedTraffic(3 - 4),SuppressedTraffic(4 - 1),SuppressedTraffic(4 - 2),SuppressedTraffic(4 - 3),SuppressedTraffic(4 - 4),NewCatSpeed(1),NewCatSpeed(2),NewCatSpeed(3),NewCatSpeed(4),"
+                    Case "Link"
+                        OutFileName = "RoadLinkOutputData.csv"
+                        TempFileName = "RoadLinkTemp.csv"
+                        header = "Yeary,FlowID,PCUTotal,SpeedMean,PCUMway,PCUDual,PCUSing,SpdMway,SpdDual,SpdSing,MSC1,MSC2,MSC3,MSC4,MSC5,MSC6,DSC1,DSC2,DSC3,DSC4,DSC5,DSC6,SSC1,SSC2,SSC3,SSC4,SSC5,SSC6,SSC7,SSC8,SpdMSC1,SpdMSC2,SpdMSC3,SpdMSC4,SpdMSC5,SpdMSC6,SpdDSC1,SpdDSC2,SpdDSC3,SpdDSC4,SpdDSC5,SpdDSC6,SpdSSC1,SpdSSC2,SpdSSC3,SpdSSC4,SpdSSC5,SpdSSC6,SpdSSC7,SpdSSC8,MWayLatent,DualLatent,SingLatent,MFullHrs,DFullHrs,SFullHrs,CostMway,CostDual,CostSing"
+                        tempheader = "Yeary,FlowID,sc0,sc1,sc2,sc3,sc4,sc5,sc6,sc7,sc8,sc9,sc10,sc11,sc12,sc13,sc14,sc15,sc16,sc17,sc18,sc19,RTLaneN0,RTLaneN1,RTLaneN2,cost0,cost1,cost2,cost3,cost4,cost5,cost6,cost7,cost8,cost9,cost10,cost11,cost12,cost13,cost14,cost15,cost16,cost17,cost18,cost19,LatentHourlyFlow0,LatentHourlyFlow1,LatentHourlyFlow2,LatentHourlyFlow3,LatentHourlyFlow4,LatentHourlyFlow5,LatentHourlyFlow6,LatentHourlyFlow7,LatentHourlyFlow8,LatentHourlyFlow9,LatentHourlyFlow10,LatentHourlyFlow11,LatentHourlyFlow12,LatentHourlyFlow13,LatentHourlyFlow14,LatentHourlyFlow15,LatentHourlyFlow16,LatentHourlyFlow17,LatentHourlyFlow18,LatentHourlyFlow19,charge0,charge1,charge2,charge3,charge4,charge5,charge6,charge7,charge8,charge9,charge10,charge11,charge12,charge13,charge14,charge15,charge16,charge17,charge18,charge19,NewHourlyFlow0,NewHourlyFlow1,NewHourlyFlow2,NewHourlyFlow3,NewHourlyFlow4,NewHourlyFlow5,NewHourlyFlow6,NewHourlyFlow7,NewHourlyFlow8,NewHourlyFlow9,NewHourlyFlow10,NewHourlyFlow11,NewHourlyFlow12,NewHourlyFlow13,NewHourlyFlow14,NewHourlyFlow15,NewHourlyFlow16,NewHourlyFlow17,NewHourlyFlow18,NewHourlyFlow19,"
                 End Select
-            Case Else
-
+            Case "Rail"
+                Select Case SubType
+                    Case "Zone"
+                        OutFileName = "RailZoneOutputData.csv"
+                        TempFileName = "RailZoneTemp.csv"
+                        header = "Yeary,ZoneID,TripsStaty,Stationsy,Tripsy"
+                        tempheader = "Yeary,ZoneID,PopZ,GvaZ,Cost,Stations,CarFuel,GJT,TripsStat,FareE"
+                    Case "Link"
+                        OutFileName = "RailLinkOutputData.csv"
+                        TempFileName = "RailLinkTemp.csv"
+                        header = "Yeary,FlowID,Trainsy,Delaysy,CUy"
+                        tempheader = "Yeary,FlowID,PopZ1Base,PopZ2Base,GVAZ1Base,GVAZ2Base,OldDelays,RlLinkCost,CarFuel,OldTrains,OldTracks,MaxTDBase,CUOld,CUNew,"
+                End Select
+            Case "Sea"
+                OutFileName = "SeaOutputData.csv"
+                TempFileName = "SeaTemplate.csv"
+                header = "Yeary, PortID, LiqBlky, DryBlky, GCargoy, LoLoy, RoRoy, GasOily, FuelOily"
+            Case "Air"
+                Select Case SubType
+                    Case "Node"
+                        OutFileName = "AirNodeOutputData.csv"
+                        TempFileName = "AirNodeTemp.csv"
+                        header = "Yeary,AirportID,AllPassy,DomPassy,IntPassy,ATMy,IntFuely"
+                        tempheader = "YearNum,AllPassTotal,DomPass,IntPass,TermCapPPA,MaxATM,GORPop,GORGVA,Cost,PlaneSize,PlaneSizeInt,LFDom,LFInt,IntTripDist,AirportTripsLatent"
+                    Case "Flow"
+                        OutFileName = "AirFlowOutputData.csv"
+                        TempFileName = "AirFlowTemp.csv"
+                        header = "Yeary,FlowID,Tripsy,Fuely"
+                        tempheader = "YearNum, FlowID, OAirID, DAirID, Trips, PopOZ, PopDZ, GVAOZ, GVADZ, Cost, FlowKm, AirFlowTripsLatent, AirFlowCapConstant0, AirFlowCapConstant1"
+                End Select
         End Select
 
         'Check if prefix has been set - if not then use default
-        If FilePrefix = "" Then
-            FilePrefix = System.DateTime.Now.Year & System.DateTime.Now.Month & System.DateTime.Now.Day & System.DateTime.Now.Hour & System.DateTime.Now.Minute & System.DateTime.Now.Second
-        End If
+        'Error may occur in readdata function, as temp file name could be different at different time
+        'If FilePrefix = "" Then
+        '    FilePrefix = System.DateTime.Now.Year & System.DateTime.Now.Month & System.DateTime.Now.Day & System.DateTime.Now.Hour & System.DateTime.Now.Minute & System.DateTime.Now.Second
+        'End If
+
         'Add File prefix to Output Filename
         OutFileName = FilePrefix & OutFileName
-        DataFile = File.Create(OutFileName)
-        'DataFile = New FileStream(Connection & OutFileName, FileMode.Open, FileAccess.Write)
-        DataWrite = New StreamWriter(DataFile, System.Text.Encoding.Default)
-        'Get field count from Array
-        fieldcount = UBound(DataArray, 1) + 1
+        TempFileName = FilePrefix & TempFileName
 
         'TODO - Not needed for SoS version using database
         'If creating a new file then create headers
-        If IsNewFile Then
-            'Get the file headers from the template version of the output file
-            TempFile = New FileStream(Connection & TempFileName, FileMode.Open, FileAccess.Read)
-            Template = New StreamReader(TempFile, System.Text.Encoding.Default)
-            'read header row from template
-            headings = Template.ReadLine
-            headarray = Split(headings, ",")
-            headcount = headarray.Count
 
-            'Write header line to output file
-            DataWrite.WriteLine(headings)
-
-            'check to make sure field count is the same as the header count
-            If fieldcount <> headcount Then
-                MsgBox("Template fields do not match output data fields")
-                Return False
-            End If
+        'create the output file if new file is required or go to the last line if not
+        If IsNewFile = True Then
+            OutputFile = New FileStream(Connection & OutFileName, IO.FileMode.CreateNew, IO.FileAccess.ReadWrite)
+            OutputWrite = New IO.StreamWriter(OutputFile, System.Text.Encoding.Default)
+            'write header row 
+            OutputWrite.WriteLine(header)
+        ElseIf IsNewFile = False Then
+            OutputFile = New FileStream(Connection & OutFileName, IO.FileMode.Open, IO.FileAccess.ReadWrite)
+            OutputRead = New IO.StreamReader(OutputFile, System.Text.Encoding.Default)
+            OutputWrite = New IO.StreamWriter(OutputFile, System.Text.Encoding.Default)
+            OutputRead.ReadToEnd()
         End If
+
+        'create the temp file
+        TempFile = New FileStream(Connection & TempFileName, IO.FileMode.CreateNew, IO.FileAccess.Write)
+        TempWrite = New IO.StreamWriter(TempFile, System.Text.Encoding.Default)
+        'write header row 
+        TempWrite.WriteLine(tempheader)
+
+        'Some value are null at the the beginning years so this check may return false
+
+        'check to make sure field count is the same as the header count
+        'If fieldcount <> headcount Then
+        '    MsgBox("Template fields do not match output data fields")
+        '    Return False
+        'End If
 
 
         'loop through array to generate lines in output file
-        For iy = 0 To UBound(DataArray, 2)
+        For iy = 1 To UBound(OutputArray, 1)
             'Build a line to write
             Line = ""
-            For ix = 0 To UBound(DataArray, 1)
-                Line += UnNull(DataArray(ix, iy), VariantType.String) & ","
+            For ix = 0 To UBound(OutputArray, 2)
+                Line += UnNull(OutputArray(iy, ix), VariantType.String) & ","
             Next
             'Delete the last comma
             Line = Line.Substring(0, Len(Line) - 1)
             'Write the line to the output file
-            DataWrite.Write(Line)
-            DataWrite.Write(vbCrLf)
+
+            OutputWrite.WriteLine(Line)
         Next
 
-        DataWrite.Close()
+        'loop through array to generate lines in temp file
+        For iy = 1 To UBound(TempArray, 1)
+            'Build a line to write
+            Line = ""
+            For ix = 0 To UBound(TempArray, 2)
+                Line += UnNull(TempArray(iy, ix), VariantType.String) & ","
+            Next
+            'Delete the last comma
+            Line = Line.Substring(0, Len(Line) - 1)
+            'Write the line to the output file
+            TempWrite.WriteLine(Line)
+        Next
+
+        OutputWrite.Close()
+        TempWrite.Close()
+
 
         Return True
 
@@ -1027,4 +1118,5 @@ Module DBaseInputInterface
 
         End If
     End Function
+
 End Module
