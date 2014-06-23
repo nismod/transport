@@ -50,7 +50,7 @@
         InputRow = pi.ReadLine
 
         'write header row to output file
-        OutputRow = "PortID,Yeary,LBCapy,DBCapy,GCCapy,LLCapy,RRCapy,GORPopy,GORGvay,Costy,FuelEffy"
+        OutputRow = "Yeary,PortID,LBCapy,DBCapy,GCCapy,LLCapy,RRCapy,GORPopy,GORGvay,Costy,FuelEffy"
         'OutputRow = "Yeary,PortID,LBCapy,DBCapy,GCCapy,LLCapy,RRCapy,GORPopy,GORGvay,Costy,FuelEffy"
         po.WriteLine(OutputRow)
 
@@ -389,8 +389,7 @@
                 End If
 
                 'write values to output file
-                OutputRow = PortBaseData(PortCount, 0) & "," & YearNum
-                'OutputRow = YearNum & "," & PortBaseData(0)
+                OutputRow = YearNum & "," & PortBaseData(PortCount, 0)
                 newcount = 1
                 Do Until newcount > 9
                     OutputRow = OutputRow & "," & PortNewData(PortCount, newcount)
