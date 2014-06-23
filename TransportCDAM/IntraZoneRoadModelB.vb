@@ -9,6 +9,7 @@
     'also now can take account of new capacity constructed as result of strategy (ie not just TR1)
     'now also includes variable trip rate option
     'v1.6 now calculated by annual time steps
+    'v1.7 now corporate with Database function, read/write are using the function in database interface
 
     Dim RoadZoneInputData As IO.FileStream
     Dim riz As IO.StreamReader
@@ -73,6 +74,9 @@
     Dim ZoneLine As String
     Dim ZoneArray() As String
     Dim OutputRow As String
+    Dim InputArray(144, 33) As String
+    Dim OutputArray(144, 27) As String
+    Dim TempArray(144, 74) As String
 
 
 
@@ -94,8 +98,12 @@
             'get external variable values
             Call GetZoneExtVar()
 
-            'read zone temp file
-            Call ReadZoneInputB()
+            If YearCount = 1 Then
+                Call ReadData("Road", "Zone", InputArray, True, , FilePrefix)
+            Else
+                ReDim Preserve InputArray(144, 74)
+                Call ReadData("Road", "Zone", InputArray, False, , FilePrefix)
+            End If
 
             ZoneID = 1
 
@@ -110,20 +118,19 @@
                 'estimate fuel consumption
                 Call RoadZoneFuelConsumption()
 
-                'write output line with new demand figure
-                Call RoadZoneOutput()
-
-                'update base values
-                'v1.6 now this sub only write values to the output if BuildInfra is true
-                Call NewBaseValues()
-
-                'write to temp file which will be read for the next year's calculation
-                Call WriteUpdateFileB()
+                'write output array and temp array
+                Call WriteRoadZoneOutput()
 
                 ZoneID += 1
             Loop
 
-            zfw.Close()
+            'create file is true if it is the initial year and write to outputfile and temp file
+            If YearCount = 1 Then
+                Call WriteData("Road", "Zone", OutputArray, TempArray, True, FilePrefix)
+            Else
+                Call WriteData("Road", "Zone", OutputArray, TempArray, False, FilePrefix)
+            End If
+
             'move on to next year
             YearCount += 1
         Loop
@@ -131,28 +138,18 @@
         stf.Close()
 
         'Close input and output files
-        riz.Close()
         evz.Close()
-        roz.Close()
         rez.Close()
         rfz.Close()
         If BuildInfra = True Then
             rzcb.Close()
         End If
-        zfr.Close()
-        'delete the temp file to recreate for current year
-        System.IO.File.Delete(DirPath & FilePrefix & "Zones.csv")
 
     End Sub
 
     Public Sub ZoneSetFiles()
         Dim row As String
         'This sub selects the input data files
-
-        RoadZoneInputData = New IO.FileStream(DirPath & "RoadZoneInputData2010.csv", IO.FileMode.Open, IO.FileAccess.Read)
-        riz = New IO.StreamReader(RoadZoneInputData, System.Text.Encoding.Default)
-        'read header row
-        row = riz.ReadLine
 
         If UpdateExtVars = True Then
             If NewRdZCap = True Then
@@ -165,12 +162,6 @@
         evz = New IO.StreamReader(RoadZoneExtInput, System.Text.Encoding.Default)
         'read header row
         row = evz.ReadLine
-
-        RoadZoneOutputData = New IO.FileStream(DirPath & FilePrefix & "RoadZoneOutput.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
-        roz = New IO.StreamWriter(RoadZoneOutputData, System.Text.Encoding.Default)
-        'write header row
-        ZoneOutputRow = "Yeary,ZoneID,Vkmy,Spdy,Petroly,Diesely,Electricy,LPGy,CNGy,Hydrogeny,VKmMwayy,VkmRurAy,VkmRurMiny,VkmUrby,SpdMWayy,SpdRurAy,SpdRurMiny,SpdUrby,VkmPet,VkmDie,VkmPH,VkmDH,VkmPEH,VkmE,VkmLPG,VkmCNG,VkmHyd,VkmFC"
-        roz.WriteLine(ZoneOutputRow)
 
         RoadZoneElasticities = New IO.FileStream(DirPath & "Elasticity Files\TR" & Strategy & "\RoadZoneElasticities.csv", IO.FileMode.Open, IO.FileAccess.Read)
         rez = New IO.StreamReader(RoadZoneElasticities, System.Text.Encoding.Default)
@@ -217,39 +208,38 @@
     Sub LoadZoneInput()
         Dim SumProbKm As Double
 
+        'read the input data for the inputarray which is from the database
         If YearCount = 1 Then
             'read the input data for the zone
-            ZoneInput = riz.ReadLine
 
-            ZoneDetails = Split(ZoneInput, ",")
-            BaseVkm(ZoneID, 1) = ZoneDetails(2)
-            ZonePop(ZoneID, 1) = ZoneDetails(3)
-            ZoneGVA(ZoneID, 1) = ZoneDetails(4)
-            ZoneSpeed(ZoneID, 1) = ZoneDetails(5)
-            ZoneCarCost(ZoneID, 1) = ZoneDetails(6)
-            ZoneLGVCost(ZoneID, 1) = ZoneDetails(18)
-            ZoneHGV1Cost(ZoneID, 1) = ZoneDetails(19)
-            ZoneHGV2Cost(ZoneID, 1) = ZoneDetails(20)
-            ZonePSVCost(ZoneID, 1) = ZoneDetails(21)
-            ZoneLaneKm(ZoneID, 1) = ZoneDetails(8)
-            ZoneLaneKm(ZoneID, 2) = CDbl(ZoneDetails(9)) + CDbl(ZoneDetails(10))
-            ZoneLaneKm(ZoneID, 3) = ZoneDetails(11)
-            ZoneLaneKm(ZoneID, 4) = CDbl(ZoneDetails(12)) + CDbl(ZoneDetails(13))
-            RoadCatProb(1) = ZoneDetails(14)
-            RoadCatProb(2) = ZoneDetails(15)
-            RoadCatProb(3) = ZoneDetails(16)
-            RoadCatProb(4) = ZoneDetails(17)
+            BaseVkm(ZoneID, 1) = InputArray(ZoneID, 2)
+            ZonePop(ZoneID, 1) = InputArray(ZoneID, 3)
+            ZoneGVA(ZoneID, 1) = InputArray(ZoneID, 4)
+            ZoneSpeed(ZoneID, 1) = InputArray(ZoneID, 5)
+            ZoneCarCost(ZoneID, 1) = InputArray(ZoneID, 6)
+            ZoneLGVCost(ZoneID, 1) = InputArray(ZoneID, 18)
+            ZoneHGV1Cost(ZoneID, 1) = InputArray(ZoneID, 19)
+            ZoneHGV2Cost(ZoneID, 1) = InputArray(ZoneID, 20)
+            ZonePSVCost(ZoneID, 1) = InputArray(ZoneID, 21)
+            ZoneLaneKm(ZoneID, 1) = InputArray(ZoneID, 8)
+            ZoneLaneKm(ZoneID, 2) = CDbl(InputArray(ZoneID, 9)) + CDbl(InputArray(ZoneID, 10))
+            ZoneLaneKm(ZoneID, 3) = InputArray(ZoneID, 11)
+            ZoneLaneKm(ZoneID, 4) = CDbl(InputArray(ZoneID, 12)) + CDbl(InputArray(ZoneID, 13))
+            RoadCatProb(1) = InputArray(ZoneID, 14)
+            RoadCatProb(2) = InputArray(ZoneID, 15)
+            RoadCatProb(3) = InputArray(ZoneID, 16)
+            RoadCatProb(4) = InputArray(ZoneID, 17)
             'allocate the vkm to vehicle types and road types based on the initial proportions and on the proportion of traffic on different road types
             'convert lane km to road km for each road category, where Cat1 is motorways, Cat2 is rural A, Cat3 is rural minor and Cat4 is urban
-            RoadCatKm(ZoneID, 1) = ZoneDetails(8) / 6
-            RoadCatKm(ZoneID, 2) = (CDbl(ZoneDetails(9)) / 4) + (CDbl(ZoneDetails(10)) / 2)
-            RoadCatKm(ZoneID, 3) = ZoneDetails(11) / 2
-            RoadCatKm(ZoneID, 4) = (CDbl(ZoneDetails(12)) / 4) + (CDbl(ZoneDetails(13)) / 2)
+            RoadCatKm(ZoneID, 1) = InputArray(ZoneID, 8) / 6
+            RoadCatKm(ZoneID, 2) = (CDbl(InputArray(ZoneID, 9)) / 4) + (CDbl(InputArray(ZoneID, 10)) / 2)
+            RoadCatKm(ZoneID, 3) = InputArray(ZoneID, 11) / 2
+            RoadCatKm(ZoneID, 4) = (CDbl(InputArray(ZoneID, 12)) / 4) + (CDbl(InputArray(ZoneID, 13)) / 2)
             'v1.4 mod - this now comes straight from input file
-            BaseRoadCatTraffic(ZoneID, 1) = ZoneDetails(22)
-            BaseRoadCatTraffic(ZoneID, 2) = ZoneDetails(23)
-            BaseRoadCatTraffic(ZoneID, 3) = ZoneDetails(24)
-            BaseRoadCatTraffic(ZoneID, 4) = ZoneDetails(25)
+            BaseRoadCatTraffic(ZoneID, 1) = InputArray(ZoneID, 22)
+            BaseRoadCatTraffic(ZoneID, 2) = InputArray(ZoneID, 23)
+            BaseRoadCatTraffic(ZoneID, 3) = InputArray(ZoneID, 24)
+            BaseRoadCatTraffic(ZoneID, 4) = InputArray(ZoneID, 25)
             'the proportions come from DfT Traffic Statistics Table TRA0204 - see model guide for more details
             '**if there is a sudden decline in traffic then we probably just want to multiply by rcprob rather than by rcprob*rck/sumpkm
             'v1.4 mod - calculation of these now much simpler
@@ -276,21 +266,21 @@
             BaseRVCatTraf(ZoneID, 4, 5) = BaseRoadCatTraffic(ZoneID, 4) * 0.017
 
             'v1.4 mod - need to get the base speed for each road category and VkmB and VkmC from input file
-            BaseCatSpeed(ZoneID, 1) = ZoneDetails(26)
-            BaseCatSpeed(ZoneID, 2) = ZoneDetails(27)
-            BaseCatSpeed(ZoneID, 3) = ZoneDetails(28)
-            BaseCatSpeed(ZoneID, 4) = ZoneDetails(29)
+            BaseCatSpeed(ZoneID, 1) = InputArray(ZoneID, 26)
+            BaseCatSpeed(ZoneID, 2) = InputArray(ZoneID, 27)
+            BaseCatSpeed(ZoneID, 3) = InputArray(ZoneID, 28)
+            BaseCatSpeed(ZoneID, 4) = InputArray(ZoneID, 29)
             For x = 1 To 4
                 BaseSpeed(ZoneID, x) = BaseCatSpeed(ZoneID, x)
             Next
-            BaseCatB(ZoneID, 1) = ZoneDetails(22)
-            BaseCatB(ZoneID, 2) = ZoneDetails(23)
-            BaseCatB(ZoneID, 3) = ZoneDetails(24)
-            BaseCatB(ZoneID, 4) = ZoneDetails(25)
-            BaseCatC(ZoneID, 1) = ZoneDetails(30)
-            BaseCatC(ZoneID, 2) = ZoneDetails(31)
-            BaseCatC(ZoneID, 3) = ZoneDetails(32)
-            BaseCatC(ZoneID, 4) = ZoneDetails(33)
+            BaseCatB(ZoneID, 1) = InputArray(ZoneID, 22)
+            BaseCatB(ZoneID, 2) = InputArray(ZoneID, 23)
+            BaseCatB(ZoneID, 3) = InputArray(ZoneID, 24)
+            BaseCatB(ZoneID, 4) = InputArray(ZoneID, 25)
+            BaseCatC(ZoneID, 1) = InputArray(ZoneID, 30)
+            BaseCatC(ZoneID, 2) = InputArray(ZoneID, 31)
+            BaseCatC(ZoneID, 3) = InputArray(ZoneID, 32)
+            BaseCatC(ZoneID, 4) = InputArray(ZoneID, 33)
 
             'v1.4 modification - reset latent and constrained values 
             For x = 1 To 4
@@ -301,6 +291,69 @@
                 AddedLaneKm(ZoneID, x) = 0
                 'End If
                 BuiltLaneKm(ZoneID, x) = 0
+            Next
+        Else
+            ZonePop(ZoneID, 1) = InputArray(ZoneID, 2)
+            ZoneGVA(ZoneID, 1) = InputArray(ZoneID, 3)
+            ZoneSpeed(ZoneID, 1) = CDbl(InputArray(ZoneID, 4))
+            ZoneCarCost(ZoneID, 1) = CDbl(InputArray(ZoneID, 5))
+            ZoneLGVCost(ZoneID, 1) = CDbl(InputArray(ZoneID, 6))
+            ZoneHGV1Cost(ZoneID, 1) = CDbl(InputArray(ZoneID, 7))
+            ZoneHGV2Cost(ZoneID, 1) = CDbl(InputArray(ZoneID, 8))
+            ZonePSVCost(ZoneID, 1) = CDbl(InputArray(ZoneID, 9))
+            BaseVkm(ZoneID, 1) = CDbl(InputArray(ZoneID, 10))
+            ZoneLaneKm(ZoneID, 1) = CDbl(InputArray(ZoneID, 11))
+            ZoneLaneKm(ZoneID, 2) = CDbl(InputArray(ZoneID, 12))
+            ZoneLaneKm(ZoneID, 3) = CDbl(InputArray(ZoneID, 13))
+            ZoneLaneKm(ZoneID, 4) = CDbl(InputArray(ZoneID, 14))
+            RoadCatKm(ZoneID, 1) = CDbl(InputArray(ZoneID, 15))
+            RoadCatKm(ZoneID, 2) = CDbl(InputArray(ZoneID, 16))
+            RoadCatKm(ZoneID, 3) = CDbl(InputArray(ZoneID, 17))
+            RoadCatKm(ZoneID, 4) = CDbl(InputArray(ZoneID, 18))
+
+
+            For x = 1 To 4
+                BaseRoadCatTraffic(ZoneID, x) = CDbl(InputArray(ZoneID, 19 + 6 * (x - 1)))
+                BaseCatSpeed(ZoneID, x) = CDbl(InputArray(ZoneID, 59 + (x - 1)))
+                For y = 1 To 5
+                    BaseRVCatTraf(ZoneID, x, y) = CDbl(InputArray(ZoneID, 19 + 6 * (x - 1) + y))
+                Next
+            Next
+            'add back the suppressed traffic if using smarter choices
+            If SmarterChoices = True Then
+                BaseRVCatTraf(ZoneID, 4, 1) += CDbl(InputArray(ZoneID, 55))
+                BaseRoadCatTraffic(ZoneID, 4) += CDbl(InputArray(ZoneID, 55))
+                'SuppressedTraffic(4, 1) = 0
+            End If
+
+            If UrbanFrt = True Then
+                For y = 2 To 4
+                    BaseRVCatTraf(ZoneID, 4, y) += CDbl(InputArray(ZoneID, 54 + y))
+                    BaseRoadCatTraffic(ZoneID, 4) += CDbl(InputArray(ZoneID, 54 + y))
+                    'SuppressedTraffic(4, y) = 0
+                Next
+            End If
+
+            If SmartFrt = True Then
+                For x = 1 To 3
+                    For y = 3 To 4
+                        BaseRVCatTraf(ZoneID, x, y) += CDbl(InputArray(ZoneID, 43 + 4 * (x - 1) + (y - 1)))
+                        BaseRoadCatTraffic(ZoneID, x) += CDbl(InputArray(ZoneID, 43 + 4 * (x - 1) + (y - 1)))
+                        'SuppressedTraffic(x, y) = 0
+                    Next
+                Next
+            End If
+
+            For x = 1 To 4
+                Latentvkm(ZoneID, x) = InputArray(ZoneID, 62 + x)
+            Next
+
+            For x = 1 To 4
+                AddedLaneKm(ZoneID, x) = InputArray(ZoneID, 66 + x)
+            Next
+
+            For x = 1 To 4
+                BuiltLaneKm(ZoneID, x) = InputArray(ZoneID, 70 + x)
             Next
 
         End If
@@ -1659,16 +1712,152 @@
 
     End Sub
 
-    Sub RoadZoneOutput()
-        'combine output values into output string
-        ZoneOutputRow = YearCount & "," & ZoneID & "," & NewVkm & "," & ZoneSpdNew & "," & PetrolUsed & "," & DieselUsed & "," & ElectricUsed & "," & LPGUsed & "," & CNGUsed & "," & HydrogenUsed & "," & RoadCatTraffic(ZoneID, 1) & "," & RoadCatTraffic(ZoneID, 2) & "," & RoadCatTraffic(ZoneID, 3) & "," & RoadCatTraffic(ZoneID, 4) & "," & NewCatSpeed(ZoneID, 1) & "," & NewCatSpeed(ZoneID, 2) & "," & NewCatSpeed(ZoneID, 3) & "," & NewCatSpeed(ZoneID, 4)
+    Sub WriteRoadZoneOutput()
+        Dim newcaprow As String
 
+        'write to output array
+        OutputArray(ZoneID, 0) = YearCount
+        OutputArray(ZoneID, 1) = ZoneID
+        OutputArray(ZoneID, 2) = NewVkm
+        OutputArray(ZoneID, 3) = ZoneSpdNew
+        OutputArray(ZoneID, 4) = PetrolUsed
+        OutputArray(ZoneID, 5) = DieselUsed
+        OutputArray(ZoneID, 6) = ElectricUsed
+        OutputArray(ZoneID, 7) = LPGUsed
+        OutputArray(ZoneID, 8) = CNGUsed
+        OutputArray(ZoneID, 9) = HydrogenUsed
+        OutputArray(ZoneID, 10) = RoadCatTraffic(ZoneID, 1)
+        OutputArray(ZoneID, 11) = RoadCatTraffic(ZoneID, 2)
+        OutputArray(ZoneID, 12) = RoadCatTraffic(ZoneID, 3)
+        OutputArray(ZoneID, 13) = RoadCatTraffic(ZoneID, 4)
+        OutputArray(ZoneID, 14) = NewCatSpeed(ZoneID, 1)
+        OutputArray(ZoneID, 15) = NewCatSpeed(ZoneID, 2)
+        OutputArray(ZoneID, 16) = NewCatSpeed(ZoneID, 3)
+        OutputArray(ZoneID, 17) = NewCatSpeed(ZoneID, 4)
         For v = 1 To 10
-            ZoneOutputRow = ZoneOutputRow & "," & VKmVType(v)
+            OutputArray(ZoneID, 17 + v) = VKmVType(v)
         Next
 
-        'write output string to file
-        roz.WriteLine(ZoneOutputRow)
+        If BuildInfra = True Then
+            'first clear 'BuiltLaneKm' array
+            For k = 1 To 4
+                BuiltLaneKm(ZoneID, k) = 0
+            Next
+            'check motorways
+            If RoadCatTraffic(ZoneID, 1) > (0.9 * BaseCatC(ZoneID, 1)) Then
+                BuiltLaneKm(ZoneID, 1) = (NewLaneKm(1) * 0.1)
+                newcaprow = ZoneID & "," & YearCount & "," & BuiltLaneKm(ZoneID, 1) & ",,,"
+                rzcb.WriteLine(newcaprow)
+            End If
+            'check rural a roads
+            If RoadCatTraffic(ZoneID, 2) > (0.9 * BaseCatC(ZoneID, 2)) Then
+                BuiltLaneKm(ZoneID, 2) = (NewLaneKm(2) * 0.1)
+                newcaprow = ZoneID & "," & YearCount & ",," & BuiltLaneKm(ZoneID, 2) & ",,"
+                rzcb.WriteLine(newcaprow)
+            End If
+            'check rural minor roads
+            If RoadCatTraffic(ZoneID, 3) > (0.9 * BaseCatC(ZoneID, 3)) Then
+                BuiltLaneKm(ZoneID, 3) = (NewLaneKm(3) * 0.1)
+                newcaprow = ZoneID & "," & YearCount & ",,," & BuiltLaneKm(ZoneID, 3) & ","
+                rzcb.WriteLine(newcaprow)
+            End If
+            'check urban roads
+            If RoadCatTraffic(ZoneID, 4) > (0.9 * BaseCatC(ZoneID, 4)) Then
+                BuiltLaneKm(ZoneID, 4) = (NewLaneKm(4) * 0.1)
+                newcaprow = ZoneID & "," & YearCount & ",,,," & BuiltLaneKm(ZoneID, 4)
+                rzcb.WriteLine(newcaprow)
+            End If
+        End If
+
+        'update variables
+        ZonePop(ZoneID, 1) = ZoneExtVar(ZoneID, 2)
+        ZoneGVA(ZoneID, 1) = ZoneExtVar(ZoneID, 3)
+        ZoneSpeed(ZoneID, 1) = ZoneSpdNew
+        ZoneCarCost(ZoneID, 1) = ZoneExtVar(ZoneID, 4)
+        ZoneLGVCost(ZoneID, 1) = ZoneExtVar(ZoneID, 42)
+        ZoneHGV1Cost(ZoneID, 1) = ZoneExtVar(ZoneID, 43)
+        ZoneHGV2Cost(ZoneID, 1) = ZoneExtVar(ZoneID, 44)
+        ZonePSVCost(ZoneID, 1) = ZoneExtVar(ZoneID, 45)
+        BaseVkm(ZoneID, 1) = NewVkm
+        ZoneLaneKm(ZoneID, 1) = ZoneExtVar(ZoneID, 6)
+        ZoneLaneKm(ZoneID, 2) = CDbl(ZoneExtVar(ZoneID, 7)) + CDbl(ZoneExtVar(ZoneID, 8))
+        ZoneLaneKm(ZoneID, 3) = ZoneExtVar(ZoneID, 9)
+        ZoneLaneKm(ZoneID, 4) = CDbl(ZoneExtVar(ZoneID, 10)) + CDbl(ZoneExtVar(ZoneID, 11))
+        RoadCatKm(ZoneID, 1) = ZoneExtVar(ZoneID, 6) / 6
+        RoadCatKm(ZoneID, 2) = (CDbl(ZoneExtVar(ZoneID, 7)) / 4) + (CDbl(ZoneExtVar(ZoneID, 8)) / 2)
+        RoadCatKm(ZoneID, 3) = ZoneExtVar(ZoneID, 9) / 2
+        RoadCatKm(ZoneID, 4) = (CDbl(ZoneExtVar(ZoneID, 10)) / 4) + (CDbl(ZoneExtVar(ZoneID, 11)) / 2)
+        PetrolUsed = 0
+        DieselUsed = 0
+        ElectricUsed = 0
+        LPGUsed = 0
+        CNGUsed = 0
+        HydrogenUsed = 0
+
+        'write to temp array
+        TempArray(ZoneID, 0) = YearCount
+        TempArray(ZoneID, 1) = ZoneID
+        TempArray(ZoneID, 2) = ZonePop(ZoneID, 1)
+        TempArray(ZoneID, 3) = ZoneGVA(ZoneID, 1)
+        TempArray(ZoneID, 4) = ZoneSpeed(ZoneID, 1)
+        TempArray(ZoneID, 5) = ZoneCarCost(ZoneID, 1)
+        TempArray(ZoneID, 6) = ZoneLGVCost(ZoneID, 1)
+        TempArray(ZoneID, 7) = ZoneHGV1Cost(ZoneID, 1)
+        TempArray(ZoneID, 8) = ZoneHGV2Cost(ZoneID, 1)
+        TempArray(ZoneID, 9) = ZonePSVCost(ZoneID, 1)
+        TempArray(ZoneID, 10) = BaseVkm(ZoneID, 1)
+        TempArray(ZoneID, 11) = ZoneLaneKm(ZoneID, 1)
+        TempArray(ZoneID, 12) = ZoneLaneKm(ZoneID, 2)
+        TempArray(ZoneID, 13) = ZoneLaneKm(ZoneID, 3)
+        TempArray(ZoneID, 14) = ZoneLaneKm(ZoneID, 4)
+        TempArray(ZoneID, 15) = RoadCatKm(ZoneID, 1)
+        TempArray(ZoneID, 16) = RoadCatKm(ZoneID, 2)
+        TempArray(ZoneID, 17) = RoadCatKm(ZoneID, 3)
+        TempArray(ZoneID, 18) = RoadCatKm(ZoneID, 4)
+        For x = 0 To 3
+            TempArray(ZoneID, 19 + 6 * (x)) = RoadCatTraffic(ZoneID, x + 1)
+            For y = 0 To 4
+                TempArray(ZoneID, 20 + 6 * (x) + y) = RVCatTraf(x + 1, y + 1)
+            Next
+        Next
+        For x = 0 To 3
+            For y = 0 To 3
+                TempArray(ZoneID, 43 + 4 * (x) + y) = SuppressedTraffic(x + 1, y + 1)
+            Next
+        Next
+        For x = 0 To 3
+            TempArray(ZoneID, 59 + x) = NewCatSpeed(ZoneID, x + 1)
+        Next
+        For x = 1 To 4
+            TempArray(ZoneID, 62 + x) = Latentvkm(ZoneID, x)
+        Next
+
+        For x = 1 To 4
+            TempArray(ZoneID, 66 + x) = AddedLaneKm(ZoneID, x)
+        Next
+
+        For x = 1 To 4
+            TempArray(ZoneID, 70 + x) = BuiltLaneKm(ZoneID, x)
+        Next
+
+        'clear previous suppressed traffic
+        If SmarterChoices = True Then
+            SuppressedTraffic(4, 1) = 0
+        End If
+        If UrbanFrt = True Then
+            For y = 2 To 4
+                SuppressedTraffic(4, y) = 0
+            Next
+        End If
+        If SmartFrt = True Then
+            For x = 1 To 3
+                For y = 3 To 4
+                    SuppressedTraffic(x, y) = 0
+                Next
+            Next
+        End If
+
+
 
     End Sub
 
