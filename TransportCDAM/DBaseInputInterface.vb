@@ -983,12 +983,43 @@ Module DBaseInputInterface
                         OutFileName = "RoadZoneOutputData.csv"
                         TempFileName = "RoadZoneTemp.csv"
                         header = "Yeary,ZoneID,Vkmy,Spdy,Petroly,Diesely,Electricy,LPGy,CNGy,Hydrogeny,VKmMwayy,VkmRurAy,VkmRurMiny,VkmUrby,SpdMWayy,SpdRurAy,SpdRurMiny,SpdUrby,VkmPet,VkmDie,VkmPH,VkmDH,VkmPEH,VkmE,VkmLPG,VkmCNG,VkmHyd,VkmFC"
-                        tempheader = "Yeary,ZoneID,ZonePop,ZoneGVA,ZoneSpeed,ZoneCarCost,ZoneLGVCost,ZoneHGV1Cost,ZoneHGV2Cost,ZonePSVCost,BaseVkm,ZoneLaneKm(1),ZoneLaneKm(2),ZoneLaneKm(3),ZoneLaneKm(4),RoadCatKm(1),RoadCatKm(2),RoadCatKm(3),RoadCatKm(4),RoadCatTraffic(1),RVCatTraf(1 - 1),RVCatTraf(1 - 2),RVCatTraf(1 - 3),RVCatTraf(1 - 4),RVCatTraf(1 - 5),RoadCatTraffic(2),RVCatTraf(2 - 1),RVCatTraf(2 - 2),RVCatTraf(2 - 3),RVCatTraf(2 - 4),RVCatTraf(2 - 5),RoadCatTraffic(3),RVCatTraf(3 - 1),RVCatTraf(3 - 2),RVCatTraf(3 - 3),RVCatTraf(3 - 4),RVCatTraf(3 - 5),RoadCatTraffic(4),RVCatTraf(4 - 1),RVCatTraf(4 - 2),RVCatTraf(4 - 3),RVCatTraf(4 - 4),RVCatTraf(4 - 5),SuppressedTraffic(1 - 1),SuppressedTraffic(1 - 2),SuppressedTraffic(1 - 3),SuppressedTraffic(1 - 4),SuppressedTraffic(2 - 1),SuppressedTraffic(2 - 2),SuppressedTraffic(2 - 3),SuppressedTraffic(2 - 4),SuppressedTraffic(3 - 1),SuppressedTraffic(3 - 2),SuppressedTraffic(3 - 3),SuppressedTraffic(3 - 4),SuppressedTraffic(4 - 1),SuppressedTraffic(4 - 2),SuppressedTraffic(4 - 3),SuppressedTraffic(4 - 4),NewCatSpeed(1),NewCatSpeed(2),NewCatSpeed(3),NewCatSpeed(4),"
+                        tempheader = "Yeary,ZoneID,PopZ,GVAZ,Speed,CarCost,LGVCost,HGV1Cost,HGV2Cost,PSVCost,Vkm,LKmMway,LkmRural,LKmRurMin,LKmUrban,RKmMway,RkmRural,RKmRurMin,RKmUrban,VKmMway,RVCatTraf(1 - 1),RVCatTraf(1 - 2),RVCatTraf(1 - 3),RVCatTraf(1 - 4),RVCatTraf(1 - 5),VKmRurA,RVCatTraf(2 - 1),RVCatTraf(2 - 2),RVCatTraf(2 - 3),RVCatTraf(2 - 4),RVCatTraf(2 - 5),VKmRurMin,RVCatTraf(3 - 1),RVCatTraf(3 - 2),RVCatTraf(3 - 3),RVCatTraf(3 - 4),RVCatTraf(3 - 5),VKmUrb,RVCatTraf(4 - 1),RVCatTraf(4 - 2),RVCatTraf(4 - 3),RVCatTraf(4 - 4),RVCatTraf(4 - 5),SuppressedTraffic(1 - 1),SuppressedTraffic(1 - 2),SuppressedTraffic(1 - 3),SuppressedTraffic(1 - 4),SuppressedTraffic(2 - 1),SuppressedTraffic(2 - 2),SuppressedTraffic(2 - 3),SuppressedTraffic(2 - 4),SuppressedTraffic(3 - 1),SuppressedTraffic(3 - 2),SuppressedTraffic(3 - 3),SuppressedTraffic(3 - 4),SuppressedTraffic(4 - 1),SuppressedTraffic(4 - 2),SuppressedTraffic(4 - 3),SuppressedTraffic(4 - 4),SpdMWayy,SpdRurAy,SpdRurMiny,SpdUrby,"
                     Case "Link"
                         OutFileName = "RoadLinkOutputData.csv"
                         TempFileName = "RoadLinkTemp.csv"
                         header = "Yeary,FlowID,PCUTotal,SpeedMean,PCUMway,PCUDual,PCUSing,SpdMway,SpdDual,SpdSing,MSC1,MSC2,MSC3,MSC4,MSC5,MSC6,DSC1,DSC2,DSC3,DSC4,DSC5,DSC6,SSC1,SSC2,SSC3,SSC4,SSC5,SSC6,SSC7,SSC8,SpdMSC1,SpdMSC2,SpdMSC3,SpdMSC4,SpdMSC5,SpdMSC6,SpdDSC1,SpdDSC2,SpdDSC3,SpdDSC4,SpdDSC5,SpdDSC6,SpdSSC1,SpdSSC2,SpdSSC3,SpdSSC4,SpdSSC5,SpdSSC6,SpdSSC7,SpdSSC8,MWayLatent,DualLatent,SingLatent,MFullHrs,DFullHrs,SFullHrs,CostMway,CostDual,CostSing"
-                        tempheader = "Yeary,FlowID,sc0,sc1,sc2,sc3,sc4,sc5,sc6,sc7,sc8,sc9,sc10,sc11,sc12,sc13,sc14,sc15,sc16,sc17,sc18,sc19,RTLaneN0,RTLaneN1,RTLaneN2,cost0,cost1,cost2,cost3,cost4,cost5,cost6,cost7,cost8,cost9,cost10,cost11,cost12,cost13,cost14,cost15,cost16,cost17,cost18,cost19,LatentHourlyFlow0,LatentHourlyFlow1,LatentHourlyFlow2,LatentHourlyFlow3,LatentHourlyFlow4,LatentHourlyFlow5,LatentHourlyFlow6,LatentHourlyFlow7,LatentHourlyFlow8,LatentHourlyFlow9,LatentHourlyFlow10,LatentHourlyFlow11,LatentHourlyFlow12,LatentHourlyFlow13,LatentHourlyFlow14,LatentHourlyFlow15,LatentHourlyFlow16,LatentHourlyFlow17,LatentHourlyFlow18,LatentHourlyFlow19,charge0,charge1,charge2,charge3,charge4,charge5,charge6,charge7,charge8,charge9,charge10,charge11,charge12,charge13,charge14,charge15,charge16,charge17,charge18,charge19,NewHourlyFlow0,NewHourlyFlow1,NewHourlyFlow2,NewHourlyFlow3,NewHourlyFlow4,NewHourlyFlow5,NewHourlyFlow6,NewHourlyFlow7,NewHourlyFlow8,NewHourlyFlow9,NewHourlyFlow10,NewHourlyFlow11,NewHourlyFlow12,NewHourlyFlow13,NewHourlyFlow14,NewHourlyFlow15,NewHourlyFlow16,NewHourlyFlow17,NewHourlyFlow18,NewHourlyFlow19,"
+                        tempheader = "Yeary,FlowID,MLanes,DLanes,SLanes,MLanesNew,DLanesNew,SLanesNew,MSC1,MSC2,MSC3,MSC4,MSC5,MSC6,DSC1,DSC2,DSC3,DSC4,DSC5,DSC6,SSC1,SSC2,SSC3,SSC4,SSC5,SSC6,SSC7,SSC8,PopZ1,PopZ2,GVAZ1,GVAZ2,"
+                        For x = 1 To 6
+                            For c = 0 To 24
+                                tempheader = tempheader & "M" & x & "Cost" & c & ","
+                            Next
+                        Next
+                        For x = 1 To 6
+                            For c = 0 To 24
+                                tempheader = tempheader & "D" & x & "Cost" & c & ","
+                            Next
+                        Next
+                        For x = 1 To 8
+                            For c = 0 To 24
+                                tempheader = tempheader & "S" & x & "Cost" & c & ","
+                            Next
+                        Next
+                        tempheader = tempheader & "MaxCapM,MaxCapD,MaxCapS,AddedLane0,AddedLane1,AddedLane2,"
+                        For x = 1 To 6
+                            For c = 0 To 24
+                                tempheader = tempheader & "M" & x & "HourlyFlows" & c & "," & "MRoadTypeFlows" & c & "," & "M" & x & "Charge" & c & "," & "M" & x & "LatentFlows" & c & "," & "M" & x & "NewHourlySpeeds" & c & ","
+                            Next
+                        Next
+                        For x = 1 To 6
+                            For c = 0 To 24
+                                tempheader = tempheader & "D" & x & "HourlyFlows" & c & "," & "DRoadTypeFlows" & c & "," & "D" & x & "Charge" & c & "," & "D" & x & "LatentFlows" & c & "," & "D" & x & "NewHourlySpeeds" & c & ","
+                            Next
+                        Next
+                        For x = 1 To 8
+                            For c = 0 To 24
+                                tempheader = tempheader & "S" & x & "HourlyFlows" & c & "," & "SRoadTypeFlows" & c & "," & "S" & x & "Charge" & c & "," & "S" & x & "LatentFlows" & c & "," & "S" & x & "NewHourlySpeeds" & c & ","
+                            Next
+                        Next
                 End Select
             Case "Rail"
                 Select Case SubType
@@ -1001,19 +1032,20 @@ Module DBaseInputInterface
                         OutFileName = "RailLinkOutputData.csv"
                         TempFileName = "RailLinkTemp.csv"
                         header = "Yeary,FlowID,Trainsy,Delaysy,CUy"
-                        tempheader = "Yeary,FlowID,PopZ1Base,PopZ2Base,GVAZ1Base,GVAZ2Base,OldDelays,RlLinkCost,CarFuel,OldTrains,OldTracks,MaxTDBase,CUOld,CUNew,"
+                        tempheader = "Yeary,FlowID,PopZ1,PopZ2,GVAZ1,GVAZ2,Delays,Cost,CarFuel,Trains,Tracks,MaxTDBase,CUOld,CUNew,BusyTrains,BusyPer,ModelPeakHeadway,CalculationCheck"
                 End Select
             Case "Sea"
                 OutFileName = "SeaOutputData.csv"
                 TempFileName = "SeaTemplate.csv"
                 header = "Yeary, PortID, LiqBlky, DryBlky, GCargoy, LoLoy, RoRoy, GasOily, FuelOily"
+                tempheader = "PortID, LiqBlk, DryBlk, GCargo, LoLo, RoRo, LBCap,DBCap,GCCap,LLCap,RRCap,GORPop,GORGva,Cost, AddedCap(1), AddedCap(2), AddedCap(3), AddedCap(4), AddedCap(5),"
             Case "Air"
                 Select Case SubType
                     Case "Node"
                         OutFileName = "AirNodeOutputData.csv"
                         TempFileName = "AirNodeTemp.csv"
                         header = "Yeary,AirportID,AllPassy,DomPassy,IntPassy,ATMy,IntFuely"
-                        tempheader = "YearNum,AllPassTotal,DomPass,IntPass,TermCapPPA,MaxATM,GORPop,GORGVA,Cost,PlaneSize,PlaneSizeInt,LFDom,LFInt,IntTripDist,AirportTripsLatent"
+                        tempheader = "AirportID,AllPassTotal,DomPass,IntPass,TermCapPPA,MaxATM,GORPop,GORGVA,Cost,PlaneSize,PlaneSizeInt,LFDom,LFInt,IntTripDist,AirportTripsLatent"
                     Case "Flow"
                         OutFileName = "AirFlowOutputData.csv"
                         TempFileName = "AirFlowTemp.csv"
