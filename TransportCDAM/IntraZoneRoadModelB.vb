@@ -343,7 +343,6 @@
                     Next
                 Next
             End If
-
             For x = 1 To 4
                 Latentvkm(ZoneID, x) = InputArray(ZoneID, 62 + x)
             Next
