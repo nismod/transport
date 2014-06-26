@@ -1174,7 +1174,7 @@
                 End If
             End If
             'write to temp file
-            NodeTempArray(aircount, 0) = YearNum
+            NodeTempArray(aircount, 0) = aircount
             For x = 1 To 13
                 NodeTempArray(aircount, x) = AirportBaseData(aircount, x)
             Next
