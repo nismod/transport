@@ -810,16 +810,17 @@ Module DBaseInputInterface
     ' 
     ' Parameters:   Type - type of data (e.g. Road, Rail)
     '               SubType - subtype of data
-    '               DataArray - array of data to be output
-    '               HasHeaders - TRUE - input file has headers, FALSE - file has no headers
+    '               Inputrray - array of data to be output
+    '               IsInitialYear - TRUE - read from initial file, FALSE - read from temp file
+    '               Year - current year of the calculation, this is for external variable file to read from the correct line
     '               datatype - variant type of data in array (e.g. string, integer)
     '               Connection - file path - to be replaced with database connection string
     '****************************************************************************************
 
     Function ReadData(ByVal Type As String, ByVal SubType As String, ByRef InputArray(,) As String,
                        Optional ByVal IsInitialYear As Boolean = True,
+                       Optional ByVal Year As Integer = 0,
                        Optional ByVal datatype As VariantType = VariantType.String,
-                       Optional ByVal FilePrefix As String = "",
                        Optional Connection As String = "") As Boolean
         Dim TheFileName As String = ""
         Dim DataFile As FileStream
@@ -841,7 +842,7 @@ Module DBaseInputInterface
 
         'Get the filename of datafile based on Type and SubType
         'Get the initial input data file if it is year 1, otherwise get the temp file
-        'TODO - replace with database calls
+        'the size of the array must be correct
         Select Case Type
             Case "Road"
                 Select Case SubType
@@ -849,13 +850,13 @@ Module DBaseInputInterface
                         If IsInitialYear = True Then
                             TheFileName = "RoadZoneInputData2010.csv"
                         ElseIf IsInitialYear = False Then
-                            TheFileName = "RoadZoneTemp.csv"
+                            TheFileName = FilePrefix & "RoadZoneTemp.csv"
                         End If
                     Case "Link"
                         If IsInitialYear = True Then
                             TheFileName = "RoadInputData2010.csv"
                         ElseIf IsInitialYear = False Then
-                            TheFileName = "RoadLinkTemp.csv"
+                            TheFileName = FilePrefix & "RoadLinkTemp.csv"
                         End If
                 End Select
             Case "Rail"
@@ -864,43 +865,49 @@ Module DBaseInputInterface
                         If IsInitialYear = True Then
                             TheFileName = "RailZoneInputData2010.csv"
                         ElseIf IsInitialYear = False Then
-                            TheFileName = "RailZoneTemp.csv"
+                            TheFileName = FilePrefix & "RailZoneTemp.csv"
                         End If
                     Case "Link"
                         If IsInitialYear = True Then
                             TheFileName = "RailLinkInputData2010.csv"
                         ElseIf IsInitialYear = False Then
-                            TheFileName = "RailLinkTemp.csv"
+                            TheFileName = FilePrefix & "RailLinkTemp.csv"
                         End If
                 End Select
-            Case "Sea"
-                If IsInitialYear = True Then
-                    TheFileName = "SeaFreightInputData.csv"
-                ElseIf IsInitialYear = False Then
-                    TheFileName = "SeaTemplate.csv"
-                End If
+            Case "Seaport"
+                Select Case SubType
+                    Case "Input"
+                        If IsInitialYear = True Then
+                            TheFileName = "SeaFreightInputData.csv"
+                        ElseIf IsInitialYear = False Then
+                            TheFileName = FilePrefix & "SeaTemplate.csv"
+                        End If
+                    Case "ExtVar"
+                        TheFileName = EVFilePrefix & "SeaFreightExtVar" & EVFileSuffix & ".csv"
+                    Case "Elasticity"
+                        TheFileName = "Elasticity Files\TR" & Strategy & "\SeaFreightElasticities.csv"
+                    Case Else
+                        'for error handling
+                End Select
             Case "Air"
                 Select Case SubType
                     Case "Node"
                         If IsInitialYear = True Then
                             TheFileName = "AirNodeInputData2010.csv"
                         ElseIf IsInitialYear = False Then
-                            TheFileName = "AirNodeTemp.csv"
+                            TheFileName = FilePrefix & "AirNodeTemp.csv"
                         End If
                     Case "Flow"
                         If IsInitialYear = True Then
                             TheFileName = "AirFlowInputData2010.csv"
                         ElseIf IsInitialYear = False Then
-                            TheFileName = "AirFlowTemp.csv"
+                            TheFileName = FilePrefix & "AirFlowTemp.csv"
                         End If
                 End Select
-
+            Case Else
+                'for error handling
         End Select
 
-        'get the correct temp file name
-        If IsInitialYear = False Then
-            TheFileName = FilePrefix & TheFileName
-        End If
 
         'Get file data
         Try
@@ -913,18 +920,33 @@ Module DBaseInputInterface
         'read header row
         dbheadings = DataRead.ReadLine
         dbarray = Split(dbheadings, ",")
+        'Get a line of data from file
+        dbline = DataRead.ReadLine
+        dbarray = Split(dbline, ",")
 
+        'read to the correct line
+        If SubType = "ExtVar" Then
+            Do
+                'if it is the current year line then stop
+                If dbarray(0) = Year Then
+                    Exit Do
+                End If
+                'if not, continue to read line
+                dbline = DataRead.ReadLine
+                dbarray = Split(dbline, ",")
+            Loop
+
+        End If
         'loop through row to get data
         For iR = 1 To UBound(InputArray, 1)
-            'Get a line of data from file
-            dbline = DataRead.ReadLine
             If dbline Is Nothing Then
                 Exit For
             End If
-            dbarray = Split(dbline, ",")
             For iC = 0 To UBound(InputArray, 2)
                 InputArray(iR, iC) = CStr(UnNull(dbarray(iC).ToString, VariantType.Char))
             Next
+            dbline = DataRead.ReadLine
+            dbarray = Split(dbline, ",")
         Next
 
         DataRead.Close()
@@ -951,8 +973,11 @@ Module DBaseInputInterface
     '               Connection - file path - to be replaced with database connection string
     '****************************************************************************************
 
-    Function WriteData(ByVal Type As String, ByVal SubType As String, ByRef OutputArray(,) As String, ByRef TempArray(,) As String, ByVal IsNewFile As Boolean,
-                       Optional ByVal FilePrefix As String = "", Optional Connection As String = "") As Boolean
+    Function WriteData(ByVal Type As String, ByVal SubType As String, ByRef OutputArray(,) As String,
+                       Optional ByRef TempArray(,) As String = Nothing,
+                       Optional ByVal IsNewFile As Boolean = True,
+                       Optional ByVal FilePrefix As String = "",
+                       Optional Connection As String = "") As Boolean
 
         Dim OutFileName As String = "", TempFileName As String = ""
         Dim TempFile As IO.FileStream
