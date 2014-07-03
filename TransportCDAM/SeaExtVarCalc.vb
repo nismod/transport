@@ -31,7 +31,8 @@
     Dim CapChanged, Breakout As Boolean
     Dim ErrorString As String
     Dim stf As IO.StreamReader
-    Dim stratstring, stratarray() As String
+    Dim stratstring As String
+    Dim stratarray(90, 95) As String
     Dim FuelEff(90) As Double
     Dim NewCapDetails(1, 6) As Double
     Dim CapCount As Long
@@ -41,19 +42,13 @@
     Dim splitline() As String
     Dim arraynum As Long
     Dim AddingCap As Boolean
+    Dim CapNum As Integer
+    Dim InputArray(47, 14) As String
+    Dim CapArray(47, 8) As String
+    Dim OutputArray(47, 10) As String
+
 
     Sub SeaEVMain()
-        'get the input and output file names
-        Call GetFiles()
-
-        'read header row
-        InputRow = pi.ReadLine
-
-        'write header row to output file
-        OutputRow = "Yeary,PortID,LBCapy,DBCapy,GCCapy,LLCapy,RRCapy,GORPopy,GORGvay,Costy,FuelEffy"
-        'OutputRow = "Yeary,PortID,LBCapy,DBCapy,GCCapy,LLCapy,RRCapy,GORPopy,GORGvay,Costy,FuelEffy"
-        po.WriteLine(OutputRow)
-
         'set scaling factors - as a default they are just set to be constant over time
         If SeaPopSource = "Constant" Then
             PopGrowth = 1.005
@@ -72,12 +67,19 @@
         'so we created another file containing sorted implemented capacity enhancements (in get files sub)
         'need initial file to be sorted by file type then by change year then by order of priority
         'first read all compulsory enhancements to intermediate array
-        CapRow = pc.ReadLine
+
+        'read capchange info
+        Call ReadData("Seaport", "CapChange", CapArray)
+
         CapCount = 0
         AddingCap = False
         tonnestobuild = 0
-        Do Until CapRow Is Nothing
+        CapNum = 1
+        Do
             Call GetCapData()
+            If CapArray(CapNum, 0) = 0 Then
+                Exit Do
+            End If
             Select Case CapType
                 Case "C"
                     NewCapDetails(CapCount, 0) = CapID
@@ -138,7 +140,7 @@
             If Breakout = True Then
                 Exit Do
             End If
-            CapRow = pc.ReadLine
+            CapNum += 1
             CapCount += 1
         Loop
         'then sort the intermediate array by port ID, then by year of implementation
@@ -151,21 +153,16 @@
             sortedline = sortarray(v)
             splitline = Split(sortedline, "&")
             arraynum = splitline(2)
-            OutputRow = NewCapDetails(arraynum, 0) & "," & NewCapDetails(arraynum, 1) & "," & NewCapDetails(arraynum, 2) & "," & NewCapDetails(arraynum, 3) & "," & NewCapDetails(arraynum, 4) & "," & NewCapDetails(arraynum, 5) & "," & NewCapDetails(arraynum, 6)
-            pnc.WriteLine(OutputRow)
+            For i = 0 To 6
+                CapArray(v, i) = NewCapDetails(arraynum, i)
+            Next
         Next
+        Call WriteData("Seaport", "NewCap", CapArray)
 
-        pc.Close()
-        pnc.Close()
-
-        'reopen the new capacity file as a reader
-        PortNewCapData = New IO.FileStream(DirPath & EVFilePrefix & "SeaFreightNewCap.csv", IO.FileMode.Open, IO.FileAccess.Read)
-        pncr = New IO.StreamReader(PortNewCapData, System.Text.Encoding.Default)
-        'read header
-        pncr.ReadLine()
         'read first line of new capacity
-        CapRow = pncr.ReadLine
         AddingCap = True
+        'reset Capnum to read the first line
+        CapNum = 1
         Call GetCapData()
 
         'If NewSeaCap = True Then
@@ -174,19 +171,12 @@
 
         'v1.3
         'get fuel efficiency values from the strategy file
-        StrategyFile = New IO.FileStream(DirPath & "CommonVariablesTR" & Strategy & ".csv", IO.FileMode.Open, IO.FileAccess.Read)
-        stf = New IO.StreamReader(StrategyFile, System.Text.Encoding.Default)
-        'read header row
-        stf.ReadLine()
+        Call ReadData("Strategy", "", stratarray)
         'v1.4 set FuelEff(0) to 1
         FuelEff(0) = 1
         For y = 1 To 90
-            'read line from file
-            stratstring = stf.ReadLine()
-            stratarray = Split(stratstring, ",")
-            FuelEff(y) = stratarray(69)
+            FuelEff(y) = stratarray(y, 69)
         Next
-        stf.Close()
 
         'then loop through rest of rows in input data file
         Call CalcPortData()
@@ -197,19 +187,12 @@
         '    PortCount += 1
         'Loop
 
-        pi.Close()
-        po.Close()
 
     End Sub
 
     Sub GetFiles()
         Dim outstring As String
 
-        PortInputData = New IO.FileStream(DirPath & "SeaFreightInputData.csv", IO.FileMode.Open, IO.FileAccess.Read)
-        pi = New IO.StreamReader(PortInputData, System.Text.Encoding.Default)
-
-        PortOutputData = New IO.FileStream(DirPath & EVFilePrefix & "SeaFreightExtVar.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
-        po = New IO.StreamWriter(PortOutputData, System.Text.Encoding.Default)
 
         'if capacity is changing then get capacity change file
         'v1.3 do this anyway to include compulsory changes
@@ -264,6 +247,9 @@
             DieselOld = enearray(2)
         End If
 
+        'read initial input data
+        Call ReadData("Seaport", "Input", InputArray, True)
+
         YearNum = 1
         'calculate new values for port variables
         Do While YearNum < 91
@@ -279,21 +265,14 @@
                 DieselNew = enearray(2)
             End If
 
-            'open input file for each year
-            PortInputData = New IO.FileStream(DirPath & "SeaFreightInputData.csv", IO.FileMode.Open, IO.FileAccess.Read)
-            pi = New IO.StreamReader(PortInputData, System.Text.Encoding.Default)
-            InputRow = pi.ReadLine
-
             PortCount = 1
             Do Until PortCount > 47
 
                 'read initial data if it is year 1
                 CapChanged = False
                 If YearNum = 1 Then
-                    InputRow = pi.ReadLine
-                    portdata = Split(InputRow, ",")
                     For i = 0 To 14
-                        PortBaseData(PortCount, i) = portdata(i)
+                        PortBaseData(PortCount, i) = InputArray(PortCount, i)
                     Next
                     GORID(PortCount, 1) = PortBaseData(PortCount, 14)
                 End If
@@ -310,7 +289,6 @@
                         PortNewData(PortCount, 4) = PortBaseData(PortCount, 9) + LLChange
                         PortNewData(PortCount, 5) = PortBaseData(PortCount, 10) + RRChange
                         CapChanged = True
-                        CapRow = pncr.ReadLine()
                         Call GetCapData()
                     ElseIf CapChanged = False Then
                         newcount = 1
@@ -388,14 +366,15 @@
                     PortNewData(PortCount, 9) = 1
                 End If
 
-                'write values to output file
-                OutputRow = YearNum & "," & PortBaseData(PortCount, 0)
+                'write values to output array
+                OutputArray(PortCount, 0) = YearNum
+                OutputArray(PortCount, 1) = PortBaseData(PortCount, 0)
                 newcount = 1
                 Do Until newcount > 9
-                    OutputRow = OutputRow & "," & PortNewData(PortCount, newcount)
+                    OutputArray(PortCount, 1 + newcount) = PortNewData(PortCount, newcount)
                     newcount += 1
                 Loop
-                po.WriteLine(OutputRow)
+
                 'set base values as previous new values
                 newcount = 1
                 basecount = 6
@@ -412,6 +391,12 @@
                 DieselOld = DieselNew
             End If
 
+            If YearNum = 1 Then
+                Call WriteData("Seaport", "ExtVar", OutputArray, , True)
+            Else
+                Call WriteData("Seaport", "ExtVar", OutputArray, , False)
+            End If
+
             'update year
             YearNum += 1
         Loop
@@ -422,30 +407,30 @@
 
     Sub GetCapData()
 
-        Dim InputData() As String
-
-        If CapRow Is Nothing Then
-        Else
-            InputData = Split(CapRow, ",")
-            CapID = InputData(0)
-            If InputData(1) = "" Then
+        If CapArray(CapNum, 0) <> "" Then
+            CapID = CapArray(CapNum, 0)
+            If CapArray(CapNum, 1) = "" Then
                 CapYear = -1
             Else
                 If AddingCap = False Then
-                    CapYear = InputData(1) - 2010
+                    CapYear = CapArray(CapNum, 1) - 2010
                 Else
-                    CapYear = InputData(1)
+                    CapYear = CapArray(CapNum, 1) - 2010
                 End If
             End If
-            LBChange = InputData(2)
-            DBChange = InputData(3)
-            GCChange = InputData(4)
-            LLChange = InputData(5)
-            RRChange = InputData(6)
+
+            LBChange = CapArray(CapNum, 2)
+            DBChange = CapArray(CapNum, 3)
+            GCChange = CapArray(CapNum, 4)
+            LLChange = CapArray(CapNum, 5)
+            RRChange = CapArray(CapNum, 6)
             If AddingCap = False Then
-                CapType = InputData(7)
+                CapType = CapArray(CapNum, 7)
             End If
+        Else
+
         End If
+
 
     End Sub
 
