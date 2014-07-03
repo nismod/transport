@@ -884,8 +884,8 @@ Module DBaseInputInterface
                         End If
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "SeaFreightExtVar" & EVFileSuffix & ".csv"
-                    Case "Elasticity"
-                        TheFileName = "Elasticity Files\TR" & Strategy & "\SeaFreightElasticities.csv"
+                    Case "CapChange"
+                        TheFileName = CapFilePrefix & "SeaFreightCapChange.csv"
                     Case Else
                         'for error handling
                 End Select
@@ -904,6 +904,10 @@ Module DBaseInputInterface
                             TheFileName = FilePrefix & "AirFlowTemp.csv"
                         End If
                 End Select
+            Case "Elasticity"
+                TheFileName = "Elasticity Files\TR" & Strategy & "\SeaFreightElasticities.csv"
+            Case "Strategy"
+                TheFileName = "CommonVariablesTR" & Strategy & ".csv"
             Case Else
                 'for error handling
         End Select
@@ -937,6 +941,7 @@ Module DBaseInputInterface
             Loop
 
         End If
+
         'loop through row to get data
         For iR = 1 To UBound(InputArray, 1)
             If dbline Is Nothing Then
@@ -1059,11 +1064,20 @@ Module DBaseInputInterface
                         header = "Yeary,FlowID,Trainsy,Delaysy,CUy"
                         tempheader = "Yeary,FlowID,PopZ1,PopZ2,GVAZ1,GVAZ2,Delays,Cost,CarFuel,Trains,Tracks,MaxTDBase,CUOld,CUNew,BusyTrains,BusyPer,ModelPeakHeadway,CalculationCheck"
                 End Select
-            Case "Sea"
-                OutFileName = "SeaOutputData.csv"
-                TempFileName = "SeaTemplate.csv"
-                header = "Yeary, PortID, LiqBlky, DryBlky, GCargoy, LoLoy, RoRoy, GasOily, FuelOily"
-                tempheader = "PortID, LiqBlk, DryBlk, GCargo, LoLo, RoRo, LBCap,DBCap,GCCap,LLCap,RRCap,GORPop,GORGva,Cost, AddedCap(1), AddedCap(2), AddedCap(3), AddedCap(4), AddedCap(5),"
+            Case "Seaport"
+                Select Case SubType
+                    Case "Output"
+                        OutFileName = "SeaOutputData.csv"
+                        TempFileName = "SeaTemplate.csv"
+                        header = "Yeary, PortID, LiqBlky, DryBlky, GCargoy, LoLoy, RoRoy, GasOily, FuelOily"
+                        tempheader = "PortID, LiqBlk, DryBlk, GCargo, LoLo, RoRo, LBCap,DBCap,GCCap,LLCap,RRCap,GORPop,GORGva,Cost, AddedCap(1), AddedCap(2), AddedCap(3), AddedCap(4), AddedCap(5),"
+                    Case "ExtVar"
+                        OutFileName = EVFilePrefix & "SeaFreightExtVar.csv"
+                        header = "Yeary,PortID,LBCapy,DBCapy,GCCapy,LLCapy,RRCapy,GORPopy,GORGvay,Costy,FuelEffy"
+                    Case "NewCap"
+                        OutFileName = EVFilePrefix & "SeaFreightNewCap.csv"
+                        header = "PortID,ChangeYear,NewLBCap,NewDBCap,NewGCCap,NewLLCap,NewRRCap"
+                End Select
             Case "Air"
                 Select Case SubType
                     Case "Node"
@@ -1087,7 +1101,6 @@ Module DBaseInputInterface
 
         'Add File prefix to Output Filename
         OutFileName = FilePrefix & OutFileName
-        TempFileName = FilePrefix & TempFileName
 
         'TODO - Not needed for SoS version using database
         'If creating a new file then create headers
@@ -1104,12 +1117,6 @@ Module DBaseInputInterface
             OutputWrite = New IO.StreamWriter(OutputFile, System.Text.Encoding.Default)
             OutputRead.ReadToEnd()
         End If
-
-        'create the temp file
-        TempFile = New FileStream(Connection & TempFileName, IO.FileMode.CreateNew, IO.FileAccess.Write)
-        TempWrite = New IO.StreamWriter(TempFile, System.Text.Encoding.Default)
-        'write header row 
-        TempWrite.WriteLine(tempheader)
 
         'Some value are null at the the beginning years so this check may return false
 
@@ -1134,21 +1141,33 @@ Module DBaseInputInterface
             OutputWrite.WriteLine(Line)
         Next
 
-        'loop through array to generate lines in temp file
-        For iy = 1 To UBound(TempArray, 1)
-            'Build a line to write
-            Line = ""
-            For ix = 0 To UBound(TempArray, 2)
-                Line += UnNull(TempArray(iy, ix), VariantType.String) & ","
-            Next
-            'Delete the last comma
-            Line = Line.Substring(0, Len(Line) - 1)
-            'Write the line to the output file
-            TempWrite.WriteLine(Line)
-        Next
-
         OutputWrite.Close()
-        TempWrite.Close()
+
+        'write to temp file if it is for output
+        If SubType = "Output" Then
+            TempFileName = FilePrefix & TempFileName
+            'create the temp file
+            TempFile = New FileStream(Connection & TempFileName, IO.FileMode.CreateNew, IO.FileAccess.Write)
+            TempWrite = New IO.StreamWriter(TempFile, System.Text.Encoding.Default)
+            'write header row 
+            TempWrite.WriteLine(tempheader)
+
+            'loop through array to generate lines in temp file
+            For iy = 1 To UBound(TempArray, 1)
+                'Build a line to write
+                Line = ""
+                For ix = 0 To UBound(TempArray, 2)
+                    Line += UnNull(TempArray(iy, ix), VariantType.String) & ","
+                Next
+                'Delete the last comma
+                Line = Line.Substring(0, Len(Line) - 1)
+                'Write the line to the output file
+                TempWrite.WriteLine(Line)
+            Next
+
+            TempWrite.Close()
+
+        End If
 
 
         Return True
