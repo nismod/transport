@@ -55,7 +55,7 @@
         Call SeaInputFiles()
 
         'get the elasticity values
-        Call ReadData("Seaport", "Elasticity", SeaEl, , YearNum)
+        Call ReadData("Elasticity", "", SeaEl, , YearNum)
 
         YearNum = 1
         Do While YearNum < 91
@@ -92,9 +92,9 @@
 
             'create file is true if it is the initial year and write to outputfile and temp file
             If YearNum = 1 Then
-                Call WriteData("Sea", "", OutputArray, TempArray, True, FilePrefix)
+                Call WriteData("Seaport", "Output", OutputArray, TempArray, True, FilePrefix)
             Else
-                Call WriteData("Sea", "", OutputArray, TempArray, False, FilePrefix)
+                Call WriteData("Seaport", "Output", OutputArray, TempArray, False, FilePrefix)
             End If
 
             'move on to next year
