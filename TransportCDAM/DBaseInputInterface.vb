@@ -859,6 +859,21 @@ Module DBaseInputInterface
                             TheFileName = FilePrefix & "RoadLinkTemp.csv"
                         End If
                 End Select
+            Case "RailZone"
+                Select Case SubType
+                    Case "Input"
+                        If IsInitialYear = True Then
+                            TheFileName = "RailZoneInputData2010.csv"
+                        ElseIf IsInitialYear = False Then
+                            TheFileName = FilePrefix & "RailZoneTemp.csv"
+                        End If
+                    Case "ExtVar"
+                        TheFileName = EVFilePrefix & "RailZoneExtVar" & EVFileSuffix & ".csv"
+                    Case "CapChange"
+                        TheFileName = CapFilePrefix & "SeaFreightCapChange.csv"
+                    Case "Elasticity"
+                        TheFileName = "Elasticity Files\TR" & Strategy & "\RailZoneElasticities.csv"
+                End Select
             Case "Rail"
                 Select Case SubType
                     Case "Zone"
@@ -1063,6 +1078,17 @@ Module DBaseInputInterface
                                 tempheader = tempheader & "S" & x & "HourlyFlows" & c & "," & "SRoadTypeFlows" & c & "," & "S" & x & "Charge" & c & "," & "S" & x & "LatentFlows" & c & "," & "S" & x & "NewHourlySpeeds" & c & ","
                             Next
                         Next
+                End Select
+            Case "RailZone"
+                Select Case SubType
+                    Case "Output"
+                        OutFileName = FilePrefix & "RailZoneOutputData.csv"
+                        TempFileName = FilePrefix & "RailZoneTemp.csv"
+                        header = "Yeary,ZoneID,TripsStaty,Stationsy,Tripsy"
+                        tempheader = "Yeary,ZoneID,PopZ,GvaZ,Cost,Stations,CarFuel,GJT,TripsStat,FareE"
+                    Case "ExtVar"
+                        OutFileName = EVFilePrefix & "RailZoneExtVar.csv"
+                        header = "Yeary,ZoneID,PopZy,GvaZy,Costy,Stationsy,CarFuely,NewTripsy,GJTy,ElPy"
                 End Select
             Case "Rail"
                 Select Case SubType
