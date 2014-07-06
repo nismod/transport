@@ -43,6 +43,7 @@
     Dim arraynum As Long
     Dim AddingCap As Boolean
     Dim CapNum As Integer
+    Dim enearray(91, 6) As String
     Dim InputArray(47, 14) As String
     Dim CapArray(47, 8) As String
     Dim OutputArray(47, 10) As String
@@ -70,6 +71,11 @@
 
         'read capchange info
         Call ReadData("Seaport", "CapChange", CapArray)
+
+        'read energy file
+        If SeaEneSource = "Database" Then
+            Call ReadData("Energy", "", enearray)
+        End If
 
         CapCount = 0
         AddingCap = False
@@ -222,10 +228,7 @@
         Dim GORID(47, 1) As Long
         Dim keylookup As String
         Dim newval As Double
-        Dim enestring As String
-        Dim enearray As String()
         Dim DieselOld, DieselNew As Double
-        Dim portdata() As String
         Dim i As Integer
 
         'Load in port base values 
@@ -236,15 +239,7 @@
 
         'initializing sea energy source input file
         If SeaEneSource = "Database" Then
-            'v1.3 altered so that scenario file is read directly as an input file
-            ZoneEneFile = New IO.FileStream(DBaseEneFile, IO.FileMode.Open, IO.FileAccess.Read)
-            zer = New IO.StreamReader(ZoneEneFile, System.Text.Encoding.Default)
-            'read header row
-            enestring = zer.ReadLine
-            'read base year prices and split into variables
-            enestring = zer.ReadLine
-            enearray = Split(enestring, ",")
-            DieselOld = enearray(2)
+            DieselOld = enearray(1, 2)
         End If
 
         'read initial input data
@@ -260,9 +255,7 @@
 
             'read diesel new for the current year
             If SeaEneSource = "Database" Then
-                enestring = zer.ReadLine
-                enearray = Split(enestring, ",")
-                DieselNew = enearray(2)
+                DieselNew = enearray(YearNum + 1, 2)
             End If
 
             PortCount = 1
