@@ -40,7 +40,7 @@
     Dim GORID(28) As Long
     Dim FuelCost(90) As Double
     Dim stf As IO.StreamReader
-    Dim stratstring, stratarray() As String
+    Dim stratstring As String
     Dim FuelEff As Double
     Dim airnodefixedcost(28), airflowfixedcost(223) As Double
     Dim FlowLength(223) As Double
@@ -57,25 +57,21 @@
     Dim arraynum As Long
     Dim padflow, padyear As String
     Dim FuelEffOld As Double
+    Dim enearray(91, 6) As String
+    Dim stratarray(90, 95) As String
+    Dim NodeInputArray(28, 14) As String
+    Dim FlowInputArray(223, 11) As String
+    Dim NodeOutputArray(28, 12) As String
+    Dim FlowOutputArray(223, 6) As String
+    Dim CapArray(47, 5) As String
+    Dim CapNum As Integer
+
 
 
     Public Sub AirEVMain()
 
-        Dim enestring As String
-        Dim enearray() As String
-
-        'get the input and output file names
+        'get the input files
         Call GetFiles()
-
-        'read header row for each file
-        NodeInputRow = ni.ReadLine
-        FlowInputRow = fi.ReadLine
-
-        'write header row to output files
-        OutputRow = "Yeary,AirportID,GORPopy,GORGvay,Costy,TermCapy,MaxATMy,PlaneSizeDomy,PlaneSizeInty,LFDomy,LFInty,IntTripDist,FuelSeatKm"
-        nv.WriteLine(OutputRow)
-        OutputRow = "Yeary,FlowID,PopOZy,PopDZy,GVAOZy,GVADZy,Costy"
-        fv.WriteLine(OutputRow)
 
         'set scaling factors - as a default they are just set to be constant over time
         If AirPopSource = "Constant" Then
@@ -91,17 +87,11 @@
         'if getting cost input from database then read in diesel cost data
         'v1.3 altered so that scenario file is read directly as an input file
         If AirEneSource = "Database" Then
-            ZoneEneFile = New IO.FileStream(DBaseEneFile, IO.FileMode.Open, IO.FileAccess.Read)
-            zer = New IO.StreamReader(ZoneEneFile, System.Text.Encoding.Default)
-            'read header row
-            enestring = zer.ReadLine
+            'read data to energy array from the file
+            Call ReadData("Energy", "", enearray)
             For y = 0 To 90
-                'read line of data
-                enestring = zer.ReadLine
-                enearray = Split(enestring, ",")
-                FuelCost(y) = enearray(2)
+                FuelCost(y) = enearray(y + 1, 2)
             Next
-            zer.Close()
         End If
 
         'if including capacity changes then read first line of the capacity file and break it down into relevant sections
@@ -109,13 +99,18 @@
         'so we created another file containing sorted implemented capacity enhancements (in get files sub)
         'need initial file to be sorted by scheme type then by change year then by order of priority
         'first read all compulsory enhancements to intermediate array
-        CapRow = nc.ReadLine
+
         CapCount = 0
         AddingCap = False
         TermToBuild = 0
         RunToBuild = 0
-        Do Until CapRow Is Nothing
+        CapNum = 1
+
+        Do
             Call GetCapData()
+            If CapArray(CapNum, 0) = 0 Then
+                Exit Do
+            End If
             Select Case CapType
                 Case "C"
                     NewCapDetails(CapCount, 0) = CapID
@@ -189,7 +184,7 @@
             If Breakout = True Then
                 Exit Do
             End If
-            CapRow = nc.ReadLine
+            CapNum += 1
             CapCount += 1
         Loop
         'then sort the intermediate array by year of implementation then by flow ID
@@ -205,21 +200,16 @@
             sortedline = sortarray(v)
             splitline = Split(sortedline, "&")
             arraynum = splitline(2)
-            OutputRow = NewCapDetails(arraynum, 0) & "," & NewCapDetails(arraynum, 1) & "," & NewCapDetails(arraynum, 2) & "," & NewCapDetails(arraynum, 3)
-            acn.WriteLine(OutputRow)
+            For i = 0 To 3
+                CapArray(v, i) = NewCapDetails(arraynum, i)
+            Next
         Next
 
-        nc.Close()
-        acn.Close()
+        Call WriteData("AirNode", "NewCap", CapArray)
 
-        'reopen the capacity file as a reader
-        AirNewCapData = New IO.FileStream(DirPath & EVFilePrefix & "AirNodeNewCap.csv", IO.FileMode.Open, IO.FileAccess.Read)
-        acr = New IO.StreamReader(AirNewCapData, System.Text.Encoding.Default)
-        'read header
-        acr.ReadLine()
-        'read first line of new capacity
-        CapRow = acr.ReadLine
         AddingCap = True
+        'reset Capnum to read the first line
+        CapNum = 1
         Call GetCapData()
 
         'If NewAirCap = True Then
@@ -231,56 +221,33 @@
         'then loop through rest of rows in input data file
         Do Until YearNum > 90
             Call CalcFlowData()
+
+            If YearNum = 1 Then
+                Call WriteData("AirNode", "ExtVar", NodeOutputArray, , True)
+                Call WriteData("AirFlow", "ExtVar", FlowOutputArray, , True)
+            Else
+                Call WriteData("AirNode", "ExtVar", NodeOutputArray, , False)
+                Call WriteData("AirFlow", "ExtVar", FlowOutputArray, , False)
+            End If
+
+
             YearNum += 1
         Loop
 
-        ni.Close()
-        fi.Close()
-        nv.Close()
-        fv.Close()
-        stf.Close()
 
     End Sub
 
     Sub GetFiles()
 
-        AirNodeInputData = New IO.FileStream(DirPath & "AirNodeInputData2010.csv", IO.FileMode.Open, IO.FileAccess.Read)
-        ni = New IO.StreamReader(AirNodeInputData, System.Text.Encoding.Default)
+        Call ReadData("AirNode", "Input", NodeInputArray, True)
 
-        AirFlowInputData = New IO.FileStream(DirPath & "AirFlowInputData2010.csv", IO.FileMode.Open, IO.FileAccess.Read)
-        fi = New IO.StreamReader(AirFlowInputData, System.Text.Encoding.Default)
+        Call ReadData("AirFlow", "Input", FlowInputArray, True)
 
-        NodeExtVarOutputData = New IO.FileStream(DirPath & EVFilePrefix & "AirNodeExtVar.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
-        nv = New IO.StreamWriter(NodeExtVarOutputData, System.Text.Encoding.Default)
-
-        FlowExtVarOutputData = New IO.FileStream(DirPath & EVFilePrefix & "AirFlowExtVar.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
-        fv = New IO.StreamWriter(FlowExtVarOutputData, System.Text.Encoding.Default)
-
-        'if capacity is changing then get capacity change file
-        'v1.3 do this anyway to include compulsory changes
-        AirNodeCapData = New IO.FileStream(DirPath & CapFilePrefix & "AirNodeCapChange.csv", IO.FileMode.Open, IO.FileAccess.Read)
-        nc = New IO.StreamReader(AirNodeCapData, System.Text.Encoding.Default)
-        'read header row
-        nc.ReadLine()
-        'v1.3 new intermediate capacity file
-        AirNewCapData = New IO.FileStream(DirPath & EVFilePrefix & "AirNodeNewCap.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
-        acn = New IO.StreamWriter(AirNewCapData, System.Text.Encoding.Default)
-        'write header row
-        OutString = "NodeID,ChangeYear,NewTermCap,NewATMCap"
-        acn.WriteLine(OutString)
-
-        'If NewAirCap = True Then
-        '    AirNodeCapData = New IO.FileStream(DirPath & CapFilePrefix & "AirNodeCapChange.csv", IO.FileMode.Open, IO.FileAccess.Read)
-        '    nc = New IO.StreamReader(AirNodeCapData, System.Text.Encoding.Default)
-        '    'read header row
-        '    nc.ReadLine()
-        'End If
+        'read capchange info
+        Call ReadData("AirNode", "CapChange", CapArray)
 
         'now get strategy file too
-        StrategyFile = New IO.FileStream(DirPath & "CommonVariablesTR" & Strategy & ".csv", IO.FileMode.Open, IO.FileAccess.Read)
-        stf = New IO.StreamReader(StrategyFile, System.Text.Encoding.Default)
-        'read header row
-        stf.ReadLine()
+        Call ReadData("Strategy", "", stratarray)
 
     End Sub
 
@@ -302,54 +269,50 @@
         If YearNum = 1 Then
             NodeCount = 1
             Do While NodeCount < 29
-                NodeInputRow = ni.ReadLine
-                NodeInputData = Split(NodeInputRow, ",")
                 'pop
-                NodeOldData(NodeCount, 1) = NodeInputData(6)
+                NodeOldData(NodeCount, 1) = NodeInputArray(NodeCount, 6)
                 'gva
-                NodeOldData(NodeCount, 2) = NodeInputData(7)
+                NodeOldData(NodeCount, 2) = NodeInputArray(NodeCount, 7)
                 'cost
-                NodeOldData(NodeCount, 3) = NodeInputData(8) * 0.29
-                airnodefixedcost(NodeCount) = NodeInputData(8) * 0.71
+                NodeOldData(NodeCount, 3) = NodeInputArray(NodeCount, 8) * 0.29
+                airnodefixedcost(NodeCount) = NodeInputArray(NodeCount, 8) * 0.71
                 'termcap
-                NodeOldData(NodeCount, 4) = NodeInputData(4)
+                NodeOldData(NodeCount, 4) = NodeInputArray(NodeCount, 4)
                 'maxatm
-                NodeOldData(NodeCount, 5) = NodeInputData(5)
+                NodeOldData(NodeCount, 5) = NodeInputArray(NodeCount, 5)
                 'psd
-                NodeOldData(NodeCount, 6) = NodeInputData(9)
+                NodeOldData(NodeCount, 6) = NodeInputArray(NodeCount, 9)
                 'psi
-                NodeOldData(NodeCount, 7) = NodeInputData(10)
+                NodeOldData(NodeCount, 7) = NodeInputArray(NodeCount, 10)
                 'lfd
-                NodeOldData(NodeCount, 8) = NodeInputData(11)
+                NodeOldData(NodeCount, 8) = NodeInputArray(NodeCount, 11)
                 'lfi
-                NodeOldData(NodeCount, 9) = NodeInputData(12)
+                NodeOldData(NodeCount, 9) = NodeInputArray(NodeCount, 12)
                 'inttripdist
-                NodeOldData(NodeCount, 10) = NodeInputData(13)
+                NodeOldData(NodeCount, 10) = NodeInputArray(NodeCount, 13)
                 'fuelseatkm
                 NodeOldData(NodeCount, 11) = 0.037251
-                GORID(NodeCount) = NodeInputData(14)
+                GORID(NodeCount) = NodeInputArray(NodeCount, 14)
                 NodeCount += 1
             Loop
 
             FlowCount = 1
             Do While FlowCount < 224
-                FlowInputRow = fi.ReadLine
-                FlowInputData = Split(FlowInputRow, ",")
                 VarCount = 1
                 '***changed from 2 to 3
                 InVarCount = 4
                 Do Until VarCount > 5
-                    FlowOldData(FlowCount, VarCount) = FlowInputData(InVarCount)
+                    FlowOldData(FlowCount, VarCount) = FlowInputArray(FlowCount, InVarCount)
                     VarCount += 1
                     InVarCount += 1
                 Loop
                 FlowOldData(FlowCount, 5) = FlowOldData(FlowCount, 5) * 0.29
-                airflowfixedcost(FlowCount) = FlowInputData(8) * 0.71
-                OZone(FlowCount) = FlowInputData(10)
-                DZone(FlowCount) = FlowInputData(11)
+                airflowfixedcost(FlowCount) = FlowInputArray(FlowCount, 8) * 0.71
+                OZone(FlowCount) = FlowInputArray(FlowCount, 10)
+                DZone(FlowCount) = FlowInputArray(FlowCount, 11)
                 'add in the Flow ID number as some are missing from the input file
-                FlowOldData(FlowCount, 0) = FlowInputData(0)
-                FlowLength(FlowCount) = FlowInputData(9)
+                FlowOldData(FlowCount, 0) = FlowInputArray(FlowCount, 0)
+                FlowLength(FlowCount) = FlowInputArray(FlowCount, 9)
                 FlowCount += 1
             Loop
             'v1.4 set fueleffold value to 1
@@ -359,10 +322,7 @@
         End If
 
         'get values from strategy file
-        'read line from file
-        stratstring = stf.ReadLine()
-        stratarray = Split(stratstring, ",")
-        FuelEff = stratarray(68) / FuelEffOld
+        FuelEff = stratarray(YearNum, 68) / FuelEffOld
 
         'calculate new node values first
         NodeCount = 1
@@ -428,16 +388,16 @@
                     'if there are, then update the capacity variables, and read in the next row from the capacity file
                     AddTermCap = TermCapChange
                     AddATMCap = ATMChange
-                    CapRow = acr.ReadLine()
+                    CapNum += 1
                     Call GetCapData()
                 End If
             End If
             NodeNewData(NodeCount, 4) = NodeOldData(NodeCount, 4) + AddTermCap
             NodeNewData(NodeCount, 5) = NodeOldData(NodeCount, 5) + AddATMCap
-            NodeNewData(NodeCount, 6) = stratarray(83)
-            NodeNewData(NodeCount, 7) = stratarray(84)
-            NodeNewData(NodeCount, 8) = stratarray(85)
-            NodeNewData(NodeCount, 9) = stratarray(86)
+            NodeNewData(NodeCount, 6) = stratarray(YearNum, 83)
+            NodeNewData(NodeCount, 7) = stratarray(YearNum, 84)
+            NodeNewData(NodeCount, 8) = stratarray(YearNum, 85)
+            NodeNewData(NodeCount, 9) = stratarray(YearNum, 86)
             NodeNewData(NodeCount, 10) = NodeOldData(NodeCount, 10)
             If AirEneSource = "Database" Then
                 NodeNewData(NodeCount, 11) = NodeOldData(NodeCount, 11) * FuelEff
@@ -450,7 +410,7 @@
             'base fuel units per journey = averagedist * intplanesize * fuelperseatkm
             If AirCaCharge = True Then
                 If YearNum >= AirCaChYear Then
-                    carbch = (NodeNewData(NodeCount, 10) * NodeNewData(NodeCount, 7) * 0.037251) * FuelEff * stratarray(73) * (stratarray(71) / 10)
+                    carbch = (NodeNewData(NodeCount, 10) * NodeNewData(NodeCount, 7) * 0.037251) * FuelEff * stratarray(YearNum, 73) * (stratarray(YearNum, 71) / 10)
                 Else
                     carbch = 0
                 End If
@@ -459,22 +419,20 @@
             End If
 
             'write node output row
-            'v1.3 now calculates cost based on fuel and fixed costs
-            OutputRow = YearNum & "," & NodeCount & ","
-            For n = 1 To 2
-                OutputRow = OutputRow & NodeNewData(NodeCount, n) & ","
-            Next
+            NodeOutputArray(NodeCount, 0) = YearNum
+            NodeOutputArray(NodeCount, 1) = NodeCount
+            NodeOutputArray(NodeCount, 2) = NodeNewData(NodeCount, 1)
+            NodeOutputArray(NodeCount, 3) = NodeNewData(NodeCount, 2)
             newcost = airnodefixedcost(NodeCount) + NodeNewData(NodeCount, 3) + carbch
-            OutputRow = OutputRow & newcost & ","
+            NodeOutputArray(NodeCount, 4) = newcost
             For n = 4 To 11
-                OutputRow = OutputRow & NodeNewData(NodeCount, n) & ","
+                NodeOutputArray(NodeCount, n + 1) = NodeNewData(NodeCount, n)
             Next
             'OutVarCount = 1
             'Do Until OutVarCount > 11
             '    OutputRow = OutputRow & NodeNewData(NodeCount, OutVarCount) & ","
             '    OutVarCount += 1
             'Loop
-            nv.WriteLine(OutputRow)
             'set old values as previous new values
             OutVarCount = 1
             'v1.4 change, previously >10
@@ -565,7 +523,7 @@
             'base fuel units per journey = averagedist * domplanesize * fuelperseatkm
             If AirCaCharge = True Then
                 If YearNum >= AirCaChYear Then
-                    carbch = (FlowLength(FlowCount) * stratarray(83) * 0.037251) * FuelEff * stratarray(73) * (stratarray(71) / 10)
+                    carbch = (FlowLength(FlowCount) * stratarray(YearNum, 83) * 0.037251) * FuelEff * stratarray(YearNum, 73) * (stratarray(YearNum, 71) / 10)
                 Else
                     carbch = 0
                 End If
@@ -574,18 +532,20 @@
             End If
 
             'write flow output row
-            OutputRow = YearNum & "," & FlowOldData(FlowCount, 0) & ","
-            For f = 1 To 4
-                OutputRow = OutputRow & FlowNewData(FlowCount, f) & ","
-            Next
+            FlowOutputArray(FlowCount, 0) = YearNum
+            FlowOutputArray(FlowCount, 1) = FlowOldData(FlowCount, 0)
+            FlowOutputArray(FlowCount, 2) = FlowNewData(FlowCount, 1)
+            FlowOutputArray(FlowCount, 3) = FlowNewData(FlowCount, 2)
+            FlowOutputArray(FlowCount, 4) = FlowNewData(FlowCount, 3)
+            FlowOutputArray(FlowCount, 5) = FlowNewData(FlowCount, 4)
             newcost = airflowfixedcost(FlowCount) + FlowNewData(FlowCount, 5) + carbch
-            OutputRow = OutputRow & newcost & ","
+            FlowOutputArray(FlowCount, 6) = newcost
             'OutVarCount = 1
             'Do Until OutVarCount > 5
             '    OutputRow = OutputRow & FlowNewData(FlowCount, OutVarCount) & ","
             '    OutVarCount += 1
             'Loop
-            fv.WriteLine(OutputRow)
+
             'set old values as previous new values
             OutVarCount = 1
             Do Until OutVarCount > 5
@@ -596,7 +556,7 @@
         Loop
 
         'v1.4 update FuelEffOld value
-        FuelEffOld = stratarray(68)
+        FuelEffOld = stratarray(YearNum, 68)
 
     End Sub
 
@@ -621,6 +581,27 @@
                 CapType = NodeInputData(4)
             End If
         End If
+
+        If CapArray(CapNum, 0) <> "" Then
+            CapID = CapArray(CapNum, 0)
+            If CapArray(CapNum, 1) = "-1" Then
+                CapYear = -1
+            Else
+                If AddingCap = False Then
+                    CapYear = CapArray(CapNum, 1) - 2010
+                Else
+                    CapYear = CapArray(CapNum, 1) - 2010
+                End If
+            End If
+            TermCapChange = CapArray(CapNum, 2)
+            ATMChange = CapArray(CapNum, 3)
+            If AddingCap = False Then
+                CapType = CapArray(CapNum, 4)
+            End If
+        Else
+
+        End If
+
     End Sub
 
     Sub DictionaryMissingVal()
