@@ -44,6 +44,7 @@
     Dim VarRat As Double
     Dim SeaTripRates(90) As Double
     Dim InputCount As Integer
+    Dim NewCapArray(47, 8) As String
     Dim InputArray(47, 13) As String
     Dim OutputArray(47, 8) As String
     Dim TempArray(47, 18) As String
@@ -54,8 +55,6 @@
         'get input files and create output files
         Call SeaInputFiles()
 
-        'get the elasticity values
-        Call ReadData("Elasticity", "", SeaEl, , YearNum)
 
         YearNum = 1
         Do While YearNum < 91
@@ -92,9 +91,16 @@
 
             'create file is true if it is the initial year and write to outputfile and temp file
             If YearNum = 1 Then
-                Call WriteData("Seaport", "Output", OutputArray, TempArray, True, FilePrefix)
+                Call WriteData("Seaport", "Output", OutputArray, TempArray, True)
+                'if the model is building capacity then create new capacity file
+                If BuildInfra = True Then
+                    Call WriteData("Seaport", "NewCap", NewCapArray, , True)
+                End If
             Else
-                Call WriteData("Seaport", "Output", OutputArray, TempArray, False, FilePrefix)
+                Call WriteData("Seaport", "Output", OutputArray, TempArray, False)
+                If BuildInfra = True Then
+                    Call WriteData("Seaport", "NewCap", NewCapArray, , False)
+                End If
             End If
 
             'move on to next year
@@ -102,16 +108,10 @@
 
         Loop
 
-        'close all files
-        If BuildInfra = True Then
-            snc.Close()
-        End If
-
     End Sub
 
     Sub SeaInputFiles()
-        Dim row As String
-        Dim stratarray() As String
+        Dim stratarray(90, 95) As String
 
         'get external variables file
         'check if updated version being used
@@ -123,27 +123,16 @@
             End If
         End If
 
-        'if the model is building capacity then create new capacity file
-        If BuildInfra = True Then
-            SeaNewCap = New IO.FileStream(DirPath & FilePrefix & "SeaNewCap.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
-            snc = New IO.StreamWriter(SeaNewCap, System.Text.Encoding.Default)
-            'write header row
-            row = "PortID,Yeary,LBCapAdded,DBCapAdded,GCCapAdded,LLCapAdded,RRCapAdded"
-            snc.WriteLine(row)
+        If TripRates = "Strategy" Then
+            'get the elasticity values
+            Call ReadData("Strategy", "", stratarray)
+            For r = 1 To 90
+                SeaTripRates(r) = stratarray(r, 95)
+            Next
         End If
 
-        If TripRates = "Strategy" Then
-            StrategyFile = New IO.FileStream(DirPath & "CommonVariablesTR" & Strategy & ".csv", IO.FileMode.Open, IO.FileAccess.Read)
-            sst = New IO.StreamReader(StrategyFile, System.Text.Encoding.Default)
-            'read header row
-            row = sst.ReadLine
-            For r = 1 To 90
-                row = sst.ReadLine
-                stratarray = Split(row, ",")
-                SeaTripRates(r) = stratarray(95)
-            Next
-            sst.Close()
-        End If
+        'get the elasticity values
+        Call ReadData("Seaport", "Elasticity", SeaEl)
 
     End Sub
 
@@ -412,7 +401,12 @@
                             Case 5
                                 newcapstring = PortID & "," & YearNum - 1 & ",0,0,0,0,1000"
                         End Select
-                        snc.WriteLine(newcapstring)
+                        'read newcapstring to array to writedata
+                        Dim abc() As String
+                        abc = Split(newcapstring, ",")
+                        For i = 0 To 7
+                            NewCapArray(PortID, i) = abc(i)
+                        Next
                     End If
                 End If
             End If
