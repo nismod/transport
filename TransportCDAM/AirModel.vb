@@ -35,12 +35,12 @@
     Dim FlowDetails() As String
     Dim AirportCount As Integer
     Dim AirportBaseData(28, 13) As Double
-    Dim AirportExtVar(28, 12) As Double
+    Dim AirportExtVar(28, 12) As String
     Dim AirpPopRat, AirpGvaRat, AirpCostRat As Double
     Dim AirpTripRat As Double
     Dim AirpTripsNew(28) As Double
     Dim AirFlowBaseData(223, 9) As Double
-    Dim AirFlowExtVar(223, 6) As Double
+    Dim AirFlowExtVar(223, 6) As String
     Dim FlowCount As Integer
     Dim AirfPopRat, AirfGvaRat, AirfCostRat As Double
     Dim AirfTripRat As Double
@@ -59,7 +59,7 @@
     Dim AirpDomTripsLatent(28) As Double
     'this specifies whether a flow is constrained at the origin end or the destination end
     Dim AirfCapConst(223, 1) As Boolean
-    Dim AirEl(6, 90) As Double
+    Dim AirEl(90, 6) As String
     Dim AirpIntFuel(28) As Double
     Dim AirfFuel(223) As Double
     Dim AirpAddedCap(28, 2) As Long
@@ -78,6 +78,8 @@
     Dim FlowOutputArray(223, 3) As String
     Dim NodeTempArray(28, 14) As String
     Dim FlowTempArray(223, 12) As String
+    Dim NewCapArray(56, 3) As String
+
 
 
     Public Sub AirMain()
@@ -90,8 +92,6 @@
         'get input files and create output files
         Call AirInputFiles()
 
-        'read in the elasticities
-        Call ReadAirElasticities()
 
         'Set year number to 1
         YearNum = 1
@@ -109,16 +109,14 @@
 
             'read from initial file if year 1, otherwise update from temp file
             If YearNum = 1 Then
-                Call ReadData("Air", "Node", NodeInputArray, True, , FilePrefix)
-                Call ReadData("Air", "Flow", FlowInputArray, True, , FilePrefix)
+                Call ReadData("AirNode", "Input", NodeInputArray, True)
+                Call ReadData("AirFlow", "Input", FlowInputArray, True)
             Else
                 ReDim Preserve NodeInputArray(28, 14)
                 ReDim Preserve FlowInputArray(223, 12)
-                Call ReadData("Air", "Node", NodeInputArray, False, , FilePrefix)
-                Call ReadData("Air", "Flow", FlowInputArray, False, , FilePrefix)
+                Call ReadData("AirNode", "Input", NodeInputArray, False)
+                Call ReadData("AirFlow", "Input", FlowInputArray, False)
             End If
-
-
 
             'run air node model
 
@@ -162,14 +160,20 @@
             '***note - do we want to alter this to cope with reductions in capacity? - also with reductions in load factors and/or aircraft sizes?
 
             'create file is true if it is the initial year and write to outputfile and temp file
-            If YearNum = 1 Then
-                Call WriteData("Air", "Node", NodeOutputArray, NodeTempArray, True, FilePrefix)
-                Call WriteData("Air", "Flow", FlowOutputArray, FlowTempArray, True, FilePrefix)
-            Else
-                Call WriteData("Air", "Node", NodeOutputArray, NodeTempArray, False, FilePrefix)
-                Call WriteData("Air", "Flow", FlowOutputArray, FlowTempArray, False, FilePrefix)
-            End If
 
+            If YearNum = 1 Then
+                Call WriteData("AirNode", "Output", NodeOutputArray, NodeTempArray, True)
+                Call WriteData("AirFlow", "Output", FlowOutputArray, FlowTempArray, True)
+                If BuildInfra = True Then
+                    Call WriteData("AirNode", "AirNewCap", NewCapArray, , True)
+                End If
+            Else
+                Call WriteData("AirNode", "Output", NodeOutputArray, NodeTempArray, False)
+                Call WriteData("AirFlow", "Output", FlowOutputArray, FlowTempArray, False)
+                If BuildInfra = True Then
+                    Call WriteData("AirNode", "AirNewCap", NewCapArray, , False)
+                End If
+            End If
 
 
             'repeat for years 2 to 90
@@ -177,20 +181,13 @@
 
         Loop
 
-        'close all opened files
-        ne.Close()
-        fe.Close()
-        ael.Close()
-        If BuildInfra = True Then
-            anc.Close()
-        End If
 
     End Sub
 
     Sub AirInputFiles()
 
         Dim row As String
-        Dim stratarray() As String
+        Dim stratarray(90, 95) As String
 
         'get nodal external variable file
         If UpdateExtVars = True Then
@@ -200,43 +197,16 @@
                 EVFileSuffix = ""
             End If
         End If
-        AirNodeExtVar = New IO.FileStream(DirPath & EVFilePrefix & "AirNodeExtVar" & EVFileSuffix & ".csv", IO.FileMode.Open, IO.FileAccess.Read)
-        ne = New IO.StreamReader(AirNodeExtVar, System.Text.Encoding.Default)
-        'read header row
-        row = ne.ReadLine
 
-
-        'get flow external variable file
-        AirLinkExtVar = New IO.FileStream(DirPath & EVFilePrefix & "AirFlowExtVar.csv", IO.FileMode.Open, IO.FileAccess.Read)
-        fe = New IO.StreamReader(AirLinkExtVar, System.Text.Encoding.Default)
-        'read header row
-        row = fe.ReadLine
-
-        AirElasticities = New IO.FileStream(DirPath & "Elasticity Files\TR" & Strategy & "\AirElasticities.csv", IO.FileMode.Open, IO.FileAccess.Read)
-        ael = New IO.StreamReader(AirElasticities, System.Text.Encoding.Default)
-        'read header row
-        row = ael.ReadLine
-
-        'if the model is building capacity then create new capacity file
-        If BuildInfra = True Then
-            AirNewCap = New IO.FileStream(DirPath & FilePrefix & "AirNewCap.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
-            anc = New IO.StreamWriter(AirNewCap, System.Text.Encoding.Default)
-            'write header row
-            row = "AirportID,Yeary,TermCapAdded,RunCapAdded"
-            anc.WriteLine(row)
-        End If
+        'get the elasticity values
+        Call ReadData("AirNode", "Elasticity", AirEl)
 
         If TripRates = "Strategy" Then
-            StrategyFile = New IO.FileStream(DirPath & "CommonVariablesTR" & Strategy & ".csv", IO.FileMode.Open, IO.FileAccess.Read)
-            asf = New IO.StreamReader(StrategyFile, System.Text.Encoding.Default)
-            'read header row
-            row = asf.ReadLine
+            'read from the strategy file
+            Call ReadData("Strategy", "", stratarray)
             For r = 1 To 90
-                row = asf.ReadLine
-                stratarray = Split(row, ",")
-                AirTripRates(r) = stratarray(94)
+                AirTripRates(r) = stratarray(r, 94)
             Next
-            asf.Close()
         End If
 
     End Sub
@@ -301,28 +271,17 @@
 
     Sub GetAirportExtVar()
 
-        Dim row As String
         Dim rowcount As Integer
-        Dim extvarstring() As String
-        Dim v As Integer
         Dim planechange As Boolean
+
+        'get external variables for this year
+        Call ReadData("AirNode", "ExtVar", AirportExtVar, , YearNum)
 
         'set rowcount to 1
         rowcount = 1
 
-        'read rows from external variables file until the row count is greater than the number of airports being modelled
+        'add in value
         Do Until rowcount > MaxAirNode
-            'read a row from the file
-            row = ne.ReadLine
-            'split it into a temporary array
-            extvarstring = Split(row, ",")
-
-            'copy the values into the airport external variables array
-            v = 1
-            Do Until v > 12
-                AirportExtVar(rowcount, v) = extvarstring(v)
-                v += 1
-            Loop
             'add in built capacity
             AirportExtVar(rowcount, 5) += AirpAddedCap(rowcount, 0)
             AirportExtVar(rowcount, 6) += AirpAddedCap(rowcount, 1)
@@ -404,14 +363,14 @@
                 End If
 
                 If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                    OldEl = AirEl(4, YearNum)
+                    OldEl = AirEl(YearNum, 4)
                     Call VarElCalc()
                     AirpPopRat = VarRat
                 Else
                     If TripRates = "Strategy" Then
-                        AirpPopRat = ((AirportExtVar(aircount, 2) * AirTripRates(YearNum)) / AirportBaseData(aircount, 6)) ^ AirEl(4, YearNum)
+                        AirpPopRat = ((AirportExtVar(aircount, 2) * AirTripRates(YearNum)) / AirportBaseData(aircount, 6)) ^ AirEl(YearNum, 4)
                     Else
-                        AirpPopRat = (AirportExtVar(aircount, 2) / AirportBaseData(aircount, 6)) ^ AirEl(4, YearNum)
+                        AirpPopRat = (AirportExtVar(aircount, 2) / AirportBaseData(aircount, 6)) ^ AirEl(YearNum, 4)
                     End If
 
                 End If
@@ -419,22 +378,22 @@
                 OldY = AirportBaseData(aircount, 7)
                 NewY = AirportExtVar(aircount, 3)
                 If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                    OldEl = AirEl(5, YearNum)
+                    OldEl = AirEl(YearNum, 5)
                     Call VarElCalc()
                     AirpGvaRat = VarRat
                 Else
-                    AirpGvaRat = (AirportExtVar(aircount, 3) / AirportBaseData(aircount, 7)) ^ AirEl(5, YearNum)
+                    AirpGvaRat = (AirportExtVar(aircount, 3) / AirportBaseData(aircount, 7)) ^ AirEl(YearNum, 5)
                 End If
                 'cost ratio
                 OldY = AirportBaseData(aircount, 8)
                 NewY = AirportExtVar(aircount, 4) + AirpCapU(aircount, 3)
                 If OldY > 0 Then
                     If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                        OldEl = AirEl(6, YearNum)
+                        OldEl = AirEl(YearNum, 6)
                         Call VarElCalc()
                         AirpCostRat = VarRat
                     Else
-                        AirpCostRat = ((AirportExtVar(aircount, 4) + AirpCapU(aircount, 3)) / AirportBaseData(aircount, 8)) ^ AirEl(6, YearNum)
+                        AirpCostRat = ((AirportExtVar(aircount, 4) + AirpCapU(aircount, 3)) / AirportBaseData(aircount, 8)) ^ AirEl(YearNum, 6)
                     End If
                 Else
                     AirpCostRat = 1
@@ -442,12 +401,12 @@
 
             Else
                 If TripRates = "Strategy" Then
-                    AirpPopRat = ((AirportExtVar(aircount, 2) * AirTripRates(YearNum)) / AirportBaseData(aircount, 6)) ^ AirEl(4, YearNum)
+                    AirpPopRat = ((AirportExtVar(aircount, 2) * AirTripRates(YearNum)) / AirportBaseData(aircount, 6)) ^ AirEl(YearNum, 4)
                 Else
-                    AirpPopRat = (AirportExtVar(aircount, 2) / AirportBaseData(aircount, 6)) ^ AirEl(4, YearNum)
+                    AirpPopRat = (AirportExtVar(aircount, 2) / AirportBaseData(aircount, 6)) ^ AirEl(YearNum, 4)
                 End If
-                AirpGvaRat = (AirportExtVar(aircount, 3) / AirportBaseData(aircount, 7)) ^ AirEl(5, YearNum)
-                AirpCostRat = ((AirportExtVar(aircount, 4) + AirpCapU(aircount, 3)) / AirportBaseData(aircount, 8)) ^ AirEl(6, YearNum)
+                AirpGvaRat = (AirportExtVar(aircount, 3) / AirportBaseData(aircount, 7)) ^ AirEl(YearNum, 5)
+                AirpCostRat = ((AirportExtVar(aircount, 4) + AirpCapU(aircount, 3)) / AirportBaseData(aircount, 8)) ^ AirEl(YearNum, 6)
             End If
 
             AirpTripRat = AirpPopRat * AirpGvaRat * AirpCostRat
@@ -535,23 +494,26 @@
         Dim extvarstring() As String
         Dim v As Integer
 
-        'set row count to 1
-        rowcount = 1
+        'get external variables for this year
+        Call ReadData("AirFlow", "ExtVar", AirFlowExtVar, , YearNum)
 
-        'read rows from external variables file until the row count is greater than the number of flows being modelled
-        Do Until rowcount > MaxAirFlow
-            'read a row from the file
-            row = fe.ReadLine
-            'split it into a temporary array
-            extvarstring = Split(row, ",")
-            'copy the values into the air flow external variables array
-            v = 1
-            Do Until v > 6
-                AirFlowExtVar(rowcount, v) = extvarstring(v)
-                v += 1
-            Loop
-            rowcount += 1
-        Loop
+        ''set row count to 1
+        'rowcount = 1
+
+        ''read rows from external variables file until the row count is greater than the number of flows being modelled
+        'Do Until rowcount > MaxAirFlow
+        '    'read a row from the file
+        '    row = fe.ReadLine
+        '    'split it into a temporary array
+        '    extvarstring = Split(row, ",")
+        '    'copy the values into the air flow external variables array
+        '    v = 1
+        '    Do Until v > 6
+        '        AirFlowExtVar(rowcount, v) = extvarstring(v)
+        '        v += 1
+        '    Loop
+        '    rowcount += 1
+        'Loop
 
     End Sub
 
@@ -589,58 +551,60 @@
                     'pop ratio
                     OldY = AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5)
                     If TripRates = "Strategy" Then
-                        NewY = (AirFlowExtVar(aircount, 2) + AirFlowExtVar(aircount, 3)) * AirTripRates(YearNum)
+                        NewY = (CDbl(AirFlowExtVar(aircount, 2)) + CDbl(AirFlowExtVar(aircount, 3))) * AirTripRates(YearNum)
                     Else
                         NewY = AirFlowExtVar(aircount, 2) + AirFlowExtVar(aircount, 3)
                     End If
 
                     If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                        OldEl = AirEl(1, YearNum)
+                        OldEl = AirEl(YearNum, 1)
                         Call VarElCalc()
                         AirfPopRat = VarRat
                     Else
-                        AirfPopRat = ((AirFlowExtVar(aircount, 2) + AirFlowExtVar(aircount, 3)) / (AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5))) ^ AirEl(1, YearNum)
+                        AirfPopRat = ((CDbl(AirFlowExtVar(aircount, 2)) + CDbl(AirFlowExtVar(aircount, 3))) / (AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5))) ^ AirEl(YearNum, 1)
                     End If
                     'gva ratio
                     OldY = AirFlowBaseData(aircount, 6) + AirFlowBaseData(aircount, 7)
-                    NewY = AirFlowExtVar(aircount, 4) + AirFlowExtVar(aircount, 5)
+                    NewY = CDbl(AirFlowExtVar(aircount, 4)) + CDbl(AirFlowExtVar(aircount, 5))
                     If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                        OldEl = AirEl(2, YearNum)
+                        OldEl = AirEl(YearNum, 2)
                         Call VarElCalc()
                         AirfGvaRat = VarRat
                     Else
-                        AirfGvaRat = ((AirFlowExtVar(aircount, 4) + AirFlowExtVar(aircount, 5)) / (AirFlowBaseData(aircount, 6) + AirFlowBaseData(aircount, 7))) ^ AirEl(2, YearNum)
+                        AirfGvaRat = ((CDbl(AirFlowExtVar(aircount, 4)) + CDbl(AirFlowExtVar(aircount, 5))) / (AirFlowBaseData(aircount, 6) + AirFlowBaseData(aircount, 7))) ^ AirEl(YearNum, 2)
                     End If
+
                     'cost ratio
                     OldY = AirFlowBaseData(aircount, 8)
-                    NewY = AirFlowExtVar(aircount, 6) + FlowCharge(aircount)
+                    NewY = CDbl(AirFlowExtVar(aircount, 6)) + FlowCharge(aircount)
                     If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                        OldEl = AirEl(3, YearNum)
+                        OldEl = AirEl(YearNum, 3)
                         Call VarElCalc()
                         AirfCostRat = VarRat
                     Else
-                        AirfCostRat = ((AirFlowExtVar(aircount, 6) + FlowCharge(aircount)) / AirFlowBaseData(aircount, 8)) ^ AirEl(3, YearNum)
+                        AirfCostRat = ((CDbl(AirFlowExtVar(aircount, 6)) + FlowCharge(aircount)) / AirFlowBaseData(aircount, 8)) ^ AirEl(YearNum, 3)
                     End If
                 Else
                     If TripRates = "Strategy" Then
-                        AirfPopRat = (((AirFlowExtVar(aircount, 2) + AirFlowExtVar(aircount, 3)) * AirTripRates(YearNum)) / (AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5))) ^ AirEl(1, YearNum)
+                        AirfPopRat = (((CDbl(AirFlowExtVar(aircount, 2)) + CDbl(AirFlowExtVar(aircount, 3))) * AirTripRates(YearNum)) / (AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5))) ^ AirEl(YearNum, 1)
                     Else
-                        AirfPopRat = ((AirFlowExtVar(aircount, 2) + AirFlowExtVar(aircount, 3)) / (AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5))) ^ AirEl(1, YearNum)
+                        AirfPopRat = ((CDbl(AirFlowExtVar(aircount, 2)) + CDbl(AirFlowExtVar(aircount, 3))) / (AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5))) ^ AirEl(YearNum, 1)
                     End If
-                    AirfGvaRat = ((AirFlowExtVar(aircount, 4) + AirFlowExtVar(aircount, 5)) / (AirFlowBaseData(aircount, 6) + AirFlowBaseData(aircount, 7))) ^ AirEl(2, YearNum)
-                    AirfCostRat = ((AirFlowExtVar(aircount, 6) + FlowCharge(aircount)) / AirFlowBaseData(aircount, 8)) ^ AirEl(3, YearNum)
+                    AirfGvaRat = ((CDbl(AirFlowExtVar(aircount, 4)) + CDbl(AirFlowExtVar(aircount, 5))) / (AirFlowBaseData(aircount, 6) + AirFlowBaseData(aircount, 7))) ^ AirEl(YearNum, 2)
+                    AirfCostRat = ((CDbl(AirFlowExtVar(aircount, 6)) + FlowCharge(aircount)) / AirFlowBaseData(aircount, 8)) ^ AirEl(YearNum, 3)
                 End If
             Else
                 If TripRates = "Strategy" Then
-                    AirfPopRat = (((AirFlowExtVar(aircount, 2) + AirFlowExtVar(aircount, 3)) * AirTripRates(YearNum)) / (AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5))) ^ AirEl(1, YearNum)
+                    AirfPopRat = (((CDbl(AirFlowExtVar(aircount, 2)) + CDbl(AirFlowExtVar(aircount, 3)))) * AirTripRates(YearNum)) / (AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5)) ^ AirEl(YearNum, 1)
                 Else
-                    AirfPopRat = ((AirFlowExtVar(aircount, 2) + AirFlowExtVar(aircount, 3)) / (AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5))) ^ AirEl(1, YearNum)
+                    AirfPopRat = ((CDbl(AirFlowExtVar(aircount, 2)) + CDbl(AirFlowExtVar(aircount, 3))) / (AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5))) ^ AirEl(YearNum, 1)
                 End If
-                AirfGvaRat = ((AirFlowExtVar(aircount, 4) + AirFlowExtVar(aircount, 5)) / (AirFlowBaseData(aircount, 6) + AirFlowBaseData(aircount, 7))) ^ AirEl(2, YearNum)
-                AirfCostRat = ((AirFlowExtVar(aircount, 6) + FlowCharge(aircount)) / AirFlowBaseData(aircount, 8)) ^ AirEl(3, YearNum)
+                AirfGvaRat = ((CDbl(AirFlowExtVar(aircount, 4)) + CDbl(AirFlowExtVar(aircount, 5))) / (AirFlowBaseData(aircount, 6) + AirFlowBaseData(aircount, 7))) ^ AirEl(YearNum, 2)
+                AirfCostRat = ((CDbl(AirFlowExtVar(aircount, 6)) + FlowCharge(aircount)) / AirFlowBaseData(aircount, 8)) ^ AirEl(YearNum, 3)
             End If
 
             'use the ratios to estimate the new actual and latent level of trips on the flow
+
             AirfTripRat = AirfPopRat * AirfGvaRat * AirfCostRat
 
             '1009Change only update actual trips if demand is not already at the constraint
@@ -979,6 +943,11 @@
                     AirpDomTripsLatent(aircount) = latentdomtrips
                     'add the difference between the scaled and unscaled figures to the latent demand arrays - and add a latent airport domestic trips array
                     'finally, recalculate all the domestic trip totals, so that airports on the other end of the constrained flows have the new correct totals
+                    If YearNum = 1 Then
+                        Dim msg = 3 & "," & AirfTripsNew(1)
+                        MsgBox(msg)
+                    End If
+
                     Call UpdateDomesticTrips()
                 End If
             End If
@@ -1089,6 +1058,7 @@
         Dim flownum As Long
         Dim cuval As Double
         Dim newcapstring As String
+        Dim newcapnum As Integer
 
 
         'write to output array for node and flow
@@ -1116,7 +1086,7 @@
             flownum += 1
         Loop
 
-
+        newcapnum = 1
         'update airport base data and write to temp file
         aircount = 1
         'loop through all airports
@@ -1141,8 +1111,11 @@
                     AirportBaseData(aircount, 4) += 20000000
                     AirpAddedCap(aircount, 0) += 20000000
                     'write details to output file
-                    newcapstring = aircount & "," & (YearNum + 1) & ",20000000,0"
-                    anc.WriteLine(newcapstring)
+                    NewCapArray(newcapnum, 0) = aircount
+                    NewCapArray(newcapnum, 1) = YearNum + 1
+                    NewCapArray(newcapnum, 2) = 20000000
+                    NewCapArray(newcapnum, 3) = 0
+                    newcapnum += 1
                     '1009Change update capacity checkers
                     AirpOldConstraint(aircount) = False
                     AirpTermCapCheck(aircount) = False
@@ -1159,8 +1132,11 @@
                     AirportBaseData(aircount, 5) += 200000
                     AirpAddedCap(aircount, 1) += 200000
                     'write details to output file
-                    newcapstring = aircount & "," & (YearNum + 1) & ",0,200000"
-                    anc.WriteLine(newcapstring)
+                    NewCapArray(newcapnum, 0) = aircount
+                    NewCapArray(newcapnum, 1) = YearNum + 1
+                    NewCapArray(newcapnum, 2) = 0
+                    NewCapArray(newcapnum, 3) = 200000
+                    newcapnum += 1
                     '1009Change update capacity checkers
                     AirpOldConstraint(aircount) = False
                     AirpRunCapCheck(aircount) = False
