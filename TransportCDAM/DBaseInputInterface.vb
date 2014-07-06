@@ -886,32 +886,45 @@ Module DBaseInputInterface
                         TheFileName = EVFilePrefix & "SeaFreightExtVar" & EVFileSuffix & ".csv"
                     Case "CapChange"
                         TheFileName = CapFilePrefix & "SeaFreightCapChange.csv"
+                    Case "Elasticity"
+                        TheFileName = "Elasticity Files\TR" & Strategy & "\SeaFreightElasticities.csv"
                     Case Else
                         'for error handling
                 End Select
-            Case "Air"
+            Case "AirNode"
                 Select Case SubType
-                    Case "Node"
+                    Case "Input"
                         If IsInitialYear = True Then
                             TheFileName = "AirNodeInputData2010.csv"
                         ElseIf IsInitialYear = False Then
                             TheFileName = FilePrefix & "AirNodeTemp.csv"
                         End If
-                    Case "Flow"
+                    Case "ExtVar"
+                        TheFileName = EVFilePrefix & "AirNodeExtVar" & EVFileSuffix & ".csv"
+                    Case "CapChange"
+                        TheFileName = CapFilePrefix & "AirNodeCapChange.csv"
+                    Case "Elasticity"
+                        TheFileName = "Elasticity Files\TR" & Strategy & "\AirElasticities.csv"
+                End Select
+            Case "AirFlow"
+                Select Case SubType
+                    Case "Input"
                         If IsInitialYear = True Then
                             TheFileName = "AirFlowInputData2010.csv"
                         ElseIf IsInitialYear = False Then
                             TheFileName = FilePrefix & "AirFlowTemp.csv"
                         End If
+                    Case "ExtVar"
+                        TheFileName = EVFilePrefix & "AirFlowExtVar.csv"
                 End Select
-            Case "Elasticity"
-                TheFileName = "Elasticity Files\TR" & Strategy & "\SeaFreightElasticities.csv"
             Case "Strategy"
                 TheFileName = "CommonVariablesTR" & Strategy & ".csv"
+            Case "Energy"
+                Connection = DBaseEneFile
+                TheFileName = ""
             Case Else
                 'for error handling
         End Select
-
 
         'Get file data
         Try
@@ -948,7 +961,8 @@ Module DBaseInputInterface
                 Exit For
             End If
             For iC = 0 To UBound(InputArray, 2)
-                InputArray(iR, iC) = CStr(UnNull(dbarray(iC).ToString, VariantType.Char))
+                'InputArray(iR, iC) = UnNull(dbarray(iC).ToString, VariantType.Char)
+                InputArray(iR, iC) = dbarray(iC)
             Next
             dbline = DataRead.ReadLine
             dbarray = Split(dbline, ",")
@@ -981,7 +995,6 @@ Module DBaseInputInterface
     Function WriteData(ByVal Type As String, ByVal SubType As String, ByRef OutputArray(,) As String,
                        Optional ByRef TempArray(,) As String = Nothing,
                        Optional ByVal IsNewFile As Boolean = True,
-                       Optional ByVal FilePrefix As String = "",
                        Optional Connection As String = "") As Boolean
 
         Dim OutFileName As String = "", TempFileName As String = ""
@@ -1067,8 +1080,8 @@ Module DBaseInputInterface
             Case "Seaport"
                 Select Case SubType
                     Case "Output"
-                        OutFileName = "SeaOutputData.csv"
-                        TempFileName = "SeaTemplate.csv"
+                        OutFileName = FilePrefix & "SeaOutputData.csv"
+                        TempFileName = FilePrefix & "SeaTemplate.csv"
                         header = "Yeary, PortID, LiqBlky, DryBlky, GCargoy, LoLoy, RoRoy, GasOily, FuelOily"
                         tempheader = "PortID, LiqBlk, DryBlk, GCargo, LoLo, RoRo, LBCap,DBCap,GCCap,LLCap,RRCap,GORPop,GORGva,Cost, AddedCap(1), AddedCap(2), AddedCap(3), AddedCap(4), AddedCap(5),"
                     Case "ExtVar"
@@ -1077,20 +1090,39 @@ Module DBaseInputInterface
                     Case "NewCap"
                         OutFileName = EVFilePrefix & "SeaFreightNewCap.csv"
                         header = "PortID,ChangeYear,NewLBCap,NewDBCap,NewGCCap,NewLLCap,NewRRCap"
+                    Case "SeaNewCap"
+                        OutFileName = FilePrefix & "SeaNewCap.csv"
+                        header = "PortID,Yeary,LBCapAdded,DBCapAdded,GCCapAdded,LLCapAdded,RRCapAdded"
                 End Select
-            Case "Air"
+            Case "AirNode"
                 Select Case SubType
-                    Case "Node"
-                        OutFileName = "AirNodeOutputData.csv"
-                        TempFileName = "AirNodeTemp.csv"
+                    Case "Output"
+                        OutFileName = FilePrefix & "AirNodeOutputData.csv"
+                        TempFileName = FilePrefix & "AirNodeTemp.csv"
                         header = "Yeary,AirportID,AllPassy,DomPassy,IntPassy,ATMy,IntFuely"
                         tempheader = "AirportID,AllPassTotal,DomPass,IntPass,TermCapPPA,MaxATM,GORPop,GORGVA,Cost,PlaneSize,PlaneSizeInt,LFDom,LFInt,IntTripDist,AirportTripsLatent"
-                    Case "Flow"
-                        OutFileName = "AirFlowOutputData.csv"
-                        TempFileName = "AirFlowTemp.csv"
+                    Case "ExtVar"
+                        OutFileName = EVFilePrefix & "AirNodeExtVar.csv"
+                        header = "Yeary,AirportID,GORPopy,GORGvay,Costy,TermCapy,MaxATMy,PlaneSizeDomy,PlaneSizeInty,LFDomy,LFInty,IntTripDist,FuelSeatKm"
+                    Case "NewCap"
+                        OutFileName = EVFilePrefix & "AirNodeNewCap.csv"
+                        header = "NodeID,ChangeYear,NewTermCap,NewATMCap"
+                    Case "AirNewCap"
+                        OutFileName = FilePrefix & "AirNewCap.csv"
+                        header = "AirportID,Yeary,TermCapAdded,RunCapAdded"
+                End Select
+            Case "AirFlow"
+                Select Case SubType
+                    Case "Output"
+                        OutFileName = FilePrefix & "AirFlowOutputData.csv"
+                        TempFileName = FilePrefix & "AirFlowTemp.csv"
                         header = "Yeary,FlowID,Tripsy,Fuely"
                         tempheader = "YearNum, FlowID, OAirID, DAirID, Trips, PopOZ, PopDZ, GVAOZ, GVADZ, Cost, FlowKm, AirFlowTripsLatent, AirFlowCapConstant0, AirFlowCapConstant1"
+                    Case "ExtVar"
+                        OutFileName = EVFilePrefix & "AirFlowExtVar.csv"
+                        header = "Yeary,FlowID,PopOZy,PopDZy,GVAOZy,GVADZy,Costy"
                 End Select
+
         End Select
 
         'Check if prefix has been set - if not then use default
@@ -1098,9 +1130,6 @@ Module DBaseInputInterface
         'If FilePrefix = "" Then
         '    FilePrefix = System.DateTime.Now.Year & System.DateTime.Now.Month & System.DateTime.Now.Day & System.DateTime.Now.Hour & System.DateTime.Now.Minute & System.DateTime.Now.Second
         'End If
-
-        'Add File prefix to Output Filename
-        OutFileName = FilePrefix & OutFileName
 
         'TODO - Not needed for SoS version using database
         'If creating a new file then create headers
@@ -1129,6 +1158,10 @@ Module DBaseInputInterface
 
         'loop through array to generate lines in output file
         For iy = 1 To UBound(OutputArray, 1)
+            'exit if write to the end of the data
+            If OutputArray(iy, 1) Is Nothing Then
+                Exit For
+            End If
             'Build a line to write
             Line = ""
             For ix = 0 To UBound(OutputArray, 2)
@@ -1145,7 +1178,6 @@ Module DBaseInputInterface
 
         'write to temp file if it is for output
         If SubType = "Output" Then
-            TempFileName = FilePrefix & TempFileName
             'create the temp file
             TempFile = New FileStream(Connection & TempFileName, IO.FileMode.CreateNew, IO.FileAccess.Write)
             TempWrite = New IO.StreamWriter(TempFile, System.Text.Encoding.Default)
@@ -1154,6 +1186,10 @@ Module DBaseInputInterface
 
             'loop through array to generate lines in temp file
             For iy = 1 To UBound(TempArray, 1)
+                'exit if write to the end of the data
+                If TempArray(iy, 1) Is Nothing Then
+                    Exit For
+                End If
                 'Build a line to write
                 Line = ""
                 For ix = 0 To UBound(TempArray, 2)
