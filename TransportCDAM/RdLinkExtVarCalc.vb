@@ -77,6 +77,7 @@
     Dim CarbCharge(19, 9) As Double
     Dim stratstring As String
     Dim stratarray() As String
+
     Public Sub RoadLinkEVMain()
 
 
@@ -97,7 +98,6 @@
         If RdLEneSource = "Constant" Then
             CostGrowth = 1.01
         End If
-
 
         'if including capacity changes then read first line of the capacity file and break it down into relevant sections
         'v1.4 change - now read this anyway to deal with compulsory enhancements
