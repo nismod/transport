@@ -844,20 +844,41 @@ Module DBaseInputInterface
         'Get the initial input data file if it is year 1, otherwise get the temp file
         'the size of the array must be correct
         Select Case Type
-            Case "Road"
+            Case "RoadZone"
                 Select Case SubType
-                    Case "Zone"
+                    Case "Input"
                         If IsInitialYear = True Then
                             TheFileName = "RoadZoneInputData2010.csv"
                         ElseIf IsInitialYear = False Then
                             TheFileName = FilePrefix & "RoadZoneTemp.csv"
                         End If
-                    Case "Link"
+                    Case "ExtVar"
+                        TheFileName = EVFilePrefix & "RoadZoneExtVar" & EVFileSuffix & ".csv"
+                    Case "NewCap"
+                        TheFileName = CapFilePrefix & "RoadZoneCapChange.csv"
+                    Case "CapChange"
+                        TheFileName = FilePrefix & "RoadZoneCapChange.csv"
+                    Case "Elasticity"
+                        TheFileName = "Elasticity Files\TR" & Strategy & "\RoadZoneElasticities.csv"
+                End Select
+            Case "RoadLink"
+                Select Case SubType
+                    Case "Input"
                         If IsInitialYear = True Then
                             TheFileName = "RoadInputData2010.csv"
                         ElseIf IsInitialYear = False Then
                             TheFileName = FilePrefix & "RoadLinkTemp.csv"
                         End If
+                    Case "ExtVar"
+                        TheFileName = EVFilePrefix & "ExternalVariables" & EVFileSuffix & ".csv"
+                    Case "Elasticity"
+                        TheFileName = "Elasticity Files\TR" & Strategy & "\RoadLinkElasticities.csv"
+                    Case "FreeFlowSpeed"
+                        'A header has been added to the original file to keep in the same format
+                        TheFileName = "FreeFlowSpeedsv0.7.csv"
+                    Case "DailyProfile"
+                        'A header has been added to the original file to keep in the same format
+                        TheFileName = "DailyTripProfile.csv"
                 End Select
             Case "RailZone"
                 Select Case SubType
@@ -870,24 +891,36 @@ Module DBaseInputInterface
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "RailZoneExtVar" & EVFileSuffix & ".csv"
                     Case "CapChange"
-                        TheFileName = CapFilePrefix & "SeaFreightCapChange.csv"
+                        TheFileName = CapFilePrefix & "RailZoneCapChange.csv"
                     Case "Elasticity"
                         TheFileName = "Elasticity Files\TR" & Strategy & "\RailZoneElasticities.csv"
+                    Case "ElSchemes"
+                        TheFileName = EVFilePrefix & "RailZoneElectrificationDates.csv"
+                    Case "EVScale"
+                        TheFileName = "RailZoneEVScaling.csv"
                 End Select
-            Case "Rail"
+            Case "RailLink"
                 Select Case SubType
-                    Case "Zone"
-                        If IsInitialYear = True Then
-                            TheFileName = "RailZoneInputData2010.csv"
-                        ElseIf IsInitialYear = False Then
-                            TheFileName = FilePrefix & "RailZoneTemp.csv"
-                        End If
-                    Case "Link"
+                    Case "Input"
                         If IsInitialYear = True Then
                             TheFileName = "RailLinkInputData2010.csv"
                         ElseIf IsInitialYear = False Then
                             TheFileName = FilePrefix & "RailLinkTemp.csv"
                         End If
+                    Case "ExtVar"
+                        TheFileName = EVFilePrefix & "RailLinkExtVar" & EVFileSuffix & ".csv"
+                    Case "CapChange"
+                        TheFileName = CapFilePrefix & "RailLinkCapChange.csv"
+                    Case "Elasticity"
+                        TheFileName = "Elasticity Files\TR" & Strategy & "\RailLinkElasticities.csv"
+                    Case "ElSchemes"
+                        TheFileName = EVFilePrefix & "RailLinkElectrificationDates.csv"
+                    Case "EVScale"
+                        TheFileName = "RailLinkEVScaling.csv"
+                    Case "OldRlEl"
+                        TheFileName = "RailElectrificationSchemes.csv"
+                    Case "OldRzEl"
+                        TheFileName = "RailZoneElectrificationSchemes.csv"
                 End Select
             Case "Seaport"
                 Select Case SubType
@@ -1007,6 +1040,8 @@ Module DBaseInputInterface
     '               Connection - file path - to be replaced with database connection string
     '****************************************************************************************
 
+
+    'TODO add the log file writedata
     Function WriteData(ByVal Type As String, ByVal SubType As String, ByRef OutputArray(,) As String,
                        Optional ByRef TempArray(,) As String = Nothing,
                        Optional ByVal IsNewFile As Boolean = True,
@@ -1035,16 +1070,31 @@ Module DBaseInputInterface
         'Get the filename of datafile based on Type and SubType
         'TODO - replace with database calls
         Select Case Type
-            Case "Road"
+            Case "RoadZone"
                 Select Case SubType
-                    Case "Zone"
-                        OutFileName = "RoadZoneOutputData.csv"
-                        TempFileName = "RoadZoneTemp.csv"
+                    Case "Output"
+                        OutFileName = FilePrefix & "RoadZoneOutputData.csv"
+                        TempFileName = FilePrefix & "RoadZoneTemp.csv"
                         header = "Yeary,ZoneID,Vkmy,Spdy,Petroly,Diesely,Electricy,LPGy,CNGy,Hydrogeny,VKmMwayy,VkmRurAy,VkmRurMiny,VkmUrby,SpdMWayy,SpdRurAy,SpdRurMiny,SpdUrby,VkmPet,VkmDie,VkmPH,VkmDH,VkmPEH,VkmE,VkmLPG,VkmCNG,VkmHyd,VkmFC"
                         tempheader = "Yeary,ZoneID,PopZ,GVAZ,Speed,CarCost,LGVCost,HGV1Cost,HGV2Cost,PSVCost,Vkm,LKmMway,LkmRural,LKmRurMin,LKmUrban,RKmMway,RkmRural,RKmRurMin,RKmUrban,VKmMway,RVCatTraf(1 - 1),RVCatTraf(1 - 2),RVCatTraf(1 - 3),RVCatTraf(1 - 4),RVCatTraf(1 - 5),VKmRurA,RVCatTraf(2 - 1),RVCatTraf(2 - 2),RVCatTraf(2 - 3),RVCatTraf(2 - 4),RVCatTraf(2 - 5),VKmRurMin,RVCatTraf(3 - 1),RVCatTraf(3 - 2),RVCatTraf(3 - 3),RVCatTraf(3 - 4),RVCatTraf(3 - 5),VKmUrb,RVCatTraf(4 - 1),RVCatTraf(4 - 2),RVCatTraf(4 - 3),RVCatTraf(4 - 4),RVCatTraf(4 - 5),SuppressedTraffic(1 - 1),SuppressedTraffic(1 - 2),SuppressedTraffic(1 - 3),SuppressedTraffic(1 - 4),SuppressedTraffic(2 - 1),SuppressedTraffic(2 - 2),SuppressedTraffic(2 - 3),SuppressedTraffic(2 - 4),SuppressedTraffic(3 - 1),SuppressedTraffic(3 - 2),SuppressedTraffic(3 - 3),SuppressedTraffic(3 - 4),SuppressedTraffic(4 - 1),SuppressedTraffic(4 - 2),SuppressedTraffic(4 - 3),SuppressedTraffic(4 - 4),SpdMWayy,SpdRurAy,SpdRurMiny,SpdUrby,"
-                    Case "Link"
-                        OutFileName = "RoadLinkOutputData.csv"
-                        TempFileName = "RoadLinkTemp.csv"
+                    Case "ExtVar"
+                        OutFileName = EVFilePrefix & "RoadZoneExtVar.csv"
+                        header = "Yeary,ZoneID,PopZy,GVAZy,Costy,LaneKm,LKmMway,LKmRurAD,LKmRurAS,LKmRurMin,LKmUrbD,LKmUrbS,PCar,DCar,ECar,PLGV,DLGV,ELGV,DHGV,EHGV,DPSV,EPSV,PBike,EBike,FCBike,PHCar,DHCar,PECar,HCar,FCCar,DHLGV,PELGV,LLGV,CLGV,DHPSV,PEPSV,LPSV,CPSV,FCPSV,DHHGV,HHGV,FCHGV"
+                    Case "NewCap"
+                        OutFileName = EVFilePrefix & "RoadZoneCapChange.csv"
+                        header = "ZoneID,ChangeYear,MWayLaneKmCh,RurADLaneKmCh,RurASLaneKmCh,RurMLaneKmCh,UrbDLaneKmCh,UrbSLaneKmCh"
+                    Case "RoadZoneNewCap"
+                        OutFileName = FilePrefix & "RoadZoneNewCap.csv"
+                        header = "ZoneID,Yeary,MWayCap,RurACap,RurMinCap,UrbCap"
+                    Case "RoadZoneFuel"
+                        OutFileName = FilePrefix & "RoadZoneFuelConsumption.csv"
+                        header = "ZoneID,Yeary,PetCary,PetLGVy,DieCary,DieLGVy,DieHGV23y,DieHGV4y,DiePSVy,EleCary,EleLGVy,ElePSVy,LPGLGVy,LPGPSVy,CNGLGVy,CNGPSVy,HydCary,HydHGV23y,HydHGV4y,HydPSVy"
+                End Select
+            Case "RoadLink"
+                Select Case SubType
+                    Case "Output"
+                        OutFileName = FilePrefix & "RoadLinkOutputData.csv"
+                        TempFileName = FilePrefix & "RoadLinkTemp.csv"
                         header = "Yeary,FlowID,PCUTotal,SpeedMean,PCUMway,PCUDual,PCUSing,SpdMway,SpdDual,SpdSing,MSC1,MSC2,MSC3,MSC4,MSC5,MSC6,DSC1,DSC2,DSC3,DSC4,DSC5,DSC6,SSC1,SSC2,SSC3,SSC4,SSC5,SSC6,SSC7,SSC8,SpdMSC1,SpdMSC2,SpdMSC3,SpdMSC4,SpdMSC5,SpdMSC6,SpdDSC1,SpdDSC2,SpdDSC3,SpdDSC4,SpdDSC5,SpdDSC6,SpdSSC1,SpdSSC2,SpdSSC3,SpdSSC4,SpdSSC5,SpdSSC6,SpdSSC7,SpdSSC8,MWayLatent,DualLatent,SingLatent,MFullHrs,DFullHrs,SFullHrs,CostMway,CostDual,CostSing"
                         tempheader = "Yeary,FlowID,MLanes,DLanes,SLanes,MLanesNew,DLanesNew,SLanesNew,MSC1,MSC2,MSC3,MSC4,MSC5,MSC6,DSC1,DSC2,DSC3,DSC4,DSC5,DSC6,SSC1,SSC2,SSC3,SSC4,SSC5,SSC6,SSC7,SSC8,PopZ1,PopZ2,GVAZ1,GVAZ2,"
                         For x = 1 To 6
@@ -1078,6 +1128,10 @@ Module DBaseInputInterface
                                 tempheader = tempheader & "S" & x & "HourlyFlows" & c & "," & "SRoadTypeFlows" & c & "," & "S" & x & "Charge" & c & "," & "S" & x & "LatentFlows" & c & "," & "S" & x & "NewHourlySpeeds" & c & ","
                             Next
                         Next
+                    Case "ExtVar"
+                    Case "RoadLinkNewCap"
+                        OutFileName = FilePrefix & "RoadLinkNewCap.csv"
+                        header = "FlowID,Yeary,RoadType,LanesAdded"
                 End Select
             Case "RailZone"
                 Select Case SubType
@@ -1090,18 +1144,31 @@ Module DBaseInputInterface
                         OutFileName = EVFilePrefix & "RailZoneExtVar.csv"
                         header = "Yeary,ZoneID,PopZy,GvaZy,Costy,Stationsy,CarFuely,NewTripsy,GJTy,ElPy"
                 End Select
-            Case "Rail"
+            Case "RailLink"
                 Select Case SubType
-                    Case "Zone"
-                        OutFileName = "RailZoneOutputData.csv"
-                        TempFileName = "RailZoneTemp.csv"
-                        header = "Yeary,ZoneID,TripsStaty,Stationsy,Tripsy"
-                        tempheader = "Yeary,ZoneID,PopZ,GvaZ,Cost,Stations,CarFuel,GJT,TripsStat,FareE"
-                    Case "Link"
-                        OutFileName = "RailLinkOutputData.csv"
-                        TempFileName = "RailLinkTemp.csv"
+                    Case "Output"
+                        OutFileName = FilePrefix & "RailLinkOutputData.csv"
+                        TempFileName = FilePrefix & "RailLinkTemp.csv"
                         header = "Yeary,FlowID,Trainsy,Delaysy,CUy"
                         tempheader = "Yeary,FlowID,PopZ1,PopZ2,GVAZ1,GVAZ2,Delays,Cost,CarFuel,Trains,Tracks,MaxTDBase,CUOld,CUNew,BusyTrains,BusyPer,ModelPeakHeadway,CalculationCheck"
+                    Case "ExtVar"
+                        OutFileName = EVFilePrefix & "RailLinkExtVar.csv"
+                        header = "Yeary,FlowID,Tracksy,PopZ1y,PopZ2y,GVAZ1y,GVAZ2y,Costy,CarFuely,MaxTDy,ElPy,ElTracksy,AddTrainsy"
+                    Case "NewCap"
+                        OutFileName = EVFilePrefix & "RailLinkNewCap.csv"
+                        header = "FlowID,ChangeYear,TrackChange,MaxTDChange,TrainChange"
+                    Case "RlLinkNewCap"
+                        OutFileName = FilePrefix & "RailLinkNewCap.csv"
+                        header = "Yeary,FlowID,TracksAdded"
+                    Case "RlLinkFuelUsed"
+                        OutFileName = FilePrefix & "RailLinkFuelConsumption.csv"
+                        header = "Yeary,Diesely,Electricy"
+                    Case "RlLinkElSchemes"
+                        OutFileName = EVFilePrefix & "RailLinkElectrificationDates.csv"
+                        header = "ElectricYear,FlowID,ElectricTracks,RouteKm"
+                    Case "RlZoneElSchemes"
+                        OutFileName = EVFilePrefix & "RailZoneElectrificationDates.csv"
+                        header = "ElectricYear,ZoneID,ElectricStations"
                 End Select
             Case "Seaport"
                 Select Case SubType
@@ -1185,7 +1252,7 @@ Module DBaseInputInterface
         'loop through array to generate lines in output file
         For iy = 1 To UBound(OutputArray, 1)
             'exit if write to the end of the data
-            If OutputArray(iy, 1) Is Nothing Then
+            If OutputArray(iy, 0) Is Nothing Then
                 Exit For
             End If
             'Build a line to write
