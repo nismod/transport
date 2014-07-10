@@ -42,7 +42,7 @@
     Dim DStartFlow() As Long
     Dim SStartFlow() As Long
     Dim HourProportions(24) As Double
-    Dim TimeProfile() As String
+    Dim TimeProfile(1, 23) As String
     'HourlyFlows is a two-dimensional array containing the hourly flows in all the speed categories
     'modification this has now been renamed 'OldHourlyFlows'
     'HourlySpeeds is a two-dimensional array containing the hourly speeds for all the speed categories
@@ -52,7 +52,7 @@
     Dim RoadTypeFlowsNew As Double
     Dim sc As Byte
     Dim h As Byte
-    Dim FreeFlowSpeeds() As String
+    Dim FreeFlowSpeeds(1, 19) As String
     Dim MaxCap(291, 2) As String
     Dim SpeedNew As Double
     Dim SpeedOld As Double
@@ -63,7 +63,7 @@
     Dim PFlowRatio(19) As Double
     Dim FFlowRatio(19) As Double
     Dim FlowRatio As Double
-    Dim ExternalValues(291, 31) As Double
+    Dim ExternalValues(291, 31) As String
     Dim YearNum As Long
     Dim ScaledHourlyFlows(20, 24) As Double
     Dim NewHourlyFlows(20, 24) As Double
@@ -92,7 +92,7 @@
     Dim TotalLanesOld As Long
     Dim TotalLanesNew As Long
     Dim CapChangeNew(291, 1) As Boolean
-    Dim RoadEls(9, 90) As Double
+    Dim RoadEls(90, 9) As String
     Dim FreeFlowCU As Double
     'v1.2 this is a new variable, storing latent demand
     Dim LatentHourlyFlows(291, 20, 24) As Double
@@ -123,6 +123,9 @@
     Dim InputArray(291, 54) As String
     Dim OutputArray(291, 58) As String
     Dim TempArray(291, 2936) As String
+    Dim NewCapArray(291, 3) As String
+    Dim NewCapNum As Integer
+
 
 
     Public Sub RoadLinkMain()
@@ -140,18 +143,15 @@
         'Loop through flow and speed calculation modules for each year until end of period
         Do Until YearNum > 90
 
-            'get external variable values
-            Call GetExternalValues()
-
-            'load the elasticities
-            Call ReadRoadEls()
+            'load external variables
+            Call ReadData("RoadLink", "ExtVar", ExternalValues, , YearNum)
 
             'read from initial file if year 1, otherwise update from temp file
             If YearNum = 1 Then
-                Call ReadData("Road", "Link", InputArray, True, , FilePrefix)
+                Call ReadData("RoadLink", "Input", InputArray, True)
             Else
                 ReDim Preserve InputArray(291, 2936)
-                Call ReadData("Road", "Link", InputArray, False, , FilePrefix)
+                Call ReadData("RoadLink", "Input", InputArray, False)
             End If
 
             link = 1
@@ -161,6 +161,9 @@
 
                 'modification v1.2 - input file replaced by internally specified values - because these have to be altered for some links
                 'further modification - these are now specified in the input file (and therefore any alterations where base usage exceeds the theoretical maximum have to be made in the input file)
+
+                'set the new cap array to the first line to start with
+                NewCapNum = 1
 
                 'read from input array
                 Call LoadInputRow()
@@ -194,21 +197,25 @@
 
             'create file is true if it is the initial year and write to outputfile and temp file
             If YearNum = 1 Then
-                Call WriteData("Road", "Link", OutputArray, TempArray, True, FilePrefix)
+                Call WriteData("RoadLink", "Output", OutputArray, TempArray, True)
+                If BuildInfra = True Then
+                    Call WriteData("RoadLink", "RoadLinkNewCap", NewCapArray, , True)
+                End If
             Else
-                Call WriteData("Road", "Link", OutputArray, TempArray, False, FilePrefix)
+                Call WriteData("RoadLink", "Output", OutputArray, TempArray, False)
+                If BuildInfra = True Then
+                    Call WriteData("RoadLink", "RoadLinkNewCap", NewCapArray, , False)
+                End If
             End If
 
+            If YearNum = 1 Then
+                Dim msg = 111
+                MsgBox(msg)
+            End If
             YearNum += 1
 
         Loop
 
-        'Close input and output files
-        ev.Close()
-        re.Close()
-        If BuildInfra = True Then
-            rlnc.Close()
-        End If
 
     End Sub
 
@@ -219,19 +226,15 @@
         Dim SpeedInput As IO.FileStream
         Dim si As IO.StreamReader
         Dim rls As IO.StreamReader
-        Dim stratarray() As String
+        Dim stratarray(90, 95) As String
 
-        DayTripProfile = New IO.FileStream(DirPath & "DailyTripProfile.csv", IO.FileMode.Open, IO.FileAccess.Read)
-        tp = New IO.StreamReader(DayTripProfile, System.Text.Encoding.Default)
-        row = tp.ReadLine
-        TimeProfile = Split(row, ",")
-        tp.Close()
+        'read daily trip data
+        Call ReadData("RoadLink", "DailyProfile", TimeProfile)
 
-        SpeedInput = New IO.FileStream(DirPath & "FreeFlowSpeedsv0.7.csv", IO.FileMode.Open, IO.FileAccess.Read)
-        si = New IO.StreamReader(SpeedInput, System.Text.Encoding.Default)
-        row = si.ReadLine
-        FreeFlowSpeeds = Split(row, ",")
-        si.Close()
+
+        'read free flow speed data
+        Call ReadData("RoadLink", "FreeFlowSpeed", FreeFlowSpeeds)
+
 
         If UpdateExtVars = True Then
             If NewRdLCap = True Then
@@ -240,46 +243,19 @@
                 EVFileSuffix = ""
             End If
         End If
-        ExtInput = New IO.FileStream(DirPath & EVFilePrefix & "ExternalVariables" & EVFileSuffix & ".csv", IO.FileMode.Open, IO.FileAccess.Read)
-        ev = New IO.StreamReader(ExtInput, System.Text.Encoding.Default)
-        'read header row
-        row = ev.ReadLine
-        'then leave this file for the external variables call in the main sub - will read 90 rows each time it goes through the loop
 
-        RoadElasticities = New IO.FileStream(DirPath & "Elasticity Files\TR" & Strategy & "\RoadLinkElasticities.csv", IO.FileMode.Open, IO.FileAccess.Read)
-        re = New IO.StreamReader(RoadElasticities, System.Text.Encoding.Default)
-        'read header row
-        row = re.ReadLine
 
-        ''create the required file "HourlyFlows.csv"
-        'HourlyData = New IO.FileStream(DirPath & FilePrefix & "HourlyFlows.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
-        'hd = New IO.StreamWriter(HourlyData, System.Text.Encoding.Default)
-        ''write header
-        'output = "Yeary,FlowID,MWH1,MWH2,MWH3,MWH4,MWH5,MWH6,MWH7,MWH8,MWH9,MWH10,MWH11,MWH12,MWH13,MWH14,MWH15,MWH16,MWH17,MWH18,MWH19,MWH20,MWH21,MWH22,MWH23,MWH24,DCH1,DCH2,DCH3,DCH4,DCH5,DCH6,DCH7,DCH8,DCH9,DCH10,DCH11,DCH12,DCH13,DCH14,DCH15,DCH16,DCH17,DCH18,DCH19,DCH20,DCH21,DCH22,DCH23,DCH24,SCH1,SCH2,SCH3,SCH4,SCH5,SCH6,SCH7,SCH8,SCH9,SCH10,SCH11,SCH12,SCH13,SCH14,SCH15,SCH16,SCH17,SCH18,SCH19,SCH20,SCH21,SCH22,SCH23,SCH24"
-        'hd.WriteLine(output)
-
-        'if the model is building capacity then create new capacity file
-        If BuildInfra = True Then
-            RoadLinkNewCap = New IO.FileStream(DirPath & FilePrefix & "RoadLinkNewCap.csv", IO.FileMode.Create, IO.FileAccess.Write)
-            rlnc = New IO.StreamWriter(RoadLinkNewCap, System.Text.Encoding.Default)
-            'write header row
-            OutputRow = "FlowID,Yeary,RoadType,LanesAdded"
-            rlnc.WriteLine(OutputRow)
-        End If
+        'load the elasticities
+        Call ReadData("RoadLink", "Elasticity", RoadEls)
 
         'if using variable trip rates then set up the trip rate variable
         If TripRates = "Strategy" Then
-            StrategyFile = New IO.FileStream(DirPath & "CommonVariablesTR" & Strategy & ".csv", IO.FileMode.Open, IO.FileAccess.Read)
-            rls = New IO.StreamReader(StrategyFile, System.Text.Encoding.Default)
-            'read header row
-            rls.ReadLine()
+            'get the strat values
+            Call ReadData("Strategy", "", stratarray)
             For r = 1 To 90
-                row = rls.ReadLine
-                stratarray = Split(row, ",")
-                RdTripRates(0, r) = stratarray(91)
-                RdTripRates(1, r) = stratarray(92)
+                RdTripRates(0, r) = stratarray(r, 91)
+                RdTripRates(1, r) = stratarray(r, 92)
             Next
-            rls.Close()
         End If
 
     End Sub
@@ -292,7 +268,7 @@
         d = 0
 
         Do While d < 24
-            HourProportions(d) = TimeProfile(d)
+            HourProportions(d) = TimeProfile(1, d)
             d += 1
         Loop
 
@@ -388,6 +364,7 @@
             ReDim ChargeNew(19, 24)
 
         Else
+            'if not first year, read the values in the temp file order
             FlowID(link, 1) = InputArray(link, 1)
             RoadTypeLanes(link, 0) = InputArray(link, 2)
             RoadTypeLanes(link, 1) = InputArray(link, 3)
@@ -733,13 +710,13 @@
                     Call AssignRoadType()
                     'if traffic less than free flow capacity then adopt free flow speed
                     If RoadTypeFlows(link, RoadType, h) < (FreeFlowCU * MaxCap(link, RoadType)) Then
-                        HourlySpeeds(link, sc, h) = FreeFlowSpeeds(sc)
+                        HourlySpeeds(link, sc, h) = FreeFlowSpeeds(1, sc)
                     ElseIf RoadTypeFlows(link, RoadType, h) <= MaxCap(link, RoadType) Then
                         'otherwise if it is in between the free flow capacity and the maximum capacity then use the speed calculator
                         'because this is the first year set the old speed as the free flow speed
                         FlowOld = FreeFlowCU * MaxCap(link, RoadType)
                         FlowNew = RoadTypeFlows(link, RoadType, h)
-                        SpeedOld = FreeFlowSpeeds(sc)
+                        SpeedOld = FreeFlowSpeeds(1, sc)
                         Call SpeedCalc()
                         HourlySpeeds(link, sc, h) = SpeedNew
                     Else
@@ -770,7 +747,7 @@
                     If RoadTypeFlows(link, 0, h) < (FreeFlowCU * MaxCap(link, 0)) Then
                         For t = 0 To 5
                             'if traffic less than free flow capacity then adopt free flow speed
-                            HourlySpeeds(link, t, h) = FreeFlowSpeeds(t)
+                            HourlySpeeds(link, t, h) = FreeFlowSpeeds(1, t)
                         Next
                     ElseIf RoadTypeFlows(link, 0, h) <= MaxCap(link, 0) Then
                         'otherwise if it is in between the free flow capacity and the maximum capacity then use the speed calculator
@@ -778,7 +755,7 @@
                         FlowOld = FreeFlowCU * MaxCap(link, 0)
                         FlowNew = RoadTypeFlows(link, 0, h)
                         For t = 0 To 5
-                            SpeedOld = FreeFlowSpeeds(t)
+                            SpeedOld = FreeFlowSpeeds(1, t)
                             sc = t
                             Call SpeedCalc()
                             HourlySpeeds(link, t, h) = SpeedNew
@@ -796,7 +773,7 @@
                         FlowOld = FreeFlowCU * MaxCap(link, 0)
                         FlowNew = RoadTypeFlows(link, 0, h)
                         For t = 0 To 5
-                            SpeedOld = FreeFlowSpeeds(t)
+                            SpeedOld = FreeFlowSpeeds(1, t)
                             sc = t
                             Call SpeedCalc()
                             HourlySpeeds(link, t, h) = SpeedNew
@@ -806,7 +783,7 @@
                     If RoadTypeFlows(link, 1, h) < (FreeFlowCU * MaxCap(link, 1)) Then
                         For t = 6 To 11
                             'if traffic less than free flow capacity then adopt free flow speed
-                            HourlySpeeds(link, t, h) = FreeFlowSpeeds(t)
+                            HourlySpeeds(link, t, h) = FreeFlowSpeeds(1, t)
                         Next
                     ElseIf RoadTypeFlows(link, 1, h) <= MaxCap(link, 1) Then
                         'otherwise if it is in between the free flow capacity and the maximum capacity then use the speed calculator
@@ -814,7 +791,7 @@
                         FlowOld = FreeFlowCU * MaxCap(link, 1)
                         FlowNew = RoadTypeFlows(link, 1, h)
                         For t = 6 To 11
-                            SpeedOld = FreeFlowSpeeds(t)
+                            SpeedOld = FreeFlowSpeeds(1, t)
                             sc = t
                             Call SpeedCalc()
                             HourlySpeeds(link, t, h) = SpeedNew
@@ -832,7 +809,7 @@
                         FlowOld = FreeFlowCU * MaxCap(link, 1)
                         FlowNew = RoadTypeFlows(link, 1, h)
                         For t = 6 To 11
-                            SpeedOld = FreeFlowSpeeds(t)
+                            SpeedOld = FreeFlowSpeeds(1, t)
                             sc = t
                             Call SpeedCalc()
                             HourlySpeeds(link, t, h) = SpeedNew
@@ -842,7 +819,7 @@
                     If RoadTypeFlows(link, 2, h) < (FreeFlowCU * MaxCap(link, 2)) Then
                         For t = 12 To 19
                             'if traffic less than free flow capacity then adopt free flow speed
-                            HourlySpeeds(link, t, h) = FreeFlowSpeeds(t)
+                            HourlySpeeds(link, t, h) = FreeFlowSpeeds(1, t)
                         Next
                     ElseIf RoadTypeFlows(link, 2, h) <= MaxCap(link, 2) Then
                         'otherwise if it is in between the free flow capacity and the maximum capacity then use the speed calculator
@@ -850,7 +827,7 @@
                         FlowOld = FreeFlowCU * MaxCap(link, 2)
                         FlowNew = RoadTypeFlows(link, 2, h)
                         For t = 12 To 19
-                            SpeedOld = FreeFlowSpeeds(t)
+                            SpeedOld = FreeFlowSpeeds(1, t)
                             sc = t
                             Call SpeedCalc()
                             HourlySpeeds(link, t, h) = SpeedNew
@@ -868,7 +845,7 @@
                         FlowOld = FreeFlowCU * MaxCap(link, 2)
                         FlowNew = RoadTypeFlows(link, 2, h)
                         For t = 12 To 19
-                            SpeedOld = FreeFlowSpeeds(t)
+                            SpeedOld = FreeFlowSpeeds(1, t)
                             sc = t
                             Call SpeedCalc()
                             HourlySpeeds(link, t, h) = SpeedNew
@@ -917,14 +894,14 @@
             OldY = FlowOld
             NewY = FlowNew
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                OldEl = RoadEls(9, YearNum)
+                OldEl = RoadEls(YearNum, 9)
                 Call VarElCalc()
                 SpeedRatio = VarRat
             Else
-                SpeedRatio = (FlowNew / FlowOld) ^ RoadEls(9, YearNum)
+                SpeedRatio = (FlowNew / FlowOld) ^ RoadEls(YearNum, 9)
             End If
         Else
-            SpeedRatio = (FlowNew / FlowOld) ^ RoadEls(9, YearNum)
+            SpeedRatio = (FlowNew / FlowOld) ^ RoadEls(YearNum, 9)
         End If
         SpeedNew = SpeedOld * SpeedRatio
     End Sub
@@ -959,28 +936,28 @@
         'calculate the individual variable ratios for passenger traffic
         'v1.3 mod
         If TripRates = "Strategy" Then
-            rat1 = (((ExternalValues(link, 2) + ExternalValues(link, 3)) * RdTripRates(0, YearNum)) / (Z1Pop(link, 1) + Z2Pop(link, 1))) ^ RoadEls(1, YearNum)
+            rat1 = (((CDbl(ExternalValues(link, 2)) + ExternalValues(link, 3)) * RdTripRates(0, YearNum)) / (Z1Pop(link, 1) + Z2Pop(link, 1))) ^ RoadEls(YearNum, 1)
         Else
-            rat1 = ((ExternalValues(link, 2) + ExternalValues(link, 3)) / (Z1Pop(link, 1) + Z2Pop(link, 1))) ^ RoadEls(1, YearNum)
+            rat1 = ((CDbl(ExternalValues(link, 2)) + ExternalValues(link, 3)) / (Z1Pop(link, 1) + Z2Pop(link, 1))) ^ RoadEls(YearNum, 1)
         End If
 
-        rat3 = ((ExternalValues(link, 4) + ExternalValues(link, 5)) / (Z1GVA(link, 1) + Z2GVA(link, 1))) ^ RoadEls(2, YearNum)
+        rat3 = ((CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)) / (Z1GVA(link, 1) + Z2GVA(link, 1))) ^ RoadEls(YearNum, 2)
         'initially set speed new and speed old as equal to speed in previous year, so ratio = 1 - can be altered if desired as part of scenario
-        rat5 = 1 ^ RoadEls(3, YearNum)
+        rat5 = 1 ^ RoadEls(YearNum, 3)
 
         'cost ratio now estimated in getflowratio sub
 
         'calculate the individual variable ratios for freight traffic
         'v1.3 mod
         If TripRates = "Strategy" Then
-            ratf1 = (((ExternalValues(link, 2) + ExternalValues(link, 3)) * RdTripRates(1, YearNum)) / (Z1Pop(link, 1) + Z2Pop(link, 1))) ^ RoadEls(5, YearNum)
+            ratf1 = (((CDbl(ExternalValues(link, 2)) + ExternalValues(link, 3)) * RdTripRates(1, YearNum)) / (Z1Pop(link, 1) + Z2Pop(link, 1))) ^ RoadEls(YearNum, 5)
         Else
-            ratf1 = ((ExternalValues(link, 2) + ExternalValues(link, 3)) / (Z1Pop(link, 1) + Z2Pop(link, 1))) ^ RoadEls(5, YearNum)
+            ratf1 = ((CDbl(ExternalValues(link, 2)) + ExternalValues(link, 3)) / (Z1Pop(link, 1) + Z2Pop(link, 1))) ^ RoadEls(YearNum, 5)
         End If
 
-        ratf3 = ((ExternalValues(link, 4) + ExternalValues(link, 5)) / (Z1GVA(link, 1) + Z2GVA(link, 1))) ^ RoadEls(6, YearNum)
+        ratf3 = ((CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)) / (Z1GVA(link, 1) + Z2GVA(link, 1))) ^ RoadEls(YearNum, 6)
         '***NOTE - if altering this elasticity will also need to alter the flow-speed iteration process as this used the rat5 variable only
-        ratf5 = 1 ^ RoadEls(7, YearNum)
+        ratf5 = 1 ^ RoadEls(YearNum, 7)
         'cost ratio now estimated in getflowratio sub
 
         Do While h < 24
@@ -1233,21 +1210,21 @@
             'pop ratio
             OldY = Z1Pop(link, 1) + Z2Pop(link, 1)
             If TripRates = "Strategy" Then
-                NewY = (ExternalValues(link, 2) + ExternalValues(link, 3)) * RdTripRates(1, YearNum)
+                NewY = (CDbl(ExternalValues(link, 2)) + ExternalValues(link, 3)) * RdTripRates(1, YearNum)
             Else
-                NewY = ExternalValues(link, 2) + ExternalValues(link, 3)
+                NewY = CDbl(ExternalValues(link, 2)) + ExternalValues(link, 3)
             End If
-            NewY = ExternalValues(link, 2) + ExternalValues(link, 3)
+            NewY = CDbl(ExternalValues(link, 2)) + ExternalValues(link, 3)
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                OldEl = RoadEls(1, YearNum)
+                OldEl = RoadEls(YearNum, 1)
                 Call VarElCalc()
                 rat1 = VarRat
             End If
             'gva ratio
             OldY = Z1GVA(link, 1) + Z2GVA(link, 1)
-            NewY = ExternalValues(link, 4) + ExternalValues(link, 5)
+            NewY = CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                OldEl = RoadEls(2, YearNum)
+                OldEl = RoadEls(YearNum, 2)
                 Call VarElCalc()
                 rat3 = VarRat
             End If
@@ -1257,29 +1234,29 @@
             OldY = CostOld(link, sc, h) + ChargeOld(link, sc, h)
             NewY = CostNew(sc, h) + ChargeNew(sc, h)
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                OldEl = RoadEls(4, YearNum)
+                OldEl = RoadEls(YearNum, 4)
                 Call VarElCalc()
                 rat6(sc) = VarRat
             Else
-                rat6(sc) = (NewY / OldY) ^ RoadEls(4, YearNum)
+                rat6(sc) = (NewY / OldY) ^ RoadEls(YearNum, 4)
             End If
             'freight pop ratio
             OldY = Z1Pop(link, 1) + Z2Pop(link, 1)
             If TripRates = "Strategy" Then
-                NewY = (ExternalValues(link, 2) + ExternalValues(link, 3)) * RdTripRates(1, YearNum)
+                NewY = (CDbl(ExternalValues(link, 2)) + ExternalValues(link, 3)) * RdTripRates(1, YearNum)
             Else
-                NewY = ExternalValues(link, 2) + ExternalValues(link, 3)
+                NewY = CDbl(ExternalValues(link, 2)) + ExternalValues(link, 3)
             End If
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                OldEl = RoadEls(5, YearNum)
+                OldEl = RoadEls(YearNum, 5)
                 Call VarElCalc()
                 ratf1 = VarRat
             End If
             'freight gva ratio
             OldY = Z1GVA(link, 1) + Z2GVA(link, 1)
-            NewY = ExternalValues(link, 4) + ExternalValues(link, 5)
+            NewY = CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                OldEl = RoadEls(6, YearNum)
+                OldEl = RoadEls(YearNum, 6)
                 Call VarElCalc()
                 ratf3 = VarRat
             End If
@@ -1288,24 +1265,24 @@
             OldY = CostOld(link, sc, h) + ChargeOld(link, sc, h)
             NewY = CostNew(sc, h) + ChargeNew(sc, h)
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                OldEl = RoadEls(8, YearNum)
+                OldEl = RoadEls(YearNum, 8)
                 Call VarElCalc()
                 ratf6(sc) = VarRat
             Else
-                ratf6(sc) = (CostNew(sc, h) / CostOld(link, sc, h)) ^ RoadEls(8, YearNum)
+                ratf6(sc) = (CostNew(sc, h) / CostOld(link, sc, h)) ^ RoadEls(YearNum, 8)
             End If
         Else
             'still need to recalculate ratio if using congestion charging and to calculate cost ratio if not (latter now moved from hourly flow calc sub
             If CongestionCharge = True Then
                 OldY = CostOld(link, sc, h) + ChargeOld(link, sc, h)
                 NewY = CostNew(sc, h) + ChargeNew(sc, h)
-                rat6(sc) = (NewY / OldY) ^ RoadEls(4, YearNum)
+                rat6(sc) = (NewY / OldY) ^ RoadEls(YearNum, 4)
                 OldY = CostOld(link, sc, h) + ChargeOld(link, sc, h)
                 NewY = CostNew(sc, h) + ChargeNew(sc, h)
-                ratf6(sc) = (NewY / OldY) ^ RoadEls(8, YearNum)
+                ratf6(sc) = (NewY / OldY) ^ RoadEls(YearNum, 8)
             Else
-                rat6(sc) = (CostNew(sc, h) / CostOld(link, sc, h)) ^ RoadEls(4, YearNum)
-                ratf6(sc) = (CostNew(sc, h) / CostOld(link, sc, h)) ^ RoadEls(8, YearNum)
+                rat6(sc) = (CostNew(sc, h) / CostOld(link, sc, h)) ^ RoadEls(YearNum, 4)
+                ratf6(sc) = (CostNew(sc, h) / CostOld(link, sc, h)) ^ RoadEls(YearNum, 8)
             End If
         End If
 
@@ -1646,9 +1623,9 @@
                 CostOld(link, x, c) = CostNew(x, c)
             Next
         Next
-        RoadTypeLanesNew(link, 0) = ExternalValues(link, 7) + AddedLanes(link, 0)
-        RoadTypeLanesNew(link, 1) = ExternalValues(link, 8) + AddedLanes(link, 1)
-        RoadTypeLanesNew(link, 2) = ExternalValues(link, 9) + AddedLanes(link, 2)
+        RoadTypeLanesNew(link, 0) = CDbl(ExternalValues(link, 7)) + AddedLanes(link, 0)
+        RoadTypeLanesNew(link, 1) = CDbl(ExternalValues(link, 8)) + AddedLanes(link, 1)
+        RoadTypeLanesNew(link, 2) = CDbl(ExternalValues(link, 9)) + AddedLanes(link, 2)
         'v1.4 blank mean cost variables
         MeanCostNew(0) = 0
         MeanCostNew(1) = 0
@@ -1665,8 +1642,11 @@
                         RoadTypeLanesNew(link, 0) += 2
                         AddedLanes(link, 0) += 2
                         'write details to output file
-                        newcapstring = FlowID(link, 1) & "," & (YearNum + 1) & ",0,2"
-                        rlnc.WriteLine(newcapstring)
+                        NewCapArray(NewCapNum, 0) = FlowID(link, 1)
+                        NewCapArray(NewCapNum, 1) = (YearNum + 1)
+                        NewCapArray(NewCapNum, 2) = 0
+                        NewCapArray(NewCapNum, 3) = 2
+                        NewCapNum += 1
                         Exit Do
                     End If
                     h += 1
@@ -1682,8 +1662,11 @@
                         RoadTypeLanesNew(link, 1) += 2
                         AddedLanes(link, 1) += 2
                         'write details to output file
-                        newcapstring = FlowID(link, 1) & "," & (YearNum + 1) & ",1,2"
-                        rlnc.WriteLine(newcapstring)
+                        NewCapArray(NewCapNum, 0) = FlowID(link, 1)
+                        NewCapArray(NewCapNum, 1) = (YearNum + 1)
+                        NewCapArray(NewCapNum, 2) = 1
+                        NewCapArray(NewCapNum, 3) = 2
+                        NewCapNum += 1
                         Exit Do
                     End If
                     h += 1
@@ -1699,8 +1682,11 @@
                         RoadTypeLanesNew(link, 2) += 2
                         AddedLanes(link, 2) += 2
                         'write details to output file
-                        newcapstring = FlowID(link, 1) & "," & (YearNum + 1) & ",2,2"
-                        rlnc.WriteLine(newcapstring)
+                        NewCapArray(NewCapNum, 0) = FlowID(link, 1)
+                        NewCapArray(NewCapNum, 1) = (YearNum + 1)
+                        NewCapArray(NewCapNum, 2) = 2
+                        NewCapArray(NewCapNum, 3) = 2
+                        NewCapNum += 1
                         Exit Do
                     End If
                     h += 1
