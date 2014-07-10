@@ -43,7 +43,7 @@
     Dim ErrorString As String
     Dim ElectFlow, ElectYear, ElectTracks As Long
     Dim stf As IO.StreamReader
-    Dim stratstring, stratarray() As String
+    Dim stratstring As String
     Dim FuelEff(1, 90), CO2Vol(1, 90), CO2Price(1, 90), MaxTD(90) As Double
     Dim OutString As String
     Dim CapCount As Double
@@ -61,6 +61,22 @@
     Dim NewTrains As Double
     Dim FuelEffOld(2) As Double
     Dim Elect As Boolean
+    Dim CapArray(455, 5) As String
+    Dim NewCapArray(238, 4) As String
+    Dim CapNum As Integer
+    Dim InputArray(238, 17) As String
+    Dim OutputArray(238, 11) As String
+    Dim stratarray(90, 95) As String
+    Dim elearray(238, 3) As String
+    Dim EleNum As Integer
+    Dim RlElNum As Integer
+    Dim RzElNum As Integer
+
+
+
+
+
+
 
     Public Sub RailLinkEVMain()
 
@@ -71,8 +87,6 @@
         If RlLEVSource = "" Then
             RlLEVSource = "Constant"
         End If
-
-
 
         'if we are using a single scaling factor then set scaling factors - as a default they are just set to be constant over time
         If RlLPopSource = "Constant" Then
@@ -93,17 +107,20 @@
             ElPGrowth = 0.025
         End If
 
+        'read initial input data
+        Call ReadData("RailLink", "Input", InputArray, True)
 
+        Call ReadData("RailLink", "CapChange", CapArray)
+        CapNum = 1
         'if including capacity changes then read first line of the capacity file and break it down into relevant sections
         'v1.4 change - now read this anyway to deal with compulsory enhancements
         'so we created another file containing sorted implemented capacity enhancements (in get files sub)
         'need initial file to be sorted by scheme type then by change year then by order of priority
         'first read all compulsory enhancements to intermediate array
-        CapRow = rac.ReadLine
         CapCount = 0
         AddingCap = False
         TracksToBuild = 0
-        Do Until CapRow Is Nothing
+        Do Until CapArray(CapNum, 0) Is Nothing
             Call GetCapData()
             Select Case CapType
                 Case "C"
@@ -156,7 +173,6 @@
             If Breakout = True Then
                 Exit Do
             End If
-            CapRow = rac.ReadLine
             CapCount += 1
         Loop
         'then sort the intermediate array by flow ID, then by year of implementation
@@ -172,20 +188,18 @@
             sortedline = sortarray(v)
             splitline = Split(sortedline, "&")
             arraynum = splitline(2)
-            OutputRow = NewCapDetails(arraynum, 0) & "," & NewCapDetails(arraynum, 1) & "," & NewCapDetails(arraynum, 2) & "," & NewCapDetails(arraynum, 3) & "," & NewCapDetails(arraynum, 4)
-            rlnc.WriteLine(OutputRow)
+            NewCapArray(v + 1, 0) = NewCapDetails(arraynum, 0)
+            NewCapArray(v + 1, 1) = NewCapDetails(arraynum, 1)
+            NewCapArray(v + 1, 2) = NewCapDetails(arraynum, 2)
+            NewCapArray(v + 1, 3) = NewCapDetails(arraynum, 3)
+            NewCapArray(v + 1, 4) = NewCapDetails(arraynum, 4)
         Next
 
-        rac.Close()
-        rlnc.Close()
+        Call WriteData("RailLink", "NewCap", NewCapArray)
 
         'reopen the capacity file as a reader
-        RlLinkNewCapData = New IO.FileStream(DirPath & EVFilePrefix & "RailLinkNewCap.csv", IO.FileMode.Open, IO.FileAccess.Read)
-        rlnr = New IO.StreamReader(RlLinkNewCapData, System.Text.Encoding.Default)
-        'read header
-        rlnr.ReadLine()
-        'read first line of new capacity
-        CapRow = rlnr.ReadLine
+        CapNum = 1
+        ReDim CapArray(238, 4)
         AddingCap = True
         Call GetCapData()
 
@@ -200,73 +214,63 @@
         'initiallize read elelct file
         Elect = True
         'read the electrification list file as an input file
-        RlLinkElSchemes = New IO.FileStream(DirPath & EVFilePrefix & "RailLinkElectrificationDates.csv", IO.FileMode.Open, IO.FileAccess.Read)
-        rel = New IO.StreamReader(RlLinkElSchemes, System.Text.Encoding.Default)
-        'read header row
-        rel.ReadLine()
+        'read ele scheme info
+        Call ReadData("RailLink", "ElSchemes", elearray)
+        EleNum = 1
         Call GetElectData()
 
         'v1.4
         'get fuel efficiency and other values from the strategy file
-        StrategyFile = New IO.FileStream(DirPath & "CommonVariablesTR" & Strategy & ".csv", IO.FileMode.Open, IO.FileAccess.Read)
-        stf = New IO.StreamReader(StrategyFile, System.Text.Encoding.Default)
-        'read header row
-        stf.ReadLine()
+        Call ReadData("Strategy", "", stratarray)
         'v1.5 set fuel efficiency old to 1
         FuelEffOld(0) = 1
         FuelEffOld(1) = 1
         'v1.5 fuel efficiency change calculation corrected
         For y = 1 To 90
             'read line from file
-            stratstring = stf.ReadLine()
-            stratarray = Split(stratstring, ",")
-            FuelEff(0, y) = stratarray(66) / FuelEffOld(0)
-            FuelEff(1, y) = stratarray(67) / FuelEffOld(1)
-            CO2Vol(0, y) = stratarray(74)
-            CO2Vol(1, y) = stratarray(73)
-            CO2Price(0, y) = stratarray(70)
-            CO2Price(1, y) = stratarray(71)
-            MaxTD(y) = stratarray(78)
+            FuelEff(0, y) = stratarray(y, 66) / FuelEffOld(0)
+            FuelEff(1, y) = stratarray(y, 67) / FuelEffOld(1)
+            CO2Vol(0, y) = stratarray(y, 74)
+            CO2Vol(1, y) = stratarray(y, 73)
+            CO2Price(0, y) = stratarray(y, 70)
+            CO2Price(1, y) = stratarray(y, 71)
+            MaxTD(y) = stratarray(y, 78)
             'v1.5 update FuelEffOld values
-            FuelEffOld(0) = stratarray(66)
-            FuelEffOld(1) = stratarray(67)
+            FuelEffOld(0) = stratarray(y, 66)
+            FuelEffOld(1) = stratarray(y, 67)
         Next
-        stf.Close()
 
         'loop through rows in input data file calculating the external variable values
         Call CalcExtVars()
 
-        rai.Close()
-        rae.Close()
-        rlnr.Close()
 
     End Sub
 
     Sub GetFiles()
 
-        RlLinkInputData = New IO.FileStream(DirPath & "RailLinkInputData2010.csv", IO.FileMode.Open, IO.FileAccess.Read)
-        rai = New IO.StreamReader(RlLinkInputData, System.Text.Encoding.Default)
-        'read header row
-        InputRow = rai.ReadLine
+        'RlLinkInputData = New IO.FileStream(DirPath & "RailLinkInputData2010.csv", IO.FileMode.Open, IO.FileAccess.Read)
+        'rai = New IO.StreamReader(RlLinkInputData, System.Text.Encoding.Default)
+        ''read header row
+        'InputRow = rai.ReadLine
 
-        RlLinkExtVar = New IO.FileStream(DirPath & EVFilePrefix & "RailLinkExtVar.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
-        rae = New IO.StreamWriter(RlLinkExtVar, System.Text.Encoding.Default)
-        'write header row to output file
-        OutputRow = "Yeary,FlowID,Tracksy,PopZ1y,PopZ2y,GVAZ1y,GVAZ2y,Costy,CarFuely,MaxTDy,ElPy,ElTracksy,AddTrainsy"
-        rae.WriteLine(OutputRow)
+        'RlLinkExtVar = New IO.FileStream(DirPath & EVFilePrefix & "RailLinkExtVar.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
+        'rae = New IO.StreamWriter(RlLinkExtVar, System.Text.Encoding.Default)
+        ''write header row to output file
+        'OutputRow = "Yeary,FlowID,Tracksy,PopZ1y,PopZ2y,GVAZ1y,GVAZ2y,Costy,CarFuely,MaxTDy,ElPy,ElTracksy,AddTrainsy"
+        'rae.WriteLine(OutputRow)
 
-        'if capacity is changing then get capacity change file
-        'v1.4 do this anyway to include compulsory changes
-        RlLinkCapData = New IO.FileStream(DirPath & CapFilePrefix & "RailLinkCapChange.csv", IO.FileMode.Open, IO.FileAccess.Read)
-        rac = New IO.StreamReader(RlLinkCapData, System.Text.Encoding.Default)
-        'read header row
-        rac.ReadLine()
-        'v1.4 new intermediate capacity file
-        RlLinkNewCapData = New IO.FileStream(DirPath & EVFilePrefix & "RailLinkNewCap.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
-        rlnc = New IO.StreamWriter(RlLinkNewCapData, System.Text.Encoding.Default)
-        'write header row
-        OutString = "FlowID,ChangeYear,TrackChange,MaxTDChange,TrainChange"
-        rlnc.WriteLine(OutString)
+        ''if capacity is changing then get capacity change file
+        ''v1.4 do this anyway to include compulsory changes
+        'RlLinkCapData = New IO.FileStream(DirPath & CapFilePrefix & "RailLinkCapChange.csv", IO.FileMode.Open, IO.FileAccess.Read)
+        'rac = New IO.StreamReader(RlLinkCapData, System.Text.Encoding.Default)
+        ''read header row
+        'rac.ReadLine()
+        ''v1.4 new intermediate capacity file
+        'RlLinkNewCapData = New IO.FileStream(DirPath & EVFilePrefix & "RailLinkNewCap.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
+        'rlnc = New IO.StreamWriter(RlLinkNewCapData, System.Text.Encoding.Default)
+        ''write header row
+        'OutString = "FlowID,ChangeYear,TrackChange,MaxTDChange,TrainChange"
+        'rlnc.WriteLine(OutString)
 
 
         'If NewRlLCap = True Then
@@ -275,6 +279,7 @@
         '    'read header row
         '    rac.ReadLine()
         'End If
+
 
     End Sub
 
@@ -299,39 +304,28 @@
         Dim DieselOld(238, 0), DieselNew, ElectricOld(238, 0), ElectricNew As Double
         Dim DMaintOld(238, 0), EMaintOld(238, 0) As Double
         Dim ElPOld(238, 0), ElPNew As Double
-        Dim ScalingRow As String
-        Dim ScalingData() As String
+        Dim ScalingData(90, 8) As String
         Dim OCountry(238, 0), DCountry(238, 0) As String
         Dim OZone(238, 0), DZone(238, 0) As Long
         Dim keylookup As String
         Dim newval As Double
         Dim ElectTracksOld(238, 0), ElectTracksNew As Double
         Dim InDieselOld(238, 0), InElectricOld(238, 0), InDieselNew, InElectricNew As Double
-        Dim enestring As String
-        Dim enearray() As String
+        Dim enearray(91, 6) As String
         Dim diecarch, elecarch As Double
         Dim InDieselOldAll, InElectricOldAll, InDieselNewAll, InElectricNewAll
 
+
         'need to set a base value for the diesel fuel cost for this zone
         If RlLEneSource = "Database" Then
-            'v1.4 altered so that scenario file is read directly as an input file
-            ZoneEneFile = New IO.FileStream(DBaseEneFile, IO.FileMode.Open, IO.FileAccess.Read)
-            zer = New IO.StreamReader(ZoneEneFile, System.Text.Encoding.Default)
-            'read header row
-            enestring = zer.ReadLine
-            'read first line of data
-            enestring = zer.ReadLine
-            enearray = Split(enestring, ",")
-            InDieselOldAll = enearray(2)
-            InElectricOldAll = enearray(3)
+            Call ReadData("Energy", "", enearray)
+            InDieselOldAll = enearray(1, 2)
+            InElectricOldAll = enearray(1, 3)
         End If
 
         'get scaling factor file if we are using one
         If RlLOthSource = "File" Then
-            RlLinkEVScale = New IO.FileStream(DirPath & "RailLinkEVScaling.csv", IO.FileMode.Open, IO.FileAccess.Read)
-            ras = New IO.StreamReader(RlLinkEVScale, System.Text.Encoding.Default)
-            'read header row
-            InputRow = ras.ReadLine
+            Call ReadData("RailLink", "EVScale", ScalingData)
         End If
 
         'set year as 1 to start with
@@ -342,41 +336,34 @@
 
             If RlLEneSource = "Database" Then
 
-                enestring = zer.ReadLine
-                enearray = Split(enestring, ",")
-
-                InDieselNewAll = enearray(2)
-                InElectricNewAll = enearray(3)
+                InDieselNewAll = enearray(Year + 1, 2)
+                InElectricNewAll = enearray(Year + 1, 3)
 
             End If
 
             If RlLOthSource = "File" Then
                 'if using scaling factors then read in the scaling factors for this year
-                ScalingRow = ras.ReadLine
-                ScalingData = Split(ScalingRow, ",")
             End If
 
             InputCount = 1
 
             Do Until InputCount > 238
                 If Year = 1 Then
-                    InputRow = rai.ReadLine
-                    InputData = Split(InputRow, ",")
-                    FlowID(InputCount, 0) = InputData(0)
-                    OZone(InputCount, 0) = InputData(1)
-                    DZone(InputCount, 0) = InputData(2)
-                    Tracks(InputCount, 0) = InputData(3)
-                    Pop1Old(InputCount, 0) = InputData(5)
-                    Pop2Old(InputCount, 0) = InputData(6)
-                    GVA1Old(InputCount, 0) = InputData(7)
-                    GVA2Old(InputCount, 0) = InputData(8)
-                    CostOld(InputCount, 0) = InputData(10)
-                    FuelOld(InputCount, 0) = InputData(11)
-                    MaxTDOld(InputCount, 0) = InputData(12)
-                    ElPOld(InputCount, 0) = InputData(13)
-                    OCountry(InputCount, 0) = InputData(14)
-                    DCountry(InputCount, 0) = InputData(15)
-                    ElectTracksOld(InputCount, 0) = InputData(16)
+                    FlowID(InputCount, 0) = InputArray(InputCount, 0)
+                    OZone(InputCount, 0) = InputArray(InputCount, 1)
+                    DZone(InputCount, 0) = InputArray(InputCount, 2)
+                    Tracks(InputCount, 0) = InputArray(InputCount, 3)
+                    Pop1Old(InputCount, 0) = InputArray(InputCount, 5)
+                    Pop2Old(InputCount, 0) = InputArray(InputCount, 6)
+                    GVA1Old(InputCount, 0) = InputArray(InputCount, 7)
+                    GVA2Old(InputCount, 0) = InputArray(InputCount, 8)
+                    CostOld(InputCount, 0) = InputArray(InputCount, 10)
+                    FuelOld(InputCount, 0) = InputArray(InputCount, 11)
+                    MaxTDOld(InputCount, 0) = InputArray(InputCount, 12)
+                    ElPOld(InputCount, 0) = InputArray(InputCount, 13)
+                    OCountry(InputCount, 0) = InputArray(InputCount, 14)
+                    DCountry(InputCount, 0) = InputArray(InputCount, 15)
+                    ElectTracksOld(InputCount, 0) = InputArray(InputCount, 16)
                     NewTrains = 0
 
                     If RlLEneSource = "Database" Then
@@ -413,19 +400,19 @@
                 ElseIf RlLPopSource = "File" Then
                     Select Case OCountry(InputCount, 0)
                         Case "E"
-                            OPopGrowth = 1 + ScalingData(1)
+                            OPopGrowth = 1 + ScalingData(Year, 1)
                         Case "S"
-                            OPopGrowth = 1 + ScalingData(2)
+                            OPopGrowth = 1 + ScalingData(Year, 2)
                         Case "W"
-                            OPopGrowth = 1 + ScalingData(3)
+                            OPopGrowth = 1 + ScalingData(Year, 3)
                     End Select
                     Select Case DCountry(InputCount, 0)
                         Case "E"
-                            DPopGrowth = 1 + ScalingData(1)
+                            DPopGrowth = 1 + ScalingData(Year, 1)
                         Case "S"
-                            DPopGrowth = 1 + ScalingData(2)
+                            DPopGrowth = 1 + ScalingData(Year, 2)
                         Case "W"
-                            DPopGrowth = 1 + ScalingData(3)
+                            DPopGrowth = 1 + ScalingData(Year, 3)
                     End Select
                     Pop1New = Pop1Old(InputCount, 0) * OPopGrowth
                     Pop2New = Pop2Old(InputCount, 0) * DPopGrowth
@@ -456,8 +443,8 @@
                     GVA1New = GVA1Old(InputCount, 0) * OGVAGrowth
                     GVA2New = GVA2Old(InputCount, 0) * DGVAGrowth
                 ElseIf RlLEcoSource = "File" Then
-                    OGVAGrowth = 1 + ScalingData(4)
-                    DGVAGrowth = 1 + ScalingData(4)
+                    OGVAGrowth = 1 + ScalingData(Year, 4)
+                    DGVAGrowth = 1 + ScalingData(Year, 4)
                     GVA1New = GVA1Old(InputCount, 0) * OGVAGrowth
                     GVA2New = GVA2Old(InputCount, 0) * DGVAGrowth
                 ElseIf RlLEcoSource = "Database" Then
@@ -486,7 +473,7 @@
                 'need to leave cost growth factor until we know new proportion of electric/diesel trains
                 If RlLOthSource = "File" Then
                     'MaxTDGrowth = 1 + ScalingData(7)
-                    ElPGrowth = ScalingData(8)
+                    ElPGrowth = ScalingData(Year, 8)
                 End If
 
                 'check if using list of electrification schemes
@@ -539,10 +526,10 @@ NextYear:
                 If RlLEneSource = "File" Then
                     'fuel forms 8.77% of costs, and in base year electric costs are set as being 0.553 times diesel costs - base prices set above
                     'scale both base prices
-                    DieselNew = DieselOld(InputCount, 0) * (1 + ScalingData(5)) * FuelEff(1, Year)
-                    ElectricNew = ElectricOld(InputCount, 0) * (1 + ScalingData(6)) * FuelEff(0, Year)
+                    DieselNew = DieselOld(InputCount, 0) * (1 + ScalingData(Year, 5)) * FuelEff(1, Year)
+                    ElectricNew = ElectricOld(InputCount, 0) * (1 + ScalingData(Year, 6)) * FuelEff(0, Year)
                     '*****this assumes car fuel costs are only based on oil prices - when really we need to integrate this with the road model to look at road fuel/split
-                    FuelGrowth = 1 + ScalingData(5)
+                    FuelGrowth = 1 + ScalingData(Year, 5)
                 ElseIf RlLEneSource = "Constant" Then
                     DieselNew = DieselOld(InputCount, 0) * CostGrowth * FuelEff(1, Year)
                     ElectricNew = ElectricOld(InputCount, 0) * CostGrowth * FuelEff(0, Year)
@@ -590,15 +577,25 @@ NextYear:
                         'note that MaxTDChange now doesn't work - replaced by strategy common variables file
                         MaxTDOld(InputCount, 0) += MaxTDChange
                         NewTrains = TrainChange
-                        CapRow = rlnr.ReadLine()
                         Call GetCapData()
                     End If
                 End If
 
                 MaxTDNew = MaxTD(Year)
                 'write to output file
-                OutputRow = Year & "," & FlowID(InputCount, 0) & "," & Tracks(InputCount, 0) & "," & Pop1New & "," & Pop2New & "," & GVA1New & "," & GVA2New & "," & CostNew & "," & FuelNew & "," & MaxTDNew & "," & ElPNew & "," & ElectTracksNew & "," & NewTrains
-                rae.WriteLine(OutputRow)
+                OutputArray(InputCount, 0) = Year
+                OutputArray(InputCount, 1) = FlowID(InputCount, 0)
+                OutputArray(InputCount, 2) = Tracks(InputCount, 0)
+                OutputArray(InputCount, 3) = Pop1New & "," & Pop2New
+                OutputArray(InputCount, 4) = GVA1New
+                OutputArray(InputCount, 5) = GVA2New
+                OutputArray(InputCount, 6) = CostNew
+                OutputArray(InputCount, 7) = FuelNew
+                OutputArray(InputCount, 8) = MaxTDNew
+                OutputArray(InputCount, 9) = ElPNew
+                OutputArray(InputCount, 10) = ElectTracksNew
+                OutputArray(InputCount, 11) = NewTrains
+
                 'set old values as previous new values
                 Pop1Old(InputCount, 0) = Pop1New
                 Pop2Old(InputCount, 0) = Pop2New
@@ -620,39 +617,48 @@ NextYear:
                 InputCount += 1
             Loop
 
+            'create file if year 1, otherwise update
+            If Year = 1 Then
+                Call WriteData("RailLink", "ExtVar", OutputArray, , True)
+            Else
+                Call WriteData("RailLink", "ExtVar", OutputArray, , False)
+            End If
 
             Year += 1
 
             Loop
 
 
-        If RlLEneSource = "Database" Then
-            zer.Close()
-        End If
 
     End Sub
 
     Sub GetCapData()
-        'modified in v1.4
-        If CapRow Is Nothing Then
+        'modified in v1.8
+        If AddingCap = True Then
+            For i = 0 To UBound(CapArray, 2)
+                CapArray(CapNum, i) = NewCapArray(CapNum, i)
+            Next
+        End If
+
+        If CapArray(CapNum, 0) Is Nothing Then
         Else
-            InputData = Split(CapRow, ",")
-            CapID = InputData(0)
-            If InputData(1) = "-1" Then
+            CapID = CapArray(CapNum, 0)
+            If CapArray(CapNum, 1) = "-1" Then
                 CapYear = -1
             Else
                 If AddingCap = False Then
-                    CapYear = InputData(1) - 2010
+                    CapYear = CapArray(CapNum, 1) - 2010
                 Else
-                    CapYear = InputData(1)
+                    CapYear = CapArray(CapNum, 1)
                 End If
             End If
-            TrackChange = InputData(2)
-            MaxTDChange = InputData(3)
-            TrainChange = InputData(4)
+            TrackChange = CapArray(CapNum, 2)
+            MaxTDChange = CapArray(CapNum, 3)
+            TrainChange = CapArray(CapNum, 4)
             If AddingCap = False Then
-                CapType = InputData(5)
+                CapType = CapArray(CapNum, 5)
             End If
+            CapNum += 1
         End If
 
         'InputRow = rac.ReadLine
@@ -681,9 +687,9 @@ NextYear:
         Dim SchemeListFile As IO.FileStream
         Dim slf As IO.StreamReader
         Dim schemeinputrow As String
-        Dim schemeoutputrow As String
+        Dim schemeoutputrow(28, 3) As String
         Dim elschemes(244, 3) As Double
-        Dim schemearray() As String
+        Dim schemearray(245, 5) As String
         Dim rownum As Integer
         Dim elyear As Long
         Dim eltrackkm As Double
@@ -698,70 +704,52 @@ NextYear:
         Dim RlZoneELSchemes As IO.FileStream
         Dim rze As IO.StreamWriter
         Dim zoneinputrow As String
-        Dim zoneoutputrow As String
-        Dim zonearray() As String
+        Dim zoneoutputrow(33, 2) As String
+        Dim zonearray(336, 4) As String
         Dim schemecode As String
         Dim elzschemes(335, 2) As Long
         Dim znum As Integer
         Dim zonecheck As Boolean
 
-        SchemeListFile = New IO.FileStream(DirPath & "RailElectrificationSchemes.csv", IO.FileMode.Open, IO.FileAccess.Read)
-        slf = New IO.StreamReader(SchemeListFile, System.Text.Encoding.Default)
-        'read header row
-        schemeinputrow = slf.ReadLine
+        'read old link scheme file
+        Call ReadData("RailLink", "OldRlEl", schemearray)
 
-        ZoneListFile = New IO.FileStream(DirPath & "RailZoneElectrificationSchemes.csv", IO.FileMode.Open, IO.FileAccess.Read)
-        zlf = New IO.StreamReader(ZoneListFile, System.Text.Encoding.Default)
-        'read header row
-        zoneinputrow = zlf.ReadLine
-
-        RlLinkElSchemes = New IO.FileStream(DirPath & EVFilePrefix & "RailLinkElectrificationDates.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
-        res = New IO.StreamWriter(RlLinkElSchemes, System.Text.Encoding.Default)
-        'write header row
-        schemeoutputrow = "ElectricYear,FlowID,ElectricTracks,RouteKm"
-        res.WriteLine(schemeoutputrow)
-
-        RlZoneELSchemes = New IO.FileStream(DirPath & EVFilePrefix & "RailZoneElectrificationDates.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
-        rze = New IO.StreamWriter(RlZoneELSchemes, System.Text.Encoding.Default)
-        'write header row
-        zoneoutputrow = "ElectricYear,ZoneID,ElectricStations"
-        rze.WriteLine(zoneoutputrow)
+        'read old zone scheme file
+        Call ReadData("RailLink", "OldRzEl", zonearray)
 
         kmtoelectrify = 0
 
-        schemeinputrow = slf.ReadLine
+        'initialize the Railink and Railzone electrification array
+        RlElNum = 1
+        RzElNum = 1
+
         rownum = 0
         schemecount = -1
         'read details of first zone scheme
-        zoneinputrow = zlf.ReadLine
-        zonearray = Split(zoneinputrow, ",")
         znum = 0
         zonecheck = True
         'loop through all rows in the initial file assigning a year if schemes don't yet have one and writing values to array
-        Do Until schemeinputrow Is Nothing
-            'split row into an array
-            schemearray = Split(schemeinputrow, ",")
+        Do Until schemearray(RlElNum, 0) Is Nothing
             'check the scheme type
-            schemetype = schemearray(5)
+            schemetype = schemearray(RlElNum, 5)
             If schemetype = "C" Then
                 'if it is a compulsory scheme then load values into array
                 For v = 0 To 3
-                    elschemes(rownum, v) = schemearray(v)
+                    elschemes(rownum, v) = schemearray(RlElNum, v)
                 Next
-                elyear = schemearray(1)
+                elyear = schemearray(RlElNum, 1)
                 schemecount += 1
                 'now check for relevant zone changes
-                schemecode = schemearray(4)
+                schemecode = schemearray(RlElNum, 4)
                 Do While zonecheck = True
-                    If schemecode = zonearray(3) Then
-                        elzschemes(znum, 0) = zonearray(0)
-                        elzschemes(znum, 1) = zonearray(1)
-                        elzschemes(znum, 2) = zonearray(2)
-                        zoneinputrow = zlf.ReadLine
-                        If zoneinputrow Is Nothing Then
+                    If schemecode = zonearray(RzElNum, 3) Then
+                        elzschemes(znum, 0) = zonearray(RzElNum, 0)
+                        elzschemes(znum, 1) = zonearray(RzElNum, 1)
+                        elzschemes(znum, 2) = zonearray(RzElNum, 2)
+                        RzElNum += 1
+                        If zonearray(RzElNum, 0) Is Nothing Then
                             zonecheck = False
                         Else
-                            zonearray = Split(zoneinputrow, ",")
                             znum += 1
                             zonecheck = True
                         End If
@@ -773,30 +761,29 @@ NextYear:
                 'check if we are using optional electrification schemes
                 If RlElect = True Then
                     'check if a year is already assigned
-                    If schemearray(1) = "" Then
+                    If schemearray(RlElNum, 1) = "" Then
                         'if it isn't then first get the length of track km for the scheme 
-                        eltrackkm = schemearray(2) * schemearray(3)
+                        eltrackkm = schemearray(RlElNum, 2) * schemearray(RlElNum, 3)
                         'then check if there are any spare electrification km in the pot
                         If kmtoelectrify >= eltrackkm Then
                             'if there are enough, then assign this scheme to this year and load values into array
-                            elschemes(rownum, 0) = schemearray(0)
+                            elschemes(rownum, 0) = schemearray(RlElNum, 0)
                             elschemes(rownum, 1) = elyear
-                            elschemes(rownum, 2) = schemearray(2)
-                            elschemes(rownum, 3) = schemearray(3)
+                            elschemes(rownum, 2) = schemearray(RlElNum, 2)
+                            elschemes(rownum, 3) = schemearray(RlElNum, 3)
                             'subtract the electrified km from the spare km
                             kmtoelectrify = kmtoelectrify - eltrackkm
                             schemecount += 1
-                            schemecode = schemearray(4)
+                            schemecode = schemearray(RlElNum, 4)
                             Do While zonecheck = True
-                                If schemecode = zonearray(3) Then
-                                    elzschemes(znum, 0) = zonearray(0)
+                                If schemecode = zonearray(RzElNum, 3) Then
+                                    elzschemes(znum, 0) = zonearray(RzElNum, 0)
                                     elzschemes(znum, 1) = elyear
-                                    elzschemes(znum, 2) = zonearray(2)
-                                    zoneinputrow = zlf.ReadLine
-                                    If zoneinputrow Is Nothing Then
+                                    elzschemes(znum, 2) = zonearray(RzElNum, 2)
+                                    RzElNum += 1
+                                    If zonearray(RzElNum, 0) Is Nothing Then
                                         zonecheck = False
                                     Else
-                                        zonearray = Split(zoneinputrow, ",")
                                         znum += 1
                                         zonecheck = True
                                     End If
@@ -817,24 +804,23 @@ NextYear:
                             'check if enough track km - if there aren't then it means we have reached 2100 so exit do loop
                             If kmtoelectrify >= eltrackkm Then
                                 'if there are enough, then assign this scheme to this year and load values into array
-                                elschemes(rownum, 0) = schemearray(0)
+                                elschemes(rownum, 0) = schemearray(RlElNum, 0)
                                 elschemes(rownum, 1) = elyear
-                                elschemes(rownum, 2) = schemearray(2)
-                                elschemes(rownum, 3) = schemearray(3)
+                                elschemes(rownum, 2) = schemearray(RlElNum, 2)
+                                elschemes(rownum, 3) = schemearray(RlElNum, 3)
                                 'subtract the electrified km from the spare km
                                 kmtoelectrify = kmtoelectrify - eltrackkm
                                 schemecount += 1
-                                schemecode = schemearray(4)
+                                schemecode = schemearray(RlElNum, 4)
                                 Do While zonecheck = True
-                                    If schemecode = zonearray(3) Then
-                                        elzschemes(znum, 0) = zonearray(0)
+                                    If schemecode = zonearray(RzElNum, 3) Then
+                                        elzschemes(znum, 0) = zonearray(RzElNum, 0)
                                         elzschemes(znum, 1) = elyear
-                                        elzschemes(znum, 2) = zonearray(2)
-                                        zoneinputrow = zlf.ReadLine
-                                        If zoneinputrow Is Nothing Then
+                                        elzschemes(znum, 2) = zonearray(RzElNum, 2)
+                                        RzElNum += 1
+                                        If zonearray(RzElNum, 0) Is Nothing Then
                                             zonecheck = False
                                         Else
-                                            zonearray = Split(zoneinputrow, ",")
                                             znum += 1
                                             zonecheck = True
                                         End If
@@ -849,21 +835,20 @@ NextYear:
                     Else
                         'if it is then load values into array
                         For v = 0 To 3
-                            elschemes(rownum, v) = schemearray(v)
+                            elschemes(rownum, v) = schemearray(RlElNum, v)
                         Next
-                        elyear = schemearray(1)
+                        elyear = schemearray(RlElNum, 1)
                         schemecount += 1
-                        schemecode = schemearray(4)
+                        schemecode = schemearray(RlElNum, 4)
                         Do While zonecheck = True
-                            If schemecode = zonearray(3) Then
-                                elzschemes(znum, 0) = zonearray(0)
-                                elzschemes(znum, 1) = zonearray(1)
-                                elzschemes(znum, 2) = zonearray(2)
-                                zoneinputrow = zlf.ReadLine
-                                If zoneinputrow Is Nothing Then
+                            If schemecode = zonearray(RzElNum, 3) Then
+                                elzschemes(znum, 0) = zonearray(RzElNum, 0)
+                                elzschemes(znum, 1) = zonearray(RzElNum, 1)
+                                elzschemes(znum, 2) = zonearray(RzElNum, 2)
+                                RzElNum += 1
+                                If zonearray(RzElNum, 0) Is Nothing Then
                                     zonecheck = False
                                 Else
-                                    zonearray = Split(zoneinputrow, ",")
                                     znum += 1
                                     zonecheck = True
                                 End If
@@ -875,7 +860,7 @@ NextYear:
                 End If
             End If
             'read next line from input file
-            schemeinputrow = slf.ReadLine
+            RlElNum += 1
             rownum += 1
             zonecheck = True
         Loop
@@ -890,14 +875,18 @@ NextYear:
         'sort this array
         Array.Sort(sortarray)
         'then go through the sorted values getting the relevant information from the main array and writing to the output file
+        RlElNum = 1
         For v = 0 To schemecount
             sortedline = sortarray(v)
             splitline = Split(sortedline, "&")
             arraynum = splitline(2)
             'skip lines which don't correspond to a flow
             If elschemes(arraynum, 0) > 0 Then
-                schemeoutputrow = elschemes(arraynum, 1) & "," & elschemes(arraynum, 0) & "," & elschemes(arraynum, 2) & "," & elschemes(arraynum, 3)
-                res.WriteLine(schemeoutputrow)
+                schemeoutputrow(RlElNum, 0) = elschemes(arraynum, 1)
+                schemeoutputrow(RlElNum, 1) = elschemes(arraynum, 0)
+                schemeoutputrow(RlElNum, 2) = elschemes(arraynum, 2)
+                schemeoutputrow(RlElNum, 3) = elschemes(arraynum, 3)
+                RlElNum += 1
             End If
         Next
         'now need to sort the zone array by zone id then by year
@@ -911,34 +900,34 @@ NextYear:
         'sort this array
         Array.Sort(sortarray)
         'then go through the sorted values getting the relevant information from the main array and writing to the output file
+        RzElNum = 1
         For v = 0 To (znum - 1)
             sortedline = sortarray(v)
             splitline = Split(sortedline, "&")
             arraynum = splitline(2)
             'skip lines which have a zero station count
             If elzschemes(arraynum, 2) > 0 Then
-                zoneoutputrow = elzschemes(arraynum, 1) & "," & elzschemes(arraynum, 0) & "," & elzschemes(arraynum, 2)
-                rze.WriteLine(zoneoutputrow)
+                zoneoutputrow(RzElNum, 0) = elzschemes(arraynum, 1)
+                zoneoutputrow(RzElNum, 1) = elzschemes(arraynum, 0)
+                zoneoutputrow(RzElNum, 2) = elzschemes(arraynum, 2)
+                RzElNum += 1
             End If
         Next
-        slf.Close()
-        res.Close()
-        zlf.Close()
-        rze.Close()
+
+        Call WriteData("RailLink", "RlLinkElSchemes", schemeoutputrow)
+        Call WriteData("RailLink", "RlZoneElSchemes", zoneoutputrow)
+
     End Sub
 
     Sub GetElectData()
-        Dim schemeline As String
-        Dim schemearray() As String
 
-        schemeline = rel.ReadLine
-        If schemeline Is Nothing Then
+        If elearray(EleNum, 0) = "" Then
             Elect = False
         Else
-            schemearray = Split(schemeline, ",")
-            ElectFlow = schemearray(1)
-            ElectYear = schemearray(0) - 2010
-            ElectTracks = schemearray(2)
+            ElectFlow = elearray(EleNum, 1)
+            ElectYear = elearray(EleNum, 0) - 2010
+            ElectTracks = elearray(EleNum, 2)
+            EleNum += 1
         End If
     End Sub
 End Module
