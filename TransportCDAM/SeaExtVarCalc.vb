@@ -77,6 +77,9 @@
             Call ReadData("Energy", "", enearray)
         End If
 
+        'read initial input data
+        Call ReadData("Seaport", "Input", InputArray, True)
+
         CapCount = 0
         AddingCap = False
         tonnestobuild = 0
@@ -146,7 +149,6 @@
             If Breakout = True Then
                 Exit Do
             End If
-            CapNum += 1
             CapCount += 1
         Loop
         'then sort the intermediate array by port ID, then by year of implementation
@@ -242,8 +244,6 @@
             DieselOld = enearray(1, 2)
         End If
 
-        'read initial input data
-        Call ReadData("Seaport", "Input", InputArray, True)
 
         YearNum = 1
         'calculate new values for port variables
@@ -420,6 +420,8 @@
             If AddingCap = False Then
                 CapType = CapArray(CapNum, 7)
             End If
+            CapNum += 1
+
         Else
 
         End If
