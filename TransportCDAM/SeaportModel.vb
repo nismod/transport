@@ -48,6 +48,7 @@
     Dim InputArray(47, 13) As String
     Dim OutputArray(47, 8) As String
     Dim TempArray(47, 18) As String
+    Dim NewCapNum As Integer
 
 
     Public Sub SeaMain()
@@ -75,6 +76,8 @@
 
             Do While InputCount < 48
 
+                'set the newcaparray to the first line to start with
+                NewCapNum = 1
                 'update the input variables
                 Call LoadPortInput()
                 'set latent traffic levels to zero
@@ -94,12 +97,12 @@
                 Call WriteData("Seaport", "Output", OutputArray, TempArray, True)
                 'if the model is building capacity then create new capacity file
                 If BuildInfra = True Then
-                    Call WriteData("Seaport", "NewCap", NewCapArray, , True)
+                    Call WriteData("Seaport", "SeaNewCap", NewCapArray, , True)
                 End If
             Else
                 Call WriteData("Seaport", "Output", OutputArray, TempArray, False)
                 If BuildInfra = True Then
-                    Call WriteData("Seaport", "NewCap", NewCapArray, , False)
+                    Call WriteData("Seaport", "SeaNewCap", NewCapArray, , False)
                 End If
             End If
 
@@ -124,7 +127,7 @@
         End If
 
         If TripRates = "Strategy" Then
-            'get the elasticity values
+            'get the strat values
             Call ReadData("Strategy", "", stratarray)
             For r = 1 To 90
                 SeaTripRates(r) = stratarray(r, 95)
@@ -405,8 +408,9 @@
                         Dim abc() As String
                         abc = Split(newcapstring, ",")
                         For i = 0 To 7
-                            NewCapArray(PortID, i) = abc(i)
+                            NewCapArray(NewCapNum, i) = abc(i)
                         Next
+                        NewCapNum += 1
                     End If
                 End If
             End If
