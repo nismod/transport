@@ -25,7 +25,7 @@
     Dim RlZCost(144, 0) As Double
     Dim RlZStat(144, 0) As Long
     Dim RlZCarFuel(144, 0) As Double
-    Dim RlZExtVar(144, 7) As String
+    Dim RlZExtVar(144, 8) As String
     Dim YearCount As Integer
     Dim NewTripsS As Double
     Dim NewTripTotal As Double
@@ -84,9 +84,9 @@
 
             'create file is true if it is the initial year and write to outputfile and temp file
             If YearCount = 1 Then
-                Call WriteData("RailZone", "Output", OutputArray, TempArray, True, FilePrefix)
+                Call WriteData("RailZone", "Output", OutputArray, TempArray, True)
             Else
-                Call WriteData("RailZone", "Output", OutputArray, TempArray, False, FilePrefix)
+                Call WriteData("RailZone", "Output", OutputArray, TempArray, False)
             End If
 
 
