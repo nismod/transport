@@ -93,8 +93,8 @@
         Call AirInputFiles()
 
 
-        'Set year number to 1
-        YearNum = 1
+        'Set year number to initial year
+        YearNum = StartYear
 
         'Set capacity constraint checkers to false
         c = 0
@@ -105,7 +105,7 @@
         Loop
 
         'loop through all 90 years of modelling period - this is the outside loop for this model because need to aggregate across flows each year
-        Do Until YearNum > 90
+        Do Until YearNum > StartYear + Duration
 
             'read from initial file if year 1, otherwise update from temp file
             If YearNum = 1 Then
@@ -161,7 +161,7 @@
 
             'create file is true if it is the initial year and write to outputfile and temp file
 
-            If YearNum = 1 Then
+            If YearNum = StartYear Then
                 Call WriteData("AirNode", "Output", NodeOutputArray, NodeTempArray, True)
                 Call WriteData("AirFlow", "Output", FlowOutputArray, FlowTempArray, True)
                 If BuildInfra = True Then
@@ -176,7 +176,7 @@
             End If
 
 
-            'repeat for years 2 to 90
+            'repeat for duration
             YearNum += 1
 
         Loop
