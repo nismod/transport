@@ -138,10 +138,10 @@
         'v1.2 modification: for the moment we are saying that if capacity utilisation is less than 0.25 then traffic flows at free flow speed - but may wish to alter this
         FreeFlowCU = 0.25
 
-        YearNum = 1
+        YearNum = StartYear
 
         'Loop through flow and speed calculation modules for each year until end of period
-        Do Until YearNum > 90
+        Do Until YearNum > StartYear + Duration
 
             'load external variables
             Call ReadData("RoadLink", "ExtVar", ExternalValues, , YearNum)
@@ -196,7 +196,7 @@
             Loop
 
             'create file is true if it is the initial year and write to outputfile and temp file
-            If YearNum = 1 Then
+            If YearNum = StartYear Then
                 Call WriteData("RoadLink", "Output", OutputArray, TempArray, True)
                 If BuildInfra = True Then
                     Call WriteData("RoadLink", "RoadLinkNewCap", NewCapArray, , True)
@@ -207,12 +207,6 @@
                     Call WriteData("RoadLink", "RoadLinkNewCap", NewCapArray, , False)
                 End If
             End If
-
-            If YearNum = 1 Then
-                Dim msg = 111
-                MsgBox(msg)
-            End If
-            YearNum += 1
 
         Loop
 
@@ -721,9 +715,9 @@
                         HourlySpeeds(link, sc, h) = SpeedNew
                     Else
                         'this shouldn't happen in the base year, as we should already have reset the maximum capacity variable in the start flows sub, so write error to log file and exit model
-                        LogLine = "ERROR in interzonal road model - maximum capacity exceeded in base year for Flow " & FlowID(link, 1) & ", road type " & RoadType & ", hour " & h & ". Model run terminated."
-                        lf.WriteLine(LogLine)
-                        lf.Close()
+                        logarray(logNum, 0) = "ERROR in interzonal road model - maximum capacity exceeded in base year for Flow " & FlowID(link, 1) & ", road type " & RoadType & ", hour " & h & ". Model run terminated."
+                        logNum += 1
+                        Call WriteData("Logfile", "", logarray)
                         End
                     End If
                     h += 1
@@ -1353,9 +1347,9 @@
             'Debugger - checks if stuck in loop and writes to log
             z += 1
             If z > 1000 Then
-                LogLine = "ERROR in Road Link Module: Flow" & FlowID(link, 1) & " Year" & YearNum & " Road Type " & RoadType & " speed and flow failed to converge after 1000 iterations"
-                lf.WriteLine(LogLine)
-                lf.Close()
+                logarray(logNum, 0) = "ERROR in Road Link Module: Flow" & FlowID(link, 1) & " Year" & YearNum & " Road Type " & RoadType & " speed and flow failed to converge after 1000 iterations"
+                logNum += 1
+                Call WriteData("Logfile", "", logarray)
                 Exit Do
             Else
             End If
