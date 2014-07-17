@@ -91,9 +91,9 @@ Module RailModel
         'get the input files and create the output files
         Call RailLinkInputFiles()
 
-        YearNum = 1
+        YearNum = StartYear
 
-        Do While YearNum < 91
+        Do Until YearNum > StartYear + Duration
             'reset Cap number
             NewCapNum = 1
 
@@ -152,7 +152,7 @@ Module RailModel
             Loop
 
             'create file is true if it is the initial year and write to outputfile and temp file
-            If YearNum = 1 Then
+            If YearNum = StartYear Then
                 Call WriteData("RailLink", "Output", OutputArray, TempArray, True)
                 'if the model is building capacity then create new capacity file
                 If BuildInfra = True Then
@@ -170,7 +170,7 @@ Module RailModel
         Loop
 
         'Write fuel consumption output file
-        For y = 1 To 90
+        For y = 1 To Duration
             FuelString(y, 0) = y
             FuelString(y, 1) = FuelUsed(y, 0)
             FuelString(y, 2) = FuelUsed(y, 1)
@@ -380,8 +380,8 @@ Module RailModel
                 ElseIf (RatCheck - CloseTrainRat) > 0.1 Then
                     NewTrains = BestTrains
                     NewDelays(InputCount, 0) = BestDelays
-                    LogLine = "Flow " & FlowNum(InputCount, 0) & " failed to converge in Year " & YearNum & " in rail link model.  Best convergence ratio was " & CloseTrainRat & "."
-                    lf.WriteLine(LogLine)
+                    logarray(logNum, 0) = "Flow " & FlowNum(InputCount, 0) & " failed to converge in Year " & YearNum & " in rail link model.  Best convergence ratio was " & CloseTrainRat & "."
+                    logNum += 1
                     Exit Do
                 Else
                 End If
