@@ -104,8 +104,8 @@ Module DBaseInputInterface
             GORYear = GORArray(0)
         End If
         'write file name to log file
-        LogLine = "Population data taken from file " & DBasePopFile
-        lf.WriteLine(LogLine)
+        logarray(logNum, 0) = "Population data taken from file " & DBasePopFile
+        logNum += 1
         'read input line, split it and get year
         PopLine = dp.ReadLine
         PopArray = Split(PopLine, ",")
@@ -281,8 +281,8 @@ Module DBaseInputInterface
         'read header row
         EcoLine = de.ReadLine
         'write file name to log file
-        LogLine = "Economy data taken from file " & DBaseEcoFile
-        lf.WriteLine(LogLine)
+        logarray(logNum, 0) = "Economy data taken from file " & DBaseEcoFile
+        logNum += 1
         'read input line, split it and get year
         EcoLine = de.ReadLine
         EcoArray = Split(EcoLine, ",")
@@ -370,9 +370,9 @@ Module DBaseInputInterface
         If DistZoneLookup.TryGetValue(District, value) Then
             ZoneNum = value
         Else
-            LogLine = "No ITRC Zone found in lookup table for District " & District & ".  Model run terminated."
-            lf.WriteLine(LogLine)
-            lf.Close()
+            logarray(logNum, 0) = "No ITRC Zone found in lookup table for District " & District & ".  Model run terminated."
+            logNum += 1
+            Call WriteData("Logfile", "", logarray)
             zp.Close()
             End
         End If
@@ -475,9 +475,9 @@ Module DBaseInputInterface
                         badregioncount += 1
                     Else
                         MsgBox("More than 10 unrecognised regions included in input gva file.  Model run terminated.")
-                        LogLine = "More than 10 unrecognised regions included in input gva file.  Model run terminated."
-                        lf.WriteLine(LogLine)
-                        lf.Close()
+                        logarray(logNum, 0) = "More than 10 unrecognised regions included in input gva file.  Model run terminated."
+                        logNum += 1
+                        Call WriteData("Logfile", "", logarray)
                         End
                     End If
                 End If
@@ -1215,7 +1215,9 @@ Module DBaseInputInterface
                         OutFileName = EVFilePrefix & "AirFlowExtVar.csv"
                         header = "Yeary,FlowID,PopOZy,PopDZy,GVAOZy,GVADZy,Costy"
                 End Select
-
+            Case "Logfile"
+                OutFileName = FilePrefix & "TransportCDAMLog.txt"
+                header = "Transport CDAM Log File"
         End Select
 
         'Check if prefix has been set - if not then use default
