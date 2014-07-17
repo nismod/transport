@@ -56,12 +56,18 @@
     Public RoadCapNum As Long
     Public RLCapYear(1) As Long
     Public TripRates As String
-
+    Public StartYear As Integer
+    Public Duration As Integer
+    Public logNum As Integer
+    Public logarray(47, 0) As String
     Dim OZone, DZone As Long
     Dim ErrDict As String
 
     Dim ModelType As String
     Dim Subtype As String
+
+
+
 
 
     Sub FullMain()
@@ -97,8 +103,8 @@
         'if RoadLink model is selected then run that model
         If RunRoadLink = True Then
             Call RoadLinkMain()
-            LogLine = "Road link model run completed"
-            lf.WriteLine(LogLine)
+            logarray(logNum, 0) = "Road link model run completed"
+            logNum += 1
         End If
 
         'if RoadZone model is selected then run that model
@@ -109,39 +115,38 @@
             Else
                 Call RoadZoneMainNew()
             End If
-            LogLine = "Road zone model run completed"
-            lf.WriteLine(LogLine)
+            logarray(logNum, 0) = "Road zone model run completed"
+            logNum += 1
         End If
 
         'if RailLink model is selected then run that model
         If RunRailLink = True Then
             Call RailLinkMain()
-            LogLine = "Rail link model run completed"
-            lf.WriteLine(LogLine)
+            logarray(logNum, 0) = "Rail link model run completed"
+            logNum += 1
         End If
 
         'if RailZone model is selected then run that model
         If RunRailZone = True Then
             Call RailZoneMain()
-            LogLine = "Rail zone model run completed"
-            lf.WriteLine(LogLine)
+            logarray(logNum, 0) = "Rail zone model run completed"
+            logNum += 1
         End If
 
         'if Air model is selected then run that model
         If RunAir = True Then
             Call AirMain()
-            LogLine = "Air model run completed"
-            lf.WriteLine(LogLine)
+            logarray(logNum, 0) = "Air model run completed"
+            logNum += 1
         End If
 
         'if Sea model is selected then run that model
         If RunSea = True Then
             Call SeaMain()
-            LogLine = "Sea model run completed"
-            lf.WriteLine(LogLine)
+            logarray(logNum, 0) = "Sea model run completed"
+            logNum += 1
         End If
 
-        lf.WriteLine()
 
         'Write closing lines of log file
         Call CloseLog()
@@ -149,15 +154,13 @@
     End Sub
 
     Sub CreateLog()
-        LogFile = New IO.FileStream(DirPath & FilePrefix & "TransportCDAMLog.txt", IO.FileMode.CreateNew, IO.FileAccess.Write)
-        lf = New IO.StreamWriter(LogFile, System.Text.Encoding.Default)
+        'start from the first line
+        logNum = 1
         'write header rows
-        LogLine = "ITRC Transport CDAM"
-        lf.WriteLine(LogLine)
-        lf.WriteLine()
-        LogLine = "Model run commenced at " & System.DateTime.Now
-        lf.WriteLine(LogLine)
-        lf.WriteLine()
+        logarray(logNum, 0) = "ITRC Transport CDAM"
+        logNum += 1
+        logarray(logNum, 0) = "Model run commenced at " & System.DateTime.Now
+        logNum += 1
     End Sub
 
     Sub ExtVarMain()
@@ -180,34 +183,33 @@
         Dim airnewcost As Double
 
         'write to log file first
-        LogLine = "The following external variable files were generated:"
-        lf.WriteLine(LogLine)
+        logarray(logNum, 0) = "The following external variable files were generated:"
+        logNum += 1
         If NewRdLEV = True Then
-            LogLine = "Road link external variables"
-            lf.WriteLine(LogLine)
+            logarray(logNum, 0) = "Road link external variables"
+            logNum += 1
         End If
         If NewRdZEV = True Then
-            LogLine = "Road zone external variables"
-            lf.WriteLine(LogLine)
+            logarray(logNum, 0) = "Road zone external variables"
+            logNum += 1
         End If
         If NewRlLEV = True Then
-            LogLine = "Rail link external variables"
-            lf.WriteLine(LogLine)
+            logarray(logNum, 0) = "Rail link external variables"
+            logNum += 1
         End If
         If NewRlZEV = True Then
-            LogLine = "Rail zone external variables"
-            lf.WriteLine(LogLine)
+            logarray(logNum, 0) = "Rail zone external variables"
+            logNum += 1
         End If
         If NewAirEV = True Then
-            LogLine = "Airport external variables"
-            lf.WriteLine(LogLine)
+            logarray(logNum, 0) = "Airport external variables"
+            logNum += 1
         End If
         If NewSeaEV = True Then
             'Call SeaEVMain()
-            LogLine = "Seaport external variables"
-            lf.WriteLine(LogLine)
+            logarray(logNum, 0) = "Seaport external variables"
+            logNum += 1
         End If
-        lf.WriteLine()
         'if we are using database files then loop through transformed database file to start year (2010)
         If DBasePop = True Then
             ZonePopFile = New IO.FileStream(DirPath & "ZoneScenarioPopFile.csv", IO.FileMode.Open, IO.FileAccess.Read)
@@ -890,56 +892,50 @@
     End Sub
 
     Sub ModelElementLog()
-        LogLine = "The following modules were run:"
-        lf.WriteLine(LogLine)
+        logarray(logNum, 0) = "The following modules were run:"
+        logNum += 1
         If RunRoadLink = True Then
-            LogLine = "Road link"
-            lf.WriteLine(LogLine)
+            logarray(logNum, 0) = "Road link"
+            logNum += 1
         End If
         If RunRoadZone = True Then
-            LogLine = "Road zone"
-            lf.WriteLine(LogLine)
+            logarray(logNum, 0) = "Road zone"
+            logNum += 1
         End If
         If RunRailLink = True Then
-            LogLine = "Rail link"
-            lf.WriteLine(LogLine)
+            logarray(logNum, 0) = "Rail link"
+            logNum += 1
         End If
         If RunRailZone = True Then
-            LogLine = "Rail zone"
-            lf.WriteLine(LogLine)
+            logarray(logNum, 0) = "Rail zone"
+            logNum += 1
         End If
         If RunAir = True Then
-            LogLine = "Air"
-            lf.WriteLine(LogLine)
+            logarray(logNum, 0) = "Air"
+            logNum += 1
         End If
         If RunSea = True Then
-            LogLine = "Sea"
-            lf.WriteLine(LogLine)
+            logarray(logNum, 0) = "Sea"
+            logNum += 1
         End If
-        lf.WriteLine()
     End Sub
 
     Sub CloseLog()
-        LogLine = "Model run finished at " & System.DateTime.Now
-        lf.WriteLine(LogLine)
-        LogLine = "Code written by Dr Simon Blainey, Transportation Research Group, University of Southampton"
-        lf.WriteLine(LogLine)
-        LogLine = "All results are indicative estimates, and the authors accept no liability for any actions arising from the use of these results"
-        lf.WriteLine(LogLine)
-        lf.Close()
+        logarray(logNum, 0) = "Model run finished at " & System.DateTime.Now
+        logNum += 1
+        logarray(logNum, 0) = "Code written by Dr Simon Blainey, Transportation Research Group, University of Southampton"
+        logNum += 1
+        logarray(logNum, 0) = "All results are indicative estimates, and the authors accept no liability for any actions arising from the use of these results"
+        logNum += 1
+
+        Call WriteData("Logfile", "", logarray)
     End Sub
 
     Sub DictionaryMissingVal()
-        LogLine = "No " & ErrDict & " value found in lookup table for Zone " & OZone & " when updating input files.  Model run terminated."
-        lf.WriteLine(LogLine)
-        lf.Close()
+        logarray(logNum, 0) = "No " & ErrDict & " value found in lookup table for Zone " & OZone & " when updating input files.  Model run terminated."
+        logNum += 1
+        Call WriteData("Logfile", "", logarray)
         MsgBox("Model run failed.  Please consult the log file for details.")
         End
-    End Sub
-    Sub GetInput(type, subtype, inputrow)
-        Select Case type
-            Case "Rail"
-
-        End Select
     End Sub
 End Module
