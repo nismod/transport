@@ -220,10 +220,10 @@
                 rownum += 1
             Else
                 'otherwise stop the model and write an error to the log file
-                LogLine = "ERROR in intrazonal road model Sub GetZoneExtVar - year counter does not correspond to year value in input data for Zone " & ZoneID & " in year " & YearCount
-                lf.WriteLine(LogLine)
-                LogLine = "Model run prematurely terminated at" & System.DateTime.Now
-                lf.Close()
+                logarray(logNum, 0) = "ERROR in intrazonal road model Sub GetZoneExtVar - year counter does not correspond to year value in input data for Zone " & ZoneID & " in year " & YearCount
+                logNum += 1
+                logarray(logNum, 0) = "Model run prematurely terminated at" & System.DateTime.Now
+                Call WriteData("Logfile", "", logarray)
                 End
             End If
             YearCheck += 1
