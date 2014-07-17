@@ -57,8 +57,8 @@
         Call SeaInputFiles()
 
 
-        YearNum = 1
-        Do While YearNum < 91
+        YearNum = StartYear
+        Do Until YearNum > StartYear + Duration
 
             'get external variables for this port this year
             Call ReadData("Seaport", "ExtVar", PortExtVar, , YearNum)
@@ -93,7 +93,7 @@
             Loop
 
             'create file is true if it is the initial year and write to outputfile and temp file
-            If YearNum = 1 Then
+            If YearNum = StartYear Then
                 Call WriteData("Seaport", "Output", OutputArray, TempArray, True)
                 'if the model is building capacity then create new capacity file
                 If BuildInfra = True Then
