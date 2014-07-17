@@ -673,9 +673,9 @@ NextYear:
     End Sub
 
     Sub DictionaryMissingVal()
-        LogLine = "No " & ErrorString & " when updating rail link external variable file.  Model run terminated."
-        lf.WriteLine(LogLine)
-        lf.Close()
+        logarray(logNum, 0) = "No " & ErrorString & " when updating rail link external variable file.  Model run terminated."
+        logNum += 1
+        Call WriteData("Logfile", "", logarray)
         MsgBox("Model run failed.  Please consult the log file for details.")
         End
     End Sub
