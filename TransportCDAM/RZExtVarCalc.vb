@@ -96,14 +96,14 @@
         If WPPL = True Then
             If WPPLYear < 2011 Then
                 MsgBox("Invalid start year provided for WPPL.  Please rerun the model using a year between 2011 and 2100.")
-                LogLine = "Invalid start year provided for WPPL.  Run terminated during intrazonal road model external variable file generation."
-                lf.WriteLine(LogLine)
+                logarray(logNum, 0) = "Invalid start year provided for WPPL.  Run terminated during intrazonal road model external variable file generation."
+                logNum += 1
                 Call CloseLog()
                 End
             ElseIf WPPLYear > 2100 Then
                 MsgBox("Invalid start year provided for WPPL.  Please rerun the model using a year between 2011 and 2100.")
-                LogLine = "Invalid start year provided for WPPL.  Run terminated during intrazonal road model external variable file generation."
-                lf.WriteLine(LogLine)
+                logarray(logNum, 0) = "Invalid start year provided for WPPL.  Run terminated during intrazonal road model external variable file generation."
+                logNum += 1
                 Call CloseLog()
                 End
             End If
@@ -572,9 +572,9 @@
     End Sub
 
     Sub DictionaryMissingVal()
-        LogLine = "No " & ErrorString & " when updating input files.  Model run terminated."
-        lf.WriteLine(LogLine)
-        lf.Close()
+        logarray(logNum, 0) = "No " & ErrorString & " when updating input files.  Model run terminated."
+        logNum += 1
+        Call WriteData("Logfile", "", logarray)
         MsgBox("Model run failed.  Please consult the log file for details.")
         End
     End Sub
