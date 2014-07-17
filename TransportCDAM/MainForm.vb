@@ -2485,4 +2485,18 @@
             TripRates = "Strategy"
         End If
     End Sub
+
+
+    Private Sub TextBox40_TextChanged(sender As Object, e As EventArgs) Handles TextBox40.TextChanged
+        Duration = CInt(TextBox40.Text) - 1
+        If Duration > 90 Then
+            MsgBox("Maximum duration is 90 years")
+        ElseIf Duration < 1 Then
+            MsgBox("Duration must between 1 to 90 years !")
+        End If
+    End Sub
+
+    Private Sub TextBox39_TextChanged(sender As Object, e As EventArgs) Handles TextBox39.TextChanged
+        StartYear = CInt(TextBox39.Text) - 2009
+    End Sub
 End Class

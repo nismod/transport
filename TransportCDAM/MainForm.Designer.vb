@@ -207,7 +207,16 @@ Partial Class MainForm
         Me.TextBox6 = New System.Windows.Forms.TextBox()
         Me.CheckBox25 = New System.Windows.Forms.CheckBox()
         Me.TabPage4 = New System.Windows.Forms.TabPage()
+        Me.GroupBox23 = New System.Windows.Forms.GroupBox()
+        Me.Label51 = New System.Windows.Forms.Label()
+        Me.Label50 = New System.Windows.Forms.Label()
+        Me.Label49 = New System.Windows.Forms.Label()
+        Me.Label48 = New System.Windows.Forms.Label()
+        Me.TextBox40 = New System.Windows.Forms.TextBox()
+        Me.TextBox39 = New System.Windows.Forms.TextBox()
+        Me.Label47 = New System.Windows.Forms.Label()
         Me.GroupBox22 = New System.Windows.Forms.GroupBox()
+        Me.ComboBox30 = New System.Windows.Forms.ComboBox()
         Me.Label46 = New System.Windows.Forms.Label()
         Me.GroupBox21 = New System.Windows.Forms.GroupBox()
         Me.Label45 = New System.Windows.Forms.Label()
@@ -222,7 +231,6 @@ Partial Class MainForm
         Me.OpenControlFileToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.SaveControlFileToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ExitToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.ComboBox30 = New System.Windows.Forms.ComboBox()
         Me.GroupBox1.SuspendLayout()
         Me.GroupBox2.SuspendLayout()
         Me.GroupBox3.SuspendLayout()
@@ -247,6 +255,7 @@ Partial Class MainForm
         Me.GroupBox10.SuspendLayout()
         Me.GroupBox9.SuspendLayout()
         Me.TabPage4.SuspendLayout()
+        Me.GroupBox23.SuspendLayout()
         Me.GroupBox22.SuspendLayout()
         Me.GroupBox21.SuspendLayout()
         Me.GroupBox20.SuspendLayout()
@@ -255,18 +264,18 @@ Partial Class MainForm
         '
         'Button1
         '
-        Me.Button1.Location = New System.Drawing.Point(14, 471)
+        Me.Button1.Location = New System.Drawing.Point(8, 471)
         Me.Button1.Name = "Button1"
-        Me.Button1.Size = New System.Drawing.Size(105, 25)
+        Me.Button1.Size = New System.Drawing.Size(89, 25)
         Me.Button1.TabIndex = 0
         Me.Button1.Text = "Run Model"
         Me.Button1.UseVisualStyleBackColor = True
         '
         'Button2
         '
-        Me.Button2.Location = New System.Drawing.Point(125, 471)
+        Me.Button2.Location = New System.Drawing.Point(111, 471)
         Me.Button2.Name = "Button2"
-        Me.Button2.Size = New System.Drawing.Size(105, 25)
+        Me.Button2.Size = New System.Drawing.Size(92, 25)
         Me.Button2.TabIndex = 1
         Me.Button2.Text = "Cancel"
         Me.Button2.UseVisualStyleBackColor = True
@@ -2207,6 +2216,7 @@ Partial Class MainForm
         '
         'TabPage4
         '
+        Me.TabPage4.Controls.Add(Me.GroupBox23)
         Me.TabPage4.Controls.Add(Me.GroupBox22)
         Me.TabPage4.Controls.Add(Me.GroupBox21)
         Me.TabPage4.Controls.Add(Me.GroupBox20)
@@ -2218,6 +2228,83 @@ Partial Class MainForm
         Me.TabPage4.Text = "Additional Options"
         Me.TabPage4.UseVisualStyleBackColor = True
         '
+        'GroupBox23
+        '
+        Me.GroupBox23.Controls.Add(Me.Label51)
+        Me.GroupBox23.Controls.Add(Me.Label50)
+        Me.GroupBox23.Controls.Add(Me.Label49)
+        Me.GroupBox23.Controls.Add(Me.Label48)
+        Me.GroupBox23.Controls.Add(Me.TextBox40)
+        Me.GroupBox23.Controls.Add(Me.TextBox39)
+        Me.GroupBox23.Controls.Add(Me.Label47)
+        Me.GroupBox23.Location = New System.Drawing.Point(197, 9)
+        Me.GroupBox23.Name = "GroupBox23"
+        Me.GroupBox23.Size = New System.Drawing.Size(217, 138)
+        Me.GroupBox23.TabIndex = 18
+        Me.GroupBox23.TabStop = False
+        Me.GroupBox23.Text = "Period"
+        '
+        'Label51
+        '
+        Me.Label51.AutoSize = True
+        Me.Label51.Location = New System.Drawing.Point(6, 107)
+        Me.Label51.Name = "Label51"
+        Me.Label51.Size = New System.Drawing.Size(186, 13)
+        Me.Label51.TabIndex = 6
+        Me.Label51.Text = "Note: End year must not exceed 2099"
+        '
+        'Label50
+        '
+        Me.Label50.AutoSize = True
+        Me.Label50.Location = New System.Drawing.Point(51, 85)
+        Me.Label50.Name = "Label50"
+        Me.Label50.Size = New System.Drawing.Size(85, 13)
+        Me.Label50.TabIndex = 5
+        Me.Label50.Text = "Between 1 to 90"
+        '
+        'Label49
+        '
+        Me.Label49.AutoSize = True
+        Me.Label49.Location = New System.Drawing.Point(51, 41)
+        Me.Label49.Name = "Label49"
+        Me.Label49.Size = New System.Drawing.Size(115, 13)
+        Me.Label49.TabIndex = 4
+        Me.Label49.Text = "Between 2010 to 2099"
+        '
+        'Label48
+        '
+        Me.Label48.AutoSize = True
+        Me.Label48.Location = New System.Drawing.Point(51, 64)
+        Me.Label48.Name = "Label48"
+        Me.Label48.Size = New System.Drawing.Size(47, 13)
+        Me.Label48.TabIndex = 3
+        Me.Label48.Text = "Duration"
+        '
+        'TextBox40
+        '
+        Me.TextBox40.Location = New System.Drawing.Point(7, 61)
+        Me.TextBox40.Name = "TextBox40"
+        Me.TextBox40.Size = New System.Drawing.Size(38, 20)
+        Me.TextBox40.TabIndex = 2
+        Me.TextBox40.Text = "90"
+        '
+        'TextBox39
+        '
+        Me.TextBox39.Location = New System.Drawing.Point(7, 16)
+        Me.TextBox39.Name = "TextBox39"
+        Me.TextBox39.Size = New System.Drawing.Size(38, 20)
+        Me.TextBox39.TabIndex = 1
+        Me.TextBox39.Text = "2010"
+        '
+        'Label47
+        '
+        Me.Label47.AutoSize = True
+        Me.Label47.Location = New System.Drawing.Point(51, 19)
+        Me.Label47.Name = "Label47"
+        Me.Label47.Size = New System.Drawing.Size(66, 13)
+        Me.Label47.TabIndex = 0
+        Me.Label47.Text = "Starting year"
+        '
         'GroupBox22
         '
         Me.GroupBox22.Controls.Add(Me.ComboBox30)
@@ -2228,6 +2315,16 @@ Partial Class MainForm
         Me.GroupBox22.TabIndex = 2
         Me.GroupBox22.TabStop = False
         Me.GroupBox22.Text = "Trip Rates"
+        '
+        'ComboBox30
+        '
+        Me.ComboBox30.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.ComboBox30.FormattingEnabled = True
+        Me.ComboBox30.Items.AddRange(New Object() {"Constant", "Strategy File"})
+        Me.ComboBox30.Location = New System.Drawing.Point(82, 17)
+        Me.ComboBox30.Name = "ComboBox30"
+        Me.ComboBox30.Size = New System.Drawing.Size(93, 21)
+        Me.ComboBox30.TabIndex = 4
         '
         'Label46
         '
@@ -2322,7 +2419,7 @@ Partial Class MainForm
         Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.FileToolStripMenuItem})
         Me.MenuStrip1.Location = New System.Drawing.Point(0, 0)
         Me.MenuStrip1.Name = "MenuStrip1"
-        Me.MenuStrip1.Size = New System.Drawing.Size(663, 24)
+        Me.MenuStrip1.Size = New System.Drawing.Size(663, 25)
         Me.MenuStrip1.TabIndex = 6
         Me.MenuStrip1.Text = "MenuStrip1"
         '
@@ -2330,38 +2427,28 @@ Partial Class MainForm
         '
         Me.FileToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.OpenControlFileToolStripMenuItem, Me.SaveControlFileToolStripMenuItem, Me.ExitToolStripMenuItem})
         Me.FileToolStripMenuItem.Name = "FileToolStripMenuItem"
-        Me.FileToolStripMenuItem.Size = New System.Drawing.Size(37, 20)
+        Me.FileToolStripMenuItem.Size = New System.Drawing.Size(39, 21)
         Me.FileToolStripMenuItem.Text = "&File"
         '
         'OpenControlFileToolStripMenuItem
         '
         Me.OpenControlFileToolStripMenuItem.Name = "OpenControlFileToolStripMenuItem"
-        Me.OpenControlFileToolStripMenuItem.Size = New System.Drawing.Size(163, 22)
+        Me.OpenControlFileToolStripMenuItem.Size = New System.Drawing.Size(174, 22)
         Me.OpenControlFileToolStripMenuItem.Text = "&Open control file"
         '
         'SaveControlFileToolStripMenuItem
         '
         Me.SaveControlFileToolStripMenuItem.Name = "SaveControlFileToolStripMenuItem"
-        Me.SaveControlFileToolStripMenuItem.Size = New System.Drawing.Size(163, 22)
+        Me.SaveControlFileToolStripMenuItem.Size = New System.Drawing.Size(174, 22)
         Me.SaveControlFileToolStripMenuItem.Text = "&Save control file"
         '
         'ExitToolStripMenuItem
         '
         Me.ExitToolStripMenuItem.Name = "ExitToolStripMenuItem"
-        Me.ExitToolStripMenuItem.Size = New System.Drawing.Size(163, 22)
+        Me.ExitToolStripMenuItem.Size = New System.Drawing.Size(174, 22)
         Me.ExitToolStripMenuItem.Text = "&Exit"
         '
-        'ComboBox30
-        '
-        Me.ComboBox30.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        Me.ComboBox30.FormattingEnabled = True
-        Me.ComboBox30.Items.AddRange(New Object() {"Constant", "Strategy File"})
-        Me.ComboBox30.Location = New System.Drawing.Point(82, 17)
-        Me.ComboBox30.Name = "ComboBox30"
-        Me.ComboBox30.Size = New System.Drawing.Size(93, 21)
-        Me.ComboBox30.TabIndex = 4
-        '
-        'Form1
+        'MainForm
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
@@ -2369,7 +2456,7 @@ Partial Class MainForm
         Me.Controls.Add(Me.TabControl1)
         Me.Controls.Add(Me.MenuStrip1)
         Me.MainMenuStrip = Me.MenuStrip1
-        Me.Name = "Form1"
+        Me.Name = "MainForm"
         Me.Text = "ITRC Transport CDAM"
         Me.GroupBox1.ResumeLayout(False)
         Me.GroupBox1.PerformLayout()
@@ -2412,6 +2499,8 @@ Partial Class MainForm
         Me.GroupBox9.ResumeLayout(False)
         Me.GroupBox9.PerformLayout()
         Me.TabPage4.ResumeLayout(False)
+        Me.GroupBox23.ResumeLayout(False)
+        Me.GroupBox23.PerformLayout()
         Me.GroupBox22.ResumeLayout(False)
         Me.GroupBox22.PerformLayout()
         Me.GroupBox21.ResumeLayout(False)
@@ -2625,5 +2714,13 @@ Partial Class MainForm
     Friend WithEvents GroupBox22 As System.Windows.Forms.GroupBox
     Friend WithEvents Label46 As System.Windows.Forms.Label
     Friend WithEvents ComboBox30 As System.Windows.Forms.ComboBox
+    Friend WithEvents GroupBox23 As System.Windows.Forms.GroupBox
+    Friend WithEvents Label48 As System.Windows.Forms.Label
+    Friend WithEvents TextBox40 As System.Windows.Forms.TextBox
+    Friend WithEvents TextBox39 As System.Windows.Forms.TextBox
+    Friend WithEvents Label47 As System.Windows.Forms.Label
+    Friend WithEvents Label49 As System.Windows.Forms.Label
+    Friend WithEvents Label51 As System.Windows.Forms.Label
+    Friend WithEvents Label50 As System.Windows.Forms.Label
 
 End Class
