@@ -90,9 +90,9 @@
         Call ZoneSetFiles()
 
         'set year counter to one
-        YearCount = 1
+        YearCount = StartYear
 
-        Do Until YearCount > 90
+        Do Until YearCount > StartYear + Duration
 
             'initialize new cap num to write to the first line
             NewCapNum = 1
@@ -127,7 +127,7 @@
             Loop
 
             'create file is true if it is the initial year and write to outputfile and temp file
-            If YearCount = 1 Then
+            If YearCount = StartYear Then
                 Call WriteData("RoadZone", "Output", OutputArray, TempArray, True)
                 Call WriteData("RoadZone", "RoadZoneFuel", FuelArray, , True)
                 If BuildInfra = True Then
