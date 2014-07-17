@@ -51,9 +51,10 @@
         'get the input files
         Call RlZSetFiles()
 
+        'initialise year count
+        YearCount = StartYear
 
-        YearCount = 1
-        Do Until YearCount > 90
+        Do Until YearCount > StartYear + Duration
 
             'get external variable values
             Call ReadData("RailZone", "ExtVar", RlZExtVar, , YearCount)
@@ -83,7 +84,7 @@
             Loop
 
             'create file is true if it is the initial year and write to outputfile and temp file
-            If YearCount = 1 Then
+            If YearCount = StartYear Then
                 Call WriteData("RailZone", "Output", OutputArray, TempArray, True)
             Else
                 Call WriteData("RailZone", "Output", OutputArray, TempArray, False)
