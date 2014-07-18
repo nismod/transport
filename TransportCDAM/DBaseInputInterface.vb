@@ -130,8 +130,14 @@ Module DBaseInputInterface
                         Case "Births", "Deaths", "Migration"
                             'do nothing
                         Case Else
-                            'call district lookup
-                            Call DistrictLookup()
+                            '180714 modification
+                            If PopArray(1) = "Persons" Then
+                                'do nothing
+                            Else
+                                'call district lookup
+                                Call DistrictLookup()
+                            End If
+                            
                     End Select
                 Else
                     Exit Do
