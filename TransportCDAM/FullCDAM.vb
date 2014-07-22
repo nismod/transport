@@ -39,7 +39,7 @@
     Public CUCritValue As Double
     Public VariableEl As Boolean
     Public ElCritValue As Double
-    Public CongestionCharge, CarbonCharge, WPPL, RailCCharge, AirCCharge, RlCaCharge, AirCaCharge As Boolean
+    Public CongestionCharge, CarbonCharge, WPPL, RailCCharge, AirCCharge, RlCaCharge, AirCaCharge, UpdateInput As Boolean
     Public ConChargePer, RailChargePer, AirChargePer As Double
     Public ConChargeYear, WPPLYear, RlCChargeYear, CarbChargeYear, RlCaChYear, AirChargeYear, AirCaChYear As Long
     Public WPPLPer As Double
@@ -277,552 +277,554 @@
             '***need to add in energy dictionary
         End If
         'update input files assuming that they need updating
-        If DBaseCheck = True Then
-            If NewRdLEV = True Then
-                'road link input file
-                RdLInputFile = New IO.FileStream(DirPath & "RoadInputDataInitial.csv", IO.FileMode.Open, IO.FileAccess.Read)
-                rlif = New IO.StreamReader(RdLInputFile, System.Text.Encoding.Default)
-                RdLInputFileNew = New IO.FileStream(DirPath & "RoadInputData2010.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
-                rlin = New IO.StreamWriter(RdLInputFileNew, System.Text.Encoding.Default)
-                'read and write header line
-                inline = rlif.ReadLine
-                rlin.WriteLine(inline)
-                'update the remainder of the lines as necessary
-                Do
+        'update the initial file if the box has been ticked, otherwise use the existing input file
+        If UpdateInput = True Then
+            If DBaseCheck = True Then
+                If NewRdLEV = True Then
+                    'road link input file
+                    RdLInputFile = New IO.FileStream(DirPath & "RoadInputDataInitial.csv", IO.FileMode.Open, IO.FileAccess.Read)
+                    rlif = New IO.StreamReader(RdLInputFile, System.Text.Encoding.Default)
+                    RdLInputFileNew = New IO.FileStream(DirPath & "RoadInputData2010.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
+                    rlin = New IO.StreamWriter(RdLInputFileNew, System.Text.Encoding.Default)
+                    'read and write header line
                     inline = rlif.ReadLine
-                    If inline Is Nothing Then
-                        Exit Do
-                    End If
-                    inarray = Split(inline, ",")
-                    OZone = inarray(1)
-                    DZone = inarray(2)
-                    arraycount = 0
-                    outline = ""
-                    Do While arraycount < 28
-                        outline = outline & inarray(arraycount) & ","
-                        arraycount += 1
-                    Loop
-                    'if getting pop data from pop database then get values from dictionary, otherwise use old value
-                    If DBasePop = True Then
-                        If PopLookup.TryGetValue(OZone, newval) Then
-                            outline = outline & newval & ","
-                        Else
-                            ErrDict = "population"
-                            Call DictionaryMissingVal()
+                    rlin.WriteLine(inline)
+                    'update the remainder of the lines as necessary
+                    Do
+                        inline = rlif.ReadLine
+                        If inline Is Nothing Then
+                            Exit Do
                         End If
-                        If PopLookup.TryGetValue(DZone, newval) Then
-                            outline = outline & newval & ","
-                        Else
-                            ErrDict = "population"
-                            Call DictionaryMissingVal()
-                        End If
-                    Else
-                        outline = outline & inarray(28) & "," & inarray(29) & ","
-                    End If
-                    'if getting economy data from database then get values from dictionary, otherwise use old value
-                    If DBaseEco = True Then
-                        If EcoLookup.TryGetValue(OZone, newval) Then
-                            outline = outline & newval & ","
-                        Else
-                            ErrDict = "gva"
-                            Call DictionaryMissingVal()
-                        End If
-                        If EcoLookup.TryGetValue(DZone, newval) Then
-                            outline = outline & newval & ","
-                        Else
-                            ErrDict = "gva"
-                            Call DictionaryMissingVal()
-                        End If
-                    Else
-                        outline = outline & inarray(30) & "," & inarray(31) & ","
-                    End If
-                    'if getting energy cost data from database then get values from dictionary, otherwise use old value
-                    If DBaseEne = True Then
-                        newval = 26.604
-                        outline = outline & newval & ","
-                        'other costs go at the end due to their place in the file
-                    Else
-                        outline = outline & inarray(32) & ","
-                    End If
-                    arraycount = 33
-                    Do While arraycount < 36
-                        outline = outline & inarray(arraycount) & ","
-                        arraycount += 1
-                    Loop
-                    If DBaseEne = True Then
-                        newval = (0.598 * 36.14) + (0.402 * 36.873)
-                        outline = outline & newval & ","
-                        newval = 61.329
-                        outline = outline & newval & ","
-                        newval = 234.5
-                        outline = outline & newval & ","
-                        newval = 93.665
-                        outline = outline & newval & ","
-                        newval = 109.948
-                        outline = outline & newval & ","
-                        newval = 26.604
-                        outline = outline & newval & ","
-                        newval = (0.598 * 36.14) + (0.402 * 36.873)
-                        outline = outline & newval & ","
-                        newval = 61.329
-                        outline = outline & newval & ","
-                        newval = 234.5
-                        outline = outline & newval & ","
-                        newval = 93.665
-                        outline = outline & newval & ","
-                        newval = 109.948
-                        outline = outline & newval & ","
-                        newval = 26.604
-                        outline = outline & newval & ","
-                        newval = (0.598 * 36.14) + (0.402 * 36.873)
-                        outline = outline & newval & ","
-                        newval = 61.329
-                        outline = outline & newval & ","
-                        newval = 234.5
-                        outline = outline & newval & ","
-                        newval = 93.665
-                        outline = outline & newval & ","
-                        newval = 93.665
-                        outline = outline & newval & ","
-                        newval = 109.948
-                        outline = outline & newval & ","
-                        newval = 109.948
-                        outline = outline & newval & ","
-                    Else
-                        arraycount = 36
-                        Do While arraycount < 55
+                        inarray = Split(inline, ",")
+                        OZone = inarray(1)
+                        DZone = inarray(2)
+                        arraycount = 0
+                        outline = ""
+                        Do While arraycount < 28
                             outline = outline & inarray(arraycount) & ","
                             arraycount += 1
                         Loop
-                    End If
-                    rlin.WriteLine(outline)
-                Loop
-                rlif.Close()
-                rlin.Close()
-            End If
-            If NewRdZEV = True Then
-                'road zone input file
-                RdZInputFile = New IO.FileStream(DirPath & "RoadZoneInputDataInitial.csv", IO.FileMode.Open, IO.FileAccess.Read)
-                rzif = New IO.StreamReader(RdZInputFile, System.Text.Encoding.Default)
-                RdZInputFileNew = New IO.FileStream(DirPath & "RoadZoneInputData2010.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
-                rzin = New IO.StreamWriter(RdZInputFileNew, System.Text.Encoding.Default)
-                'read and write header line
-                inline = rzif.ReadLine
-                rzin.WriteLine(inline)
-                Do
+                        'if getting pop data from pop database then get values from dictionary, otherwise use old value
+                        If DBasePop = True Then
+                            If PopLookup.TryGetValue(OZone, newval) Then
+                                outline = outline & newval & ","
+                            Else
+                                ErrDict = "population"
+                                Call DictionaryMissingVal()
+                            End If
+                            If PopLookup.TryGetValue(DZone, newval) Then
+                                outline = outline & newval & ","
+                            Else
+                                ErrDict = "population"
+                                Call DictionaryMissingVal()
+                            End If
+                        Else
+                            outline = outline & inarray(28) & "," & inarray(29) & ","
+                        End If
+                        'if getting economy data from database then get values from dictionary, otherwise use old value
+                        If DBaseEco = True Then
+                            If EcoLookup.TryGetValue(OZone, newval) Then
+                                outline = outline & newval & ","
+                            Else
+                                ErrDict = "gva"
+                                Call DictionaryMissingVal()
+                            End If
+                            If EcoLookup.TryGetValue(DZone, newval) Then
+                                outline = outline & newval & ","
+                            Else
+                                ErrDict = "gva"
+                                Call DictionaryMissingVal()
+                            End If
+                        Else
+                            outline = outline & inarray(30) & "," & inarray(31) & ","
+                        End If
+                        'if getting energy cost data from database then get values from dictionary, otherwise use old value
+                        If DBaseEne = True Then
+                            newval = 26.604
+                            outline = outline & newval & ","
+                            'other costs go at the end due to their place in the file
+                        Else
+                            outline = outline & inarray(32) & ","
+                        End If
+                        arraycount = 33
+                        Do While arraycount < 36
+                            outline = outline & inarray(arraycount) & ","
+                            arraycount += 1
+                        Loop
+                        If DBaseEne = True Then
+                            newval = (0.598 * 36.14) + (0.402 * 36.873)
+                            outline = outline & newval & ","
+                            newval = 61.329
+                            outline = outline & newval & ","
+                            newval = 234.5
+                            outline = outline & newval & ","
+                            newval = 93.665
+                            outline = outline & newval & ","
+                            newval = 109.948
+                            outline = outline & newval & ","
+                            newval = 26.604
+                            outline = outline & newval & ","
+                            newval = (0.598 * 36.14) + (0.402 * 36.873)
+                            outline = outline & newval & ","
+                            newval = 61.329
+                            outline = outline & newval & ","
+                            newval = 234.5
+                            outline = outline & newval & ","
+                            newval = 93.665
+                            outline = outline & newval & ","
+                            newval = 109.948
+                            outline = outline & newval & ","
+                            newval = 26.604
+                            outline = outline & newval & ","
+                            newval = (0.598 * 36.14) + (0.402 * 36.873)
+                            outline = outline & newval & ","
+                            newval = 61.329
+                            outline = outline & newval & ","
+                            newval = 234.5
+                            outline = outline & newval & ","
+                            newval = 93.665
+                            outline = outline & newval & ","
+                            newval = 93.665
+                            outline = outline & newval & ","
+                            newval = 109.948
+                            outline = outline & newval & ","
+                            newval = 109.948
+                            outline = outline & newval & ","
+                        Else
+                            arraycount = 36
+                            Do While arraycount < 55
+                                outline = outline & inarray(arraycount) & ","
+                                arraycount += 1
+                            Loop
+                        End If
+                        rlin.WriteLine(outline)
+                    Loop
+                    rlif.Close()
+                    rlin.Close()
+                End If
+                If NewRdZEV = True Then
+                    'road zone input file
+                    RdZInputFile = New IO.FileStream(DirPath & "RoadZoneInputDataInitial.csv", IO.FileMode.Open, IO.FileAccess.Read)
+                    rzif = New IO.StreamReader(RdZInputFile, System.Text.Encoding.Default)
+                    RdZInputFileNew = New IO.FileStream(DirPath & "RoadZoneInputData2010.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
+                    rzin = New IO.StreamWriter(RdZInputFileNew, System.Text.Encoding.Default)
+                    'read and write header line
                     inline = rzif.ReadLine
-                    If inline Is Nothing Then
-                        Exit Do
-                    End If
-                    inarray = Split(inline, ",")
-                    OZone = inarray(0)
-                    arraycount = 0
-                    outline = ""
-                    Do While arraycount < 3
-                        outline = outline & inarray(arraycount) & ","
-                        arraycount += 1
-                    Loop
-                    'if getting pop data from pop database then get values from dictionary, otherwise use old value
-                    If DBasePop = True Then
-                        If PopLookup.TryGetValue(OZone, newval) Then
+                    rzin.WriteLine(inline)
+                    Do
+                        inline = rzif.ReadLine
+                        If inline Is Nothing Then
+                            Exit Do
+                        End If
+                        inarray = Split(inline, ",")
+                        OZone = inarray(0)
+                        arraycount = 0
+                        outline = ""
+                        Do While arraycount < 3
+                            outline = outline & inarray(arraycount) & ","
+                            arraycount += 1
+                        Loop
+                        'if getting pop data from pop database then get values from dictionary, otherwise use old value
+                        If DBasePop = True Then
+                            If PopLookup.TryGetValue(OZone, newval) Then
+                                outline = outline & newval & ","
+                            Else
+                                ErrDict = "population"
+                                Call DictionaryMissingVal()
+                            End If
+                        Else
+                            outline = outline & inarray(3) & ","
+                        End If
+                        'if getting economy data from database then get values from dictionary, otherwise use old value
+                        If DBaseEco = True Then
+                            If EcoLookup.TryGetValue(OZone, newval) Then
+                                outline = outline & newval & ","
+                            Else
+                                ErrDict = "gva"
+                                Call DictionaryMissingVal()
+                            End If
+                        Else
+                            outline = outline & inarray(4) & ","
+                        End If
+                        outline = outline + inarray(5) & ","
+                        'if getting energy cost data from database then get values from dictionary, otherwise use old value
+                        If DBaseEne = True Then
+                            'in first year there are only petrol and diesel vehicles to take account of - 59.8% of cost variable from petrol vehicles and 40.2% from diesel cars
+                            'car cost figure is 0.598*P + 0.402*D
+                            newval = (0.598 * 36.14) + (0.402 * 36.873)
+                            outline = outline & newval & ","
+                            'need to do other cost figures at the end because they are at a different place in file
+                        Else
+                            outline = outline & inarray(6) & ","
+                        End If
+                        arraycount = 7
+                        Do While arraycount < 18
+                            outline = outline & inarray(arraycount) & ","
+                            arraycount += 1
+                        Loop
+                        'do remainder of the cost variables
+                        If DBaseEne = True Then
+                            'LGVCost
+                            newval = 61.329
+                            outline = outline & newval & ","
+                            'HGV1Cost
+                            newval = 93.665
+                            outline = outline & newval & ","
+                            'HGV2Cost
+                            newval = 109.948
+                            outline = outline & newval & ","
+                            'PSVCost
+                            newval = 234.5
                             outline = outline & newval & ","
                         Else
-                            ErrDict = "population"
-                            Call DictionaryMissingVal()
+                            outline = outline & inarray(18) & "," & inarray(19) & "," & inarray(20) & "," & inarray(21) & ","
                         End If
-                    Else
-                        outline = outline & inarray(3) & ","
-                    End If
-                    'if getting economy data from database then get values from dictionary, otherwise use old value
-                    If DBaseEco = True Then
-                        If EcoLookup.TryGetValue(OZone, newval) Then
-                            outline = outline & newval & ","
-                        Else
-                            ErrDict = "gva"
-                            Call DictionaryMissingVal()
-                        End If
-                    Else
-                        outline = outline & inarray(4) & ","
-                    End If
-                    outline = outline + inarray(5) & ","
-                    'if getting energy cost data from database then get values from dictionary, otherwise use old value
-                    If DBaseEne = True Then
-                        'in first year there are only petrol and diesel vehicles to take account of - 59.8% of cost variable from petrol vehicles and 40.2% from diesel cars
-                        'car cost figure is 0.598*P + 0.402*D
-                        newval = (0.598 * 36.14) + (0.402 * 36.873)
-                        outline = outline & newval & ","
-                        'need to do other cost figures at the end because they are at a different place in file
-                    Else
-                        outline = outline & inarray(6) & ","
-                    End If
-                    arraycount = 7
-                    Do While arraycount < 18
-                        outline = outline & inarray(arraycount) & ","
-                        arraycount += 1
+                        For ac = 22 To 33
+                            outline = outline & inarray(ac) & ","
+                        Next
+                        rzin.WriteLine(outline)
                     Loop
-                    'do remainder of the cost variables
-                    If DBaseEne = True Then
-                        'LGVCost
-                        newval = 61.329
-                        outline = outline & newval & ","
-                        'HGV1Cost
-                        newval = 93.665
-                        outline = outline & newval & ","
-                        'HGV2Cost
-                        newval = 109.948
-                        outline = outline & newval & ","
-                        'PSVCost
-                        newval = 234.5
-                        outline = outline & newval & ","
-                    Else
-                        outline = outline & inarray(18) & "," & inarray(19) & "," & inarray(20) & "," & inarray(21) & ","
-                    End If
-                    For ac = 22 To 33
-                        outline = outline & inarray(ac) & ","
-                    Next
-                    rzin.WriteLine(outline)
-                Loop
-                rzif.Close()
-                rzin.Close()
-            End If
-            If NewRlLEV = True Then
-                'rail link input file
-                RlLInputFile = New IO.FileStream(DirPath & "RailLinkInputDataInitial.csv", IO.FileMode.Open, IO.FileAccess.Read)
-                rllif = New IO.StreamReader(RlLInputFile, System.Text.Encoding.Default)
-                RlLInputFileNew = New IO.FileStream(DirPath & "RailLinkInputData2010.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
-                rllin = New IO.StreamWriter(RlLInputFileNew, System.Text.Encoding.Default)
-                'read and write header line
-                inline = rllif.ReadLine
-                rllin.WriteLine(inline)
-                Do
+                    rzif.Close()
+                    rzin.Close()
+                End If
+                If NewRlLEV = True Then
+                    'rail link input file
+                    RlLInputFile = New IO.FileStream(DirPath & "RailLinkInputDataInitial.csv", IO.FileMode.Open, IO.FileAccess.Read)
+                    rllif = New IO.StreamReader(RlLInputFile, System.Text.Encoding.Default)
+                    RlLInputFileNew = New IO.FileStream(DirPath & "RailLinkInputData2010.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
+                    rllin = New IO.StreamWriter(RlLInputFileNew, System.Text.Encoding.Default)
+                    'read and write header line
                     inline = rllif.ReadLine
-                    If inline Is Nothing Then
-                        Exit Do
-                    End If
-                    inarray = Split(inline, ",")
-                    OZone = inarray(1)
-                    DZone = inarray(2)
-                    arraycount = 0
-                    outline = ""
-                    Do While arraycount < 5
-                        outline = outline & inarray(arraycount) & ","
-                        arraycount += 1
+                    rllin.WriteLine(inline)
+                    Do
+                        inline = rllif.ReadLine
+                        If inline Is Nothing Then
+                            Exit Do
+                        End If
+                        inarray = Split(inline, ",")
+                        OZone = inarray(1)
+                        DZone = inarray(2)
+                        arraycount = 0
+                        outline = ""
+                        Do While arraycount < 5
+                            outline = outline & inarray(arraycount) & ","
+                            arraycount += 1
+                        Loop
+                        'if getting pop data from pop database then get values from dictionary, otherwise use old value
+                        If DBasePop = True Then
+                            If PopLookup.TryGetValue(OZone, newval) Then
+                                outline = outline & newval & ","
+                            Else
+                                ErrDict = "population"
+                                Call DictionaryMissingVal()
+                            End If
+                            If PopLookup.TryGetValue(DZone, newval) Then
+                                outline = outline & newval & ","
+                            Else
+                                ErrDict = "population"
+                                Call DictionaryMissingVal()
+                            End If
+                        Else
+                            outline = outline & inarray(5) & "," & inarray(6) & ","
+                        End If
+                        'if getting economy data from database then get values from dictionary, otherwise use old value
+                        If DBaseEco = True Then
+                            If EcoLookup.TryGetValue(OZone, newval) Then
+                                outline = outline & newval & ","
+                            Else
+                                ErrDict = "gva"
+                                Call DictionaryMissingVal()
+                            End If
+                            If EcoLookup.TryGetValue(DZone, newval) Then
+                                outline = outline & newval & ","
+                            Else
+                                ErrDict = "gva"
+                                Call DictionaryMissingVal()
+                            End If
+                        Else
+                            outline = outline & inarray(7) & "," & inarray(8) & ","
+                        End If
+                        outline = outline & inarray(9) & ","
+                        'if getting energy cost data from database then get values from dictionary, otherwise use old value
+                        If DBaseEne = True Then
+                            '***need to bring in car fuel costs from input data
+                            'assumes base diesel cost per km is 29.204p and base electric cost per km is 16.156p, base diesel maintenance cost per km are 37.282p, base electric maintenance cost per km 24.855p
+                            '...base other costs for both traction types are 121.381p
+                            electricprop = inarray(13)
+                            newcosts = 121.381 + (electricprop * 41.011) + ((1 - electricprop) * 66.486)
+                            outline = outline & newcosts & "," & inarray(11) & ","
+                        Else
+                            outline = outline & inarray(10) & "," & inarray(11) & ","
+                        End If
+                        arraycount = 12
+                        Do While arraycount < 18
+                            outline = outline & inarray(arraycount) & ","
+                            arraycount += 1
+                        Loop
+                        rllin.WriteLine(outline)
                     Loop
-                    'if getting pop data from pop database then get values from dictionary, otherwise use old value
-                    If DBasePop = True Then
-                        If PopLookup.TryGetValue(OZone, newval) Then
-                            outline = outline & newval & ","
-                        Else
-                            ErrDict = "population"
-                            Call DictionaryMissingVal()
-                        End If
-                        If PopLookup.TryGetValue(DZone, newval) Then
-                            outline = outline & newval & ","
-                        Else
-                            ErrDict = "population"
-                            Call DictionaryMissingVal()
-                        End If
-                    Else
-                        outline = outline & inarray(5) & "," & inarray(6) & ","
-                    End If
-                    'if getting economy data from database then get values from dictionary, otherwise use old value
-                    If DBaseEco = True Then
-                        If EcoLookup.TryGetValue(OZone, newval) Then
-                            outline = outline & newval & ","
-                        Else
-                            ErrDict = "gva"
-                            Call DictionaryMissingVal()
-                        End If
-                        If EcoLookup.TryGetValue(DZone, newval) Then
-                            outline = outline & newval & ","
-                        Else
-                            ErrDict = "gva"
-                            Call DictionaryMissingVal()
-                        End If
-                    Else
-                        outline = outline & inarray(7) & "," & inarray(8) & ","
-                    End If
-                    outline = outline & inarray(9) & ","
-                    'if getting energy cost data from database then get values from dictionary, otherwise use old value
-                    If DBaseEne = True Then
-                        '***need to bring in car fuel costs from input data
-                        'assumes base diesel cost per km is 29.204p and base electric cost per km is 16.156p, base diesel maintenance cost per km are 37.282p, base electric maintenance cost per km 24.855p
-                        '...base other costs for both traction types are 121.381p
-                        electricprop = inarray(13)
-                        newcosts = 121.381 + (electricprop * 41.011) + ((1 - electricprop) * 66.486)
-                        outline = outline & newcosts & "," & inarray(11) & ","
-                    Else
-                        outline = outline & inarray(10) & "," & inarray(11) & ","
-                    End If
-                    arraycount = 12
-                    Do While arraycount < 18
-                        outline = outline & inarray(arraycount) & ","
-                        arraycount += 1
-                    Loop
-                    rllin.WriteLine(outline)
-                Loop
-                rllif.Close()
-                rllin.Close()
-            End If
-            If NewRlZEV = True Then
-                'rail zone input file
-                RlZInputFile = New IO.FileStream(DirPath & "RailZoneInputDataInitial.csv", IO.FileMode.Open, IO.FileAccess.Read)
-                rlzif = New IO.StreamReader(RlZInputFile, System.Text.Encoding.Default)
-                RlZInputFileNew = New IO.FileStream(DirPath & "RailZoneInputData2010.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
-                rlzin = New IO.StreamWriter(RlZInputFileNew, System.Text.Encoding.Default)
-                'read and write header line
-                inline = rlzif.ReadLine
-                rlzin.WriteLine(inline)
-                Do
+                    rllif.Close()
+                    rllin.Close()
+                End If
+                If NewRlZEV = True Then
+                    'rail zone input file
+                    RlZInputFile = New IO.FileStream(DirPath & "RailZoneInputDataInitial.csv", IO.FileMode.Open, IO.FileAccess.Read)
+                    rlzif = New IO.StreamReader(RlZInputFile, System.Text.Encoding.Default)
+                    RlZInputFileNew = New IO.FileStream(DirPath & "RailZoneInputData2010.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
+                    rlzin = New IO.StreamWriter(RlZInputFileNew, System.Text.Encoding.Default)
+                    'read and write header line
                     inline = rlzif.ReadLine
-                    If inline Is Nothing Then
-                        Exit Do
-                    End If
-                    inarray = Split(inline, ",")
-                    OZone = inarray(0)
-                    arraycount = 0
-                    outline = ""
-                    Do While arraycount < 4
-                        outline = outline & inarray(arraycount) & ","
-                        arraycount += 1
-                    Loop
-                    'if getting pop data from pop database then get values from dictionary, otherwise use old value
-                    If DBasePop = True Then
-                        If PopLookup.TryGetValue(OZone, newval) Then
-                            outline = outline & newval & ","
-                        Else
-                            ErrDict = "population"
-                            Call DictionaryMissingVal()
+                    rlzin.WriteLine(inline)
+                    Do
+                        inline = rlzif.ReadLine
+                        If inline Is Nothing Then
+                            Exit Do
                         End If
-                    Else
-                        outline = outline & inarray(4) & ","
-                    End If
-                    'if getting economy data from database then get values from dictionary, otherwise use old value
-                    If DBaseEco = True Then
-                        If EcoLookup.TryGetValue(OZone, newval) Then
-                            outline = outline & newval & ","
+                        inarray = Split(inline, ",")
+                        OZone = inarray(0)
+                        arraycount = 0
+                        outline = ""
+                        Do While arraycount < 4
+                            outline = outline & inarray(arraycount) & ","
+                            arraycount += 1
+                        Loop
+                        'if getting pop data from pop database then get values from dictionary, otherwise use old value
+                        If DBasePop = True Then
+                            If PopLookup.TryGetValue(OZone, newval) Then
+                                outline = outline & newval & ","
+                            Else
+                                ErrDict = "population"
+                                Call DictionaryMissingVal()
+                            End If
                         Else
-                            ErrDict = "gva"
-                            Call DictionaryMissingVal()
+                            outline = outline & inarray(4) & ","
                         End If
-                    Else
-                        outline = outline & inarray(5) & ","
-                    End If
-                    'if getting energy cost data from database then get values from dictionary, otherwise use old value
-                    If DBaseEne = True Then
-                        '****need to bring in car fuel costs from input data, and note that we also need to add in stations even though it doesn't change****
-                        'assumes base diesel cost per km is 29.204p and base electric cost per km is 16.156p, base diesel maintenance cost per km are 37.282p, base electric maintenance cost per km 24.855p
-                        '...base other costs for both traction types are 121.381p
-                        electricprop = inarray(11)
-                        newcosts = 121.381 + (electricprop * 41.011) + ((1 - electricprop) * 66.486)
-                        outline = outline & newcosts & "," & inarray(7) & "," & inarray(8) & ","
-                    Else
-                        outline = outline & inarray(6) & "," & inarray(7) & "," & inarray(8) & ","
-                    End If
-                    arraycount = 9
-                    Do While arraycount < 13
-                        outline = outline & inarray(arraycount) & ","
-                        arraycount += 1
+                        'if getting economy data from database then get values from dictionary, otherwise use old value
+                        If DBaseEco = True Then
+                            If EcoLookup.TryGetValue(OZone, newval) Then
+                                outline = outline & newval & ","
+                            Else
+                                ErrDict = "gva"
+                                Call DictionaryMissingVal()
+                            End If
+                        Else
+                            outline = outline & inarray(5) & ","
+                        End If
+                        'if getting energy cost data from database then get values from dictionary, otherwise use old value
+                        If DBaseEne = True Then
+                            '****need to bring in car fuel costs from input data, and note that we also need to add in stations even though it doesn't change****
+                            'assumes base diesel cost per km is 29.204p and base electric cost per km is 16.156p, base diesel maintenance cost per km are 37.282p, base electric maintenance cost per km 24.855p
+                            '...base other costs for both traction types are 121.381p
+                            electricprop = inarray(11)
+                            newcosts = 121.381 + (electricprop * 41.011) + ((1 - electricprop) * 66.486)
+                            outline = outline & newcosts & "," & inarray(7) & "," & inarray(8) & ","
+                        Else
+                            outline = outline & inarray(6) & "," & inarray(7) & "," & inarray(8) & ","
+                        End If
+                        arraycount = 9
+                        Do While arraycount < 13
+                            outline = outline & inarray(arraycount) & ","
+                            arraycount += 1
+                        Loop
+                        rlzin.WriteLine(outline)
                     Loop
-                    rlzin.WriteLine(outline)
-                Loop
-                rlzif.Close()
-                rlzin.Close()
-            End If
-            If NewAirEV = True Then
-                'air flow input file
-                AirFInputFile = New IO.FileStream(DirPath & "AirFlowInputDataInitial.csv", IO.FileMode.Open, IO.FileAccess.Read)
-                afif = New IO.StreamReader(AirFInputFile, System.Text.Encoding.Default)
-                AirFInputFileNew = New IO.FileStream(DirPath & "AirFlowInputData2010.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
-                afin = New IO.StreamWriter(AirFInputFileNew, System.Text.Encoding.Default)
-                'read and write header line
-                inline = afif.ReadLine
-                afin.WriteLine(inline)
-                Do
+                    rlzif.Close()
+                    rlzin.Close()
+                End If
+                If NewAirEV = True Then
+                    'air flow input file
+                    AirFInputFile = New IO.FileStream(DirPath & "AirFlowInputDataInitial.csv", IO.FileMode.Open, IO.FileAccess.Read)
+                    afif = New IO.StreamReader(AirFInputFile, System.Text.Encoding.Default)
+                    AirFInputFileNew = New IO.FileStream(DirPath & "AirFlowInputData2010.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
+                    afin = New IO.StreamWriter(AirFInputFileNew, System.Text.Encoding.Default)
+                    'read and write header line
                     inline = afif.ReadLine
-                    If inline Is Nothing Then
-                        Exit Do
-                    End If
-                    inarray = Split(inline, ",")
-                    OZone = inarray(10)
-                    DZone = inarray(11)
-                    arraycount = 0
-                    outline = ""
-                    Do While arraycount < 4
-                        outline = outline & inarray(arraycount) & ","
-                        arraycount += 1
+                    afin.WriteLine(inline)
+                    Do
+                        inline = afif.ReadLine
+                        If inline Is Nothing Then
+                            Exit Do
+                        End If
+                        inarray = Split(inline, ",")
+                        OZone = inarray(10)
+                        DZone = inarray(11)
+                        arraycount = 0
+                        outline = ""
+                        Do While arraycount < 4
+                            outline = outline & inarray(arraycount) & ","
+                            arraycount += 1
+                        Loop
+                        'if getting pop data from pop database then get values from dictionary, otherwise use old value
+                        If DBasePop = True Then
+                            If PopLookup.TryGetValue(OZone, newval) Then
+                                outline = outline & newval & ","
+                            Else
+                                ErrDict = "population"
+                                Call DictionaryMissingVal()
+                            End If
+                            If PopLookup.TryGetValue(DZone, newval) Then
+                                outline = outline & newval & ","
+                            Else
+                                ErrDict = "population"
+                                Call DictionaryMissingVal()
+                            End If
+                        Else
+                            outline = outline & inarray(4) & "," & inarray(5) & ","
+                        End If
+                        'if getting economy data from database then get values from dictionary, otherwise use old value
+                        If DBaseEco = True Then
+                            If EcoLookup.TryGetValue(OZone, newval) Then
+                                outline = outline & newval & ","
+                            Else
+                                ErrDict = "gva"
+                                Call DictionaryMissingVal()
+                            End If
+                            If EcoLookup.TryGetValue(DZone, newval) Then
+                                outline = outline & newval & ","
+                            Else
+                                ErrDict = "gva"
+                                Call DictionaryMissingVal()
+                            End If
+                        Else
+                            outline = outline & inarray(6) & "," & inarray(7) & ","
+                        End If
+                        'if getting energy cost data from database then get values from dictionary, otherwise use old value
+                        If DBaseEne = True Then
+                            'cost = flowdist * domesticplanesize * fuelperseatkm * cost per litre / 0.29 '(which is fuel percentage of total)
+                            airnewcost = (inarray(9) * 89 * 0.037251 * 49.218) / 0.29
+                            outline = outline & airnewcost & ","
+                        Else
+                            outline = outline & inarray(8) & ","
+                        End If
+                        arraycount = 9
+                        Do While arraycount < 12
+                            outline = outline & inarray(arraycount) & ","
+                            arraycount += 1
+                        Loop
+                        afin.WriteLine(outline)
                     Loop
-                    'if getting pop data from pop database then get values from dictionary, otherwise use old value
-                    If DBasePop = True Then
-                        If PopLookup.TryGetValue(OZone, newval) Then
-                            outline = outline & newval & ","
-                        Else
-                            ErrDict = "population"
-                            Call DictionaryMissingVal()
-                        End If
-                        If PopLookup.TryGetValue(DZone, newval) Then
-                            outline = outline & newval & ","
-                        Else
-                            ErrDict = "population"
-                            Call DictionaryMissingVal()
-                        End If
-                    Else
-                        outline = outline & inarray(4) & "," & inarray(5) & ","
-                    End If
-                    'if getting economy data from database then get values from dictionary, otherwise use old value
-                    If DBaseEco = True Then
-                        If EcoLookup.TryGetValue(OZone, newval) Then
-                            outline = outline & newval & ","
-                        Else
-                            ErrDict = "gva"
-                            Call DictionaryMissingVal()
-                        End If
-                        If EcoLookup.TryGetValue(DZone, newval) Then
-                            outline = outline & newval & ","
-                        Else
-                            ErrDict = "gva"
-                            Call DictionaryMissingVal()
-                        End If
-                    Else
-                        outline = outline & inarray(6) & "," & inarray(7) & ","
-                    End If
-                    'if getting energy cost data from database then get values from dictionary, otherwise use old value
-                    If DBaseEne = True Then
-                        'cost = flowdist * domesticplanesize * fuelperseatkm * cost per litre / 0.29 '(which is fuel percentage of total)
-                        airnewcost = (inarray(9) * 89 * 0.037251 * 49.218) / 0.29
-                        outline = outline & airnewcost & ","
-                    Else
-                        outline = outline & inarray(8) & ","
-                    End If
-                    arraycount = 9
-                    Do While arraycount < 12
-                        outline = outline & inarray(arraycount) & ","
-                        arraycount += 1
-                    Loop
-                    afin.WriteLine(outline)
-                Loop
-                afif.Close()
-                afin.Close()
-                'air node input file
-                AirNInputFile = New IO.FileStream(DirPath & "AirNodeInputDataInitial.csv", IO.FileMode.Open, IO.FileAccess.Read)
-                anif = New IO.StreamReader(AirNInputFile, System.Text.Encoding.Default)
-                AirNInputFileNew = New IO.FileStream(DirPath & "AirNodeInputData2010.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
-                anin = New IO.StreamWriter(AirNInputFileNew, System.Text.Encoding.Default)
-                'read and write header line
-                inline = anif.ReadLine
-                anin.WriteLine(inline)
-                Do
+                    afif.Close()
+                    afin.Close()
+                    'air node input file
+                    AirNInputFile = New IO.FileStream(DirPath & "AirNodeInputDataInitial.csv", IO.FileMode.Open, IO.FileAccess.Read)
+                    anif = New IO.StreamReader(AirNInputFile, System.Text.Encoding.Default)
+                    AirNInputFileNew = New IO.FileStream(DirPath & "AirNodeInputData2010.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
+                    anin = New IO.StreamWriter(AirNInputFileNew, System.Text.Encoding.Default)
+                    'read and write header line
                     inline = anif.ReadLine
-                    If inline Is Nothing Then
-                        Exit Do
-                    End If
-                    inarray = Split(inline, ",")
-                    OZone = inarray(14)
-                    arraycount = 0
-                    outline = ""
-                    Do While arraycount < 6
-                        outline = outline & inarray(arraycount) & ","
-                        arraycount += 1
-                    Loop
-                    'if getting pop data from pop database then get values from dictionary, otherwise use old value
-                    If DBasePop = True Then
-                        If PopLookup.TryGetValue(OZone, newval) Then
-                            outline = outline & newval & ","
-                        Else
-                            ErrDict = "population"
-                            Call DictionaryMissingVal()
+                    anin.WriteLine(inline)
+                    Do
+                        inline = anif.ReadLine
+                        If inline Is Nothing Then
+                            Exit Do
                         End If
-                    Else
-                        outline = outline & inarray(6) & ","
-                    End If
-                    'if getting economy data from database then get values from dictionary, otherwise use old value
-                    If DBaseEco = True Then
-                        If EcoLookup.TryGetValue(OZone, newval) Then
-                            outline = outline & newval & ","
+                        inarray = Split(inline, ",")
+                        OZone = inarray(14)
+                        arraycount = 0
+                        outline = ""
+                        Do While arraycount < 6
+                            outline = outline & inarray(arraycount) & ","
+                            arraycount += 1
+                        Loop
+                        'if getting pop data from pop database then get values from dictionary, otherwise use old value
+                        If DBasePop = True Then
+                            If PopLookup.TryGetValue(OZone, newval) Then
+                                outline = outline & newval & ","
+                            Else
+                                ErrDict = "population"
+                                Call DictionaryMissingVal()
+                            End If
                         Else
-                            ErrDict = "gva"
-                            Call DictionaryMissingVal()
+                            outline = outline & inarray(6) & ","
                         End If
-                    Else
-                        outline = outline & inarray(7) & ","
-                    End If
-                    'if getting energy cost data from database then get values from dictionary, otherwise use old value
-                    If DBaseEne = True Then
-                        'cost = averagedist * intplanesize * fuelperseatkm * cost per litre / 0.29 '(which is fuel percentage of total)
-                        airnewcost = (inarray(13) * 155 * 0.037251 * 49.218) / 0.29
-                        outline = outline & airnewcost & ","
-                    Else
-                        outline = outline & inarray(8) & ","
-                    End If
-                    arraycount = 9
-                    Do While arraycount < 15
-                        outline = outline & inarray(arraycount) & ","
-                        arraycount += 1
+                        'if getting economy data from database then get values from dictionary, otherwise use old value
+                        If DBaseEco = True Then
+                            If EcoLookup.TryGetValue(OZone, newval) Then
+                                outline = outline & newval & ","
+                            Else
+                                ErrDict = "gva"
+                                Call DictionaryMissingVal()
+                            End If
+                        Else
+                            outline = outline & inarray(7) & ","
+                        End If
+                        'if getting energy cost data from database then get values from dictionary, otherwise use old value
+                        If DBaseEne = True Then
+                            'cost = averagedist * intplanesize * fuelperseatkm * cost per litre / 0.29 '(which is fuel percentage of total)
+                            airnewcost = (inarray(13) * 155 * 0.037251 * 49.218) / 0.29
+                            outline = outline & airnewcost & ","
+                        Else
+                            outline = outline & inarray(8) & ","
+                        End If
+                        arraycount = 9
+                        Do While arraycount < 15
+                            outline = outline & inarray(arraycount) & ","
+                            arraycount += 1
+                        Loop
+                        anin.WriteLine(outline)
                     Loop
-                    anin.WriteLine(outline)
-                Loop
-                anif.Close()
-                anin.Close()
-            End If
-            If NewSeaEV = True Then
-                'seaport input file
-                SeaInputFile = New IO.FileStream(DirPath & "SeaFreightInputDataInitial.csv", IO.FileMode.Open, IO.FileAccess.Read)
-                sif = New IO.StreamReader(SeaInputFile, System.Text.Encoding.Default)
-                SeaInputFileNew = New IO.FileStream(DirPath & "SeaFreightInputData.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
-                sin = New IO.StreamWriter(SeaInputFileNew, System.Text.Encoding.Default)
-                'read and write header line
-                inline = sif.ReadLine
-                sin.WriteLine(inline)
-                Do
+                    anif.Close()
+                    anin.Close()
+                End If
+                If NewSeaEV = True Then
+                    'seaport input file
+                    SeaInputFile = New IO.FileStream(DirPath & "SeaFreightInputDataInitial.csv", IO.FileMode.Open, IO.FileAccess.Read)
+                    sif = New IO.StreamReader(SeaInputFile, System.Text.Encoding.Default)
+                    SeaInputFileNew = New IO.FileStream(DirPath & "SeaFreightInputData.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
+                    sin = New IO.StreamWriter(SeaInputFileNew, System.Text.Encoding.Default)
+                    'read and write header line
                     inline = sif.ReadLine
-                    If inline Is Nothing Then
-                        Exit Do
-                    End If
-                    inarray = Split(inline, ",")
-                    OZone = inarray(14)
-                    arraycount = 0
-                    outline = ""
-                    Do While arraycount < 11
-                        outline = outline & inarray(arraycount) & ","
-                        arraycount += 1
+                    sin.WriteLine(inline)
+                    Do
+                        inline = sif.ReadLine
+                        If inline Is Nothing Then
+                            Exit Do
+                        End If
+                        inarray = Split(inline, ",")
+                        OZone = inarray(14)
+                        arraycount = 0
+                        outline = ""
+                        Do While arraycount < 11
+                            outline = outline & inarray(arraycount) & ","
+                            arraycount += 1
+                        Loop
+                        'if getting pop data from pop database then get values from dictionary, otherwise use old value
+                        If DBasePop = True Then
+                            If PopLookup.TryGetValue(OZone, newval) Then
+                                outline = outline & newval & ","
+                            Else
+                                ErrDict = "population"
+                                Call DictionaryMissingVal()
+                            End If
+                        Else
+                            outline = outline & inarray(11) & ","
+                        End If
+                        'if getting economy data from database then get values from dictionary, otherwise use old value
+                        If DBaseEco = True Then
+                            If EcoLookup.TryGetValue(OZone, newval) Then
+                                outline = outline & newval & ","
+                            Else
+                                ErrDict = "gva"
+                                Call DictionaryMissingVal()
+                            End If
+                        Else
+                            outline = outline & inarray(12) & ","
+                        End If
+                        'if getting energy cost data from database then get values from dictionary, otherwise use old value
+                        If DBaseEne = True Then
+                            '****need to add this in ****
+                            outline = outline & inarray(13) & ","
+                        Else
+                            outline = outline & inarray(13) & ","
+                        End If
+                        outline = outline & inarray(14) & ","
+                        sin.WriteLine(outline)
                     Loop
-                    'if getting pop data from pop database then get values from dictionary, otherwise use old value
-                    If DBasePop = True Then
-                        If PopLookup.TryGetValue(OZone, newval) Then
-                            outline = outline & newval & ","
-                        Else
-                            ErrDict = "population"
-                            Call DictionaryMissingVal()
-                        End If
-                    Else
-                        outline = outline & inarray(11) & ","
-                    End If
-                    'if getting economy data from database then get values from dictionary, otherwise use old value
-                    If DBaseEco = True Then
-                        If EcoLookup.TryGetValue(OZone, newval) Then
-                            outline = outline & newval & ","
-                        Else
-                            ErrDict = "gva"
-                            Call DictionaryMissingVal()
-                        End If
-                    Else
-                        outline = outline & inarray(12) & ","
-                    End If
-                    'if getting energy cost data from database then get values from dictionary, otherwise use old value
-                    If DBaseEne = True Then
-                        '****need to add this in ****
-                        outline = outline & inarray(13) & ","
-                    Else
-                        outline = outline & inarray(13) & ","
-                    End If
-                    outline = outline & inarray(14) & ","
-                    sin.WriteLine(outline)
-                Loop
-                sif.Close()
-                sin.Close()
+                    sif.Close()
+                    sin.Close()
+                End If
             End If
         End If
-
         'once model input files have been updated, then go on to 2011, loop through every year and update/create (probably create) model EV files as we go along
         'but can't loop by year, so create a compound dictionary containing all values for population for years 1 to 90
         'population
