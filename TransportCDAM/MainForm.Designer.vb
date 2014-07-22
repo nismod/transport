@@ -207,6 +207,8 @@ Partial Class MainForm
         Me.TextBox6 = New System.Windows.Forms.TextBox()
         Me.CheckBox25 = New System.Windows.Forms.CheckBox()
         Me.TabPage4 = New System.Windows.Forms.TabPage()
+        Me.GroupBox24 = New System.Windows.Forms.GroupBox()
+        Me.CheckBox43 = New System.Windows.Forms.CheckBox()
         Me.GroupBox23 = New System.Windows.Forms.GroupBox()
         Me.Label51 = New System.Windows.Forms.Label()
         Me.Label50 = New System.Windows.Forms.Label()
@@ -255,6 +257,7 @@ Partial Class MainForm
         Me.GroupBox10.SuspendLayout()
         Me.GroupBox9.SuspendLayout()
         Me.TabPage4.SuspendLayout()
+        Me.GroupBox24.SuspendLayout()
         Me.GroupBox23.SuspendLayout()
         Me.GroupBox22.SuspendLayout()
         Me.GroupBox21.SuspendLayout()
@@ -2216,6 +2219,7 @@ Partial Class MainForm
         '
         'TabPage4
         '
+        Me.TabPage4.Controls.Add(Me.GroupBox24)
         Me.TabPage4.Controls.Add(Me.GroupBox23)
         Me.TabPage4.Controls.Add(Me.GroupBox22)
         Me.TabPage4.Controls.Add(Me.GroupBox21)
@@ -2228,6 +2232,26 @@ Partial Class MainForm
         Me.TabPage4.Text = "Additional Options"
         Me.TabPage4.UseVisualStyleBackColor = True
         '
+        'GroupBox24
+        '
+        Me.GroupBox24.Controls.Add(Me.CheckBox43)
+        Me.GroupBox24.Location = New System.Drawing.Point(420, 9)
+        Me.GroupBox24.Name = "GroupBox24"
+        Me.GroupBox24.Size = New System.Drawing.Size(216, 54)
+        Me.GroupBox24.TabIndex = 19
+        Me.GroupBox24.TabStop = False
+        Me.GroupBox24.Text = "Update Input"
+        '
+        'CheckBox43
+        '
+        Me.CheckBox43.AutoSize = True
+        Me.CheckBox43.Location = New System.Drawing.Point(6, 20)
+        Me.CheckBox43.Name = "CheckBox43"
+        Me.CheckBox43.Size = New System.Drawing.Size(169, 17)
+        Me.CheckBox43.TabIndex = 1
+        Me.CheckBox43.Text = "Update initial year (2010) input"
+        Me.CheckBox43.UseVisualStyleBackColor = True
+        '
         'GroupBox23
         '
         Me.GroupBox23.Controls.Add(Me.Label51)
@@ -2239,7 +2263,7 @@ Partial Class MainForm
         Me.GroupBox23.Controls.Add(Me.Label47)
         Me.GroupBox23.Location = New System.Drawing.Point(197, 9)
         Me.GroupBox23.Name = "GroupBox23"
-        Me.GroupBox23.Size = New System.Drawing.Size(217, 138)
+        Me.GroupBox23.Size = New System.Drawing.Size(217, 128)
         Me.GroupBox23.TabIndex = 18
         Me.GroupBox23.TabStop = False
         Me.GroupBox23.Text = "Period"
@@ -2251,7 +2275,7 @@ Partial Class MainForm
         Me.Label51.Name = "Label51"
         Me.Label51.Size = New System.Drawing.Size(186, 13)
         Me.Label51.TabIndex = 6
-        Me.Label51.Text = "Note: End year must not exceed 2099"
+        Me.Label51.Text = "Note: End year must not exceed 2100"
         '
         'Label50
         '
@@ -2269,7 +2293,7 @@ Partial Class MainForm
         Me.Label49.Name = "Label49"
         Me.Label49.Size = New System.Drawing.Size(115, 13)
         Me.Label49.TabIndex = 4
-        Me.Label49.Text = "Between 2010 to 2099"
+        Me.Label49.Text = "Between 2011 to 2100"
         '
         'Label48
         '
@@ -2294,7 +2318,7 @@ Partial Class MainForm
         Me.TextBox39.Name = "TextBox39"
         Me.TextBox39.Size = New System.Drawing.Size(38, 20)
         Me.TextBox39.TabIndex = 1
-        Me.TextBox39.Text = "2010"
+        Me.TextBox39.Text = "2011"
         '
         'Label47
         '
@@ -2499,6 +2523,8 @@ Partial Class MainForm
         Me.GroupBox9.ResumeLayout(False)
         Me.GroupBox9.PerformLayout()
         Me.TabPage4.ResumeLayout(False)
+        Me.GroupBox24.ResumeLayout(False)
+        Me.GroupBox24.PerformLayout()
         Me.GroupBox23.ResumeLayout(False)
         Me.GroupBox23.PerformLayout()
         Me.GroupBox22.ResumeLayout(False)
@@ -2722,5 +2748,7 @@ Partial Class MainForm
     Friend WithEvents Label49 As System.Windows.Forms.Label
     Friend WithEvents Label51 As System.Windows.Forms.Label
     Friend WithEvents Label50 As System.Windows.Forms.Label
+    Friend WithEvents GroupBox24 As System.Windows.Forms.GroupBox
+    Friend WithEvents CheckBox43 As System.Windows.Forms.CheckBox
 
 End Class

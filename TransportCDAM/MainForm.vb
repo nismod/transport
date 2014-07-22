@@ -2497,6 +2497,14 @@
     End Sub
 
     Private Sub TextBox39_TextChanged(sender As Object, e As EventArgs) Handles TextBox39.TextChanged
-        StartYear = CInt(TextBox39.Text) - 2009
+        StartYear = CInt(TextBox39.Text) - 2010
+    End Sub
+
+    Private Sub CheckBox43_CheckedChanged(sender As Object, e As EventArgs) Handles CheckBox43.CheckedChanged
+        If CheckBox43.Checked = True Then
+            UpdateInput = True
+        Else
+            UpdateInput = False
+        End If
     End Sub
 End Class
