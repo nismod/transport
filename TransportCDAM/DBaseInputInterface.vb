@@ -16,8 +16,21 @@ Module DBaseInputInterface
     Dim ZoneID As Long
     Dim badregions(10) As String
     Dim badregioncount As Long
+    Dim cmd As New Odbc.OdbcCommand
+    Dim m_sConnString As String
+    Dim m_conn As Odbc.OdbcConnection
 
     Sub DBaseInputMain()
+
+        'Setup connection to the database
+        Try
+            m_sConnString = "Driver={PostgreSQL ODBC Driver(ANSI)};DSN=PostgreSQL30;Server=localhost;Port=5432;Database=itrc_sos;UId=postgres;Password=XXXXXX;"
+            m_conn = New Odbc.OdbcConnection(m_sConnString)
+            m_conn.Open()
+        Catch ex As Exception
+            MsgBox(ex.Message)
+        End Try
+
         'set up the overall database check variable
         If DBasePop = True Then
             DBaseCheck = True
@@ -836,6 +849,8 @@ Module DBaseInputInterface
         Dim dbarray() As String
         Dim iR As Integer = 0, iC As Integer = 0
         Dim DataRows As Integer = 0, DataColumns As Integer = 0
+        Dim theSQL As String = ""
+
 
         'Check if file path has been selected - if not then use default.
         If Connection = "" Then
@@ -938,6 +953,7 @@ Module DBaseInputInterface
                         End If
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "SeaFreightExtVar" & EVFileSuffix & ".csv"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_O_SeaFreightExternalVariables" & Chr(34)
                     Case "CapChange"
                         TheFileName = CapFilePrefix & "SeaFreightCapChange.csv"
                     Case "Elasticity"
@@ -980,49 +996,58 @@ Module DBaseInputInterface
                 'for error handling
         End Select
 
-        'Get file data
-        Try
-            DataFile = New FileStream(Connection & TheFileName, IO.FileMode.Open, IO.FileAccess.Read)
-        Catch exIO As IOException
-            MsgBox("An error was encountered trying to access the file " & Connection & TheFileName)
-        End Try
-        DataRead = New IO.StreamReader(DataFile, System.Text.Encoding.Default)
-
-        'read header row
-        dbheadings = DataRead.ReadLine
-        dbarray = Split(dbheadings, ",")
-        'Get a line of data from file
-        dbline = DataRead.ReadLine
-        dbarray = Split(dbline, ",")
-
-        'read to the correct line
-        If SubType = "ExtVar" Then
-            Do
-                'if it is the current year line then stop
-                If dbarray(0) = Year Then
-                    Exit Do
-                End If
-                'if not, continue to read line
-                dbline = DataRead.ReadLine
-                dbarray = Split(dbline, ",")
-            Loop
-
-        End If
-
-        'loop through row to get data
-        For iR = 1 To UBound(InputArray, 1)
-            If dbline Is Nothing Then
-                Exit For
+        'If there is SQL then get the data from the database - otherwise from the csv file
+        If theSQL <> "" Then
+            'Load data returned by the SQL into the InputArray
+            If LoadSQLDataToArray(InputArray, theSQL) = False Then
+                InputArray = Nothing
+                Return False
             End If
-            For iC = 0 To UBound(InputArray, 2)
-                'InputArray(iR, iC) = UnNull(dbarray(iC).ToString, VariantType.Char)
-                InputArray(iR, iC) = dbarray(iC)
-            Next
+        Else
+            'Else get the data from the file and parse it into an array
+            Try
+                DataFile = New FileStream(Connection & TheFileName, IO.FileMode.Open, IO.FileAccess.Read)
+            Catch exIO As IOException
+                MsgBox("An error was encountered trying to access the file " & Connection & TheFileName)
+            End Try
+            DataRead = New IO.StreamReader(DataFile, System.Text.Encoding.Default)
+
+            'read header row
+            dbheadings = DataRead.ReadLine
+            dbarray = Split(dbheadings, ",")
+            'Get a line of data from file
             dbline = DataRead.ReadLine
             dbarray = Split(dbline, ",")
-        Next
 
-        DataRead.Close()
+            'read to the correct line
+            If SubType = "ExtVar" Then
+                Do
+                    'if it is the current year line then stop
+                    If dbarray(0) = Year Then
+                        Exit Do
+                    End If
+                    'if not, continue to read line
+                    dbline = DataRead.ReadLine
+                    dbarray = Split(dbline, ",")
+                Loop
+
+            End If
+
+            'loop through row to get data
+            For iR = 1 To UBound(InputArray, 1)
+                If dbline Is Nothing Then
+                    Exit For
+                End If
+                For iC = 0 To UBound(InputArray, 2)
+                    InputArray(iR, iC) = UnNull(dbarray(iC).ToString, VariantType.Char)
+                    'InputArray(iR, iC) = dbarray(iC)
+                Next
+                dbline = DataRead.ReadLine
+                dbarray = Split(dbline, ",")
+            Next
+
+            DataRead.Close()
+        End If
 
         If IsInitialYear = False Then
             'delete the temp file to recreate for current year
@@ -1030,6 +1055,55 @@ Module DBaseInputInterface
         End If
 
         Return True
+
+    End Function
+
+    Public Function LoadSQLDataToArray(ByRef aryData(,) As String, ByVal theSQL As String) As Boolean
+        Dim iR As Integer
+        Dim iC As Integer
+        Dim strSampleOutput As String = ""
+        Dim DataRows As Integer
+        Dim DataColumns As Integer
+        Dim TableData As DataTable
+
+        Try
+
+            cmd.Connection = m_conn
+            cmd.CommandText = theSQL
+
+            Dim da As Odbc.OdbcDataAdapter = New Odbc.OdbcDataAdapter(cmd)
+            Dim ds As New DataSet
+            da.Fill(ds, "Data")
+
+            TableData = ds.Tables(0)
+
+            DataRows = TableData.Rows.Count
+            DataColumns = TableData.Columns.Count
+
+            If DataRows = 0 Then
+                Return False
+            End If
+
+            'Load Data into an array and generate some sample output
+            For iR = 0 To DataRows - 1
+                If aryData Is Nothing Then
+                    ReDim aryData(DataColumns - 1, 0)
+                Else
+                    ReDim Preserve aryData(DataColumns - 1, iR)
+                End If
+
+                For iC = 0 To DataColumns - 1
+                    aryData(iC, iR) = Trim(CStr(UnNull(TableData.Rows(iR).Item(iC), VariantType.Char)))
+                    If iR < 50 Then strSampleOutput &= aryData(iC, iR).PadRight(30) & " "
+                Next
+            Next
+
+            Return True
+
+        Catch ex As Exception
+            Throw ex
+            Return False
+        End Try
 
     End Function
 
@@ -1041,7 +1115,8 @@ Module DBaseInputInterface
     ' Parameters:   Type - type of data (e.g. Road, Rail)
     '               SubType - subtype of data
     '               DataArray - array of data to be output
-    '               IsNewFile - TRUE - create a new file, FALSE - update and existing file
+    '               IsNewFile_IsInsert - TRUE - create a new file OR insert data to table, 
+    '                                    FALSE - update and existing file OR update data to table
     '               FilePrefix - Optional fileprefix for output file (use date and time otherwise)
     '               Connection - file path - to be replaced with database connection string
     '****************************************************************************************
@@ -1050,7 +1125,7 @@ Module DBaseInputInterface
     'TODO add the log file writedata
     Function WriteData(ByVal Type As String, ByVal SubType As String, ByRef OutputArray(,) As String,
                        Optional ByRef TempArray(,) As String = Nothing,
-                       Optional ByVal IsNewFile As Boolean = True,
+                       Optional ByVal IsNewFile_IsInsert As Boolean = True,
                        Optional Connection As String = "") As Boolean
 
         Dim OutFileName As String = "", TempFileName As String = ""
@@ -1063,6 +1138,11 @@ Module DBaseInputInterface
         Dim ix As Integer, iy As Integer
         Dim header As String
         Dim tempheader As String
+        Dim aryFieldNames As ArrayList
+        Dim aryFieldValues As ArrayList
+        Dim ToSQL As Boolean = False
+        Dim TempTableName As String = ""
+        Dim TableName As String = ""
 
         'Check if file path has been selected - if not then use default.
         If Connection = "" Then
@@ -1179,6 +1259,9 @@ Module DBaseInputInterface
             Case "Seaport"
                 Select Case SubType
                     Case "Output"
+                        ToSQL = True
+                        TableName = "SeaOutpuData"
+                        TempTableName = "SeaTemplate"
                         OutFileName = FilePrefix & "SeaOutputData.csv"
                         TempFileName = FilePrefix & "SeaTemplate.csv"
                         header = "Yeary, PortID, LiqBlky, DryBlky, GCargoy, LoLoy, RoRoy, GasOily, FuelOily"
@@ -1232,16 +1315,32 @@ Module DBaseInputInterface
         '    FilePrefix = System.DateTime.Now.Year & System.DateTime.Now.Month & System.DateTime.Now.Day & System.DateTime.Now.Hour & System.DateTime.Now.Minute & System.DateTime.Now.Second
         'End If
 
-        'TODO - Not needed for SoS version using database
-        'If creating a new file then create headers
+        If ToSQL = True Then
+            'use headers for table field names
+            aryFieldNames.AddRange(Split(header, ","))
+            'use array data for field values
+            For iy = 1 To UBound(OutputArray, 1)
+                'exit if write to the end of the data
+                If OutputArray(iy, 0) Is Nothing Then
+                    Exit For
+                End If
+                For ix = 0 To UBound(OutputArray, 2)
+                    aryFieldValues.Add(UnNull(OutputArray(iy, ix), VariantType.String))
+                Next
+                'Insert data into table
+                SaveArrayToSQLTable(aryFieldNames, aryFieldValues, TableName, "", True)
+            Next
 
+        End If
+
+        'If creating a new file then create headers
         'create the output file if new file is required or go to the last line if not
-        If IsNewFile = True Then
+        If IsNewFile_IsInsert = True Then
             OutputFile = New FileStream(Connection & OutFileName, IO.FileMode.CreateNew, IO.FileAccess.ReadWrite)
             OutputWrite = New IO.StreamWriter(OutputFile, System.Text.Encoding.Default)
             'write header row 
             OutputWrite.WriteLine(header)
-        ElseIf IsNewFile = False Then
+        ElseIf IsNewFile_IsInsert = False Then
             OutputFile = New FileStream(Connection & OutFileName, IO.FileMode.Open, IO.FileAccess.ReadWrite)
             OutputRead = New IO.StreamReader(OutputFile, System.Text.Encoding.Default)
             OutputWrite = New IO.StreamWriter(OutputFile, System.Text.Encoding.Default)
@@ -1306,9 +1405,66 @@ Module DBaseInputInterface
 
         End If
 
-
         Return True
 
+    End Function
+
+    Public Function SaveArrayToSQLTable(ByRef aryFieldNames As ArrayList, ByRef aryFieldValues As ArrayList, _
+                                 ByVal TableName As String, ByVal IDField As String, _
+                                 ByVal IsInsert As Boolean, Optional ByVal KeyID As Integer = 0) As Boolean
+
+        Dim strSQL_N As String = ""
+        Dim strSQL_V As String = ""
+        Dim strSQL_NV As String = ""
+        Dim strSQL_All As String = ""
+        Dim i As Integer
+
+        Try
+
+            'Note that the field named FormKey is taken out as it is not a field name in the database
+            'It's used to keep track of the value of the Field that is regarded as the FormKey
+            If IsInsert = True Then
+                'Get a list of Field Names
+                For i = 0 To aryFieldNames.Count - 1
+                    strSQL_N &= aryFieldNames.Item(i) & ", "
+                Next
+                'Get rid of the last comma and space
+                strSQL_N = Left(strSQL_N, Len(strSQL_N) - 2)
+
+                'Get a list of Field Values
+                For i = 0 To aryFieldNames.Count - 1
+                    strSQL_V &= aryFieldValues.Item(i) & ", "
+                Next
+                'Get rid of the last comma and space
+                strSQL_V = Left(strSQL_V, Len(strSQL_V) - 2)
+
+                strSQL_All = "INSERT INTO " & TableName & " (" & strSQL_N & ") "
+                strSQL_All = strSQL_All & "VALUES (" & strSQL_V & ")"
+            Else
+                strSQL_NV = ""
+                'Get a list of Field Names = Values
+                For i = 0 To aryFieldNames.Count - 1
+                    strSQL_NV &= aryFieldNames.Item(i) & " = " & aryFieldValues.Item(i) & ", "
+                Next
+                'Get rid of the last comma and space
+                strSQL_NV = Left(strSQL_NV, Len(strSQL_NV) - 2)
+
+                strSQL_All = "UPDATE " & TableName & " SET " & strSQL_NV
+                strSQL_All &= " WHERE " & IDField & " = " & KeyID
+            End If
+
+            cmd.Connection = m_conn
+            cmd.CommandText = strSQL_All
+
+            Dim da As Odbc.OdbcDataAdapter = New Odbc.OdbcDataAdapter(cmd)
+            Dim ds As New DataSet
+            da.Fill(ds, "Data")
+
+            Return True
+        Catch ex As Exception
+            Throw ex
+            Return False
+        End Try
     End Function
 
     Public Function UnNull(ByVal vntData As Object, ByVal datatype As VariantType) As Object
