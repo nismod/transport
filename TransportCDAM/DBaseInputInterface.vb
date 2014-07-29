@@ -1260,11 +1260,12 @@ Module DBaseInputInterface
                 Select Case SubType
                     Case "Output"
                         ToSQL = True
-                        TableName = "SeaOutpuData"
+                        TableName = "TR_O_SeaFreightOutputData"
                         TempTableName = "SeaTemplate"
                         OutFileName = FilePrefix & "SeaOutputData.csv"
                         TempFileName = FilePrefix & "SeaTemplate.csv"
-                        header = "Yeary, PortID, LiqBlky, DryBlky, GCargoy, LoLoy, RoRoy, GasOily, FuelOily"
+                        header = "ModelRunID, StretegyID, Year, PortID, LiqBlk, DryBlk, GCargo, LoLo, RoRo, GasOil, FuelOil"
+                        'header = "Yeary, PortID, LiqBlky, DryBlky, GCargoy, LoLoy, RoRoy, GasOily, FuelOily"
                         tempheader = "PortID, LiqBlk, DryBlk, GCargo, LoLo, RoRo, LBCap,DBCap,GCCap,LLCap,RRCap,GORPop,GORGva,Cost, AddedCap(1), AddedCap(2), AddedCap(3), AddedCap(4), AddedCap(5),"
                     Case "ExtVar"
                         OutFileName = EVFilePrefix & "SeaFreightExtVar.csv"
