@@ -150,7 +150,7 @@ Module DBaseInputInterface
                                 'call district lookup
                                 Call DistrictLookup()
                             End If
-                            
+
                     End Select
                 Else
                     Exit Do
@@ -1184,33 +1184,33 @@ Module DBaseInputInterface
                         header = "Yeary,FlowID,PCUTotal,SpeedMean,PCUMway,PCUDual,PCUSing,SpdMway,SpdDual,SpdSing,MSC1,MSC2,MSC3,MSC4,MSC5,MSC6,DSC1,DSC2,DSC3,DSC4,DSC5,DSC6,SSC1,SSC2,SSC3,SSC4,SSC5,SSC6,SSC7,SSC8,SpdMSC1,SpdMSC2,SpdMSC3,SpdMSC4,SpdMSC5,SpdMSC6,SpdDSC1,SpdDSC2,SpdDSC3,SpdDSC4,SpdDSC5,SpdDSC6,SpdSSC1,SpdSSC2,SpdSSC3,SpdSSC4,SpdSSC5,SpdSSC6,SpdSSC7,SpdSSC8,MWayLatent,DualLatent,SingLatent,MFullHrs,DFullHrs,SFullHrs,CostMway,CostDual,CostSing"
                         tempheader = "Yeary,FlowID,MLanes,DLanes,SLanes,MLanesNew,DLanesNew,SLanesNew,MSC1,MSC2,MSC3,MSC4,MSC5,MSC6,DSC1,DSC2,DSC3,DSC4,DSC5,DSC6,SSC1,SSC2,SSC3,SSC4,SSC5,SSC6,SSC7,SSC8,PopZ1,PopZ2,GVAZ1,GVAZ2,"
                         For x = 1 To 6
-                            For c = 0 To 24
+                            For c = 0 To 23
                                 tempheader = tempheader & "M" & x & "Cost" & c & ","
                             Next
                         Next
                         For x = 1 To 6
-                            For c = 0 To 24
+                            For c = 0 To 23
                                 tempheader = tempheader & "D" & x & "Cost" & c & ","
                             Next
                         Next
                         For x = 1 To 8
-                            For c = 0 To 24
+                            For c = 0 To 23
                                 tempheader = tempheader & "S" & x & "Cost" & c & ","
                             Next
                         Next
                         tempheader = tempheader & "MaxCapM,MaxCapD,MaxCapS,AddedLane0,AddedLane1,AddedLane2,"
                         For x = 1 To 6
-                            For c = 0 To 24
+                            For c = 0 To 23
                                 tempheader = tempheader & "M" & x & "HourlyFlows" & c & "," & "MRoadTypeFlows" & c & "," & "M" & x & "Charge" & c & "," & "M" & x & "LatentFlows" & c & "," & "M" & x & "NewHourlySpeeds" & c & ","
                             Next
                         Next
                         For x = 1 To 6
-                            For c = 0 To 24
+                            For c = 0 To 23
                                 tempheader = tempheader & "D" & x & "HourlyFlows" & c & "," & "DRoadTypeFlows" & c & "," & "D" & x & "Charge" & c & "," & "D" & x & "LatentFlows" & c & "," & "D" & x & "NewHourlySpeeds" & c & ","
                             Next
                         Next
                         For x = 1 To 8
-                            For c = 0 To 24
+                            For c = 0 To 23
                                 tempheader = tempheader & "S" & x & "HourlyFlows" & c & "," & "SRoadTypeFlows" & c & "," & "S" & x & "Charge" & c & "," & "S" & x & "LatentFlows" & c & "," & "S" & x & "NewHourlySpeeds" & c & ","
                             Next
                         Next
