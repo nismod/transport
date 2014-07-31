@@ -2245,6 +2245,8 @@ Partial Class MainForm
         'CheckBox43
         '
         Me.CheckBox43.AutoSize = True
+        Me.CheckBox43.Checked = True
+        Me.CheckBox43.CheckState = System.Windows.Forms.CheckState.Checked
         Me.CheckBox43.Location = New System.Drawing.Point(6, 20)
         Me.CheckBox43.Name = "CheckBox43"
         Me.CheckBox43.Size = New System.Drawing.Size(169, 17)
