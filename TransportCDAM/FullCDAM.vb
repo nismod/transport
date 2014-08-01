@@ -33,8 +33,7 @@
     Public zpr, zer, znr As IO.StreamReader
     Public PopLookup, EcoLookup As New Dictionary(Of Long, Double)
     Public PopYearLookup, EcoYearLookup As New Dictionary(Of String, Double)
-    Public ControlFile, StrategyFile As IO.FileStream
-    Public Strategy As Integer
+    Public ControlFile, SubStrategyFile As IO.FileStream
     Public BuildInfra As Boolean
     Public CUCritValue As Double
     Public VariableEl As Boolean
@@ -60,6 +59,13 @@
     Public Duration As Integer
     Public logNum As Integer
     Public logarray(47, 0) As String
+    Public ModelRunID As Integer
+    Public ScenarioID As Integer
+    Public Scenario As Integer
+    Public StrategyID As Integer
+    Public StrategyCode As String
+    Public SubStrategy As Integer
+
     Dim OZone, DZone As Long
     Dim ErrDict As String
 
@@ -67,10 +73,41 @@
     Dim Subtype As String
 
 
+    Public Function RunCDAM(ByVal ModelRunID As Integer, ByVal Year As Integer) As Boolean
+        'Try
+
+        ModelRunID = ModelRunID
 
 
+        ConnectToDBase()
 
-    Sub FullMain()
+        'Get Model Run Details including 
+        If GetModelRunDetails() = False Then
+            Throw New System.Exception("Error getting Model Run details from database")
+        End If
+
+        'Run Transport Model
+        FullMain(Year)
+
+        Return True
+
+        'Catch ex As Exception
+        'Throw ex
+        'Return False
+        'End Try
+    End Function
+
+    Private Function GetModelRunDetails() As Boolean
+        Dim mrdarray As String(,)
+
+        Call ReadData("System", "ModelRunDetails", mrdarray)
+
+
+        Return True
+
+    End Function
+
+    Sub FullMain(ByVal Year As Integer)
 
         'get directory path for files - **now unnecessary as set by user
         'DirPath = "\\soton.ac.uk\ude\PersonalFiles\Users\spb1g09\mydocuments\Southampton Work\ITRC\Transport CDAM\Model Inputs\"

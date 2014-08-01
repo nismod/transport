@@ -10,7 +10,11 @@
         If FilePrefix = "" Then
             FilePrefix = System.DateTime.Now
         End If
-        Call FullMain()
+
+        'Call FullMain()
+        'Just use dummy values for ModelRunID and Year for now
+        Call RunCDAM(1, 2010)
+
         End
     End Sub
 
@@ -94,7 +98,7 @@
             Button4.Enabled = True
             Button5.Enabled = False
             Button6.Enabled = False
-            'enable strategy combobox
+            'enable SubStrategy combobox
             ComboBox27.Enabled = True
         ElseIf ListBox1.SelectedIndex = 1 Then
             CreateExtVars = False
@@ -114,7 +118,7 @@
             Button4.Enabled = False
             Button5.Enabled = True
             Button6.Enabled = True
-            'disable strategy combobox
+            'disable SubStrategy combobox
             ComboBox27.Enabled = True
         Else
             CreateExtVars = False
@@ -133,7 +137,7 @@
             Button4.Enabled = False
             Button5.Enabled = False
             Button6.Enabled = False
-            'disable strategy combobox
+            'disable SubStrategy combobox
             ComboBox27.Enabled = True
         End If
     End Sub
@@ -216,7 +220,7 @@
         If FilePrefix = "" Then
             FilePrefix = System.DateTime.Now
         End If
-        Call FullMain()
+        Call FullMain(1)
         End
     End Sub
 
@@ -230,7 +234,7 @@
         If FilePrefix = "" Then
             FilePrefix = System.DateTime.Now
         End If
-        Call FullMain()
+        Call FullMain(1)
         End
     End Sub
 
@@ -364,7 +368,7 @@
         If FilePrefix = "" Then
             FilePrefix = System.DateTime.Now
         End If
-        Call FullMain()
+        Call FullMain(1)
         End
     End Sub
 
@@ -378,7 +382,7 @@
         If FilePrefix = "" Then
             FilePrefix = System.DateTime.Now
         End If
-        Call FullMain()
+        Call FullMain(1)
         End
     End Sub
 
@@ -922,21 +926,21 @@
         controlstring = "evprefix," & TextBox2.Text
         cfs.WriteLine(controlstring)
         If ComboBox27.SelectedItem = "TR0: Decline and Decay" Then
-            controlstring = "strategy,0"
+            controlstring = "SubStrategy,0"
         ElseIf ComboBox27.SelectedItem = "TR1: Predict and Provide" Then
-            controlstring = "strategy,1"
+            controlstring = "SubStrategy,1"
         ElseIf ComboBox27.SelectedItem = "TR2: Cost and Constrain" Then
-            controlstring = "strategy,2"
+            controlstring = "SubStrategy,2"
         ElseIf ComboBox27.SelectedItem = "TR3: Adapting the Fleet" Then
-            controlstring = "strategy,3"
+            controlstring = "SubStrategy,3"
         ElseIf ComboBox27.SelectedItem = "TR4: Promo-Pricing" Then
-            controlstring = "strategy,4"
+            controlstring = "SubStrategy,4"
         ElseIf ComboBox27.SelectedItem = "TR5: Connected Grid" Then
-            controlstring = "strategy,5"
+            controlstring = "SubStrategy,5"
         ElseIf ComboBox27.SelectedItem = "TR6: Smarter Choices" Then
-            controlstring = "strategy,6"
+            controlstring = "SubStrategy,6"
         Else
-            controlstring = "strategy,"
+            controlstring = "SubStrategy,"
         End If
         cfs.WriteLine(controlstring)
         If CheckBox29.Checked = True Then
@@ -1461,8 +1465,8 @@
         cfs.WriteLine(controlstring)
         If ComboBox30.SelectedItem = "Constant" Then
             controlstring = "triprate,constant"
-        ElseIf ComboBox30.SelectedItem = "Strategy File" Then
-            controlstring = "triprate,strategy"
+        ElseIf ComboBox30.SelectedItem = "SubStrategy File" Then
+            controlstring = "triprate,SubStrategy"
         End If
         cfs.WriteLine(controlstring)
         cfs.Close()
@@ -1836,7 +1840,7 @@
                     ElseIf controlarray(1) = "file" Then
                         ComboBox24.SelectedItem = "File"
                     End If
-                Case "strategy"
+                Case "SubStrategy"
                     If controlarray(1) = "0" Then
                         ComboBox27.SelectedItem = "TR0: Decline and Decay"
                     ElseIf controlarray(1) = "1" Then
@@ -2009,8 +2013,8 @@
                 Case "triprate"
                     If controlarray(1) = "constant" Then
                         ComboBox30.SelectedItem = "Constant"
-                    ElseIf controlarray(1) = "strategy" Then
-                        ComboBox30.SelectedItem = "Strategy File"
+                    ElseIf controlarray(1) = "SubStrategy" Then
+                        ComboBox30.SelectedItem = "SubStrategy File"
                     End If
             End Select
             controlstring = cfo.ReadLine
@@ -2020,21 +2024,21 @@
 
     Private Sub ComboBox27_SelectedIndexChanged(sender As System.Object, e As System.EventArgs) Handles ComboBox27.SelectedIndexChanged
         If ComboBox27.SelectedItem = "TR0: Decline and Decay" Then
-            Strategy = 0
+            SubStrategy = 0
         ElseIf ComboBox27.SelectedItem = "TR1: Predict and Provide" Then
-            Strategy = 1
+            SubStrategy = 1
         ElseIf ComboBox27.SelectedItem = "TR2: Cost and Constrain" Then
-            Strategy = 2
+            SubStrategy = 2
         ElseIf ComboBox27.SelectedItem = "TR3: Adapting the Fleet" Then
-            Strategy = 3
+            SubStrategy = 3
         ElseIf ComboBox27.SelectedItem = "TR4: Promo-Pricing" Then
-            Strategy = 4
+            SubStrategy = 4
         ElseIf ComboBox27.SelectedItem = "TR5: Connected Grid" Then
-            Strategy = 5
+            SubStrategy = 5
         ElseIf ComboBox27.SelectedItem = "TR6: Smarter Choices" Then
-            Strategy = 6
+            SubStrategy = 6
         Else
-            Strategy = 7
+            SubStrategy = 7
         End If
     End Sub
 
@@ -2481,8 +2485,8 @@
     Private Sub ComboBox30_SelectedIndexChanged(sender As System.Object, e As System.EventArgs) Handles ComboBox30.SelectedIndexChanged
         If ComboBox30.SelectedItem = "Constant" Then
             TripRates = "Constant"
-        ElseIf ComboBox30.SelectedItem = "Strategy File" Then
-            TripRates = "Strategy"
+        ElseIf ComboBox30.SelectedItem = "SubStrategy File" Then
+            TripRates = "SubStrategy"
         End If
     End Sub
 

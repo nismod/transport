@@ -63,8 +63,8 @@
                 Exit Do
             Else
                 '1.3 get the strategy file
-                StrategyFile = New IO.FileStream(DirPath & "CommonVariablesTR" & Strategy & ".csv", IO.FileMode.Open, IO.FileAccess.Read)
-                stf = New IO.StreamReader(StrategyFile, System.Text.Encoding.Default)
+                SubStrategyFile = New IO.FileStream(DirPath & "CommonVariablesTR" & SubStrategy & ".csv", IO.FileMode.Open, IO.FileAccess.Read)
+                stf = New IO.StreamReader(SubStrategyFile, System.Text.Encoding.Default)
                 'read header row
                 stf.ReadLine()
 

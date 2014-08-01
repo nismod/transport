@@ -20,16 +20,23 @@ Module DBaseInputInterface
     Dim m_sConnString As String
     Dim m_conn As Odbc.OdbcConnection
 
-    Sub DBaseInputMain()
-
-        'Setup connection to the database
+    Sub ConnectToDBase()
         Try
-            m_sConnString = "Driver={PostgreSQL ODBC Driver(ANSI)};DSN=PostgreSQL30;Server=localhost;Port=5432;Database=itrc_sos;UId=postgres;Password=XXXXXX;"
-            m_conn = New Odbc.OdbcConnection(m_sConnString)
-            m_conn.Open()
+            'If there is no connection to the database then establish one
+            If m_conn Is Nothing Then
+                m_sConnString = "Driver={PostgreSQL ODBC Driver(ANSI)};DSN=PostgreSQL30;Server=localhost;Port=5432;Database=itrc_sos;UId=postgres;Password=P0stgr3s;"
+                m_conn = New Odbc.OdbcConnection(m_sConnString)
+                m_conn.Open()
+            End If
+
         Catch ex As Exception
             MsgBox(ex.Message)
+            Throw (ex)
         End Try
+
+    End Sub
+
+    Sub DBaseInputMain()
 
         'set up the overall database check variable
         If DBasePop = True Then
@@ -350,7 +357,7 @@ Module DBaseInputInterface
     End Sub
 
     Sub GetDBaseEne()
-        '***NEED TO DO***
+        'TODO ***NEED TO DO***
     End Sub
 
     Sub CreateDistLookup()
@@ -865,6 +872,11 @@ Module DBaseInputInterface
         'Get the initial input data file if it is year 1, otherwise get the temp file
         'the size of the array must be correct
         Select Case Type
+            Case "System"
+                Select Case SubType
+                    Case "ModelRunDetails"
+                        theSQL = "SELECT * FROM " & Chr(34) & "ISL_ModelRuns" & Chr(34)
+                End Select
             Case "RoadZone"
                 Select Case SubType
                     Case "Input"
@@ -880,7 +892,7 @@ Module DBaseInputInterface
                     Case "CapChange"
                         TheFileName = FilePrefix & "RoadZoneCapChange.csv"
                     Case "Elasticity"
-                        TheFileName = "Elasticity Files\TR" & Strategy & "\RoadZoneElasticities.csv"
+                        TheFileName = "Elasticity Files\TR" & SubStrategy & "\RoadZoneElasticities.csv"
                 End Select
             Case "RoadLink"
                 Select Case SubType
@@ -893,7 +905,7 @@ Module DBaseInputInterface
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "ExternalVariables" & EVFileSuffix & ".csv"
                     Case "Elasticity"
-                        TheFileName = "Elasticity Files\TR" & Strategy & "\RoadLinkElasticities.csv"
+                        TheFileName = "Elasticity Files\TR" & SubStrategy & "\RoadLinkElasticities.csv"
                     Case "FreeFlowSpeed"
                         'A header has been added to the original file to keep in the same format
                         TheFileName = "FreeFlowSpeedsv0.7.csv"
@@ -914,7 +926,7 @@ Module DBaseInputInterface
                     Case "CapChange"
                         TheFileName = CapFilePrefix & "RailZoneCapChange.csv"
                     Case "Elasticity"
-                        TheFileName = "Elasticity Files\TR" & Strategy & "\RailZoneElasticities.csv"
+                        TheFileName = "Elasticity Files\TR" & SubStrategy & "\RailZoneElasticities.csv"
                     Case "ElSchemes"
                         TheFileName = EVFilePrefix & "RailZoneElectrificationDates.csv"
                     Case "EVScale"
@@ -933,7 +945,7 @@ Module DBaseInputInterface
                     Case "CapChange"
                         TheFileName = CapFilePrefix & "RailLinkCapChange.csv"
                     Case "Elasticity"
-                        TheFileName = "Elasticity Files\TR" & Strategy & "\RailLinkElasticities.csv"
+                        TheFileName = "Elasticity Files\TR" & SubStrategy & "\RailLinkElasticities.csv"
                     Case "ElSchemes"
                         TheFileName = EVFilePrefix & "RailLinkElectrificationDates.csv"
                     Case "EVScale"
@@ -957,7 +969,7 @@ Module DBaseInputInterface
                     Case "CapChange"
                         TheFileName = CapFilePrefix & "SeaFreightCapChange.csv"
                     Case "Elasticity"
-                        TheFileName = "Elasticity Files\TR" & Strategy & "\SeaFreightElasticities.csv"
+                        TheFileName = "Elasticity Files\TR" & SubStrategy & "\SeaFreightElasticities.csv"
                     Case Else
                         'for error handling
                 End Select
@@ -974,7 +986,7 @@ Module DBaseInputInterface
                     Case "CapChange"
                         TheFileName = CapFilePrefix & "AirNodeCapChange.csv"
                     Case "Elasticity"
-                        TheFileName = "Elasticity Files\TR" & Strategy & "\AirElasticities.csv"
+                        TheFileName = "Elasticity Files\TR" & SubStrategy & "\AirElasticities.csv"
                 End Select
             Case "AirFlow"
                 Select Case SubType
@@ -987,8 +999,8 @@ Module DBaseInputInterface
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "AirFlowExtVar.csv"
                 End Select
-            Case "Strategy"
-                TheFileName = "CommonVariablesTR" & Strategy & ".csv"
+            Case "SubStrategy"
+                TheFileName = "CommonVariablesTR" & SubStrategy & ".csv"
             Case "Energy"
                 Connection = DBaseEneFile
                 TheFileName = ""
@@ -1080,21 +1092,22 @@ Module DBaseInputInterface
             DataRows = TableData.Rows.Count
             DataColumns = TableData.Columns.Count
 
+            'If there is no data then just exit
             If DataRows = 0 Then
                 Return False
             End If
 
-            'Load Data into an array and generate some sample output
+            'Store column names in the 0 row
+            ReDim aryData(DataColumns - 1, 0)
+            For iC = 0 To DataColumns - 1
+                aryData(iC, 0) = Trim(CStr(TableData.Columns(iC).ColumnName))
+            Next
+            'Load Data into the array
             For iR = 0 To DataRows - 1
-                If aryData Is Nothing Then
-                    ReDim aryData(DataColumns - 1, 0)
-                Else
-                    ReDim Preserve aryData(DataColumns - 1, iR)
-                End If
+                ReDim Preserve aryData(DataColumns - 1, iR + 1)
 
                 For iC = 0 To DataColumns - 1
-                    aryData(iC, iR) = Trim(CStr(UnNull(TableData.Rows(iR).Item(iC), VariantType.Char)))
-                    If iR < 50 Then strSampleOutput &= aryData(iC, iR).PadRight(30) & " "
+                    aryData(iC, iR + 1) = Trim(CStr(UnNull(TableData.Rows(iR).Item(iC), VariantType.Char)))
                 Next
             Next
 
