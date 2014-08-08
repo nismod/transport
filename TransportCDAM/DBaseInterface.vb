@@ -1,6 +1,6 @@
 ﻿Imports System.IO
 
-Module DBaseInputInterface
+Module DBaseInterface
     'this gets the input files from the database, and converts them into a form suitable for input to the model files
 
     'this stores the total population values for each zone with the array index equal to the zoneID, 145 is Scotland and 146 is Wales

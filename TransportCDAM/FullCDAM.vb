@@ -526,6 +526,7 @@
                 End If
                 If NewRlLEV = True Then
                     'rail link input file
+                    'XUCHENG - IS THIS CODE USED? SHOULD THESE BE IN READDATA FUNCTION?
                     RlLInputFile = New IO.FileStream(DirPath & "RailLinkInputDataInitial.csv", IO.FileMode.Open, IO.FileAccess.Read)
                     rllif = New IO.StreamReader(RlLInputFile, System.Text.Encoding.Default)
                     RlLInputFileNew = New IO.FileStream(DirPath & "RailLinkInputData2010.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
@@ -605,6 +606,7 @@
                 End If
                 If NewRlZEV = True Then
                     'rail zone input file
+                    'XUCHENG - IS THIS CODE USED? SHOULD THESE BE IN READDATA FUNCTION?
                     RlZInputFile = New IO.FileStream(DirPath & "RailZoneInputDataInitial.csv", IO.FileMode.Open, IO.FileAccess.Read)
                     rlzif = New IO.StreamReader(RlZInputFile, System.Text.Encoding.Default)
                     RlZInputFileNew = New IO.FileStream(DirPath & "RailZoneInputData2010.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
@@ -670,6 +672,7 @@
                 End If
                 If NewAirEV = True Then
                     'air flow input file
+                    'XUCHENG - IS THIS CODE USED? SHOULD THESE BE IN READDATA FUNCTION?
                     AirFInputFile = New IO.FileStream(DirPath & "AirFlowInputDataInitial.csv", IO.FileMode.Open, IO.FileAccess.Read)
                     afif = New IO.StreamReader(AirFInputFile, System.Text.Encoding.Default)
                     AirFInputFileNew = New IO.FileStream(DirPath & "AirFlowInputData2010.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
@@ -743,6 +746,7 @@
                     afif.Close()
                     afin.Close()
                     'air node input file
+                    'XUCHENG - IS THIS CODE USED? SHOULD THESE BE IN READDATA FUNCTION?
                     AirNInputFile = New IO.FileStream(DirPath & "AirNodeInputDataInitial.csv", IO.FileMode.Open, IO.FileAccess.Read)
                     anif = New IO.StreamReader(AirNInputFile, System.Text.Encoding.Default)
                     AirNInputFileNew = New IO.FileStream(DirPath & "AirNodeInputData2010.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
@@ -805,6 +809,7 @@
                 End If
                 If NewSeaEV = True Then
                     'seaport input file
+                    'XUCHENG - IS THIS CODE USED? SHOULD THESE BE IN READDATA FUNCTION?
                     SeaInputFile = New IO.FileStream(DirPath & "SeaFreightInputDataInitial.csv", IO.FileMode.Open, IO.FileAccess.Read)
                     sif = New IO.StreamReader(SeaInputFile, System.Text.Encoding.Default)
                     SeaInputFileNew = New IO.FileStream(DirPath & "SeaFreightInputData.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)

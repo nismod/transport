@@ -78,7 +78,7 @@
   <ItemGroup>
     <Compile Include="AirExtVarCalc.vb" />
     <Compile Include="AirModel.vb" />
-    <Compile Include="DBaseInputInterface.vb" />
+    <Compile Include="DBaseInterface.vb" />
     <Compile Include="FullCDAM.vb" />
     <Compile Include="IntraZoneRailModel.vb" />
     <Compile Include="IntraZoneRoadModelA.vb" />

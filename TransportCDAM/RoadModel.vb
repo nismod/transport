@@ -390,6 +390,7 @@
             AddedLanes(link, 1) = InputArray(link, 516)
             AddedLanes(link, 2) = InputArray(link, 517)
 
+            'XUCHENG - you need to put more commenting in your code - why does this only do this until sc < 20 ?
             i = 518
             sc = 0
             Do While sc < 20
