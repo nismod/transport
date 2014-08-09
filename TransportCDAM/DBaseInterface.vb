@@ -1313,7 +1313,7 @@ Module DBaseInterface
                         OutFileName = FilePrefix & "AirFlowOutputData.csv"
                         TempFileName = FilePrefix & "AirFlowTemp.csv"
                         header = "Yeary,FlowID,Tripsy,Fuely"
-                        tempheader = "YearNum, FlowID, OAirID, DAirID, Trips, PopOZ, PopDZ, GVAOZ, GVADZ, Cost, FlowKm, AirFlowTripsLatent, AirFlowCapConstant0, AirFlowCapConstant1"
+                        tempheader = "FlowID, OAirID, DAirID, Trips, PopOZ, PopDZ, GVAOZ, GVADZ, Cost, FlowKm, AirFlowTripsLatent, AirFlowCapConstant0, AirFlowCapConstant1"
                     Case "ExtVar"
                         OutFileName = EVFilePrefix & "AirFlowExtVar.csv"
                         header = "Yeary,FlowID,PopOZy,PopDZy,GVAOZy,GVADZy,Costy"
