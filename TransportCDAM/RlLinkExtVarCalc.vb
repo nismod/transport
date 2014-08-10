@@ -11,6 +11,7 @@
     'and InDieselOldAll, InElectricOldAll, InDieselNewAll, InElectricNewAll are created to replace the old parameters
     'and old InDieselOld/New and InElectricOld/New now increase dimension to seperate the values for each link
     'and each time the calculation start, the values in new parameters (InDieselOldAll etc) will be read into the original parameters
+    'now all file related functions are using databaseinterface
 
     Dim RlLinkInputData As IO.FileStream
     Dim rai As IO.StreamReader
@@ -74,14 +75,8 @@
 
 
 
-
-
-
-
     Public Sub RailLinkEVMain()
 
-        'get the input and output file names
-        Call GetFiles()
 
         'check if there is any value assigned to RlLEVSource - if not then set to constant as default
         If RlLEVSource = "" Then
@@ -110,11 +105,12 @@
         'read initial input data
         Call ReadData("RailLink", "Input", InputArray, True)
 
+        'read capacity change data
         Call ReadData("RailLink", "CapChange", CapArray)
+
+        'start from the first row of CapArray
         CapNum = 1
-        'if including capacity changes then read first line of the capacity file and break it down into relevant sections
-        'v1.4 change - now read this anyway to deal with compulsory enhancements
-        'so we created another file containing sorted implemented capacity enhancements (in get files sub)
+
         'need initial file to be sorted by scheme type then by change year then by order of priority
         'first read all compulsory enhancements to intermediate array
         CapCount = 0
@@ -170,12 +166,13 @@
                         Exit Do
                     End If
             End Select
+            'exit if year is greater than our range (90 years)
             If Breakout = True Then
                 Exit Do
             End If
             CapCount += 1
         Loop
-        'then sort the intermediate array by flow ID, then by year of implementation
+        'then sort the intermediate array by year, then by flow ID of implementation
         ReDim sortarray(CapCount - 1)
         For v = 0 To (CapCount - 1)
             padflow = String.Format("{0:000}", NewCapDetails(v, 0))
@@ -183,7 +180,8 @@
             sortarray(v) = padyear & "&" & padflow & "&" & v
         Next
         Array.Sort(sortarray)
-        'write all lines to intermediate capacity file
+
+        'write all lines to NewCapArray
         For v = 0 To (CapCount - 1)
             sortedline = sortarray(v)
             splitline = Split(sortedline, "&")
@@ -195,26 +193,24 @@
             NewCapArray(v + 1, 4) = NewCapDetails(arraynum, 4)
         Next
 
+        'write all lines from NewCapArray to intermediate capacity file
         Call WriteData("RailLink", "NewCap", NewCapArray)
 
-        'reopen the capacity file as a reader
+        'reset NewCapArray row to the begining
         CapNum = 1
         ReDim CapArray(238, 4)
         AddingCap = True
         Call GetCapData()
 
-        'If NewRlLCap = True Then
-        '    Call GetCapData()
-        'End If
-
         'if including rail electrification then create the intermediate file sorted by flow then by date
         'mod - now do this anyway as some schemes are non-discretionary
         'create intermediate file listing timings of scheme implementations
         Call CreateElectrificationList()
+
         'initiallize read elelct file
         Elect = True
         'read the electrification list file as an input file
-        'read ele scheme info
+        'read eletrification scheme info
         Call ReadData("RailLink", "ElSchemes", elearray)
         EleNum = 1
         Call GetElectData()
@@ -246,42 +242,7 @@
 
     End Sub
 
-    Sub GetFiles()
 
-        'RlLinkInputData = New IO.FileStream(DirPath & "RailLinkInputData2010.csv", IO.FileMode.Open, IO.FileAccess.Read)
-        'rai = New IO.StreamReader(RlLinkInputData, System.Text.Encoding.Default)
-        ''read header row
-        'InputRow = rai.ReadLine
-
-        'RlLinkExtVar = New IO.FileStream(DirPath & EVFilePrefix & "RailLinkExtVar.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
-        'rae = New IO.StreamWriter(RlLinkExtVar, System.Text.Encoding.Default)
-        ''write header row to output file
-        'OutputRow = "Yeary,FlowID,Tracksy,PopZ1y,PopZ2y,GVAZ1y,GVAZ2y,Costy,CarFuely,MaxTDy,ElPy,ElTracksy,AddTrainsy"
-        'rae.WriteLine(OutputRow)
-
-        ''if capacity is changing then get capacity change file
-        ''v1.4 do this anyway to include compulsory changes
-        'RlLinkCapData = New IO.FileStream(DirPath & CapFilePrefix & "RailLinkCapChange.csv", IO.FileMode.Open, IO.FileAccess.Read)
-        'rac = New IO.StreamReader(RlLinkCapData, System.Text.Encoding.Default)
-        ''read header row
-        'rac.ReadLine()
-        ''v1.4 new intermediate capacity file
-        'RlLinkNewCapData = New IO.FileStream(DirPath & EVFilePrefix & "RailLinkNewCap.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
-        'rlnc = New IO.StreamWriter(RlLinkNewCapData, System.Text.Encoding.Default)
-        ''write header row
-        'OutString = "FlowID,ChangeYear,TrackChange,MaxTDChange,TrainChange"
-        'rlnc.WriteLine(OutString)
-
-
-        'If NewRlLCap = True Then
-        '    RlLinkCapData = New IO.FileStream(DirPath & CapFilePrefix & "RailLinkCapChange.csv", IO.FileMode.Open, IO.FileAccess.Read)
-        '    rac = New IO.StreamReader(RlLinkCapData, System.Text.Encoding.Default)
-        '    'read header row
-        '    rac.ReadLine()
-        'End If
-
-
-    End Sub
 
     Sub CalcExtVars()
 
@@ -626,7 +587,7 @@ NextYear:
 
             Year += 1
 
-            Loop
+        Loop
 
 
 
@@ -661,15 +622,6 @@ NextYear:
             CapNum += 1
         End If
 
-        'InputRow = rac.ReadLine
-        'If InputRow Is Nothing Then
-        'Else
-        '    InputData = Split(InputRow, ",")
-        '    CapID = InputData(0)
-        '    CapYear = InputData(1) - 2010
-        '    TrackChange = InputData(2)
-        '    MaxTDChange = InputData(3)
-        'End If
     End Sub
 
     Sub DictionaryMissingVal()
@@ -684,9 +636,6 @@ NextYear:
         'now modified to include some schemes as standard
         'now modified to include zones as well as links
 
-        Dim SchemeListFile As IO.FileStream
-        Dim slf As IO.StreamReader
-        Dim schemeinputrow As String
         Dim schemeoutputrow(28, 3) As String
         Dim elschemes(244, 3) As Double
         Dim schemearray(245, 5) As String
@@ -699,11 +648,6 @@ NextYear:
         Dim splitline() As String
         Dim arraynum, schemecount As Long
         Dim schemetype As String
-        Dim ZoneListFile As IO.FileStream
-        Dim zlf As IO.StreamReader
-        Dim RlZoneELSchemes As IO.FileStream
-        Dim rze As IO.StreamWriter
-        Dim zoneinputrow As String
         Dim zoneoutputrow(33, 2) As String
         Dim zonearray(336, 4) As String
         Dim schemecode As String
@@ -920,6 +864,7 @@ NextYear:
     End Sub
 
     Sub GetElectData()
+        'read electrification data here
 
         If elearray(EleNum, 0) = "" Then
             Elect = False

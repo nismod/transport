@@ -1228,6 +1228,8 @@ Module DBaseInterface
                             Next
                         Next
                     Case "ExtVar"
+                        OutFileName = EVFilePrefix & "ExternalVariables.csv"
+                        header = "Yeary,FlowID,PopZ1y,PopZ2y,GVAZ1y,GVAZ2y,M1Costy,MLanesy,DLanesy,SLanesy,MaxCapMy,MaxCapDy,MaxCapSy,M2Costy,M3Costy,M4Costy,M5Costy,M6Costy,D1Costy,D2Costy,D3Costy,D4Costy,D5Costy,D6Costy,S1Costy,S2Costy,S3Costy,S4Costy,S5Costy,S6Costy,S7Costy,S8Costy"
                     Case "RoadLinkNewCap"
                         OutFileName = FilePrefix & "RoadLinkNewCap.csv"
                         header = "FlowID,Yeary,RoadType,LanesAdded"

@@ -2492,7 +2492,7 @@
 
 
     Private Sub TextBox40_TextChanged(sender As Object, e As EventArgs) Handles TextBox40.TextChanged
-        Duration = CInt(TextBox40.Text) - 1
+        Duration = CInt(TextBox40.Text)
         If Duration > 90 Then
             MsgBox("Maximum duration is 90 years")
         ElseIf Duration < 1 Then

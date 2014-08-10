@@ -10,6 +10,7 @@
     'now also includes variable trip rate option
     '**may need to add in a further refinement so that if demand for that flow/node actually decreases in a given year then it can drop even if it is 'locked'
     'v1.7 now work with the databse interface functions for read/write data
+    'now all file related functions are using databaseinterface
 
     Dim AirNodeInputData As IO.FileStream
     Dim an As IO.StreamReader
@@ -89,7 +90,7 @@
         MaxAirFlow = 223
 
 
-        'get input files and create output files
+        'read all related files
         Call AirInputFiles()
 
 
@@ -134,6 +135,8 @@
             Call AirNodeChange()
 
 
+
+
             'run air flow model
 
             'get external variables for relevant year for all flows
@@ -154,13 +157,15 @@
             'estimate fuel consumpion
             Call AirFuelConsumption()
 
+
+
             'write output values and temp array
             Call AirOutputValues()
 
             '***note - do we want to alter this to cope with reductions in capacity? - also with reductions in load factors and/or aircraft sizes?
 
-            'create file is true if it is the initial year and write to outputfile and temp file
 
+            'create file is true if it is the initial year and write to outputfile and temp file
             If YearNum = StartYear Then
                 Call WriteData("AirNode", "Output", NodeOutputArray, NodeTempArray, True)
                 Call WriteData("AirFlow", "Output", FlowOutputArray, FlowTempArray, True)
@@ -186,10 +191,9 @@
 
     Sub AirInputFiles()
 
-        Dim row As String
         Dim stratarray(90, 95) As String
 
-        'get nodal external variable file
+        'get nodal external variable file suffix name
         If UpdateExtVars = True Then
             If NewAirCap = True Then
                 EVFileSuffix = "Updated"
@@ -211,30 +215,6 @@
 
     End Sub
 
-    Sub ReadAirElasticities()
-        Dim row As String
-        Dim elstring() As String
-        Dim yearcheck As Integer
-        Dim elcount As Integer
-
-        yearcheck = 1
-
-        Do
-            'read in row from elasticities file
-            row = ael.ReadLine
-            If row Is Nothing Then
-                Exit Do
-            End If
-            'split it into array - 1 is Dpop, 2 is Dgva, 3 is Dcost, 4 is Ipop, 5 is Igva, 6 is Icost
-            elstring = Split(row, ",")
-            elcount = 1
-            Do While elcount < 7
-                AirEl(elcount, yearcheck) = elstring(elcount)
-                elcount += 1
-            Loop
-            yearcheck += 1
-        Loop
-    End Sub
 
     Sub GetAirportInputData()
 
@@ -489,31 +469,8 @@
 
     Sub GetAirFlowExtVar()
 
-        Dim row As String
-        Dim rowcount As String
-        Dim extvarstring() As String
-        Dim v As Integer
-
         'get external variables for this year
         Call ReadData("AirFlow", "ExtVar", AirFlowExtVar, , YearNum)
-
-        ''set row count to 1
-        'rowcount = 1
-
-        ''read rows from external variables file until the row count is greater than the number of flows being modelled
-        'Do Until rowcount > MaxAirFlow
-        '    'read a row from the file
-        '    row = fe.ReadLine
-        '    'split it into a temporary array
-        '    extvarstring = Split(row, ",")
-        '    'copy the values into the air flow external variables array
-        '    v = 1
-        '    Do Until v > 6
-        '        AirFlowExtVar(rowcount, v) = extvarstring(v)
-        '        v += 1
-        '    Loop
-        '    rowcount += 1
-        'Loop
 
     End Sub
 
@@ -656,7 +613,6 @@
         Dim latenttrips As Double
         Dim latentdomtrips As Double
         Dim constcheck As Boolean
-        Dim termsparecap As Double
         Dim latentrat As Double
         Dim constflowstring As String
         Dim extratrips As Double
@@ -1057,7 +1013,6 @@
         Dim aircount As Integer
         Dim flownum As Long
         Dim cuval As Double
-        Dim newcapstring As String
         Dim newcapnum As Integer
 
 
@@ -1380,113 +1335,5 @@
 
     End Sub
 
-    Sub WriteAirTemp()
-        Dim aircount As Integer
-        Dim flownum As Long
-        Dim cuval As Double
-        Dim newcapstring As String
-
-        aircount = 1
-
-        'update airport base data and write to temp file
-        'loop through all airports
-        Do While aircount < 29
-            '**CH7 change this so that all values are updated each year - constraint now longer matters as constrained demand stored in latent array
-            AirportBaseData(aircount, 1) = AirpPass(aircount)
-            AirportBaseData(aircount, 2) = AirpDomTripsNew(aircount)
-            AirportBaseData(aircount, 3) = AirpTripsNew(aircount)
-            AirportBaseData(aircount, 4) = AirportExtVar(aircount, 5)
-            AirportBaseData(aircount, 5) = AirportExtVar(aircount, 6)
-            AirportBaseData(aircount, 8) = AirportExtVar(aircount, 4) + AirpCapU(aircount, 3)
-            AirportBaseData(aircount, 9) = AirportExtVar(aircount, 7)
-            AirportBaseData(aircount, 10) = AirportExtVar(aircount, 8)
-            AirportBaseData(aircount, 11) = AirportExtVar(aircount, 9)
-            AirportBaseData(aircount, 12) = AirportExtVar(aircount, 10)
-            AirportBaseData(aircount, 6) = AirportExtVar(aircount, 2)
-            AirportBaseData(aircount, 7) = AirportExtVar(aircount, 3)
-            AirportBaseData(aircount, 13) = AirportExtVar(aircount, 11)
-            If BuildInfra = True Then
-                cuval = AirpPass(aircount) / AirportBaseData(aircount, 4)
-                If cuval >= CUCritValue Then
-                    AirportBaseData(aircount, 4) += 20000000
-                    AirpAddedCap(aircount, 0) += 20000000
-                    'write details to output file
-                    newcapstring = aircount & "," & (YearNum + 1) & ",20000000,0"
-                    anc.WriteLine(newcapstring)
-                    '1009Change update capacity checkers
-                    AirpOldConstraint(aircount) = False
-                    AirpTermCapCheck(aircount) = False
-                    For f = 1 To 223
-                        If AirFlowBaseData(f, 1) = aircount Then
-                            AirfCapConst(f, 0) = False
-                        ElseIf AirFlowBaseData(f, 2) = aircount Then
-                            AirfCapConst(f, 1) = False
-                        End If
-                    Next
-                End If
-                cuval = AirpATM(aircount) / AirportBaseData(aircount, 5)
-                If cuval >= CUCritValue Then
-                    AirportBaseData(aircount, 5) += 200000
-                    AirpAddedCap(aircount, 1) += 200000
-                    'write details to output file
-                    newcapstring = aircount & "," & (YearNum + 1) & ",0,200000"
-                    anc.WriteLine(newcapstring)
-                    '1009Change update capacity checkers
-                    AirpOldConstraint(aircount) = False
-                    AirpRunCapCheck(aircount) = False
-                    For f = 1 To 223
-                        If AirFlowBaseData(f, 1) = aircount Then
-                            AirfCapConst(f, 0) = False
-                        ElseIf AirFlowBaseData(f, 2) = aircount Then
-                            AirfCapConst(f, 1) = False
-                        End If
-                    Next
-                End If
-            End If
-
-            'write to temp file
-            For x = 1 To 13
-                NodeTempArray(aircount, x) = AirportBaseData(aircount, x)
-            Next
-            NodeTempArray(aircount, 14) = AirpTripsLatent(aircount)
-
-            aircount += 1
-        Loop
-
-        flownum = 1
-
-        ''''''''''''''''''''''''''''''''''''
-        'update air flow base data and write to temp 
-        Do Until flownum > MaxAirFlow
-            '**CH8 change this so that all values are updated each year - constraint now longer matters as constrained demand stored in latent array
-            AirFlowBaseData(flownum, 3) = AirfTripsNew(flownum)
-            AirFlowBaseData(flownum, 4) = AirFlowExtVar(flownum, 2)
-            AirFlowBaseData(flownum, 5) = AirFlowExtVar(flownum, 3)
-            AirFlowBaseData(flownum, 6) = AirFlowExtVar(flownum, 4)
-            AirFlowBaseData(flownum, 7) = AirFlowExtVar(flownum, 5)
-            AirFlowBaseData(flownum, 8) = AirFlowExtVar(flownum, 6) + FlowCharge(aircount)
-
-            'write to temp
-            For x = 0 To 9
-                FlowTempArray(flownum, x) = AirFlowBaseData(flownum, x)
-            Next
-
-            FlowTempArray(flownum, 10) = AirfTripsLatent(flownum)
-
-            'set all the capacity constraint checks for the flow 
-            If AirfCapConst(flownum, 0) = False Then
-                FlowTempArray(flownum, 11) = 0
-            ElseIf AirfCapConst(flownum, 0) = True Then
-                FlowTempArray(flownum, 11) = 1
-            End If
-            If AirfCapConst(flownum, 1) = False Then
-                FlowTempArray(flownum, 12) = 0
-            ElseIf AirfCapConst(flownum, 1) = True Then
-                FlowTempArray(flownum, 12) = 1
-            End If
-            flownum += 1
-        Loop
-
-    End Sub
 
 End Module

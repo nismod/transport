@@ -527,6 +527,8 @@
                 If NewRlLEV = True Then
                     'rail link input file
                     'XUCHENG - IS THIS CODE USED? SHOULD THESE BE IN READDATA FUNCTION?
+                    'Yes, this is to translate the raw data into the format for the calculation
+                    'They will be removed if we have connection to the database in the next version
                     RlLInputFile = New IO.FileStream(DirPath & "RailLinkInputDataInitial.csv", IO.FileMode.Open, IO.FileAccess.Read)
                     rllif = New IO.StreamReader(RlLInputFile, System.Text.Encoding.Default)
                     RlLInputFileNew = New IO.FileStream(DirPath & "RailLinkInputData2010.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)

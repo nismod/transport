@@ -8,17 +8,8 @@
     'v1.6 now calculate by annual timesteps
     'correct the error that the original code doesnot read the electrificationdata correctly
     'note this module needs to run RlLinkExtVarCalc first
+    'now all file related functions are using databaseinterface
 
-    Dim RlZoneInputData As IO.FileStream
-    Dim rlzi As IO.StreamReader
-    Dim RlZoneExtVar As IO.FileStream
-    Dim rlze As IO.StreamWriter
-    Dim RlZoneCapData As IO.FileStream
-    Dim rlzc As IO.StreamReader
-    Dim RlZoneEVScale As IO.FileStream
-    Dim rlzs As IO.StreamReader
-    Dim RlZoneElSchemes As IO.FileStream
-    Dim rzel As IO.StreamReader
     Dim InputRow As String
     Dim OutputRow As String
     Dim PopGrowth As Double
@@ -55,7 +46,7 @@
 
     Public Sub RlZoneEVMain()
 
-        'get the input and output files
+        'read all related files
         Call GetRlZEVFiles()
 
         'check if there is any value assigned to RlZEVSource - if not then set to constant as default
@@ -135,12 +126,11 @@
         End If
 
 
-        'read ele scheme info
+        'read electric scheme info
         Call ReadData("RailZone", "ElSchemes", elearray)
         EleNum = 1
 
-        '**This has been moved here because need to reread the file for each zone
-        'v1.6 just read at the start of each year
+        'read file according to the setting
         If RlZOthSource = "File" Then
             Call ReadData("RailZone", "EVScale", ScalingData)
         ElseIf RlZEneSource = "Database" Then
@@ -170,7 +160,6 @@
         Dim ElPNew As Double
         Dim DieselOld(238, 0), DieselNew, ElectricOld(238, 0), ElectricNew As Double
         Dim DMaintOld(238, 0), EMaintOld(238, 0) As Double
-        Dim ScalingRow As String
         Dim Country(238, 0) As String
         Dim keylookup As String
         Dim newval As Double
@@ -181,6 +170,7 @@
         Dim InputCount As Long
         Dim InDieselOldAll, InElectricOldAll, InDieselNewAll, InElectricNewAll
 
+        'start from year 1
         Year = 1
 
         'initialize values
@@ -190,7 +180,7 @@
             InElectricOldAll = enearray(1, 3)
         End If
 
-
+        'loop through all 90 years
         Do Until Year > 90
 
             If RlZEneSource = "Database" Then
@@ -267,6 +257,8 @@ Elect:              'altered to allow reading in electrification input file***
                         ElPGrowth = 0
                     End If
 
+                    'if there are multiply electricfication occur for the same zone and same year, go back to the lines before the do additional calculation
+                    'otherwise move forward
                     If ZoneID(InputCount, 0) = ElectricZone Then
                         If Year = ElectricYear Then
                             GoTo Elect
@@ -410,7 +402,7 @@ NextYear:
                 OutputArray(InputCount, 9) = ElPNew
 
 
-                'set old values as previous new values
+                'update input parameters
                 PopOld(InputCount, 0) = PopNew
                 GVAOld(InputCount, 0) = GVANew
                 CostOld(InputCount, 0) = CostNew
@@ -450,7 +442,11 @@ NextYear:
     End Sub
 
     Sub GetCapData()
+        'read capacity data here
+
+
         If CapArray(CapNum, 0) = "" Then
+            'do nothing if reach the end
         Else
             CapID = CapArray(CapNum, 0)
             CapYear = CapArray(CapNum, 1) - 2010
@@ -461,6 +457,8 @@ NextYear:
     End Sub
 
     Sub ElectricRead()
+        'read electrification array here
+
         If elearray(EleNum, 0) = "" Then
             ElectricZone = 0
             Elect = False

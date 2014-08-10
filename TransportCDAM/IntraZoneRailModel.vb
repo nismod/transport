@@ -9,11 +9,8 @@
     'v1.6 now calculated by annual timesteps
     'values from previous year are stored in temp file and read at the start of the calculation for each year
     'v1.7 now corporate with Database function, read/write are using the function in database interface
-    Dim RailZoneExtInput As IO.FileStream
-    Dim evrlz As IO.StreamReader
-    Dim RailZoneElasticities As IO.FileStream
-    Dim rerlz As IO.StreamReader
-    Dim srlz As IO.StreamReader
+    'now all file related functions are using databaseinterface
+
     Dim RlZOutputRow As String
     Dim RlZInput As String
     Dim RlZDetails() As String
@@ -35,9 +32,6 @@
     Dim VarRat As Double
     Dim RlzTripRates(90) As Double
     Dim InputCount As Long
-    Dim RlZFile As IO.FileStream
-    Dim rlzr As IO.StreamReader
-    Dim rlzw As IO.StreamWriter
     Dim OutputRow As String
     Dim RlZLine As String
     Dim InputArray(144, 9) As String
@@ -48,7 +42,7 @@
 
     Public Sub RailZoneMain()
 
-        'get the input files
+        'read all related files
         Call RlZSetFiles()
 
         'initialise year count
@@ -98,7 +92,6 @@
     End Sub
 
     Sub RlZSetFiles()
-        Dim row As String
         'This sub selects the input data files
 
         If UpdateExtVars = True Then
@@ -152,49 +145,6 @@
 
     End Sub
 
-    Sub GetRlZExtVar()
-        Dim rownum As Long
-        Dim row As String
-        Dim ExtVarRow() As String
-        Dim r As Byte
-
-        rownum = 1
-        Do While rownum < 145
-            'loop through 90 rows in the external variables file, storing the values in the external variable values array
-            row = evrlz.ReadLine
-            ExtVarRow = Split(row, ",")
-            For r = 2 To 6
-                RlZExtVar(r, rownum) = ExtVarRow(r)
-            Next
-            'the 7th value in the input data is the new trips at new stations, so we skip this, and assign the 8th value (GJT) to the 7th value in the array
-            RlZExtVar(7, rownum) = ExtVarRow(8)
-            rownum += 1
-        Loop
-    End Sub
-    Sub ReadRlZElasticities()
-        Dim row As String
-        Dim elstring() As String
-        Dim yearcheck As Integer
-        Dim elcount As Integer
-
-        yearcheck = 1
-
-        Do
-            'read in row from elasticities file
-            row = rerlz.ReadLine
-            If row Is Nothing Then
-                Exit Do
-            End If
-            'split it into array - 1 is pop, 2 is gva, 3 is LondonFares, 4 is SEFares, 5 is PTEFares, 6 is OtherFares, 7 is carfuel, 8 is LondonGJT, 9 is SEGJT, 10 is PTEGJT, 11 iS OtherGJT
-            elstring = Split(row, ",")
-            elcount = 1
-            Do While elcount < 12
-                RlZoneEl(elcount, yearcheck) = elstring(elcount)
-                elcount += 1
-            Loop
-            yearcheck += 1
-        Loop
-    End Sub
 
     Sub RailZoneTrips()
         Dim PopRat, GVARat, FarRat, TrpRat, CFuelRat, GJTRat As Double
@@ -357,82 +307,6 @@
 
     End Sub
 
-    Sub RlZNewBaseValues()
-        'set base values to equal the values from the current year
-        RlZTripsS(InputCount, 0) = NewTripsS
-        RlZPop(InputCount, 0) = RlZExtVar(2, InputCount)
-        RlZGva(InputCount, 0) = RlZExtVar(3, InputCount)
-        RlZCost(InputCount, 0) = RlZExtVar(4, InputCount)
-        RlZStat(InputCount, 0) = RlZExtVar(5, InputCount)
-        RlZCarFuel(InputCount, 0) = RlZExtVar(6, InputCount)
-        RlZGJT(InputCount, 0) = RlZExtVar(7, InputCount)
-    End Sub
 
-    Sub ReadRlZInput()
-
-        If YearCount = 1 Then
-            'year 1 will use the initial input file
-        Else
-            'read the temp file "Flows.csv"
-            RlZFile = New IO.FileStream(DirPath & FilePrefix & "RlZones.csv", IO.FileMode.Open, IO.FileAccess.Read)
-            rlzr = New IO.StreamReader(RlZFile, System.Text.Encoding.Default)
-            'read header line
-            rlzr.ReadLine()
-
-            'read temp file for each link
-            InputCount = 1
-
-            Do While InputCount < 145
-
-                RlZLine = rlzr.ReadLine
-                'TempArray = Split(RlZLine, ",")
-
-                RlZID(InputCount, 0) = TempArray(InputCOunt, 1)
-                RlZPop(InputCount, 0) = TempArray(InputCOunt, 2)
-                RlZGva(InputCount, 0) = TempArray(InputCOunt, 3)
-                RlZCost(InputCount, 0) = TempArray(InputCOunt, 4)
-                RlZStat(InputCount, 0) = TempArray(InputCOunt, 5)
-                RlZCarFuel(InputCount, 0) = TempArray(InputCOunt, 6)
-                RlZGJT(InputCount, 0) = TempArray(InputCOunt, 7)
-                RlZTripsS(InputCount, 0) = TempArray(InputCOunt, 8)
-                FareE(InputCount, 0) = TempArray(InputCOunt, 9)
-
-                InputCount += 1
-            Loop
-
-            rlzr.Close()
-            'delete the temp file to recreate for current year
-            System.IO.File.Delete(DirPath & FilePrefix & "RlZones.csv")
-
-        End If
-
-        'create a temp file 
-        RlZFile = New IO.FileStream(DirPath & FilePrefix & "RlZones.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
-        rlzw = New IO.StreamWriter(RlZFile, System.Text.Encoding.Default)
-
-        'write header row
-
-        OutputRow = "Yeary,ZoneID,PopZ,GvaZ,Cost,Stations,CarFuel,GJT,TripsStat,FareE,"
-        rlzw.WriteLine(OutputRow)
-
-    End Sub
-
-    Sub WriteRlZUpdate()
-
-        'set base values to equal the values from the current year
-        RlZPop(InputCount, 0) = RlZExtVar(2, InputCount)
-        RlZGva(InputCount, 0) = RlZExtVar(3, InputCount)
-        RlZCost(InputCount, 0) = RlZExtVar(4, InputCount)
-        RlZStat(InputCount, 0) = RlZExtVar(5, InputCount)
-        RlZCarFuel(InputCount, 0) = RlZExtVar(6, InputCount)
-        RlZGJT(InputCount, 0) = RlZExtVar(7, InputCount)
-        RlZTripsS(InputCount, 0) = NewTripsS
-
-        'write second row
-        OutputRow = YearCount & "," & RlZID(InputCount, 0) & "," & RlZPop(InputCount, 0) & "," & RlZGva(InputCount, 0) & "," & RlZCost(InputCount, 0) & "," & RlZStat(InputCount, 0) & "," & RlZCarFuel(InputCount, 0) & "," & RlZGJT(InputCount, 0) & "," & RlZTripsS(InputCount, 0) & "," & FareE(InputCount, 0) & ","
-
-        rlzw.WriteLine(OutputRow)
-
-    End Sub
 
 End Module

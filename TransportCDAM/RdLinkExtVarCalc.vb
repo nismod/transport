@@ -85,8 +85,8 @@
         Call GetFiles()
 
         'write header row to output file
-        OutputRow = "Yeary,FlowID,PopZ1y,PopZ2y,GVAZ1y,GVAZ2y,M1Costy,MLanesy,DLanesy,SLanesy,MaxCapMy,MaxCapDy,MaxCapSy,M2Costy,M3Costy,M4Costy,M5Costy,M6Costy,D1Costy,D2Costy,D3Costy,D4Costy,D5Costy,D6Costy,S1Costy,S2Costy,S3Costy,S4Costy,S5Costy,S6Costy,S7Costy,S8Costy"
-        ev.WriteLine(OutputRow)
+        'OutputRow = "Yeary,FlowID,PopZ1y,PopZ2y,GVAZ1y,GVAZ2y,M1Costy,MLanesy,DLanesy,SLanesy,MaxCapMy,MaxCapDy,MaxCapSy,M2Costy,M3Costy,M4Costy,M5Costy,M6Costy,D1Costy,D2Costy,D3Costy,D4Costy,D5Costy,D6Costy,S1Costy,S2Costy,S3Costy,S4Costy,S5Costy,S6Costy,S7Costy,S8Costy"
+        'ev.WriteLine(OutputRow)
 
         'if we are using a single scaling factor then set scaling factors - as a default they are just set to be constant over time
         If RdLPopSource = "Constant" Then
@@ -939,29 +939,5 @@
         MsgBox("Model run failed.  Please consult the log file for details.")
         End
     End Sub
-    Sub GetInput()
 
-        InputRow = ri.ReadLine
-        InputData = Split(InputRow, ",")
-        FlowID(InputCount, 1) = InputData(0)
-        OZone(InputCount, 1) = InputData(1)
-        DZone(InputCount, 1) = InputData(2)
-        Pop1Old(InputCount, 1) = InputData(28)
-        Pop2Old(InputCount, 1) = InputData(29)
-        GVA1Old(InputCount, 1) = InputData(30)
-        GVA2Old(InputCount, 1) = InputData(31)
-        CostsOld(InputCount, 0) = InputData(32)
-        MLanes(InputCount, 1) = InputData(4)
-        DLanes(InputCount, 1) = InputData(5)
-        SLanes(InputCount, 1) = InputData(6)
-        MCap(InputCount, 1) = InputData(33)
-        DCap(InputCount, 1) = InputData(34)
-        SCap(InputCount, 1) = InputData(35)
-        countvar = 36
-        For x = 1 To 19
-            CostsOld(InputCount, x) = CDbl(InputData(countvar))
-            countvar += 1
-        Next
-
-    End Sub
 End Module

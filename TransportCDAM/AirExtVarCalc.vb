@@ -4,20 +4,8 @@
     '1.2 it also now includes fuel consumption variables
     '1.3 this version allows input from the database
     '1.4 fuel efficiency calculation corrected
+    'now all file related functions are using databaseinterface
 
-    Dim AirNodeInputData As IO.FileStream
-    Dim ni As IO.StreamReader
-    Dim AirFlowInputData As IO.FileStream
-    Dim fi As IO.StreamReader
-    Dim NodeExtVarOutputData As IO.FileStream
-    Dim nv As IO.StreamWriter
-    Dim FlowExtVarOutputData As IO.FileStream
-    Dim fv As IO.StreamWriter
-    Dim AirNodeCapData As IO.FileStream
-    Dim nc As IO.StreamReader
-    Dim AirNewCapData As IO.FileStream
-    Dim acn As IO.StreamWriter
-    Dim acr As IO.StreamReader
     Dim NodeInputRow As String
     Dim FlowInputRow As String
     Dim OutputRow As String
@@ -39,7 +27,6 @@
     Dim OZone(223), DZone(223) As Long
     Dim GORID(28) As Long
     Dim FuelCost(90) As Double
-    Dim stf As IO.StreamReader
     Dim stratstring As String
     Dim FuelEff As Double
     Dim airnodefixedcost(28), airflowfixedcost(223) As Double
@@ -70,7 +57,7 @@
 
     Public Sub AirEVMain()
 
-        'get the input files
+        'get all related files
         Call GetFiles()
 
         'set scaling factors - as a default they are just set to be constant over time
@@ -100,6 +87,7 @@
         'need initial file to be sorted by scheme type then by change year then by order of priority
         'first read all compulsory enhancements to intermediate array
 
+        'initialise to read and write capacity change values
         CapCount = 0
         AddingCap = False
         TermToBuild = 0
@@ -181,6 +169,7 @@
                         Exit Do
                     End If
             End Select
+            'exit if year is greater than 2100
             If Breakout = True Then
                 Exit Do
             End If
@@ -239,8 +228,8 @@
 
     Sub GetFiles()
 
+        'read initial year files
         Call ReadData("AirNode", "Input", NodeInputArray, True)
-
         Call ReadData("AirFlow", "Input", FlowInputArray, True)
 
         'read capchange info
