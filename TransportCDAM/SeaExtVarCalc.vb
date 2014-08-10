@@ -5,16 +5,8 @@
     'it also incorporates changes in fuel efficiency
     '1.3 mod fuel efficiency calculations corrected
     '1.4 fuel efficiency and cost calculation corrected
+    'now all file related functions are using databaseinterface
 
-    Dim PortInputData As IO.FileStream
-    Dim pi As IO.StreamReader
-    Dim PortOutputData As IO.FileStream
-    Dim po As IO.StreamWriter
-    Dim PortCapData As IO.FileStream
-    Dim pc As IO.StreamReader
-    Dim PortNewCapData As IO.FileStream
-    Dim pnc As IO.StreamWriter
-    Dim pncr As IO.StreamReader
     Dim InputRow As String
     Dim OutputRow As String
     Dim PopGrowth As Double
@@ -80,13 +72,16 @@
         'read initial input data
         Call ReadData("Seaport", "Input", InputArray, True)
 
+        'start read CapArray into the first row
         CapCount = 0
         AddingCap = False
         tonnestobuild = 0
+        'read from the first row
         CapNum = 1
         Do
             Call GetCapData()
-            If CapArray(CapNum, 0) = 0 Then
+            'exit the loop if read to the end of the array
+            If CapArray(CapNum, 0) = "" Then
                 Exit Do
             End If
             Select Case CapType
@@ -146,17 +141,18 @@
                         Exit Do
                     End If
             End Select
+            'if the cap year over our range of 90 year, then exit
             If Breakout = True Then
                 Exit Do
             End If
             CapCount += 1
         Loop
-        'then sort the intermediate array by port ID, then by year of implementation
+        'then sort the intermediate array by PortID, then by year of implementation
         For v = 0 To 0
             sortarray(v) = NewCapDetails(v, 0) & "&" & NewCapDetails(v, 1) & "&" & v
         Next
         Array.Sort(sortarray)
-        'write all lines to intermediate capacity file
+
         For v = 0 To 0
             sortedline = sortarray(v)
             splitline = Split(sortedline, "&")
@@ -165,20 +161,16 @@
                 CapArray(v, i) = NewCapDetails(arraynum, i)
             Next
         Next
+        'write all lines to intermediate capacity file
         Call WriteData("Seaport", "NewCap", CapArray)
 
         'read first line of new capacity
         AddingCap = True
-        'reset Capnum to read the first line
+        'reset CapNum to read the first row
         CapNum = 1
         Call GetCapData()
 
-        'If NewSeaCap = True Then
-        '    Call GetCapData()
-        'End If
-
-        'v1.3
-        'get fuel efficiency values from the strategy file
+        'read strategy file data to strategy array
         Call ReadData("Strategy", "", stratarray)
         'v1.4 set FuelEff(0) to 1
         FuelEff(0) = 1
@@ -189,57 +181,19 @@
         'then loop through rest of rows in input data file
         Call CalcPortData()
 
-        'Do Until PortCount > 47
-        '    CapChanged = False
-        '    Call CalcPortData()
-        '    PortCount += 1
-        'Loop
 
 
     End Sub
-
-    Sub GetFiles()
-        Dim outstring As String
-
-
-        'if capacity is changing then get capacity change file
-        'v1.3 do this anyway to include compulsory changes
-        PortCapData = New IO.FileStream(DirPath & CapFilePrefix & "SeaFreightCapChange.csv", IO.FileMode.Open, IO.FileAccess.Read)
-        pc = New IO.StreamReader(PortCapData, System.Text.Encoding.Default)
-        'read header row
-        pc.ReadLine()
-        'If NewSeaCap = True Then
-        '    PortCapData = New IO.FileStream(DirPath & CapFilePrefix & "SeaFreightCapChange.csv", IO.FileMode.Open, IO.FileAccess.Read)
-        '    pc = New IO.StreamReader(PortCapData, System.Text.Encoding.Default)
-        '    'read header row
-        '    pc.ReadLine()
-        'End If
-        'v1.3 new intermediate capacity file
-        PortNewCapData = New IO.FileStream(DirPath & EVFilePrefix & "SeaFreightNewCap.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
-        pnc = New IO.StreamWriter(PortNewCapData, System.Text.Encoding.Default)
-        'write header row
-        outstring = "PortID,ChangeYear,NewLBCap,NewDBCap,NewGCCap,NewLLCap,NewRRCap"
-        pnc.WriteLine(outstring)
-
-    End Sub
-
     Sub CalcPortData()
         Dim newcount As Integer
         Dim basecount As Integer
-        'Dim GORID As Long
         Dim GORID(47, 1) As Long
         Dim keylookup As String
         Dim newval As Double
         Dim DieselOld, DieselNew As Double
         Dim i As Integer
 
-        'Load in port base values 
-
-        'InputRow = pi.ReadLine
-        'PortBaseData = Split(InputRow, ",")
-        'GORID = PortBaseData(14)
-
-        'initializing sea energy source input file
+        'use the data in the database file
         If SeaEneSource = "Database" Then
             DieselOld = enearray(1, 2)
         End If
@@ -400,6 +354,7 @@
 
     Sub GetCapData()
 
+        'read CapArray until reach the end
         If CapArray(CapNum, 0) <> "" Then
             CapID = CapArray(CapNum, 0)
             If CapArray(CapNum, 1) = "" Then
@@ -423,7 +378,7 @@
             CapNum += 1
 
         Else
-
+            'if empty, do nothing
         End If
 
 
