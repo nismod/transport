@@ -9,17 +9,8 @@
     '1.4 fuel efficiency and cost calculations corrected
     '1.6 Recode to calculate by annual timesteps, the dimension of the parameter array has been increased by one to store previous year's data
     'may need to check if the code works if RdZEneSource is not = "Database"
+    'now all file related functions are using databaseinterface
 
-    Dim RoadInputData As IO.FileStream
-    Dim ri As IO.StreamReader
-    Dim ExtVarOutputData As IO.FileStream
-    Dim ev As IO.StreamWriter
-    Dim RoadZoneCapData As IO.FileStream
-    Dim rzc As IO.StreamReader
-    Dim RoadZoneNewCapData As IO.FileStream
-    Dim rzcw As IO.StreamWriter
-    Dim rzcn As IO.StreamReader
-    Dim stf As IO.StreamReader
     Dim InputRow As String
     Dim OutputRow As String
     Dim InputData() As String
@@ -50,7 +41,6 @@
     Dim arraynum As Long
     Dim stratstring As String
     Dim stratarray(90, 95) As String
-    'declaration of parameters in Sub CalcZoneData()
     Dim ZoneID As String
     Dim PopOld(144, 0) As Double
     Dim GVAOld(144, 0) As Double
@@ -84,9 +74,6 @@
     Dim enearray(91, 6) As String
     Dim InputArray(144, 33) As String
     Dim OutputArray(144, 45) As String
-
-
-
 
 
     Public Sub RoadZoneEVMain()
@@ -123,9 +110,6 @@
             CostGrowth = 1.01
         End If
 
-        'if including capacity changes then read first line of the capacity file and break it down into relevant sections
-        'v1.4 change this now happens automatically
-        'create intermediate capacity file
         'read first line
         capnum = caparray(newcapnum, 8)
         zonecapcount = 0
@@ -147,6 +131,8 @@
             sortarray(v) = padzone & "&" & padyear & "&" & v
         Next
         Array.Sort(sortarray)
+
+        'reset the zonecaparray to the begining row
         zonecapnum = 1
         For v = 1 To (zonecapcount - 1)
             sortedline = sortarray(v)
@@ -203,10 +189,12 @@
 
         'Set year as 1 to start with
         Year = 1
+
         If WPPL = True Then
             WPPLStart = WPPLYear - 2010
         End If
 
+        'loop through all 90 years
         Do While Year < 91
 
             InputCount = 1
@@ -217,6 +205,7 @@
                 InputCount += 1
             Loop
 
+            'create the file if year 1
             If Year = 1 Then
                 Call WriteData("RoadZone", "ExtVar", OutputArray, , True)
             Else
@@ -317,6 +306,7 @@
 
         End If
 
+        'change indicator to ZoneId for lookup
         ZoneID = InputCount
 
 
@@ -559,6 +549,7 @@
     Sub GetCapData()
 
         If zonecaparray(zonecapnum, 0) Is Nothing Then
+            'do nothing if reach the end
         Else
             CapID = zonecaparray(zonecapnum, 0)
             CapYear = zonecaparray(zonecapnum, 1)
