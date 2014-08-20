@@ -1,4 +1,4 @@
-﻿Module RlLinkExtVarCalc1pt5
+﻿Module RlLinkExtVarCalc
     'creates an external variables file for the rail model, based on a single year's input data and growth factors for the external variables
     '1.2 this version allows capacity changes to be specified
     '1.2 it now allows external variable growth factors to be taken from an input file and to vary over time
@@ -105,8 +105,7 @@
         'read initial input data
         Call ReadData("RailLink", "Input", InputArray, True)
 
-        'read capacity change data
-        Call ReadData("RailLink", "CapChange", CapArray)
+        Call ReadData("RailLink", "CapChange", CapArray, modelRunID)
 
         'start from the first row of CapArray
         CapNum = 1
@@ -210,14 +209,14 @@
         'initiallize read elelct file
         Elect = True
         'read the electrification list file as an input file
-        'read eletrification scheme info
-        Call ReadData("RailLink", "ElSchemes", elearray)
+        'read ele scheme info
+        Call ReadData("RailLink", "ElSchemes", elearray, modelRunID)
         EleNum = 1
         Call GetElectData()
 
         'v1.4
         'get fuel efficiency and other values from the strategy file
-        Call ReadData("Strategy", "", stratarray)
+        Call ReadData("Strategy", "", stratarray, modelRunID)
         'v1.5 set fuel efficiency old to 1
         FuelEffOld(0) = 1
         FuelEffOld(1) = 1
@@ -279,14 +278,14 @@
 
         'need to set a base value for the diesel fuel cost for this zone
         If RlLEneSource = "Database" Then
-            Call ReadData("Energy", "", enearray)
+            Call ReadData("Energy", "", enearray, modelRunID)
             InDieselOldAll = enearray(1, 2)
             InElectricOldAll = enearray(1, 3)
         End If
 
         'get scaling factor file if we are using one
         If RlLOthSource = "File" Then
-            Call ReadData("RailLink", "EVScale", ScalingData)
+            Call ReadData("RailLink", "EVScale", ScalingData, modelRunID)
         End If
 
         'set year as 1 to start with
@@ -656,10 +655,10 @@ NextYear:
         Dim zonecheck As Boolean
 
         'read old link scheme file
-        Call ReadData("RailLink", "OldRlEl", schemearray)
+        Call ReadData("RailLink", "OldRlEl", schemearray, modelRunID)
 
         'read old zone scheme file
-        Call ReadData("RailLink", "OldRzEl", zonearray)
+        Call ReadData("RailLink", "OldRzEl", zonearray, modelRunID)
 
         kmtoelectrify = 0
 

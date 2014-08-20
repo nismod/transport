@@ -1,4 +1,4 @@
-﻿Module RoadModel1pt4
+﻿Module RoadModel
     'This version is complete, and dependent on module FullCDAM for file paths.  It also now allows elasticities to vary over time.
     'version 1.2 has a revised corrected speed-flow relationship, and incorporates latent demand variables etc
     'now also includes differential costs for different vehicle types
@@ -12,7 +12,19 @@
     'run time has been increased because the increased dimension requires extra memory and the temp file needs to be read and write for every step, but still acceptable
     'v1.7 now corporate with Database function, read/write are using the function in database interface
     'now all file related functions are using databaseinterface
-
+    Dim RlLinkInputData As IO.FileStream
+    Dim rai As IO.StreamReader
+    Dim RlLinkExtVar As IO.FileStream
+    Dim rae As IO.StreamReader
+    Dim RlLinkOutputData As IO.FileStream
+    Dim rao As IO.StreamWriter
+    Dim RlLinkElasticities As IO.FileStream
+    Dim ral As IO.StreamReader
+    Dim RlLinkNewCap As IO.FileStream
+    Dim ranc As IO.StreamWriter
+    Dim RlLinkFuelUsed As IO.FileStream
+    Dim rafc As IO.StreamWriter
+    Dim rast As IO.StreamReader
     Dim InputFlow As String
     Dim FlowDetails() As String
     Dim FlowID(291, 1) As Long
@@ -34,8 +46,8 @@
     Dim HourlySpeeds(291, 20, 24) As Double
     Dim RoadTypeFlows(291, 2, 24) As Double
     Dim RoadTypeFlowsNew As Double
-    Dim sc As Byte
-    Dim h As Byte
+    Dim sc As Integer
+    Dim h As Integer
     Dim FreeFlowSpeeds(1, 19) As String
     Dim MaxCap(291, 2) As String
     Dim SpeedNew As Double
@@ -105,9 +117,10 @@
     Dim InputArray(291, 54) As String
     Dim OutputArray(291, 58) As String
     Dim TempArray(291, 3037) As String
+    Dim TempAnArray(291, 34) As String
+    Dim TempHArray(7007, 483) As String
     Dim NewCapArray(291, 3) As String
     Dim NewCapNum As Integer
-
 
 
     Public Sub RoadLinkMain()
@@ -127,12 +140,14 @@
         Do Until YearNum > StartYear + Duration
 
             'load external variables
-            Call ReadData("RoadLink", "ExtVar", ExternalValues, , YearNum)
+            Call ReadData("RoadLink", "ExtVar", ExternalValues, modelRunID, , YearNum)
 
             'read from initial file if year 1, otherwise update from temp file
             If YearNum = 1 Then
                 Call ReadData("RoadLink", "Input", InputArray, True)
             Else
+                Call ReadData("RoadLink", "Temp Annual", TempAnArray, False)
+                Call ReadData("RoadLink", "Temp Hourly", TempHArray, False)
                 ReDim Preserve InputArray(291, 3037)
                 Call ReadData("RoadLink", "Input", InputArray, False)
             End If
@@ -198,13 +213,20 @@
     End Sub
 
     Sub SetFiles()
+        'Dim DayTripProfile As IO.FileStream
+        'Dim tp As IO.StreamReader
+        'Dim row As String
+        'Dim SpeedInput As IO.FileStream
+        'Dim si As IO.StreamReader
+        'Dim rls As IO.StreamReader
+        Dim stratarray(90, 95) As String
 
         'read daily trip data
-        Call ReadData("RoadLink", "DailyProfile", TimeProfile)
+        Call ReadData("RoadLink", "DailyProfile", TimeProfile, modelRunID)
 
 
         'read free flow speed data
-        Call ReadData("RoadLink", "FreeFlowSpeed", FreeFlowSpeeds)
+        Call ReadData("RoadLink", "FreeFlowSpeed", FreeFlowSpeeds, modelRunID)
 
         If UpdateExtVars = True Then
             If NewRdLCap = True Then
@@ -216,12 +238,12 @@
 
 
         'load the elasticities
-        Call ReadData("RoadLink", "Elasticity", RoadEls)
+        Call ReadData("RoadLink", "Elasticity", RoadEls, modelRunID)
 
         'if using variable trip rates then set up the trip rate variable
         If TripRates = "Strategy" Then
             'get the strat values
-            Call ReadData("Strategy", "", stratarray)
+            Call ReadData("Strategy", "", stratarray, modelRunID)
             For r = 1 To 90
                 RdTripRates(0, r) = stratarray(r, 91)
                 RdTripRates(1, r) = stratarray(r, 92)
@@ -247,6 +269,9 @@
     Sub LoadInputRow()
         Dim varnum As Long
         Dim i As Long
+        Dim hrow As Integer
+        Dim Zone1ID As Integer
+        Dim Zone2ID As Integer
 
         If YearNum = 1 Then
             'read base year (year 0) data
@@ -335,61 +360,145 @@
             ReDim ChargeNew(19, 24)
 
         Else
-            'if not first year, read the values in the temp file format
-            FlowID(link, 1) = InputArray(link, 1)
-            RoadTypeLanes(link, 0) = InputArray(link, 2)
-            RoadTypeLanes(link, 1) = InputArray(link, 3)
-            RoadTypeLanes(link, 2) = InputArray(link, 4)
-            RoadTypeLanesNew(link, 0) = InputArray(link, 5)
-            RoadTypeLanesNew(link, 1) = InputArray(link, 6)
-            RoadTypeLanesNew(link, 2) = InputArray(link, 7)
+            'if not first year, read the values 
+            ' from the Temp Annual array
+            FlowID(link, 1) = TempAnArray(link, 2)
+            RoadTypeLanes(link, 0) = TempAnArray(link, 4)
+            RoadTypeLanes(link, 1) = TempAnArray(link, 5)
+            RoadTypeLanes(link, 2) = TempAnArray(link, 6)
+            RoadTypeLanesNew(link, 0) = TempAnArray(link, 7)
+            RoadTypeLanesNew(link, 1) = TempAnArray(link, 8)
+            RoadTypeLanesNew(link, 2) = TempAnArray(link, 9)
             For x = 0 To 19
-                SpeedCatFlows(link, x) = InputArray(link, 8 + x)
+                SpeedCatFlows(link, x) = TempAnArray(link, 10 + x)
             Next
-            Z1Pop(link, 1) = InputArray(link, 28)
-            Z2Pop(link, 1) = InputArray(link, 29)
-            Z1GVA(link, 1) = InputArray(link, 30)
-            Z2GVA(link, 1) = InputArray(link, 31)
+            MaxCap(link, 0) = TempAnArray(link, 30)
+            MaxCap(link, 1) = TempAnArray(link, 31)
+            MaxCap(link, 2) = TempAnArray(link, 32)
+            AddedLanes(link, 0) = TempAnArray(link, 33)
+            AddedLanes(link, 1) = TempAnArray(link, 34)
+            AddedLanes(link, 2) = TempAnArray(link, 35)
 
-            i = 32
-            'for all 20 road link categories and 24 hours
-            For x = 0 To 19
-                For c = 0 To 23
-                    CostOld(link, x, c) = InputArray(link, i)
+            'Read from the Temp Hourly Array
+            'Loop through the hourly data for each roadtype (RoadType) and speed capacity (sc)
+            h = 0
+            Do Until h > 23
+                'work out the row number for the hourly data
+                hrow = (link - 1) * 24 + h
+                i = 4
+                sc = 0
+                Do While sc < 20
+                    RoadType = AssignRoadType(sc)
+                    OldHourlyFlows(link, sc, h) = TempHArray(hrow, i)
                     i += 1
-                Next
-            Next
-
-            MaxCap(link, 0) = InputArray(link, 512)
-            MaxCap(link, 1) = InputArray(link, 513)
-            MaxCap(link, 2) = InputArray(link, 514)
-            AddedLanes(link, 0) = InputArray(link, 515)
-            AddedLanes(link, 1) = InputArray(link, 516)
-            AddedLanes(link, 2) = InputArray(link, 517)
-
-            i = 518
-
-            'for all 20 road link categories and 24 hours
-            'must use "sc", as it is the variable needs to be passed to AssignRoadType()
-            sc = 0
-            Do While sc < 20
-                Call AssignRoadType()
-                h = 0
-                For c = 0 To 23
-                    OldHourlyFlows(link, sc, c) = InputArray(link, i)
+                    RoadTypeFlows(link, RoadType, h) = TempHArray(hrow, i)
                     i += 1
-                    RoadTypeFlows(link, RoadType, c) = InputArray(link, i)
+                    ChargeOld(link, sc, h) = TempHArray(hrow, i)
                     i += 1
-                    ChargeOld(link, sc, c) = InputArray(link, i)
+                    LatentHourlyFlows(link, sc, h) = TempHArray(hrow, i)
                     i += 1
-                    LatentHourlyFlows(link, sc, c) = InputArray(link, i)
+                    NewHourlySpeeds(link, sc, h) = TempHArray(hrow, i)
                     i += 1
-                    NewHourlySpeeds(link, sc, c) = InputArray(link, i)
-                    i += 1
-                Next
+                Loop
                 sc += 1
             Loop
 
+
+                'Get Population and GVA data
+                get_zone_by_flowid(FlowID(link, 1), Zone1ID, Zone2ID)
+                Z1Pop(link, 1) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "road", Zone1ID)
+                Z2Pop(link, 1) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "road", Zone2ID)
+                Z1GVA(link, 1) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "road", Zone1ID)
+                Z2GVA(link, 1) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "road", Zone2ID)
+
+
+
+                'Old code for inputing Temp RoadLink data from text file 
+                'FlowID(link, 1) = InputArray(link, 1)
+                'RoadTypeLanes(link, 0) = InputArray(link, 2)
+                'RoadTypeLanes(link, 1) = InputArray(link, 3)
+                'RoadTypeLanes(link, 2) = InputArray(link, 4)
+                'RoadTypeLanesNew(link, 0) = InputArray(link, 5)
+                'RoadTypeLanesNew(link, 1) = InputArray(link, 6)
+                'RoadTypeLanesNew(link, 2) = InputArray(link, 7)
+                'For x = 0 To 19
+                '    SpeedCatFlows(link, x) = InputArray(link, 8 + x)
+                'Next
+                'Z1Pop(link, 1) = InputArray(link, 28)
+                'Z2Pop(link, 1) = InputArray(link, 29)
+                'Z1GVA(link, 1) = InputArray(link, 30)
+                'Z2GVA(link, 1) = InputArray(link, 31)
+
+                'i = 32
+                'For x = 0 To 19
+                '    For c = 0 To 23
+                '        CostOld(link, x, c) = InputArray(link, i)
+                '        i += 1
+                '    Next
+                'Next
+
+                'MaxCap(link, 0) = InputArray(link, 512)
+                'MaxCap(link, 1) = InputArray(link, 513)
+                'MaxCap(link, 2) = InputArray(link, 514)
+                'AddedLanes(link, 0) = InputArray(link, 515)
+                'AddedLanes(link, 1) = InputArray(link, 516)
+                'AddedLanes(link, 2) = InputArray(link, 517)
+
+                ''XUCHENG - you need to put more commenting in your code - why does this only do this until sc < 20 ?
+                'i = 518
+                'sc = 0
+                'Do While sc < 20
+                '    RoadType = AssignRoadType(sc)
+                '    h = 0
+                '    Do Until h > 23
+                '        OldHourlyFlows(link, sc, h) = InputArray(link, i)
+                '        i += 1
+                '        RoadTypeFlows(link, RoadType, h) = InputArray(link, i)
+                '        i += 1
+                '        ChargeOld(link, sc, h) = InputArray(link, i)
+                '        i += 1
+                '        LatentHourlyFlows(link, sc, h) = InputArray(link, i)
+                '        i += 1
+                '        NewHourlySpeeds(link, sc, h) = InputArray(link, i)
+                '        i += 1
+                '        h += 1
+                '    Loop
+                '    sc += 1
+                'Loop
+
+                'read standard cost value and each hour value into array "InputDetail"
+                'For i = 0 To 24
+                '    If i = 0 Then
+                '        FlowID(link, 1) = InputArray(link, 1)
+                '        'update lane variables to current values
+                '        RoadTypeLanesNew(link, 0) = InputArray(link, 22)
+                '        RoadTypeLanesNew(link, 1) = InputArray(link, 23)
+                '        RoadTypeLanesNew(link, 2) = InputArray(link, 24)
+                '    End If
+                '    For j = 0 To 19
+                '        InputDetail(i, j) = CDbl(Val(result(j + 2)))
+                '        If i <> 0 Then
+                '            CostOld(link, j, i - 1) = CDbl(Val(result(j + 25)))
+                '            LatentHourlyFlows(link, j, i - 1) = CDbl(Val(result(j + 45)))
+                '            If CongestionCharge = True Then
+                '                ChargeOld(link, j, i - 1) = CDbl(Val(result(j + 65)))
+                '            End If
+                '            NewHourlySpeeds(link, j, i - 1) = CDbl(Val(result(j + 85)))
+                '        End If
+                '    Next
+                'Next
+
+                ''store the values into computer memory
+                'sc = 0
+                'Do While sc < 20
+                '    SpeedCatFlowsNew(sc) = InputDetail(0, sc)
+                '    h = 0
+                '    Do While h < 24
+                '        NewHourlyFlows(sc, h) = InputDetail(h + 1, sc)
+                '        h += 1
+                '    Loop
+                '    sc += 1
+                'Loop
 
         End If
     End Sub
@@ -402,7 +511,7 @@
             sc = 0
 
             Do While sc < 20
-                Call AssignRoadType()
+                RoadType = AssignRoadType(sc)
                 If RoadTypeLanesNew(link, RoadType) > 0 Then
                     If SpeedCatFlows(link, sc) > 0 Then
                         SpeedCatFlows(link, sc) = (SpeedCatFlows(link, sc) * RoadTypeLanes(link, RoadType)) / RoadTypeLanesNew(link, RoadType)
@@ -453,7 +562,7 @@
 
         'for all 20 road link categories and 24 hours
         Do While sc < 20
-            Call AssignRoadType()
+            RoadType = AssignRoadType(sc)
             Do While h < 24
                 OldHourlyFlows(link, sc, h) = SpeedCatFlows(link, sc) * HourProportions(h)
                 RoadTypeFlows(link, RoadType, h) = RoadTypeFlows(link, RoadType, h) + OldHourlyFlows(link, sc, h)
@@ -470,6 +579,10 @@
                 MaxCap(link, t) = Math.Round(RoadTypeFlows(link, t, 8) + 0.5)
             End If
         Next
+    End Sub
+
+    Sub GetExternalValues()
+        'v1.2 modification - now get external variable values for maximum road capacities
     End Sub
 
     Sub BaseSpeeds()
@@ -497,7 +610,7 @@
             'for all 20 road link categories and 24 hours
             Do While sc < 20
                 Do While h < 24
-                    Call AssignRoadType()
+                    RoadType = AssignRoadType(sc)
                     'if traffic less than free flow capacity then adopt free flow speed
                     If RoadTypeFlows(link, RoadType, h) < (FreeFlowCU * MaxCap(link, RoadType)) Then
                         HourlySpeeds(link, sc, h) = FreeFlowSpeeds(1, sc)
@@ -663,7 +776,10 @@
 
         End If
     End Sub
-    Sub AssignRoadType()
+
+    Function AssignRoadType(ByVal sc As Integer) As Integer
+        Dim RoadType As Integer
+
         'assigns a speed category to a road type
         Select Case sc
             Case 0, 1, 2, 3, 4, 5
@@ -674,9 +790,12 @@
 
             Case 12, 13, 14, 15, 16, 17, 18, 19
                 RoadType = 2
-
+            Case Else
+                RoadType = 3
         End Select
-    End Sub
+
+        Return RoadType
+    End Function
 
     Sub SpeedCalc()
         'calculates change in speed as result of change in flow
@@ -1316,7 +1435,9 @@
     End Sub
     Sub WriteOutputRow()
         Dim cu As Double
+        'Dim newcapstring As String
         Dim i As Integer
+        Dim hrow As Integer
 
         'write to output array
         OutputArray(link, 0) = YearNum
@@ -1356,7 +1477,7 @@
             SpeedCatFlows(link, sc) = SpeedCatFlowsNew(sc)
             'v1.2 modification - now also updates hourly flows
             'v1.2 additional modification - updates road type flows too
-            Call AssignRoadType()
+            RoadType = AssignRoadType(sc)
             h = 0
             Do Until h > 23
                 OldHourlyFlows(link, sc, h) = NewHourlyFlows(sc, h)
@@ -1451,7 +1572,55 @@
             End If
         End If
 
-        'write to temp array
+        'write to Temp Annual array
+        TempAnArray(link, 0) = modelRunID
+        TempAnArray(link, 1) = YearNum
+        TempAnArray(link, 2) = FlowID(link, 1)
+        TempAnArray(link, 3) = RoadTypeLanes(link, 0)
+        TempAnArray(link, 4) = RoadTypeLanes(link, 1)
+        TempAnArray(link, 5) = RoadTypeLanes(link, 2)
+        TempAnArray(link, 6) = RoadTypeLanesNew(link, 0)
+        TempAnArray(link, 7) = RoadTypeLanesNew(link, 1)
+        TempAnArray(link, 8) = RoadTypeLanesNew(link, 2)
+        For x = 0 To 19
+            TempAnArray(link, 9 + x) = SpeedCatFlows(link, x)
+        Next
+        TempAnArray(link, 29) = MaxCap(link, 0)
+        TempAnArray(link, 30) = MaxCap(link, 1)
+        TempAnArray(link, 31) = MaxCap(link, 2)
+        TempAnArray(link, 32) = AddedLanes(link, 0)
+        TempAnArray(link, 33) = AddedLanes(link, 1)
+        TempAnArray(link, 34) = AddedLanes(link, 2)
+
+        'Write to the Temp Hourly Array
+        'Loop through the hourly data for each roadtype (RoadType) and speed capacity (sc)
+        h = 0
+        Do Until h > 23
+            'work out the row number for the hourly data
+            hrow = (link - 1) * 24 + h
+            'write to TempFlow array
+            TempHArray(hrow, 0) = modelRunID
+            TempHArray(hrow, 1) = YearNum
+            TempHArray(hrow, 2) = FlowID(link, 1)
+            TempHArray(hrow, 3) = h + 1
+            i = 4
+            sc = 0
+            Do While sc < 20
+                RoadType = AssignRoadType(sc)
+                TempHArray(hrow, i) = OldHourlyFlows(link, sc, h)
+                i += 1
+                TempHArray(hrow, i) = RoadTypeFlows(link, RoadType, h)
+                i += 1
+                TempHArray(hrow, i) = ChargeOld(link, sc, h)
+                i += 1
+                TempHArray(hrow, i) = LatentHourlyFlows(link, sc, h)
+                i += 1
+                TempHArray(hrow, i) = NewHourlySpeeds(link, sc, h)
+                i += 1
+            Loop
+        Loop
+
+        'write to Temp array - NO LONGER NEEDED
         TempArray(link, 0) = YearNum
         TempArray(link, 1) = FlowID(link, 1)
         TempArray(link, 2) = RoadTypeLanes(link, 0)
@@ -1488,7 +1657,7 @@
         'for all 20 road link categories and 24 hours
         sc = 0
         Do While sc < 20
-            Call AssignRoadType()
+            RoadType = AssignRoadType(sc)
             h = 0
             Do Until h > 23
                 TempArray(link, i) = OldHourlyFlows(link, sc, h)

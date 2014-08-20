@@ -59,7 +59,8 @@
     Public Duration As Integer
     Public logNum As Integer
     Public logarray(47, 0) As String
-    Public ModelRunID As Integer
+    Public modelRunID As Integer
+    Public modelRunYear As Integer
     Public ScenarioID As Integer
     Public Scenario As Integer
     Public StrategyID As Integer
@@ -73,21 +74,19 @@
     Dim Subtype As String
 
 
-    Public Function RunCDAM(ByVal ModelRunID As Integer, ByVal Year As Integer) As Boolean
+    Public Function runCDAM(ByVal ModelRun_ID As Integer, ByVal Model_Year As Integer) As Boolean
         'Try
 
-        ModelRunID = ModelRunID
-
-
-        ConnectToDBase()
+        modelRunID = ModelRun_ID
+        modelRunYear = Model_Year
 
         'Get Model Run Details including 
-        If GetModelRunDetails() = False Then
+        If getModelRunDetails() = False Then
             Throw New System.Exception("Error getting Model Run details from database")
         End If
 
         'Run Transport Model
-        FullMain(Year)
+        FullMain()
 
         Return True
 
@@ -97,17 +96,16 @@
         'End Try
     End Function
 
-    Private Function GetModelRunDetails() As Boolean
-        Dim mrdarray As String(,)
+    Private Function getModelRunDetails() As Boolean
+        Dim mrdarray As String(,) = Nothing
 
-        Call ReadData("System", "ModelRunDetails", mrdarray)
-
+        Call ReadData("System", "ModelRunDetails", mrdarray, modelRunID)
 
         Return True
 
     End Function
 
-    Sub FullMain(ByVal Year As Integer)
+    Sub FullMain()
 
         'get directory path for files - **now unnecessary as set by user
         'DirPath = "\\soton.ac.uk\ude\PersonalFiles\Users\spb1g09\mydocuments\Southampton Work\ITRC\Transport CDAM\Model Inputs\"

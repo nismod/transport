@@ -220,7 +220,8 @@
         If FilePrefix = "" Then
             FilePrefix = System.DateTime.Now
         End If
-        Call FullMain(1)
+        modelRunYear = 2010
+        Call FullMain()
         End
     End Sub
 
@@ -234,7 +235,8 @@
         If FilePrefix = "" Then
             FilePrefix = System.DateTime.Now
         End If
-        Call FullMain(1)
+        modelRunYear = 2010
+        Call FullMain()
         End
     End Sub
 
@@ -368,7 +370,8 @@
         If FilePrefix = "" Then
             FilePrefix = System.DateTime.Now
         End If
-        Call FullMain(1)
+        modelRunYear = 2010
+        Call FullMain()
         End
     End Sub
 
@@ -382,7 +385,8 @@
         If FilePrefix = "" Then
             FilePrefix = System.DateTime.Now
         End If
-        Call FullMain(1)
+        modelRunYear = 2010
+        Call FullMain()
         End
     End Sub
 

@@ -1,4 +1,4 @@
-﻿Module SeaExtVarCalc1pt4
+﻿Module SeaExtVarCalc
     '1.2 creates an external variables file for the seaport freight model
     '1.2 fuel efficiency variable now added
     '1.3 this version allows input from the database
@@ -62,11 +62,11 @@
         'first read all compulsory enhancements to intermediate array
 
         'read capchange info
-        Call ReadData("Seaport", "CapChange", CapArray)
+        Call ReadData("Seaport", "CapChange", CapArray, modelRunID)
 
         'read energy file
         If SeaEneSource = "Database" Then
-            Call ReadData("Energy", "", enearray)
+            Call ReadData("Energy", "", enearray, modelRunID)
         End If
 
         'read initial input data
@@ -170,8 +170,13 @@
         CapNum = 1
         Call GetCapData()
 
-        'read strategy file data to strategy array
-        Call ReadData("Strategy", "", stratarray)
+        'If NewSeaCap = True Then
+        '    Call GetCapData()
+        'End If
+
+        'v1.3
+        'get fuel efficiency values from the strategy file
+        Call ReadData("Strategy", "", stratarray, modelRunID)
         'v1.4 set FuelEff(0) to 1
         FuelEff(0) = 1
         For y = 1 To 90

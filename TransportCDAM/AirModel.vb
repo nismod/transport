@@ -1,4 +1,4 @@
-﻿Module AirModel1pt4
+﻿Module AirModel
     'v1.2 fuel consumption estimation added
     'this version works, and is dependent on the Full CDAM module for file path definitions
     'it now also allows for variable elasticities over time, specified via input file
@@ -203,11 +203,11 @@
         End If
 
         'get the elasticity values
-        Call ReadData("AirNode", "Elasticity", AirEl)
+        Call ReadData("AirNode", "Elasticity", AirEl, modelRunID)
 
         If TripRates = "Strategy" Then
             'read from the strategy file
-            Call ReadData("Strategy", "", stratarray)
+            Call ReadData("Strategy", "", stratarray, modelRunID)
             For r = 1 To 90
                 AirTripRates(r) = stratarray(r, 94)
             Next
@@ -255,7 +255,7 @@
         Dim planechange As Boolean
 
         'get external variables for this year
-        Call ReadData("AirNode", "ExtVar", AirportExtVar, , YearNum)
+        Call ReadData("AirNode", "ExtVar", AirportExtVar, modelRunID, , YearNum)
 
         'set rowcount to 1
         rowcount = 1
@@ -438,27 +438,27 @@
                 AirfCapConst(AirportCount, 1) = False
 
             Else
-            'if it is not initial year, read from the temp input
-            AirportField = 0
-            'loop through all elements of the input line, transferring the data to the airport base data array
-            Do While AirportField < 10
-                AirFlowBaseData(AirportCount, AirportField) = FlowInputArray(AirportCount, AirportField)
-                AirportField += 1
-            Loop
+                'if it is not initial year, read from the temp input
+                AirportField = 0
+                'loop through all elements of the input line, transferring the data to the airport base data array
+                Do While AirportField < 10
+                    AirFlowBaseData(AirportCount, AirportField) = FlowInputArray(AirportCount, AirportField)
+                    AirportField += 1
+                Loop
 
-            AirfTripsLatent(AirportCount) = FlowInputArray(AirportCount, 10)
+                AirfTripsLatent(AirportCount) = FlowInputArray(AirportCount, 10)
 
-            'set all the capacity constraint checks for the flow 
-            If FlowInputArray(AirportCount, 11) = 0 Then
-                AirfCapConst(AirportCount, 0) = False
-            ElseIf FlowInputArray(AirportCount, 11) = 1 Then
-                AirfCapConst(AirportCount, 0) = True
-            End If
-            If FlowInputArray(AirportCount, 12) = 0 Then
-                AirfCapConst(AirportCount, 1) = False
-            ElseIf FlowInputArray(AirportCount, 12) = 1 Then
-                AirfCapConst(AirportCount, 1) = True
-            End If
+                'set all the capacity constraint checks for the flow 
+                If FlowInputArray(AirportCount, 11) = 0 Then
+                    AirfCapConst(AirportCount, 0) = False
+                ElseIf FlowInputArray(AirportCount, 11) = 1 Then
+                    AirfCapConst(AirportCount, 0) = True
+                End If
+                If FlowInputArray(AirportCount, 12) = 0 Then
+                    AirfCapConst(AirportCount, 1) = False
+                ElseIf FlowInputArray(AirportCount, 12) = 1 Then
+                    AirfCapConst(AirportCount, 1) = True
+                End If
 
             End If
 
@@ -470,7 +470,7 @@
     Sub GetAirFlowExtVar()
 
         'get external variables for this year
-        Call ReadData("AirFlow", "ExtVar", AirFlowExtVar, , YearNum)
+        Call ReadData("AirFlow", "ExtVar", AirFlowExtVar, modelRunID, , YearNum)
 
     End Sub
 

@@ -1,4 +1,4 @@
-﻿Module IntraZoneRoadModel1pt4
+﻿Module IntraZoneRoadModelB
     '1.3 this version adds in fuel consumption estimation
     'This version adds in a capacity constraint, and is dependent on module FullCDAM for file paths
     'It now also allows elasticities to vary over time, and reads them from an input file
@@ -82,7 +82,7 @@
             NewCapNum = 1
 
             'get external variable values
-            Call ReadData("RoadZone", "ExtVar", ZoneExtVar, , YearCount)
+            Call ReadData("RoadZone", "ExtVar", ZoneExtVar, modelRunID, , YearCount)
 
             'read from the initial file if it is year 2010
             If YearCount = 1 Then
@@ -145,10 +145,10 @@
         End If
 
         'read in elasticity array
-        Call ReadData("RoadZone", "Elasticity", RdZoneEl)
+        Call ReadData("RoadZone", "Elasticity", RdZoneEl, modelRunID)
 
         '130514 note that at the moment this just reads a blank file - need to remove "fileprefix" from string, and then need to modify form1 and build procedure so that it picks up on additional capacity built (ie those tagged '-1' for year)
-        Call ReadData("RoadZone", "CapChange", RoadCapArray)
+        Call ReadData("RoadZone", "CapChange", RoadCapArray, modelRunID)
         CapNum = 1
         If RoadCapArray(CapNum, 0) Is Nothing Then
             '130514 addition of line
@@ -158,7 +158,7 @@
         End If
 
         'get the strategy file
-        Call ReadData("Strategy", "", StratArray)
+        Call ReadData("Strategy", "", StratArray, modelRunID)
 
 
     End Sub

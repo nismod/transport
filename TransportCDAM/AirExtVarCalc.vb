@@ -1,4 +1,4 @@
-﻿Module AirExtVarCalc1pt4
+﻿Module AirExtVarCalc
     'creates two external variable files for the air model, based on a single year's input data and growth factors for the other variables
     '1.2 this version allows capacity changes to be included
     '1.2 it also now includes fuel consumption variables
@@ -75,7 +75,7 @@
         'v1.3 altered so that scenario file is read directly as an input file
         If AirEneSource = "Database" Then
             'read data to energy array from the file
-            Call ReadData("Energy", "", enearray)
+            Call ReadData("Energy", "", enearray, modelRunID)
             For y = 0 To 90
                 FuelCost(y) = enearray(y + 1, 2)
             Next
@@ -233,10 +233,10 @@
         Call ReadData("AirFlow", "Input", FlowInputArray, True)
 
         'read capchange info
-        Call ReadData("AirNode", "CapChange", CapArray)
+        Call ReadData("AirNode", "CapChange", CapArray, modelRunID)
 
         'now get strategy file too
-        Call ReadData("Strategy", "", stratarray)
+        Call ReadData("Strategy", "", stratarray, modelRunID)
 
     End Sub
 

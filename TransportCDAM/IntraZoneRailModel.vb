@@ -1,4 +1,4 @@
-﻿Module IntraZoneRailModel1pt1
+﻿Module IntraZoneRailModel
     'this version can cope with the addition of new stations based on external demand forecasts 
     'it is dependent on module FullCDAM for file paths
     'it now includes a car fuel cost variable
@@ -51,7 +51,7 @@
         Do Until YearCount > StartYear + Duration
 
             'get external variable values
-            Call ReadData("RailZone", "ExtVar", RlZExtVar, , YearCount)
+            Call ReadData("RailZone", "ExtVar", RlZExtVar, modelRunID, , YearCount)
 
             'read from initial file if year 1, otherwise update from temp file
             If YearCount = 1 Then
@@ -103,11 +103,11 @@
         End If
 
         'read in the elasticies
-        Call ReadData("RailZone", "Elasticity", RlZoneEl)
+        Call ReadData("RailZone", "Elasticity", RlZoneEl, modelRunID)
 
         'read in the strategy
         If TripRates = "Strategy" Then
-            Call ReadData("Strategy", "", stratarray)
+            Call ReadData("Strategy", "", stratarray, modelRunID)
             For r = 1 To 90
                 RlzTripRates(r) = stratarray(r, 93)
             Next
@@ -307,6 +307,82 @@
 
     End Sub
 
+    Sub RlZNewBaseValues()
+        'set base values to equal the values from the current year
+        RlZTripsS(InputCount, 0) = NewTripsS
+        RlZPop(InputCount, 0) = RlZExtVar(2, InputCount)
+        RlZGva(InputCount, 0) = RlZExtVar(3, InputCount)
+        RlZCost(InputCount, 0) = RlZExtVar(4, InputCount)
+        RlZStat(InputCount, 0) = RlZExtVar(5, InputCount)
+        RlZCarFuel(InputCount, 0) = RlZExtVar(6, InputCount)
+        RlZGJT(InputCount, 0) = RlZExtVar(7, InputCount)
+    End Sub
 
+    Sub ReadRlZInput()
+
+        If YearCount = 1 Then
+            'year 1 will use the initial input file
+        Else
+            'read the temp file "Flows.csv"
+            RlZFile = New IO.FileStream(DirPath & FilePrefix & "RlZones.csv", IO.FileMode.Open, IO.FileAccess.Read)
+            rlzr = New IO.StreamReader(RlZFile, System.Text.Encoding.Default)
+            'read header line
+            rlzr.ReadLine()
+
+            'read temp file for each link
+            InputCount = 1
+
+            Do While InputCount < 145
+
+                RlZLine = rlzr.ReadLine
+                'TempArray = Split(RlZLine, ",")
+
+                RlZID(InputCount, 0) = TempArray(InputCOunt, 1)
+                RlZPop(InputCount, 0) = TempArray(InputCOunt, 2)
+                RlZGva(InputCount, 0) = TempArray(InputCOunt, 3)
+                RlZCost(InputCount, 0) = TempArray(InputCOunt, 4)
+                RlZStat(InputCount, 0) = TempArray(InputCOunt, 5)
+                RlZCarFuel(InputCount, 0) = TempArray(InputCOunt, 6)
+                RlZGJT(InputCount, 0) = TempArray(InputCOunt, 7)
+                RlZTripsS(InputCount, 0) = TempArray(InputCOunt, 8)
+                FareE(InputCount, 0) = TempArray(InputCOunt, 9)
+
+                InputCount += 1
+            Loop
+
+            rlzr.Close()
+            'delete the temp file to recreate for current year
+            System.IO.File.Delete(DirPath & FilePrefix & "RlZones.csv")
+
+        End If
+
+        'create a temp file 
+        RlZFile = New IO.FileStream(DirPath & FilePrefix & "RlZones.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
+        rlzw = New IO.StreamWriter(RlZFile, System.Text.Encoding.Default)
+
+        'write header row
+
+        OutputRow = "Yeary,ZoneID,PopZ,GvaZ,Cost,Stations,CarFuel,GJT,TripsStat,FareE,"
+        rlzw.WriteLine(OutputRow)
+
+    End Sub
+
+    Sub WriteRlZUpdate()
+
+        'set base values to equal the values from the current year
+        RlZPop(InputCount, 0) = RlZExtVar(2, InputCount)
+        RlZGva(InputCount, 0) = RlZExtVar(3, InputCount)
+        RlZCost(InputCount, 0) = RlZExtVar(4, InputCount)
+        RlZStat(InputCount, 0) = RlZExtVar(5, InputCount)
+        RlZCarFuel(InputCount, 0) = RlZExtVar(6, InputCount)
+        RlZGJT(InputCount, 0) = RlZExtVar(7, InputCount)
+        RlZTripsS(InputCount, 0) = NewTripsS
+
+        'write second row
+        OutputRow = YearCount & "," & RlZID(InputCount, 0) & "," & RlZPop(InputCount, 0) & "," & RlZGva(InputCount, 0) & "," & RlZCost(InputCount, 0) & "," & RlZStat(InputCount, 0) & "," & RlZCarFuel(InputCount, 0) & "," & RlZGJT(InputCount, 0) & "," & RlZTripsS(InputCount, 0) & "," & FareE(InputCount, 0) & ","
+
+        rlzw.WriteLine(OutputRow)
+
+    End Sub
 
 End Module

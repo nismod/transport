@@ -1,4 +1,4 @@
-﻿Module Module1
+﻿Module SeaportModel
     'this version completely revised to forecast five types of freight traffic - capable of dealing with capacity constraints and enhancements on a case by case basis if data available
     'it now also allows variable elasticities over time and by freight type
     'it now also includes a basic fuel consumption estimator
@@ -51,7 +51,7 @@
         Do Until YearNum > StartYear + Duration
 
             'get external variables for this port this year
-            Call ReadData("Seaport", "ExtVar", PortExtVar, , YearNum)
+            Call ReadData("Seaport", "ExtVar", PortExtVar, modelRunID, , YearNum)
 
             'read from initial file if year 1, otherwise update from temp file
             If YearNum = 1 Then
@@ -84,7 +84,8 @@
 
             'create file is true if it is the initial year and write to outputfile and temp file
             If YearNum = StartYear Then
-                Call WriteData("Seaport", "Output", OutputArray, TempArray, True)
+                Call WriteData("Seaport", "Output", OutputArray, , True)
+                Call WriteData("Seaport", "Temp", TempArray, , True)
                 'if the model is building capacity then create new capacity file
                 If BuildInfra = True Then
                     Call WriteData("Seaport", "SeaNewCap", NewCapArray, , True)
@@ -118,14 +119,14 @@
 
         If TripRates = "Strategy" Then
             'get the strat values
-            Call ReadData("Strategy", "", stratarray)
+            Call ReadData("Strategy", "", stratarray, modelRunID)
             For r = 1 To 90
                 SeaTripRates(r) = stratarray(r, 95)
             Next
         End If
 
         'get the elasticity values
-        Call ReadData("Seaport", "Elasticity", SeaEl)
+        Call ReadData("Seaport", "Elasticity", SeaEl, modelRunID)
 
     End Sub
 

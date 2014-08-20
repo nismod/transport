@@ -81,7 +81,7 @@ Module RailModel
             NewCapNum = 1
 
             'get external variables for this year
-            Call ReadData("RailLink", "ExtVar", RlLinkExtVars, , YearNum)
+            Call ReadData("RailLink", "ExtVar", RlLinkExtVars, modelRunID, , YearNum)
 
             'read from initial file if year 1, otherwise update from temp file
             If YearNum = 1 Then
@@ -176,12 +176,12 @@ Module RailModel
         End If
 
         'get the elasticity values
-        Call ReadData("RailLink", "Elasticity", RlLinkEl)
+        Call ReadData("RailLink", "Elasticity", RlLinkEl, modelRunID)
 
 
         'get fuel efficiency data from strategy file
         'also get trip rate info
-        Call ReadData("Strategy", "", stratarray)
+        Call ReadData("Strategy", "", stratarray, modelRunID)
         yearchecker = 1
         Do Until yearchecker > 90
             RlFuelEff(yearchecker, 0) = stratarray(yearchecker, 67)

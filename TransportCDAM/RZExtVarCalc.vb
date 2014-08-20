@@ -1,4 +1,4 @@
-﻿Module RZExtVarCalc1pt4
+﻿Module RZExtVarCalc
     'creates an external variables file for the intrazonal road model, based on a single year's input data and growth factors for the other variables
     '1.2 this version allows capacity changes to be specified
     '1.2 it also disaggregates lane km by road type and specifies vehicle fuel proportions
@@ -224,16 +224,16 @@
         Call ReadData("RoadZone", "Input", InputArray, True)
 
         'read new capacity data
-        Call ReadData("RoadZone", "NewCap", caparray)
+        Call ReadData("RoadZone", "NewCap", caparray, modelRunID)
         newcapnum = 1
 
         'read energy file
         If RdZEneSource = "Database" Then
-            Call ReadData("Energy", "", enearray)
+            Call ReadData("Energy", "", enearray, modelRunID)
         End If
 
         'open the strategy file
-        Call ReadData("Strategy", "", stratarray)
+        Call ReadData("Strategy", "", stratarray, modelRunID)
 
     End Sub
     'v1.6 to calculate by annual timesteps, parameters for each zone need to be seperated

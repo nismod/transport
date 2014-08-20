@@ -1,4 +1,4 @@
-﻿Module RdLinkExtVarCalc1pt5
+﻿Module RdLinkExtVarCalc
     'creates an external variables file for the road model, based on a single year's input data and growth factors for the other variables
     '1.2 this version allows capacity changes to be specified
     '1.3 this version can cope with database input files
@@ -902,9 +902,9 @@
             Year += 1
         Loop
 
-            If RdLEneSource = "Database" Then
-                zer.Close()
-            End If
+        If RdLEneSource = "Database" Then
+            zer.Close()
+        End If
 
     End Sub
 

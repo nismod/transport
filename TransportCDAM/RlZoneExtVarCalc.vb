@@ -1,4 +1,4 @@
-﻿Module RlZoneExtVarCalc1pt4
+﻿Module RlZoneExtVarCalc
     '1.2 this version allows capacity changes to be included
     '1.2 it now allows external variable growth factors to be taken from an input file and to vary over time
     '1.3 this version allows input from the database
@@ -79,7 +79,7 @@
 
         '1.8
         'get fuel efficiency values from the strategy file using database interface
-        Call ReadData("Strategy", "", stratarray)
+        Call ReadData("Strategy", "", stratarray, modelRunID)
 
         'v1.4 set fuel efficiency old to 1
         FuelEffOld(0) = 1
@@ -116,25 +116,25 @@
 
 
         'read initial input data
-        Call ReadData("RailZone", "Input", InputArray)
+        Call ReadData("RailZone", "Input", InputArray, modelRunID)
 
         'if capacity is changing then get capacity change file
         If NewRlZCap = True Then
             'read capchange info
-            Call ReadData("RailZone", "CapChange", CapArray)
+            Call ReadData("RailZone", "CapChange", CapArray, modelRunID)
             CapNum = 1
         End If
 
 
-        'read electric scheme info
-        Call ReadData("RailZone", "ElSchemes", elearray)
+        'read ele scheme info
+        Call ReadData("RailZone", "ElSchemes", elearray, modelRunID)
         EleNum = 1
 
         'read file according to the setting
         If RlZOthSource = "File" Then
-            Call ReadData("RailZone", "EVScale", ScalingData)
+            Call ReadData("RailZone", "EVScale", ScalingData, modelRunID)
         ElseIf RlZEneSource = "Database" Then
-            Call ReadData("Energy", "", enearray)
+            Call ReadData("Energy", "", enearray, modelRunID)
         End If
 
 

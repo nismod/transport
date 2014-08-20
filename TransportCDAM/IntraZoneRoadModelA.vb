@@ -1,4 +1,4 @@
-﻿Module IntraZoneRoadModel1pt3
+﻿Module IntraZoneRoadModelA
     '1.3 this version adds in fuel consumption estimation
     'This version adds in a capacity constraint, and is dependent on module FullCDAM for file paths
     'It now also allows elasticities to vary over time, and reads them from an input file

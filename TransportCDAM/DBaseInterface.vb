@@ -829,6 +829,38 @@ Module DBaseInterface
     End Sub
 
 
+    Function get_population_data_by_economics_scenario_tr_zone(ByVal scenario As String, ByVal year As Integer, ByVal link_type As String, ByVal ZoneID As Integer)
+        Dim theSQL As String = ""
+        Dim InputArray(,) As String = Nothing
+
+        'The database function seems to be brocken so it will return a temporary result until it's fixed
+        Return 5000
+
+        theSQL = "SELECT * FROM cdam_get_population_data_by_population_scenario_od_tr_zone(" & scenario & "," & year & "'" & link_type & ZoneID & ")"
+
+        If LoadSQLDataToArray(InputArray, theSQL) = False Then
+            InputArray = Nothing
+            Return False
+        Else
+            Return 500
+        End If
+
+
+    End Function
+
+    Sub get_zone_by_flowid(ByVal FlowID As Integer, ByRef Zone1ID As Integer, ByRef Zone2ID As Integer)
+        Dim theSQL As String = ""
+        Dim InputArray(,) As String = Nothing
+
+        theSQL = "SELECT * TR_LU_RoadInputFlows where id =" & FlowID
+
+        If LoadSQLDataToArray(InputArray, theSQL) = True Then
+            Zone1ID = InputArray(0, 1)
+            Zone2ID = InputArray(0, 1)
+        End If
+
+    End Sub
+
     '****************************************************************************************
     ' Function: ReadData 
     '
@@ -837,17 +869,18 @@ Module DBaseInterface
     ' Parameters:   Type - type of data (e.g. Road, Rail)
     '               SubType - subtype of data
     '               Inputrray - array of data to be output
+    '               ModelRunID - used in most WHERE clauses
     '               IsInitialYear - TRUE - read from initial file, FALSE - read from temp file
     '               Year - current year of the calculation, this is for external variable file to read from the correct line
     '               datatype - variant type of data in array (e.g. string, integer)
     '               Connection - file path - to be replaced with database connection string
+    '               whereID - an integer to be used in the WHERE clause of the SQL
     '****************************************************************************************
 
     Function ReadData(ByVal Type As String, ByVal SubType As String, ByRef InputArray(,) As String,
-                       Optional ByVal IsInitialYear As Boolean = True,
-                       Optional ByVal Year As Integer = 0,
-                       Optional ByVal datatype As VariantType = VariantType.String,
-                       Optional Connection As String = "") As Boolean
+                       ByVal ModelRunID As Integer, Optional ByVal IsInitialYear As Boolean = True,
+                       Optional ByVal Year As Integer = 0, Optional ByVal datatype As VariantType = VariantType.String,
+                       Optional Connection As String = "", Optional whereID As Integer = 0) As Boolean
         Dim TheFileName As String = ""
         Dim DataFile As FileStream
         Dim DataRead As StreamReader
@@ -877,6 +910,11 @@ Module DBaseInterface
                     Case "ModelRunDetails"
                         theSQL = "SELECT * FROM " & Chr(34) & "ISL_ModelRuns" & Chr(34)
                 End Select
+            Case "Scenario"
+                Select Case SubType
+                    Case "Pop by Zone"
+
+                End Select
             Case "RoadZone"
                 Select Case SubType
                     Case "Input"
@@ -902,6 +940,10 @@ Module DBaseInterface
                         ElseIf IsInitialYear = False Then
                             TheFileName = FilePrefix & "RoadLinkTemp.csv"
                         End If
+                    Case "Temp Annual"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadLink_Annual" & Chr(34) & " WHERE modelrun_id = " & ModelRunID & "year ="
+                    Case "Temp Hourly"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadLink_Hourly" & Chr(34) & " WHERE modelrun_id = " & ModelRunID
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "ExternalVariables" & EVFileSuffix & ".csv"
                     Case "Elasticity"
@@ -960,12 +1002,14 @@ Module DBaseInterface
                     Case "Input"
                         If IsInitialYear = True Then
                             TheFileName = "SeaFreightInputData.csv"
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_I_SeaFreight_Run" & Chr(34) & " WHERE modelrun_id = " & ModelRunID
                         ElseIf IsInitialYear = False Then
                             TheFileName = FilePrefix & "SeaTemplate.csv"
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_I_SeaFreight_Run" & Chr(34) & " WHERE modelrun_id = " & ModelRunID
                         End If
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "SeaFreightExtVar" & EVFileSuffix & ".csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_O_SeaFreightExternalVariables" & Chr(34)
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_O_SeaFreightExternalVariables" & Chr(34) & " WHERE modelrun_id = " & ModelRunID
                     Case "CapChange"
                         TheFileName = CapFilePrefix & "SeaFreightCapChange.csv"
                     Case "Elasticity"
@@ -1079,7 +1123,7 @@ Module DBaseInterface
         Dim TableData As DataTable
 
         Try
-
+            ConnectToDBase()
             cmd.Connection = m_conn
             cmd.CommandText = theSQL
 
@@ -1127,10 +1171,10 @@ Module DBaseInterface
     ' 
     ' Parameters:   Type - type of data (e.g. Road, Rail)
     '               SubType - subtype of data
-    '               DataArray - array of data to be output
+    '               OutputArray - array of data to be output
+    '               TemoArray - array of temp data to be output
     '               IsNewFile_IsInsert - TRUE - create a new file OR insert data to table, 
     '                                    FALSE - update and existing file OR update data to table
-    '               FilePrefix - Optional fileprefix for output file (use date and time otherwise)
     '               Connection - file path - to be replaced with database connection string
     '****************************************************************************************
 
@@ -1192,39 +1236,59 @@ Module DBaseInterface
             Case "RoadLink"
                 Select Case SubType
                     Case "Output"
-                        OutFileName = FilePrefix & "RoadLinkOutputData.csv"
+                        ToSQL = True
+                        TableName = "TR_O_RoadOutputFlows"
+                        'header = "Yeary,FlowID,PCUTotal,SpeedMean,PCUMway,PCUDual,PCUSing,SpdMway,SpdDual,SpdSing,MSC1,MSC2,MSC3,MSC4,MSC5,MSC6,DSC1,DSC2,DSC3,DSC4,DSC5,DSC6,SSC1,SSC2,SSC3,SSC4,SSC5,SSC6,SSC7,SSC8,SpdMSC1,SpdMSC2,SpdMSC3,SpdMSC4,SpdMSC5,SpdMSC6,SpdDSC1,SpdDSC2,SpdDSC3,SpdDSC4,SpdDSC5,SpdDSC6,SpdSSC1,SpdSSC2,SpdSSC3,SpdSSC4,SpdSSC5,SpdSSC6,SpdSSC7,SpdSSC8,MWayLatent,DualLatent,SingLatent,MFullHrs,DFullHrs,SFullHrs,CostMway,CostDual,CostSing"
+                        header = "modelrun_id, FlowID, year,PCUTotal,SpeedMean,PCUMway,PCUDual,PCUSing,SpdMway,SpdDual,SpdSing,MSC1,MSC2,MSC3,MSC4,MSC5,MSC6,DSC1,DSC2,DSC3,DSC4,DSC5,DSC6,SSC1,SSC2,SSC3,SSC4,SSC5,SSC6,SSC7,SSC8,SpdMSC1,SpdMSC2,SpdMSC3,SpdMSC4,SpdMSC5,SpdMSC6,SpdDSC1,SpdDSC2,SpdDSC3,SpdDSC4,SpdDSC5,SpdDSC6,SpdSSC1,SpdSSC2,SpdSSC3,SpdSSC4,SpdSSC5,SpdSSC6,SpdSSC7,SpdSSC8,MWayLatent,DualLatent,SingLatent,MFullHrs,DFullHrs,SFullHrs,CostMway,CostDual,CostSing"
+                    Case "Temp Annual"
+                        ToSQL = True
+                        TableName = "TR_IO_RoadLink_Annual"
+                        header = "modelrun_id, year,FlowID,MLanes,DLanes,SLanes,MLanesNew,DLanesNew,SLanesNew,msc1,msc2,msc3,msc4,msc5,msc6,dsc1,dsc2,dsc3,dsc4,dsc5,dsc6,ssc1,ssc2,ssc3,ssc4,ssc5,ssc6,ssc7,ssc8,MaxCapM,MaxCapD,MaxCapS,AddedLane0,AddedLane1,AddedLane2"
+                    Case "Temp Hourly"
+                        ToSQL = True
+                        TableName = "TR_IO_RoadLink_Hourly"
+                        header = "modelrun_id, year,FlowID,HourID, MRoadTypeFlows,DRoadTypeFlows,SRoadTypeFlows,"
+                        For x = 1 To 6
+                            header = header & "M" & x & "HourlyFlows" & "," & "M" & x & "Charge" & "," & "M" & x & "LatentFlows" & "," & "M" & x & "NewHourlySpeeds" & ","
+                        Next
+                        For x = 1 To 6
+                            header = header & "D" & x & "HourlyFlows" & "," & "D" & x & "Charge" & "," & "D" & x & "LatentFlows" & "," & "D" & x & "NewHourlySpeeds" & ","
+                        Next
+                        For x = 1 To 8
+                            header = header & "S" & x & "HourlyFlows" & "," & "S" & x & "Charge" & "," & "S" & x & "LatentFlows" & "," & "S" & x & "NewHourlySpeeds" & ","
+                        Next
+                    Case "Temp"
                         TempFileName = FilePrefix & "RoadLinkTemp.csv"
-                        header = "Yeary,FlowID,PCUTotal,SpeedMean,PCUMway,PCUDual,PCUSing,SpdMway,SpdDual,SpdSing,MSC1,MSC2,MSC3,MSC4,MSC5,MSC6,DSC1,DSC2,DSC3,DSC4,DSC5,DSC6,SSC1,SSC2,SSC3,SSC4,SSC5,SSC6,SSC7,SSC8,SpdMSC1,SpdMSC2,SpdMSC3,SpdMSC4,SpdMSC5,SpdMSC6,SpdDSC1,SpdDSC2,SpdDSC3,SpdDSC4,SpdDSC5,SpdDSC6,SpdSSC1,SpdSSC2,SpdSSC3,SpdSSC4,SpdSSC5,SpdSSC6,SpdSSC7,SpdSSC8,MWayLatent,DualLatent,SingLatent,MFullHrs,DFullHrs,SFullHrs,CostMway,CostDual,CostSing"
-                        tempheader = "Yeary,FlowID,MLanes,DLanes,SLanes,MLanesNew,DLanesNew,SLanesNew,MSC1,MSC2,MSC3,MSC4,MSC5,MSC6,DSC1,DSC2,DSC3,DSC4,DSC5,DSC6,SSC1,SSC2,SSC3,SSC4,SSC5,SSC6,SSC7,SSC8,PopZ1,PopZ2,GVAZ1,GVAZ2,"
+                        header = "Yeary,FlowID,MLanes,DLanes,SLanes,MLanesNew,DLanesNew,SLanesNew,MSC1,MSC2,MSC3,MSC4,MSC5,MSC6,DSC1,DSC2,DSC3,DSC4,DSC5,DSC6,SSC1,SSC2,SSC3,SSC4,SSC5,SSC6,SSC7,SSC8,PopZ1,PopZ2,GVAZ1,GVAZ2,"
+                        'For x = 1 To 6
+                        'For c = 0 To 23
+                        'header = header & "M" & x & "Cost" & c & ","
+                        'Next
+                        'Next
+                        'For x = 1 To 6
+                        'For c = 0 To 23
+                        'header = header & "D" & x & "Cost" & c & ","
+                        'Next
+                        'Next
+                        'For x = 1 To 8
+                        'For c = 0 To 23
+                        'header = header & "S" & x & "Cost" & c & ","
+                        'Next
+                        'Next
+                        header = header & "MaxCapM,MaxCapD,MaxCapS,AddedLane0,AddedLane1,AddedLane2,"
                         For x = 1 To 6
                             For c = 0 To 23
-                                tempheader = tempheader & "M" & x & "Cost" & c & ","
+                                header = header & "M" & x & "HourlyFlows" & c & "," & "MRoadTypeFlows" & c & "," & "M" & x & "Charge" & c & "," & "M" & x & "LatentFlows" & c & "," & "M" & x & "NewHourlySpeeds" & c & ","
                             Next
                         Next
                         For x = 1 To 6
                             For c = 0 To 23
-                                tempheader = tempheader & "D" & x & "Cost" & c & ","
+                                header = header & "D" & x & "HourlyFlows" & c & "," & "DRoadTypeFlows" & c & "," & "D" & x & "Charge" & c & "," & "D" & x & "LatentFlows" & c & "," & "D" & x & "NewHourlySpeeds" & c & ","
                             Next
                         Next
                         For x = 1 To 8
                             For c = 0 To 23
-                                tempheader = tempheader & "S" & x & "Cost" & c & ","
-                            Next
-                        Next
-                        tempheader = tempheader & "MaxCapM,MaxCapD,MaxCapS,AddedLane0,AddedLane1,AddedLane2,"
-                        For x = 1 To 6
-                            For c = 0 To 23
-                                tempheader = tempheader & "M" & x & "HourlyFlows" & c & "," & "MRoadTypeFlows" & c & "," & "M" & x & "Charge" & c & "," & "M" & x & "LatentFlows" & c & "," & "M" & x & "NewHourlySpeeds" & c & ","
-                            Next
-                        Next
-                        For x = 1 To 6
-                            For c = 0 To 23
-                                tempheader = tempheader & "D" & x & "HourlyFlows" & c & "," & "DRoadTypeFlows" & c & "," & "D" & x & "Charge" & c & "," & "D" & x & "LatentFlows" & c & "," & "D" & x & "NewHourlySpeeds" & c & ","
-                            Next
-                        Next
-                        For x = 1 To 8
-                            For c = 0 To 23
-                                tempheader = tempheader & "S" & x & "HourlyFlows" & c & "," & "SRoadTypeFlows" & c & "," & "S" & x & "Charge" & c & "," & "S" & x & "LatentFlows" & c & "," & "S" & x & "NewHourlySpeeds" & c & ","
+                                header = header & "S" & x & "HourlyFlows" & c & "," & "SRoadTypeFlows" & c & "," & "S" & x & "Charge" & c & "," & "S" & x & "LatentFlows" & c & "," & "S" & x & "NewHourlySpeeds" & c & ","
                             Next
                         Next
                     Case "ExtVar"
@@ -1276,12 +1340,15 @@ Module DBaseInterface
                     Case "Output"
                         ToSQL = True
                         TableName = "TR_O_SeaFreightOutputData"
-                        TempTableName = "SeaTemplate"
                         OutFileName = FilePrefix & "SeaOutputData.csv"
-                        TempFileName = FilePrefix & "SeaTemplate.csv"
-                        header = "ModelRunID, StretegyID, Year, PortID, LiqBlk, DryBlk, GCargo, LoLo, RoRo, GasOil, FuelOil"
                         'header = "Yeary, PortID, LiqBlky, DryBlky, GCargoy, LoLoy, RoRoy, GasOily, FuelOily"
-                        tempheader = "PortID, LiqBlk, DryBlk, GCargo, LoLo, RoRo, LBCap,DBCap,GCCap,LLCap,RRCap,GORPop,GORGva,Cost, AddedCap(1), AddedCap(2), AddedCap(3), AddedCap(4), AddedCap(5),"
+                        header = "ModelRunID, StretegyID, Year, PortID, LiqBlk, DryBlk, GCargo, LoLo, RoRo, GasOil, FuelOil"
+                    Case "Temp"
+                        ToSQL = True
+                        TableName = "TR_IO_SeaFreight"
+                        OutFileName = FilePrefix & "SeaTemplate.csv"
+                        'tempheader = "PortID, LiqBlk, DryBlk, GCargo, LoLo, RoRo, LBCap,DBCap,GCCap,LLCap,RRCap,GORPop,GORGva,Cost, AddedCap(1), AddedCap(2), AddedCap(3), AddedCap(4), AddedCap(5),"
+                        tempheader = "modelrun_id, year, PortID, LiqBlk, DryBlk, GCargo, LoLo, RoRo, AddedCap(1), AddedCap(2), AddedCap(3), AddedCap(4), AddedCap(5),"
                     Case "ExtVar"
                         OutFileName = EVFilePrefix & "SeaFreightExtVar.csv"
                         header = "Yeary,PortID,LBCapy,DBCapy,GCCapy,LLCapy,RRCapy,GORPopy,GORGvay,Costy,FuelEffy"
@@ -1442,7 +1509,7 @@ Module DBaseInterface
             If IsInsert = True Then
                 'Get a list of Field Names
                 For i = 0 To aryFieldNames.Count - 1
-                    strSQL_N &= aryFieldNames.Item(i) & ", "
+                    strSQL_N &= Chr(34) & aryFieldNames.Item(i) & Chr(34) & ", "
                 Next
                 'Get rid of the last comma and space
                 strSQL_N = Left(strSQL_N, Len(strSQL_N) - 2)
@@ -1469,6 +1536,7 @@ Module DBaseInterface
                 strSQL_All &= " WHERE " & IDField & " = " & KeyID
             End If
 
+            ConnectToDBase()
             cmd.Connection = m_conn
             cmd.CommandText = strSQL_All
 
