@@ -404,12 +404,12 @@
             Loop
 
 
-                'Get Population and GVA data
-                get_zone_by_flowid(FlowID(link, 1), Zone1ID, Zone2ID)
-                Z1Pop(link, 1) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "road", Zone1ID)
-                Z2Pop(link, 1) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "road", Zone2ID)
-                Z1GVA(link, 1) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "road", Zone1ID)
-                Z2GVA(link, 1) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "road", Zone2ID)
+            'Get Population and GVA data
+            get_zone_by_flowid(FlowID(link, 1), Zone1ID, Zone2ID)
+            Z1Pop(link, 1) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "road", Zone1ID)
+            Z2Pop(link, 1) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "road", Zone2ID)
+            Z1GVA(link, 1) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "road", Zone1ID)
+            Z2GVA(link, 1) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "road", Zone2ID)
 
 
 

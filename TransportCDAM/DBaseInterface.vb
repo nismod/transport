@@ -842,7 +842,27 @@ Module DBaseInterface
             InputArray = Nothing
             Return False
         Else
-            Return 500
+            Return 0
+        End If
+
+
+    End Function
+
+
+    Function get_regional_gva_data_by_economics_scenario_tr_zone(ByVal scenario As String, ByVal year As Integer, ByVal link_type As String, ByVal ZoneID As Integer)
+        Dim theSQL As String = ""
+        Dim InputArray(,) As String = Nothing
+
+        'The database function seems to be brocken so it will return a temporary result until it's fixed
+        Return 10000
+
+        theSQL = "SELECT * FROM cdam_get_regional_gva_data_by_economics_scenario_tr_zone(" & scenario & "," & year & "'" & link_type & ZoneID & ")"
+
+        If LoadSQLDataToArray(InputArray, theSQL) = False Then
+            InputArray = Nothing
+            Return False
+        Else
+            Return 0
         End If
 
 
