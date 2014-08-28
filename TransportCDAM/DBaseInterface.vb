@@ -1214,6 +1214,7 @@ Module DBaseInterface
         Dim Line As String = ""
         Dim ix As Integer, iy As Integer
         Dim header As String
+        Dim sqlheader As String
         Dim tempheader As String
         Dim aryFieldNames As ArrayList
         Dim aryFieldValues As ArrayList

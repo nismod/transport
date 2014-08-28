@@ -13,7 +13,7 @@
 
         'Call FullMain()
         'Just use dummy values for ModelRunID and Year for now
-        Call RunCDAM(1, 2010)
+        Call runCDAM(1, StartYear)
 
         End
     End Sub
@@ -2514,5 +2514,9 @@
         Else
             UpdateInput = False
         End If
+    End Sub
+
+    Private Sub MainForm_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+
     End Sub
 End Class
