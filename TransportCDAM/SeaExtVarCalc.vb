@@ -36,7 +36,7 @@
     Dim AddingCap As Boolean
     Dim CapNum As Integer
     Dim enearray(91, 6) As String
-    Dim InputArray(47, 14) As String
+    Dim InputArray(47, 16) As String
     Dim CapArray(47, 8) As String
     Dim OutputArray(47, 10) As String
 
@@ -70,7 +70,7 @@
         End If
 
         'read initial input data
-        Call ReadData("Seaport", "Input", InputArray, True)
+        Call ReadData("Seaport", "Input", InputArray, modelRunID, True)
 
         'start read CapArray into the first row
         CapCount = 0
@@ -176,7 +176,7 @@
 
         'v1.3
         'get fuel efficiency values from the strategy file
-        Call ReadData("Strategy", "", stratarray, modelRunID)
+        Call ReadData("SubStrategy", "", stratarray, modelRunID)
         'v1.4 set FuelEff(0) to 1
         FuelEff(0) = 1
         For y = 1 To 90
@@ -223,10 +223,15 @@
                 'read initial data if it is year 1
                 CapChanged = False
                 If YearNum = 1 Then
-                    For i = 0 To 14
-                        PortBaseData(PortCount, i) = InputArray(PortCount, i)
+                    For i = 0 To 10
+                        PortBaseData(PortCount, i) = InputArray(PortCount, i + 4)
                     Next
-                    GORID(PortCount, 1) = PortBaseData(PortCount, 14)
+
+                    'get GORPop and GORGva
+                    PortBaseData(PortCount, 11) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "sea", PortCount)
+                    PortBaseData(PortCount, 12) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "sea", PortCount)
+                    PortBaseData(PortCount, 13) = InputArray(PortCount, 15)
+                    GORID(PortCount, 1) = InputArray(PortCount, 16)
                 End If
 
 
