@@ -24,7 +24,7 @@ Module DBaseInterface
         Try
             'If there is no connection to the database then establish one
             If m_conn Is Nothing Then
-                m_sConnString = "Driver={PostgreSQL ODBC Driver(ANSI)};DSN=PostgreSQL30;Server=localhost;Port=5432;Database=itrc_sos;UId=postgres;Password=P0stgr3s;"
+                m_sConnString = "Driver={PostgreSQL ODBC Driver(ANSI)};DSN=PostgreSQL30;Server=localhost;Port=5432;Database=itrc_sos;UId=postgres;Password=76583Xucheng1;"
                 m_conn = New Odbc.OdbcConnection(m_sConnString)
                 m_conn.Open()
             End If
@@ -1022,7 +1022,7 @@ Module DBaseInterface
                     Case "Input"
                         If IsInitialYear = True Then
                             TheFileName = "SeaFreightInputData.csv"
-                            theSQL = "SELECT * FROM " & Chr(34) & "TR_I_SeaFreight_Run" & Chr(34) & " WHERE modelrun_id = " & ModelRunID
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_I_SeaFreight_Base" & Chr(34) & " WHERE year = " & 2010
                         ElseIf IsInitialYear = False Then
                             TheFileName = FilePrefix & "SeaTemplate.csv"
                             theSQL = "SELECT * FROM " & Chr(34) & "TR_I_SeaFreight_Run" & Chr(34) & " WHERE modelrun_id = " & ModelRunID
@@ -1072,6 +1072,8 @@ Module DBaseInterface
                 'for error handling
         End Select
 
+
+
         'If there is SQL then get the data from the database - otherwise from the csv file
         If theSQL <> "" Then
             'Load data returned by the SQL into the InputArray
@@ -1079,6 +1081,7 @@ Module DBaseInterface
                 InputArray = Nothing
                 Return False
             End If
+
         Else
             'Else get the data from the file and parse it into an array
             Try
@@ -1123,12 +1126,15 @@ Module DBaseInterface
             Next
 
             DataRead.Close()
+
+            If IsInitialYear = False Then
+                'delete the temp file to recreate for current year
+                System.IO.File.Delete(Connection & TheFileName)
+            End If
+
+
         End If
 
-        If IsInitialYear = False Then
-            'delete the temp file to recreate for current year
-            System.IO.File.Delete(Connection & TheFileName)
-        End If
 
         Return True
 
@@ -1162,16 +1168,15 @@ Module DBaseInterface
             End If
 
             'Store column names in the 0 row
-            ReDim aryData(DataColumns - 1, 0)
+            ReDim aryData(DataRows, DataColumns - 1)
             For iC = 0 To DataColumns - 1
-                aryData(iC, 0) = Trim(CStr(TableData.Columns(iC).ColumnName))
+                aryData(0, iC) = Trim(CStr(TableData.Columns(iC).ColumnName))
             Next
             'Load Data into the array
             For iR = 0 To DataRows - 1
-                ReDim Preserve aryData(DataColumns - 1, iR + 1)
 
                 For iC = 0 To DataColumns - 1
-                    aryData(iC, iR + 1) = Trim(CStr(UnNull(TableData.Rows(iR).Item(iC), VariantType.Char)))
+                    aryData(iR + 1, iC) = Trim(CStr(UnNull(TableData.Rows(iR).Item(iC), VariantType.Char)))
                 Next
             Next
 
@@ -1201,7 +1206,7 @@ Module DBaseInterface
 
     'TODO add the log file writedata
     Function WriteData(ByVal Type As String, ByVal SubType As String, ByRef OutputArray(,) As String,
-                       Optional ByRef TempArray(,) As String = Nothing,
+                       Optional ByVal TempArray(,) As String = Nothing,
                        Optional ByVal IsNewFile_IsInsert As Boolean = True,
                        Optional Connection As String = "") As Boolean
 
@@ -1216,8 +1221,8 @@ Module DBaseInterface
         Dim header As String
         Dim sqlheader As String
         Dim tempheader As String
-        Dim aryFieldNames As ArrayList
-        Dim aryFieldValues As ArrayList
+        Dim aryFieldNames As New ArrayList
+        Dim aryFieldValues As New ArrayList
         Dim ToSQL As Boolean = False
         Dim TempTableName As String = ""
         Dim TableName As String = ""
@@ -1369,10 +1374,12 @@ Module DBaseInterface
                         TableName = "TR_IO_SeaFreight"
                         OutFileName = FilePrefix & "SeaTemplate.csv"
                         'tempheader = "PortID, LiqBlk, DryBlk, GCargo, LoLo, RoRo, LBCap,DBCap,GCCap,LLCap,RRCap,GORPop,GORGva,Cost, AddedCap(1), AddedCap(2), AddedCap(3), AddedCap(4), AddedCap(5),"
-                        tempheader = "modelrun_id, year, PortID, LiqBlk, DryBlk, GCargo, LoLo, RoRo, AddedCap(1), AddedCap(2), AddedCap(3), AddedCap(4), AddedCap(5),"
+                        header = "modelrun_id, year, PortID, LiqBlk, DryBlk, GCargo, LoLo, RoRo, AddedCap(1), AddedCap(2), AddedCap(3), AddedCap(4), AddedCap(5),"
                     Case "ExtVar"
+                        ToSQL = True
+                        TableName = "TR_O_SeaFreightExternalVariables"
                         OutFileName = EVFilePrefix & "SeaFreightExtVar.csv"
-                        header = "Yeary,PortID,LBCapy,DBCapy,GCCapy,LLCapy,RRCapy,GORPopy,GORGvay,Costy,FuelEffy"
+                        header = "ModelRunID,PortID,Yeary,LBCapy,DBCapy,GCCapy,LLCapy,RRCapy,GORPopy,GORGvay,Costy,FuelEffy"
                     Case "NewCap"
                         OutFileName = EVFilePrefix & "SeaFreightNewCap.csv"
                         header = "PortID,ChangeYear,NewLBCap,NewDBCap,NewGCCap,NewLLCap,NewRRCap"
@@ -1419,9 +1426,10 @@ Module DBaseInterface
         '    FilePrefix = System.DateTime.Now.Year & System.DateTime.Now.Month & System.DateTime.Now.Day & System.DateTime.Now.Hour & System.DateTime.Now.Minute & System.DateTime.Now.Second
         'End If
 
+
         If ToSQL = True Then
             'use headers for table field names
-            aryFieldNames.AddRange(Split(header, ","))
+            aryFieldNames.Add(Split(header, ","))
             'use array data for field values
             For iy = 1 To UBound(OutputArray, 1)
                 'exit if write to the end of the data
@@ -1434,80 +1442,54 @@ Module DBaseInterface
                 'Insert data into table
                 SaveArrayToSQLTable(aryFieldNames, aryFieldValues, TableName, "", True)
             Next
-
-        End If
-
-        'If creating a new file then create headers
-        'create the output file if new file is required or go to the last line if not
-        If IsNewFile_IsInsert = True Then
-            OutputFile = New FileStream(Connection & OutFileName, IO.FileMode.CreateNew, IO.FileAccess.ReadWrite)
-            OutputWrite = New IO.StreamWriter(OutputFile, System.Text.Encoding.Default)
-            'write header row 
-            OutputWrite.WriteLine(header)
-        ElseIf IsNewFile_IsInsert = False Then
-            OutputFile = New FileStream(Connection & OutFileName, IO.FileMode.Open, IO.FileAccess.ReadWrite)
-            OutputRead = New IO.StreamReader(OutputFile, System.Text.Encoding.Default)
-            OutputWrite = New IO.StreamWriter(OutputFile, System.Text.Encoding.Default)
-            OutputRead.ReadToEnd()
-        End If
-
-        'Some value are null at the the beginning years so this check may return false
-
-        'check to make sure field count is the same as the header count
-        'If fieldcount <> headcount Then
-        '    MsgBox("Template fields do not match output data fields")
-        '    Return False
-        'End If
-
-
-        'loop through array to generate lines in output file
-        For iy = 1 To UBound(OutputArray, 1)
-            'exit if write to the end of the data
-            If OutputArray(iy, 0) Is Nothing Then
-                Exit For
+        Else
+            'write to local folder if not using database
+            'If creating a new file then create headers
+            'create the output file if new file is required or go to the last line if not
+            If IsNewFile_IsInsert = True Then
+                OutputFile = New FileStream(Connection & OutFileName, IO.FileMode.CreateNew, IO.FileAccess.ReadWrite)
+                OutputWrite = New IO.StreamWriter(OutputFile, System.Text.Encoding.Default)
+                'write header row 
+                OutputWrite.WriteLine(header)
+            ElseIf IsNewFile_IsInsert = False Then
+                OutputFile = New FileStream(Connection & OutFileName, IO.FileMode.Open, IO.FileAccess.ReadWrite)
+                OutputRead = New IO.StreamReader(OutputFile, System.Text.Encoding.Default)
+                OutputWrite = New IO.StreamWriter(OutputFile, System.Text.Encoding.Default)
+                OutputRead.ReadToEnd()
             End If
-            'Build a line to write
-            Line = ""
-            For ix = 0 To UBound(OutputArray, 2)
-                Line += UnNull(OutputArray(iy, ix), VariantType.String) & ","
-            Next
-            'Delete the last comma
-            Line = Line.Substring(0, Len(Line) - 1)
-            'Write the line to the output file
 
-            OutputWrite.WriteLine(Line)
-        Next
+            'Some value are null at the the beginning years so this check may return false
 
-        OutputWrite.Close()
+            'check to make sure field count is the same as the header count
+            'If fieldcount <> headcount Then
+            '    MsgBox("Template fields do not match output data fields")
+            '    Return False
+            'End If
 
-        'write to temp file if it is for output
-        If SubType = "Output" Then
-            'create the temp file
-            TempFile = New FileStream(Connection & TempFileName, IO.FileMode.CreateNew, IO.FileAccess.Write)
-            TempWrite = New IO.StreamWriter(TempFile, System.Text.Encoding.Default)
-            'write header row 
-            TempWrite.WriteLine(tempheader)
 
-            'loop through array to generate lines in temp file
-            For iy = 1 To UBound(TempArray, 1)
+            'loop through array to generate lines in output file
+            For iy = 1 To UBound(OutputArray, 1)
                 'exit if write to the end of the data
-                If TempArray(iy, 1) Is Nothing Then
+                If OutputArray(iy, 0) Is Nothing Then
                     Exit For
                 End If
                 'Build a line to write
                 Line = ""
-                For ix = 0 To UBound(TempArray, 2)
-                    Line += UnNull(TempArray(iy, ix), VariantType.String) & ","
+                For ix = 0 To UBound(OutputArray, 2)
+                    Line += UnNull(OutputArray(iy, ix), VariantType.String) & ","
                 Next
                 'Delete the last comma
                 Line = Line.Substring(0, Len(Line) - 1)
                 'Write the line to the output file
-                TempWrite.WriteLine(Line)
+
+                OutputWrite.WriteLine(Line)
             Next
 
-            TempWrite.Close()
+            OutputWrite.Close()
 
         End If
+
+
 
         Return True
 
@@ -1548,7 +1530,8 @@ Module DBaseInterface
                 strSQL_NV = ""
                 'Get a list of Field Names = Values
                 For i = 0 To aryFieldNames.Count - 1
-                    strSQL_NV &= aryFieldNames.Item(i) & " = " & aryFieldValues.Item(i) & ", "
+                    'strSQL_NV &= aryFieldNames.Item(i) & " = " & aryFieldValues.Item(i) & ", "
+                    strSQL_NV = aryFieldNames.Item(i) & " = " & aryFieldValues.Item(i) & ", "
                 Next
                 'Get rid of the last comma and space
                 strSQL_NV = Left(strSQL_NV, Len(strSQL_NV) - 2)
