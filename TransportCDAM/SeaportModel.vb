@@ -37,7 +37,7 @@
     Dim NewCapArray(47, 8) As String
     Dim InputArray(47, 13) As String
     Dim OutputArray(47, 8) As String
-    Dim TempArray(47, 18) As String
+    Dim TempArray(47, 13) As String
     Dim NewCapNum As Integer
 
 
@@ -55,10 +55,9 @@
 
             'read from initial file if year 1, otherwise update from temp file
             If YearNum = 1 Then
-                Call ReadData("Seaport", "Input", InputArray, True, YearNum)
+                Call ReadData("Seaport", "Input", InputArray, modelRunID, True)
             Else
-                ReDim Preserve InputArray(47, 18)
-                Call ReadData("Seaport", "Input", InputArray, False, YearNum)
+                Call ReadData("Seaport", "Input", InputArray, modelRunID, False)
             End If
 
 
@@ -119,7 +118,7 @@
 
         If TripRates = "Strategy" Then
             'get the strat values
-            Call ReadData("Strategy", "", stratarray, modelRunID)
+            Call ReadData("SubStrategy", "", stratarray, modelRunID)
             For r = 1 To 90
                 SeaTripRates(r) = stratarray(r, 95)
             Next
@@ -307,15 +306,17 @@
 
     Sub WritePortOutput()
         'write to output array
-        OutputArray(InputCount, 0) = YearNum
-        OutputArray(InputCount, 1) = PortID
-        OutputArray(InputCount, 2) = NewFreight(PortID, 1)
-        OutputArray(InputCount, 3) = NewFreight(PortID, 2)
-        OutputArray(InputCount, 4) = NewFreight(PortID, 3)
-        OutputArray(InputCount, 5) = NewFreight(PortID, 4)
-        OutputArray(InputCount, 6) = NewFreight(PortID, 5)
-        OutputArray(InputCount, 7) = NewGasOil
-        OutputArray(InputCount, 8) = NewFuelOil
+        OutputArray(InputCount, 0) = modelRunID
+        OutputArray(InputCount, 1) = SubStrategy
+        OutputArray(InputCount, 2) = YearNum
+        OutputArray(InputCount, 3) = PortID
+        OutputArray(InputCount, 4) = NewFreight(PortID, 1)
+        OutputArray(InputCount, 5) = NewFreight(PortID, 2)
+        OutputArray(InputCount, 6) = NewFreight(PortID, 3)
+        OutputArray(InputCount, 7) = NewFreight(PortID, 4)
+        OutputArray(InputCount, 8) = NewFreight(PortID, 5)
+        OutputArray(InputCount, 9) = NewGasOil
+        OutputArray(InputCount, 10) = NewFuelOil
 
         'update the variables
         Dim evindex As Integer
@@ -367,22 +368,16 @@
         CostBase = PortExtVar(PortID, 9)
 
         'write to temp array
-        TempArray(InputCount, 0) = PortID
-        TempArray(InputCount, 1) = BaseFreight(1)
-        TempArray(InputCount, 2) = BaseFreight(2)
-        TempArray(InputCount, 3) = BaseFreight(3)
-        TempArray(InputCount, 4) = BaseFreight(4)
-        TempArray(InputCount, 5) = BaseFreight(5)
-        TempArray(InputCount, 6) = BaseCap(1)
-        TempArray(InputCount, 7) = BaseCap(2)
-        TempArray(InputCount, 8) = BaseCap(3)
-        TempArray(InputCount, 9) = BaseCap(4)
-        TempArray(InputCount, 10) = BaseCap(5)
-        TempArray(InputCount, 11) = PopBase
-        TempArray(InputCount, 12) = GVABase
-        TempArray(InputCount, 13) = CostBase
+        TempArray(InputCount, 0) = modelRunID
+        TempArray(InputCount, 1) = YearNum
+        TempArray(InputCount, 2) = PortID
+        TempArray(InputCount, 3) = BaseFreight(1)
+        TempArray(InputCount, 4) = BaseFreight(2)
+        TempArray(InputCount, 5) = BaseFreight(3)
+        TempArray(InputCount, 6) = BaseFreight(4)
+        TempArray(InputCount, 7) = BaseFreight(5)
         For x = 1 To 5
-            TempArray(InputCount, 13 + x) = AddedCap(x)
+            TempArray(InputCount, 7 + x) = AddedCap(x)
         Next
 
     End Sub
