@@ -233,7 +233,7 @@
         End If
 
         'open the strategy file
-        Call ReadData("Strategy", "", stratarray, modelRunID)
+        Call ReadData("SubStrategy", "", stratarray, modelRunID)
 
     End Sub
     'v1.6 to calculate by annual timesteps, parameters for each zone need to be seperated

@@ -236,7 +236,7 @@
         Call ReadData("AirNode", "CapChange", CapArray, modelRunID)
 
         'now get strategy file too
-        Call ReadData("Strategy", "", stratarray, modelRunID)
+        Call ReadData("SubStrategy", "", stratarray, modelRunID)
 
     End Sub
 

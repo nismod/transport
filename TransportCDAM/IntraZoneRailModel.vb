@@ -107,7 +107,7 @@
 
         'read in the strategy
         If TripRates = "Strategy" Then
-            Call ReadData("Strategy", "", stratarray, modelRunID)
+            Call ReadData("SubStrategy", "", stratarray, modelRunID)
             For r = 1 To 90
                 RlzTripRates(r) = stratarray(r, 93)
             Next

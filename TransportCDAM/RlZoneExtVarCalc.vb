@@ -79,7 +79,7 @@
 
         '1.8
         'get fuel efficiency values from the strategy file using database interface
-        Call ReadData("Strategy", "", stratarray, modelRunID)
+        Call ReadData("SubStrategy", "", stratarray, modelRunID)
 
         'v1.4 set fuel efficiency old to 1
         FuelEffOld(0) = 1

@@ -181,7 +181,7 @@ Module RailModel
 
         'get fuel efficiency data from strategy file
         'also get trip rate info
-        Call ReadData("Strategy", "", stratarray, modelRunID)
+        Call ReadData("SubStrategy", "", stratarray, modelRunID)
         yearchecker = 1
         Do Until yearchecker > 90
             RlFuelEff(yearchecker, 0) = stratarray(yearchecker, 67)

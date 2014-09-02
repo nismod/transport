@@ -243,7 +243,7 @@
         'if using variable trip rates then set up the trip rate variable
         If TripRates = "Strategy" Then
             'get the strat values
-            Call ReadData("Strategy", "", stratarray, modelRunID)
+            Call ReadData("SubStrategy", "", stratarray, modelRunID)
             For r = 1 To 90
                 RdTripRates(0, r) = stratarray(r, 91)
                 RdTripRates(1, r) = stratarray(r, 92)

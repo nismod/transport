@@ -158,7 +158,7 @@
         End If
 
         'get the strategy file
-        Call ReadData("Strategy", "", StratArray, modelRunID)
+        Call ReadData("SubStrategy", "", StratArray, modelRunID)
 
 
     End Sub

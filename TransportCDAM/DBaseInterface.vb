@@ -1530,8 +1530,7 @@ Module DBaseInterface
                 strSQL_NV = ""
                 'Get a list of Field Names = Values
                 For i = 0 To aryFieldNames.Count - 1
-                    'strSQL_NV &= aryFieldNames.Item(i) & " = " & aryFieldValues.Item(i) & ", "
-                    strSQL_NV = aryFieldNames.Item(i) & " = " & aryFieldValues.Item(i) & ", "
+                    strSQL_NV &= aryFieldNames.Item(i) & " = " & aryFieldValues.Item(i) & ", "
                 Next
                 'Get rid of the last comma and space
                 strSQL_NV = Left(strSQL_NV, Len(strSQL_NV) - 2)

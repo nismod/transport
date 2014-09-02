@@ -207,7 +207,7 @@
 
         If TripRates = "Strategy" Then
             'read from the strategy file
-            Call ReadData("Strategy", "", stratarray, modelRunID)
+            Call ReadData("SubStrategy", "", stratarray, modelRunID)
             For r = 1 To 90
                 AirTripRates(r) = stratarray(r, 94)
             Next
