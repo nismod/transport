@@ -837,7 +837,8 @@ Module DBaseInterface
         'The database function seems to be brocken so it will return a temporary result until it's fixed
         Return 5000
 
-        theSQL = "SELECT * FROM cdam_get_population_data_by_population_scenario_od_tr_zone(" & scenario & "," & year & "'" & link_type & ZoneID & ")"
+        theSQL = "SELECT * FROM cdam_get_population_data_by_population_scenario_od_tr_zone(" & scenario & "," & year & "'" & link_type & "')" & " WHERE zone_id = " & ZoneID
+        theSQL &= " AS (scenario_id varchar, year integer, gender varchar, category varchar, " & Chr(34) & "DistrictName" & Chr(34) & " varchar, zone_id integer, " & Chr(34) & "ZoneName" & Chr(34) & " varchar, district_code varchar, value double precision);"
 
         If LoadSQLDataToArray(InputArray, theSQL) = False Then
             InputArray = Nothing
@@ -857,7 +858,7 @@ Module DBaseInterface
         'The database function seems to be brocken so it will return a temporary result until it's fixed
         Return 10000
 
-        theSQL = "SELECT * FROM cdam_get_regional_gva_data_by_economics_scenario_tr_zone(" & scenario & "," & year & "'" & link_type & ZoneID & ")"
+        theSQL = "SELECT * FROM cdam_get_regional_gva_data_by_economics_scenario_tr_zone(" & scenario & "," & year & "'" & link_type & "')" & " WHERE zone_id = " & ZoneID
 
         If LoadSQLDataToArray(InputArray, theSQL) = False Then
             InputArray = Nothing

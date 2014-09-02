@@ -133,20 +133,21 @@
 
         'read initial input file if year 1
         If YearNum = 1 Then
-            PortID = InputArray(InputCount, 0)
-            BaseFreight(1) = InputArray(InputCount, 1)
-            BaseFreight(2) = InputArray(InputCount, 2)
-            BaseFreight(3) = InputArray(InputCount, 3)
-            BaseFreight(4) = InputArray(InputCount, 4)
-            BaseFreight(5) = InputArray(InputCount, 5)
-            BaseCap(1) = InputArray(InputCount, 6)
-            BaseCap(2) = InputArray(InputCount, 7)
-            BaseCap(3) = InputArray(InputCount, 8)
-            BaseCap(4) = InputArray(InputCount, 9)
-            BaseCap(5) = InputArray(InputCount, 10)
-            PopBase = InputArray(InputCount, 11)
-            GVABase = InputArray(InputCount, 12)
-            CostBase = InputArray(InputCount, 13)
+            PortID = InputArray(InputCount, 4)
+            BaseFreight(1) = InputArray(InputCount, 5)
+            BaseFreight(2) = InputArray(InputCount, 6)
+            BaseFreight(3) = InputArray(InputCount, 7)
+            BaseFreight(4) = InputArray(InputCount, 8)
+            BaseFreight(5) = InputArray(InputCount, 9)
+            BaseCap(1) = InputArray(InputCount, 10)
+            BaseCap(2) = InputArray(InputCount, 11)
+            BaseCap(3) = InputArray(InputCount, 12)
+            BaseCap(4) = InputArray(InputCount, 13)
+            BaseCap(5) = InputArray(InputCount, 14)
+            CostBase = InputArray(InputCount, 15)
+
+            PopBase = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "sea", PortID)
+            GVABase = InputArray(InputCount, 16)
             For x = 1 To 5
                 AddedCap(x) = 0
             Next
