@@ -8,7 +8,7 @@
         End If
         'Check if prefix has been set - if not then use default
         If FilePrefix = "" Then
-            FilePrefix = System.DateTime.Now
+            FilePrefix = System.DateTime.Now.Millisecond
         End If
 
         'Call FullMain()

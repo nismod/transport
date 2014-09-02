@@ -24,7 +24,8 @@ Module DBaseInterface
         Try
             'If there is no connection to the database then establish one
             If m_conn Is Nothing Then
-                m_sConnString = "Driver={PostgreSQL ODBC Driver(ANSI)};DSN=PostgreSQL30;Server=localhost;Port=5432;Database=itrc_sos;UId=postgres;Password=76583Xucheng1;"
+                'm_sConnString = "Driver={PostgreSQL ODBC Driver(ANSI)};DSN=PostgreSQL30;Server=localhost;Port=5432;Database=itrc_sos;UId=postgres;Password=76583Xucheng1;"
+                m_sConnString = "Driver={PostgreSQL ODBC Driver(ANSI)};DSN=PostgreSQL30;Server=localhost;Port=5432;Database=itrc_sos;UId=postgres;Password=P0stgr3s;"
                 m_conn = New Odbc.OdbcConnection(m_sConnString)
                 m_conn.Open()
             End If
@@ -928,7 +929,7 @@ Module DBaseInterface
             Case "System"
                 Select Case SubType
                     Case "ModelRunDetails"
-                        theSQL = "SELECT * FROM " & Chr(34) & "ISL_ModelRuns" & Chr(34)
+                        theSQL = "SELECT * FROM " & Chr(34) & "ISL_ModelRuns" & Chr(34) & " WHERE modelrun_id = " & ModelRunID
                 End Select
             Case "Scenario"
                 Select Case SubType
@@ -961,9 +962,9 @@ Module DBaseInterface
                             TheFileName = FilePrefix & "RoadLinkTemp.csv"
                         End If
                     Case "Temp Annual"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadLink_Annual" & Chr(34) & " WHERE modelrun_id = " & ModelRunID & "year ="
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadLink_Annual" & Chr(34) & " WHERE modelrun_id = " & ModelRunID & "year =" & Year
                     Case "Temp Hourly"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadLink_Hourly" & Chr(34) & " WHERE modelrun_id = " & ModelRunID
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadLink_Hourly" & Chr(34) & " WHERE modelrun_id = " & ModelRunID & "year =" & Year
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "ExternalVariables" & EVFileSuffix & ".csv"
                     Case "Elasticity"
@@ -1219,7 +1220,6 @@ Module DBaseInterface
         Dim Line As String = ""
         Dim ix As Integer, iy As Integer
         Dim header As String
-        Dim sqlheader As String
         Dim tempheader As String
         Dim aryFieldNames As New ArrayList
         Dim aryFieldValues As New ArrayList

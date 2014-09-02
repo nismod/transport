@@ -101,6 +101,9 @@
 
         Call ReadData("System", "ModelRunDetails", mrdarray, modelRunID)
 
+        ScenarioID = mrdarray(1, 9)
+        StrategyID = mrdarray(1, 2)
+        SubStrategy = mrdarray(1, 3)
         Return True
 
     End Function
@@ -109,6 +112,7 @@
 
         'get directory path for files - **now unnecessary as set by user
         'DirPath = "\\soton.ac.uk\ude\PersonalFiles\Users\spb1g09\mydocuments\Southampton Work\ITRC\Transport CDAM\Model Inputs\"
+        DirPath = "C:\Users\cenv0384\Documents\Visual Studio 2013\Projects\ITRCWS1C3\Transport\TransportCDAM\Model Input and Output\Model Inputs"
 
         'creates the log file for the model
         Call CreateLog()
