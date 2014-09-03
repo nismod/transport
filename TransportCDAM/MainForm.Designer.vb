@@ -268,7 +268,7 @@ Partial Class MainForm
         'Button1
         '
         Me.Button1.Location = New System.Drawing.Point(11, 580)
-        Me.Button1.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.Button1.Margin = New System.Windows.Forms.Padding(4)
         Me.Button1.Name = "Button1"
         Me.Button1.Size = New System.Drawing.Size(119, 31)
         Me.Button1.TabIndex = 0
@@ -278,7 +278,7 @@ Partial Class MainForm
         'Button2
         '
         Me.Button2.Location = New System.Drawing.Point(148, 580)
-        Me.Button2.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.Button2.Margin = New System.Windows.Forms.Padding(4)
         Me.Button2.Name = "Button2"
         Me.Button2.Size = New System.Drawing.Size(123, 31)
         Me.Button2.TabIndex = 1
@@ -294,9 +294,9 @@ Partial Class MainForm
         Me.GroupBox1.Controls.Add(Me.CheckBox2)
         Me.GroupBox1.Controls.Add(Me.CheckBox1)
         Me.GroupBox1.Location = New System.Drawing.Point(8, 7)
-        Me.GroupBox1.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox1.Margin = New System.Windows.Forms.Padding(4)
         Me.GroupBox1.Name = "GroupBox1"
-        Me.GroupBox1.Padding = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox1.Padding = New System.Windows.Forms.Padding(4)
         Me.GroupBox1.Size = New System.Drawing.Size(273, 202)
         Me.GroupBox1.TabIndex = 2
         Me.GroupBox1.TabStop = False
@@ -306,7 +306,7 @@ Partial Class MainForm
         '
         Me.CheckBox6.AutoSize = True
         Me.CheckBox6.Location = New System.Drawing.Point(19, 170)
-        Me.CheckBox6.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox6.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox6.Name = "CheckBox6"
         Me.CheckBox6.Size = New System.Drawing.Size(87, 21)
         Me.CheckBox6.TabIndex = 5
@@ -317,7 +317,7 @@ Partial Class MainForm
         '
         Me.CheckBox5.AutoSize = True
         Me.CheckBox5.Location = New System.Drawing.Point(19, 142)
-        Me.CheckBox5.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox5.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox5.Name = "CheckBox5"
         Me.CheckBox5.Size = New System.Drawing.Size(79, 21)
         Me.CheckBox5.TabIndex = 4
@@ -328,7 +328,7 @@ Partial Class MainForm
         '
         Me.CheckBox4.AutoSize = True
         Me.CheckBox4.Location = New System.Drawing.Point(19, 113)
-        Me.CheckBox4.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox4.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox4.Name = "CheckBox4"
         Me.CheckBox4.Size = New System.Drawing.Size(96, 21)
         Me.CheckBox4.TabIndex = 3
@@ -339,7 +339,7 @@ Partial Class MainForm
         '
         Me.CheckBox3.AutoSize = True
         Me.CheckBox3.Location = New System.Drawing.Point(19, 85)
-        Me.CheckBox3.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox3.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox3.Name = "CheckBox3"
         Me.CheckBox3.Size = New System.Drawing.Size(86, 21)
         Me.CheckBox3.TabIndex = 2
@@ -350,7 +350,7 @@ Partial Class MainForm
         '
         Me.CheckBox2.AutoSize = True
         Me.CheckBox2.Location = New System.Drawing.Point(19, 57)
-        Me.CheckBox2.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox2.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox2.Name = "CheckBox2"
         Me.CheckBox2.Size = New System.Drawing.Size(106, 21)
         Me.CheckBox2.TabIndex = 1
@@ -361,7 +361,7 @@ Partial Class MainForm
         '
         Me.CheckBox1.AutoSize = True
         Me.CheckBox1.Location = New System.Drawing.Point(19, 28)
-        Me.CheckBox1.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox1.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox1.Name = "CheckBox1"
         Me.CheckBox1.Size = New System.Drawing.Size(96, 21)
         Me.CheckBox1.TabIndex = 0
@@ -372,9 +372,9 @@ Partial Class MainForm
         '
         Me.GroupBox2.Controls.Add(Me.folderPath)
         Me.GroupBox2.Location = New System.Drawing.Point(289, 7)
-        Me.GroupBox2.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox2.Margin = New System.Windows.Forms.Padding(4)
         Me.GroupBox2.Name = "GroupBox2"
-        Me.GroupBox2.Padding = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox2.Padding = New System.Windows.Forms.Padding(4)
         Me.GroupBox2.Size = New System.Drawing.Size(273, 59)
         Me.GroupBox2.TabIndex = 3
         Me.GroupBox2.TabStop = False
@@ -383,7 +383,7 @@ Partial Class MainForm
         'folderPath
         '
         Me.folderPath.Location = New System.Drawing.Point(11, 20)
-        Me.folderPath.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.folderPath.Margin = New System.Windows.Forms.Padding(4)
         Me.folderPath.Name = "folderPath"
         Me.folderPath.Size = New System.Drawing.Size(116, 32)
         Me.folderPath.TabIndex = 0
@@ -394,9 +394,9 @@ Partial Class MainForm
         '
         Me.GroupBox3.Controls.Add(Me.TextBox1)
         Me.GroupBox3.Location = New System.Drawing.Point(289, 74)
-        Me.GroupBox3.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox3.Margin = New System.Windows.Forms.Padding(4)
         Me.GroupBox3.Name = "GroupBox3"
-        Me.GroupBox3.Padding = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox3.Padding = New System.Windows.Forms.Padding(4)
         Me.GroupBox3.Size = New System.Drawing.Size(273, 59)
         Me.GroupBox3.TabIndex = 4
         Me.GroupBox3.TabStop = False
@@ -405,7 +405,7 @@ Partial Class MainForm
         'TextBox1
         '
         Me.TextBox1.Location = New System.Drawing.Point(11, 23)
-        Me.TextBox1.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox1.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox1.Name = "TextBox1"
         Me.TextBox1.Size = New System.Drawing.Size(253, 22)
         Me.TextBox1.TabIndex = 0
@@ -417,7 +417,7 @@ Partial Class MainForm
         Me.TabControl1.Controls.Add(Me.TabPage3)
         Me.TabControl1.Controls.Add(Me.TabPage4)
         Me.TabControl1.Location = New System.Drawing.Point(1, 33)
-        Me.TabControl1.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TabControl1.Margin = New System.Windows.Forms.Padding(4)
         Me.TabControl1.Name = "TabControl1"
         Me.TabControl1.SelectedIndex = 0
         Me.TabControl1.Size = New System.Drawing.Size(867, 686)
@@ -440,9 +440,9 @@ Partial Class MainForm
         Me.TabPage1.Controls.Add(Me.GroupBox2)
         Me.TabPage1.Controls.Add(Me.Button2)
         Me.TabPage1.Location = New System.Drawing.Point(4, 25)
-        Me.TabPage1.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TabPage1.Margin = New System.Windows.Forms.Padding(4)
         Me.TabPage1.Name = "TabPage1"
-        Me.TabPage1.Padding = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TabPage1.Padding = New System.Windows.Forms.Padding(4)
         Me.TabPage1.Size = New System.Drawing.Size(859, 657)
         Me.TabPage1.TabIndex = 0
         Me.TabPage1.Text = "Model"
@@ -458,9 +458,9 @@ Partial Class MainForm
         Me.GroupBox19.Controls.Add(Me.TextBox26)
         Me.GroupBox19.Controls.Add(Me.CheckBox40)
         Me.GroupBox19.Location = New System.Drawing.Point(571, 497)
-        Me.GroupBox19.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox19.Margin = New System.Windows.Forms.Padding(4)
         Me.GroupBox19.Name = "GroupBox19"
-        Me.GroupBox19.Padding = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox19.Padding = New System.Windows.Forms.Padding(4)
         Me.GroupBox19.Size = New System.Drawing.Size(271, 151)
         Me.GroupBox19.TabIndex = 16
         Me.GroupBox19.TabStop = False
@@ -481,7 +481,7 @@ Partial Class MainForm
         '
         Me.TextBox24.Enabled = False
         Me.TextBox24.Location = New System.Drawing.Point(9, 113)
-        Me.TextBox24.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox24.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox24.Name = "TextBox24"
         Me.TextBox24.Size = New System.Drawing.Size(37, 22)
         Me.TextBox24.TabIndex = 13
@@ -501,7 +501,7 @@ Partial Class MainForm
         '
         Me.TextBox25.Enabled = False
         Me.TextBox25.Location = New System.Drawing.Point(9, 81)
-        Me.TextBox25.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox25.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox25.Name = "TextBox25"
         Me.TextBox25.Size = New System.Drawing.Size(37, 22)
         Me.TextBox25.TabIndex = 11
@@ -521,7 +521,7 @@ Partial Class MainForm
         '
         Me.TextBox26.Enabled = False
         Me.TextBox26.Location = New System.Drawing.Point(9, 48)
-        Me.TextBox26.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox26.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox26.Name = "TextBox26"
         Me.TextBox26.Size = New System.Drawing.Size(37, 22)
         Me.TextBox26.TabIndex = 9
@@ -530,7 +530,7 @@ Partial Class MainForm
         '
         Me.CheckBox40.AutoSize = True
         Me.CheckBox40.Location = New System.Drawing.Point(9, 20)
-        Me.CheckBox40.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox40.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox40.Name = "CheckBox40"
         Me.CheckBox40.Size = New System.Drawing.Size(189, 21)
         Me.CheckBox40.TabIndex = 0
@@ -547,9 +547,9 @@ Partial Class MainForm
         Me.GroupBox18.Controls.Add(Me.TextBox23)
         Me.GroupBox18.Controls.Add(Me.CheckBox39)
         Me.GroupBox18.Location = New System.Drawing.Point(571, 340)
-        Me.GroupBox18.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox18.Margin = New System.Windows.Forms.Padding(4)
         Me.GroupBox18.Name = "GroupBox18"
-        Me.GroupBox18.Padding = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox18.Padding = New System.Windows.Forms.Padding(4)
         Me.GroupBox18.Size = New System.Drawing.Size(271, 151)
         Me.GroupBox18.TabIndex = 15
         Me.GroupBox18.TabStop = False
@@ -570,7 +570,7 @@ Partial Class MainForm
         '
         Me.TextBox21.Enabled = False
         Me.TextBox21.Location = New System.Drawing.Point(9, 113)
-        Me.TextBox21.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox21.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox21.Name = "TextBox21"
         Me.TextBox21.Size = New System.Drawing.Size(37, 22)
         Me.TextBox21.TabIndex = 13
@@ -590,7 +590,7 @@ Partial Class MainForm
         '
         Me.TextBox22.Enabled = False
         Me.TextBox22.Location = New System.Drawing.Point(9, 81)
-        Me.TextBox22.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox22.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox22.Name = "TextBox22"
         Me.TextBox22.Size = New System.Drawing.Size(37, 22)
         Me.TextBox22.TabIndex = 11
@@ -610,7 +610,7 @@ Partial Class MainForm
         '
         Me.TextBox23.Enabled = False
         Me.TextBox23.Location = New System.Drawing.Point(9, 48)
-        Me.TextBox23.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox23.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox23.Name = "TextBox23"
         Me.TextBox23.Size = New System.Drawing.Size(37, 22)
         Me.TextBox23.TabIndex = 9
@@ -619,7 +619,7 @@ Partial Class MainForm
         '
         Me.CheckBox39.AutoSize = True
         Me.CheckBox39.Location = New System.Drawing.Point(9, 20)
-        Me.CheckBox39.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox39.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox39.Name = "CheckBox39"
         Me.CheckBox39.Size = New System.Drawing.Size(121, 21)
         Me.CheckBox39.TabIndex = 0
@@ -636,9 +636,9 @@ Partial Class MainForm
         Me.GroupBox17.Controls.Add(Me.TextBox18)
         Me.GroupBox17.Controls.Add(Me.CheckBox38)
         Me.GroupBox17.Location = New System.Drawing.Point(571, 183)
-        Me.GroupBox17.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox17.Margin = New System.Windows.Forms.Padding(4)
         Me.GroupBox17.Name = "GroupBox17"
-        Me.GroupBox17.Padding = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox17.Padding = New System.Windows.Forms.Padding(4)
         Me.GroupBox17.Size = New System.Drawing.Size(271, 151)
         Me.GroupBox17.TabIndex = 11
         Me.GroupBox17.TabStop = False
@@ -659,7 +659,7 @@ Partial Class MainForm
         '
         Me.TextBox20.Enabled = False
         Me.TextBox20.Location = New System.Drawing.Point(9, 113)
-        Me.TextBox20.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox20.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox20.Name = "TextBox20"
         Me.TextBox20.Size = New System.Drawing.Size(37, 22)
         Me.TextBox20.TabIndex = 13
@@ -679,7 +679,7 @@ Partial Class MainForm
         '
         Me.TextBox19.Enabled = False
         Me.TextBox19.Location = New System.Drawing.Point(9, 81)
-        Me.TextBox19.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox19.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox19.Name = "TextBox19"
         Me.TextBox19.Size = New System.Drawing.Size(37, 22)
         Me.TextBox19.TabIndex = 11
@@ -699,7 +699,7 @@ Partial Class MainForm
         '
         Me.TextBox18.Enabled = False
         Me.TextBox18.Location = New System.Drawing.Point(9, 48)
-        Me.TextBox18.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox18.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox18.Name = "TextBox18"
         Me.TextBox18.Size = New System.Drawing.Size(37, 22)
         Me.TextBox18.TabIndex = 9
@@ -708,7 +708,7 @@ Partial Class MainForm
         '
         Me.CheckBox38.AutoSize = True
         Me.CheckBox38.Location = New System.Drawing.Point(9, 20)
-        Me.CheckBox38.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox38.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox38.Name = "CheckBox38"
         Me.CheckBox38.Size = New System.Drawing.Size(228, 21)
         Me.CheckBox38.TabIndex = 0
@@ -726,9 +726,9 @@ Partial Class MainForm
         Me.GroupBox15.Controls.Add(Me.TextBox16)
         Me.GroupBox15.Controls.Add(Me.CheckBox35)
         Me.GroupBox15.Location = New System.Drawing.Point(571, 7)
-        Me.GroupBox15.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox15.Margin = New System.Windows.Forms.Padding(4)
         Me.GroupBox15.Name = "GroupBox15"
-        Me.GroupBox15.Padding = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox15.Padding = New System.Windows.Forms.Padding(4)
         Me.GroupBox15.Size = New System.Drawing.Size(271, 169)
         Me.GroupBox15.TabIndex = 10
         Me.GroupBox15.TabStop = False
@@ -749,7 +749,7 @@ Partial Class MainForm
         '
         Me.TextBox32.Enabled = False
         Me.TextBox32.Location = New System.Drawing.Point(8, 138)
-        Me.TextBox32.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox32.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox32.Name = "TextBox32"
         Me.TextBox32.Size = New System.Drawing.Size(37, 22)
         Me.TextBox32.TabIndex = 19
@@ -758,7 +758,7 @@ Partial Class MainForm
         '
         Me.CheckBox42.AutoSize = True
         Me.CheckBox42.Location = New System.Drawing.Point(13, 113)
-        Me.CheckBox42.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox42.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox42.Name = "CheckBox42"
         Me.CheckBox42.Size = New System.Drawing.Size(137, 21)
         Me.CheckBox42.TabIndex = 18
@@ -780,7 +780,7 @@ Partial Class MainForm
         '
         Me.TextBox31.Enabled = False
         Me.TextBox31.Location = New System.Drawing.Point(13, 48)
-        Me.TextBox31.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox31.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox31.Name = "TextBox31"
         Me.TextBox31.Size = New System.Drawing.Size(37, 22)
         Me.TextBox31.TabIndex = 13
@@ -800,7 +800,7 @@ Partial Class MainForm
         '
         Me.TextBox16.Enabled = False
         Me.TextBox16.Location = New System.Drawing.Point(13, 80)
-        Me.TextBox16.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox16.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox16.Name = "TextBox16"
         Me.TextBox16.Size = New System.Drawing.Size(37, 22)
         Me.TextBox16.TabIndex = 10
@@ -809,7 +809,7 @@ Partial Class MainForm
         '
         Me.CheckBox35.AutoSize = True
         Me.CheckBox35.Location = New System.Drawing.Point(13, 25)
-        Me.CheckBox35.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox35.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox35.Name = "CheckBox35"
         Me.CheckBox35.Size = New System.Drawing.Size(145, 21)
         Me.CheckBox35.TabIndex = 0
@@ -827,9 +827,9 @@ Partial Class MainForm
         Me.GroupBox14.Controls.Add(Me.TextBox15)
         Me.GroupBox14.Controls.Add(Me.CheckBox34)
         Me.GroupBox14.Location = New System.Drawing.Point(291, 404)
-        Me.GroupBox14.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox14.Margin = New System.Windows.Forms.Padding(4)
         Me.GroupBox14.Name = "GroupBox14"
-        Me.GroupBox14.Padding = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox14.Padding = New System.Windows.Forms.Padding(4)
         Me.GroupBox14.Size = New System.Drawing.Size(272, 162)
         Me.GroupBox14.TabIndex = 9
         Me.GroupBox14.TabStop = False
@@ -850,7 +850,7 @@ Partial Class MainForm
         '
         Me.TextBox30.Enabled = False
         Me.TextBox30.Location = New System.Drawing.Point(8, 130)
-        Me.TextBox30.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox30.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox30.Name = "TextBox30"
         Me.TextBox30.Size = New System.Drawing.Size(37, 22)
         Me.TextBox30.TabIndex = 16
@@ -859,7 +859,7 @@ Partial Class MainForm
         '
         Me.CheckBox41.AutoSize = True
         Me.CheckBox41.Location = New System.Drawing.Point(8, 102)
-        Me.CheckBox41.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox41.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox41.Name = "CheckBox41"
         Me.CheckBox41.Size = New System.Drawing.Size(137, 21)
         Me.CheckBox41.TabIndex = 15
@@ -892,7 +892,7 @@ Partial Class MainForm
         '
         Me.TextBox29.Enabled = False
         Me.TextBox29.Location = New System.Drawing.Point(8, 48)
-        Me.TextBox29.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox29.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox29.Name = "TextBox29"
         Me.TextBox29.Size = New System.Drawing.Size(37, 22)
         Me.TextBox29.TabIndex = 13
@@ -901,7 +901,7 @@ Partial Class MainForm
         '
         Me.TextBox15.Enabled = False
         Me.TextBox15.Location = New System.Drawing.Point(8, 78)
-        Me.TextBox15.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox15.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox15.Name = "TextBox15"
         Me.TextBox15.Size = New System.Drawing.Size(37, 22)
         Me.TextBox15.TabIndex = 9
@@ -910,7 +910,7 @@ Partial Class MainForm
         '
         Me.CheckBox34.AutoSize = True
         Me.CheckBox34.Location = New System.Drawing.Point(9, 20)
-        Me.CheckBox34.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox34.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox34.Name = "CheckBox34"
         Me.CheckBox34.Size = New System.Drawing.Size(145, 21)
         Me.CheckBox34.TabIndex = 0
@@ -933,9 +933,9 @@ Partial Class MainForm
         Me.GroupBox13.Controls.Add(Me.TextBox12)
         Me.GroupBox13.Controls.Add(Me.CheckBox31)
         Me.GroupBox13.Location = New System.Drawing.Point(291, 140)
-        Me.GroupBox13.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox13.Margin = New System.Windows.Forms.Padding(4)
         Me.GroupBox13.Name = "GroupBox13"
-        Me.GroupBox13.Padding = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox13.Padding = New System.Windows.Forms.Padding(4)
         Me.GroupBox13.Size = New System.Drawing.Size(272, 256)
         Me.GroupBox13.TabIndex = 8
         Me.GroupBox13.TabStop = False
@@ -956,7 +956,7 @@ Partial Class MainForm
         '
         Me.TextBox28.Enabled = False
         Me.TextBox28.Location = New System.Drawing.Point(8, 47)
-        Me.TextBox28.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox28.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox28.Name = "TextBox28"
         Me.TextBox28.Size = New System.Drawing.Size(37, 22)
         Me.TextBox28.TabIndex = 11
@@ -976,7 +976,7 @@ Partial Class MainForm
         '
         Me.TextBox27.Enabled = False
         Me.TextBox27.Location = New System.Drawing.Point(8, 137)
-        Me.TextBox27.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox27.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox27.Name = "TextBox27"
         Me.TextBox27.Size = New System.Drawing.Size(37, 22)
         Me.TextBox27.TabIndex = 9
@@ -996,7 +996,7 @@ Partial Class MainForm
         '
         Me.TextBox14.Enabled = False
         Me.TextBox14.Location = New System.Drawing.Point(8, 225)
-        Me.TextBox14.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox14.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox14.Name = "TextBox14"
         Me.TextBox14.Size = New System.Drawing.Size(37, 22)
         Me.TextBox14.TabIndex = 7
@@ -1016,7 +1016,7 @@ Partial Class MainForm
         '
         Me.TextBox13.Enabled = False
         Me.TextBox13.Location = New System.Drawing.Point(8, 193)
-        Me.TextBox13.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox13.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox13.Name = "TextBox13"
         Me.TextBox13.Size = New System.Drawing.Size(37, 22)
         Me.TextBox13.TabIndex = 5
@@ -1025,7 +1025,7 @@ Partial Class MainForm
         '
         Me.CheckBox33.AutoSize = True
         Me.CheckBox33.Location = New System.Drawing.Point(9, 170)
-        Me.CheckBox33.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox33.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox33.Name = "CheckBox33"
         Me.CheckBox33.Size = New System.Drawing.Size(177, 21)
         Me.CheckBox33.TabIndex = 4
@@ -1036,7 +1036,7 @@ Partial Class MainForm
         '
         Me.CheckBox32.AutoSize = True
         Me.CheckBox32.Location = New System.Drawing.Point(11, 110)
-        Me.CheckBox32.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox32.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox32.Name = "CheckBox32"
         Me.CheckBox32.Size = New System.Drawing.Size(137, 21)
         Me.CheckBox32.TabIndex = 3
@@ -1058,7 +1058,7 @@ Partial Class MainForm
         '
         Me.TextBox12.Enabled = False
         Me.TextBox12.Location = New System.Drawing.Point(8, 76)
-        Me.TextBox12.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox12.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox12.Name = "TextBox12"
         Me.TextBox12.Size = New System.Drawing.Size(37, 22)
         Me.TextBox12.TabIndex = 1
@@ -1067,7 +1067,7 @@ Partial Class MainForm
         '
         Me.CheckBox31.AutoSize = True
         Me.CheckBox31.Location = New System.Drawing.Point(11, 23)
-        Me.CheckBox31.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox31.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox31.Name = "CheckBox31"
         Me.CheckBox31.Size = New System.Drawing.Size(145, 21)
         Me.CheckBox31.TabIndex = 0
@@ -1080,9 +1080,9 @@ Partial Class MainForm
         Me.GroupBox12.Controls.Add(Me.TextBox11)
         Me.GroupBox12.Controls.Add(Me.CheckBox30)
         Me.GroupBox12.Location = New System.Drawing.Point(8, 480)
-        Me.GroupBox12.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox12.Margin = New System.Windows.Forms.Padding(4)
         Me.GroupBox12.Name = "GroupBox12"
-        Me.GroupBox12.Padding = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox12.Padding = New System.Windows.Forms.Padding(4)
         Me.GroupBox12.Size = New System.Drawing.Size(272, 86)
         Me.GroupBox12.TabIndex = 7
         Me.GroupBox12.TabStop = False
@@ -1102,7 +1102,7 @@ Partial Class MainForm
         'TextBox11
         '
         Me.TextBox11.Location = New System.Drawing.Point(17, 50)
-        Me.TextBox11.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox11.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox11.Name = "TextBox11"
         Me.TextBox11.Size = New System.Drawing.Size(79, 22)
         Me.TextBox11.TabIndex = 1
@@ -1113,7 +1113,7 @@ Partial Class MainForm
         '
         Me.CheckBox30.AutoSize = True
         Me.CheckBox30.Location = New System.Drawing.Point(19, 23)
-        Me.CheckBox30.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox30.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox30.Name = "CheckBox30"
         Me.CheckBox30.Size = New System.Drawing.Size(186, 21)
         Me.CheckBox30.TabIndex = 0
@@ -1126,9 +1126,9 @@ Partial Class MainForm
         Me.GroupBox11.Controls.Add(Me.TextBox10)
         Me.GroupBox11.Controls.Add(Me.CheckBox29)
         Me.GroupBox11.Location = New System.Drawing.Point(8, 383)
-        Me.GroupBox11.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox11.Margin = New System.Windows.Forms.Padding(4)
         Me.GroupBox11.Name = "GroupBox11"
-        Me.GroupBox11.Padding = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox11.Padding = New System.Windows.Forms.Padding(4)
         Me.GroupBox11.Size = New System.Drawing.Size(271, 90)
         Me.GroupBox11.TabIndex = 6
         Me.GroupBox11.TabStop = False
@@ -1149,7 +1149,7 @@ Partial Class MainForm
         '
         Me.TextBox10.Enabled = False
         Me.TextBox10.Location = New System.Drawing.Point(17, 54)
-        Me.TextBox10.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox10.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox10.Name = "TextBox10"
         Me.TextBox10.Size = New System.Drawing.Size(79, 22)
         Me.TextBox10.TabIndex = 1
@@ -1160,7 +1160,7 @@ Partial Class MainForm
         '
         Me.CheckBox29.AutoSize = True
         Me.CheckBox29.Location = New System.Drawing.Point(17, 26)
-        Me.CheckBox29.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox29.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox29.Name = "CheckBox29"
         Me.CheckBox29.Size = New System.Drawing.Size(237, 21)
         Me.CheckBox29.TabIndex = 0
@@ -1174,9 +1174,9 @@ Partial Class MainForm
         Me.GroupBox4.Controls.Add(Me.TextBox2)
         Me.GroupBox4.Controls.Add(Me.ListBox1)
         Me.GroupBox4.Location = New System.Drawing.Point(8, 217)
-        Me.GroupBox4.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox4.Margin = New System.Windows.Forms.Padding(4)
         Me.GroupBox4.Name = "GroupBox4"
-        Me.GroupBox4.Padding = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox4.Padding = New System.Windows.Forms.Padding(4)
         Me.GroupBox4.Size = New System.Drawing.Size(272, 159)
         Me.GroupBox4.TabIndex = 5
         Me.GroupBox4.TabStop = False
@@ -1187,7 +1187,7 @@ Partial Class MainForm
         Me.ComboBox27.FormattingEnabled = True
         Me.ComboBox27.Items.AddRange(New Object() {"TR0: Decline and Decay", "TR1: Predict and Provide", "TR2: Cost and Constrain", "TR3: Adapting the Fleet", "TR4: Promo-Pricing", "TR5: Connected Grid", "TR6: Smarter Choices"})
         Me.ComboBox27.Location = New System.Drawing.Point(11, 122)
-        Me.ComboBox27.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.ComboBox27.Margin = New System.Windows.Forms.Padding(4)
         Me.ComboBox27.Name = "ComboBox27"
         Me.ComboBox27.Size = New System.Drawing.Size(204, 24)
         Me.ComboBox27.TabIndex = 3
@@ -1206,7 +1206,7 @@ Partial Class MainForm
         'TextBox2
         '
         Me.TextBox2.Location = New System.Drawing.Point(11, 84)
-        Me.TextBox2.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox2.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox2.Name = "TextBox2"
         Me.TextBox2.Size = New System.Drawing.Size(137, 22)
         Me.TextBox2.TabIndex = 1
@@ -1217,7 +1217,7 @@ Partial Class MainForm
         Me.ListBox1.ItemHeight = 16
         Me.ListBox1.Items.AddRange(New Object() {"Create new external variable files", "Add infrastructure to existing files", "Use existing files"})
         Me.ListBox1.Location = New System.Drawing.Point(11, 23)
-        Me.ListBox1.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.ListBox1.Margin = New System.Windows.Forms.Padding(4)
         Me.ListBox1.Name = "ListBox1"
         Me.ListBox1.Size = New System.Drawing.Size(252, 52)
         Me.ListBox1.TabIndex = 1
@@ -1231,9 +1231,9 @@ Partial Class MainForm
         Me.TabPage2.Controls.Add(Me.Button3)
         Me.TabPage2.Controls.Add(Me.GroupBox5)
         Me.TabPage2.Location = New System.Drawing.Point(4, 25)
-        Me.TabPage2.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TabPage2.Margin = New System.Windows.Forms.Padding(4)
         Me.TabPage2.Name = "TabPage2"
-        Me.TabPage2.Padding = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TabPage2.Padding = New System.Windows.Forms.Padding(4)
         Me.TabPage2.Size = New System.Drawing.Size(859, 657)
         Me.TabPage2.TabIndex = 1
         Me.TabPage2.Text = "External Variable Files"
@@ -1251,9 +1251,9 @@ Partial Class MainForm
         Me.GroupBox8.Controls.Add(Me.CheckBox24)
         Me.GroupBox8.Enabled = False
         Me.GroupBox8.Location = New System.Drawing.Point(8, 432)
-        Me.GroupBox8.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox8.Margin = New System.Windows.Forms.Padding(4)
         Me.GroupBox8.Name = "GroupBox8"
-        Me.GroupBox8.Padding = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox8.Padding = New System.Windows.Forms.Padding(4)
         Me.GroupBox8.Size = New System.Drawing.Size(560, 84)
         Me.GroupBox8.TabIndex = 6
         Me.GroupBox8.TabStop = False
@@ -1263,7 +1263,7 @@ Partial Class MainForm
         '
         Me.CheckBox19.AutoSize = True
         Me.CheckBox19.Location = New System.Drawing.Point(11, 23)
-        Me.CheckBox19.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox19.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox19.Name = "CheckBox19"
         Me.CheckBox19.Size = New System.Drawing.Size(96, 21)
         Me.CheckBox19.TabIndex = 5
@@ -1284,7 +1284,7 @@ Partial Class MainForm
         '
         Me.CheckBox20.AutoSize = True
         Me.CheckBox20.Location = New System.Drawing.Point(11, 53)
-        Me.CheckBox20.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox20.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox20.Name = "CheckBox20"
         Me.CheckBox20.Size = New System.Drawing.Size(106, 21)
         Me.CheckBox20.TabIndex = 4
@@ -1294,7 +1294,7 @@ Partial Class MainForm
         'TextBox5
         '
         Me.TextBox5.Location = New System.Drawing.Point(339, 49)
-        Me.TextBox5.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox5.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox5.Name = "TextBox5"
         Me.TextBox5.Size = New System.Drawing.Size(136, 22)
         Me.TextBox5.TabIndex = 1
@@ -1303,7 +1303,7 @@ Partial Class MainForm
         '
         Me.CheckBox21.AutoSize = True
         Me.CheckBox21.Location = New System.Drawing.Point(127, 23)
-        Me.CheckBox21.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox21.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox21.Name = "CheckBox21"
         Me.CheckBox21.Size = New System.Drawing.Size(86, 21)
         Me.CheckBox21.TabIndex = 3
@@ -1314,7 +1314,7 @@ Partial Class MainForm
         '
         Me.CheckBox22.AutoSize = True
         Me.CheckBox22.Location = New System.Drawing.Point(127, 52)
-        Me.CheckBox22.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox22.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox22.Name = "CheckBox22"
         Me.CheckBox22.Size = New System.Drawing.Size(96, 21)
         Me.CheckBox22.TabIndex = 2
@@ -1325,7 +1325,7 @@ Partial Class MainForm
         '
         Me.CheckBox23.AutoSize = True
         Me.CheckBox23.Location = New System.Drawing.Point(237, 23)
-        Me.CheckBox23.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox23.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox23.Name = "CheckBox23"
         Me.CheckBox23.Size = New System.Drawing.Size(79, 21)
         Me.CheckBox23.TabIndex = 1
@@ -1336,7 +1336,7 @@ Partial Class MainForm
         '
         Me.CheckBox24.AutoSize = True
         Me.CheckBox24.Location = New System.Drawing.Point(237, 53)
-        Me.CheckBox24.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox24.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox24.Name = "CheckBox24"
         Me.CheckBox24.Size = New System.Drawing.Size(87, 21)
         Me.CheckBox24.TabIndex = 0
@@ -1346,7 +1346,7 @@ Partial Class MainForm
         'Button6
         '
         Me.Button6.Location = New System.Drawing.Point(207, 567)
-        Me.Button6.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.Button6.Margin = New System.Windows.Forms.Padding(4)
         Me.Button6.Name = "Button6"
         Me.Button6.Size = New System.Drawing.Size(191, 42)
         Me.Button6.TabIndex = 4
@@ -1356,7 +1356,7 @@ Partial Class MainForm
         'Button5
         '
         Me.Button5.Location = New System.Drawing.Point(207, 523)
-        Me.Button5.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.Button5.Margin = New System.Windows.Forms.Padding(4)
         Me.Button5.Name = "Button5"
         Me.Button5.Size = New System.Drawing.Size(191, 42)
         Me.Button5.TabIndex = 3
@@ -1366,7 +1366,7 @@ Partial Class MainForm
         'Button4
         '
         Me.Button4.Location = New System.Drawing.Point(12, 567)
-        Me.Button4.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.Button4.Margin = New System.Windows.Forms.Padding(4)
         Me.Button4.Name = "Button4"
         Me.Button4.Size = New System.Drawing.Size(191, 42)
         Me.Button4.TabIndex = 2
@@ -1376,7 +1376,7 @@ Partial Class MainForm
         'Button3
         '
         Me.Button3.Location = New System.Drawing.Point(12, 523)
-        Me.Button3.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.Button3.Margin = New System.Windows.Forms.Padding(4)
         Me.Button3.Name = "Button3"
         Me.Button3.Size = New System.Drawing.Size(191, 42)
         Me.Button3.TabIndex = 1
@@ -1390,9 +1390,9 @@ Partial Class MainForm
         Me.GroupBox5.Controls.Add(Me.GroupBox6)
         Me.GroupBox5.Enabled = False
         Me.GroupBox5.Location = New System.Drawing.Point(8, 9)
-        Me.GroupBox5.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox5.Margin = New System.Windows.Forms.Padding(4)
         Me.GroupBox5.Name = "GroupBox5"
-        Me.GroupBox5.Padding = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox5.Padding = New System.Windows.Forms.Padding(4)
         Me.GroupBox5.Size = New System.Drawing.Size(669, 416)
         Me.GroupBox5.TabIndex = 0
         Me.GroupBox5.TabStop = False
@@ -1404,9 +1404,9 @@ Partial Class MainForm
         Me.GroupBox16.Controls.Add(Me.TextBox17)
         Me.GroupBox16.Controls.Add(Me.CheckBox36)
         Me.GroupBox16.Location = New System.Drawing.Point(328, 302)
-        Me.GroupBox16.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox16.Margin = New System.Windows.Forms.Padding(4)
         Me.GroupBox16.Name = "GroupBox16"
-        Me.GroupBox16.Padding = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox16.Padding = New System.Windows.Forms.Padding(4)
         Me.GroupBox16.Size = New System.Drawing.Size(223, 85)
         Me.GroupBox16.TabIndex = 4
         Me.GroupBox16.TabStop = False
@@ -1427,7 +1427,7 @@ Partial Class MainForm
         '
         Me.TextBox17.Enabled = False
         Me.TextBox17.Location = New System.Drawing.Point(8, 52)
-        Me.TextBox17.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox17.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox17.Name = "TextBox17"
         Me.TextBox17.Size = New System.Drawing.Size(77, 22)
         Me.TextBox17.TabIndex = 1
@@ -1437,7 +1437,7 @@ Partial Class MainForm
         '
         Me.CheckBox36.AutoSize = True
         Me.CheckBox36.Location = New System.Drawing.Point(9, 23)
-        Me.CheckBox36.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox36.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox36.Name = "CheckBox36"
         Me.CheckBox36.Size = New System.Drawing.Size(162, 21)
         Me.CheckBox36.TabIndex = 0
@@ -1465,9 +1465,9 @@ Partial Class MainForm
         Me.GroupBox7.Controls.Add(Me.CheckBox14)
         Me.GroupBox7.Controls.Add(Me.CheckBox13)
         Me.GroupBox7.Location = New System.Drawing.Point(328, 22)
-        Me.GroupBox7.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox7.Margin = New System.Windows.Forms.Padding(4)
         Me.GroupBox7.Name = "GroupBox7"
-        Me.GroupBox7.Padding = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox7.Padding = New System.Windows.Forms.Padding(4)
         Me.GroupBox7.Size = New System.Drawing.Size(333, 257)
         Me.GroupBox7.TabIndex = 3
         Me.GroupBox7.TabStop = False
@@ -1488,7 +1488,7 @@ Partial Class MainForm
         '
         Me.TextBox37.Enabled = False
         Me.TextBox37.Location = New System.Drawing.Point(120, 167)
-        Me.TextBox37.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox37.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox37.Name = "TextBox37"
         Me.TextBox37.Size = New System.Drawing.Size(75, 22)
         Me.TextBox37.TabIndex = 16
@@ -1508,7 +1508,7 @@ Partial Class MainForm
         '
         Me.TextBox36.Enabled = False
         Me.TextBox36.Location = New System.Drawing.Point(120, 139)
-        Me.TextBox36.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox36.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox36.Name = "TextBox36"
         Me.TextBox36.Size = New System.Drawing.Size(75, 22)
         Me.TextBox36.TabIndex = 14
@@ -1528,7 +1528,7 @@ Partial Class MainForm
         '
         Me.TextBox35.Enabled = False
         Me.TextBox35.Location = New System.Drawing.Point(120, 81)
-        Me.TextBox35.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox35.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox35.Name = "TextBox35"
         Me.TextBox35.Size = New System.Drawing.Size(75, 22)
         Me.TextBox35.TabIndex = 12
@@ -1548,7 +1548,7 @@ Partial Class MainForm
         '
         Me.TextBox34.Enabled = False
         Me.TextBox34.Location = New System.Drawing.Point(120, 22)
-        Me.TextBox34.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox34.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox34.Name = "TextBox34"
         Me.TextBox34.Size = New System.Drawing.Size(75, 22)
         Me.TextBox34.TabIndex = 10
@@ -1568,7 +1568,7 @@ Partial Class MainForm
         '
         Me.TextBox33.Enabled = False
         Me.TextBox33.Location = New System.Drawing.Point(120, 196)
-        Me.TextBox33.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox33.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox33.Name = "TextBox33"
         Me.TextBox33.Size = New System.Drawing.Size(75, 22)
         Me.TextBox33.TabIndex = 8
@@ -1588,7 +1588,7 @@ Partial Class MainForm
         Me.CheckBox18.AutoSize = True
         Me.CheckBox18.Enabled = False
         Me.CheckBox18.Location = New System.Drawing.Point(9, 197)
-        Me.CheckBox18.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox18.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox18.Name = "CheckBox18"
         Me.CheckBox18.Size = New System.Drawing.Size(87, 21)
         Me.CheckBox18.TabIndex = 5
@@ -1598,7 +1598,7 @@ Partial Class MainForm
         'TextBox4
         '
         Me.TextBox4.Location = New System.Drawing.Point(8, 224)
-        Me.TextBox4.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox4.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox4.Name = "TextBox4"
         Me.TextBox4.Size = New System.Drawing.Size(187, 22)
         Me.TextBox4.TabIndex = 6
@@ -1608,7 +1608,7 @@ Partial Class MainForm
         Me.CheckBox17.AutoSize = True
         Me.CheckBox17.Enabled = False
         Me.CheckBox17.Location = New System.Drawing.Point(9, 142)
-        Me.CheckBox17.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox17.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox17.Name = "CheckBox17"
         Me.CheckBox17.Size = New System.Drawing.Size(79, 21)
         Me.CheckBox17.TabIndex = 4
@@ -1620,7 +1620,7 @@ Partial Class MainForm
         Me.CheckBox16.AutoSize = True
         Me.CheckBox16.Enabled = False
         Me.CheckBox16.Location = New System.Drawing.Point(9, 112)
-        Me.CheckBox16.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox16.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox16.Name = "CheckBox16"
         Me.CheckBox16.Size = New System.Drawing.Size(96, 21)
         Me.CheckBox16.TabIndex = 3
@@ -1632,7 +1632,7 @@ Partial Class MainForm
         Me.CheckBox15.AutoSize = True
         Me.CheckBox15.Enabled = False
         Me.CheckBox15.Location = New System.Drawing.Point(9, 84)
-        Me.CheckBox15.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox15.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox15.Name = "CheckBox15"
         Me.CheckBox15.Size = New System.Drawing.Size(86, 21)
         Me.CheckBox15.TabIndex = 2
@@ -1644,7 +1644,7 @@ Partial Class MainForm
         Me.CheckBox14.AutoSize = True
         Me.CheckBox14.Enabled = False
         Me.CheckBox14.Location = New System.Drawing.Point(9, 54)
-        Me.CheckBox14.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox14.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox14.Name = "CheckBox14"
         Me.CheckBox14.Size = New System.Drawing.Size(106, 21)
         Me.CheckBox14.TabIndex = 1
@@ -1656,7 +1656,7 @@ Partial Class MainForm
         Me.CheckBox13.AutoSize = True
         Me.CheckBox13.Enabled = False
         Me.CheckBox13.Location = New System.Drawing.Point(9, 25)
-        Me.CheckBox13.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox13.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox13.Name = "CheckBox13"
         Me.CheckBox13.Size = New System.Drawing.Size(96, 21)
         Me.CheckBox13.TabIndex = 0
@@ -1680,9 +1680,9 @@ Partial Class MainForm
         Me.GroupBox6.Controls.Add(Me.CheckBox8)
         Me.GroupBox6.Controls.Add(Me.CheckBox7)
         Me.GroupBox6.Location = New System.Drawing.Point(12, 22)
-        Me.GroupBox6.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox6.Margin = New System.Windows.Forms.Padding(4)
         Me.GroupBox6.Name = "GroupBox6"
-        Me.GroupBox6.Padding = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox6.Padding = New System.Windows.Forms.Padding(4)
         Me.GroupBox6.Size = New System.Drawing.Size(308, 234)
         Me.GroupBox6.TabIndex = 0
         Me.GroupBox6.TabStop = False
@@ -1696,7 +1696,7 @@ Partial Class MainForm
         Me.ComboBox6.FormattingEnabled = True
         Me.ComboBox6.Items.AddRange(New Object() {"Scaling constant", "Input file", "Database input"})
         Me.ComboBox6.Location = New System.Drawing.Point(139, 166)
-        Me.ComboBox6.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.ComboBox6.Margin = New System.Windows.Forms.Padding(4)
         Me.ComboBox6.Name = "ComboBox6"
         Me.ComboBox6.Size = New System.Drawing.Size(160, 24)
         Me.ComboBox6.TabIndex = 11
@@ -1709,7 +1709,7 @@ Partial Class MainForm
         Me.ComboBox5.FormattingEnabled = True
         Me.ComboBox5.Items.AddRange(New Object() {"Scaling constant", "Input file", "Database input"})
         Me.ComboBox5.Location = New System.Drawing.Point(139, 137)
-        Me.ComboBox5.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.ComboBox5.Margin = New System.Windows.Forms.Padding(4)
         Me.ComboBox5.Name = "ComboBox5"
         Me.ComboBox5.Size = New System.Drawing.Size(160, 24)
         Me.ComboBox5.TabIndex = 10
@@ -1722,7 +1722,7 @@ Partial Class MainForm
         Me.ComboBox4.FormattingEnabled = True
         Me.ComboBox4.Items.AddRange(New Object() {"Scaling constant", "Input file", "Database input"})
         Me.ComboBox4.Location = New System.Drawing.Point(139, 49)
-        Me.ComboBox4.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.ComboBox4.Margin = New System.Windows.Forms.Padding(4)
         Me.ComboBox4.Name = "ComboBox4"
         Me.ComboBox4.Size = New System.Drawing.Size(160, 24)
         Me.ComboBox4.TabIndex = 9
@@ -1735,7 +1735,7 @@ Partial Class MainForm
         Me.ComboBox3.FormattingEnabled = True
         Me.ComboBox3.Items.AddRange(New Object() {"Scaling constant", "Input file", "Database input"})
         Me.ComboBox3.Location = New System.Drawing.Point(139, 20)
-        Me.ComboBox3.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.ComboBox3.Margin = New System.Windows.Forms.Padding(4)
         Me.ComboBox3.Name = "ComboBox3"
         Me.ComboBox3.Size = New System.Drawing.Size(160, 24)
         Me.ComboBox3.TabIndex = 8
@@ -1748,7 +1748,7 @@ Partial Class MainForm
         Me.ComboBox2.FormattingEnabled = True
         Me.ComboBox2.Items.AddRange(New Object() {"Scaling constant", "Input file", "Database input"})
         Me.ComboBox2.Location = New System.Drawing.Point(139, 78)
-        Me.ComboBox2.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.ComboBox2.Margin = New System.Windows.Forms.Padding(4)
         Me.ComboBox2.Name = "ComboBox2"
         Me.ComboBox2.Size = New System.Drawing.Size(160, 24)
         Me.ComboBox2.TabIndex = 7
@@ -1761,7 +1761,7 @@ Partial Class MainForm
         Me.ComboBox1.FormattingEnabled = True
         Me.ComboBox1.Items.AddRange(New Object() {"Scaling constant", "Input file", "Database input"})
         Me.ComboBox1.Location = New System.Drawing.Point(139, 107)
-        Me.ComboBox1.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.ComboBox1.Margin = New System.Windows.Forms.Padding(4)
         Me.ComboBox1.Name = "ComboBox1"
         Me.ComboBox1.Size = New System.Drawing.Size(160, 24)
         Me.ComboBox1.TabIndex = 6
@@ -1770,7 +1770,7 @@ Partial Class MainForm
         '
         Me.CheckBox12.AutoSize = True
         Me.CheckBox12.Location = New System.Drawing.Point(9, 171)
-        Me.CheckBox12.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox12.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox12.Name = "CheckBox12"
         Me.CheckBox12.Size = New System.Drawing.Size(87, 21)
         Me.CheckBox12.TabIndex = 5
@@ -1791,7 +1791,7 @@ Partial Class MainForm
         '
         Me.CheckBox11.AutoSize = True
         Me.CheckBox11.Location = New System.Drawing.Point(9, 142)
-        Me.CheckBox11.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox11.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox11.Name = "CheckBox11"
         Me.CheckBox11.Size = New System.Drawing.Size(79, 21)
         Me.CheckBox11.TabIndex = 4
@@ -1801,7 +1801,7 @@ Partial Class MainForm
         'TextBox3
         '
         Me.TextBox3.Location = New System.Drawing.Point(7, 199)
-        Me.TextBox3.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox3.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox3.Name = "TextBox3"
         Me.TextBox3.Size = New System.Drawing.Size(136, 22)
         Me.TextBox3.TabIndex = 1
@@ -1810,7 +1810,7 @@ Partial Class MainForm
         '
         Me.CheckBox10.AutoSize = True
         Me.CheckBox10.Location = New System.Drawing.Point(9, 112)
-        Me.CheckBox10.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox10.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox10.Name = "CheckBox10"
         Me.CheckBox10.Size = New System.Drawing.Size(96, 21)
         Me.CheckBox10.TabIndex = 3
@@ -1821,7 +1821,7 @@ Partial Class MainForm
         '
         Me.CheckBox9.AutoSize = True
         Me.CheckBox9.Location = New System.Drawing.Point(9, 82)
-        Me.CheckBox9.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox9.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox9.Name = "CheckBox9"
         Me.CheckBox9.Size = New System.Drawing.Size(86, 21)
         Me.CheckBox9.TabIndex = 2
@@ -1832,7 +1832,7 @@ Partial Class MainForm
         '
         Me.CheckBox8.AutoSize = True
         Me.CheckBox8.Location = New System.Drawing.Point(9, 53)
-        Me.CheckBox8.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox8.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox8.Name = "CheckBox8"
         Me.CheckBox8.Size = New System.Drawing.Size(106, 21)
         Me.CheckBox8.TabIndex = 1
@@ -1843,7 +1843,7 @@ Partial Class MainForm
         '
         Me.CheckBox7.AutoSize = True
         Me.CheckBox7.Location = New System.Drawing.Point(9, 25)
-        Me.CheckBox7.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox7.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox7.Name = "CheckBox7"
         Me.CheckBox7.Size = New System.Drawing.Size(96, 21)
         Me.CheckBox7.TabIndex = 0
@@ -1855,9 +1855,9 @@ Partial Class MainForm
         Me.TabPage3.Controls.Add(Me.GroupBox10)
         Me.TabPage3.Controls.Add(Me.GroupBox9)
         Me.TabPage3.Location = New System.Drawing.Point(4, 25)
-        Me.TabPage3.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TabPage3.Margin = New System.Windows.Forms.Padding(4)
         Me.TabPage3.Name = "TabPage3"
-        Me.TabPage3.Padding = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TabPage3.Padding = New System.Windows.Forms.Padding(4)
         Me.TabPage3.Size = New System.Drawing.Size(859, 657)
         Me.TabPage3.TabIndex = 2
         Me.TabPage3.Text = "Database Input"
@@ -1896,9 +1896,9 @@ Partial Class MainForm
         Me.GroupBox10.Controls.Add(Me.ComboBox8)
         Me.GroupBox10.Controls.Add(Me.ComboBox7)
         Me.GroupBox10.Location = New System.Drawing.Point(8, 252)
-        Me.GroupBox10.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox10.Margin = New System.Windows.Forms.Padding(4)
         Me.GroupBox10.Name = "GroupBox10"
-        Me.GroupBox10.Padding = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox10.Padding = New System.Windows.Forms.Padding(4)
         Me.GroupBox10.Size = New System.Drawing.Size(551, 254)
         Me.GroupBox10.TabIndex = 1
         Me.GroupBox10.TabStop = False
@@ -1912,7 +1912,7 @@ Partial Class MainForm
         Me.ComboBox26.FormattingEnabled = True
         Me.ComboBox26.Items.AddRange(New Object() {"File", "None"})
         Me.ComboBox26.Location = New System.Drawing.Point(427, 148)
-        Me.ComboBox26.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.ComboBox26.Margin = New System.Windows.Forms.Padding(4)
         Me.ComboBox26.Name = "ComboBox26"
         Me.ComboBox26.Size = New System.Drawing.Size(101, 24)
         Me.ComboBox26.TabIndex = 38
@@ -1935,7 +1935,7 @@ Partial Class MainForm
         Me.ComboBox25.FormattingEnabled = True
         Me.ComboBox25.Items.AddRange(New Object() {"File", "None"})
         Me.ComboBox25.Location = New System.Drawing.Point(427, 114)
-        Me.ComboBox25.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.ComboBox25.Margin = New System.Windows.Forms.Padding(4)
         Me.ComboBox25.Name = "ComboBox25"
         Me.ComboBox25.Size = New System.Drawing.Size(101, 24)
         Me.ComboBox25.TabIndex = 36
@@ -1948,7 +1948,7 @@ Partial Class MainForm
         Me.ComboBox24.FormattingEnabled = True
         Me.ComboBox24.Items.AddRange(New Object() {"Constant", "File"})
         Me.ComboBox24.Location = New System.Drawing.Point(316, 214)
-        Me.ComboBox24.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.ComboBox24.Margin = New System.Windows.Forms.Padding(4)
         Me.ComboBox24.Name = "ComboBox24"
         Me.ComboBox24.Size = New System.Drawing.Size(101, 24)
         Me.ComboBox24.TabIndex = 35
@@ -1961,7 +1961,7 @@ Partial Class MainForm
         Me.ComboBox23.FormattingEnabled = True
         Me.ComboBox23.Items.AddRange(New Object() {"Constant", "File"})
         Me.ComboBox23.Location = New System.Drawing.Point(205, 214)
-        Me.ComboBox23.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.ComboBox23.Margin = New System.Windows.Forms.Padding(4)
         Me.ComboBox23.Name = "ComboBox23"
         Me.ComboBox23.Size = New System.Drawing.Size(101, 24)
         Me.ComboBox23.TabIndex = 34
@@ -1974,7 +1974,7 @@ Partial Class MainForm
         Me.ComboBox22.FormattingEnabled = True
         Me.ComboBox22.Items.AddRange(New Object() {"Constant", "File"})
         Me.ComboBox22.Location = New System.Drawing.Point(95, 214)
-        Me.ComboBox22.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.ComboBox22.Margin = New System.Windows.Forms.Padding(4)
         Me.ComboBox22.Name = "ComboBox22"
         Me.ComboBox22.Size = New System.Drawing.Size(101, 24)
         Me.ComboBox22.TabIndex = 33
@@ -1997,7 +1997,7 @@ Partial Class MainForm
         Me.ComboBox21.FormattingEnabled = True
         Me.ComboBox21.Items.AddRange(New Object() {"Constant", "File"})
         Me.ComboBox21.Location = New System.Drawing.Point(316, 181)
-        Me.ComboBox21.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.ComboBox21.Margin = New System.Windows.Forms.Padding(4)
         Me.ComboBox21.Name = "ComboBox21"
         Me.ComboBox21.Size = New System.Drawing.Size(101, 24)
         Me.ComboBox21.TabIndex = 31
@@ -2010,7 +2010,7 @@ Partial Class MainForm
         Me.ComboBox20.FormattingEnabled = True
         Me.ComboBox20.Items.AddRange(New Object() {"Constant", "File"})
         Me.ComboBox20.Location = New System.Drawing.Point(205, 181)
-        Me.ComboBox20.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.ComboBox20.Margin = New System.Windows.Forms.Padding(4)
         Me.ComboBox20.Name = "ComboBox20"
         Me.ComboBox20.Size = New System.Drawing.Size(101, 24)
         Me.ComboBox20.TabIndex = 30
@@ -2023,7 +2023,7 @@ Partial Class MainForm
         Me.ComboBox19.FormattingEnabled = True
         Me.ComboBox19.Items.AddRange(New Object() {"Constant", "File"})
         Me.ComboBox19.Location = New System.Drawing.Point(95, 181)
-        Me.ComboBox19.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.ComboBox19.Margin = New System.Windows.Forms.Padding(4)
         Me.ComboBox19.Name = "ComboBox19"
         Me.ComboBox19.Size = New System.Drawing.Size(101, 24)
         Me.ComboBox19.TabIndex = 29
@@ -2046,7 +2046,7 @@ Partial Class MainForm
         Me.ComboBox18.FormattingEnabled = True
         Me.ComboBox18.Items.AddRange(New Object() {"Constant", "File"})
         Me.ComboBox18.Location = New System.Drawing.Point(316, 148)
-        Me.ComboBox18.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.ComboBox18.Margin = New System.Windows.Forms.Padding(4)
         Me.ComboBox18.Name = "ComboBox18"
         Me.ComboBox18.Size = New System.Drawing.Size(101, 24)
         Me.ComboBox18.TabIndex = 27
@@ -2059,7 +2059,7 @@ Partial Class MainForm
         Me.ComboBox17.FormattingEnabled = True
         Me.ComboBox17.Items.AddRange(New Object() {"Constant", "File"})
         Me.ComboBox17.Location = New System.Drawing.Point(205, 148)
-        Me.ComboBox17.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.ComboBox17.Margin = New System.Windows.Forms.Padding(4)
         Me.ComboBox17.Name = "ComboBox17"
         Me.ComboBox17.Size = New System.Drawing.Size(101, 24)
         Me.ComboBox17.TabIndex = 26
@@ -2072,7 +2072,7 @@ Partial Class MainForm
         Me.ComboBox16.FormattingEnabled = True
         Me.ComboBox16.Items.AddRange(New Object() {"Constant", "File"})
         Me.ComboBox16.Location = New System.Drawing.Point(95, 148)
-        Me.ComboBox16.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.ComboBox16.Margin = New System.Windows.Forms.Padding(4)
         Me.ComboBox16.Name = "ComboBox16"
         Me.ComboBox16.Size = New System.Drawing.Size(101, 24)
         Me.ComboBox16.TabIndex = 25
@@ -2095,7 +2095,7 @@ Partial Class MainForm
         Me.ComboBox15.FormattingEnabled = True
         Me.ComboBox15.Items.AddRange(New Object() {"Constant", "File"})
         Me.ComboBox15.Location = New System.Drawing.Point(316, 114)
-        Me.ComboBox15.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.ComboBox15.Margin = New System.Windows.Forms.Padding(4)
         Me.ComboBox15.Name = "ComboBox15"
         Me.ComboBox15.Size = New System.Drawing.Size(101, 24)
         Me.ComboBox15.TabIndex = 23
@@ -2108,7 +2108,7 @@ Partial Class MainForm
         Me.ComboBox14.FormattingEnabled = True
         Me.ComboBox14.Items.AddRange(New Object() {"Constant", "File"})
         Me.ComboBox14.Location = New System.Drawing.Point(205, 114)
-        Me.ComboBox14.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.ComboBox14.Margin = New System.Windows.Forms.Padding(4)
         Me.ComboBox14.Name = "ComboBox14"
         Me.ComboBox14.Size = New System.Drawing.Size(101, 24)
         Me.ComboBox14.TabIndex = 22
@@ -2121,7 +2121,7 @@ Partial Class MainForm
         Me.ComboBox13.FormattingEnabled = True
         Me.ComboBox13.Items.AddRange(New Object() {"Constant", "File"})
         Me.ComboBox13.Location = New System.Drawing.Point(95, 114)
-        Me.ComboBox13.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.ComboBox13.Margin = New System.Windows.Forms.Padding(4)
         Me.ComboBox13.Name = "ComboBox13"
         Me.ComboBox13.Size = New System.Drawing.Size(101, 24)
         Me.ComboBox13.TabIndex = 21
@@ -2144,7 +2144,7 @@ Partial Class MainForm
         Me.ComboBox12.FormattingEnabled = True
         Me.ComboBox12.Items.AddRange(New Object() {"Constant", "File"})
         Me.ComboBox12.Location = New System.Drawing.Point(316, 81)
-        Me.ComboBox12.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.ComboBox12.Margin = New System.Windows.Forms.Padding(4)
         Me.ComboBox12.Name = "ComboBox12"
         Me.ComboBox12.Size = New System.Drawing.Size(101, 24)
         Me.ComboBox12.TabIndex = 19
@@ -2157,7 +2157,7 @@ Partial Class MainForm
         Me.ComboBox11.FormattingEnabled = True
         Me.ComboBox11.Items.AddRange(New Object() {"Constant", "File"})
         Me.ComboBox11.Location = New System.Drawing.Point(205, 81)
-        Me.ComboBox11.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.ComboBox11.Margin = New System.Windows.Forms.Padding(4)
         Me.ComboBox11.Name = "ComboBox11"
         Me.ComboBox11.Size = New System.Drawing.Size(101, 24)
         Me.ComboBox11.TabIndex = 18
@@ -2170,7 +2170,7 @@ Partial Class MainForm
         Me.ComboBox10.FormattingEnabled = True
         Me.ComboBox10.Items.AddRange(New Object() {"Constant", "File"})
         Me.ComboBox10.Location = New System.Drawing.Point(95, 81)
-        Me.ComboBox10.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.ComboBox10.Margin = New System.Windows.Forms.Padding(4)
         Me.ComboBox10.Name = "ComboBox10"
         Me.ComboBox10.Size = New System.Drawing.Size(101, 24)
         Me.ComboBox10.TabIndex = 17
@@ -2233,7 +2233,7 @@ Partial Class MainForm
         Me.ComboBox9.FormattingEnabled = True
         Me.ComboBox9.Items.AddRange(New Object() {"Constant", "File"})
         Me.ComboBox9.Location = New System.Drawing.Point(316, 48)
-        Me.ComboBox9.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.ComboBox9.Margin = New System.Windows.Forms.Padding(4)
         Me.ComboBox9.Name = "ComboBox9"
         Me.ComboBox9.Size = New System.Drawing.Size(101, 24)
         Me.ComboBox9.TabIndex = 11
@@ -2246,7 +2246,7 @@ Partial Class MainForm
         Me.ComboBox8.FormattingEnabled = True
         Me.ComboBox8.Items.AddRange(New Object() {"Constant", "File"})
         Me.ComboBox8.Location = New System.Drawing.Point(205, 48)
-        Me.ComboBox8.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.ComboBox8.Margin = New System.Windows.Forms.Padding(4)
         Me.ComboBox8.Name = "ComboBox8"
         Me.ComboBox8.Size = New System.Drawing.Size(101, 24)
         Me.ComboBox8.TabIndex = 10
@@ -2259,7 +2259,7 @@ Partial Class MainForm
         Me.ComboBox7.FormattingEnabled = True
         Me.ComboBox7.Items.AddRange(New Object() {"Constant", "File"})
         Me.ComboBox7.Location = New System.Drawing.Point(95, 48)
-        Me.ComboBox7.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.ComboBox7.Margin = New System.Windows.Forms.Padding(4)
         Me.ComboBox7.Name = "ComboBox7"
         Me.ComboBox7.Size = New System.Drawing.Size(101, 24)
         Me.ComboBox7.TabIndex = 9
@@ -2280,9 +2280,9 @@ Partial Class MainForm
         Me.GroupBox9.Controls.Add(Me.TextBox6)
         Me.GroupBox9.Controls.Add(Me.CheckBox25)
         Me.GroupBox9.Location = New System.Drawing.Point(8, 7)
-        Me.GroupBox9.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox9.Margin = New System.Windows.Forms.Padding(4)
         Me.GroupBox9.Name = "GroupBox9"
-        Me.GroupBox9.Padding = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox9.Padding = New System.Windows.Forms.Padding(4)
         Me.GroupBox9.Size = New System.Drawing.Size(552, 226)
         Me.GroupBox9.TabIndex = 0
         Me.GroupBox9.TabStop = False
@@ -2293,7 +2293,7 @@ Partial Class MainForm
         Me.CheckBox37.AutoSize = True
         Me.CheckBox37.Enabled = False
         Me.CheckBox37.Location = New System.Drawing.Point(63, 64)
-        Me.CheckBox37.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox37.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox37.Name = "CheckBox37"
         Me.CheckBox37.Size = New System.Drawing.Size(274, 21)
         Me.CheckBox37.TabIndex = 12
@@ -2304,7 +2304,7 @@ Partial Class MainForm
         '
         Me.Button10.Enabled = False
         Me.Button10.Location = New System.Drawing.Point(456, 91)
-        Me.Button10.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.Button10.Margin = New System.Windows.Forms.Padding(4)
         Me.Button10.Name = "Button10"
         Me.Button10.Size = New System.Drawing.Size(93, 32)
         Me.Button10.TabIndex = 11
@@ -2314,7 +2314,7 @@ Partial Class MainForm
         'TextBox9
         '
         Me.TextBox9.Location = New System.Drawing.Point(157, 95)
-        Me.TextBox9.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox9.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox9.Name = "TextBox9"
         Me.TextBox9.Size = New System.Drawing.Size(289, 22)
         Me.TextBox9.TabIndex = 10
@@ -2323,7 +2323,7 @@ Partial Class MainForm
         '
         Me.CheckBox28.AutoSize = True
         Me.CheckBox28.Location = New System.Drawing.Point(8, 98)
-        Me.CheckBox28.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox28.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox28.Name = "CheckBox28"
         Me.CheckBox28.Size = New System.Drawing.Size(143, 21)
         Me.CheckBox28.TabIndex = 9
@@ -2334,7 +2334,7 @@ Partial Class MainForm
         '
         Me.Button9.Enabled = False
         Me.Button9.Location = New System.Drawing.Point(456, 169)
-        Me.Button9.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.Button9.Margin = New System.Windows.Forms.Padding(4)
         Me.Button9.Name = "Button9"
         Me.Button9.Size = New System.Drawing.Size(93, 32)
         Me.Button9.TabIndex = 8
@@ -2344,7 +2344,7 @@ Partial Class MainForm
         'TextBox8
         '
         Me.TextBox8.Location = New System.Drawing.Point(157, 171)
-        Me.TextBox8.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox8.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox8.Name = "TextBox8"
         Me.TextBox8.Size = New System.Drawing.Size(289, 22)
         Me.TextBox8.TabIndex = 7
@@ -2353,7 +2353,7 @@ Partial Class MainForm
         '
         Me.CheckBox27.AutoSize = True
         Me.CheckBox27.Location = New System.Drawing.Point(8, 171)
-        Me.CheckBox27.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox27.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox27.Name = "CheckBox27"
         Me.CheckBox27.Size = New System.Drawing.Size(75, 21)
         Me.CheckBox27.TabIndex = 6
@@ -2364,7 +2364,7 @@ Partial Class MainForm
         '
         Me.Button8.Enabled = False
         Me.Button8.Location = New System.Drawing.Point(456, 129)
-        Me.Button8.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.Button8.Margin = New System.Windows.Forms.Padding(4)
         Me.Button8.Name = "Button8"
         Me.Button8.Size = New System.Drawing.Size(93, 32)
         Me.Button8.TabIndex = 5
@@ -2374,7 +2374,7 @@ Partial Class MainForm
         'TextBox7
         '
         Me.TextBox7.Location = New System.Drawing.Point(157, 134)
-        Me.TextBox7.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox7.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox7.Name = "TextBox7"
         Me.TextBox7.Size = New System.Drawing.Size(289, 22)
         Me.TextBox7.TabIndex = 4
@@ -2383,7 +2383,7 @@ Partial Class MainForm
         '
         Me.CheckBox26.AutoSize = True
         Me.CheckBox26.Location = New System.Drawing.Point(8, 134)
-        Me.CheckBox26.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox26.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox26.Name = "CheckBox26"
         Me.CheckBox26.Size = New System.Drawing.Size(88, 21)
         Me.CheckBox26.TabIndex = 3
@@ -2394,7 +2394,7 @@ Partial Class MainForm
         '
         Me.Button7.Enabled = False
         Me.Button7.Location = New System.Drawing.Point(456, 27)
-        Me.Button7.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.Button7.Margin = New System.Windows.Forms.Padding(4)
         Me.Button7.Name = "Button7"
         Me.Button7.Size = New System.Drawing.Size(93, 32)
         Me.Button7.TabIndex = 2
@@ -2404,7 +2404,7 @@ Partial Class MainForm
         'TextBox6
         '
         Me.TextBox6.Location = New System.Drawing.Point(157, 32)
-        Me.TextBox6.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox6.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox6.Name = "TextBox6"
         Me.TextBox6.Size = New System.Drawing.Size(289, 22)
         Me.TextBox6.TabIndex = 1
@@ -2413,7 +2413,7 @@ Partial Class MainForm
         '
         Me.CheckBox25.AutoSize = True
         Me.CheckBox25.Location = New System.Drawing.Point(8, 36)
-        Me.CheckBox25.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox25.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox25.Name = "CheckBox25"
         Me.CheckBox25.Size = New System.Drawing.Size(152, 21)
         Me.CheckBox25.TabIndex = 0
@@ -2428,9 +2428,9 @@ Partial Class MainForm
         Me.TabPage4.Controls.Add(Me.GroupBox21)
         Me.TabPage4.Controls.Add(Me.GroupBox20)
         Me.TabPage4.Location = New System.Drawing.Point(4, 25)
-        Me.TabPage4.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TabPage4.Margin = New System.Windows.Forms.Padding(4)
         Me.TabPage4.Name = "TabPage4"
-        Me.TabPage4.Padding = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TabPage4.Padding = New System.Windows.Forms.Padding(4)
         Me.TabPage4.Size = New System.Drawing.Size(859, 657)
         Me.TabPage4.TabIndex = 3
         Me.TabPage4.Text = "Additional Options"
@@ -2440,9 +2440,9 @@ Partial Class MainForm
         '
         Me.GroupBox24.Controls.Add(Me.CheckBox43)
         Me.GroupBox24.Location = New System.Drawing.Point(560, 11)
-        Me.GroupBox24.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox24.Margin = New System.Windows.Forms.Padding(4)
         Me.GroupBox24.Name = "GroupBox24"
-        Me.GroupBox24.Padding = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox24.Padding = New System.Windows.Forms.Padding(4)
         Me.GroupBox24.Size = New System.Drawing.Size(288, 66)
         Me.GroupBox24.TabIndex = 19
         Me.GroupBox24.TabStop = False
@@ -2454,7 +2454,7 @@ Partial Class MainForm
         Me.CheckBox43.Checked = True
         Me.CheckBox43.CheckState = System.Windows.Forms.CheckState.Checked
         Me.CheckBox43.Location = New System.Drawing.Point(8, 25)
-        Me.CheckBox43.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.CheckBox43.Margin = New System.Windows.Forms.Padding(4)
         Me.CheckBox43.Name = "CheckBox43"
         Me.CheckBox43.Size = New System.Drawing.Size(225, 21)
         Me.CheckBox43.TabIndex = 1
@@ -2471,9 +2471,9 @@ Partial Class MainForm
         Me.GroupBox23.Controls.Add(Me.TextBox39)
         Me.GroupBox23.Controls.Add(Me.Label47)
         Me.GroupBox23.Location = New System.Drawing.Point(263, 11)
-        Me.GroupBox23.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox23.Margin = New System.Windows.Forms.Padding(4)
         Me.GroupBox23.Name = "GroupBox23"
-        Me.GroupBox23.Padding = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox23.Padding = New System.Windows.Forms.Padding(4)
         Me.GroupBox23.Size = New System.Drawing.Size(289, 158)
         Me.GroupBox23.TabIndex = 18
         Me.GroupBox23.TabStop = False
@@ -2522,7 +2522,7 @@ Partial Class MainForm
         'TextBox40
         '
         Me.TextBox40.Location = New System.Drawing.Point(9, 75)
-        Me.TextBox40.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox40.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox40.Name = "TextBox40"
         Me.TextBox40.Size = New System.Drawing.Size(49, 22)
         Me.TextBox40.TabIndex = 2
@@ -2531,7 +2531,7 @@ Partial Class MainForm
         'TextBox39
         '
         Me.TextBox39.Location = New System.Drawing.Point(9, 20)
-        Me.TextBox39.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox39.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox39.Name = "TextBox39"
         Me.TextBox39.Size = New System.Drawing.Size(49, 22)
         Me.TextBox39.TabIndex = 1
@@ -2552,9 +2552,9 @@ Partial Class MainForm
         Me.GroupBox22.Controls.Add(Me.ComboBox30)
         Me.GroupBox22.Controls.Add(Me.Label46)
         Me.GroupBox22.Location = New System.Drawing.Point(11, 196)
-        Me.GroupBox22.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox22.Margin = New System.Windows.Forms.Padding(4)
         Me.GroupBox22.Name = "GroupBox22"
-        Me.GroupBox22.Padding = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox22.Padding = New System.Windows.Forms.Padding(4)
         Me.GroupBox22.Size = New System.Drawing.Size(241, 57)
         Me.GroupBox22.TabIndex = 2
         Me.GroupBox22.TabStop = False
@@ -2566,7 +2566,7 @@ Partial Class MainForm
         Me.ComboBox30.FormattingEnabled = True
         Me.ComboBox30.Items.AddRange(New Object() {"Constant", "Strategy File"})
         Me.ComboBox30.Location = New System.Drawing.Point(109, 21)
-        Me.ComboBox30.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.ComboBox30.Margin = New System.Windows.Forms.Padding(4)
         Me.ComboBox30.Name = "ComboBox30"
         Me.ComboBox30.Size = New System.Drawing.Size(123, 24)
         Me.ComboBox30.TabIndex = 4
@@ -2586,9 +2586,9 @@ Partial Class MainForm
         Me.GroupBox21.Controls.Add(Me.Label45)
         Me.GroupBox21.Controls.Add(Me.ComboBox29)
         Me.GroupBox21.Location = New System.Drawing.Point(9, 119)
-        Me.GroupBox21.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox21.Margin = New System.Windows.Forms.Padding(4)
         Me.GroupBox21.Name = "GroupBox21"
-        Me.GroupBox21.Padding = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox21.Padding = New System.Windows.Forms.Padding(4)
         Me.GroupBox21.Size = New System.Drawing.Size(244, 62)
         Me.GroupBox21.TabIndex = 1
         Me.GroupBox21.TabStop = False
@@ -2610,7 +2610,7 @@ Partial Class MainForm
         Me.ComboBox29.FormattingEnabled = True
         Me.ComboBox29.Items.AddRange(New Object() {"Elasticity", "S/F Curve"})
         Me.ComboBox29.Location = New System.Drawing.Point(112, 23)
-        Me.ComboBox29.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.ComboBox29.Margin = New System.Windows.Forms.Padding(4)
         Me.ComboBox29.Name = "ComboBox29"
         Me.ComboBox29.Size = New System.Drawing.Size(123, 24)
         Me.ComboBox29.TabIndex = 1
@@ -2622,9 +2622,9 @@ Partial Class MainForm
         Me.GroupBox20.Controls.Add(Me.Label43)
         Me.GroupBox20.Controls.Add(Me.ComboBox28)
         Me.GroupBox20.Location = New System.Drawing.Point(9, 7)
-        Me.GroupBox20.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox20.Margin = New System.Windows.Forms.Padding(4)
         Me.GroupBox20.Name = "GroupBox20"
-        Me.GroupBox20.Padding = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox20.Padding = New System.Windows.Forms.Padding(4)
         Me.GroupBox20.Size = New System.Drawing.Size(245, 86)
         Me.GroupBox20.TabIndex = 0
         Me.GroupBox20.TabStop = False
@@ -2634,7 +2634,7 @@ Partial Class MainForm
         '
         Me.TextBox38.Enabled = False
         Me.TextBox38.Location = New System.Drawing.Point(115, 54)
-        Me.TextBox38.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox38.Margin = New System.Windows.Forms.Padding(4)
         Me.TextBox38.Name = "TextBox38"
         Me.TextBox38.Size = New System.Drawing.Size(121, 22)
         Me.TextBox38.TabIndex = 11
@@ -2665,7 +2665,7 @@ Partial Class MainForm
         Me.ComboBox28.FormattingEnabled = True
         Me.ComboBox28.Items.AddRange(New Object() {"Full Day", "Busiest Hour"})
         Me.ComboBox28.Location = New System.Drawing.Point(115, 23)
-        Me.ComboBox28.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.ComboBox28.Margin = New System.Windows.Forms.Padding(4)
         Me.ComboBox28.Name = "ComboBox28"
         Me.ComboBox28.Size = New System.Drawing.Size(123, 24)
         Me.ComboBox28.TabIndex = 0
@@ -2713,7 +2713,7 @@ Partial Class MainForm
         Me.Controls.Add(Me.TabControl1)
         Me.Controls.Add(Me.MenuStrip1)
         Me.MainMenuStrip = Me.MenuStrip1
-        Me.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.Margin = New System.Windows.Forms.Padding(4)
         Me.Name = "MainForm"
         Me.Text = "ITRC Transport CDAM"
         Me.GroupBox1.ResumeLayout(False)

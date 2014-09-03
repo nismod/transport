@@ -24,8 +24,8 @@ Module DBaseInterface
         Try
             'If there is no connection to the database then establish one
             If m_conn Is Nothing Then
-                'm_sConnString = "Driver={PostgreSQL ODBC Driver(ANSI)};DSN=PostgreSQL30;Server=localhost;Port=5432;Database=itrc_sos;UId=postgres;Password=76583Xucheng1;"
-                m_sConnString = "Driver={PostgreSQL ODBC Driver(ANSI)};DSN=PostgreSQL30;Server=localhost;Port=5432;Database=itrc_sos;UId=postgres;Password=P0stgr3s;"
+                m_sConnString = "Driver={PostgreSQL ODBC Driver(ANSI)};DSN=PostgreSQL30;Server=localhost;Port=5432;Database=itrc_sos;UId=postgres;Password=76583Xucheng1;"
+                'm_sConnString = "Driver={PostgreSQL ODBC Driver(ANSI)};DSN=PostgreSQL30;Server=localhost;Port=5432;Database=itrc_sos;UId=postgres;Password=P0stgr3s;"
                 m_conn = New Odbc.OdbcConnection(m_sConnString)
                 m_conn.Open()
             End If
@@ -1266,15 +1266,15 @@ Module DBaseInterface
                         ToSQL = True
                         TableName = "TR_O_RoadOutputFlows"
                         'header = "Yeary,FlowID,PCUTotal,SpeedMean,PCUMway,PCUDual,PCUSing,SpdMway,SpdDual,SpdSing,MSC1,MSC2,MSC3,MSC4,MSC5,MSC6,DSC1,DSC2,DSC3,DSC4,DSC5,DSC6,SSC1,SSC2,SSC3,SSC4,SSC5,SSC6,SSC7,SSC8,SpdMSC1,SpdMSC2,SpdMSC3,SpdMSC4,SpdMSC5,SpdMSC6,SpdDSC1,SpdDSC2,SpdDSC3,SpdDSC4,SpdDSC5,SpdDSC6,SpdSSC1,SpdSSC2,SpdSSC3,SpdSSC4,SpdSSC5,SpdSSC6,SpdSSC7,SpdSSC8,MWayLatent,DualLatent,SingLatent,MFullHrs,DFullHrs,SFullHrs,CostMway,CostDual,CostSing"
-                        header = "modelrun_id, FlowID, year,PCUTotal,SpeedMean,PCUMway,PCUDual,PCUSing,SpdMway,SpdDual,SpdSing,MSC1,MSC2,MSC3,MSC4,MSC5,MSC6,DSC1,DSC2,DSC3,DSC4,DSC5,DSC6,SSC1,SSC2,SSC3,SSC4,SSC5,SSC6,SSC7,SSC8,SpdMSC1,SpdMSC2,SpdMSC3,SpdMSC4,SpdMSC5,SpdMSC6,SpdDSC1,SpdDSC2,SpdDSC3,SpdDSC4,SpdDSC5,SpdDSC6,SpdSSC1,SpdSSC2,SpdSSC3,SpdSSC4,SpdSSC5,SpdSSC6,SpdSSC7,SpdSSC8,MWayLatent,DualLatent,SingLatent,MFullHrs,DFullHrs,SFullHrs,CostMway,CostDual,CostSing"
+                        header = "modelrun_id, year,flow_id,PCUTotal,SpeedMean,PCUMway,PCUDual,PCUSing,SpdMway,SpdDual,SpdSing,MSC1,MSC2,MSC3,MSC4,MSC5,MSC6,DSC1,DSC2,DSC3,DSC4,DSC5,DSC6,SSC1,SSC2,SSC3,SSC4,SSC5,SSC6,SSC7,SSC8,SpdMSC1,SpdMSC2,SpdMSC3,SpdMSC4,SpdMSC5,SpdMSC6,SpdDSC1,SpdDSC2,SpdDSC3,SpdDSC4,SpdDSC5,SpdDSC6,SpdSSC1,SpdSSC2,SpdSSC3,SpdSSC4,SpdSSC5,SpdSSC6,SpdSSC7,SpdSSC8,MWayLatent,DualLatent,SingLatent,MFullHrs,DFullHrs,SFullHrs,CostMway,CostDual,CostSing"
                     Case "Temp Annual"
                         ToSQL = True
                         TableName = "TR_IO_RoadLink_Annual"
-                        header = "modelrun_id, year,FlowID,MLanes,DLanes,SLanes,MLanesNew,DLanesNew,SLanesNew,msc1,msc2,msc3,msc4,msc5,msc6,dsc1,dsc2,dsc3,dsc4,dsc5,dsc6,ssc1,ssc2,ssc3,ssc4,ssc5,ssc6,ssc7,ssc8,MaxCapM,MaxCapD,MaxCapS,AddedLane0,AddedLane1,AddedLane2"
+                        header = "modelrun_id, year,flow_id,MLanes,DLanes,SLanes,MLanesNew,DLanesNew,SLanesNew,msc1,msc2,msc3,msc4,msc5,msc6,dsc1,dsc2,dsc3,dsc4,dsc5,dsc6,ssc1,ssc2,ssc3,ssc4,ssc5,ssc6,ssc7,ssc8,MaxCapM,MaxCapD,MaxCapS,AddedLane0,AddedLane1,AddedLane2"
                     Case "Temp Hourly"
                         ToSQL = True
                         TableName = "TR_IO_RoadLink_Hourly"
-                        header = "modelrun_id, year,FlowID,HourID, MRoadTypeFlows,DRoadTypeFlows,SRoadTypeFlows,"
+                        header = "modelrun_id, year,flow_id,hour_id, MRoadTypeFlows,DRoadTypeFlows,SRoadTypeFlows,"
                         For x = 1 To 6
                             header = header & "M" & x & "HourlyFlows" & "," & "M" & x & "Charge" & "," & "M" & x & "LatentFlows" & "," & "M" & x & "NewHourlySpeeds" & ","
                         Next
@@ -1369,18 +1369,18 @@ Module DBaseInterface
                         TableName = "TR_O_SeaFreightOutputData"
                         OutFileName = FilePrefix & "SeaOutputData.csv"
                         'header = "Yeary, PortID, LiqBlky, DryBlky, GCargoy, LoLoy, RoRoy, GasOily, FuelOily"
-                        header = "ModelRunID, StretegyID, Year, PortID, LiqBlk, DryBlk, GCargo, LoLo, RoRo, GasOil, FuelOil"
+                        header = "modelrun_id, year, port_id, LiqBlk, DryBlk, GCargo, LoLo, RoRo, GasOil, FuelOil"
                     Case "Temp"
                         ToSQL = True
                         TableName = "TR_IO_SeaFreight"
                         OutFileName = FilePrefix & "SeaTemplate.csv"
                         'tempheader = "PortID, LiqBlk, DryBlk, GCargo, LoLo, RoRo, LBCap,DBCap,GCCap,LLCap,RRCap,GORPop,GORGva,Cost, AddedCap(1), AddedCap(2), AddedCap(3), AddedCap(4), AddedCap(5),"
-                        header = "modelrun_id, year, PortID, LiqBlk, DryBlk, GCargo, LoLo, RoRo, AddedCap(1), AddedCap(2), AddedCap(3), AddedCap(4), AddedCap(5),"
+                        header = "modelrun_id, year, port_id, LiqBlk, DryBlk, GCargo, LoLo, RoRo, AddedCap(1), AddedCap(2), AddedCap(3), AddedCap(4), AddedCap(5),"
                     Case "ExtVar"
                         ToSQL = True
                         TableName = "TR_O_SeaFreightExternalVariables"
                         OutFileName = EVFilePrefix & "SeaFreightExtVar.csv"
-                        header = "ModelRunID,PortID,Yeary,LBCapy,DBCapy,GCCapy,LLCapy,RRCapy,GORPopy,GORGvay,Costy,FuelEffy"
+                        header = "modelrun_id,year,port_id, LBCap,DBCap,GCCap,LLCap,RRCap,GORPop,GORGva,Cost,FuelEff"
                     Case "NewCap"
                         OutFileName = EVFilePrefix & "SeaFreightNewCap.csv"
                         header = "PortID,ChangeYear,NewLBCap,NewDBCap,NewGCCap,NewLLCap,NewRRCap"
@@ -1430,7 +1430,11 @@ Module DBaseInterface
 
         If ToSQL = True Then
             'use headers for table field names
-            aryFieldNames.Add(Split(header, ","))
+            Dim aryFields As String()
+            aryFields = header.Split(",")
+            For iy = 1 To UBound(aryFields, 1)
+                aryFieldNames.Add(UnNull(aryFields(iy), VariantType.String))
+            Next
             'use array data for field values
             For iy = 1 To UBound(OutputArray, 1)
                 'exit if write to the end of the data
@@ -1513,19 +1517,19 @@ Module DBaseInterface
             If IsInsert = True Then
                 'Get a list of Field Names
                 For i = 0 To aryFieldNames.Count - 1
-                    strSQL_N &= Chr(34) & aryFieldNames.Item(i) & Chr(34) & ", "
+                    strSQL_N &= Chr(34) & Trim(aryFieldNames(i)) & Chr(34) & ", "
                 Next
                 'Get rid of the last comma and space
                 strSQL_N = Left(strSQL_N, Len(strSQL_N) - 2)
 
                 'Get a list of Field Values
                 For i = 0 To aryFieldNames.Count - 1
-                    strSQL_V &= aryFieldValues.Item(i) & ", "
+                    strSQL_V &= Trim(aryFieldValues.Item(i)) & ", "
                 Next
                 'Get rid of the last comma and space
                 strSQL_V = Left(strSQL_V, Len(strSQL_V) - 2)
 
-                strSQL_All = "INSERT INTO " & TableName & " (" & strSQL_N & ") "
+                strSQL_All = "INSERT INTO " & Chr(34) & TableName & Chr(34) & " (" & strSQL_N & ") "
                 strSQL_All = strSQL_All & "VALUES (" & strSQL_V & ")"
             Else
                 strSQL_NV = ""
@@ -1536,7 +1540,7 @@ Module DBaseInterface
                 'Get rid of the last comma and space
                 strSQL_NV = Left(strSQL_NV, Len(strSQL_NV) - 2)
 
-                strSQL_All = "UPDATE " & TableName & " SET " & strSQL_NV
+                strSQL_All = "UPDATE " & Chr(34) & TableName & Chr(34) & " SET " & strSQL_NV
                 strSQL_All &= " WHERE " & IDField & " = " & KeyID
             End If
 
