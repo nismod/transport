@@ -829,7 +829,9 @@
     Private Sub OpenControlFileToolStripMenuItem_Click(sender As System.Object, e As System.EventArgs) Handles OpenControlFileToolStripMenuItem.Click
         Dim opencontf As New OpenFileDialog()
 
-        opencontf.InitialDirectory = "c:\"
+        'set default directory path
+        If DirPath = "" Then DirPath = "c:\"
+        opencontf.InitialDirectory = DirPath
         opencontf.Filter = "icf files (*.icf)|*.icf"
         opencontf.FilterIndex = 1
         opencontf.RestoreDirectory = True
