@@ -35,9 +35,9 @@
     Dim SeaTripRates(90) As Double
     Dim InputCount As Integer
     Dim NewCapArray(47, 8) As String
-    Dim InputArray(47, 13) As String
-    Dim OutputArray(47, 8) As String
-    Dim TempArray(47, 13) As String
+    Dim InputArray(47, 15) As String
+    Dim OutputArray(47, 9) As String
+    Dim TempArray(47, 12) As String
     Dim NewCapNum As Integer
 
 
@@ -90,7 +90,8 @@
                     Call WriteData("Seaport", "SeaNewCap", NewCapArray, , True)
                 End If
             Else
-                Call WriteData("Seaport", "Output", OutputArray, TempArray, False)
+                Call WriteData("Seaport", "Output", OutputArray, , False)
+                Call WriteData("Seaport", "Temp", TempArray, , False)
                 If BuildInfra = True Then
                     Call WriteData("Seaport", "SeaNewCap", NewCapArray, , False)
                 End If
@@ -144,31 +145,32 @@
             BaseCap(3) = InputArray(InputCount, 12)
             BaseCap(4) = InputArray(InputCount, 13)
             BaseCap(5) = InputArray(InputCount, 14)
-            CostBase = InputArray(InputCount, 15)
+            PopBase = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "sea", InputCount)
+            GVABase = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "sea", InputCount)
 
-            PopBase = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "sea", PortID)
-            GVABase = InputArray(InputCount, 16)
+            CostBase = InputArray(InputCount, 15)
             For x = 1 To 5
                 AddedCap(x) = 0
             Next
         Else
             'if not year 1, use updated data
-            PortID = InputArray(InputCount, 0)
-            BaseFreight(1) = InputArray(InputCount, 1)
-            BaseFreight(2) = InputArray(InputCount, 2)
-            BaseFreight(3) = InputArray(InputCount, 3)
-            BaseFreight(4) = InputArray(InputCount, 4)
-            BaseFreight(5) = InputArray(InputCount, 5)
-            BaseCap(1) = InputArray(InputCount, 6)
-            BaseCap(2) = InputArray(InputCount, 7)
-            BaseCap(3) = InputArray(InputCount, 8)
-            BaseCap(4) = InputArray(InputCount, 9)
-            BaseCap(5) = InputArray(InputCount, 10)
-            PopBase = InputArray(InputCount, 11)
-            GVABase = InputArray(InputCount, 12)
-            CostBase = InputArray(InputCount, 13)
+            PortID = InputArray(InputCount, 3)
+            BaseFreight(1) = InputArray(InputCount, 4)
+            BaseFreight(2) = InputArray(InputCount, 5)
+            BaseFreight(3) = InputArray(InputCount, 6)
+            BaseFreight(4) = InputArray(InputCount, 7)
+            BaseFreight(5) = InputArray(InputCount, 8)
+            'BaseCap(1) = InputArray(InputCount, 6)
+            'BaseCap(2) = InputArray(InputCount, 7)
+            'BaseCap(3) = InputArray(InputCount, 8)
+            'BaseCap(4) = InputArray(InputCount, 9)
+            'BaseCap(5) = InputArray(InputCount, 10)
+            PopBase = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "sea", InputCount)
+            GVABase = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "sea", InputCount)
+            'needs to create a new function to get cost from the external variable from previous year
+            CostBase = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "sea", InputCount)
             For x = 1 To 5
-                AddedCap(x) = InputArray(InputCount, 13 + x)
+                AddedCap(x) = InputArray(InputCount, 8 + x)
             Next
 
         End If
@@ -308,16 +310,15 @@
     Sub WritePortOutput()
         'write to output array
         OutputArray(InputCount, 0) = modelRunID
-        OutputArray(InputCount, 1) = SubStrategy
+        OutputArray(InputCount, 1) = PortID
         OutputArray(InputCount, 2) = YearNum
-        OutputArray(InputCount, 3) = PortID
-        OutputArray(InputCount, 4) = NewFreight(PortID, 1)
-        OutputArray(InputCount, 5) = NewFreight(PortID, 2)
-        OutputArray(InputCount, 6) = NewFreight(PortID, 3)
-        OutputArray(InputCount, 7) = NewFreight(PortID, 4)
-        OutputArray(InputCount, 8) = NewFreight(PortID, 5)
-        OutputArray(InputCount, 9) = NewGasOil
-        OutputArray(InputCount, 10) = NewFuelOil
+        OutputArray(InputCount, 3) = NewFreight(PortID, 1)
+        OutputArray(InputCount, 4) = NewFreight(PortID, 2)
+        OutputArray(InputCount, 5) = NewFreight(PortID, 3)
+        OutputArray(InputCount, 6) = NewFreight(PortID, 4)
+        OutputArray(InputCount, 7) = NewFreight(PortID, 5)
+        OutputArray(InputCount, 8) = NewGasOil
+        OutputArray(InputCount, 9) = NewFuelOil
 
         'update the variables
         Dim evindex As Integer
@@ -364,9 +365,9 @@
             End If
             FreightType += 1
         Loop
-        PopBase = PortExtVar(PortID, 7)
-        GVABase = PortExtVar(PortID, 8)
-        CostBase = PortExtVar(PortID, 9)
+        'PopBase = PortExtVar(PortID, 7)
+        'GVABase = PortExtVar(PortID, 8)
+        'CostBase = PortExtVar(PortID, 9)
 
         'write to temp array
         TempArray(InputCount, 0) = modelRunID
