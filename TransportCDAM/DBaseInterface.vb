@@ -1027,11 +1027,11 @@ Module DBaseInterface
                             theSQL = "SELECT * FROM " & Chr(34) & "TR_I_SeaFreight_Base" & Chr(34) & " WHERE year = " & 2010
                         ElseIf IsInitialYear = False Then
                             TheFileName = FilePrefix & "SeaTemplate.csv"
-                            theSQL = "SELECT * FROM " & Chr(34) & "TR_I_SeaFreight_Run" & Chr(34) & " WHERE modelrun_id = " & ModelRunID
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_SeaFreight" & Chr(34) & " WHERE modelrun_id = " & ModelRunID
                         End If
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "SeaFreightExtVar" & EVFileSuffix & ".csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_O_SeaFreightExternalVariables" & Chr(34) & " WHERE modelrun_id = " & ModelRunID
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_O_SeaFreightExternalVariables" & Chr(34) & " WHERE year = " & Year
                     Case "CapChange"
                         TheFileName = CapFilePrefix & "SeaFreightCapChange.csv"
                     Case "Elasticity"
@@ -1369,7 +1369,7 @@ Module DBaseInterface
                         TableName = "TR_O_SeaFreightOutputData"
                         OutFileName = FilePrefix & "SeaOutputData.csv"
                         'header = "Yeary, PortID, LiqBlky, DryBlky, GCargoy, LoLoy, RoRoy, GasOily, FuelOily"
-                        header = "modelrun_id, year, port_id, LiqBlk, DryBlk, GCargo, LoLo, RoRo, GasOil, FuelOil"
+                        header = "modelrun_id, port_id, year, LiqBlk, DryBlk, GCargo, LoLo, RoRo, GasOil, FuelOil"
                     Case "Temp"
                         ToSQL = True
                         TableName = "TR_IO_SeaFreight"
@@ -1380,7 +1380,7 @@ Module DBaseInterface
                         ToSQL = True
                         TableName = "TR_O_SeaFreightExternalVariables"
                         OutFileName = EVFilePrefix & "SeaFreightExtVar.csv"
-                        header = "modelrun_id,year,port_id, LBCap,DBCap,GCCap,LLCap,RRCap,GORPop,GORGva,Cost,FuelEff"
+                        header = "modelrun_id,port_id,year,LBCap,DBCap,GCCap,LLCap,RRCap,GORPop,GORGva,Cost,FuelEff"
                     Case "NewCap"
                         OutFileName = EVFilePrefix & "SeaFreightNewCap.csv"
                         header = "PortID,ChangeYear,NewLBCap,NewDBCap,NewGCCap,NewLLCap,NewRRCap"
@@ -1437,11 +1437,15 @@ Module DBaseInterface
             Next
             'use array data for field values
             For iy = 1 To UBound(OutputArray, 1)
+                aryFieldValues.Clear()
                 'exit if write to the end of the data
-                If OutputArray(iy, 0) Is Nothing Then
+                'If OutputArray(iy, 0) Is Nothing Then
+                'changed from 0 to 1, as the modelrun_id is dummy and empty in the database for now
+                If OutputArray(iy, 1) Is Nothing Then
                     Exit For
                 End If
-                For ix = 0 To UBound(OutputArray, 2)
+                'For ix = 0 To UBound(OutputArray, 2)
+                For ix = 1 To UBound(OutputArray, 2)
                     aryFieldValues.Add(UnNull(OutputArray(iy, ix), VariantType.String))
                 Next
                 'Insert data into table
@@ -1475,7 +1479,7 @@ Module DBaseInterface
             'loop through array to generate lines in output file
             For iy = 1 To UBound(OutputArray, 1)
                 'exit if write to the end of the data
-                If OutputArray(iy, 0) Is Nothing Then
+                If OutputArray(iy, 1) Is Nothing Then
                     Exit For
                 End If
                 'Build a line to write
