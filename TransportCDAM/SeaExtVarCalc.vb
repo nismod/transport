@@ -38,7 +38,7 @@
     Dim enearray(91, 6) As String
     Dim InputArray(47, 16) As String
     Dim CapArray(47, 8) As String
-    Dim OutputArray(47, 10) As String
+    Dim OutputArray(47, 11) As String
 
 
     Sub SeaEVMain()
@@ -229,7 +229,7 @@
 
                     'get GORPop and GORGva
                     PortBaseData(PortCount, 11) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "sea", PortCount)
-                    PortBaseData(PortCount, 12) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "sea", PortCount)
+                    PortBaseData(PortCount, 12) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "sea", PortCount)
                     PortBaseData(PortCount, 13) = InputArray(PortCount, 15)
                     GORID(PortCount, 1) = InputArray(PortCount, 16)
                 End If
@@ -322,13 +322,14 @@
                 Else
                     PortNewData(PortCount, 9) = 1
                 End If
-
+                'modelrun_id,year,port_id, LBCap,DBCap,GCCap,LLCap,RRCap,GORPop,GORGva,Cost,FuelEff
                 'write values to output array
-                OutputArray(PortCount, 0) = YearNum
+                'OutputArray(PortCount, 0) = modelRunID
                 OutputArray(PortCount, 1) = PortBaseData(PortCount, 0)
+                OutputArray(PortCount, 2) = YearNum
                 newcount = 1
                 Do Until newcount > 9
-                    OutputArray(PortCount, 1 + newcount) = PortNewData(PortCount, newcount)
+                    OutputArray(PortCount, 2 + newcount) = PortNewData(PortCount, newcount)
                     newcount += 1
                 Loop
 
