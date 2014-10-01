@@ -38,7 +38,7 @@
     Dim enearray(91, 6) As String
     Dim InputArray(47, 16) As String
     Dim CapArray(47, 8) As String
-    Dim OutputArray(47, 11) As String
+    Dim OutputArray(48, 11) As String
 
 
     Sub SeaEVMain()
@@ -54,7 +54,6 @@
         End If
 
         PortCount = 1
-
         'if including capacity changes then read first line of the capacity file and break it down into relevant sections
         'v1.3 change - now read this anyway to deal with compulsory enhancements
         'so we created another file containing sorted implemented capacity enhancements (in get files sub)
@@ -324,7 +323,7 @@
                 End If
                 'modelrun_id,year,port_id, LBCap,DBCap,GCCap,LLCap,RRCap,GORPop,GORGva,Cost,FuelEff
                 'write values to output array
-                'OutputArray(PortCount, 0) = modelRunID
+                OutputArray(PortCount, 0) = modelRunID
                 OutputArray(PortCount, 1) = PortBaseData(PortCount, 0)
                 OutputArray(PortCount, 2) = YearNum
                 newcount = 1

@@ -221,7 +221,7 @@
             FilePrefix = System.DateTime.Now
         End If
         modelRunYear = 2010
-        Call FullMain()
+        Call runCDAM(1, StartYear)
         End
     End Sub
 
@@ -236,7 +236,7 @@
             FilePrefix = System.DateTime.Now
         End If
         modelRunYear = 2010
-        Call FullMain()
+        Call runCDAM(1, StartYear)
         End
     End Sub
 
@@ -371,7 +371,7 @@
             FilePrefix = System.DateTime.Now
         End If
         modelRunYear = 2010
-        Call FullMain()
+        Call runCDAM(1, StartYear)
         End
     End Sub
 
@@ -386,7 +386,7 @@
             FilePrefix = System.DateTime.Now
         End If
         modelRunYear = 2010
-        Call FullMain()
+        Call runCDAM(1, StartYear)
         End
     End Sub
 
@@ -829,9 +829,7 @@
     Private Sub OpenControlFileToolStripMenuItem_Click(sender As System.Object, e As System.EventArgs) Handles OpenControlFileToolStripMenuItem.Click
         Dim opencontf As New OpenFileDialog()
 
-        'set default directory path
-        If DirPath = "" Then DirPath = "c:\"
-        opencontf.InitialDirectory = DirPath
+        opencontf.InitialDirectory = "c:\"
         opencontf.Filter = "icf files (*.icf)|*.icf"
         opencontf.FilterIndex = 1
         opencontf.RestoreDirectory = True
@@ -2491,15 +2489,15 @@
     Private Sub ComboBox30_SelectedIndexChanged(sender As System.Object, e As System.EventArgs) Handles ComboBox30.SelectedIndexChanged
         If ComboBox30.SelectedItem = "Constant" Then
             TripRates = "Constant"
-        ElseIf ComboBox30.SelectedItem = "SubStrategy File" Then
+        ElseIf ComboBox30.SelectedItem = "Strategy File" Then
             TripRates = "SubStrategy"
         End If
     End Sub
 
 
     Private Sub TextBox40_TextChanged(sender As Object, e As EventArgs) Handles TextBox40.TextChanged
-        Duration = CInt(TextBox40.Text)
-        If Duration > 90 Then
+        Duration = CInt(TextBox40.Text) - 1
+        If StartYear + Duration > 90 Then
             MsgBox("Maximum duration is 90 years")
         ElseIf Duration < 1 Then
             MsgBox("Duration must between 1 to 90 years !")

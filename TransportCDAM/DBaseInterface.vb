@@ -24,8 +24,7 @@ Module DBaseInterface
         Try
             'If there is no connection to the database then establish one
             If m_conn Is Nothing Then
-                m_sConnString = "Driver={PostgreSQL ODBC Driver(ANSI)};DSN=PostgreSQL30;Server=localhost;Port=5432;Database=itrc_sos;UId=postgres;Password=76583Xucheng1;"
-                'm_sConnString = "Driver={PostgreSQL ODBC Driver(ANSI)};DSN=PostgreSQL30;Server=localhost;Port=5432;Database=itrc_sos;UId=postgres;Password=P0stgr3s;"
+                m_sConnString = "Driver={PostgreSQL ODBC Driver(ANSI)};DSN=PostgreSQL30;Server=localhost;Port=5432;Database=itrc_sos;UId=postgres;Password=P0stgr3s;"
                 m_conn = New Odbc.OdbcConnection(m_sConnString)
                 m_conn.Open()
             End If
@@ -835,9 +834,9 @@ Module DBaseInterface
         Dim InputArray(,) As String = Nothing
 
         'The database function seems to be brocken so it will return a temporary result until it's fixed
-        Return 5000
+        Return 10425.96
 
-        theSQL = "SELECT * FROM cdam_get_population_data_by_population_scenario_od_tr_zone(" & scenario & "," & year & "'" & link_type & "')" & " WHERE zone_id = " & ZoneID
+        theSQL = "SELECT * FROM cdam_get_population_data_by_population_scenario_od_tr_zone(" & scenario & "," & year & "," & link_type & "')" & " WHERE zone_id = " & ZoneID
         theSQL &= " AS (scenario_id varchar, year integer, gender varchar, category varchar, " & Chr(34) & "DistrictName" & Chr(34) & " varchar, zone_id integer, " & Chr(34) & "ZoneName" & Chr(34) & " varchar, district_code varchar, value double precision);"
 
         If LoadSQLDataToArray(InputArray, theSQL) = False Then
@@ -856,7 +855,7 @@ Module DBaseInterface
         Dim InputArray(,) As String = Nothing
 
         'The database function seems to be brocken so it will return a temporary result until it's fixed
-        Return 10000
+        Return 100663.5
 
         theSQL = "SELECT * FROM cdam_get_regional_gva_data_by_economics_scenario_tr_zone(" & scenario & "," & year & "'" & link_type & "')" & " WHERE zone_id = " & ZoneID
 
@@ -942,11 +941,14 @@ Module DBaseInterface
                     Case "Input"
                         If IsInitialYear = True Then
                             TheFileName = "RoadZoneInputData2010.csv"
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_I_RoadZone_Base" & Chr(34) & " WHERE year = " & 2010
                         ElseIf IsInitialYear = False Then
                             TheFileName = FilePrefix & "RoadZoneTemp.csv"
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadZone" & Chr(34) & " WHERE modelrun_id = " & ModelRunID
                         End If
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "RoadZoneExtVar" & EVFileSuffix & ".csv"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_O_RoadZoneExternalVariables" & Chr(34) & " WHERE year = " & Year
                     Case "NewCap"
                         TheFileName = CapFilePrefix & "RoadZoneCapChange.csv"
                     Case "CapChange"
@@ -982,17 +984,22 @@ Module DBaseInterface
                     Case "Input"
                         If IsInitialYear = True Then
                             TheFileName = "RailZoneInputData2010.csv"
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_I_RailZone_Base" & Chr(34) & " WHERE year = " & 2010
                         ElseIf IsInitialYear = False Then
                             TheFileName = FilePrefix & "RailZoneTemp.csv"
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RailZone" & Chr(34) & " WHERE modelrun_id = " & ModelRunID
                         End If
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "RailZoneExtVar" & EVFileSuffix & ".csv"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_O_RailZoneExternalVariables" & Chr(34) & " WHERE year = " & Year
                     Case "CapChange"
                         TheFileName = CapFilePrefix & "RailZoneCapChange.csv"
                     Case "Elasticity"
                         TheFileName = "Elasticity Files\TR" & SubStrategy & "\RailZoneElasticities.csv"
                     Case "ElSchemes"
                         TheFileName = EVFilePrefix & "RailZoneElectrificationDates.csv"
+                        'theSQL = "SELECT * FROM " & Chr(34) & "TR_O_RailZoneElectrificationDates" & Chr(34) & " WHERE modelrun_id = " & ModelRunID
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_O_RailZoneElectrificationDates" & Chr(34)
                     Case "EVScale"
                         TheFileName = "RailZoneEVScaling.csv"
                 End Select
@@ -1001,17 +1008,22 @@ Module DBaseInterface
                     Case "Input"
                         If IsInitialYear = True Then
                             TheFileName = "RailLinkInputData2010.csv"
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_I_RailLink_Base" & Chr(34) & " WHERE year = " & 2010
                         ElseIf IsInitialYear = False Then
                             TheFileName = FilePrefix & "RailLinkTemp.csv"
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RailLink" & Chr(34) & " WHERE modelrun_id = " & ModelRunID
                         End If
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "RailLinkExtVar" & EVFileSuffix & ".csv"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_O_RailLinkExternalVariables" & Chr(34) & " WHERE year = " & Year
                     Case "CapChange"
                         TheFileName = CapFilePrefix & "RailLinkCapChange.csv"
                     Case "Elasticity"
                         TheFileName = "Elasticity Files\TR" & SubStrategy & "\RailLinkElasticities.csv"
                     Case "ElSchemes"
                         TheFileName = EVFilePrefix & "RailLinkElectrificationDates.csv"
+                        'theSQL = "SELECT * FROM " & Chr(34) & "TR_O_RailLinkElectrificationDates" & Chr(34) & " WHERE modelrun_id = " & ModelRunID
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_O_RailLinkElectrificationDates" & Chr(34)
                     Case "EVScale"
                         TheFileName = "RailLinkEVScaling.csv"
                     Case "OldRlEl"
@@ -1243,13 +1255,23 @@ Module DBaseInterface
             Case "RoadZone"
                 Select Case SubType
                     Case "Output"
+                        ToSQL = True
+                        TableName = "TR_O_RoadZoneOutputData"
                         OutFileName = FilePrefix & "RoadZoneOutputData.csv"
-                        TempFileName = FilePrefix & "RoadZoneTemp.csv"
-                        header = "Yeary,ZoneID,Vkmy,Spdy,Petroly,Diesely,Electricy,LPGy,CNGy,Hydrogeny,VKmMwayy,VkmRurAy,VkmRurMiny,VkmUrby,SpdMWayy,SpdRurAy,SpdRurMiny,SpdUrby,VkmPet,VkmDie,VkmPH,VkmDH,VkmPEH,VkmE,VkmLPG,VkmCNG,VkmHyd,VkmFC"
-                        tempheader = "Yeary,ZoneID,PopZ,GVAZ,Speed,CarCost,LGVCost,HGV1Cost,HGV2Cost,PSVCost,Vkm,LKmMway,LkmRural,LKmRurMin,LKmUrban,RKmMway,RkmRural,RKmRurMin,RKmUrban,VKmMway,RVCatTraf(1 - 1),RVCatTraf(1 - 2),RVCatTraf(1 - 3),RVCatTraf(1 - 4),RVCatTraf(1 - 5),VKmRurA,RVCatTraf(2 - 1),RVCatTraf(2 - 2),RVCatTraf(2 - 3),RVCatTraf(2 - 4),RVCatTraf(2 - 5),VKmRurMin,RVCatTraf(3 - 1),RVCatTraf(3 - 2),RVCatTraf(3 - 3),RVCatTraf(3 - 4),RVCatTraf(3 - 5),VKmUrb,RVCatTraf(4 - 1),RVCatTraf(4 - 2),RVCatTraf(4 - 3),RVCatTraf(4 - 4),RVCatTraf(4 - 5),SuppressedTraffic(1 - 1),SuppressedTraffic(1 - 2),SuppressedTraffic(1 - 3),SuppressedTraffic(1 - 4),SuppressedTraffic(2 - 1),SuppressedTraffic(2 - 2),SuppressedTraffic(2 - 3),SuppressedTraffic(2 - 4),SuppressedTraffic(3 - 1),SuppressedTraffic(3 - 2),SuppressedTraffic(3 - 3),SuppressedTraffic(3 - 4),SuppressedTraffic(4 - 1),SuppressedTraffic(4 - 2),SuppressedTraffic(4 - 3),SuppressedTraffic(4 - 4),SpdMWayy,SpdRurAy,SpdRurMiny,SpdUrby,"
+                        'header = "Yeary,ZoneID,Vkmy,Spdy,Petroly,Diesely,Electricy,LPGy,CNGy,Hydrogeny,VKmMwayy,VkmRurAy,VkmRurMiny,VkmUrby,SpdMWayy,SpdRurAy,SpdRurMiny,SpdUrby,VkmPet,VkmDie,VkmPH,VkmDH,VkmPEH,VkmE,VkmLPG,VkmCNG,VkmHyd,VkmFC"
+                        header = "modelrun_id, zone_id, year, Vkm, Spd, Petrol, Diesel, Electric, LPG, CNG, Hydrogen, VKmMway, VkmRurA, VkmRurMin, VkmUrb, SpdMWay, SpdRurA, SpdRurMin, SpdUrb, VkmPet, VkmDie, VkmPH, VkmDH, VkmPEH, VkmE, VkmLPG, VkmCNG, VkmHyd, VkmFC, country_id"
+                    Case "Temp"
+                        ToSQL = True
+                        TableName = "TR_IO_RoadZone"
+                        OutFileName = FilePrefix & "RoadZoneTemp.csv"
+                        'tempheader = "Yeary,ZoneID,PopZ,GVAZ,Speed,CarCost,LGVCost,HGV1Cost,HGV2Cost,PSVCost,Vkm,LKmMway,LkmRural,LKmRurMin,LKmUrban,RKmMway,RkmRural,RKmRurMin,RKmUrban,VKmMway,RVCatTraf(1 - 1),RVCatTraf(1 - 2),RVCatTraf(1 - 3),RVCatTraf(1 - 4),RVCatTraf(1 - 5),VKmRurA,RVCatTraf(2 - 1),RVCatTraf(2 - 2),RVCatTraf(2 - 3),RVCatTraf(2 - 4),RVCatTraf(2 - 5),VKmRurMin,RVCatTraf(3 - 1),RVCatTraf(3 - 2),RVCatTraf(3 - 3),RVCatTraf(3 - 4),RVCatTraf(3 - 5),VKmUrb,RVCatTraf(4 - 1),RVCatTraf(4 - 2),RVCatTraf(4 - 3),RVCatTraf(4 - 4),RVCatTraf(4 - 5),SuppressedTraffic(1 - 1),SuppressedTraffic(1 - 2),SuppressedTraffic(1 - 3),SuppressedTraffic(1 - 4),SuppressedTraffic(2 - 1),SuppressedTraffic(2 - 2),SuppressedTraffic(2 - 3),SuppressedTraffic(2 - 4),SuppressedTraffic(3 - 1),SuppressedTraffic(3 - 2),SuppressedTraffic(3 - 3),SuppressedTraffic(3 - 4),SuppressedTraffic(4 - 1),SuppressedTraffic(4 - 2),SuppressedTraffic(4 - 3),SuppressedTraffic(4 - 4),SpdMWayy,SpdRurAy,SpdRurMiny,SpdUrby,"
+                        header = "modelrun_id, year, zone_id, Speed, Vkm, VKmMway, RVCatTraf_1_1, RVCatTraf_1_2, RVCatTraf_1_3, RVCatTraf_1_4, RVCatTraf_1_5, VKmRurA, RVCatTraf_2_1, RVCatTraf_2_2, RVCatTraf_2_3, RVCatTraf_2_4, RVCatTraf_2_5, VKmRurMin, RVCatTraf_3_1, RVCatTraf_3_2, RVCatTraf_3_3, RVCatTraf_3_4, RVCatTraf_3_5, VKmUrb, RVCatTraf_4_1, RVCatTraf_4_2, RVCatTraf_4_3, RVCatTraf_4_4, RVCatTraf_4_5, SuppressedTraffic_1_1, SuppressedTraffic_1_2, SuppressedTraffic_1_3, SuppressedTraffic_1_4, SuppressedTraffic_2_1, SuppressedTraffic_2_2, SuppressedTraffic_2_3, SuppressedTraffic_2_4, SuppressedTraffic_3_1, SuppressedTraffic_3_2, SuppressedTraffic_3_3, SuppressedTraffic_3_4, SuppressedTraffic_4_1, SuppressedTraffic_4_2, SuppressedTraffic_4_3, SuppressedTraffic_4_4, SpdMWay, SpdRurA, SpdRurMin, SpdUrb, LatentVkm1, LatentVkm2, LatentVkm3, LatentVkm4, AddedLaneKm1, AddedLaneKm2, AddedLaneKm3, AddedLaneKm4, BuiltLaneKm1, BuiltLaneKm2, BuiltLaneKm3, BuiltLaneKm4"
                     Case "ExtVar"
+                        ToSQL = True
+                        TableName = "TR_O_RoadZoneExternalVariables"
                         OutFileName = EVFilePrefix & "RoadZoneExtVar.csv"
-                        header = "Yeary,ZoneID,PopZy,GVAZy,Costy,LaneKm,LKmMway,LKmRurAD,LKmRurAS,LKmRurMin,LKmUrbD,LKmUrbS,PCar,DCar,ECar,PLGV,DLGV,ELGV,DHGV,EHGV,DPSV,EPSV,PBike,EBike,FCBike,PHCar,DHCar,PECar,HCar,FCCar,DHLGV,PELGV,LLGV,CLGV,DHPSV,PEPSV,LPSV,CPSV,FCPSV,DHHGV,HHGV,FCHGV"
+                        'header = "Yeary,ZoneID,PopZy,GVAZy,Costy,LaneKm,LKmMway,LKmRurAD,LKmRurAS,LKmRurMin,LKmUrbD,LKmUrbS,PCar,DCar,ECar,PLGV,DLGV,ELGV,DHGV,EHGV,DPSV,EPSV,PBike,EBike,FCBike,PHCar,DHCar,PECar,HCar,FCCar,DHLGV,PELGV,LLGV,CLGV,DHPSV,PEPSV,LPSV,CPSV,FCPSV,DHHGV,HHGV,FCHGV"
+                        header = "modelrun_id, zone_id, year, PopZ, GVAZ, Cost, LaneKm, LKmMway, LKmRurAD, LKmRurAS, LKmRurMin, LKmUrbD, LKmUrbD, LKmUrbS, PCar, DCar, ECar, PLGV, DLGV, ELGV, DHGV, EHGV, DPSV, EPSV, PBike, EBike, FCBike, PHCar, DHCar, PECar, HCar, FCCar, DHLGV, PELGV, LLGV, CLGV, DHPSV, PEPSV, LPSV, CPSV, FCPSV, DHHGV, HHGV, FCHGV, LGVCost, HGV1Cost, HGV2Cost, PSVCost"
                     Case "NewCap"
                         OutFileName = EVFilePrefix & "RoadZoneCapChange.csv"
                         header = "ZoneID,ChangeYear,MWayLaneKmCh,RurADLaneKmCh,RurASLaneKmCh,RurMLaneKmCh,UrbDLaneKmCh,UrbSLaneKmCh"
@@ -1328,39 +1350,66 @@ Module DBaseInterface
             Case "RailZone"
                 Select Case SubType
                     Case "Output"
+                        ToSQL = True
+                        TableName = "TR_O_RailZoneOutputData"
                         OutFileName = FilePrefix & "RailZoneOutputData.csv"
-                        TempFileName = FilePrefix & "RailZoneTemp.csv"
-                        header = "Yeary,ZoneID,TripsStaty,Stationsy,Tripsy"
-                        tempheader = "Yeary,ZoneID,PopZ,GvaZ,Cost,Stations,CarFuel,GJT,TripsStat,FareE"
+                        'header = "Yeary,ZoneID,TripsStaty,Stationsy,Tripsy"
+                        header = "modelrun_id, year, zone_id, TripsStat, Stations, Trips"
+                    Case "Temp"
+                        ToSQL = True
+                        TableName = "TR_IO_RailZone"
+                        OutFileName = FilePrefix & "RailZoneTemp.csv"
+                        'tempheader = "Yeary,ZoneID,PopZ,GvaZ,Cost,Stations,CarFuel,GJT,TripsStat,FareE"
+                        header = "modelrun_id, year, zone_id, TripsStat, FareE"
                     Case "ExtVar"
+                        ToSQL = True
+                        TableName = "TR_O_RailZoneExternalVariables"
                         OutFileName = EVFilePrefix & "RailZoneExtVar.csv"
-                        header = "Yeary,ZoneID,PopZy,GvaZy,Costy,Stationsy,CarFuely,NewTripsy,GJTy,ElPy"
+                        'header = "Yeary,ZoneID,PopZy,GvaZy,Costy,Stationsy,CarFuely,NewTripsy,GJTy,ElPy"
+                        header = "modelrun_id, zone_id, year, PopZ, GvaZ, Cost, Stations, CarFuel, NewTrips, GJT, ElP"
                 End Select
             Case "RailLink"
                 Select Case SubType
                     Case "Output"
+                        ToSQL = True
+                        TableName = "TR_O_RailLinkOutputData"
                         OutFileName = FilePrefix & "RailLinkOutputData.csv"
-                        TempFileName = FilePrefix & "RailLinkTemp.csv"
-                        header = "Yeary,FlowID,Trainsy,Delaysy,CUy"
-                        tempheader = "Yeary,FlowID,PopZ1,PopZ2,GVAZ1,GVAZ2,Delays,Cost,CarFuel,Trains,Tracks,MaxTDBase,CUOld,CUNew,BusyTrains,BusyPer,ModelPeakHeadway,CalculationCheck"
+                        'header = "Yeary,FlowID,Trainsy,Delaysy,CUy"
+                        header = "modelrun_id, flow_id, year, Trains, Delays, CU"
+                    Case "Temp"
+                        ToSQL = True
+                        TableName = "TR_IO_RailLink"
+                        OutFileName = FilePrefix & "RailLinkTemp.csv"
+                        'tempheader = "Yeary,FlowID,PopZ1,PopZ2,GVAZ1,GVAZ2,Delays,Cost,CarFuel,Trains,Tracks,MaxTDBase,CUOld,CUNew,BusyTrains,BusyPer,ModelPeakHeadway,CalculationCheck"
+                        header = "modelrun_id, year, flow_id, Delays, Cost, Trains, Tracks, MaxTDBase, CUOld, CUNew, BusyTrains, BusyPer, ModelPeakHeadway, CalculationCheck"
                     Case "ExtVar"
+                        ToSQL = True
+                        TableName = "TR_O_RailLinkExternalVariables"
                         OutFileName = EVFilePrefix & "RailLinkExtVar.csv"
-                        header = "Yeary,FlowID,Tracksy,PopZ1y,PopZ2y,GVAZ1y,GVAZ2y,Costy,CarFuely,MaxTDy,ElPy,ElTracksy,AddTrainsy"
+                        header = "modelrun_id, flow_id, year, Tracks, PopZ1, PopZ2, GVAZ1, GVAZ2, Cost, CarFuel, MaxTD, ElP, ElTracks, AddTrains"
                     Case "NewCap"
+                        ToSQL = True
+                        TableName = "TR_O_RailLinkNewCapacity"
                         OutFileName = EVFilePrefix & "RailLinkNewCap.csv"
-                        header = "FlowID,ChangeYear,TrackChange,MaxTDChange,TrainChange"
+                        header = "modelrun_id, flow_id, changeyear, TrackChange, MaxTDChange, TrainChange"
                     Case "RlLinkNewCap"
-                        OutFileName = FilePrefix & "RailLinkNewCap.csv"
+                        OutFileName = FilePrefix & "RailLinkNewCapacity.csv"
                         header = "Yeary,FlowID,TracksAdded"
                     Case "RlLinkFuelUsed"
+                        ToSQL = True
+                        TableName = "TR_O_RailLinkFuelConsumption"
                         OutFileName = FilePrefix & "RailLinkFuelConsumption.csv"
-                        header = "Yeary,Diesely,Electricy"
+                        header = "modelrun_id, year, Diesel, Electric"
                     Case "RlLinkElSchemes"
+                        ToSQL = True
+                        TableName = "TR_O_RailLinkElectrificationDates"
                         OutFileName = EVFilePrefix & "RailLinkElectrificationDates.csv"
-                        header = "ElectricYear,FlowID,ElectricTracks,RouteKm"
+                        header = "modelrun_id, flow_id, ElectricYear, ElectricTracks, RouteKm"
                     Case "RlZoneElSchemes"
+                        ToSQL = True
+                        TableName = "TR_O_RailZoneElectrificationDates"
                         OutFileName = EVFilePrefix & "RailZoneElectrificationDates.csv"
-                        header = "ElectricYear,ZoneID,ElectricStations"
+                        header = "modelrun_id, zone_id, ElectricYear, ElectricStations"
                 End Select
             Case "Seaport"
                 Select Case SubType
@@ -1375,7 +1424,7 @@ Module DBaseInterface
                         TableName = "TR_IO_SeaFreight"
                         OutFileName = FilePrefix & "SeaTemplate.csv"
                         'tempheader = "PortID, LiqBlk, DryBlk, GCargo, LoLo, RoRo, LBCap,DBCap,GCCap,LLCap,RRCap,GORPop,GORGva,Cost, AddedCap(1), AddedCap(2), AddedCap(3), AddedCap(4), AddedCap(5),"
-                        header = "modelrun_id, year, port_id, LiqBlk, DryBlk, GCargo, LoLo, RoRo, AddedCap(1), AddedCap(2), AddedCap(3), AddedCap(4), AddedCap(5),"
+                        header = "modelrun_id, year, port_id, LiqBlk, DryBlk, GCargo, LoLo, RoRo, AddedCap_1, AddedCap_2, AddedCap_3, AddedCap_4, AddedCap_5"
                     Case "ExtVar"
                         ToSQL = True
                         TableName = "TR_O_SeaFreightExternalVariables"
@@ -1432,21 +1481,22 @@ Module DBaseInterface
             'use headers for table field names
             Dim aryFields As String()
             aryFields = header.Split(",")
-            For iy = 1 To UBound(aryFields, 1)
+            For iy = 0 To UBound(aryFields, 1)
                 aryFieldNames.Add(UnNull(aryFields(iy), VariantType.String))
             Next
             'use array data for field values
-            For iy = 1 To UBound(OutputArray, 1)
+            For iy = 0 To UBound(OutputArray, 1)
                 aryFieldValues.Clear()
                 'exit if write to the end of the data
-                'If OutputArray(iy, 0) Is Nothing Then
-                'changed from 0 to 1, as the modelrun_id is dummy and empty in the database for now
-                If OutputArray(iy, 1) Is Nothing Then
+                'size of outputarray must be zone/flow number + 1
+                If OutputArray(iy + 1, 0) Is Nothing Then
+                    'changed from 0 to 1, as the modelrun_id is dummy and empty in the database for now
+                    'If OutputArray(iy, 1) Is Nothing Then
                     Exit For
                 End If
-                'For ix = 0 To UBound(OutputArray, 2)
-                For ix = 1 To UBound(OutputArray, 2)
-                    aryFieldValues.Add(UnNull(OutputArray(iy, ix), VariantType.String))
+                For ix = 0 To UBound(OutputArray, 2)
+                    'For ix = 1 To UBound(OutputArray, 2)
+                    aryFieldValues.Add(UnNull(OutputArray(iy + 1, ix), VariantType.String))
                 Next
                 'Insert data into table
                 SaveArrayToSQLTable(aryFieldNames, aryFieldValues, TableName, "", True)
@@ -1479,7 +1529,7 @@ Module DBaseInterface
             'loop through array to generate lines in output file
             For iy = 1 To UBound(OutputArray, 1)
                 'exit if write to the end of the data
-                If OutputArray(iy, 1) Is Nothing Then
+                If OutputArray(iy, 0) Is Nothing Then
                     Exit For
                 End If
                 'Build a line to write

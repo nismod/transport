@@ -35,12 +35,12 @@
     Dim Elect As Boolean
     Dim CapArray(144, 5) As String
     Dim CapNum As Integer
-    Dim elearray(335, 2) As String
+    Dim elearray(335, 4) As String
     Dim EleNum As Integer
     Dim enearray(91, 6) As String
     Dim ScalingData(90, 8) As String
-    Dim InputArray(144, 12) As String
-    Dim OutputArray(144, 9) As String
+    Dim InputArray(144, 14) As String
+    Dim OutputArray(144, 10) As String
 
 
 
@@ -194,16 +194,16 @@
 
                 If Year = 1 Then
 
-                    ZoneID(InputCount, 0) = InputArray(InputCount, 0)
-                    PopOld(InputCount, 0) = InputArray(InputCount, 4)
-                    GVAOld(InputCount, 0) = InputArray(InputCount, 5)
-                    CostOld(InputCount, 0) = InputArray(InputCount, 6)
-                    StationsOld(InputCount, 0) = InputArray(InputCount, 7)
-                    FuelOld(InputCount, 0) = InputArray(InputCount, 8)
-                    GJTOld(InputCount, 0) = InputArray(InputCount, 9)
-                    Country(InputCount, 0) = InputArray(InputCount, 10)
-                    ElPOld(InputCount, 0) = InputArray(InputCount, 11)
-                    ElStat(InputCount, 0) = InputArray(InputCount, 12)
+                    ZoneID(InputCount, 0) = InputArray(InputCount, 4)
+                    PopOld(InputCount, 0) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "railzone", InputCount)
+                    GVAOld(InputCount, 0) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "railzone", InputCount)
+                    CostOld(InputCount, 0) = InputArray(InputCount, 8)
+                    StationsOld(InputCount, 0) = InputArray(InputCount, 9)
+                    FuelOld(InputCount, 0) = InputArray(InputCount, 10)
+                    GJTOld(InputCount, 0) = InputArray(InputCount, 11)
+                    Country(InputCount, 0) = InputArray(InputCount, 14)
+                    ElPOld(InputCount, 0) = InputArray(InputCount, 12)
+                    ElStat(InputCount, 0) = InputArray(InputCount, 13)
                     NewTrips = 0
 
                     'need to set StationsNew to equal StationsOld to start with, as it gets reset every year but doesn't change every year
@@ -274,11 +274,14 @@ NextYear:
                 End If
                 If RlZPopSource = "File" Then
                     Select Case Country(InputCount, 0)
-                        Case "E"
+                        'Case "E"
+                        Case "1"
                             PopGrowth = 1 + ScalingData(Year, 1)
-                        Case "S"
+                            'Case "S"
+                        Case "3"
                             PopGrowth = 1 + ScalingData(Year, 2)
-                        Case "W"
+                            'Case "W"
+                        Case "2"
                             PopGrowth = 1 + ScalingData(Year, 3)
                     End Select
                     PopNew = PopOld(InputCount, 0) * PopGrowth
@@ -390,16 +393,16 @@ NextYear:
                     End If
                 End If
                 'write to output file
-                OutputArray(InputCount, 0) = Year
                 OutputArray(InputCount, 1) = ZoneID(InputCount, 0)
-                OutputArray(InputCount, 2) = PopNew
-                OutputArray(InputCount, 3) = GVANew
-                OutputArray(InputCount, 4) = CostNew
-                OutputArray(InputCount, 5) = StationsNew(InputCount, 0)
-                OutputArray(InputCount, 6) = FuelNew
-                OutputArray(InputCount, 7) = NewTrips
-                OutputArray(InputCount, 8) = GJTNew
-                OutputArray(InputCount, 9) = ElPNew
+                OutputArray(InputCount, 2) = Year
+                OutputArray(InputCount, 3) = PopNew
+                OutputArray(InputCount, 4) = GVANew
+                OutputArray(InputCount, 5) = CostNew
+                OutputArray(InputCount, 6) = StationsNew(InputCount, 0)
+                OutputArray(InputCount, 7) = FuelNew
+                OutputArray(InputCount, 8) = NewTrips
+                OutputArray(InputCount, 9) = GJTNew
+                OutputArray(InputCount, 10) = ElPNew
 
 
                 'update input parameters
@@ -459,13 +462,13 @@ NextYear:
     Sub ElectricRead()
         'read electrification array here
 
-        If elearray(EleNum, 0) = "" Then
+        If elearray(EleNum, 2) = "" Then
             ElectricZone = 0
             Elect = False
         Else
-            ElectricZone = elearray(EleNum, 1)
-            ElectricYear = elearray(EleNum, 0) - 2010
-            ElectricStations = elearray(EleNum, 2)
+            ElectricZone = elearray(EleNum, 2)
+            ElectricYear = elearray(EleNum, 3) - 2010
+            ElectricStations = elearray(EleNum, 4)
             EleNum += 1
         End If
 

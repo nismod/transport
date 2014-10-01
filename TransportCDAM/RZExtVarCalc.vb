@@ -72,8 +72,8 @@
     Dim zonecaparray(144, 7) As String
     Dim zonecapnum As Integer
     Dim enearray(91, 6) As String
-    Dim InputArray(144, 33) As String
-    Dim OutputArray(144, 45) As String
+    Dim InputArray(144, 35) As String
+    Dim OutputArray(144, 46) As String
 
 
     Public Sub RoadZoneEVMain()
@@ -221,7 +221,7 @@
     Sub GetFiles()
 
         'read initial input data
-        Call ReadData("RoadZone", "Input", InputArray, True)
+        Call ReadData("RoadZone", "Input", InputArray, modelRunID, True)
 
         'read new capacity data
         Call ReadData("RoadZone", "NewCap", caparray, modelRunID)
@@ -244,21 +244,21 @@
 
 
         If Year = 1 Then
-            ZoneID = InputArray(InputCount, 0)
-            PopOld(ZoneID, 0) = InputArray(InputCount, 3)
-            GVAOld(ZoneID, 0) = InputArray(InputCount, 4)
-            CostOld(ZoneID, 0) = InputArray(InputCount, 6)
-            LaneKm(ZoneID, 0) = InputArray(InputCount, 7)
-            MLaneKm(ZoneID, 0) = InputArray(InputCount, 8)
-            RurADLaneKm(ZoneID, 0) = InputArray(InputCount, 9)
-            RurASLaneKm(ZoneID, 0) = InputArray(InputCount, 10)
-            RurMinLaneKm(ZoneID, 0) = InputArray(InputCount, 11)
-            UrbDLaneKm(ZoneID, 0) = InputArray(InputCount, 12)
-            UrbSLaneKm(ZoneID, 0) = InputArray(InputCount, 13)
-            CostOld(ZoneID, 1) = InputArray(InputCount, 18)
-            CostOld(ZoneID, 2) = InputArray(InputCount, 19)
-            CostOld(ZoneID, 3) = InputArray(InputCount, 20)
-            CostOld(ZoneID, 4) = InputArray(InputCount, 21)
+            ZoneID = InputArray(InputCount, 4)
+            PopOld(ZoneID, 0) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "roadzone", InputCount)
+            GVAOld(ZoneID, 0) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "roadzone", InputCount)
+            CostOld(ZoneID, 0) = InputArray(InputCount, 8)
+            LaneKm(ZoneID, 0) = InputArray(InputCount, 9)
+            MLaneKm(ZoneID, 0) = InputArray(InputCount, 10)
+            RurADLaneKm(ZoneID, 0) = InputArray(InputCount, 11)
+            RurASLaneKm(ZoneID, 0) = InputArray(InputCount, 12)
+            RurMinLaneKm(ZoneID, 0) = InputArray(InputCount, 13)
+            UrbDLaneKm(ZoneID, 0) = InputArray(InputCount, 14)
+            UrbSLaneKm(ZoneID, 0) = InputArray(InputCount, 15)
+            CostOld(ZoneID, 1) = InputArray(InputCount, 20)
+            CostOld(ZoneID, 2) = InputArray(InputCount, 21)
+            CostOld(ZoneID, 3) = InputArray(InputCount, 22)
+            CostOld(ZoneID, 4) = InputArray(InputCount, 23)
 
             'v1.4 change set fuel efficiency old values to one
             For f = 0 To 34
@@ -272,16 +272,16 @@
                 VehFuelCosts(InputCount, 0, 2) = ((11.2 / 18.6) * 0.2337) / (0.7663 + ((11.2 / 18.6) * 0.2337)) * 36.14
                 VehFuelCosts(InputCount, 0, 3) = ((7.6 / 12.4) * 0.1911) / (0.8089 + ((7.6 / 12.4) * 0.1911)) * 36.873
                 'this and later plug-in hybrids is based on petrol/diesel being used for rural roads and electricity for urban roads
-                VehFuelCosts(InputCount, 0, 4) = ((((18.1 / 25.9) * (1 - InputArray(InputCount, 17))) + ((EleOld(InputCount, 0) / PetOld(InputCount, 0)) * (46.7 / 25.9) * InputArray(InputCount, 17))) * 0.2337) / (0.7663 + ((((18.1 / 25.9) * (1 - InputArray(InputCount, 17))) + ((EleOld(InputCount, 0) / PetOld(InputCount, 0)) * (46.7 / 25.9) * InputArray(InputCount, 17))) * 0.2337)) * 36.14
-                PHPerOld(InputCount, 0) = ((18.1 / 25.9) * (1 - InputArray(InputCount, 17))) / ((((18.1 / 25.9) * (1 - InputArray(InputCount, 17))) + ((EleOld(InputCount, 0) / PetOld(InputCount, 0)) * (46.7 / 25.9) * InputArray(InputCount, 17))))
+                VehFuelCosts(InputCount, 0, 4) = ((((18.1 / 25.9) * (1 - InputArray(InputCount, 31))) + ((EleOld(InputCount, 0) / PetOld(InputCount, 0)) * (46.7 / 25.9) * InputArray(InputCount, 31))) * 0.2337) / (0.7663 + ((((18.1 / 25.9) * (1 - InputArray(InputCount, 31))) + ((EleOld(InputCount, 0) / PetOld(InputCount, 0)) * (46.7 / 25.9) * InputArray(InputCount, 31))) * 0.2337)) * 36.14
+                PHPerOld(InputCount, 0) = ((18.1 / 25.9) * (1 - InputArray(InputCount, 31))) / ((((18.1 / 25.9) * (1 - InputArray(InputCount, 31))) + ((EleOld(InputCount, 0) / PetOld(InputCount, 0)) * (46.7 / 25.9) * InputArray(InputCount, 31))))
                 VehFuelCosts(InputCount, 0, 5) = ((EleOld(InputCount, 0) / PetOld(InputCount, 0)) * (16.5 / 7.3) * 0.2337) / (0.7663 + ((EleOld(InputCount, 0) / PetOld(InputCount, 0)) * (16.5 / 7.3) * 0.2337)) * 36.14
                 VehFuelCosts(InputCount, 0, 8) = ((HydOld(InputCount, 0) / PetOld(InputCount, 0)) * (43.8 / 10.3) * 0.2337) / (0.7663 + ((HydOld(InputCount, 0) / PetOld(InputCount, 0)) * (43.8 / 10.3) * 0.2337)) * 36.14
                 VehFuelCosts(InputCount, 0, 9) = ((HydOld(InputCount, 0) / PetOld(InputCount, 0)) * (53.3 / 25.9) * 0.2337) / (0.7663 + ((HydOld(InputCount, 0) / PetOld(InputCount, 0)) * (53.3 / 25.9) * 0.2337)) * 36.14
                 VehFuelCosts(InputCount, 1, 0) = 0.155 * 61.329
                 VehFuelCosts(InputCount, 1, 1) = 0.155 * 61.329
                 VehFuelCosts(InputCount, 1, 3) = ((4.4 / 7.9) * 0.155) / (0.845 + ((4.4 / 7.9) * 0.155)) * 61.329
-                VehFuelCosts(InputCount, 1, 4) = ((((5.8 / 7.9) * (1 - InputArray(InputCount, 17))) + ((EleOld(InputCount, 0) / DieOld(InputCount, 0)) * (42.3 / 7.9) * InputArray(InputCount, 17))) * 0.155) / (0.845 + ((((5.8 / 7.9) * (1 - InputArray(InputCount, 17))) + ((EleOld(InputCount, 0) / DieOld(InputCount, 0)) * (42.3 / 7.9) * InputArray(InputCount, 17))) * 0.155)) * 61.329
-                PHPerOld(InputCount, 1) = ((5.8 / 7.9) * (1 - InputArray(InputCount, 17))) / ((((5.8 / 7.9) * (1 - InputArray(InputCount, 17))) + ((EleOld(InputCount, 0) / DieOld(InputCount, 0)) * (42.3 / 7.9) * InputArray(InputCount, 17))))
+                VehFuelCosts(InputCount, 1, 4) = ((((5.8 / 7.9) * (1 - InputArray(InputCount, 31))) + ((EleOld(InputCount, 0) / DieOld(InputCount, 0)) * (42.3 / 7.9) * InputArray(InputCount, 31))) * 0.155) / (0.845 + ((((5.8 / 7.9) * (1 - InputArray(InputCount, 31))) + ((EleOld(InputCount, 0) / DieOld(InputCount, 0)) * (42.3 / 7.9) * InputArray(InputCount, 31))) * 0.155)) * 61.329
+                PHPerOld(InputCount, 1) = ((5.8 / 7.9) * (1 - InputArray(InputCount, 31))) / ((((5.8 / 7.9) * (1 - InputArray(InputCount, 31))) + ((EleOld(InputCount, 0) / DieOld(InputCount, 0)) * (42.3 / 7.9) * InputArray(InputCount, 31))))
                 VehFuelCosts(InputCount, 1, 5) = ((EleOld(InputCount, 0) / DieOld(InputCount, 0)) * (56.2 / 7.9) * 0.155) / (0.845 + ((EleOld(InputCount, 0) / DieOld(InputCount, 0)) * (56.2 / 7.9) * 0.155)) * 61.329
                 VehFuelCosts(InputCount, 1, 6) = ((LPGOld(InputCount, 0) / DieOld(InputCount, 0)) * (11.8 / 7.9) * 0.155) / (0.845 + ((LPGOld(InputCount, 0) / DieOld(InputCount, 0)) * (11.8 / 7.9) * 0.155)) * 61.329
                 VehFuelCosts(InputCount, 1, 7) = ((CNGOld(InputCount, 0) / DieOld(InputCount, 0)) * (80.8 / 7.9) * 0.155) / (0.845 + ((CNGOld(InputCount, 0) / DieOld(InputCount, 0)) * (80.8 / 7.9) * 0.155)) * 61.329
@@ -295,8 +295,8 @@
                 VehFuelCosts(InputCount, 3, 9) = ((HydOld(InputCount, 0) / DieOld(InputCount, 0)) * (112.3 / 37.6) * 0.2935) / (0.7065 + ((HydOld(InputCount, 0) / DieOld(InputCount, 0)) * (112.3 / 37.6) * 0.2935)) * 109.948
                 VehFuelCosts(InputCount, 4, 1) = 0.1301 * 234.5
                 VehFuelCosts(InputCount, 4, 3) = ((30.4 / 37.2) * 0.1301) / (0.8699 + ((30.4 / 37.2) * 0.1301)) * 234.5
-                VehFuelCosts(InputCount, 4, 4) = ((((11.9 / 19.6) * (1 - InputArray(InputCount, 17))) + ((EleOld(InputCount, 0) / DieOld(InputCount, 0)) * (103.7 / 19.6) * InputArray(InputCount, 17))) * 0.1301) / (0.8699 + ((((11.9 / 19.6) * (1 - InputArray(InputCount, 17))) + ((EleOld(InputCount, 0) / DieOld(InputCount, 0)) * (103.7 / 19.6) * InputArray(InputCount, 17))) * 0.1301)) * 234.5
-                PHPerOld(InputCount, 4) = ((11.9 / 19.6) * (1 - InputArray(InputCount, 17))) / ((((11.9 / 19.6) * (1 - InputArray(InputCount, 17))) + ((EleOld(InputCount, 0) / DieOld(InputCount, 0)) * (103.7 / 19.6) * InputArray(InputCount, 17))))
+                VehFuelCosts(InputCount, 4, 4) = ((((11.9 / 19.6) * (1 - InputArray(InputCount, 31))) + ((EleOld(InputCount, 0) / DieOld(InputCount, 0)) * (103.7 / 19.6) * InputArray(InputCount, 31))) * 0.1301) / (0.8699 + ((((11.9 / 19.6) * (1 - InputArray(InputCount, 31))) + ((EleOld(InputCount, 0) / DieOld(InputCount, 0)) * (103.7 / 19.6) * InputArray(InputCount, 31))) * 0.1301)) * 234.5
+                PHPerOld(InputCount, 4) = ((11.9 / 19.6) * (1 - InputArray(InputCount, 31))) / ((((11.9 / 19.6) * (1 - InputArray(InputCount, 31))) + ((EleOld(InputCount, 0) / DieOld(InputCount, 0)) * (103.7 / 19.6) * InputArray(InputCount, 31))))
                 VehFuelCosts(InputCount, 4, 5) = ((EleOld(InputCount, 0) / DieOld(InputCount, 0)) * (425.4 / 37.2) * 0.1301) / (0.8699 + ((EleOld(InputCount, 0) / DieOld(InputCount, 0)) * (425.4 / 37.2) * 0.1301)) * 234.5
                 VehFuelCosts(InputCount, 4, 6) = ((LPGOld(InputCount, 0) / DieOld(InputCount, 0)) * (131.8 / 37.2) * 0.1301) / (0.8699 + ((LPGOld(InputCount, 0) / DieOld(InputCount, 0)) * (131.8 / 37.2) * 0.1301)) * 234.5
                 VehFuelCosts(InputCount, 4, 7) = ((CNGOld(InputCount, 0) / DieOld(InputCount, 0)) * (1003.2 / 37.2) * 0.1301) / (0.8699 + ((CNGOld(InputCount, 0) / DieOld(InputCount, 0)) * (1003.2 / 37.2) * 0.1301)) * 234.5
@@ -501,29 +501,30 @@
         'define fuel split - this is now specified via the strategy common variables file
         'FuelString = "0.598,0.402,0,0.055,0.945,0,1,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"
         'write to output file
-        OutputArray(InputCount, 0) = Year
+
         OutputArray(InputCount, 1) = ZoneID
-        OutputArray(InputCount, 2) = PopNew
-        OutputArray(InputCount, 3) = GVANew
-        OutputArray(InputCount, 4) = CostNew(0)
-        OutputArray(InputCount, 5) = LaneKm(ZoneID, 0)
-        OutputArray(InputCount, 6) = MLaneKm(ZoneID, 0)
-        OutputArray(InputCount, 7) = RurADLaneKm(ZoneID, 0)
-        OutputArray(InputCount, 8) = RurASLaneKm(ZoneID, 0)
-        OutputArray(InputCount, 9) = RurMinLaneKm(ZoneID, 0)
-        OutputArray(InputCount, 10) = UrbDLaneKm(ZoneID, 0)
-        OutputArray(InputCount, 11) = UrbSLaneKm(ZoneID, 0)
+        OutputArray(InputCount, 2) = Year
+        OutputArray(InputCount, 3) = PopNew
+        OutputArray(InputCount, 4) = GVANew
+        OutputArray(InputCount, 5) = CostNew(0)
+        OutputArray(InputCount, 6) = LaneKm(ZoneID, 0)
+        OutputArray(InputCount, 7) = MLaneKm(ZoneID, 0)
+        OutputArray(InputCount, 8) = RurADLaneKm(ZoneID, 0)
+        OutputArray(InputCount, 9) = RurASLaneKm(ZoneID, 0)
+        OutputArray(InputCount, 10) = RurMinLaneKm(ZoneID, 0)
+        OutputArray(InputCount, 11) = UrbDLaneKm(ZoneID, 0)
+        OutputArray(InputCount, 12) = UrbSLaneKm(ZoneID, 0)
         'fuel split now comes from the strategy file
         'build the fuel string from the strategy file row
         stratcount = 1
         Do While stratcount < 31
-            OutputArray(InputCount, 11 + stratcount) = stratarray(Year, stratcount)
+            OutputArray(InputCount, 12 + stratcount) = stratarray(Year, stratcount)
             stratcount += 1
         Loop
-        OutputArray(InputCount, 42) = CostNew(1)
-        OutputArray(InputCount, 43) = CostNew(2)
-        OutputArray(InputCount, 44) = CostNew(3)
-        OutputArray(InputCount, 45) = CostNew(4)
+        OutputArray(InputCount, 43) = CostNew(1)
+        OutputArray(InputCount, 44) = CostNew(2)
+        OutputArray(InputCount, 45) = CostNew(3)
+        OutputArray(InputCount, 46) = CostNew(4)
         'set old values as previous new values
         PopOld(ZoneID, 0) = PopNew
         GVAOld(ZoneID, 0) = GVANew

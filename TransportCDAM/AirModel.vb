@@ -73,8 +73,8 @@
     Dim AirTripRates(90) As Double
     Dim MaxAirNode As Long
     Dim MaxAirFlow As Long
-    Dim NodeInputArray(28, 13) As String
-    Dim FlowInputArray(223, 9) As String
+    Dim NodeInputArray(28, 16) As String
+    Dim FlowInputArray(223, 11) As String
     Dim NodeOutputArray(28, 6) As String
     Dim FlowOutputArray(223, 3) As String
     Dim NodeTempArray(28, 14) As String
@@ -110,13 +110,13 @@
 
             'read from initial file if year 1, otherwise update from temp file
             If YearNum = 1 Then
-                Call ReadData("AirNode", "Input", NodeInputArray, True)
-                Call ReadData("AirFlow", "Input", FlowInputArray, True)
+                Call ReadData("AirNode", "Input", NodeInputArray, modelRunID, True)
+                Call ReadData("AirFlow", "Input", FlowInputArray, modelRunID, True)
             Else
-                ReDim Preserve NodeInputArray(28, 14)
-                ReDim Preserve FlowInputArray(223, 12)
-                Call ReadData("AirNode", "Input", NodeInputArray, False)
-                Call ReadData("AirFlow", "Input", FlowInputArray, False)
+                ReDim Preserve NodeInputArray(28, 7)
+                ReDim Preserve FlowInputArray(223, 7)
+                Call ReadData("AirNode", "Input", NodeInputArray, modelRunID, False)
+                Call ReadData("AirFlow", "Input", FlowInputArray, modelRunID, False)
             End If
 
             'run air node model

@@ -63,12 +63,12 @@
     Dim FuelEffOld(2) As Double
     Dim Elect As Boolean
     Dim CapArray(455, 5) As String
-    Dim NewCapArray(238, 4) As String
+    Dim NewCapArray(238, 5) As String
     Dim CapNum As Integer
     Dim InputArray(238, 17) As String
-    Dim OutputArray(238, 11) As String
+    Dim OutputArray(238, 13) As String
     Dim stratarray(90, 95) As String
-    Dim elearray(238, 3) As String
+    Dim elearray(238, 5) As String
     Dim EleNum As Integer
     Dim RlElNum As Integer
     Dim RzElNum As Integer
@@ -103,7 +103,7 @@
         End If
 
         'read initial input data
-        Call ReadData("RailLink", "Input", InputArray, True)
+        Call ReadData("RailLink", "Input", InputArray, modelRunID, True)
 
         Call ReadData("RailLink", "CapChange", CapArray, modelRunID)
 
@@ -185,11 +185,12 @@
             sortedline = sortarray(v)
             splitline = Split(sortedline, "&")
             arraynum = splitline(2)
-            NewCapArray(v + 1, 0) = NewCapDetails(arraynum, 0)
-            NewCapArray(v + 1, 1) = NewCapDetails(arraynum, 1)
-            NewCapArray(v + 1, 2) = NewCapDetails(arraynum, 2)
-            NewCapArray(v + 1, 3) = NewCapDetails(arraynum, 3)
-            NewCapArray(v + 1, 4) = NewCapDetails(arraynum, 4)
+            'NewCapArray(v + 1, 0) = modelRunID
+            NewCapArray(v + 1, 1) = NewCapDetails(arraynum, 0)
+            NewCapArray(v + 1, 2) = NewCapDetails(arraynum, 1)
+            NewCapArray(v + 1, 3) = NewCapDetails(arraynum, 2)
+            NewCapArray(v + 1, 4) = NewCapDetails(arraynum, 3)
+            NewCapArray(v + 1, 5) = NewCapDetails(arraynum, 4)
         Next
 
         'write all lines from NewCapArray to intermediate capacity file
@@ -309,21 +310,21 @@
 
             Do Until InputCount > 238
                 If Year = 1 Then
-                    FlowID(InputCount, 0) = InputArray(InputCount, 0)
-                    OZone(InputCount, 0) = InputArray(InputCount, 1)
-                    DZone(InputCount, 0) = InputArray(InputCount, 2)
-                    Tracks(InputCount, 0) = InputArray(InputCount, 3)
-                    Pop1Old(InputCount, 0) = InputArray(InputCount, 5)
-                    Pop2Old(InputCount, 0) = InputArray(InputCount, 6)
-                    GVA1Old(InputCount, 0) = InputArray(InputCount, 7)
-                    GVA2Old(InputCount, 0) = InputArray(InputCount, 8)
+                    FlowID(InputCount, 0) = InputArray(InputCount, 4)
+                    OZone(InputCount, 0) = InputArray(InputCount, 5)
+                    DZone(InputCount, 0) = InputArray(InputCount, 6)
+                    Tracks(InputCount, 0) = InputArray(InputCount, 7)
+                    Pop1Old(InputCount, 0) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "raillink", InputCount)
+                    Pop2Old(InputCount, 0) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "raillink", InputCount)
+                    GVA1Old(InputCount, 0) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "raillink", InputCount)
+                    GVA2Old(InputCount, 0) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "raillink", InputCount)
                     CostOld(InputCount, 0) = InputArray(InputCount, 10)
                     FuelOld(InputCount, 0) = InputArray(InputCount, 11)
                     MaxTDOld(InputCount, 0) = InputArray(InputCount, 12)
                     ElPOld(InputCount, 0) = InputArray(InputCount, 13)
-                    OCountry(InputCount, 0) = InputArray(InputCount, 14)
-                    DCountry(InputCount, 0) = InputArray(InputCount, 15)
-                    ElectTracksOld(InputCount, 0) = InputArray(InputCount, 16)
+                    OCountry(InputCount, 0) = InputArray(InputCount, 16)
+                    DCountry(InputCount, 0) = InputArray(InputCount, 17)
+                    ElectTracksOld(InputCount, 0) = InputArray(InputCount, 14)
                     NewTrains = 0
 
                     If RlLEneSource = "Database" Then
@@ -359,19 +360,25 @@
                     Pop2New = Pop2Old(InputCount, 0) * DPopGrowth
                 ElseIf RlLPopSource = "File" Then
                     Select Case OCountry(InputCount, 0)
-                        Case "E"
+                        'Case "E"
+                        Case "1"
                             OPopGrowth = 1 + ScalingData(Year, 1)
-                        Case "S"
+                            'Case "S"
+                        Case "3"
                             OPopGrowth = 1 + ScalingData(Year, 2)
-                        Case "W"
+                            'Case "w"
+                        Case "2"
                             OPopGrowth = 1 + ScalingData(Year, 3)
                     End Select
                     Select Case DCountry(InputCount, 0)
-                        Case "E"
+                        'Case "E"
+                        Case "1"
                             DPopGrowth = 1 + ScalingData(Year, 1)
-                        Case "S"
+                            'Case "S"
+                        Case "3"
                             DPopGrowth = 1 + ScalingData(Year, 2)
-                        Case "W"
+                            'Case "W"
+                        Case "2"
                             DPopGrowth = 1 + ScalingData(Year, 3)
                     End Select
                     Pop1New = Pop1Old(InputCount, 0) * OPopGrowth
@@ -543,18 +550,20 @@ NextYear:
 
                 MaxTDNew = MaxTD(Year)
                 'write to output file
-                OutputArray(InputCount, 0) = Year
+                'OutputArray(InputCount, 0) = modelRunID
                 OutputArray(InputCount, 1) = FlowID(InputCount, 0)
-                OutputArray(InputCount, 2) = Tracks(InputCount, 0)
-                OutputArray(InputCount, 3) = Pop1New & "," & Pop2New
-                OutputArray(InputCount, 4) = GVA1New
-                OutputArray(InputCount, 5) = GVA2New
-                OutputArray(InputCount, 6) = CostNew
-                OutputArray(InputCount, 7) = FuelNew
-                OutputArray(InputCount, 8) = MaxTDNew
-                OutputArray(InputCount, 9) = ElPNew
-                OutputArray(InputCount, 10) = ElectTracksNew
-                OutputArray(InputCount, 11) = NewTrains
+                OutputArray(InputCount, 2) = Year
+                OutputArray(InputCount, 3) = Tracks(InputCount, 0)
+                OutputArray(InputCount, 4) = Pop1New
+                OutputArray(InputCount, 5) = Pop2New
+                OutputArray(InputCount, 6) = GVA1New
+                OutputArray(InputCount, 7) = GVA2New
+                OutputArray(InputCount, 8) = CostNew
+                OutputArray(InputCount, 9) = FuelNew
+                OutputArray(InputCount, 10) = MaxTDNew
+                OutputArray(InputCount, 11) = ElPNew
+                OutputArray(InputCount, 12) = ElectTracksNew
+                OutputArray(InputCount, 13) = NewTrains
 
                 'set old values as previous new values
                 Pop1Old(InputCount, 0) = Pop1New
@@ -635,7 +644,7 @@ NextYear:
         'now modified to include some schemes as standard
         'now modified to include zones as well as links
 
-        Dim schemeoutputrow(28, 3) As String
+        Dim schemeoutputrow(28, 4) As String
         Dim elschemes(244, 3) As Double
         Dim schemearray(245, 5) As String
         Dim rownum As Integer
@@ -647,10 +656,10 @@ NextYear:
         Dim splitline() As String
         Dim arraynum, schemecount As Long
         Dim schemetype As String
-        Dim zoneoutputrow(33, 2) As String
+        Dim zoneoutputrow(33, 3) As String
         Dim zonearray(336, 4) As String
         Dim schemecode As String
-        Dim elzschemes(335, 2) As Long
+        Dim elzschemes(335, 4) As Long
         Dim znum As Integer
         Dim zonecheck As Boolean
 
@@ -825,10 +834,10 @@ NextYear:
             arraynum = splitline(2)
             'skip lines which don't correspond to a flow
             If elschemes(arraynum, 0) > 0 Then
-                schemeoutputrow(RlElNum, 0) = elschemes(arraynum, 1)
                 schemeoutputrow(RlElNum, 1) = elschemes(arraynum, 0)
-                schemeoutputrow(RlElNum, 2) = elschemes(arraynum, 2)
-                schemeoutputrow(RlElNum, 3) = elschemes(arraynum, 3)
+                schemeoutputrow(RlElNum, 2) = elschemes(arraynum, 1)
+                schemeoutputrow(RlElNum, 3) = elschemes(arraynum, 2)
+                schemeoutputrow(RlElNum, 4) = elschemes(arraynum, 3)
                 RlElNum += 1
             End If
         Next
@@ -850,9 +859,9 @@ NextYear:
             arraynum = splitline(2)
             'skip lines which have a zero station count
             If elzschemes(arraynum, 2) > 0 Then
-                zoneoutputrow(RzElNum, 0) = elzschemes(arraynum, 1)
                 zoneoutputrow(RzElNum, 1) = elzschemes(arraynum, 0)
-                zoneoutputrow(RzElNum, 2) = elzschemes(arraynum, 2)
+                zoneoutputrow(RzElNum, 2) = elzschemes(arraynum, 1)
+                zoneoutputrow(RzElNum, 3) = elzschemes(arraynum, 2)
                 RzElNum += 1
             End If
         Next
@@ -865,13 +874,14 @@ NextYear:
     Sub GetElectData()
         'read electrification data here
 
-        If elearray(EleNum, 0) = "" Then
+        If elearray(EleNum, 2) = "" Then
             Elect = False
         Else
-            ElectFlow = elearray(EleNum, 1)
-            ElectYear = elearray(EleNum, 0) - 2010
-            ElectTracks = elearray(EleNum, 2)
+            ElectFlow = elearray(EleNum, 2)
+            ElectYear = elearray(EleNum, 3) - 2010
+            ElectTracks = elearray(EleNum, 4)
             EleNum += 1
         End If
+        MsgBox(elearray(EleNum, 0))
     End Sub
 End Module

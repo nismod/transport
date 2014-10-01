@@ -36,8 +36,8 @@
     Dim InputCount As Integer
     Dim NewCapArray(47, 8) As String
     Dim InputArray(47, 15) As String
-    Dim OutputArray(47, 9) As String
-    Dim TempArray(47, 12) As String
+    Dim OutputArray(48, 9) As String
+    Dim TempArray(48, 12) As String
     Dim NewCapNum As Integer
 
 
@@ -117,7 +117,7 @@
             End If
         End If
 
-        If TripRates = "Strategy" Then
+        If TripRates = "SubStrategy" Then
             'get the strat values
             Call ReadData("SubStrategy", "", stratarray, modelRunID)
             For r = 1 To 90
@@ -195,8 +195,8 @@
 
         'add 
         If BuildInfra = True Then
-            item = 2
-            Do While item < 7
+            item = 4
+            Do While item < 9
                 PortExtVar(PortID, item) += AddedCap(item - 1)
                 item += 1
             Loop
@@ -205,60 +205,64 @@
         'loop through all the freight types calculating new freight volumes
         FreightType = 1
         Do While FreightType < 6
-            evindex = FreightType + 1
+            evindex = FreightType + 3
             elindex = (FreightType - 1) * 3
             'calculate ratios - now includes option to use variable elasticities
             If VariableEl = True Then
                 OldX = BaseFreight(FreightType)
                 'pop ratio
                 OldY = PopBase
-                If TripRates = "Strategy" Then
-                    NewY = PortExtVar(PortID, 7) * SeaTripRates(YearNum)
+                If TripRates = "SubStrategy" Then
+                    NewY = PortExtVar(PortID, 9) * SeaTripRates(YearNum)
                 Else
-                    NewY = PortExtVar(PortID, 7)
+                    NewY = PortExtVar(PortID, 9)
                 End If
                 If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
                     OldEl = SeaEl(YearNum, 1 + elindex)
                     Call VarElCalc()
                     PortPopRat = VarRat
                 Else
-                    If TripRates = "Strategy" Then
-                        PortPopRat = ((PortExtVar(PortID, 7) * SeaTripRates(YearNum)) / PopBase) ^ SeaEl(YearNum, 1 + elindex)
+                    If TripRates = "SubStrategy" Then
+                        PortPopRat = ((PortExtVar(PortID, 9) * SeaTripRates(YearNum)) / PopBase) ^ SeaEl(YearNum, 1 + elindex)
                     Else
                         PortPopRat = (PortExtVar(PortID, 7) / PopBase) ^ SeaEl(YearNum, 1 + elindex)
                     End If
                 End If
                 'gva ratio
                 OldY = GVABase
-                NewY = PortExtVar(PortID, 8)
+                NewY = PortExtVar(PortID, 10)
                 If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
                     OldEl = SeaEl(YearNum, 2 + elindex)
                     Call VarElCalc()
                     PortGVARat = VarRat
                 Else
-                    PortGVARat = (PortExtVar(PortID, 8) / GVABase) ^ SeaEl(YearNum, 2 + elindex)
+                    PortGVARat = (PortExtVar(PortID, 10) / GVABase) ^ SeaEl(YearNum, 2 + elindex)
                 End If
                 'cost ratio
                 OldY = CostBase
-                NewY = PortExtVar(PortID, 9)
+                NewY = PortExtVar(PortID, 11)
                 If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
                     OldEl = SeaEl(YearNum, 3 + elindex)
                     Call VarElCalc()
                     PortCostRat = VarRat
                 Else
-                    PortCostRat = (PortExtVar(PortID, 9) / CostBase) ^ SeaEl(YearNum, 3 + elindex)
+                    PortCostRat = (PortExtVar(PortID, 11) / CostBase) ^ SeaEl(YearNum, 3 + elindex)
                 End If
             Else
-                If TripRates = "Strategy" Then
-                    PortPopRat = ((PortExtVar(PortID, 7) * SeaTripRates(YearNum)) / PopBase) ^ SeaEl(YearNum, 1 + elindex)
+                If TripRates = "SubStrategy" Then
+                    PortPopRat = ((PortExtVar(PortID, 9) * SeaTripRates(YearNum)) / PopBase) ^ SeaEl(YearNum, 1 + elindex)
                 Else
-                    PortPopRat = (PortExtVar(PortID, 7) / PopBase) ^ SeaEl(YearNum, 1 + elindex)
+                    PortPopRat = (PortExtVar(PortID, 9) / PopBase) ^ SeaEl(YearNum, 1 + elindex)
                 End If
-                PortGVARat = (PortExtVar(PortID, 8) / GVABase) ^ SeaEl(YearNum, 2 + elindex)
-                PortCostRat = (PortExtVar(PortID, 9) / CostBase) ^ SeaEl(YearNum, 3 + elindex)
+                PortGVARat = (PortExtVar(PortID, 10) / GVABase) ^ SeaEl(YearNum, 2 + elindex)
+                PortCostRat = (PortExtVar(PortID, 11) / CostBase) ^ SeaEl(YearNum, 3 + elindex)
             End If
             FreightRat = PortPopRat * PortGVARat * PortCostRat
-            NewFreight(PortID, FreightType) = BaseFreight(FreightType) * FreightRat
+            If BaseFreight(FreightType) = 0 Then
+                NewFreight(PortID, FreightType) = 0
+            Else
+                NewFreight(PortID, FreightType) = BaseFreight(FreightType) * FreightRat
+            End If
             'check if capacity data exists
             portcap = PortExtVar(PortID, evindex)
             If portcap > -1 Then
@@ -292,8 +296,8 @@
         'get total freight tonnage, converting LoLo TEU to tons
         totalfreight = NewFreight(PortID, 1) + NewFreight(PortID, 2) + NewFreight(PortID, 3) + (NewFreight(PortID, 4) * 4.237035) + NewFreight(PortID, 5)
         'calculate gas oil and fuel oil consumption
-        NewGasOil = totalfreight * 0.00286568 * PortExtVar(PortID, 10)
-        NewFuelOil = totalfreight * 0.00352039 * PortExtVar(PortID, 10)
+        NewGasOil = totalfreight * 0.00286568 * PortExtVar(PortID, 12)
+        NewFuelOil = totalfreight * 0.00352039 * PortExtVar(PortID, 12)
     End Sub
 
     Sub VarElCalc()
@@ -328,7 +332,7 @@
         'loop through 5 freight types
         FreightType = 1
         Do While FreightType < 6
-            evindex = FreightType + 1
+            evindex = FreightType + 3
             BaseFreight(FreightType) = NewFreight(PortID, FreightType)
             BaseCap(FreightType) = PortExtVar(PortID, evindex)
             If BuildInfra = True Then

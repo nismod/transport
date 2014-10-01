@@ -46,10 +46,10 @@
     Dim FuelEffOld As Double
     Dim enearray(91, 6) As String
     Dim stratarray(90, 95) As String
-    Dim NodeInputArray(28, 14) As String
+    Dim NodeInputArray(28, 16) As String
     Dim FlowInputArray(223, 11) As String
     Dim NodeOutputArray(28, 12) As String
-    Dim FlowOutputArray(223, 6) As String
+    Dim FlowOutputArray(223, 7) As String
     Dim CapArray(47, 5) As String
     Dim CapNum As Integer
 
@@ -229,8 +229,8 @@
     Sub GetFiles()
 
         'read initial year files
-        Call ReadData("AirNode", "Input", NodeInputArray, True)
-        Call ReadData("AirFlow", "Input", FlowInputArray, True)
+        Call ReadData("AirNode", "Input", NodeInputArray, modelRunID, True)
+        Call ReadData("AirFlow", "Input", FlowInputArray, modelRunID, True)
 
         'read capchange info
         Call ReadData("AirNode", "CapChange", CapArray, modelRunID)
@@ -244,8 +244,6 @@
 
         Dim NodeCount As Long
         Dim FlowCount As Long
-        Dim VarCount As Integer
-        Dim InVarCount As Integer
         Dim OutVarCount As Integer
         Dim AddTermCap As Long
         Dim AddATMCap As Long
@@ -259,48 +257,46 @@
             NodeCount = 1
             Do While NodeCount < 29
                 'pop
-                NodeOldData(NodeCount, 1) = NodeInputArray(NodeCount, 6)
+                NodeOldData(NodeCount, 1) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "airnode", NodeCount)
                 'gva
-                NodeOldData(NodeCount, 2) = NodeInputArray(NodeCount, 7)
+                NodeOldData(NodeCount, 2) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "airnode", NodeCount)
                 'cost
-                NodeOldData(NodeCount, 3) = NodeInputArray(NodeCount, 8) * 0.29
-                airnodefixedcost(NodeCount) = NodeInputArray(NodeCount, 8) * 0.71
+                NodeOldData(NodeCount, 3) = NodeInputArray(NodeCount, 10) * 0.29
+                airnodefixedcost(NodeCount) = NodeInputArray(NodeCount, 10) * 0.71
                 'termcap
-                NodeOldData(NodeCount, 4) = NodeInputArray(NodeCount, 4)
+                NodeOldData(NodeCount, 4) = NodeInputArray(NodeCount, 8)
                 'maxatm
-                NodeOldData(NodeCount, 5) = NodeInputArray(NodeCount, 5)
+                NodeOldData(NodeCount, 5) = NodeInputArray(NodeCount, 9)
                 'psd
-                NodeOldData(NodeCount, 6) = NodeInputArray(NodeCount, 9)
+                NodeOldData(NodeCount, 6) = NodeInputArray(NodeCount, 11)
                 'psi
-                NodeOldData(NodeCount, 7) = NodeInputArray(NodeCount, 10)
+                NodeOldData(NodeCount, 7) = NodeInputArray(NodeCount, 12)
                 'lfd
-                NodeOldData(NodeCount, 8) = NodeInputArray(NodeCount, 11)
+                NodeOldData(NodeCount, 8) = NodeInputArray(NodeCount, 13)
                 'lfi
-                NodeOldData(NodeCount, 9) = NodeInputArray(NodeCount, 12)
+                NodeOldData(NodeCount, 9) = NodeInputArray(NodeCount, 14)
                 'inttripdist
-                NodeOldData(NodeCount, 10) = NodeInputArray(NodeCount, 13)
+                NodeOldData(NodeCount, 10) = NodeInputArray(NodeCount, 15)
                 'fuelseatkm
                 NodeOldData(NodeCount, 11) = 0.037251
-                GORID(NodeCount) = NodeInputArray(NodeCount, 14)
+                GORID(NodeCount) = NodeInputArray(NodeCount, 16)
                 NodeCount += 1
             Loop
 
             FlowCount = 1
             Do While FlowCount < 224
-                VarCount = 1
-                '***changed from 2 to 3
-                InVarCount = 4
-                Do Until VarCount > 5
-                    FlowOldData(FlowCount, VarCount) = FlowInputArray(FlowCount, InVarCount)
-                    VarCount += 1
-                    InVarCount += 1
-                Loop
-                FlowOldData(FlowCount, 5) = FlowOldData(FlowCount, 5) * 0.29
+                FlowOldData(FlowCount, 0) = FlowInputArray(FlowCount, 4)
+                FlowOldData(FlowCount, 1) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "airflow", FlowCount)
+                FlowOldData(FlowCount, 2) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "airflow", FlowCount)
+                FlowOldData(FlowCount, 3) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "airflow", FlowCount)
+                FlowOldData(FlowCount, 4) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "airflow", FlowCount)
+
+                FlowOldData(FlowCount, 5) = FlowInputArray(FlowCount, 8) * 0.29
                 airflowfixedcost(FlowCount) = FlowInputArray(FlowCount, 8) * 0.71
                 OZone(FlowCount) = FlowInputArray(FlowCount, 10)
                 DZone(FlowCount) = FlowInputArray(FlowCount, 11)
                 'add in the Flow ID number as some are missing from the input file
-                FlowOldData(FlowCount, 0) = FlowInputArray(FlowCount, 0)
+
                 FlowLength(FlowCount) = FlowInputArray(FlowCount, 9)
                 FlowCount += 1
             Loop
@@ -408,12 +404,22 @@
             End If
 
             'write node output row
-            NodeOutputArray(NodeCount, 0) = YearNum
             NodeOutputArray(NodeCount, 1) = NodeCount
-            NodeOutputArray(NodeCount, 2) = NodeNewData(NodeCount, 1)
+            NodeOutputArray(NodeCount, 2) = YearNum
+            NodeOutputArray(NodeCount, 3) = NodeNewData(NodeCount, 1)
             NodeOutputArray(NodeCount, 3) = NodeNewData(NodeCount, 2)
             newcost = airnodefixedcost(NodeCount) + NodeNewData(NodeCount, 3) + carbch
             NodeOutputArray(NodeCount, 4) = newcost
+
+
+
+
+
+            ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+            '''TO be continued here
+            ''' missing PlaneSizeDom, PlaneSizeInt
+
+
             For n = 4 To 11
                 NodeOutputArray(NodeCount, n + 1) = NodeNewData(NodeCount, n)
             Next
@@ -434,6 +440,11 @@
             AddATMCap = 0
             NodeCount += 1
         Loop
+
+
+
+
+
 
         'then calculate new flow values
         FlowCount = 1
@@ -521,14 +532,14 @@
             End If
 
             'write flow output row
-            FlowOutputArray(FlowCount, 0) = YearNum
-            FlowOutputArray(FlowCount, 1) = FlowOldData(FlowCount, 0)
-            FlowOutputArray(FlowCount, 2) = FlowNewData(FlowCount, 1)
-            FlowOutputArray(FlowCount, 3) = FlowNewData(FlowCount, 2)
-            FlowOutputArray(FlowCount, 4) = FlowNewData(FlowCount, 3)
-            FlowOutputArray(FlowCount, 5) = FlowNewData(FlowCount, 4)
+            FlowOutputArray(FlowCount, 1) = YearNum
+            FlowOutputArray(FlowCount, 2) = FlowOldData(FlowCount, 0)
+            FlowOutputArray(FlowCount, 3) = FlowNewData(FlowCount, 1)
+            FlowOutputArray(FlowCount, 4) = FlowNewData(FlowCount, 2)
+            FlowOutputArray(FlowCount, 5) = FlowNewData(FlowCount, 3)
+            FlowOutputArray(FlowCount, 6) = FlowNewData(FlowCount, 4)
             newcost = airflowfixedcost(FlowCount) + FlowNewData(FlowCount, 5) + carbch
-            FlowOutputArray(FlowCount, 6) = newcost
+            FlowOutputArray(FlowCount, 7) = newcost
             'OutVarCount = 1
             'Do Until OutVarCount > 5
             '    OutputRow = OutputRow & FlowNewData(FlowCount, OutVarCount) & ","
