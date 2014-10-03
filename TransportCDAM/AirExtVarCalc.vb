@@ -48,8 +48,8 @@
     Dim stratarray(90, 95) As String
     Dim NodeInputArray(28, 16) As String
     Dim FlowInputArray(223, 11) As String
-    Dim NodeOutputArray(28, 12) As String
-    Dim FlowOutputArray(223, 7) As String
+    Dim NodeOutputArray(29, 13) As String
+    Dim FlowOutputArray(224, 7) As String
     Dim CapArray(47, 5) As String
     Dim CapNum As Integer
 
@@ -404,24 +404,16 @@
             End If
 
             'write node output row
+            NodeOutputArray(NodeCount, 0) = modelRunID
             NodeOutputArray(NodeCount, 1) = NodeCount
             NodeOutputArray(NodeCount, 2) = YearNum
             NodeOutputArray(NodeCount, 3) = NodeNewData(NodeCount, 1)
-            NodeOutputArray(NodeCount, 3) = NodeNewData(NodeCount, 2)
+            NodeOutputArray(NodeCount, 4) = NodeNewData(NodeCount, 2)
             newcost = airnodefixedcost(NodeCount) + NodeNewData(NodeCount, 3) + carbch
-            NodeOutputArray(NodeCount, 4) = newcost
-
-
-
-
-
-            ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-            '''TO be continued here
-            ''' missing PlaneSizeDom, PlaneSizeInt
-
+            NodeOutputArray(NodeCount, 5) = newcost
 
             For n = 4 To 11
-                NodeOutputArray(NodeCount, n + 1) = NodeNewData(NodeCount, n)
+                NodeOutputArray(NodeCount, n + 2) = NodeNewData(NodeCount, n)
             Next
             'OutVarCount = 1
             'Do Until OutVarCount > 11
@@ -532,6 +524,7 @@
             End If
 
             'write flow output row
+            FlowOutputArray(FlowCount, 0) = modelRunID
             FlowOutputArray(FlowCount, 1) = YearNum
             FlowOutputArray(FlowCount, 2) = FlowOldData(FlowCount, 0)
             FlowOutputArray(FlowCount, 3) = FlowNewData(FlowCount, 1)

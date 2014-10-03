@@ -834,7 +834,7 @@ Module DBaseInterface
         Dim InputArray(,) As String = Nothing
 
         'The database function seems to be brocken so it will return a temporary result until it's fixed
-        Return 10425.96
+        'Return 10425.96
 
         theSQL = "SELECT * FROM cdam_get_population_data_by_population_scenario_od_tr_zone(" & scenario & "," & year & "," & link_type & "')" & " WHERE zone_id = " & ZoneID
         theSQL &= " AS (scenario_id varchar, year integer, gender varchar, category varchar, " & Chr(34) & "DistrictName" & Chr(34) & " varchar, zone_id integer, " & Chr(34) & "ZoneName" & Chr(34) & " varchar, district_code varchar, value double precision);"
@@ -855,7 +855,7 @@ Module DBaseInterface
         Dim InputArray(,) As String = Nothing
 
         'The database function seems to be brocken so it will return a temporary result until it's fixed
-        Return 100663.5
+        'Return 100663.5
 
         theSQL = "SELECT * FROM cdam_get_regional_gva_data_by_economics_scenario_tr_zone(" & scenario & "," & year & "'" & link_type & "')" & " WHERE zone_id = " & ZoneID
 
@@ -1056,11 +1056,19 @@ Module DBaseInterface
                     Case "Input"
                         If IsInitialYear = True Then
                             TheFileName = "AirNodeInputData2010.csv"
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_I_AirNode_Base" & Chr(34) & " WHERE year = " & 2010
+                        ElseIf IsInitialYear = False Then
+                            TheFileName = FilePrefix & "AirNodeTemp.csv"
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_AirNode" & Chr(34) & " WHERE modelrun_id = " & ModelRunID
+                        End If
+                        If IsInitialYear = True Then
+                            TheFileName = "AirNodeInputData2010.csv"
                         ElseIf IsInitialYear = False Then
                             TheFileName = FilePrefix & "AirNodeTemp.csv"
                         End If
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "AirNodeExtVar" & EVFileSuffix & ".csv"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_O_AirNodeExternalVariables" & Chr(34) & " WHERE year = " & Year
                     Case "CapChange"
                         TheFileName = CapFilePrefix & "AirNodeCapChange.csv"
                     Case "Elasticity"
@@ -1071,11 +1079,14 @@ Module DBaseInterface
                     Case "Input"
                         If IsInitialYear = True Then
                             TheFileName = "AirFlowInputData2010.csv"
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_I_AirFlow_Base" & Chr(34) & " WHERE year = " & 2010
                         ElseIf IsInitialYear = False Then
                             TheFileName = FilePrefix & "AirFlowTemp.csv"
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_AirFlow" & Chr(34) & " WHERE modelrun_id = " & ModelRunID
                         End If
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "AirFlowExtVar.csv"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_O_AirFlowExternalVariables" & Chr(34) & " WHERE year = " & Year
                 End Select
             Case "SubStrategy"
                 TheFileName = "CommonVariablesTR" & SubStrategy & ".csv"
@@ -1440,13 +1451,22 @@ Module DBaseInterface
             Case "AirNode"
                 Select Case SubType
                     Case "Output"
+                        ToSQL = True
+                        TableName = "TR_O_AirNodeOutputData"
                         OutFileName = FilePrefix & "AirNodeOutputData.csv"
-                        TempFileName = FilePrefix & "AirNodeTemp.csv"
-                        header = "Yeary,AirportID,AllPassy,DomPassy,IntPassy,ATMy,IntFuely"
-                        tempheader = "AirportID,AllPassTotal,DomPass,IntPass,TermCapPPA,MaxATM,GORPop,GORGVA,Cost,PlaneSize,PlaneSizeInt,LFDom,LFInt,IntTripDist,AirportTripsLatent"
+                        'header = "Yeary,AirportID,AllPassy,DomPassy,IntPassy,ATMy,IntFuely"
+                        header = "modelrun_id, airport_id, year, AllPass, DomPass, IntPass, ATM, IntFuel"
+                    Case "Temp"
+                        ToSQL = True
+                        TableName = "TR_IO_AirNode"
+                        OutFileName = FilePrefix & "AirNodeTemp.csv"
+                        'tempheader = "AirportID,AllPassTotal,DomPass,IntPass,TermCapPPA,MaxATM,GORPop,GORGVA,Cost,PlaneSize,PlaneSizeInt,LFDom,LFInt,IntTripDist,AirportTripsLatent"
+                        header = "modelrun_id, year, airport_id, AllPassTotal, DomPass, IntPass, AirportTripsLatent"
                     Case "ExtVar"
+                        ToSQL = True
+                        TableName = "TR_O_AirNodeExternalVariables"
                         OutFileName = EVFilePrefix & "AirNodeExtVar.csv"
-                        header = "Yeary,AirportID,GORPopy,GORGvay,Costy,TermCapy,MaxATMy,PlaneSizeDomy,PlaneSizeInty,LFDomy,LFInty,IntTripDist,FuelSeatKm"
+                        header = "modelrun_id, airport_id, year, GORPop, GORGva, Cost, TermCap, MaxATM, PlaneSizeDom,PlaneSizeInt, LFDom, LFInt, IntTripDist, FuelSeatKm"
                     Case "NewCap"
                         OutFileName = EVFilePrefix & "AirNodeNewCap.csv"
                         header = "NodeID,ChangeYear,NewTermCap,NewATMCap"
@@ -1457,13 +1477,22 @@ Module DBaseInterface
             Case "AirFlow"
                 Select Case SubType
                     Case "Output"
+                        ToSQL = True
+                        TableName = "TR_O_AirFlowOutputData"
                         OutFileName = FilePrefix & "AirFlowOutputData.csv"
-                        TempFileName = FilePrefix & "AirFlowTemp.csv"
-                        header = "Yeary,FlowID,Tripsy,Fuely"
-                        tempheader = "FlowID, OAirID, DAirID, Trips, PopOZ, PopDZ, GVAOZ, GVADZ, Cost, FlowKm, AirFlowTripsLatent, AirFlowCapConstant0, AirFlowCapConstant1"
+                        'header = "Yeary,FlowID,Tripsy,Fuely"
+                        header = "modelrun_id, flow_id, year, Trips, Fuel"
+                    Case "Temp"
+                        ToSQL = True
+                        TableName = "TR_IO_AirFlow"
+                        OutFileName = FilePrefix & "AirFlowTemp.csv"
+                        'tempheader = "FlowID, OAirID, DAirID, Trips, PopOZ, PopDZ, GVAOZ, GVADZ, Cost, FlowKm, AirFlowTripsLatent, AirFlowCapConstant0, AirFlowCapConstant1"
+                        header = "modelrun_id, year, flow_id, Trips, AirFlowTripsLatent, AirFlowCapConstant0, AirFlowCapConstant1"
                     Case "ExtVar"
+                        ToSQL = True
+                        TableName = "TR_O_AirFlowExternalVariables"
                         OutFileName = EVFilePrefix & "AirFlowExtVar.csv"
-                        header = "Yeary,FlowID,PopOZy,PopDZy,GVAOZy,GVADZy,Costy"
+                        header = "modelrun_id, year, flow_id, PopOZ, PopDZ, GVAOZ, GVADZ, Cost"
                 End Select
             Case "Logfile"
                 OutFileName = FilePrefix & "TransportCDAMLog.txt"
