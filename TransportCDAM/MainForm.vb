@@ -1,6 +1,5 @@
 ﻿Public Class MainForm
 
-
     Private Sub Button1_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles Button1.Click
         RunModel = True
         'Check if file path has been selected - if not then use default.
@@ -1469,9 +1468,9 @@
         End If
         cfs.WriteLine(controlstring)
         If ComboBox30.SelectedItem = "Constant" Then
-            controlstring = "triprate,Constant"
-        ElseIf ComboBox30.SelectedItem = "SubStrategy File" Then
-            controlstring = "triprate,SubStrategy"
+            controlstring = "triprate,constant"
+        ElseIf ComboBox30.SelectedItem = "Strategy File" Then
+            controlstring = "triprate,Strategy"
         End If
         cfs.WriteLine(controlstring)
         cfs.Close()
@@ -1989,12 +1988,6 @@
                     Else
                         CheckBox42.Checked = False
                     End If
-                Case "UpdateInput"
-                    If controlarray(1) = "True" Then
-                        CheckBox43.Checked = True
-                    Else
-                        CheckBox43.Checked = False
-                    End If
                 Case "airemcyr"
                     TextBox32.Text = controlarray(1)
                 Case "newseaton"
@@ -2024,8 +2017,8 @@
                 Case "triprate"
                     If controlarray(1) = "constant" Then
                         ComboBox30.SelectedItem = "Constant"
-                    ElseIf controlarray(1) = "SubStrategy" Then
-                        ComboBox30.SelectedItem = "SubStrategy File"
+                    ElseIf controlarray(1) = "Strategy" Then
+                        ComboBox30.SelectedItem = "Strategy File"
                     End If
             End Select
             controlstring = cfo.ReadLine
@@ -2496,7 +2489,7 @@
     Private Sub ComboBox30_SelectedIndexChanged(sender As System.Object, e As System.EventArgs) Handles ComboBox30.SelectedIndexChanged
         If ComboBox30.SelectedItem = "Constant" Then
             TripRates = "Constant"
-        ElseIf ComboBox30.SelectedItem = "SubStrategy File" Then
+        ElseIf ComboBox30.SelectedItem = "Strategy File" Then
             TripRates = "SubStrategy"
         End If
     End Sub
@@ -2526,13 +2519,4 @@
     Private Sub MainForm_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
     End Sub
-
-    Private Sub FileToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles FileToolStripMenuItem.Click
-
-    End Sub
-
-    Private Function ComboBox30() As Object
-        Throw New NotImplementedException
-    End Function
-
 End Class
