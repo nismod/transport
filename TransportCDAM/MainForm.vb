@@ -71,6 +71,7 @@
     End Sub
 
     Private Sub folderPath_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles folderPath.Click
+        'FolderBrowserDialog1.SelectedPath = "C:\Users\cenv0384\Documents\Visual Studio 2013\Projects\ITRCWS1C3\Transport\TransportCDAM\Model Input and Output\Model Inputs"
         FolderBrowserDialog1.ShowDialog()
         DirPath = FolderBrowserDialog1.SelectedPath & "\"
     End Sub
@@ -829,7 +830,8 @@
     Private Sub OpenControlFileToolStripMenuItem_Click(sender As System.Object, e As System.EventArgs) Handles OpenControlFileToolStripMenuItem.Click
         Dim opencontf As New OpenFileDialog()
 
-        opencontf.InitialDirectory = "c:\"
+        opencontf.InitialDirectory = "C:\"
+        'opencontf.InitialDirectory = "C:\Users\cenv0384\Documents\Visual Studio 2013\Projects\ITRCWS1C3\Transport\TransportCDAM\Model Input and Output"
         opencontf.Filter = "icf files (*.icf)|*.icf"
         opencontf.FilterIndex = 1
         opencontf.RestoreDirectory = True

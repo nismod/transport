@@ -19,7 +19,14 @@ Module DBaseInterface
     Dim cmd As New Odbc.OdbcCommand
     Dim m_sConnString As String
     Dim m_conn As Odbc.OdbcConnection
+    Dim seaDemogArray(,) As String = Nothing
+    Dim airDemogArray(,) As String = Nothing
+    Dim zoneDemogArray(,) As String = Nothing
+    Dim seaGVAArray(,) As String = Nothing
+    Dim airGVAArray(,) As String = Nothing
+    Dim zoneGVAArray(,) As String = Nothing
 
+ 
     Sub ConnectToDBase()
         Try
             'If there is no connection to the database then establish one
@@ -828,47 +835,178 @@ Module DBaseInterface
         End Select
     End Sub
 
+#Region "...Get Population..."
 
-    Function get_population_data_by_economics_scenario_tr_zone(ByVal scenario As String, ByVal year As Integer, ByVal link_type As String, ByVal ZoneID As Integer)
+    Function get_population_data_by_airportID(ByVal modelrunid As Integer, ByVal year As Integer, ByVal PortID As Integer)
         Dim theSQL As String = ""
-        Dim InputArray(,) As String = Nothing
 
-        'The database function seems to be brocken so it will return a temporary result until it's fixed
-        'Return 10425.96
-
-        theSQL = "SELECT * FROM cdam_get_population_data_by_population_scenario_od_tr_zone(" & scenario & "," & year & "," & link_type & "')" & " WHERE zone_id = " & ZoneID
-        theSQL &= " AS (scenario_id varchar, year integer, gender varchar, category varchar, " & Chr(34) & "DistrictName" & Chr(34) & " varchar, zone_id integer, " & Chr(34) & "ZoneName" & Chr(34) & " varchar, district_code varchar, value double precision);"
-
-        If LoadSQLDataToArray(InputArray, theSQL) = False Then
-            InputArray = Nothing
-            Return False
-        Else
-            Return 0
+        'If the Demographic data has not been loaded then load it for each zone or port.
+        If airDemogArray Is Nothing Then
+            theSQL = "SELECT * FROM " & Chr(34) & "CDAM_get_population_data_by_model_run_id_per_tr_gor" & Chr(34) & "('" & modelrunid & "', " & year & ", 'air', 9999) "
+            theSQL &= "AS (scenario_id varchar, year integer, gender varchar, category varchar, location varchar, value double precision, " & Chr(34)
+            theSQL &= "GORName" & Chr(34) & " varchar, " & Chr(34) & "gor_id" & Chr(34) & " integer, " & Chr(34) & "tr_cdam_gor_id" & Chr(34)
+            theSQL &= " integer, " & Chr(34) & "PortName" & Chr(34) & " varchar, " & Chr(34) & "port_id" & Chr(34) & " integer); "
+            If LoadSQLDataToArray(airDemogArray, theSQL) = False Then
+                airDemogArray = Nothing
+                Return 0
+            End If
         End If
 
+        'Get the population for the specified port
+        For i = 1 To UBound(seaDemogArray, 1)
+            If CInt(seaDemogArray(i, 9)) = PortID Then
+                Return CDbl(seaDemogArray(i, 4))
+            End If
+        Next
+
+        'If portid not found then return 0
+        Return 0
+
+    End Function
+
+    Function get_population_data_by_zoneID(ByVal modelrunid As Integer, ByVal year As Integer, ByVal ZoneID As Integer)
+        Dim theSQL As String = ""
+
+        If zoneDemogArray Is Nothing Then
+            theSQL = "SELECT * FROM cdam_get_population_data_by_population_scenario_od_tr_zone('" & modelrunid & "'," & year & ",9999)" & " WHERE zone_id = " & ZoneID
+            theSQL &= "AS (scenario_id varchar, year integer, gender varchar, category varchar, location varchar, value double precision, " & Chr(34)
+            theSQL &= "GORName" & Chr(34) & " varchar, " & Chr(34) & "gor_id" & Chr(34) & " integer, " & Chr(34) & "tr_cdam_gor_id" & Chr(34)
+            theSQL &= " integer, " & Chr(34) & "PortName" & Chr(34) & " varchar, " & Chr(34) & "port_id" & Chr(34) & " integer); "
+            If LoadSQLDataToArray(zoneDemogArray, theSQL) = False Then
+                zoneDemogArray = Nothing
+                Return 0
+            End If
+        End If
+
+        'Get the population for the specified zone
+        For i = 1 To UBound(zoneDemogArray, 1)
+            If CInt(seaDemogArray(i, 5)) = ZoneID Then
+                Return CDbl(zoneDemogArray(i, 8))
+            End If
+        Next
+
+        'If portid not found then return 0
+        Return 0
 
     End Function
 
 
-    Function get_regional_gva_data_by_economics_scenario_tr_zone(ByVal scenario As String, ByVal year As Integer, ByVal link_type As String, ByVal ZoneID As Integer)
+    Function get_population_data_by_seaportID(ByVal modelrunid As Integer, ByVal year As Integer, ByVal PortID As Integer) As Double
         Dim theSQL As String = ""
-        Dim InputArray(,) As String = Nothing
 
-        'The database function seems to be brocken so it will return a temporary result until it's fixed
-        'Return 100663.5
-
-        theSQL = "SELECT * FROM cdam_get_regional_gva_data_by_economics_scenario_tr_zone(" & scenario & "," & year & "'" & link_type & "')" & " WHERE zone_id = " & ZoneID
-
-        If LoadSQLDataToArray(InputArray, theSQL) = False Then
-            InputArray = Nothing
-            Return False
-        Else
-            Return 0
+        'If the Demographic data has not been loaded then load it for each zone or port.
+        If seaDemogArray Is Nothing Then
+            theSQL = "SELECT * FROM cdam_get_population_data_by_model_run_id_per_tr_gor('" & modelrunid & "', " & year & ", 'sea', 9999) "
+            theSQL &= "AS (scenario_id varchar, year integer, gender varchar, category varchar, value double precision, " & Chr(34) & "GORName" & Chr(34) & " varchar, "
+            theSQL &= Chr(34) & "gor_id" & Chr(34) & " integer, " & Chr(34) & "tr_cdam_gor_id" & Chr(34) & " integer, " & Chr(34) & "PortName" & Chr(34) & " varchar, " & Chr(34) & "port_id" & Chr(34) & " integer); "
+            If LoadSQLDataToArray(seaDemogArray, theSQL) = False Then
+                seaDemogArray = Nothing
+                Return 0
+            End If
         End If
 
+        'Get the population for the specified port
+        For i = 1 To UBound(seaDemogArray, 1)
+            If CInt(seaDemogArray(i, 9)) = PortID Then
+                Return CDbl(seaDemogArray(i, 4))
+            End If
+        Next
+
+        'If portid not found then return 0
+        Return 0
 
     End Function
 
+#End Region
+
+#Region "...Get GVA..."
+
+    Function get_gva_data_by_zoneID(ByVal modelrunid As Integer, ByVal year As Integer, ByVal ZoneID As Integer)
+        Dim theSQL As String = ""
+
+        If zoneGVAArray Is Nothing Then
+            theSQL = "SELECT * FROM SELECT * FROM cdam_get_economics_data_by_model_run_id_per_tr_gor(" & modelrunid & "," & year & ",9999) "
+            theSQL &= " AS (scenario_id varchar, year integer," & Chr(34) & "GORName" & Chr(34)
+            theSQL &= " varchar, " & Chr(34) & "GVAZ" & Chr(34) & " double precision, tr_cdam_gor_id integer, "
+            theSQL &= Chr(34) & "PortName" & Chr(34) & " varchar, port_id integer);"
+
+            If LoadSQLDataToArray(zoneGVAArray, theSQL) = False Then
+                zoneGVAArray = Nothing
+                Return 0
+            End If
+        End If
+
+        'Get the population for the specified zone
+        For i = 1 To UBound(zoneGVAArray, 1)
+            If CInt(zoneGVAArray(i, 6)) = ZoneID Then
+                Return CDbl(zoneGVAArray(i, 3))
+            End If
+        Next
+
+        'If portid not found then return 0
+        Return 0
+
+    End Function
+
+    Function get_gva_data_by_airportID(ByVal modelrunid As Integer, ByVal year As Integer, ByVal PortID As Integer)
+        Dim theSQL As String = ""
+        Dim InputArray(,) As String = Nothing
+
+        If airGVAArray Is Nothing Then
+            theSQL = "SELECT * FROM cdam_get_economics_data_by_model_run_id_per_tr_gor(" & modelrunid & "," & year & ",'air', 9999) "
+            theSQL &= " AS (scenario_id varchar, year integer," & Chr(34) & "GORName" & Chr(34)
+            theSQL &= " varchar, " & Chr(34) & "GVAZ" & Chr(34) & " double precision, tr_cdam_gor_id integer, "
+            theSQL &= Chr(34) & "PortName" & Chr(34) & " varchar, port_id integer);"
+
+            If LoadSQLDataToArray(airGVAArray, theSQL) = False Then
+                InputArray = Nothing
+                Return 0
+            End If
+        End If
+
+        'Get the population for the specified zone
+        For i = 1 To UBound(airGVAArray, 1)
+            If CInt(airGVAArray(i, 6)) = PortID Then
+                Return CDbl(airGVAArray(i, 3))
+            End If
+        Next
+
+        'If portid not found then return 0
+        Return 0
+
+    End Function
+
+    Function get_gva_data_by_seaportID(ByVal modelrunid As Integer, ByVal year As Integer, ByVal PortID As Integer)
+        Dim theSQL As String = ""
+        Dim i As Integer
+
+        If seaGVAArray Is Nothing Then
+
+            theSQL = "SELECT * FROM cdam_get_economics_data_by_model_run_id_per_tr_gor(" & modelrunid & "," & year & ",'sea',9999) "
+            theSQL &= " AS (scenario_id varchar, year integer," & Chr(34) & "GORName" & Chr(34)
+            theSQL &= " varchar, " & Chr(34) & "GVAZ" & Chr(34) & " double precision, tr_cdam_gor_id integer, "
+            theSQL &= Chr(34) & "PortName" & Chr(34) & " varchar, port_id integer);"
+
+            If LoadSQLDataToArray(seaGVAArray, theSQL) = False Then
+                seaGVAArray = Nothing
+                Return 0
+            End If
+        End If
+
+        'Get the population for the specified zone
+        For i = 1 To UBound(seaGVAArray, 1)
+            If CInt(seaGVAArray(i, 6)) = PortID Then
+                Return CDbl(seaGVAArray(i, 3))
+            End If
+        Next
+
+        'If portid not found then return 0
+        Return 0
+
+    End Function
+
+
+#End Region
     Sub get_zone_by_flowid(ByVal FlowID As Integer, ByRef Zone1ID As Integer, ByRef Zone2ID As Integer)
         Dim theSQL As String = ""
         Dim InputArray(,) As String = Nothing
@@ -1208,6 +1346,7 @@ Module DBaseInterface
             Return True
 
         Catch ex As Exception
+            Stop
             Throw ex
             Return False
         End Try
@@ -1236,15 +1375,12 @@ Module DBaseInterface
                        Optional Connection As String = "") As Boolean
 
         Dim OutFileName As String = "", TempFileName As String = ""
-        Dim TempFile As IO.FileStream
-        Dim TempWrite As StreamWriter
         Dim OutputFile As IO.FileStream
         Dim OutputWrite As StreamWriter
         Dim OutputRead As StreamReader
         Dim Line As String = ""
         Dim ix As Integer, iy As Integer
         Dim header As String
-        Dim tempheader As String
         Dim aryFieldNames As New ArrayList
         Dim aryFieldValues As New ArrayList
         Dim ToSQL As Boolean = False

@@ -176,8 +176,8 @@
             'read the input data for the zone
 
             BaseVkm(ZoneID, 1) = InputArray(ZoneID, 6)
-            ZonePop(ZoneID, 1) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "roadzone", ZoneID)
-            ZoneGVA(ZoneID, 1) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "roadzone", ZoneID)
+            ZonePop(ZoneID, 1) = get_population_data_by_zoneID(modelRunID, modelRunYear, ZoneID)
+            ZoneGVA(ZoneID, 1) = get_gva_data_by_zoneID(modelRunID, modelRunYear, ZoneID)
             ZoneSpeed(ZoneID, 1) = InputArray(ZoneID, 7)
             ZoneCarCost(ZoneID, 1) = InputArray(ZoneID, 8)
             ZoneLGVCost(ZoneID, 1) = InputArray(ZoneID, 20)
@@ -256,17 +256,17 @@
                 BuiltLaneKm(ZoneID, x) = 0
             Next
         Else
-            ZonePop(ZoneID, 1) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "roadzone", ZoneID)
-            ZoneGVA(ZoneID, 1) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "roadzone", ZoneID)
+            ZonePop(ZoneID, 1) = get_population_data_by_zoneID(modelRunID, modelRunYear, ZoneID)
+            ZoneGVA(ZoneID, 1) = get_gva_data_by_zoneID(modelRunID, modelRunYear, ZoneID)
             ZoneSpeed(ZoneID, 1) = CDbl(InputArray(ZoneID, 4))
             BaseVkm(ZoneID, 1) = CDbl(InputArray(ZoneID, 5))
 
             'need a function to pop out values from external variable files from previous year
-            ZoneCarCost(ZoneID, 1) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "roadzone", ZoneID)
-            ZoneLGVCost(ZoneID, 1) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "roadzone", ZoneID)
-            ZoneHGV1Cost(ZoneID, 1) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "roadzone", ZoneID)
-            ZoneHGV2Cost(ZoneID, 1) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "roadzone", ZoneID)
-            ZonePSVCost(ZoneID, 1) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "roadzone", ZoneID)
+            'ZoneCarCost(ZoneID, 1) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "roadzone", ZoneID)
+            'ZoneLGVCost(ZoneID, 1) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "roadzone", ZoneID)
+            'ZoneHGV1Cost(ZoneID, 1) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "roadzone", ZoneID)
+            'ZoneHGV2Cost(ZoneID, 1) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "roadzone", ZoneID)
+            'ZonePSVCost(ZoneID, 1) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "roadzone", ZoneID)
 
             ZoneLaneKm(ZoneID, 1) = ZoneExtVar(ZoneID, 8)
             ZoneLaneKm(ZoneID, 2) = CDbl(ZoneExtVar(ZoneID, 9)) + CDbl(ZoneExtVar(ZoneID, 10))

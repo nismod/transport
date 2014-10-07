@@ -118,15 +118,18 @@
     End Sub
 
     Sub LoadRlZInput()
+        Dim ZoneID As Integer
 
+        'Get ZoneID for the pop and gva functions
+        ZoneID = CInt(InputArray(InputCount, 1))
         'read the input data for the inputarray which is from the database
         If YearCount = 1 Then
             'if it is initial year, read from the initial input
             RlZID(InputCount, 0) = InputArray(InputCount, 4)
             FareE(InputCount, 0) = InputArray(InputCount, 6)
             RlZTripsS(InputCount, 0) = InputArray(InputCount, 7)
-            RlZPop(InputCount, 0) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "railzone", InputCount)
-            RlZGva(InputCount, 0) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "railzone", InputCount)
+            RlZPop(InputCount, 0) = get_population_data_by_zoneID(modelRunID, modelRunYear, ZoneID)
+            RlZGva(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, modelRunYear, ZoneID)
             RlZCost(InputCount, 0) = InputArray(InputCount, 8)
             RlZStat(InputCount, 0) = InputArray(InputCount, 9)
             RlZCarFuel(InputCount, 0) = InputArray(InputCount, 10)
@@ -135,12 +138,12 @@
             'if not year 1, read from the Input file
             RlZID(InputCount, 0) = InputArray(InputCount, 3)
             'needs to create a new function to get cost from the external variable from previous year
-            RlZPop(InputCount, 0) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "railzone", InputCount)
-            RlZGva(InputCount, 0) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "railzone", InputCount)
-            RlZCost(InputCount, 0) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "railzone", InputCount)
-            RlZStat(InputCount, 0) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "railzone", InputCount)
-            RlZCarFuel(InputCount, 0) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "railzone", InputCount)
-            RlZGJT(InputCount, 0) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "railzone", InputCount)
+            RlZPop(InputCount, 0) = get_population_data_by_zoneID(modelRunID, modelRunYear, ZoneID)
+            RlZGva(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, modelRunYear, ZoneID)
+            'RlZCost(InputCount, 0) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "railzone", InputCount)
+            'RlZStat(InputCount, 0) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "railzone", InputCount)
+            'RlZCarFuel(InputCount, 0) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "railzone", InputCount)
+            'RlZGJT(InputCount, 0) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "railzone", InputCount)
             RlZTripsS(InputCount, 0) = InputArray(InputCount, 4)
             FareE(InputCount, 0) = InputArray(InputCount, 5)
 

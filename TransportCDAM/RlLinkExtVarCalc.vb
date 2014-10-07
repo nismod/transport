@@ -275,6 +275,7 @@
         Dim enearray(91, 6) As String
         Dim diecarch, elecarch As Double
         Dim InDieselOldAll, InElectricOldAll, InDieselNewAll, InElectricNewAll
+        Dim Zone1ID As Integer, Zone2ID As Integer
 
 
         'need to set a base value for the diesel fuel cost for this zone
@@ -314,10 +315,10 @@
                     OZone(InputCount, 0) = InputArray(InputCount, 5)
                     DZone(InputCount, 0) = InputArray(InputCount, 6)
                     Tracks(InputCount, 0) = InputArray(InputCount, 7)
-                    Pop1Old(InputCount, 0) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "raillink", InputCount)
-                    Pop2Old(InputCount, 0) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "raillink", InputCount)
-                    GVA1Old(InputCount, 0) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "raillink", InputCount)
-                    GVA2Old(InputCount, 0) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "raillink", InputCount)
+                    Pop1Old(InputCount, 0) = get_population_data_by_zoneID(modelRunID, modelRunYear, Zone1ID)
+                    Pop2Old(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, modelRunYear, Zone1ID)
+                    GVA1Old(InputCount, 0) = get_population_data_by_zoneID(modelRunID, modelRunYear, Zone2ID)
+                    GVA2Old(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, modelRunYear, Zone2ID)
                     CostOld(InputCount, 0) = InputArray(InputCount, 10)
                     FuelOld(InputCount, 0) = InputArray(InputCount, 11)
                     MaxTDOld(InputCount, 0) = InputArray(InputCount, 12)

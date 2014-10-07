@@ -257,9 +257,9 @@
             NodeCount = 1
             Do While NodeCount < 29
                 'pop
-                NodeOldData(NodeCount, 1) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "airnode", NodeCount)
+                NodeOldData(NodeCount, 1) = get_population_data_by_airportID(modelRunID, modelRunYear, NodeCount)
                 'gva
-                NodeOldData(NodeCount, 2) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "airnode", NodeCount)
+                NodeOldData(NodeCount, 2) = get_gva_data_by_airportID(ScenarioID, modelRunYear, NodeCount)
                 'cost
                 NodeOldData(NodeCount, 3) = NodeInputArray(NodeCount, 10) * 0.29
                 airnodefixedcost(NodeCount) = NodeInputArray(NodeCount, 10) * 0.71
@@ -286,10 +286,10 @@
             FlowCount = 1
             Do While FlowCount < 224
                 FlowOldData(FlowCount, 0) = FlowInputArray(FlowCount, 4)
-                FlowOldData(FlowCount, 1) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "airflow", FlowCount)
-                FlowOldData(FlowCount, 2) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "airflow", FlowCount)
-                FlowOldData(FlowCount, 3) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "airflow", FlowCount)
-                FlowOldData(FlowCount, 4) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "airflow", FlowCount)
+                FlowOldData(FlowCount, 1) = get_population_data_by_airportID(ScenarioID, modelRunYear, FlowCount)
+                FlowOldData(FlowCount, 2) = get_population_data_by_airportID(ScenarioID, modelRunYear, FlowCount)
+                FlowOldData(FlowCount, 3) = get_gva_data_by_airportID(ScenarioID, modelRunYear, FlowCount)
+                FlowOldData(FlowCount, 4) = get_gva_data_by_airportID(ScenarioID, modelRunYear, FlowCount)
 
                 FlowOldData(FlowCount, 5) = FlowInputArray(FlowCount, 8) * 0.29
                 airflowfixedcost(FlowCount) = FlowInputArray(FlowCount, 8) * 0.71

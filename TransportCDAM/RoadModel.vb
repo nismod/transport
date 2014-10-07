@@ -406,14 +406,13 @@
 
             'Get Population and GVA data
             get_zone_by_flowid(FlowID(link, 1), Zone1ID, Zone2ID)
-            Z1Pop(link, 1) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "road", Zone1ID)
-            Z2Pop(link, 1) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "road", Zone2ID)
-            Z1GVA(link, 1) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "road", Zone1ID)
-            Z2GVA(link, 1) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "road", Zone2ID)
+            Z1Pop(link, 1) = get_population_data_by_zoneID(modelRunID, modelRunYear, Zone1ID)
+            Z2Pop(link, 1) = get_gva_data_by_zoneID(modelRunID, modelRunYear, Zone1ID)
+            Z1GVA(link, 1) = get_population_data_by_zoneID(modelRunID, modelRunYear, Zone2ID)
+            Z2GVA(link, 1) = get_gva_data_by_zoneID(modelRunID, modelRunYear, Zone2ID)
 
 
-
-                'Old code for inputing Temp RoadLink data from text file 
+            'Old code for inputing Temp RoadLink data from text file 
                 'FlowID(link, 1) = InputArray(link, 1)
                 'RoadTypeLanes(link, 0) = InputArray(link, 2)
                 'RoadTypeLanes(link, 1) = InputArray(link, 3)

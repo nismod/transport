@@ -195,16 +195,18 @@ Module RailModel
     End Sub
 
     Sub LoadRailLinkInput()
+        Dim Zone1ID As Integer
+        Dim Zone2ID As Integer
 
         If YearNum = 1 Then
             'assign values to variables in the order of the initial file
             FlowNum(InputCount, 0) = InputArray(InputCount, 4)
             OldTracks(InputCount, 0) = InputArray(InputCount, 7)
             OldTrains(InputCount, 0) = InputArray(InputCount, 8)
-            PopZ1Base(InputCount, 0) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "raillink", InputCount)
-            PopZ2Base(InputCount, 0) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "raillink", InputCount)
-            GVAZ1Base(InputCount, 0) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "raillink", InputCount)
-            GVAZ2Base(InputCount, 0) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "raillink", InputCount)
+            PopZ1Base(InputCount, 0) = get_population_data_by_zoneID(modelRunID, modelRunYear, Zone1ID)
+            PopZ2Base(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, modelRunYear, Zone1ID)
+            GVAZ1Base(InputCount, 0) = get_population_data_by_zoneID(modelRunID, modelRunYear, Zone2ID)
+            GVAZ2Base(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, modelRunYear, Zone2ID)
             OldDelays(InputCount, 0) = InputArray(InputCount, 9)
             RlLinkCost(InputCount, 0) = InputArray(InputCount, 10)
             CarFuel(InputCount, 0) = InputArray(InputCount, 11)
@@ -222,14 +224,14 @@ Module RailModel
         Else
             'assign values to variables in the order of the temp file
             FlowNum(InputCount, 0) = InputArray(InputCount, 3)
-            PopZ1Base(InputCount, 0) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "raillink", InputCount)
-            PopZ2Base(InputCount, 0) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "raillink", InputCount)
-            GVAZ1Base(InputCount, 0) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "raillink", InputCount)
-            GVAZ2Base(InputCount, 0) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "raillink", InputCount)
+            PopZ1Base(InputCount, 0) = get_population_data_by_zoneID(modelRunID, modelRunYear, Zone1ID)
+            PopZ2Base(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, modelRunYear, Zone1ID)
+            GVAZ1Base(InputCount, 0) = get_population_data_by_zoneID(modelRunID, modelRunYear, Zone1ID)
+            GVAZ2Base(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, modelRunYear, Zone2ID)
             OldDelays(InputCount, 0) = InputArray(InputCount, 4)
             RlLinkCost(InputCount, 0) = InputArray(InputCount, 5)
             'needs to create a new function to get cost from the external variable from previous year
-            CarFuel(InputCount, 0) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "raillink", InputCount)
+            'CarFuel(InputCount, 0) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "raillink", InputCount)
             OldTrains(InputCount, 0) = InputArray(InputCount, 6)
             OldTracks(InputCount, 0) = InputArray(InputCount, 7)
             MaxTDBase(InputCount, 0) = InputArray(InputCount, 8)

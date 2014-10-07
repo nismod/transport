@@ -196,6 +196,7 @@
         Dim newval As Double
         Dim DieselOld, DieselNew As Double
         Dim i As Integer
+        Dim PortID As Integer
 
         'use the data in the database file
         If SeaEneSource = "Database" Then
@@ -227,8 +228,9 @@
                     Next
 
                     'get GORPop and GORGva
-                    PortBaseData(PortCount, 11) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "sea", PortCount)
-                    PortBaseData(PortCount, 12) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "sea", PortCount)
+                    PortID = InputArray(PortCount, 4)
+                    PortBaseData(PortCount, 11) = get_population_data_by_seaportID(modelRunID, modelRunYear, PortID)
+                    PortBaseData(PortCount, 12) = get_gva_data_by_seaportID(modelRunID, modelRunYear, PortID)
                     PortBaseData(PortCount, 13) = InputArray(PortCount, 15)
                     GORID(PortCount, 1) = InputArray(PortCount, 16)
                 End If

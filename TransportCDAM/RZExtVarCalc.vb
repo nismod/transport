@@ -245,8 +245,8 @@
 
         If Year = 1 Then
             ZoneID = InputArray(InputCount, 4)
-            PopOld(ZoneID, 0) = get_population_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "roadzone", InputCount)
-            GVAOld(ZoneID, 0) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "roadzone", InputCount)
+            PopOld(ZoneID, 0) = get_population_data_by_zoneID(modelRunID, modelRunYear, ZoneID)
+            GVAOld(ZoneID, 0) = get_gva_data_by_zoneID(modelRunID, modelRunYear, ZoneID)
             CostOld(ZoneID, 0) = InputArray(InputCount, 8)
             LaneKm(ZoneID, 0) = InputArray(InputCount, 9)
             MLaneKm(ZoneID, 0) = InputArray(InputCount, 10)
