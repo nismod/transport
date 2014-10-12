@@ -277,13 +277,14 @@
                     'if year is after 2093 then no population forecasts are available so assume population remains constant
                     'now modified as population data available up to 2100 - so should never need 'else'
                     If YearNum < 91 Then
-                        keylookup = YearNum & "_" & GORID(PortCount, 1)
-                        If PopYearLookup.TryGetValue(keylookup, newval) Then
-                            PortNewData(PortCount, 6) = newval
-                        Else
-                            ErrorString = "population found in lookup table for zone " & GORID(PortCount, 1) & " in year " & YearNum
-                            Call DictionaryMissingVal()
-                        End If
+                        PortNewData(PortCount, 6) = get_population_data_by_seaportID(modelRunID, YearNum, PortID)
+                        'keylookup = YearNum & "_" & GORID(PortCount, 1)
+                        'If PopYearLookup.TryGetValue(keylookup, newval) Then
+                        '    PortNewData(PortCount, 6) = newval
+                        'Else
+                        '    ErrorString = "population found in lookup table for zone " & GORID(PortCount, 1) & " in year " & YearNum
+                        '    Call DictionaryMissingVal()
+                        'End If
                     Else
                         PortNewData(PortCount, 6) = PortBaseData(PortCount, 11)
                     End If
@@ -297,13 +298,14 @@
                     'if year is after 2050 then no gva forecasts are available so assume gva remains constant
                     'now modified as population data available up to 2100 - so should never need 'else'
                     If YearNum < 91 Then
-                        keylookup = YearNum & "_" & GORID(PortCount, 1)
-                        If EcoYearLookup.TryGetValue(keylookup, newval) Then
-                            PortNewData(PortCount, 7) = newval
-                        Else
-                            ErrorString = "GVA found in lookup table for zone " & GORID(PortCount, 1) & " in year " & YearNum
-                            Call DictionaryMissingVal()
-                        End If
+                        PortNewData(PortCount, 7) = get_gva_data_by_seaportID(modelRunID, YearNum, PortID)
+                        'keylookup = YearNum & "_" & GORID(PortCount, 1)
+                        'If EcoYearLookup.TryGetValue(keylookup, newval) Then
+                        '    PortNewData(PortCount, 7) = newval
+                        'Else
+                        '    ErrorString = "GVA found in lookup table for zone " & GORID(PortCount, 1) & " in year " & YearNum
+                        '    Call DictionaryMissingVal()
+                        'End If
                     Else
                         PortNewData(PortCount, 7) = PortBaseData(PortCount, 12)
                     End If

@@ -146,7 +146,7 @@
             BaseCap(4) = InputArray(InputCount, 13)
             BaseCap(5) = InputArray(InputCount, 14)
             PopBase = get_population_data_by_seaportID(modelRunID, modelRunYear, PortID)
-            GVABase = get_gva_data_by_zoneID(ScenarioID, modelRunYear, PortID)
+            GVABase = get_gva_data_by_seaportID(modelRunID, modelRunYear, PortID)
 
             CostBase = InputArray(InputCount, 15)
             For x = 1 To 5
@@ -166,9 +166,9 @@
             'BaseCap(4) = InputArray(InputCount, 9)
             'BaseCap(5) = InputArray(InputCount, 10)
             PopBase = get_population_data_by_seaportID(modelRunID, modelRunYear, PortID)
-            GVABase = get_gva_data_by_zoneID(ScenarioID, modelRunYear, PortID)
+            GVABase = get_gva_data_by_seaportID(modelRunID, modelRunYear, PortID)
             'needs to create a new function to get cost from the external variable from previous year
-            'CostBase = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "sea", InputCount)
+            CostBase = get_gva_data_by_seaportID(modelRunID, modelRunYear, PortID)
             For x = 1 To 5
                 AddedCap(x) = InputArray(InputCount, 8 + x)
             Next

@@ -26,7 +26,7 @@ Module DBaseInterface
     Dim airGVAArray(,) As String = Nothing
     Dim zoneGVAArray(,) As String = Nothing
 
- 
+
     Sub ConnectToDBase()
         Try
             'If there is no connection to the database then establish one
@@ -835,6 +835,7 @@ Module DBaseInterface
         End Select
     End Sub
 
+    'These Get Population/GVA functions return large amount of data (every zone/flow/port data for the year), which are not necessary. We can either call these function at the start of each year or improve these function to read specified data (Xucheng)
 #Region "...Get Population..."
 
     Function get_population_data_by_airportID(ByVal modelrunid As Integer, ByVal year As Integer, ByVal PortID As Integer)
@@ -867,6 +868,7 @@ Module DBaseInterface
     Function get_population_data_by_zoneID(ByVal modelrunid As Integer, ByVal year As Integer, ByVal ZoneID As Integer)
         Dim theSQL As String = ""
 
+
         If zoneDemogArray Is Nothing Then
             theSQL = "SELECT * FROM cdam_get_population_data_by_population_scenario_od_tr_zone('" & modelrunid & "'," & year & ",9999)" & " WHERE zone_id = " & ZoneID
             theSQL &= "AS (scenario_id varchar, year integer, gender varchar, category varchar, location varchar, value double precision, " & Chr(34)
@@ -894,11 +896,25 @@ Module DBaseInterface
     Function get_population_data_by_seaportID(ByVal modelrunid As Integer, ByVal year As Integer, ByVal PortID As Integer) As Double
         Dim theSQL As String = ""
 
+
         'If the Demographic data has not been loaded then load it for each zone or port.
         If seaDemogArray Is Nothing Then
-            theSQL = "SELECT * FROM cdam_get_population_data_by_model_run_id_per_tr_gor('" & modelrunid & "', " & year & ", 'sea', 9999) "
-            theSQL &= "AS (scenario_id varchar, year integer, gender varchar, category varchar, value double precision, " & Chr(34) & "GORName" & Chr(34) & " varchar, "
-            theSQL &= Chr(34) & "gor_id" & Chr(34) & " integer, " & Chr(34) & "tr_cdam_gor_id" & Chr(34) & " integer, " & Chr(34) & "PortName" & Chr(34) & " varchar, " & Chr(34) & "port_id" & Chr(34) & " integer); "
+
+            'theSQL = "SELECT * FROM cdam_get_population_data_by_model_run_id_per_tr_gor(" & modelrunid & "," & year & ", 'sea', 9999) "
+            'theSQL &= "AS (scenario_id varchar, year integer, gender varchar, category varchar, value double precision, " & Chr(34) & "GORName" & Chr(34) & " varchar, "
+            'theSQL &= "gor_id integer, tr_cdam_gor_id integer, " & Chr(34) & "PortName" & Chr(34) & " varchar, port_id integer);"
+
+            theSQL = "SELECT * FROM cdam_get_population_data_by_model_run_id_per_tr_gor(" & modelrunid & "," & year & ",'sea',9999) "
+            theSQL &= " AS (scenario_id varchar, year integer, gender varchar, category varchar, value double precision, " & Chr(34) & "GORName" & Chr(34)
+            theSQL &= " varchar, gor_id integer, tr_cdam_gor_id integer, "
+            theSQL &= Chr(34) & "PortName" & Chr(34) & " varchar, port_id integer);"
+
+            theSQL = "SELECT * FROM cdam_get_economics_data_by_model_run_id_per_tr_gor(" & modelrunid & "," & year & ",'sea',9999) "
+            theSQL &= " AS (scenario_id varchar, year integer," & Chr(34) & "GORName" & Chr(34)
+            theSQL &= " varchar, " & Chr(34) & "GVAZ" & Chr(34) & " double precision, tr_cdam_gor_id integer, "
+            theSQL &= Chr(34) & "PortName" & Chr(34) & " varchar, port_id integer);"
+
+
             If LoadSQLDataToArray(seaDemogArray, theSQL) = False Then
                 seaDemogArray = Nothing
                 Return 0
@@ -907,7 +923,9 @@ Module DBaseInterface
 
         'Get the population for the specified port
         For i = 1 To UBound(seaDemogArray, 1)
-            If CInt(seaDemogArray(i, 9)) = PortID Then
+            'If CInt(seaDemogArray(i, 9)) = PortID Then
+            If CInt(seaDemogArray(i, 6)) = PortID Then
+
                 Return CDbl(seaDemogArray(i, 4))
             End If
         Next

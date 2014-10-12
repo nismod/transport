@@ -24,8 +24,8 @@ Partial Class MainForm
     Private Sub InitializeComponent()
         Me.components = New System.ComponentModel.Container()
         Dim GroupBox24 As System.Windows.Forms.GroupBox
-        Dim ComboBox30 As System.Windows.Forms.ComboBox
         Me.CheckBox43 = New System.Windows.Forms.CheckBox()
+        Me.ComboBox30 = New System.Windows.Forms.ComboBox()
         Me.Button1 = New System.Windows.Forms.Button()
         Me.Button2 = New System.Windows.Forms.Button()
         Me.GroupBox1 = New System.Windows.Forms.GroupBox()
@@ -236,7 +236,6 @@ Partial Class MainForm
         Me.ExitToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.MainFormBindingSource = New System.Windows.Forms.BindingSource(Me.components)
         GroupBox24 = New System.Windows.Forms.GroupBox()
-        ComboBox30 = New System.Windows.Forms.ComboBox()
         GroupBox24.SuspendLayout()
         Me.GroupBox1.SuspendLayout()
         Me.GroupBox2.SuspendLayout()
@@ -294,15 +293,14 @@ Partial Class MainForm
         '
         'ComboBox30
         '
-        ComboBox30.AutoCompleteCustomSource.AddRange(New String() {"Strategy File"})
-        ComboBox30.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.CustomSource
-        ComboBox30.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        ComboBox30.Items.AddRange(New Object() {"Constant", "Strategy File"})
-        ComboBox30.Location = New System.Drawing.Point(82, 17)
-        ComboBox30.Name = "ComboBox30"
-        ComboBox30.Size = New System.Drawing.Size(93, 21)
-        ComboBox30.TabIndex = 4
-        AddHandler ComboBox30.SelectedIndexChanged, AddressOf Me.ComboBox30_SelectedIndexChanged
+        Me.ComboBox30.AutoCompleteCustomSource.AddRange(New String() {"Strategy File"})
+        Me.ComboBox30.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.CustomSource
+        Me.ComboBox30.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.ComboBox30.Items.AddRange(New Object() {"Constant", "Strategy File"})
+        Me.ComboBox30.Location = New System.Drawing.Point(82, 17)
+        Me.ComboBox30.Name = "ComboBox30"
+        Me.ComboBox30.Size = New System.Drawing.Size(93, 21)
+        Me.ComboBox30.TabIndex = 4
         '
         'Button1
         '
@@ -2350,7 +2348,7 @@ Partial Class MainForm
         '
         'GroupBox22
         '
-        Me.GroupBox22.Controls.Add(ComboBox30)
+        Me.GroupBox22.Controls.Add(Me.ComboBox30)
         Me.GroupBox22.Controls.Add(Me.Label46)
         Me.GroupBox22.Location = New System.Drawing.Point(8, 159)
         Me.GroupBox22.Name = "GroupBox22"
@@ -2452,7 +2450,7 @@ Partial Class MainForm
         Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.FileToolStripMenuItem})
         Me.MenuStrip1.Location = New System.Drawing.Point(0, 0)
         Me.MenuStrip1.Name = "MenuStrip1"
-        Me.MenuStrip1.Size = New System.Drawing.Size(651, 24)
+        Me.MenuStrip1.Size = New System.Drawing.Size(663, 25)
         Me.MenuStrip1.TabIndex = 6
         Me.MenuStrip1.Text = "MenuStrip1"
         '
@@ -2460,25 +2458,25 @@ Partial Class MainForm
         '
         Me.FileToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.OpenControlFileToolStripMenuItem, Me.SaveControlFileToolStripMenuItem, Me.ExitToolStripMenuItem})
         Me.FileToolStripMenuItem.Name = "FileToolStripMenuItem"
-        Me.FileToolStripMenuItem.Size = New System.Drawing.Size(37, 20)
+        Me.FileToolStripMenuItem.Size = New System.Drawing.Size(39, 21)
         Me.FileToolStripMenuItem.Text = "&File"
         '
         'OpenControlFileToolStripMenuItem
         '
         Me.OpenControlFileToolStripMenuItem.Name = "OpenControlFileToolStripMenuItem"
-        Me.OpenControlFileToolStripMenuItem.Size = New System.Drawing.Size(163, 22)
+        Me.OpenControlFileToolStripMenuItem.Size = New System.Drawing.Size(174, 22)
         Me.OpenControlFileToolStripMenuItem.Text = "&Open control file"
         '
         'SaveControlFileToolStripMenuItem
         '
         Me.SaveControlFileToolStripMenuItem.Name = "SaveControlFileToolStripMenuItem"
-        Me.SaveControlFileToolStripMenuItem.Size = New System.Drawing.Size(163, 22)
+        Me.SaveControlFileToolStripMenuItem.Size = New System.Drawing.Size(174, 22)
         Me.SaveControlFileToolStripMenuItem.Text = "&Save control file"
         '
         'ExitToolStripMenuItem
         '
         Me.ExitToolStripMenuItem.Name = "ExitToolStripMenuItem"
-        Me.ExitToolStripMenuItem.Size = New System.Drawing.Size(163, 22)
+        Me.ExitToolStripMenuItem.Size = New System.Drawing.Size(174, 22)
         Me.ExitToolStripMenuItem.Text = "&Exit"
         '
         'MainFormBindingSource
@@ -2764,5 +2762,6 @@ Partial Class MainForm
     Friend WithEvents ComboBox28 As System.Windows.Forms.ComboBox
     Friend WithEvents OpenControlFileToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents TabPage4 As System.Windows.Forms.TabPage
+    Friend WithEvents ComboBox30 As System.Windows.Forms.ComboBox
 
 End Class
