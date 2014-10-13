@@ -900,20 +900,10 @@ Module DBaseInterface
         'If the Demographic data has not been loaded then load it for each zone or port.
         If seaDemogArray Is Nothing Then
 
-            'theSQL = "SELECT * FROM cdam_get_population_data_by_model_run_id_per_tr_gor(" & modelrunid & "," & year & ", 'sea', 9999) "
-            'theSQL &= "AS (scenario_id varchar, year integer, gender varchar, category varchar, value double precision, " & Chr(34) & "GORName" & Chr(34) & " varchar, "
-            'theSQL &= "gor_id integer, tr_cdam_gor_id integer, " & Chr(34) & "PortName" & Chr(34) & " varchar, port_id integer);"
-
             theSQL = "SELECT * FROM cdam_get_population_data_by_model_run_id_per_tr_gor(" & modelrunid & "," & year & ",'sea',9999) "
             theSQL &= " AS (scenario_id varchar, year integer, gender varchar, category varchar, value double precision, " & Chr(34) & "GORName" & Chr(34)
             theSQL &= " varchar, gor_id integer, tr_cdam_gor_id integer, "
             theSQL &= Chr(34) & "PortName" & Chr(34) & " varchar, port_id integer);"
-
-            theSQL = "SELECT * FROM cdam_get_economics_data_by_model_run_id_per_tr_gor(" & modelrunid & "," & year & ",'sea',9999) "
-            theSQL &= " AS (scenario_id varchar, year integer," & Chr(34) & "GORName" & Chr(34)
-            theSQL &= " varchar, " & Chr(34) & "GVAZ" & Chr(34) & " double precision, tr_cdam_gor_id integer, "
-            theSQL &= Chr(34) & "PortName" & Chr(34) & " varchar, port_id integer);"
-
 
             If LoadSQLDataToArray(seaDemogArray, theSQL) = False Then
                 seaDemogArray = Nothing
@@ -923,9 +913,7 @@ Module DBaseInterface
 
         'Get the population for the specified port
         For i = 1 To UBound(seaDemogArray, 1)
-            'If CInt(seaDemogArray(i, 9)) = PortID Then
-            If CInt(seaDemogArray(i, 6)) = PortID Then
-
+            If CInt(seaDemogArray(i, 9)) = PortID Then
                 Return CDbl(seaDemogArray(i, 4))
             End If
         Next
