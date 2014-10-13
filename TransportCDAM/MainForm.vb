@@ -1475,6 +1475,16 @@
             controlstring = "triprate,Strategy"
         End If
         cfs.WriteLine(controlstring)
+        If CheckBox43.Checked = True Then
+            controlstring = "UpdateInput,True"
+        Else
+            controlstring = "UpdateInput,False"
+        End If
+        cfs.WriteLine(controlstring)
+        controlstring = "StartYear," & TextBox39.Text
+        cfs.WriteLine(controlstring)
+        controlstring = "Duration," & TextBox40.Text
+        cfs.WriteLine(controlstring)
         cfs.Close()
     End Sub
 
@@ -2022,6 +2032,16 @@
                     ElseIf controlarray(1) = "Strategy" Then
                         ComboBox30.SelectedItem = "Strategy File"
                     End If
+                Case "UpdateInput"
+                    If controlarray(1) = "True" Then
+                        CheckBox43.Checked = True
+                    Else
+                        CheckBox43.Checked = False
+                    End If
+                Case "StartYear"
+                    TextBox39.Text = controlarray(1)
+                Case " Duration"
+                    TextBox40.Text = controlarray(1)
             End Select
             controlstring = cfo.ReadLine
         Loop
