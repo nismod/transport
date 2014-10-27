@@ -236,38 +236,38 @@ Partial Class MainForm
         Me.ExitToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.MainFormBindingSource = New System.Windows.Forms.BindingSource(Me.components)
         GroupBox24 = New System.Windows.Forms.GroupBox()
-        GroupBox24.SuspendLayout()
-        Me.GroupBox1.SuspendLayout()
-        Me.GroupBox2.SuspendLayout()
-        Me.GroupBox3.SuspendLayout()
-        Me.TabControl1.SuspendLayout()
-        Me.TabPage1.SuspendLayout()
-        Me.GroupBox19.SuspendLayout()
-        Me.GroupBox18.SuspendLayout()
-        Me.GroupBox17.SuspendLayout()
-        Me.GroupBox15.SuspendLayout()
-        Me.GroupBox14.SuspendLayout()
-        Me.GroupBox13.SuspendLayout()
-        Me.GroupBox12.SuspendLayout()
-        Me.GroupBox11.SuspendLayout()
-        Me.GroupBox4.SuspendLayout()
-        Me.TabPage2.SuspendLayout()
-        Me.GroupBox8.SuspendLayout()
-        Me.GroupBox5.SuspendLayout()
-        Me.GroupBox16.SuspendLayout()
-        Me.GroupBox7.SuspendLayout()
-        Me.GroupBox6.SuspendLayout()
-        Me.TabPage3.SuspendLayout()
-        Me.GroupBox10.SuspendLayout()
-        Me.GroupBox9.SuspendLayout()
-        Me.TabPage4.SuspendLayout()
-        Me.GroupBox23.SuspendLayout()
-        Me.GroupBox22.SuspendLayout()
-        Me.GroupBox21.SuspendLayout()
-        Me.GroupBox20.SuspendLayout()
-        Me.MenuStrip1.SuspendLayout()
-        CType(Me.MainFormBindingSource, System.ComponentModel.ISupportInitialize).BeginInit()
-        Me.SuspendLayout()
+        GroupBox24.SuspendLayout
+        Me.GroupBox1.SuspendLayout
+        Me.GroupBox2.SuspendLayout
+        Me.GroupBox3.SuspendLayout
+        Me.TabControl1.SuspendLayout
+        Me.TabPage1.SuspendLayout
+        Me.GroupBox19.SuspendLayout
+        Me.GroupBox18.SuspendLayout
+        Me.GroupBox17.SuspendLayout
+        Me.GroupBox15.SuspendLayout
+        Me.GroupBox14.SuspendLayout
+        Me.GroupBox13.SuspendLayout
+        Me.GroupBox12.SuspendLayout
+        Me.GroupBox11.SuspendLayout
+        Me.GroupBox4.SuspendLayout
+        Me.TabPage2.SuspendLayout
+        Me.GroupBox8.SuspendLayout
+        Me.GroupBox5.SuspendLayout
+        Me.GroupBox16.SuspendLayout
+        Me.GroupBox7.SuspendLayout
+        Me.GroupBox6.SuspendLayout
+        Me.TabPage3.SuspendLayout
+        Me.GroupBox10.SuspendLayout
+        Me.GroupBox9.SuspendLayout
+        Me.TabPage4.SuspendLayout
+        Me.GroupBox23.SuspendLayout
+        Me.GroupBox22.SuspendLayout
+        Me.GroupBox21.SuspendLayout
+        Me.GroupBox20.SuspendLayout
+        Me.MenuStrip1.SuspendLayout
+        CType(Me.MainFormBindingSource,System.ComponentModel.ISupportInitialize).BeginInit
+        Me.SuspendLayout
         '
         'GroupBox24
         '
@@ -276,20 +276,20 @@ Partial Class MainForm
         GroupBox24.Name = "GroupBox24"
         GroupBox24.Size = New System.Drawing.Size(216, 54)
         GroupBox24.TabIndex = 19
-        GroupBox24.TabStop = False
+        GroupBox24.TabStop = false
         GroupBox24.Text = "Update Input"
         '
         'CheckBox43
         '
-        Me.CheckBox43.AutoSize = True
-        Me.CheckBox43.Checked = True
+        Me.CheckBox43.AutoSize = true
+        Me.CheckBox43.Checked = true
         Me.CheckBox43.CheckState = System.Windows.Forms.CheckState.Checked
         Me.CheckBox43.Location = New System.Drawing.Point(16, 31)
         Me.CheckBox43.Name = "CheckBox43"
         Me.CheckBox43.Size = New System.Drawing.Size(169, 17)
         Me.CheckBox43.TabIndex = 1
         Me.CheckBox43.Text = "Update initial year (2010) input"
-        Me.CheckBox43.UseVisualStyleBackColor = True
+        Me.CheckBox43.UseVisualStyleBackColor = true
         '
         'ComboBox30
         '
@@ -309,7 +309,7 @@ Partial Class MainForm
         Me.Button1.Size = New System.Drawing.Size(89, 25)
         Me.Button1.TabIndex = 0
         Me.Button1.Text = "Run Model"
-        Me.Button1.UseVisualStyleBackColor = True
+        Me.Button1.UseVisualStyleBackColor = true
         '
         'Button2
         '
@@ -318,7 +318,7 @@ Partial Class MainForm
         Me.Button2.Size = New System.Drawing.Size(92, 25)
         Me.Button2.TabIndex = 1
         Me.Button2.Text = "Cancel"
-        Me.Button2.UseVisualStyleBackColor = True
+        Me.Button2.UseVisualStyleBackColor = true
         '
         'GroupBox1
         '
@@ -332,68 +332,68 @@ Partial Class MainForm
         Me.GroupBox1.Name = "GroupBox1"
         Me.GroupBox1.Size = New System.Drawing.Size(205, 164)
         Me.GroupBox1.TabIndex = 2
-        Me.GroupBox1.TabStop = False
+        Me.GroupBox1.TabStop = false
         Me.GroupBox1.Text = "Select model elements"
         '
         'CheckBox6
         '
-        Me.CheckBox6.AutoSize = True
+        Me.CheckBox6.AutoSize = true
         Me.CheckBox6.Location = New System.Drawing.Point(14, 138)
         Me.CheckBox6.Name = "CheckBox6"
         Me.CheckBox6.Size = New System.Drawing.Size(68, 17)
         Me.CheckBox6.TabIndex = 5
         Me.CheckBox6.Text = "Seaports"
-        Me.CheckBox6.UseVisualStyleBackColor = True
+        Me.CheckBox6.UseVisualStyleBackColor = true
         '
         'CheckBox5
         '
-        Me.CheckBox5.AutoSize = True
+        Me.CheckBox5.AutoSize = true
         Me.CheckBox5.Location = New System.Drawing.Point(14, 115)
         Me.CheckBox5.Name = "CheckBox5"
         Me.CheckBox5.Size = New System.Drawing.Size(61, 17)
         Me.CheckBox5.TabIndex = 4
         Me.CheckBox5.Text = "Airports"
-        Me.CheckBox5.UseVisualStyleBackColor = True
+        Me.CheckBox5.UseVisualStyleBackColor = true
         '
         'CheckBox4
         '
-        Me.CheckBox4.AutoSize = True
+        Me.CheckBox4.AutoSize = true
         Me.CheckBox4.Location = New System.Drawing.Point(14, 92)
         Me.CheckBox4.Name = "CheckBox4"
         Me.CheckBox4.Size = New System.Drawing.Size(75, 17)
         Me.CheckBox4.TabIndex = 3
         Me.CheckBox4.Text = "Rail zones"
-        Me.CheckBox4.UseVisualStyleBackColor = True
+        Me.CheckBox4.UseVisualStyleBackColor = true
         '
         'CheckBox3
         '
-        Me.CheckBox3.AutoSize = True
+        Me.CheckBox3.AutoSize = true
         Me.CheckBox3.Location = New System.Drawing.Point(14, 69)
         Me.CheckBox3.Name = "CheckBox3"
         Me.CheckBox3.Size = New System.Drawing.Size(68, 17)
         Me.CheckBox3.TabIndex = 2
         Me.CheckBox3.Text = "Rail links"
-        Me.CheckBox3.UseVisualStyleBackColor = True
+        Me.CheckBox3.UseVisualStyleBackColor = true
         '
         'CheckBox2
         '
-        Me.CheckBox2.AutoSize = True
+        Me.CheckBox2.AutoSize = true
         Me.CheckBox2.Location = New System.Drawing.Point(14, 46)
         Me.CheckBox2.Name = "CheckBox2"
         Me.CheckBox2.Size = New System.Drawing.Size(83, 17)
         Me.CheckBox2.TabIndex = 1
         Me.CheckBox2.Text = "Road zones"
-        Me.CheckBox2.UseVisualStyleBackColor = True
+        Me.CheckBox2.UseVisualStyleBackColor = true
         '
         'CheckBox1
         '
-        Me.CheckBox1.AutoSize = True
+        Me.CheckBox1.AutoSize = true
         Me.CheckBox1.Location = New System.Drawing.Point(14, 23)
         Me.CheckBox1.Name = "CheckBox1"
         Me.CheckBox1.Size = New System.Drawing.Size(76, 17)
         Me.CheckBox1.TabIndex = 0
         Me.CheckBox1.Text = "Road links"
-        Me.CheckBox1.UseVisualStyleBackColor = True
+        Me.CheckBox1.UseVisualStyleBackColor = true
         '
         'GroupBox2
         '
@@ -402,7 +402,7 @@ Partial Class MainForm
         Me.GroupBox2.Name = "GroupBox2"
         Me.GroupBox2.Size = New System.Drawing.Size(205, 48)
         Me.GroupBox2.TabIndex = 3
-        Me.GroupBox2.TabStop = False
+        Me.GroupBox2.TabStop = false
         Me.GroupBox2.Text = "Set location of model files"
         '
         'folderPath
@@ -412,7 +412,7 @@ Partial Class MainForm
         Me.folderPath.Size = New System.Drawing.Size(87, 26)
         Me.folderPath.TabIndex = 0
         Me.folderPath.Text = "Select folder..."
-        Me.folderPath.UseVisualStyleBackColor = True
+        Me.folderPath.UseVisualStyleBackColor = true
         '
         'GroupBox3
         '
@@ -421,7 +421,7 @@ Partial Class MainForm
         Me.GroupBox3.Name = "GroupBox3"
         Me.GroupBox3.Size = New System.Drawing.Size(205, 48)
         Me.GroupBox3.TabIndex = 4
-        Me.GroupBox3.TabStop = False
+        Me.GroupBox3.TabStop = false
         Me.GroupBox3.Text = "Enter prefix for output files"
         '
         'TextBox1
@@ -465,7 +465,7 @@ Partial Class MainForm
         Me.TabPage1.Size = New System.Drawing.Size(642, 531)
         Me.TabPage1.TabIndex = 0
         Me.TabPage1.Text = "Model"
-        Me.TabPage1.UseVisualStyleBackColor = True
+        Me.TabPage1.UseVisualStyleBackColor = true
         '
         'GroupBox19
         '
@@ -480,13 +480,13 @@ Partial Class MainForm
         Me.GroupBox19.Name = "GroupBox19"
         Me.GroupBox19.Size = New System.Drawing.Size(203, 123)
         Me.GroupBox19.TabIndex = 16
-        Me.GroupBox19.TabStop = False
+        Me.GroupBox19.TabStop = false
         Me.GroupBox19.Text = "Urban freight"
         '
         'Label29
         '
-        Me.Label29.AutoSize = True
-        Me.Label29.Enabled = False
+        Me.Label29.AutoSize = true
+        Me.Label29.Enabled = false
         Me.Label29.Location = New System.Drawing.Point(42, 95)
         Me.Label29.Name = "Label29"
         Me.Label29.Size = New System.Drawing.Size(100, 13)
@@ -495,7 +495,7 @@ Partial Class MainForm
         '
         'TextBox24
         '
-        Me.TextBox24.Enabled = False
+        Me.TextBox24.Enabled = false
         Me.TextBox24.Location = New System.Drawing.Point(7, 92)
         Me.TextBox24.Name = "TextBox24"
         Me.TextBox24.Size = New System.Drawing.Size(29, 20)
@@ -503,8 +503,8 @@ Partial Class MainForm
         '
         'Label30
         '
-        Me.Label30.AutoSize = True
-        Me.Label30.Enabled = False
+        Me.Label30.AutoSize = true
+        Me.Label30.Enabled = false
         Me.Label30.Location = New System.Drawing.Point(42, 69)
         Me.Label30.Name = "Label30"
         Me.Label30.Size = New System.Drawing.Size(135, 13)
@@ -513,7 +513,7 @@ Partial Class MainForm
         '
         'TextBox25
         '
-        Me.TextBox25.Enabled = False
+        Me.TextBox25.Enabled = false
         Me.TextBox25.Location = New System.Drawing.Point(7, 66)
         Me.TextBox25.Name = "TextBox25"
         Me.TextBox25.Size = New System.Drawing.Size(29, 20)
@@ -521,8 +521,8 @@ Partial Class MainForm
         '
         'Label31
         '
-        Me.Label31.AutoSize = True
-        Me.Label31.Enabled = False
+        Me.Label31.AutoSize = true
+        Me.Label31.Enabled = false
         Me.Label31.Location = New System.Drawing.Point(42, 42)
         Me.Label31.Name = "Label31"
         Me.Label31.Size = New System.Drawing.Size(99, 13)
@@ -531,7 +531,7 @@ Partial Class MainForm
         '
         'TextBox26
         '
-        Me.TextBox26.Enabled = False
+        Me.TextBox26.Enabled = false
         Me.TextBox26.Location = New System.Drawing.Point(7, 39)
         Me.TextBox26.Name = "TextBox26"
         Me.TextBox26.Size = New System.Drawing.Size(29, 20)
@@ -539,13 +539,13 @@ Partial Class MainForm
         '
         'CheckBox40
         '
-        Me.CheckBox40.AutoSize = True
+        Me.CheckBox40.AutoSize = true
         Me.CheckBox40.Location = New System.Drawing.Point(7, 16)
         Me.CheckBox40.Name = "CheckBox40"
         Me.CheckBox40.Size = New System.Drawing.Size(144, 17)
         Me.CheckBox40.TabIndex = 0
         Me.CheckBox40.Text = "Urban freight innovations"
-        Me.CheckBox40.UseVisualStyleBackColor = True
+        Me.CheckBox40.UseVisualStyleBackColor = true
         '
         'GroupBox18
         '
@@ -560,13 +560,13 @@ Partial Class MainForm
         Me.GroupBox18.Name = "GroupBox18"
         Me.GroupBox18.Size = New System.Drawing.Size(203, 123)
         Me.GroupBox18.TabIndex = 15
-        Me.GroupBox18.TabStop = False
+        Me.GroupBox18.TabStop = false
         Me.GroupBox18.Text = "Smart logistics"
         '
         'Label26
         '
-        Me.Label26.AutoSize = True
-        Me.Label26.Enabled = False
+        Me.Label26.AutoSize = true
+        Me.Label26.Enabled = false
         Me.Label26.Location = New System.Drawing.Point(42, 95)
         Me.Label26.Name = "Label26"
         Me.Label26.Size = New System.Drawing.Size(100, 13)
@@ -575,7 +575,7 @@ Partial Class MainForm
         '
         'TextBox21
         '
-        Me.TextBox21.Enabled = False
+        Me.TextBox21.Enabled = false
         Me.TextBox21.Location = New System.Drawing.Point(7, 92)
         Me.TextBox21.Name = "TextBox21"
         Me.TextBox21.Size = New System.Drawing.Size(29, 20)
@@ -583,8 +583,8 @@ Partial Class MainForm
         '
         'Label27
         '
-        Me.Label27.AutoSize = True
-        Me.Label27.Enabled = False
+        Me.Label27.AutoSize = true
+        Me.Label27.Enabled = false
         Me.Label27.Location = New System.Drawing.Point(42, 69)
         Me.Label27.Name = "Label27"
         Me.Label27.Size = New System.Drawing.Size(135, 13)
@@ -593,7 +593,7 @@ Partial Class MainForm
         '
         'TextBox22
         '
-        Me.TextBox22.Enabled = False
+        Me.TextBox22.Enabled = false
         Me.TextBox22.Location = New System.Drawing.Point(7, 66)
         Me.TextBox22.Name = "TextBox22"
         Me.TextBox22.Size = New System.Drawing.Size(29, 20)
@@ -601,8 +601,8 @@ Partial Class MainForm
         '
         'Label28
         '
-        Me.Label28.AutoSize = True
-        Me.Label28.Enabled = False
+        Me.Label28.AutoSize = true
+        Me.Label28.Enabled = false
         Me.Label28.Location = New System.Drawing.Point(42, 42)
         Me.Label28.Name = "Label28"
         Me.Label28.Size = New System.Drawing.Size(99, 13)
@@ -611,7 +611,7 @@ Partial Class MainForm
         '
         'TextBox23
         '
-        Me.TextBox23.Enabled = False
+        Me.TextBox23.Enabled = false
         Me.TextBox23.Location = New System.Drawing.Point(7, 39)
         Me.TextBox23.Name = "TextBox23"
         Me.TextBox23.Size = New System.Drawing.Size(29, 20)
@@ -619,13 +619,13 @@ Partial Class MainForm
         '
         'CheckBox39
         '
-        Me.CheckBox39.AutoSize = True
+        Me.CheckBox39.AutoSize = true
         Me.CheckBox39.Location = New System.Drawing.Point(7, 16)
         Me.CheckBox39.Name = "CheckBox39"
         Me.CheckBox39.Size = New System.Drawing.Size(93, 17)
         Me.CheckBox39.TabIndex = 0
         Me.CheckBox39.Text = "Smart logistics"
-        Me.CheckBox39.UseVisualStyleBackColor = True
+        Me.CheckBox39.UseVisualStyleBackColor = true
         '
         'GroupBox17
         '
@@ -640,13 +640,13 @@ Partial Class MainForm
         Me.GroupBox17.Name = "GroupBox17"
         Me.GroupBox17.Size = New System.Drawing.Size(203, 123)
         Me.GroupBox17.TabIndex = 11
-        Me.GroupBox17.TabStop = False
+        Me.GroupBox17.TabStop = false
         Me.GroupBox17.Text = "Smarter choices"
         '
         'Label25
         '
-        Me.Label25.AutoSize = True
-        Me.Label25.Enabled = False
+        Me.Label25.AutoSize = true
+        Me.Label25.Enabled = false
         Me.Label25.Location = New System.Drawing.Point(42, 95)
         Me.Label25.Name = "Label25"
         Me.Label25.Size = New System.Drawing.Size(100, 13)
@@ -655,7 +655,7 @@ Partial Class MainForm
         '
         'TextBox20
         '
-        Me.TextBox20.Enabled = False
+        Me.TextBox20.Enabled = false
         Me.TextBox20.Location = New System.Drawing.Point(7, 92)
         Me.TextBox20.Name = "TextBox20"
         Me.TextBox20.Size = New System.Drawing.Size(29, 20)
@@ -663,8 +663,8 @@ Partial Class MainForm
         '
         'Label24
         '
-        Me.Label24.AutoSize = True
-        Me.Label24.Enabled = False
+        Me.Label24.AutoSize = true
+        Me.Label24.Enabled = false
         Me.Label24.Location = New System.Drawing.Point(42, 69)
         Me.Label24.Name = "Label24"
         Me.Label24.Size = New System.Drawing.Size(97, 13)
@@ -673,7 +673,7 @@ Partial Class MainForm
         '
         'TextBox19
         '
-        Me.TextBox19.Enabled = False
+        Me.TextBox19.Enabled = false
         Me.TextBox19.Location = New System.Drawing.Point(7, 66)
         Me.TextBox19.Name = "TextBox19"
         Me.TextBox19.Size = New System.Drawing.Size(29, 20)
@@ -681,8 +681,8 @@ Partial Class MainForm
         '
         'Label23
         '
-        Me.Label23.AutoSize = True
-        Me.Label23.Enabled = False
+        Me.Label23.AutoSize = true
+        Me.Label23.Enabled = false
         Me.Label23.Location = New System.Drawing.Point(42, 42)
         Me.Label23.Name = "Label23"
         Me.Label23.Size = New System.Drawing.Size(99, 13)
@@ -691,7 +691,7 @@ Partial Class MainForm
         '
         'TextBox18
         '
-        Me.TextBox18.Enabled = False
+        Me.TextBox18.Enabled = false
         Me.TextBox18.Location = New System.Drawing.Point(7, 39)
         Me.TextBox18.Name = "TextBox18"
         Me.TextBox18.Size = New System.Drawing.Size(29, 20)
@@ -699,13 +699,13 @@ Partial Class MainForm
         '
         'CheckBox38
         '
-        Me.CheckBox38.AutoSize = True
+        Me.CheckBox38.AutoSize = true
         Me.CheckBox38.Location = New System.Drawing.Point(7, 16)
         Me.CheckBox38.Name = "CheckBox38"
         Me.CheckBox38.Size = New System.Drawing.Size(172, 17)
         Me.CheckBox38.TabIndex = 0
         Me.CheckBox38.Text = "Smarter choices in urban areas"
-        Me.CheckBox38.UseVisualStyleBackColor = True
+        Me.CheckBox38.UseVisualStyleBackColor = true
         '
         'GroupBox15
         '
@@ -721,13 +721,13 @@ Partial Class MainForm
         Me.GroupBox15.Name = "GroupBox15"
         Me.GroupBox15.Size = New System.Drawing.Size(203, 137)
         Me.GroupBox15.TabIndex = 10
-        Me.GroupBox15.TabStop = False
+        Me.GroupBox15.TabStop = false
         Me.GroupBox15.Text = "Air charging"
         '
         'Label37
         '
-        Me.Label37.AutoSize = True
-        Me.Label37.Enabled = False
+        Me.Label37.AutoSize = true
+        Me.Label37.Enabled = false
         Me.Label37.Location = New System.Drawing.Point(39, 115)
         Me.Label37.Name = "Label37"
         Me.Label37.Size = New System.Drawing.Size(99, 13)
@@ -736,7 +736,7 @@ Partial Class MainForm
         '
         'TextBox32
         '
-        Me.TextBox32.Enabled = False
+        Me.TextBox32.Enabled = false
         Me.TextBox32.Location = New System.Drawing.Point(6, 112)
         Me.TextBox32.Name = "TextBox32"
         Me.TextBox32.Size = New System.Drawing.Size(29, 20)
@@ -744,18 +744,18 @@ Partial Class MainForm
         '
         'CheckBox42
         '
-        Me.CheckBox42.AutoSize = True
+        Me.CheckBox42.AutoSize = true
         Me.CheckBox42.Location = New System.Drawing.Point(10, 92)
         Me.CheckBox42.Name = "CheckBox42"
         Me.CheckBox42.Size = New System.Drawing.Size(104, 17)
         Me.CheckBox42.TabIndex = 18
         Me.CheckBox42.Text = "Emissions-based"
-        Me.CheckBox42.UseVisualStyleBackColor = True
+        Me.CheckBox42.UseVisualStyleBackColor = true
         '
         'Label36
         '
-        Me.Label36.AutoSize = True
-        Me.Label36.Enabled = False
+        Me.Label36.AutoSize = true
+        Me.Label36.Enabled = false
         Me.Label36.Location = New System.Drawing.Point(43, 42)
         Me.Label36.Name = "Label36"
         Me.Label36.Size = New System.Drawing.Size(99, 13)
@@ -764,7 +764,7 @@ Partial Class MainForm
         '
         'TextBox31
         '
-        Me.TextBox31.Enabled = False
+        Me.TextBox31.Enabled = false
         Me.TextBox31.Location = New System.Drawing.Point(10, 39)
         Me.TextBox31.Name = "TextBox31"
         Me.TextBox31.Size = New System.Drawing.Size(29, 20)
@@ -772,8 +772,8 @@ Partial Class MainForm
         '
         'Label21
         '
-        Me.Label21.AutoSize = True
-        Me.Label21.Enabled = False
+        Me.Label21.AutoSize = true
+        Me.Label21.Enabled = false
         Me.Label21.Location = New System.Drawing.Point(45, 68)
         Me.Label21.Name = "Label21"
         Me.Label21.Size = New System.Drawing.Size(96, 13)
@@ -782,7 +782,7 @@ Partial Class MainForm
         '
         'TextBox16
         '
-        Me.TextBox16.Enabled = False
+        Me.TextBox16.Enabled = false
         Me.TextBox16.Location = New System.Drawing.Point(10, 65)
         Me.TextBox16.Name = "TextBox16"
         Me.TextBox16.Size = New System.Drawing.Size(29, 20)
@@ -790,13 +790,13 @@ Partial Class MainForm
         '
         'CheckBox35
         '
-        Me.CheckBox35.AutoSize = True
+        Me.CheckBox35.AutoSize = true
         Me.CheckBox35.Location = New System.Drawing.Point(10, 20)
         Me.CheckBox35.Name = "CheckBox35"
         Me.CheckBox35.Size = New System.Drawing.Size(111, 17)
         Me.CheckBox35.TabIndex = 0
         Me.CheckBox35.Text = "Congestion-based"
-        Me.CheckBox35.UseVisualStyleBackColor = True
+        Me.CheckBox35.UseVisualStyleBackColor = true
         '
         'GroupBox14
         '
@@ -812,13 +812,13 @@ Partial Class MainForm
         Me.GroupBox14.Name = "GroupBox14"
         Me.GroupBox14.Size = New System.Drawing.Size(204, 132)
         Me.GroupBox14.TabIndex = 9
-        Me.GroupBox14.TabStop = False
+        Me.GroupBox14.TabStop = false
         Me.GroupBox14.Text = "Rail charging"
         '
         'Label35
         '
-        Me.Label35.AutoSize = True
-        Me.Label35.Enabled = False
+        Me.Label35.AutoSize = true
+        Me.Label35.Enabled = false
         Me.Label35.Location = New System.Drawing.Point(39, 109)
         Me.Label35.Name = "Label35"
         Me.Label35.Size = New System.Drawing.Size(99, 13)
@@ -827,7 +827,7 @@ Partial Class MainForm
         '
         'TextBox30
         '
-        Me.TextBox30.Enabled = False
+        Me.TextBox30.Enabled = false
         Me.TextBox30.Location = New System.Drawing.Point(6, 106)
         Me.TextBox30.Name = "TextBox30"
         Me.TextBox30.Size = New System.Drawing.Size(29, 20)
@@ -835,18 +835,18 @@ Partial Class MainForm
         '
         'CheckBox41
         '
-        Me.CheckBox41.AutoSize = True
+        Me.CheckBox41.AutoSize = true
         Me.CheckBox41.Location = New System.Drawing.Point(6, 83)
         Me.CheckBox41.Name = "CheckBox41"
         Me.CheckBox41.Size = New System.Drawing.Size(104, 17)
         Me.CheckBox41.TabIndex = 15
         Me.CheckBox41.Text = "Emissions-based"
-        Me.CheckBox41.UseVisualStyleBackColor = True
+        Me.CheckBox41.UseVisualStyleBackColor = true
         '
         'Label34
         '
-        Me.Label34.AutoSize = True
-        Me.Label34.Enabled = False
+        Me.Label34.AutoSize = true
+        Me.Label34.Enabled = false
         Me.Label34.Location = New System.Drawing.Point(39, 42)
         Me.Label34.Name = "Label34"
         Me.Label34.Size = New System.Drawing.Size(99, 13)
@@ -855,8 +855,8 @@ Partial Class MainForm
         '
         'Label20
         '
-        Me.Label20.AutoSize = True
-        Me.Label20.Enabled = False
+        Me.Label20.AutoSize = true
+        Me.Label20.Enabled = false
         Me.Label20.Location = New System.Drawing.Point(37, 66)
         Me.Label20.Name = "Label20"
         Me.Label20.Size = New System.Drawing.Size(116, 13)
@@ -865,7 +865,7 @@ Partial Class MainForm
         '
         'TextBox29
         '
-        Me.TextBox29.Enabled = False
+        Me.TextBox29.Enabled = false
         Me.TextBox29.Location = New System.Drawing.Point(6, 39)
         Me.TextBox29.Name = "TextBox29"
         Me.TextBox29.Size = New System.Drawing.Size(29, 20)
@@ -873,7 +873,7 @@ Partial Class MainForm
         '
         'TextBox15
         '
-        Me.TextBox15.Enabled = False
+        Me.TextBox15.Enabled = false
         Me.TextBox15.Location = New System.Drawing.Point(6, 63)
         Me.TextBox15.Name = "TextBox15"
         Me.TextBox15.Size = New System.Drawing.Size(29, 20)
@@ -881,13 +881,13 @@ Partial Class MainForm
         '
         'CheckBox34
         '
-        Me.CheckBox34.AutoSize = True
+        Me.CheckBox34.AutoSize = true
         Me.CheckBox34.Location = New System.Drawing.Point(7, 16)
         Me.CheckBox34.Name = "CheckBox34"
         Me.CheckBox34.Size = New System.Drawing.Size(111, 17)
         Me.CheckBox34.TabIndex = 0
         Me.CheckBox34.Text = "Congestion-based"
-        Me.CheckBox34.UseVisualStyleBackColor = True
+        Me.CheckBox34.UseVisualStyleBackColor = true
         '
         'GroupBox13
         '
@@ -908,13 +908,13 @@ Partial Class MainForm
         Me.GroupBox13.Name = "GroupBox13"
         Me.GroupBox13.Size = New System.Drawing.Size(204, 208)
         Me.GroupBox13.TabIndex = 8
-        Me.GroupBox13.TabStop = False
+        Me.GroupBox13.TabStop = false
         Me.GroupBox13.Text = "Road charging"
         '
         'Label33
         '
-        Me.Label33.AutoSize = True
-        Me.Label33.Enabled = False
+        Me.Label33.AutoSize = true
+        Me.Label33.Enabled = false
         Me.Label33.Location = New System.Drawing.Point(39, 41)
         Me.Label33.Name = "Label33"
         Me.Label33.Size = New System.Drawing.Size(99, 13)
@@ -923,7 +923,7 @@ Partial Class MainForm
         '
         'TextBox28
         '
-        Me.TextBox28.Enabled = False
+        Me.TextBox28.Enabled = false
         Me.TextBox28.Location = New System.Drawing.Point(6, 38)
         Me.TextBox28.Name = "TextBox28"
         Me.TextBox28.Size = New System.Drawing.Size(29, 20)
@@ -931,8 +931,8 @@ Partial Class MainForm
         '
         'Label32
         '
-        Me.Label32.AutoSize = True
-        Me.Label32.Enabled = False
+        Me.Label32.AutoSize = true
+        Me.Label32.Enabled = false
         Me.Label32.Location = New System.Drawing.Point(39, 114)
         Me.Label32.Name = "Label32"
         Me.Label32.Size = New System.Drawing.Size(99, 13)
@@ -941,7 +941,7 @@ Partial Class MainForm
         '
         'TextBox27
         '
-        Me.TextBox27.Enabled = False
+        Me.TextBox27.Enabled = false
         Me.TextBox27.Location = New System.Drawing.Point(6, 111)
         Me.TextBox27.Name = "TextBox27"
         Me.TextBox27.Size = New System.Drawing.Size(29, 20)
@@ -949,8 +949,8 @@ Partial Class MainForm
         '
         'Label19
         '
-        Me.Label19.AutoSize = True
-        Me.Label19.Enabled = False
+        Me.Label19.AutoSize = true
+        Me.Label19.Enabled = false
         Me.Label19.Location = New System.Drawing.Point(39, 186)
         Me.Label19.Name = "Label19"
         Me.Label19.Size = New System.Drawing.Size(81, 13)
@@ -959,7 +959,7 @@ Partial Class MainForm
         '
         'TextBox14
         '
-        Me.TextBox14.Enabled = False
+        Me.TextBox14.Enabled = false
         Me.TextBox14.Location = New System.Drawing.Point(6, 183)
         Me.TextBox14.Name = "TextBox14"
         Me.TextBox14.Size = New System.Drawing.Size(29, 20)
@@ -967,8 +967,8 @@ Partial Class MainForm
         '
         'Label18
         '
-        Me.Label18.AutoSize = True
-        Me.Label18.Enabled = False
+        Me.Label18.AutoSize = true
+        Me.Label18.Enabled = false
         Me.Label18.Location = New System.Drawing.Point(39, 160)
         Me.Label18.Name = "Label18"
         Me.Label18.Size = New System.Drawing.Size(99, 13)
@@ -977,7 +977,7 @@ Partial Class MainForm
         '
         'TextBox13
         '
-        Me.TextBox13.Enabled = False
+        Me.TextBox13.Enabled = false
         Me.TextBox13.Location = New System.Drawing.Point(6, 157)
         Me.TextBox13.Name = "TextBox13"
         Me.TextBox13.Size = New System.Drawing.Size(29, 20)
@@ -985,28 +985,28 @@ Partial Class MainForm
         '
         'CheckBox33
         '
-        Me.CheckBox33.AutoSize = True
+        Me.CheckBox33.AutoSize = true
         Me.CheckBox33.Location = New System.Drawing.Point(7, 138)
         Me.CheckBox33.Name = "CheckBox33"
         Me.CheckBox33.Size = New System.Drawing.Size(138, 17)
         Me.CheckBox33.TabIndex = 4
         Me.CheckBox33.Text = "Workplace parking levy"
-        Me.CheckBox33.UseVisualStyleBackColor = True
+        Me.CheckBox33.UseVisualStyleBackColor = true
         '
         'CheckBox32
         '
-        Me.CheckBox32.AutoSize = True
+        Me.CheckBox32.AutoSize = true
         Me.CheckBox32.Location = New System.Drawing.Point(8, 89)
         Me.CheckBox32.Name = "CheckBox32"
         Me.CheckBox32.Size = New System.Drawing.Size(104, 17)
         Me.CheckBox32.TabIndex = 3
         Me.CheckBox32.Text = "Emissions-based"
-        Me.CheckBox32.UseVisualStyleBackColor = True
+        Me.CheckBox32.UseVisualStyleBackColor = true
         '
         'Label17
         '
-        Me.Label17.AutoSize = True
-        Me.Label17.Enabled = False
+        Me.Label17.AutoSize = true
+        Me.Label17.Enabled = false
         Me.Label17.Location = New System.Drawing.Point(41, 65)
         Me.Label17.Name = "Label17"
         Me.Label17.Size = New System.Drawing.Size(98, 13)
@@ -1015,7 +1015,7 @@ Partial Class MainForm
         '
         'TextBox12
         '
-        Me.TextBox12.Enabled = False
+        Me.TextBox12.Enabled = false
         Me.TextBox12.Location = New System.Drawing.Point(6, 62)
         Me.TextBox12.Name = "TextBox12"
         Me.TextBox12.Size = New System.Drawing.Size(29, 20)
@@ -1023,13 +1023,13 @@ Partial Class MainForm
         '
         'CheckBox31
         '
-        Me.CheckBox31.AutoSize = True
+        Me.CheckBox31.AutoSize = true
         Me.CheckBox31.Location = New System.Drawing.Point(8, 19)
         Me.CheckBox31.Name = "CheckBox31"
         Me.CheckBox31.Size = New System.Drawing.Size(111, 17)
         Me.CheckBox31.TabIndex = 0
         Me.CheckBox31.Text = "Congestion-based"
-        Me.CheckBox31.UseVisualStyleBackColor = True
+        Me.CheckBox31.UseVisualStyleBackColor = true
         '
         'GroupBox12
         '
@@ -1040,13 +1040,13 @@ Partial Class MainForm
         Me.GroupBox12.Name = "GroupBox12"
         Me.GroupBox12.Size = New System.Drawing.Size(204, 70)
         Me.GroupBox12.TabIndex = 7
-        Me.GroupBox12.TabStop = False
+        Me.GroupBox12.TabStop = false
         Me.GroupBox12.Text = "Elasticities"
         '
         'Label16
         '
-        Me.Label16.AutoSize = True
-        Me.Label16.Enabled = False
+        Me.Label16.AutoSize = true
+        Me.Label16.Enabled = false
         Me.Label16.Location = New System.Drawing.Point(77, 44)
         Me.Label16.Name = "Label16"
         Me.Label16.Size = New System.Drawing.Size(78, 13)
@@ -1064,13 +1064,13 @@ Partial Class MainForm
         '
         'CheckBox30
         '
-        Me.CheckBox30.AutoSize = True
+        Me.CheckBox30.AutoSize = true
         Me.CheckBox30.Location = New System.Drawing.Point(14, 19)
         Me.CheckBox30.Name = "CheckBox30"
         Me.CheckBox30.Size = New System.Drawing.Size(142, 17)
         Me.CheckBox30.TabIndex = 0
         Me.CheckBox30.Text = "Use variable elasticities?"
-        Me.CheckBox30.UseVisualStyleBackColor = True
+        Me.CheckBox30.UseVisualStyleBackColor = true
         '
         'GroupBox11
         '
@@ -1081,13 +1081,13 @@ Partial Class MainForm
         Me.GroupBox11.Name = "GroupBox11"
         Me.GroupBox11.Size = New System.Drawing.Size(203, 73)
         Me.GroupBox11.TabIndex = 6
-        Me.GroupBox11.TabStop = False
+        Me.GroupBox11.TabStop = false
         Me.GroupBox11.Text = "New infrastructure"
         '
         'Label15
         '
-        Me.Label15.AutoSize = True
-        Me.Label15.Enabled = False
+        Me.Label15.AutoSize = true
+        Me.Label15.Enabled = false
         Me.Label15.Location = New System.Drawing.Point(77, 47)
         Me.Label15.Name = "Label15"
         Me.Label15.Size = New System.Drawing.Size(102, 13)
@@ -1096,7 +1096,7 @@ Partial Class MainForm
         '
         'TextBox10
         '
-        Me.TextBox10.Enabled = False
+        Me.TextBox10.Enabled = false
         Me.TextBox10.Location = New System.Drawing.Point(13, 44)
         Me.TextBox10.Name = "TextBox10"
         Me.TextBox10.Size = New System.Drawing.Size(60, 20)
@@ -1106,13 +1106,13 @@ Partial Class MainForm
         '
         'CheckBox29
         '
-        Me.CheckBox29.AutoSize = True
+        Me.CheckBox29.AutoSize = true
         Me.CheckBox29.Location = New System.Drawing.Point(13, 21)
         Me.CheckBox29.Name = "CheckBox29"
         Me.CheckBox29.Size = New System.Drawing.Size(179, 17)
         Me.CheckBox29.TabIndex = 0
         Me.CheckBox29.Text = "Automatically add infrastructure?"
-        Me.CheckBox29.UseVisualStyleBackColor = True
+        Me.CheckBox29.UseVisualStyleBackColor = true
         '
         'GroupBox4
         '
@@ -1124,12 +1124,12 @@ Partial Class MainForm
         Me.GroupBox4.Name = "GroupBox4"
         Me.GroupBox4.Size = New System.Drawing.Size(204, 129)
         Me.GroupBox4.TabIndex = 5
-        Me.GroupBox4.TabStop = False
+        Me.GroupBox4.TabStop = false
         Me.GroupBox4.Text = "External Variable Files"
         '
         'ComboBox27
         '
-        Me.ComboBox27.FormattingEnabled = True
+        Me.ComboBox27.FormattingEnabled = true
         Me.ComboBox27.Items.AddRange(New Object() {"TR0: Decline and Decay", "TR1: Predict and Provide", "TR2: Cost and Constrain", "TR3: Adapting the Fleet", "TR4: Promo-Pricing", "TR5: Connected Grid", "TR6: Smarter Choices"})
         Me.ComboBox27.Location = New System.Drawing.Point(8, 99)
         Me.ComboBox27.Name = "ComboBox27"
@@ -1139,7 +1139,7 @@ Partial Class MainForm
         '
         'Label1
         '
-        Me.Label1.AutoSize = True
+        Me.Label1.AutoSize = true
         Me.Label1.Location = New System.Drawing.Point(115, 71)
         Me.Label1.Name = "Label1"
         Me.Label1.Size = New System.Drawing.Size(87, 13)
@@ -1155,7 +1155,7 @@ Partial Class MainForm
         '
         'ListBox1
         '
-        Me.ListBox1.FormattingEnabled = True
+        Me.ListBox1.FormattingEnabled = true
         Me.ListBox1.Items.AddRange(New Object() {"Create new external variable files", "Add infrastructure to existing files", "Use existing files"})
         Me.ListBox1.Location = New System.Drawing.Point(8, 19)
         Me.ListBox1.Name = "ListBox1"
@@ -1176,7 +1176,7 @@ Partial Class MainForm
         Me.TabPage2.Size = New System.Drawing.Size(642, 531)
         Me.TabPage2.TabIndex = 1
         Me.TabPage2.Text = "External Variable Files"
-        Me.TabPage2.UseVisualStyleBackColor = True
+        Me.TabPage2.UseVisualStyleBackColor = true
         '
         'GroupBox8
         '
@@ -1188,27 +1188,27 @@ Partial Class MainForm
         Me.GroupBox8.Controls.Add(Me.CheckBox22)
         Me.GroupBox8.Controls.Add(Me.CheckBox23)
         Me.GroupBox8.Controls.Add(Me.CheckBox24)
-        Me.GroupBox8.Enabled = False
+        Me.GroupBox8.Enabled = false
         Me.GroupBox8.Location = New System.Drawing.Point(6, 351)
         Me.GroupBox8.Name = "GroupBox8"
         Me.GroupBox8.Size = New System.Drawing.Size(420, 68)
         Me.GroupBox8.TabIndex = 6
-        Me.GroupBox8.TabStop = False
+        Me.GroupBox8.TabStop = false
         Me.GroupBox8.Text = "Add new infrastructure to existing files"
         '
         'CheckBox19
         '
-        Me.CheckBox19.AutoSize = True
+        Me.CheckBox19.AutoSize = true
         Me.CheckBox19.Location = New System.Drawing.Point(8, 19)
         Me.CheckBox19.Name = "CheckBox19"
         Me.CheckBox19.Size = New System.Drawing.Size(76, 17)
         Me.CheckBox19.TabIndex = 5
         Me.CheckBox19.Text = "Road links"
-        Me.CheckBox19.UseVisualStyleBackColor = True
+        Me.CheckBox19.UseVisualStyleBackColor = true
         '
         'Label4
         '
-        Me.Label4.AutoSize = True
+        Me.Label4.AutoSize = true
         Me.Label4.Location = New System.Drawing.Point(360, 43)
         Me.Label4.Name = "Label4"
         Me.Label4.Size = New System.Drawing.Size(51, 13)
@@ -1217,13 +1217,13 @@ Partial Class MainForm
         '
         'CheckBox20
         '
-        Me.CheckBox20.AutoSize = True
+        Me.CheckBox20.AutoSize = true
         Me.CheckBox20.Location = New System.Drawing.Point(8, 43)
         Me.CheckBox20.Name = "CheckBox20"
         Me.CheckBox20.Size = New System.Drawing.Size(83, 17)
         Me.CheckBox20.TabIndex = 4
         Me.CheckBox20.Text = "Road zones"
-        Me.CheckBox20.UseVisualStyleBackColor = True
+        Me.CheckBox20.UseVisualStyleBackColor = true
         '
         'TextBox5
         '
@@ -1234,43 +1234,43 @@ Partial Class MainForm
         '
         'CheckBox21
         '
-        Me.CheckBox21.AutoSize = True
+        Me.CheckBox21.AutoSize = true
         Me.CheckBox21.Location = New System.Drawing.Point(95, 19)
         Me.CheckBox21.Name = "CheckBox21"
         Me.CheckBox21.Size = New System.Drawing.Size(68, 17)
         Me.CheckBox21.TabIndex = 3
         Me.CheckBox21.Text = "Rail links"
-        Me.CheckBox21.UseVisualStyleBackColor = True
+        Me.CheckBox21.UseVisualStyleBackColor = true
         '
         'CheckBox22
         '
-        Me.CheckBox22.AutoSize = True
+        Me.CheckBox22.AutoSize = true
         Me.CheckBox22.Location = New System.Drawing.Point(95, 42)
         Me.CheckBox22.Name = "CheckBox22"
         Me.CheckBox22.Size = New System.Drawing.Size(75, 17)
         Me.CheckBox22.TabIndex = 2
         Me.CheckBox22.Text = "Rail zones"
-        Me.CheckBox22.UseVisualStyleBackColor = True
+        Me.CheckBox22.UseVisualStyleBackColor = true
         '
         'CheckBox23
         '
-        Me.CheckBox23.AutoSize = True
+        Me.CheckBox23.AutoSize = true
         Me.CheckBox23.Location = New System.Drawing.Point(178, 19)
         Me.CheckBox23.Name = "CheckBox23"
         Me.CheckBox23.Size = New System.Drawing.Size(61, 17)
         Me.CheckBox23.TabIndex = 1
         Me.CheckBox23.Text = "Airports"
-        Me.CheckBox23.UseVisualStyleBackColor = True
+        Me.CheckBox23.UseVisualStyleBackColor = true
         '
         'CheckBox24
         '
-        Me.CheckBox24.AutoSize = True
+        Me.CheckBox24.AutoSize = true
         Me.CheckBox24.Location = New System.Drawing.Point(178, 43)
         Me.CheckBox24.Name = "CheckBox24"
         Me.CheckBox24.Size = New System.Drawing.Size(68, 17)
         Me.CheckBox24.TabIndex = 0
         Me.CheckBox24.Text = "Seaports"
-        Me.CheckBox24.UseVisualStyleBackColor = True
+        Me.CheckBox24.UseVisualStyleBackColor = true
         '
         'Button6
         '
@@ -1279,7 +1279,7 @@ Partial Class MainForm
         Me.Button6.Size = New System.Drawing.Size(143, 34)
         Me.Button6.TabIndex = 4
         Me.Button6.Text = "Add infrastructure to existing files and run model"
-        Me.Button6.UseVisualStyleBackColor = True
+        Me.Button6.UseVisualStyleBackColor = true
         '
         'Button5
         '
@@ -1288,7 +1288,7 @@ Partial Class MainForm
         Me.Button5.Size = New System.Drawing.Size(143, 34)
         Me.Button5.TabIndex = 3
         Me.Button5.Text = "Add infrastructure to existing files"
-        Me.Button5.UseVisualStyleBackColor = True
+        Me.Button5.UseVisualStyleBackColor = true
         '
         'Button4
         '
@@ -1297,7 +1297,7 @@ Partial Class MainForm
         Me.Button4.Size = New System.Drawing.Size(143, 34)
         Me.Button4.TabIndex = 2
         Me.Button4.Text = "Create external variable files and run model"
-        Me.Button4.UseVisualStyleBackColor = True
+        Me.Button4.UseVisualStyleBackColor = true
         '
         'Button3
         '
@@ -1306,19 +1306,19 @@ Partial Class MainForm
         Me.Button3.Size = New System.Drawing.Size(143, 34)
         Me.Button3.TabIndex = 1
         Me.Button3.Text = "Create external variable files"
-        Me.Button3.UseVisualStyleBackColor = True
+        Me.Button3.UseVisualStyleBackColor = true
         '
         'GroupBox5
         '
         Me.GroupBox5.Controls.Add(Me.GroupBox16)
         Me.GroupBox5.Controls.Add(Me.GroupBox7)
         Me.GroupBox5.Controls.Add(Me.GroupBox6)
-        Me.GroupBox5.Enabled = False
+        Me.GroupBox5.Enabled = false
         Me.GroupBox5.Location = New System.Drawing.Point(6, 7)
         Me.GroupBox5.Name = "GroupBox5"
         Me.GroupBox5.Size = New System.Drawing.Size(502, 338)
         Me.GroupBox5.TabIndex = 0
-        Me.GroupBox5.TabStop = False
+        Me.GroupBox5.TabStop = false
         Me.GroupBox5.Text = "New files"
         '
         'GroupBox16
@@ -1330,13 +1330,13 @@ Partial Class MainForm
         Me.GroupBox16.Name = "GroupBox16"
         Me.GroupBox16.Size = New System.Drawing.Size(167, 69)
         Me.GroupBox16.TabIndex = 4
-        Me.GroupBox16.TabStop = False
+        Me.GroupBox16.TabStop = false
         Me.GroupBox16.Text = "Rail electrification"
         '
         'Label22
         '
-        Me.Label22.AutoSize = True
-        Me.Label22.Enabled = False
+        Me.Label22.AutoSize = true
+        Me.Label22.Enabled = false
         Me.Label22.Location = New System.Drawing.Point(68, 45)
         Me.Label22.Name = "Label22"
         Me.Label22.Size = New System.Drawing.Size(93, 13)
@@ -1345,7 +1345,7 @@ Partial Class MainForm
         '
         'TextBox17
         '
-        Me.TextBox17.Enabled = False
+        Me.TextBox17.Enabled = false
         Me.TextBox17.Location = New System.Drawing.Point(6, 42)
         Me.TextBox17.Name = "TextBox17"
         Me.TextBox17.Size = New System.Drawing.Size(59, 20)
@@ -1354,13 +1354,13 @@ Partial Class MainForm
         '
         'CheckBox36
         '
-        Me.CheckBox36.AutoSize = True
+        Me.CheckBox36.AutoSize = true
         Me.CheckBox36.Location = New System.Drawing.Point(7, 19)
         Me.CheckBox36.Name = "CheckBox36"
         Me.CheckBox36.Size = New System.Drawing.Size(126, 17)
         Me.CheckBox36.TabIndex = 0
         Me.CheckBox36.Text = "Include electrification"
-        Me.CheckBox36.UseVisualStyleBackColor = True
+        Me.CheckBox36.UseVisualStyleBackColor = true
         '
         'GroupBox7
         '
@@ -1386,13 +1386,13 @@ Partial Class MainForm
         Me.GroupBox7.Name = "GroupBox7"
         Me.GroupBox7.Size = New System.Drawing.Size(250, 209)
         Me.GroupBox7.TabIndex = 3
-        Me.GroupBox7.TabStop = False
+        Me.GroupBox7.TabStop = false
         Me.GroupBox7.Text = "Add new infrastructure"
         '
         'Label42
         '
-        Me.Label42.AutoSize = True
-        Me.Label42.Enabled = False
+        Me.Label42.AutoSize = true
+        Me.Label42.Enabled = false
         Me.Label42.Location = New System.Drawing.Point(149, 139)
         Me.Label42.Name = "Label42"
         Me.Label42.Size = New System.Drawing.Size(93, 13)
@@ -1401,7 +1401,7 @@ Partial Class MainForm
         '
         'TextBox37
         '
-        Me.TextBox37.Enabled = False
+        Me.TextBox37.Enabled = false
         Me.TextBox37.Location = New System.Drawing.Point(90, 136)
         Me.TextBox37.Name = "TextBox37"
         Me.TextBox37.Size = New System.Drawing.Size(57, 20)
@@ -1409,8 +1409,8 @@ Partial Class MainForm
         '
         'Label41
         '
-        Me.Label41.AutoSize = True
-        Me.Label41.Enabled = False
+        Me.Label41.AutoSize = true
+        Me.Label41.Enabled = false
         Me.Label41.Location = New System.Drawing.Point(149, 116)
         Me.Label41.Name = "Label41"
         Me.Label41.Size = New System.Drawing.Size(92, 13)
@@ -1419,7 +1419,7 @@ Partial Class MainForm
         '
         'TextBox36
         '
-        Me.TextBox36.Enabled = False
+        Me.TextBox36.Enabled = false
         Me.TextBox36.Location = New System.Drawing.Point(90, 113)
         Me.TextBox36.Name = "TextBox36"
         Me.TextBox36.Size = New System.Drawing.Size(57, 20)
@@ -1427,8 +1427,8 @@ Partial Class MainForm
         '
         'Label40
         '
-        Me.Label40.AutoSize = True
-        Me.Label40.Enabled = False
+        Me.Label40.AutoSize = true
+        Me.Label40.Enabled = false
         Me.Label40.Location = New System.Drawing.Point(149, 69)
         Me.Label40.Name = "Label40"
         Me.Label40.Size = New System.Drawing.Size(81, 13)
@@ -1437,7 +1437,7 @@ Partial Class MainForm
         '
         'TextBox35
         '
-        Me.TextBox35.Enabled = False
+        Me.TextBox35.Enabled = false
         Me.TextBox35.Location = New System.Drawing.Point(90, 66)
         Me.TextBox35.Name = "TextBox35"
         Me.TextBox35.Size = New System.Drawing.Size(57, 20)
@@ -1445,8 +1445,8 @@ Partial Class MainForm
         '
         'Label39
         '
-        Me.Label39.AutoSize = True
-        Me.Label39.Enabled = False
+        Me.Label39.AutoSize = true
+        Me.Label39.Enabled = false
         Me.Label39.Location = New System.Drawing.Point(149, 21)
         Me.Label39.Name = "Label39"
         Me.Label39.Size = New System.Drawing.Size(77, 13)
@@ -1455,7 +1455,7 @@ Partial Class MainForm
         '
         'TextBox34
         '
-        Me.TextBox34.Enabled = False
+        Me.TextBox34.Enabled = false
         Me.TextBox34.Location = New System.Drawing.Point(90, 18)
         Me.TextBox34.Name = "TextBox34"
         Me.TextBox34.Size = New System.Drawing.Size(57, 20)
@@ -1463,8 +1463,8 @@ Partial Class MainForm
         '
         'Label38
         '
-        Me.Label38.AutoSize = True
-        Me.Label38.Enabled = False
+        Me.Label38.AutoSize = true
+        Me.Label38.Enabled = false
         Me.Label38.Location = New System.Drawing.Point(149, 162)
         Me.Label38.Name = "Label38"
         Me.Label38.Size = New System.Drawing.Size(84, 13)
@@ -1473,7 +1473,7 @@ Partial Class MainForm
         '
         'TextBox33
         '
-        Me.TextBox33.Enabled = False
+        Me.TextBox33.Enabled = false
         Me.TextBox33.Location = New System.Drawing.Point(90, 159)
         Me.TextBox33.Name = "TextBox33"
         Me.TextBox33.Size = New System.Drawing.Size(57, 20)
@@ -1481,7 +1481,7 @@ Partial Class MainForm
         '
         'Label3
         '
-        Me.Label3.AutoSize = True
+        Me.Label3.AutoSize = true
         Me.Label3.Location = New System.Drawing.Point(149, 185)
         Me.Label3.Name = "Label3"
         Me.Label3.Size = New System.Drawing.Size(51, 13)
@@ -1490,14 +1490,14 @@ Partial Class MainForm
         '
         'CheckBox18
         '
-        Me.CheckBox18.AutoSize = True
-        Me.CheckBox18.Enabled = False
+        Me.CheckBox18.AutoSize = true
+        Me.CheckBox18.Enabled = false
         Me.CheckBox18.Location = New System.Drawing.Point(7, 160)
         Me.CheckBox18.Name = "CheckBox18"
         Me.CheckBox18.Size = New System.Drawing.Size(68, 17)
         Me.CheckBox18.TabIndex = 5
         Me.CheckBox18.Text = "Seaports"
-        Me.CheckBox18.UseVisualStyleBackColor = True
+        Me.CheckBox18.UseVisualStyleBackColor = true
         '
         'TextBox4
         '
@@ -1508,58 +1508,58 @@ Partial Class MainForm
         '
         'CheckBox17
         '
-        Me.CheckBox17.AutoSize = True
-        Me.CheckBox17.Enabled = False
+        Me.CheckBox17.AutoSize = true
+        Me.CheckBox17.Enabled = false
         Me.CheckBox17.Location = New System.Drawing.Point(7, 115)
         Me.CheckBox17.Name = "CheckBox17"
         Me.CheckBox17.Size = New System.Drawing.Size(61, 17)
         Me.CheckBox17.TabIndex = 4
         Me.CheckBox17.Text = "Airports"
-        Me.CheckBox17.UseVisualStyleBackColor = True
+        Me.CheckBox17.UseVisualStyleBackColor = true
         '
         'CheckBox16
         '
-        Me.CheckBox16.AutoSize = True
-        Me.CheckBox16.Enabled = False
+        Me.CheckBox16.AutoSize = true
+        Me.CheckBox16.Enabled = false
         Me.CheckBox16.Location = New System.Drawing.Point(7, 91)
         Me.CheckBox16.Name = "CheckBox16"
         Me.CheckBox16.Size = New System.Drawing.Size(75, 17)
         Me.CheckBox16.TabIndex = 3
         Me.CheckBox16.Text = "Rail zones"
-        Me.CheckBox16.UseVisualStyleBackColor = True
+        Me.CheckBox16.UseVisualStyleBackColor = true
         '
         'CheckBox15
         '
-        Me.CheckBox15.AutoSize = True
-        Me.CheckBox15.Enabled = False
+        Me.CheckBox15.AutoSize = true
+        Me.CheckBox15.Enabled = false
         Me.CheckBox15.Location = New System.Drawing.Point(7, 68)
         Me.CheckBox15.Name = "CheckBox15"
         Me.CheckBox15.Size = New System.Drawing.Size(68, 17)
         Me.CheckBox15.TabIndex = 2
         Me.CheckBox15.Text = "Rail links"
-        Me.CheckBox15.UseVisualStyleBackColor = True
+        Me.CheckBox15.UseVisualStyleBackColor = true
         '
         'CheckBox14
         '
-        Me.CheckBox14.AutoSize = True
-        Me.CheckBox14.Enabled = False
+        Me.CheckBox14.AutoSize = true
+        Me.CheckBox14.Enabled = false
         Me.CheckBox14.Location = New System.Drawing.Point(7, 44)
         Me.CheckBox14.Name = "CheckBox14"
         Me.CheckBox14.Size = New System.Drawing.Size(83, 17)
         Me.CheckBox14.TabIndex = 1
         Me.CheckBox14.Text = "Road zones"
-        Me.CheckBox14.UseVisualStyleBackColor = True
+        Me.CheckBox14.UseVisualStyleBackColor = true
         '
         'CheckBox13
         '
-        Me.CheckBox13.AutoSize = True
-        Me.CheckBox13.Enabled = False
+        Me.CheckBox13.AutoSize = true
+        Me.CheckBox13.Enabled = false
         Me.CheckBox13.Location = New System.Drawing.Point(7, 20)
         Me.CheckBox13.Name = "CheckBox13"
         Me.CheckBox13.Size = New System.Drawing.Size(76, 17)
         Me.CheckBox13.TabIndex = 0
         Me.CheckBox13.Text = "Road links"
-        Me.CheckBox13.UseVisualStyleBackColor = True
+        Me.CheckBox13.UseVisualStyleBackColor = true
         '
         'GroupBox6
         '
@@ -1581,7 +1581,7 @@ Partial Class MainForm
         Me.GroupBox6.Name = "GroupBox6"
         Me.GroupBox6.Size = New System.Drawing.Size(231, 190)
         Me.GroupBox6.TabIndex = 0
-        Me.GroupBox6.TabStop = False
+        Me.GroupBox6.TabStop = false
         Me.GroupBox6.Text = "Create files"
         '
         'ComboBox6
@@ -1589,7 +1589,7 @@ Partial Class MainForm
         Me.ComboBox6.AutoCompleteCustomSource.AddRange(New String() {"Scaling constant", "Input file"})
         Me.ComboBox6.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems
         Me.ComboBox6.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        Me.ComboBox6.FormattingEnabled = True
+        Me.ComboBox6.FormattingEnabled = true
         Me.ComboBox6.Items.AddRange(New Object() {"Scaling constant", "Input file", "Database input"})
         Me.ComboBox6.Location = New System.Drawing.Point(104, 135)
         Me.ComboBox6.Name = "ComboBox6"
@@ -1601,7 +1601,7 @@ Partial Class MainForm
         Me.ComboBox5.AutoCompleteCustomSource.AddRange(New String() {"Scaling constant", "Input file"})
         Me.ComboBox5.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems
         Me.ComboBox5.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        Me.ComboBox5.FormattingEnabled = True
+        Me.ComboBox5.FormattingEnabled = true
         Me.ComboBox5.Items.AddRange(New Object() {"Scaling constant", "Input file", "Database input"})
         Me.ComboBox5.Location = New System.Drawing.Point(104, 111)
         Me.ComboBox5.Name = "ComboBox5"
@@ -1613,7 +1613,7 @@ Partial Class MainForm
         Me.ComboBox4.AutoCompleteCustomSource.AddRange(New String() {"Scaling constant", "Input file"})
         Me.ComboBox4.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems
         Me.ComboBox4.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        Me.ComboBox4.FormattingEnabled = True
+        Me.ComboBox4.FormattingEnabled = true
         Me.ComboBox4.Items.AddRange(New Object() {"Scaling constant", "Input file", "Database input"})
         Me.ComboBox4.Location = New System.Drawing.Point(104, 40)
         Me.ComboBox4.Name = "ComboBox4"
@@ -1625,7 +1625,7 @@ Partial Class MainForm
         Me.ComboBox3.AutoCompleteCustomSource.AddRange(New String() {"Scaling constant", "Input file"})
         Me.ComboBox3.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems
         Me.ComboBox3.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        Me.ComboBox3.FormattingEnabled = True
+        Me.ComboBox3.FormattingEnabled = true
         Me.ComboBox3.Items.AddRange(New Object() {"Scaling constant", "Input file", "Database input"})
         Me.ComboBox3.Location = New System.Drawing.Point(104, 16)
         Me.ComboBox3.Name = "ComboBox3"
@@ -1637,7 +1637,7 @@ Partial Class MainForm
         Me.ComboBox2.AutoCompleteCustomSource.AddRange(New String() {"Scaling constant", "Input file"})
         Me.ComboBox2.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems
         Me.ComboBox2.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        Me.ComboBox2.FormattingEnabled = True
+        Me.ComboBox2.FormattingEnabled = true
         Me.ComboBox2.Items.AddRange(New Object() {"Scaling constant", "Input file", "Database input"})
         Me.ComboBox2.Location = New System.Drawing.Point(104, 63)
         Me.ComboBox2.Name = "ComboBox2"
@@ -1649,7 +1649,7 @@ Partial Class MainForm
         Me.ComboBox1.AutoCompleteCustomSource.AddRange(New String() {"Scaling constant", "Input file"})
         Me.ComboBox1.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems
         Me.ComboBox1.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        Me.ComboBox1.FormattingEnabled = True
+        Me.ComboBox1.FormattingEnabled = true
         Me.ComboBox1.Items.AddRange(New Object() {"Scaling constant", "Input file", "Database input"})
         Me.ComboBox1.Location = New System.Drawing.Point(104, 87)
         Me.ComboBox1.Name = "ComboBox1"
@@ -1658,17 +1658,17 @@ Partial Class MainForm
         '
         'CheckBox12
         '
-        Me.CheckBox12.AutoSize = True
+        Me.CheckBox12.AutoSize = true
         Me.CheckBox12.Location = New System.Drawing.Point(7, 139)
         Me.CheckBox12.Name = "CheckBox12"
         Me.CheckBox12.Size = New System.Drawing.Size(68, 17)
         Me.CheckBox12.TabIndex = 5
         Me.CheckBox12.Text = "Seaports"
-        Me.CheckBox12.UseVisualStyleBackColor = True
+        Me.CheckBox12.UseVisualStyleBackColor = true
         '
         'Label2
         '
-        Me.Label2.AutoSize = True
+        Me.Label2.AutoSize = true
         Me.Label2.Location = New System.Drawing.Point(111, 165)
         Me.Label2.Name = "Label2"
         Me.Label2.Size = New System.Drawing.Size(51, 13)
@@ -1677,13 +1677,13 @@ Partial Class MainForm
         '
         'CheckBox11
         '
-        Me.CheckBox11.AutoSize = True
+        Me.CheckBox11.AutoSize = true
         Me.CheckBox11.Location = New System.Drawing.Point(7, 115)
         Me.CheckBox11.Name = "CheckBox11"
         Me.CheckBox11.Size = New System.Drawing.Size(61, 17)
         Me.CheckBox11.TabIndex = 4
         Me.CheckBox11.Text = "Airports"
-        Me.CheckBox11.UseVisualStyleBackColor = True
+        Me.CheckBox11.UseVisualStyleBackColor = true
         '
         'TextBox3
         '
@@ -1694,43 +1694,43 @@ Partial Class MainForm
         '
         'CheckBox10
         '
-        Me.CheckBox10.AutoSize = True
+        Me.CheckBox10.AutoSize = true
         Me.CheckBox10.Location = New System.Drawing.Point(7, 91)
         Me.CheckBox10.Name = "CheckBox10"
         Me.CheckBox10.Size = New System.Drawing.Size(75, 17)
         Me.CheckBox10.TabIndex = 3
         Me.CheckBox10.Text = "Rail zones"
-        Me.CheckBox10.UseVisualStyleBackColor = True
+        Me.CheckBox10.UseVisualStyleBackColor = true
         '
         'CheckBox9
         '
-        Me.CheckBox9.AutoSize = True
+        Me.CheckBox9.AutoSize = true
         Me.CheckBox9.Location = New System.Drawing.Point(7, 67)
         Me.CheckBox9.Name = "CheckBox9"
         Me.CheckBox9.Size = New System.Drawing.Size(68, 17)
         Me.CheckBox9.TabIndex = 2
         Me.CheckBox9.Text = "Rail links"
-        Me.CheckBox9.UseVisualStyleBackColor = True
+        Me.CheckBox9.UseVisualStyleBackColor = true
         '
         'CheckBox8
         '
-        Me.CheckBox8.AutoSize = True
+        Me.CheckBox8.AutoSize = true
         Me.CheckBox8.Location = New System.Drawing.Point(7, 43)
         Me.CheckBox8.Name = "CheckBox8"
         Me.CheckBox8.Size = New System.Drawing.Size(83, 17)
         Me.CheckBox8.TabIndex = 1
         Me.CheckBox8.Text = "Road zones"
-        Me.CheckBox8.UseVisualStyleBackColor = True
+        Me.CheckBox8.UseVisualStyleBackColor = true
         '
         'CheckBox7
         '
-        Me.CheckBox7.AutoSize = True
+        Me.CheckBox7.AutoSize = true
         Me.CheckBox7.Location = New System.Drawing.Point(7, 20)
         Me.CheckBox7.Name = "CheckBox7"
         Me.CheckBox7.Size = New System.Drawing.Size(76, 17)
         Me.CheckBox7.TabIndex = 0
         Me.CheckBox7.Text = "Road links"
-        Me.CheckBox7.UseVisualStyleBackColor = True
+        Me.CheckBox7.UseVisualStyleBackColor = true
         '
         'TabPage3
         '
@@ -1742,7 +1742,7 @@ Partial Class MainForm
         Me.TabPage3.Size = New System.Drawing.Size(642, 531)
         Me.TabPage3.TabIndex = 2
         Me.TabPage3.Text = "Database Input"
-        Me.TabPage3.UseVisualStyleBackColor = True
+        Me.TabPage3.UseVisualStyleBackColor = true
         '
         'GroupBox10
         '
@@ -1780,7 +1780,7 @@ Partial Class MainForm
         Me.GroupBox10.Name = "GroupBox10"
         Me.GroupBox10.Size = New System.Drawing.Size(413, 206)
         Me.GroupBox10.TabIndex = 1
-        Me.GroupBox10.TabStop = False
+        Me.GroupBox10.TabStop = false
         Me.GroupBox10.Text = "Select source for other inputs"
         '
         'ComboBox26
@@ -1788,7 +1788,7 @@ Partial Class MainForm
         Me.ComboBox26.AutoCompleteCustomSource.AddRange(New String() {"Scaling constant", "Input file"})
         Me.ComboBox26.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems
         Me.ComboBox26.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        Me.ComboBox26.FormattingEnabled = True
+        Me.ComboBox26.FormattingEnabled = true
         Me.ComboBox26.Items.AddRange(New Object() {"File", "None"})
         Me.ComboBox26.Location = New System.Drawing.Point(320, 120)
         Me.ComboBox26.Name = "ComboBox26"
@@ -1797,7 +1797,7 @@ Partial Class MainForm
         '
         'Label14
         '
-        Me.Label14.AutoSize = True
+        Me.Label14.AutoSize = true
         Me.Label14.Location = New System.Drawing.Point(317, 23)
         Me.Label14.Name = "Label14"
         Me.Label14.Size = New System.Drawing.Size(33, 13)
@@ -1809,7 +1809,7 @@ Partial Class MainForm
         Me.ComboBox25.AutoCompleteCustomSource.AddRange(New String() {"Scaling constant", "Input file"})
         Me.ComboBox25.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems
         Me.ComboBox25.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        Me.ComboBox25.FormattingEnabled = True
+        Me.ComboBox25.FormattingEnabled = true
         Me.ComboBox25.Items.AddRange(New Object() {"File", "None"})
         Me.ComboBox25.Location = New System.Drawing.Point(320, 93)
         Me.ComboBox25.Name = "ComboBox25"
@@ -1821,7 +1821,7 @@ Partial Class MainForm
         Me.ComboBox24.AutoCompleteCustomSource.AddRange(New String() {"Scaling constant", "Input file"})
         Me.ComboBox24.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems
         Me.ComboBox24.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        Me.ComboBox24.FormattingEnabled = True
+        Me.ComboBox24.FormattingEnabled = true
         Me.ComboBox24.Items.AddRange(New Object() {"Constant", "File"})
         Me.ComboBox24.Location = New System.Drawing.Point(237, 174)
         Me.ComboBox24.Name = "ComboBox24"
@@ -1833,7 +1833,7 @@ Partial Class MainForm
         Me.ComboBox23.AutoCompleteCustomSource.AddRange(New String() {"Scaling constant", "Input file"})
         Me.ComboBox23.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems
         Me.ComboBox23.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        Me.ComboBox23.FormattingEnabled = True
+        Me.ComboBox23.FormattingEnabled = true
         Me.ComboBox23.Items.AddRange(New Object() {"Constant", "File"})
         Me.ComboBox23.Location = New System.Drawing.Point(154, 174)
         Me.ComboBox23.Name = "ComboBox23"
@@ -1845,7 +1845,7 @@ Partial Class MainForm
         Me.ComboBox22.AutoCompleteCustomSource.AddRange(New String() {"Scaling constant", "Input file"})
         Me.ComboBox22.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems
         Me.ComboBox22.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        Me.ComboBox22.FormattingEnabled = True
+        Me.ComboBox22.FormattingEnabled = true
         Me.ComboBox22.Items.AddRange(New Object() {"Constant", "File"})
         Me.ComboBox22.Location = New System.Drawing.Point(71, 174)
         Me.ComboBox22.Name = "ComboBox22"
@@ -1854,7 +1854,7 @@ Partial Class MainForm
         '
         'Label13
         '
-        Me.Label13.AutoSize = True
+        Me.Label13.AutoSize = true
         Me.Label13.Location = New System.Drawing.Point(8, 177)
         Me.Label13.Name = "Label13"
         Me.Label13.Size = New System.Drawing.Size(49, 13)
@@ -1866,7 +1866,7 @@ Partial Class MainForm
         Me.ComboBox21.AutoCompleteCustomSource.AddRange(New String() {"Scaling constant", "Input file"})
         Me.ComboBox21.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems
         Me.ComboBox21.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        Me.ComboBox21.FormattingEnabled = True
+        Me.ComboBox21.FormattingEnabled = true
         Me.ComboBox21.Items.AddRange(New Object() {"Constant", "File"})
         Me.ComboBox21.Location = New System.Drawing.Point(237, 147)
         Me.ComboBox21.Name = "ComboBox21"
@@ -1878,7 +1878,7 @@ Partial Class MainForm
         Me.ComboBox20.AutoCompleteCustomSource.AddRange(New String() {"Scaling constant", "Input file"})
         Me.ComboBox20.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems
         Me.ComboBox20.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        Me.ComboBox20.FormattingEnabled = True
+        Me.ComboBox20.FormattingEnabled = true
         Me.ComboBox20.Items.AddRange(New Object() {"Constant", "File"})
         Me.ComboBox20.Location = New System.Drawing.Point(154, 147)
         Me.ComboBox20.Name = "ComboBox20"
@@ -1890,7 +1890,7 @@ Partial Class MainForm
         Me.ComboBox19.AutoCompleteCustomSource.AddRange(New String() {"Scaling constant", "Input file"})
         Me.ComboBox19.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems
         Me.ComboBox19.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        Me.ComboBox19.FormattingEnabled = True
+        Me.ComboBox19.FormattingEnabled = true
         Me.ComboBox19.Items.AddRange(New Object() {"Constant", "File"})
         Me.ComboBox19.Location = New System.Drawing.Point(71, 147)
         Me.ComboBox19.Name = "ComboBox19"
@@ -1899,7 +1899,7 @@ Partial Class MainForm
         '
         'Label12
         '
-        Me.Label12.AutoSize = True
+        Me.Label12.AutoSize = true
         Me.Label12.Location = New System.Drawing.Point(8, 150)
         Me.Label12.Name = "Label12"
         Me.Label12.Size = New System.Drawing.Size(42, 13)
@@ -1911,7 +1911,7 @@ Partial Class MainForm
         Me.ComboBox18.AutoCompleteCustomSource.AddRange(New String() {"Scaling constant", "Input file"})
         Me.ComboBox18.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems
         Me.ComboBox18.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        Me.ComboBox18.FormattingEnabled = True
+        Me.ComboBox18.FormattingEnabled = true
         Me.ComboBox18.Items.AddRange(New Object() {"Constant", "File"})
         Me.ComboBox18.Location = New System.Drawing.Point(237, 120)
         Me.ComboBox18.Name = "ComboBox18"
@@ -1923,7 +1923,7 @@ Partial Class MainForm
         Me.ComboBox17.AutoCompleteCustomSource.AddRange(New String() {"Scaling constant", "Input file"})
         Me.ComboBox17.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems
         Me.ComboBox17.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        Me.ComboBox17.FormattingEnabled = True
+        Me.ComboBox17.FormattingEnabled = true
         Me.ComboBox17.Items.AddRange(New Object() {"Constant", "File"})
         Me.ComboBox17.Location = New System.Drawing.Point(154, 120)
         Me.ComboBox17.Name = "ComboBox17"
@@ -1935,7 +1935,7 @@ Partial Class MainForm
         Me.ComboBox16.AutoCompleteCustomSource.AddRange(New String() {"Scaling constant", "Input file"})
         Me.ComboBox16.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems
         Me.ComboBox16.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        Me.ComboBox16.FormattingEnabled = True
+        Me.ComboBox16.FormattingEnabled = true
         Me.ComboBox16.Items.AddRange(New Object() {"Constant", "File"})
         Me.ComboBox16.Location = New System.Drawing.Point(71, 120)
         Me.ComboBox16.Name = "ComboBox16"
@@ -1944,7 +1944,7 @@ Partial Class MainForm
         '
         'Label11
         '
-        Me.Label11.AutoSize = True
+        Me.Label11.AutoSize = true
         Me.Label11.Location = New System.Drawing.Point(8, 123)
         Me.Label11.Name = "Label11"
         Me.Label11.Size = New System.Drawing.Size(56, 13)
@@ -1956,7 +1956,7 @@ Partial Class MainForm
         Me.ComboBox15.AutoCompleteCustomSource.AddRange(New String() {"Scaling constant", "Input file"})
         Me.ComboBox15.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems
         Me.ComboBox15.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        Me.ComboBox15.FormattingEnabled = True
+        Me.ComboBox15.FormattingEnabled = true
         Me.ComboBox15.Items.AddRange(New Object() {"Constant", "File"})
         Me.ComboBox15.Location = New System.Drawing.Point(237, 93)
         Me.ComboBox15.Name = "ComboBox15"
@@ -1968,7 +1968,7 @@ Partial Class MainForm
         Me.ComboBox14.AutoCompleteCustomSource.AddRange(New String() {"Scaling constant", "Input file"})
         Me.ComboBox14.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems
         Me.ComboBox14.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        Me.ComboBox14.FormattingEnabled = True
+        Me.ComboBox14.FormattingEnabled = true
         Me.ComboBox14.Items.AddRange(New Object() {"Constant", "File"})
         Me.ComboBox14.Location = New System.Drawing.Point(154, 93)
         Me.ComboBox14.Name = "ComboBox14"
@@ -1980,7 +1980,7 @@ Partial Class MainForm
         Me.ComboBox13.AutoCompleteCustomSource.AddRange(New String() {"Scaling constant", "Input file"})
         Me.ComboBox13.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems
         Me.ComboBox13.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        Me.ComboBox13.FormattingEnabled = True
+        Me.ComboBox13.FormattingEnabled = true
         Me.ComboBox13.Items.AddRange(New Object() {"Constant", "File"})
         Me.ComboBox13.Location = New System.Drawing.Point(71, 93)
         Me.ComboBox13.Name = "ComboBox13"
@@ -1989,7 +1989,7 @@ Partial Class MainForm
         '
         'Label10
         '
-        Me.Label10.AutoSize = True
+        Me.Label10.AutoSize = true
         Me.Label10.Location = New System.Drawing.Point(8, 96)
         Me.Label10.Name = "Label10"
         Me.Label10.Size = New System.Drawing.Size(49, 13)
@@ -2001,7 +2001,7 @@ Partial Class MainForm
         Me.ComboBox12.AutoCompleteCustomSource.AddRange(New String() {"Scaling constant", "Input file"})
         Me.ComboBox12.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems
         Me.ComboBox12.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        Me.ComboBox12.FormattingEnabled = True
+        Me.ComboBox12.FormattingEnabled = true
         Me.ComboBox12.Items.AddRange(New Object() {"Constant", "File"})
         Me.ComboBox12.Location = New System.Drawing.Point(237, 66)
         Me.ComboBox12.Name = "ComboBox12"
@@ -2013,7 +2013,7 @@ Partial Class MainForm
         Me.ComboBox11.AutoCompleteCustomSource.AddRange(New String() {"Scaling constant", "Input file"})
         Me.ComboBox11.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems
         Me.ComboBox11.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        Me.ComboBox11.FormattingEnabled = True
+        Me.ComboBox11.FormattingEnabled = true
         Me.ComboBox11.Items.AddRange(New Object() {"Constant", "File"})
         Me.ComboBox11.Location = New System.Drawing.Point(154, 66)
         Me.ComboBox11.Name = "ComboBox11"
@@ -2025,7 +2025,7 @@ Partial Class MainForm
         Me.ComboBox10.AutoCompleteCustomSource.AddRange(New String() {"Scaling constant", "Input file"})
         Me.ComboBox10.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems
         Me.ComboBox10.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        Me.ComboBox10.FormattingEnabled = True
+        Me.ComboBox10.FormattingEnabled = true
         Me.ComboBox10.Items.AddRange(New Object() {"Constant", "File"})
         Me.ComboBox10.Location = New System.Drawing.Point(71, 66)
         Me.ComboBox10.Name = "ComboBox10"
@@ -2034,7 +2034,7 @@ Partial Class MainForm
         '
         'Label9
         '
-        Me.Label9.AutoSize = True
+        Me.Label9.AutoSize = true
         Me.Label9.Location = New System.Drawing.Point(8, 69)
         Me.Label9.Name = "Label9"
         Me.Label9.Size = New System.Drawing.Size(64, 13)
@@ -2043,7 +2043,7 @@ Partial Class MainForm
         '
         'Label8
         '
-        Me.Label8.AutoSize = True
+        Me.Label8.AutoSize = true
         Me.Label8.Location = New System.Drawing.Point(8, 42)
         Me.Label8.Name = "Label8"
         Me.Label8.Size = New System.Drawing.Size(57, 13)
@@ -2052,7 +2052,7 @@ Partial Class MainForm
         '
         'Label7
         '
-        Me.Label7.AutoSize = True
+        Me.Label7.AutoSize = true
         Me.Label7.Location = New System.Drawing.Point(234, 23)
         Me.Label7.Name = "Label7"
         Me.Label7.Size = New System.Drawing.Size(40, 13)
@@ -2061,7 +2061,7 @@ Partial Class MainForm
         '
         'Label6
         '
-        Me.Label6.AutoSize = True
+        Me.Label6.AutoSize = true
         Me.Label6.Location = New System.Drawing.Point(151, 23)
         Me.Label6.Name = "Label6"
         Me.Label6.Size = New System.Drawing.Size(51, 13)
@@ -2070,7 +2070,7 @@ Partial Class MainForm
         '
         'Label5
         '
-        Me.Label5.AutoSize = True
+        Me.Label5.AutoSize = true
         Me.Label5.Location = New System.Drawing.Point(68, 23)
         Me.Label5.Name = "Label5"
         Me.Label5.Size = New System.Drawing.Size(57, 13)
@@ -2082,7 +2082,7 @@ Partial Class MainForm
         Me.ComboBox9.AutoCompleteCustomSource.AddRange(New String() {"Scaling constant", "Input file"})
         Me.ComboBox9.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems
         Me.ComboBox9.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        Me.ComboBox9.FormattingEnabled = True
+        Me.ComboBox9.FormattingEnabled = true
         Me.ComboBox9.Items.AddRange(New Object() {"Constant", "File"})
         Me.ComboBox9.Location = New System.Drawing.Point(237, 39)
         Me.ComboBox9.Name = "ComboBox9"
@@ -2094,7 +2094,7 @@ Partial Class MainForm
         Me.ComboBox8.AutoCompleteCustomSource.AddRange(New String() {"Scaling constant", "Input file"})
         Me.ComboBox8.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems
         Me.ComboBox8.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        Me.ComboBox8.FormattingEnabled = True
+        Me.ComboBox8.FormattingEnabled = true
         Me.ComboBox8.Items.AddRange(New Object() {"Constant", "File"})
         Me.ComboBox8.Location = New System.Drawing.Point(154, 39)
         Me.ComboBox8.Name = "ComboBox8"
@@ -2106,7 +2106,7 @@ Partial Class MainForm
         Me.ComboBox7.AutoCompleteCustomSource.AddRange(New String() {"Scaling constant", "Input file"})
         Me.ComboBox7.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems
         Me.ComboBox7.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        Me.ComboBox7.FormattingEnabled = True
+        Me.ComboBox7.FormattingEnabled = true
         Me.ComboBox7.Items.AddRange(New Object() {"Constant", "File"})
         Me.ComboBox7.Location = New System.Drawing.Point(71, 39)
         Me.ComboBox7.Name = "ComboBox7"
@@ -2132,29 +2132,29 @@ Partial Class MainForm
         Me.GroupBox9.Name = "GroupBox9"
         Me.GroupBox9.Size = New System.Drawing.Size(414, 184)
         Me.GroupBox9.TabIndex = 0
-        Me.GroupBox9.TabStop = False
+        Me.GroupBox9.TabStop = false
         Me.GroupBox9.Text = "Select database input files"
         '
         'CheckBox37
         '
-        Me.CheckBox37.AutoSize = True
-        Me.CheckBox37.Enabled = False
+        Me.CheckBox37.AutoSize = true
+        Me.CheckBox37.Enabled = false
         Me.CheckBox37.Location = New System.Drawing.Point(47, 52)
         Me.CheckBox37.Name = "CheckBox37"
         Me.CheckBox37.Size = New System.Drawing.Size(209, 17)
         Me.CheckBox37.TabIndex = 12
         Me.CheckBox37.Text = "Disaggregated for Scotland and Wales"
-        Me.CheckBox37.UseVisualStyleBackColor = True
+        Me.CheckBox37.UseVisualStyleBackColor = true
         '
         'Button10
         '
-        Me.Button10.Enabled = False
+        Me.Button10.Enabled = false
         Me.Button10.Location = New System.Drawing.Point(342, 74)
         Me.Button10.Name = "Button10"
         Me.Button10.Size = New System.Drawing.Size(70, 26)
         Me.Button10.TabIndex = 11
         Me.Button10.Text = "Select file..."
-        Me.Button10.UseVisualStyleBackColor = True
+        Me.Button10.UseVisualStyleBackColor = true
         '
         'TextBox9
         '
@@ -2165,23 +2165,23 @@ Partial Class MainForm
         '
         'CheckBox28
         '
-        Me.CheckBox28.AutoSize = True
+        Me.CheckBox28.AutoSize = true
         Me.CheckBox28.Location = New System.Drawing.Point(6, 80)
         Me.CheckBox28.Name = "CheckBox28"
         Me.CheckBox28.Size = New System.Drawing.Size(109, 17)
         Me.CheckBox28.TabIndex = 9
         Me.CheckBox28.Text = "Population (GOR)"
-        Me.CheckBox28.UseVisualStyleBackColor = True
+        Me.CheckBox28.UseVisualStyleBackColor = true
         '
         'Button9
         '
-        Me.Button9.Enabled = False
+        Me.Button9.Enabled = false
         Me.Button9.Location = New System.Drawing.Point(342, 137)
         Me.Button9.Name = "Button9"
         Me.Button9.Size = New System.Drawing.Size(70, 26)
         Me.Button9.TabIndex = 8
         Me.Button9.Text = "Select file..."
-        Me.Button9.UseVisualStyleBackColor = True
+        Me.Button9.UseVisualStyleBackColor = true
         '
         'TextBox8
         '
@@ -2192,23 +2192,23 @@ Partial Class MainForm
         '
         'CheckBox27
         '
-        Me.CheckBox27.AutoSize = True
+        Me.CheckBox27.AutoSize = true
         Me.CheckBox27.Location = New System.Drawing.Point(6, 139)
         Me.CheckBox27.Name = "CheckBox27"
         Me.CheckBox27.Size = New System.Drawing.Size(59, 17)
         Me.CheckBox27.TabIndex = 6
         Me.CheckBox27.Text = "Energy"
-        Me.CheckBox27.UseVisualStyleBackColor = True
+        Me.CheckBox27.UseVisualStyleBackColor = true
         '
         'Button8
         '
-        Me.Button8.Enabled = False
+        Me.Button8.Enabled = false
         Me.Button8.Location = New System.Drawing.Point(342, 105)
         Me.Button8.Name = "Button8"
         Me.Button8.Size = New System.Drawing.Size(70, 26)
         Me.Button8.TabIndex = 5
         Me.Button8.Text = "Select file..."
-        Me.Button8.UseVisualStyleBackColor = True
+        Me.Button8.UseVisualStyleBackColor = true
         '
         'TextBox7
         '
@@ -2219,23 +2219,23 @@ Partial Class MainForm
         '
         'CheckBox26
         '
-        Me.CheckBox26.AutoSize = True
+        Me.CheckBox26.AutoSize = true
         Me.CheckBox26.Location = New System.Drawing.Point(6, 109)
         Me.CheckBox26.Name = "CheckBox26"
         Me.CheckBox26.Size = New System.Drawing.Size(70, 17)
         Me.CheckBox26.TabIndex = 3
         Me.CheckBox26.Text = "Economy"
-        Me.CheckBox26.UseVisualStyleBackColor = True
+        Me.CheckBox26.UseVisualStyleBackColor = true
         '
         'Button7
         '
-        Me.Button7.Enabled = False
+        Me.Button7.Enabled = false
         Me.Button7.Location = New System.Drawing.Point(342, 22)
         Me.Button7.Name = "Button7"
         Me.Button7.Size = New System.Drawing.Size(70, 26)
         Me.Button7.TabIndex = 2
         Me.Button7.Text = "Select file..."
-        Me.Button7.UseVisualStyleBackColor = True
+        Me.Button7.UseVisualStyleBackColor = true
         '
         'TextBox6
         '
@@ -2246,13 +2246,13 @@ Partial Class MainForm
         '
         'CheckBox25
         '
-        Me.CheckBox25.AutoSize = True
+        Me.CheckBox25.AutoSize = true
         Me.CheckBox25.Location = New System.Drawing.Point(6, 29)
         Me.CheckBox25.Name = "CheckBox25"
         Me.CheckBox25.Size = New System.Drawing.Size(115, 17)
         Me.CheckBox25.TabIndex = 0
         Me.CheckBox25.Text = "Population (district)"
-        Me.CheckBox25.UseVisualStyleBackColor = True
+        Me.CheckBox25.UseVisualStyleBackColor = true
         '
         'TabPage4
         '
@@ -2267,7 +2267,7 @@ Partial Class MainForm
         Me.TabPage4.Size = New System.Drawing.Size(642, 531)
         Me.TabPage4.TabIndex = 3
         Me.TabPage4.Text = "Additional Options"
-        Me.TabPage4.UseVisualStyleBackColor = True
+        Me.TabPage4.UseVisualStyleBackColor = true
         '
         'GroupBox23
         '
@@ -2282,12 +2282,12 @@ Partial Class MainForm
         Me.GroupBox23.Name = "GroupBox23"
         Me.GroupBox23.Size = New System.Drawing.Size(217, 128)
         Me.GroupBox23.TabIndex = 18
-        Me.GroupBox23.TabStop = False
+        Me.GroupBox23.TabStop = false
         Me.GroupBox23.Text = "Period"
         '
         'Label51
         '
-        Me.Label51.AutoSize = True
+        Me.Label51.AutoSize = true
         Me.Label51.Location = New System.Drawing.Point(6, 107)
         Me.Label51.Name = "Label51"
         Me.Label51.Size = New System.Drawing.Size(186, 13)
@@ -2296,7 +2296,7 @@ Partial Class MainForm
         '
         'Label50
         '
-        Me.Label50.AutoSize = True
+        Me.Label50.AutoSize = true
         Me.Label50.Location = New System.Drawing.Point(51, 85)
         Me.Label50.Name = "Label50"
         Me.Label50.Size = New System.Drawing.Size(85, 13)
@@ -2305,16 +2305,16 @@ Partial Class MainForm
         '
         'Label49
         '
-        Me.Label49.AutoSize = True
+        Me.Label49.AutoSize = true
         Me.Label49.Location = New System.Drawing.Point(51, 41)
         Me.Label49.Name = "Label49"
         Me.Label49.Size = New System.Drawing.Size(115, 13)
         Me.Label49.TabIndex = 4
-        Me.Label49.Text = "Between 2011 to 2100"
+        Me.Label49.Text = "Between 2010 to 2099"
         '
         'Label48
         '
-        Me.Label48.AutoSize = True
+        Me.Label48.AutoSize = true
         Me.Label48.Location = New System.Drawing.Point(51, 64)
         Me.Label48.Name = "Label48"
         Me.Label48.Size = New System.Drawing.Size(47, 13)
@@ -2339,7 +2339,7 @@ Partial Class MainForm
         '
         'Label47
         '
-        Me.Label47.AutoSize = True
+        Me.Label47.AutoSize = true
         Me.Label47.Location = New System.Drawing.Point(51, 19)
         Me.Label47.Name = "Label47"
         Me.Label47.Size = New System.Drawing.Size(66, 13)
@@ -2354,12 +2354,12 @@ Partial Class MainForm
         Me.GroupBox22.Name = "GroupBox22"
         Me.GroupBox22.Size = New System.Drawing.Size(181, 46)
         Me.GroupBox22.TabIndex = 2
-        Me.GroupBox22.TabStop = False
+        Me.GroupBox22.TabStop = false
         Me.GroupBox22.Text = "Trip Rates"
         '
         'Label46
         '
-        Me.Label46.AutoSize = True
+        Me.Label46.AutoSize = true
         Me.Label46.Location = New System.Drawing.Point(6, 20)
         Me.Label46.Name = "Label46"
         Me.Label46.Size = New System.Drawing.Size(41, 13)
@@ -2374,12 +2374,12 @@ Partial Class MainForm
         Me.GroupBox21.Name = "GroupBox21"
         Me.GroupBox21.Size = New System.Drawing.Size(183, 50)
         Me.GroupBox21.TabIndex = 1
-        Me.GroupBox21.TabStop = False
+        Me.GroupBox21.TabStop = false
         Me.GroupBox21.Text = "Intrazonal Road Model"
         '
         'Label45
         '
-        Me.Label45.AutoSize = True
+        Me.Label45.AutoSize = true
         Me.Label45.Location = New System.Drawing.Point(6, 22)
         Me.Label45.Name = "Label45"
         Me.Label45.Size = New System.Drawing.Size(43, 13)
@@ -2389,7 +2389,7 @@ Partial Class MainForm
         'ComboBox29
         '
         Me.ComboBox29.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        Me.ComboBox29.FormattingEnabled = True
+        Me.ComboBox29.FormattingEnabled = true
         Me.ComboBox29.Items.AddRange(New Object() {"Elasticity", "S/F Curve"})
         Me.ComboBox29.Location = New System.Drawing.Point(84, 19)
         Me.ComboBox29.Name = "ComboBox29"
@@ -2406,12 +2406,12 @@ Partial Class MainForm
         Me.GroupBox20.Name = "GroupBox20"
         Me.GroupBox20.Size = New System.Drawing.Size(184, 70)
         Me.GroupBox20.TabIndex = 0
-        Me.GroupBox20.TabStop = False
+        Me.GroupBox20.TabStop = false
         Me.GroupBox20.Text = "Interzonal Rail Model"
         '
         'TextBox38
         '
-        Me.TextBox38.Enabled = False
+        Me.TextBox38.Enabled = false
         Me.TextBox38.Location = New System.Drawing.Point(86, 44)
         Me.TextBox38.Name = "TextBox38"
         Me.TextBox38.Size = New System.Drawing.Size(92, 20)
@@ -2419,7 +2419,7 @@ Partial Class MainForm
         '
         'Label44
         '
-        Me.Label44.AutoSize = True
+        Me.Label44.AutoSize = true
         Me.Label44.Location = New System.Drawing.Point(6, 48)
         Me.Label44.Name = "Label44"
         Me.Label44.Size = New System.Drawing.Size(80, 13)
@@ -2428,7 +2428,7 @@ Partial Class MainForm
         '
         'Label43
         '
-        Me.Label43.AutoSize = True
+        Me.Label43.AutoSize = true
         Me.Label43.Location = New System.Drawing.Point(6, 23)
         Me.Label43.Name = "Label43"
         Me.Label43.Size = New System.Drawing.Size(55, 13)
@@ -2438,7 +2438,7 @@ Partial Class MainForm
         'ComboBox28
         '
         Me.ComboBox28.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        Me.ComboBox28.FormattingEnabled = True
+        Me.ComboBox28.FormattingEnabled = true
         Me.ComboBox28.Items.AddRange(New Object() {"Full Day", "Busiest Hour"})
         Me.ComboBox28.Location = New System.Drawing.Point(86, 19)
         Me.ComboBox28.Name = "ComboBox28"
@@ -2450,7 +2450,7 @@ Partial Class MainForm
         Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.FileToolStripMenuItem})
         Me.MenuStrip1.Location = New System.Drawing.Point(0, 0)
         Me.MenuStrip1.Name = "MenuStrip1"
-        Me.MenuStrip1.Size = New System.Drawing.Size(663, 25)
+        Me.MenuStrip1.Size = New System.Drawing.Size(651, 25)
         Me.MenuStrip1.TabIndex = 6
         Me.MenuStrip1.Text = "MenuStrip1"
         '
@@ -2485,73 +2485,73 @@ Partial Class MainForm
         '
         'MainForm
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(6!, 13!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.AutoScroll = True
+        Me.AutoScroll = true
         Me.ClientSize = New System.Drawing.Size(663, 583)
         Me.Controls.Add(Me.TabControl1)
         Me.Controls.Add(Me.MenuStrip1)
         Me.MainMenuStrip = Me.MenuStrip1
         Me.Name = "MainForm"
         Me.Text = "ITRC Transport CDAM"
-        GroupBox24.ResumeLayout(False)
-        GroupBox24.PerformLayout()
-        Me.GroupBox1.ResumeLayout(False)
-        Me.GroupBox1.PerformLayout()
-        Me.GroupBox2.ResumeLayout(False)
-        Me.GroupBox3.ResumeLayout(False)
-        Me.GroupBox3.PerformLayout()
-        Me.TabControl1.ResumeLayout(False)
-        Me.TabPage1.ResumeLayout(False)
-        Me.GroupBox19.ResumeLayout(False)
-        Me.GroupBox19.PerformLayout()
-        Me.GroupBox18.ResumeLayout(False)
-        Me.GroupBox18.PerformLayout()
-        Me.GroupBox17.ResumeLayout(False)
-        Me.GroupBox17.PerformLayout()
-        Me.GroupBox15.ResumeLayout(False)
-        Me.GroupBox15.PerformLayout()
-        Me.GroupBox14.ResumeLayout(False)
-        Me.GroupBox14.PerformLayout()
-        Me.GroupBox13.ResumeLayout(False)
-        Me.GroupBox13.PerformLayout()
-        Me.GroupBox12.ResumeLayout(False)
-        Me.GroupBox12.PerformLayout()
-        Me.GroupBox11.ResumeLayout(False)
-        Me.GroupBox11.PerformLayout()
-        Me.GroupBox4.ResumeLayout(False)
-        Me.GroupBox4.PerformLayout()
-        Me.TabPage2.ResumeLayout(False)
-        Me.GroupBox8.ResumeLayout(False)
-        Me.GroupBox8.PerformLayout()
-        Me.GroupBox5.ResumeLayout(False)
-        Me.GroupBox16.ResumeLayout(False)
-        Me.GroupBox16.PerformLayout()
-        Me.GroupBox7.ResumeLayout(False)
-        Me.GroupBox7.PerformLayout()
-        Me.GroupBox6.ResumeLayout(False)
-        Me.GroupBox6.PerformLayout()
-        Me.TabPage3.ResumeLayout(False)
-        Me.GroupBox10.ResumeLayout(False)
-        Me.GroupBox10.PerformLayout()
-        Me.GroupBox9.ResumeLayout(False)
-        Me.GroupBox9.PerformLayout()
-        Me.TabPage4.ResumeLayout(False)
-        Me.GroupBox23.ResumeLayout(False)
-        Me.GroupBox23.PerformLayout()
-        Me.GroupBox22.ResumeLayout(False)
-        Me.GroupBox22.PerformLayout()
-        Me.GroupBox21.ResumeLayout(False)
-        Me.GroupBox21.PerformLayout()
-        Me.GroupBox20.ResumeLayout(False)
-        Me.GroupBox20.PerformLayout()
-        Me.MenuStrip1.ResumeLayout(False)
-        Me.MenuStrip1.PerformLayout()
-        CType(Me.MainFormBindingSource, System.ComponentModel.ISupportInitialize).EndInit()
-        Me.ResumeLayout(False)
-        Me.PerformLayout()
+        GroupBox24.ResumeLayout(false)
+        GroupBox24.PerformLayout
+        Me.GroupBox1.ResumeLayout(false)
+        Me.GroupBox1.PerformLayout
+        Me.GroupBox2.ResumeLayout(false)
+        Me.GroupBox3.ResumeLayout(false)
+        Me.GroupBox3.PerformLayout
+        Me.TabControl1.ResumeLayout(false)
+        Me.TabPage1.ResumeLayout(false)
+        Me.GroupBox19.ResumeLayout(false)
+        Me.GroupBox19.PerformLayout
+        Me.GroupBox18.ResumeLayout(false)
+        Me.GroupBox18.PerformLayout
+        Me.GroupBox17.ResumeLayout(false)
+        Me.GroupBox17.PerformLayout
+        Me.GroupBox15.ResumeLayout(false)
+        Me.GroupBox15.PerformLayout
+        Me.GroupBox14.ResumeLayout(false)
+        Me.GroupBox14.PerformLayout
+        Me.GroupBox13.ResumeLayout(false)
+        Me.GroupBox13.PerformLayout
+        Me.GroupBox12.ResumeLayout(false)
+        Me.GroupBox12.PerformLayout
+        Me.GroupBox11.ResumeLayout(false)
+        Me.GroupBox11.PerformLayout
+        Me.GroupBox4.ResumeLayout(false)
+        Me.GroupBox4.PerformLayout
+        Me.TabPage2.ResumeLayout(false)
+        Me.GroupBox8.ResumeLayout(false)
+        Me.GroupBox8.PerformLayout
+        Me.GroupBox5.ResumeLayout(false)
+        Me.GroupBox16.ResumeLayout(false)
+        Me.GroupBox16.PerformLayout
+        Me.GroupBox7.ResumeLayout(false)
+        Me.GroupBox7.PerformLayout
+        Me.GroupBox6.ResumeLayout(false)
+        Me.GroupBox6.PerformLayout
+        Me.TabPage3.ResumeLayout(false)
+        Me.GroupBox10.ResumeLayout(false)
+        Me.GroupBox10.PerformLayout
+        Me.GroupBox9.ResumeLayout(false)
+        Me.GroupBox9.PerformLayout
+        Me.TabPage4.ResumeLayout(false)
+        Me.GroupBox23.ResumeLayout(false)
+        Me.GroupBox23.PerformLayout
+        Me.GroupBox22.ResumeLayout(false)
+        Me.GroupBox22.PerformLayout
+        Me.GroupBox21.ResumeLayout(false)
+        Me.GroupBox21.PerformLayout
+        Me.GroupBox20.ResumeLayout(false)
+        Me.GroupBox20.PerformLayout
+        Me.MenuStrip1.ResumeLayout(false)
+        Me.MenuStrip1.PerformLayout
+        CType(Me.MainFormBindingSource,System.ComponentModel.ISupportInitialize).EndInit
+        Me.ResumeLayout(false)
+        Me.PerformLayout
 
-    End Sub
+End Sub
     Friend WithEvents Button1 As System.Windows.Forms.Button
     Friend WithEvents Button2 As System.Windows.Forms.Button
     Friend WithEvents GroupBox1 As System.Windows.Forms.GroupBox

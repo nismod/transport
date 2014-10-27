@@ -176,8 +176,8 @@
             'read the input data for the zone
 
             BaseVkm(ZoneID, 1) = InputArray(ZoneID, 6)
-            ZonePop(ZoneID, 1) = get_population_data_by_zoneID(modelRunID, modelRunYear, ZoneID)
-            ZoneGVA(ZoneID, 1) = get_gva_data_by_zoneID(modelRunID, modelRunYear, ZoneID)
+            'ZonePop(ZoneID, 1) = get_population_data_by_zoneID(modelRunID, modelRunYear, ZoneID)
+            'ZoneGVA(ZoneID, 1) = get_gva_data_by_zoneID(modelRunID, modelRunYear, ZoneID)
             ZoneSpeed(ZoneID, 1) = InputArray(ZoneID, 7)
             ZoneCarCost(ZoneID, 1) = InputArray(ZoneID, 8)
             ZoneLGVCost(ZoneID, 1) = InputArray(ZoneID, 20)
@@ -256,8 +256,8 @@
                 BuiltLaneKm(ZoneID, x) = 0
             Next
         Else
-            ZonePop(ZoneID, 1) = get_population_data_by_zoneID(modelRunID, modelRunYear, ZoneID)
-            ZoneGVA(ZoneID, 1) = get_gva_data_by_zoneID(modelRunID, modelRunYear, ZoneID)
+            'ZonePop(ZoneID, 1) = get_population_data_by_zoneID(modelRunID, modelRunYear, ZoneID)
+            'ZoneGVA(ZoneID, 1) = get_gva_data_by_zoneID(modelRunID, modelRunYear, ZoneID)
             ZoneSpeed(ZoneID, 1) = CDbl(InputArray(ZoneID, 4))
             BaseVkm(ZoneID, 1) = CDbl(InputArray(ZoneID, 5))
 
@@ -347,7 +347,7 @@
         Dim starttraffic As Double
 
         'v1.4 mod get the trip rates
-        If TripRates = "Strategy" Then
+        If TripRates = "SubStrategy" Then
             RdTripRates(0) = StratArray(YearCount, 91)
             RdTripRates(1) = StratArray(YearCount, 92)
         End If
@@ -355,7 +355,7 @@
         'now incorporates variable elasticities - only do this here if we are not using them - otherwise do it in a separate sub
         If VariableEl = False Then
             'Calculate the values of the various input ratios for the different types of road vehicle (speed assumed to be the same for all)
-            If TripRates = "Strategy" Then
+            If TripRates = "SubStrategy" Then
                 PopRat(1) = ((ZoneExtVar(ZoneID, 4) * RdTripRates(0)) / ZonePop(ZoneID, 1)) ^ RdZoneEl(YearCount, 1)
                 PopRat(2) = ((ZoneExtVar(ZoneID, 4) * RdTripRates(1)) / ZonePop(ZoneID, 1)) ^ RdZoneEl(YearCount, 6)
                 PopRat(3) = ((ZoneExtVar(ZoneID, 4) * RdTripRates(1)) / ZonePop(ZoneID, 1)) ^ RdZoneEl(YearCount, 6)
@@ -731,7 +731,7 @@
 
         'pop1ratio
         OldY = ZonePop(ZoneID, 1)
-        If TripRates = "Strategy" Then
+        If TripRates = "SubStrategy" Then
             NewY = ZoneExtVar(ZoneID, 4) * RdTripRates(0)
         Else
             NewY = ZoneExtVar(ZoneID, 4)
@@ -745,7 +745,7 @@
         End If
         'pop2ratio
         OldY = ZonePop(ZoneID, 1)
-        If TripRates = "Strategy" Then
+        If TripRates = "SubStrategy" Then
             NewY = ZoneExtVar(ZoneID, 4) * RdTripRates(1)
         Else
             NewY = ZoneExtVar(ZoneID, 4)
@@ -759,7 +759,7 @@
         End If
         'pop3ratio
         OldY = ZonePop(ZoneID, 1)
-        If TripRates = "Strategy" Then
+        If TripRates = "SubStrategy" Then
             NewY = ZoneExtVar(ZoneID, 4) * RdTripRates(1)
         Else
             NewY = ZoneExtVar(ZoneID, 4)
@@ -773,7 +773,7 @@
         End If
         'pop4ratio
         OldY = ZonePop(ZoneID, 1)
-        If TripRates = "Strategy" Then
+        If TripRates = "SubStrategy" Then
             NewY = ZoneExtVar(ZoneID, 4) * RdTripRates(1)
         Else
             NewY = ZoneExtVar(ZoneID, 4)
@@ -787,7 +787,7 @@
         End If
         'pop5ratio
         OldY = ZonePop(ZoneID, 1)
-        If TripRates = "Strategy" Then
+        If TripRates = "SubStrategy" Then
             NewY = ZoneExtVar(ZoneID, 4) * RdTripRates(0)
         Else
             NewY = ZoneExtVar(ZoneID, 4)

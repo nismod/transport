@@ -205,7 +205,7 @@
         'get the elasticity values
         Call ReadData("AirNode", "Elasticity", AirEl, modelRunID)
 
-        If TripRates = "Strategy" Then
+        If TripRates = "SubStrategy" Then
             'read from the strategy file
             Call ReadData("SubStrategy", "", stratarray, modelRunID)
             For r = 1 To 90
@@ -336,7 +336,7 @@
                 OldX = AirportBaseData(aircount, 3)
                 'pop ratio
                 OldY = AirportBaseData(aircount, 6)
-                If TripRates = "Strategy" Then
+                If TripRates = "SubStrategy" Then
                     NewY = AirportExtVar(aircount, 2) * AirTripRates(YearNum)
                 Else
                     NewY = AirportExtVar(aircount, 2)
@@ -347,7 +347,7 @@
                     Call VarElCalc()
                     AirpPopRat = VarRat
                 Else
-                    If TripRates = "Strategy" Then
+                    If TripRates = "SubStrategy" Then
                         AirpPopRat = ((AirportExtVar(aircount, 2) * AirTripRates(YearNum)) / AirportBaseData(aircount, 6)) ^ AirEl(YearNum, 4)
                     Else
                         AirpPopRat = (AirportExtVar(aircount, 2) / AirportBaseData(aircount, 6)) ^ AirEl(YearNum, 4)
@@ -380,7 +380,7 @@
                 End If
 
             Else
-                If TripRates = "Strategy" Then
+                If TripRates = "SubStrategy" Then
                     AirpPopRat = ((AirportExtVar(aircount, 2) * AirTripRates(YearNum)) / AirportBaseData(aircount, 6)) ^ AirEl(YearNum, 4)
                 Else
                     AirpPopRat = (AirportExtVar(aircount, 2) / AirportBaseData(aircount, 6)) ^ AirEl(YearNum, 4)
@@ -507,7 +507,7 @@
                 If OldX > 0 Then
                     'pop ratio
                     OldY = AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5)
-                    If TripRates = "Strategy" Then
+                    If TripRates = "SubStrategy" Then
                         NewY = (CDbl(AirFlowExtVar(aircount, 2)) + CDbl(AirFlowExtVar(aircount, 3))) * AirTripRates(YearNum)
                     Else
                         NewY = AirFlowExtVar(aircount, 2) + AirFlowExtVar(aircount, 3)
@@ -542,7 +542,7 @@
                         AirfCostRat = ((CDbl(AirFlowExtVar(aircount, 6)) + FlowCharge(aircount)) / AirFlowBaseData(aircount, 8)) ^ AirEl(YearNum, 3)
                     End If
                 Else
-                    If TripRates = "Strategy" Then
+                    If TripRates = "SubStrategy" Then
                         AirfPopRat = (((CDbl(AirFlowExtVar(aircount, 2)) + CDbl(AirFlowExtVar(aircount, 3))) * AirTripRates(YearNum)) / (AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5))) ^ AirEl(YearNum, 1)
                     Else
                         AirfPopRat = ((CDbl(AirFlowExtVar(aircount, 2)) + CDbl(AirFlowExtVar(aircount, 3))) / (AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5))) ^ AirEl(YearNum, 1)
@@ -551,7 +551,7 @@
                     AirfCostRat = ((CDbl(AirFlowExtVar(aircount, 6)) + FlowCharge(aircount)) / AirFlowBaseData(aircount, 8)) ^ AirEl(YearNum, 3)
                 End If
             Else
-                If TripRates = "Strategy" Then
+                If TripRates = "SubStrategy" Then
                     AirfPopRat = (((CDbl(AirFlowExtVar(aircount, 2)) + CDbl(AirFlowExtVar(aircount, 3)))) * AirTripRates(YearNum)) / (AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5)) ^ AirEl(YearNum, 1)
                 Else
                     AirfPopRat = ((CDbl(AirFlowExtVar(aircount, 2)) + CDbl(AirFlowExtVar(aircount, 3))) / (AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5))) ^ AirEl(YearNum, 1)

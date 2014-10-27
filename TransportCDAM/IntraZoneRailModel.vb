@@ -108,7 +108,7 @@
         Call ReadData("RailZone", "Elasticity", RlZoneEl, modelRunID)
 
         'read in the strategy
-        If TripRates = "Strategy" Then
+        If TripRates = "SubStrategy" Then
             Call ReadData("SubStrategy", "", stratarray, modelRunID)
             For r = 1 To 90
                 RlzTripRates(r) = stratarray(r, 93)
@@ -128,8 +128,8 @@
             RlZID(InputCount, 0) = InputArray(InputCount, 4)
             FareE(InputCount, 0) = InputArray(InputCount, 6)
             RlZTripsS(InputCount, 0) = InputArray(InputCount, 7)
-            RlZPop(InputCount, 0) = get_population_data_by_zoneID(modelRunID, modelRunYear, ZoneID)
-            RlZGva(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, modelRunYear, ZoneID)
+            'RlZPop(InputCount, 0) = get_population_data_by_zoneID(modelRunID, modelRunYear, ZoneID)
+            'RlZGva(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, modelRunYear, ZoneID)
             RlZCost(InputCount, 0) = InputArray(InputCount, 8)
             RlZStat(InputCount, 0) = InputArray(InputCount, 9)
             RlZCarFuel(InputCount, 0) = InputArray(InputCount, 10)
@@ -138,8 +138,8 @@
             'if not year 1, read from the Input file
             RlZID(InputCount, 0) = InputArray(InputCount, 3)
             'needs to create a new function to get cost from the external variable from previous year
-            RlZPop(InputCount, 0) = get_population_data_by_zoneID(modelRunID, modelRunYear, ZoneID)
-            RlZGva(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, modelRunYear, ZoneID)
+            'RlZPop(InputCount, 0) = get_population_data_by_zoneID(modelRunID, modelRunYear, ZoneID)
+            'RlZGva(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, modelRunYear, ZoneID)
             'RlZCost(InputCount, 0) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "railzone", InputCount)
             'RlZStat(InputCount, 0) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "railzone", InputCount)
             'RlZCarFuel(InputCount, 0) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "railzone", InputCount)
@@ -181,7 +181,7 @@
             OldX = RlZTripsS(InputCount, 0)
             'pop ratio
             OldY = RlZPop(InputCount, 0)
-            If TripRates = "Strategy" Then
+            If TripRates = "SubStrategy" Then
                 NewY = RlZExtVar(InputCount, 4) * RlzTripRates(YearCount)
             Else
                 NewY = RlZExtVar(InputCount, 4)
@@ -191,7 +191,7 @@
                 Call VarElCalc()
                 PopRat = VarRat
             Else
-                If TripRates = "Strategy" Then
+                If TripRates = "SubStrategy" Then
                     PopRat = ((RlZExtVar(InputCount, 4) * RlzTripRates(YearCount)) / RlZPop(InputCount, 0)) ^ RlZoneEl(YearCount, 1)
                 Else
                     PopRat = (RlZExtVar(InputCount, 4) / RlZPop(InputCount, 0)) ^ RlZoneEl(YearCount, 1)
@@ -239,7 +239,7 @@
                 GJTRat = (RlZExtVar(InputCount, 10) / RlZGJT(InputCount, 0)) ^ GJTEl
             End If
         Else
-            If TripRates = "Strategy" Then
+            If TripRates = "SubStrategy" Then
                 PopRat = ((RlZExtVar(InputCount, 4) * RlzTripRates(YearCount)) / RlZPop(InputCount, 0)) ^ RlZoneEl(YearCount, 1)
             Else
                 PopRat = (RlZExtVar(InputCount, 4) / RlZPop(InputCount, 0)) ^ RlZoneEl(YearCount, 1)

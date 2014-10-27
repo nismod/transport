@@ -241,7 +241,7 @@
         Call ReadData("RoadLink", "Elasticity", RoadEls, modelRunID)
 
         'if using variable trip rates then set up the trip rate variable
-        If TripRates = "Strategy" Then
+        If TripRates = "SubStrategy" Then
             'get the strat values
             Call ReadData("SubStrategy", "", stratarray, modelRunID)
             For r = 1 To 90
@@ -406,10 +406,10 @@
 
             'Get Population and GVA data
             get_zone_by_flowid(FlowID(link, 1), Zone1ID, Zone2ID)
-            Z1Pop(link, 1) = get_population_data_by_zoneID(modelRunID, modelRunYear, Zone1ID)
-            Z2Pop(link, 1) = get_gva_data_by_zoneID(modelRunID, modelRunYear, Zone1ID)
-            Z1GVA(link, 1) = get_population_data_by_zoneID(modelRunID, modelRunYear, Zone2ID)
-            Z2GVA(link, 1) = get_gva_data_by_zoneID(modelRunID, modelRunYear, Zone2ID)
+            Z1Pop(link, 1) = get_population_data_by_zoneID(modelRunID, YearNum + 2010, link, "OZ")
+            Z2Pop(link, 1) = get_population_data_by_zoneID(modelRunID, YearNum + 2010, link, "DZ")
+            Z1GVA(link, 1) = get_gva_data_by_zoneID(modelRunID, YearNum + 2010, link, "OZ")
+            Z2GVA(link, 1) = get_gva_data_by_zoneID(modelRunID, YearNum + 2010, link, "DZ")
 
 
             'Old code for inputing Temp RoadLink data from text file 
@@ -844,7 +844,7 @@
 
         'calculate the individual variable ratios for passenger traffic
         'v1.3 mod
-        If TripRates = "Strategy" Then
+        If TripRates = "SubStrategy" Then
             rat1 = (((CDbl(ExternalValues(link, 2)) + ExternalValues(link, 3)) * RdTripRates(0, YearNum)) / (Z1Pop(link, 1) + Z2Pop(link, 1))) ^ RoadEls(YearNum, 1)
         Else
             rat1 = ((CDbl(ExternalValues(link, 2)) + ExternalValues(link, 3)) / (Z1Pop(link, 1) + Z2Pop(link, 1))) ^ RoadEls(YearNum, 1)
@@ -858,7 +858,7 @@
 
         'calculate the individual variable ratios for freight traffic
         'v1.3 mod
-        If TripRates = "Strategy" Then
+        If TripRates = "SubStrategy" Then
             ratf1 = (((CDbl(ExternalValues(link, 2)) + ExternalValues(link, 3)) * RdTripRates(1, YearNum)) / (Z1Pop(link, 1) + Z2Pop(link, 1))) ^ RoadEls(YearNum, 5)
         Else
             ratf1 = ((CDbl(ExternalValues(link, 2)) + ExternalValues(link, 3)) / (Z1Pop(link, 1) + Z2Pop(link, 1))) ^ RoadEls(YearNum, 5)
@@ -1118,7 +1118,7 @@
             OldX = OldHourlyFlows(link, sc, h)
             'pop ratio
             OldY = Z1Pop(link, 1) + Z2Pop(link, 1)
-            If TripRates = "Strategy" Then
+            If TripRates = "SubStrategy" Then
                 NewY = (CDbl(ExternalValues(link, 2)) + ExternalValues(link, 3)) * RdTripRates(1, YearNum)
             Else
                 NewY = CDbl(ExternalValues(link, 2)) + ExternalValues(link, 3)
@@ -1151,7 +1151,7 @@
             End If
             'freight pop ratio
             OldY = Z1Pop(link, 1) + Z2Pop(link, 1)
-            If TripRates = "Strategy" Then
+            If TripRates = "SubStrategy" Then
                 NewY = (CDbl(ExternalValues(link, 2)) + ExternalValues(link, 3)) * RdTripRates(1, YearNum)
             Else
                 NewY = CDbl(ExternalValues(link, 2)) + ExternalValues(link, 3)

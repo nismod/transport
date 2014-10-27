@@ -66,7 +66,7 @@
     Dim NewCapArray(238, 5) As String
     Dim CapNum As Integer
     Dim InputArray(238, 17) As String
-    Dim OutputArray(238, 13) As String
+    Dim OutputArray(239, 13) As String
     Dim stratarray(90, 95) As String
     Dim elearray(238, 5) As String
     Dim EleNum As Integer
@@ -185,7 +185,7 @@
             sortedline = sortarray(v)
             splitline = Split(sortedline, "&")
             arraynum = splitline(2)
-            'NewCapArray(v + 1, 0) = modelRunID
+            NewCapArray(v + 1, 0) = modelRunID
             NewCapArray(v + 1, 1) = NewCapDetails(arraynum, 0)
             NewCapArray(v + 1, 2) = NewCapDetails(arraynum, 1)
             NewCapArray(v + 1, 3) = NewCapDetails(arraynum, 2)
@@ -291,9 +291,9 @@
         End If
 
         'set year as 1 to start with
-        Year = 1
+        Year = StartYear
 
-        Do While Year < 91
+        Do Until Year > StartYear + Duration
             'loop through scaling up values for each year and writing to output file
 
             If RlLEneSource = "Database" Then
@@ -315,10 +315,10 @@
                     OZone(InputCount, 0) = InputArray(InputCount, 5)
                     DZone(InputCount, 0) = InputArray(InputCount, 6)
                     Tracks(InputCount, 0) = InputArray(InputCount, 7)
-                    Pop1Old(InputCount, 0) = get_population_data_by_zoneID(modelRunID, modelRunYear, Zone1ID)
-                    Pop2Old(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, modelRunYear, Zone1ID)
-                    GVA1Old(InputCount, 0) = get_population_data_by_zoneID(modelRunID, modelRunYear, Zone2ID)
-                    GVA2Old(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, modelRunYear, Zone2ID)
+                    Pop1Old(InputCount, 0) = get_population_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 0), "OZ")
+                    Pop2Old(InputCount, 0) = get_population_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 0), "DZ")
+                    GVA1Old(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 0), "OZ")
+                    GVA2Old(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 0), "DZ")
                     CostOld(InputCount, 0) = InputArray(InputCount, 10)
                     FuelOld(InputCount, 0) = InputArray(InputCount, 11)
                     MaxTDOld(InputCount, 0) = InputArray(InputCount, 12)
@@ -551,7 +551,7 @@ NextYear:
 
                 MaxTDNew = MaxTD(Year)
                 'write to output file
-                'OutputArray(InputCount, 0) = modelRunID
+                OutputArray(InputCount, 0) = modelRunID
                 OutputArray(InputCount, 1) = FlowID(InputCount, 0)
                 OutputArray(InputCount, 2) = Year
                 OutputArray(InputCount, 3) = Tracks(InputCount, 0)
@@ -835,6 +835,7 @@ NextYear:
             arraynum = splitline(2)
             'skip lines which don't correspond to a flow
             If elschemes(arraynum, 0) > 0 Then
+                schemeoutputrow(RlElNum, 0) = modelRunID
                 schemeoutputrow(RlElNum, 1) = elschemes(arraynum, 0)
                 schemeoutputrow(RlElNum, 2) = elschemes(arraynum, 1)
                 schemeoutputrow(RlElNum, 3) = elschemes(arraynum, 2)
@@ -860,6 +861,7 @@ NextYear:
             arraynum = splitline(2)
             'skip lines which have a zero station count
             If elzschemes(arraynum, 2) > 0 Then
+                zoneoutputrow(RzElNum, 0) = modelRunID
                 zoneoutputrow(RzElNum, 1) = elzschemes(arraynum, 0)
                 zoneoutputrow(RzElNum, 2) = elzschemes(arraynum, 1)
                 zoneoutputrow(RzElNum, 3) = elzschemes(arraynum, 2)
@@ -874,7 +876,6 @@ NextYear:
 
     Sub GetElectData()
         'read electrification data here
-
         If elearray(EleNum, 2) = "" Then
             Elect = False
         Else
@@ -883,6 +884,5 @@ NextYear:
             ElectTracks = elearray(EleNum, 4)
             EleNum += 1
         End If
-        MsgBox(elearray(EleNum, 0))
     End Sub
 End Module

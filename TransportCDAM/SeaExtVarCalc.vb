@@ -204,9 +204,9 @@
         End If
 
 
-        YearNum = 1
+        YearNum = StartYear
         'calculate new values for port variables
-        Do While YearNum < 91
+        Do Until YearNum > StartYear + Duration
             'calculate new values where needed
             'if including capacity changes, then check if there are any capacity changes for this zone
             'v1.3 changed to include compulsory capacity changes where construction has already begun
@@ -229,8 +229,8 @@
 
                     'get GORPop and GORGva
                     PortID = InputArray(PortCount, 4)
-                    PortBaseData(PortCount, 11) = get_population_data_by_seaportID(modelRunID, modelRunYear, PortID)
-                    PortBaseData(PortCount, 12) = get_gva_data_by_seaportID(modelRunID, modelRunYear, PortID)
+                    PortBaseData(PortCount, 11) = get_population_data_by_seaportID(modelRunID, YearNum + 2010, PortCount)
+                    PortBaseData(PortCount, 12) = get_gva_data_by_seaportID(modelRunID, YearNum + 2010, PortCount)
                     PortBaseData(PortCount, 13) = InputArray(PortCount, 15)
                     GORID(PortCount, 1) = InputArray(PortCount, 16)
                 End If
@@ -277,7 +277,7 @@
                     'if year is after 2093 then no population forecasts are available so assume population remains constant
                     'now modified as population data available up to 2100 - so should never need 'else'
                     If YearNum < 91 Then
-                        PortNewData(PortCount, 6) = get_population_data_by_seaportID(modelRunID, YearNum, PortID)
+                        PortNewData(PortCount, 6) = get_population_data_by_seaportID(modelRunID, YearNum + 2010, PortCount)
                         'keylookup = YearNum & "_" & GORID(PortCount, 1)
                         'If PopYearLookup.TryGetValue(keylookup, newval) Then
                         '    PortNewData(PortCount, 6) = newval
@@ -298,7 +298,7 @@
                     'if year is after 2050 then no gva forecasts are available so assume gva remains constant
                     'now modified as population data available up to 2100 - so should never need 'else'
                     If YearNum < 91 Then
-                        PortNewData(PortCount, 7) = get_gva_data_by_seaportID(modelRunID, YearNum, PortID)
+                        PortNewData(PortCount, 7) = get_gva_data_by_seaportID(modelRunID, YearNum + 2010, PortCount)
                         'keylookup = YearNum & "_" & GORID(PortCount, 1)
                         'If EcoYearLookup.TryGetValue(keylookup, newval) Then
                         '    PortNewData(PortCount, 7) = newval

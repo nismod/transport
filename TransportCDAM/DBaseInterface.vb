@@ -25,6 +25,8 @@ Module DBaseInterface
     Dim seaGVAArray(,) As String = Nothing
     Dim airGVAArray(,) As String = Nothing
     Dim zoneGVAArray(,) As String = Nothing
+    Dim dataArray(,) As String = Nothing
+
 
 
     Sub ConnectToDBase()
@@ -865,15 +867,28 @@ Module DBaseInterface
 
     End Function
 
-    Function get_population_data_by_zoneID(ByVal modelrunid As Integer, ByVal year As Integer, ByVal ZoneID As Integer)
+    Function get_population_data_by_zoneID(ByVal modelrunid As Integer, ByVal year As Integer, ByVal FlowID As Integer, ByVal type As String)
         Dim theSQL As String = ""
 
+        If FlowID = 1 And type = "OZ" Then
+            'reset zoneDemogArray value at the beginning of each year
+            '"OZ" has to be called first to avoid errors
+            zoneDemogArray = Nothing
+        End If
 
         If zoneDemogArray Is Nothing Then
-            theSQL = "SELECT * FROM cdam_get_population_data_by_population_scenario_od_tr_zone('" & modelrunid & "'," & year & ",9999)" & " WHERE zone_id = " & ZoneID
-            theSQL &= "AS (scenario_id varchar, year integer, gender varchar, category varchar, location varchar, value double precision, " & Chr(34)
-            theSQL &= "GORName" & Chr(34) & " varchar, " & Chr(34) & "gor_id" & Chr(34) & " integer, " & Chr(34) & "tr_cdam_gor_id" & Chr(34)
-            theSQL &= " integer, " & Chr(34) & "PortName" & Chr(34) & " varchar, " & Chr(34) & "port_id" & Chr(34) & " integer); "
+            'theSQL = "SELECT * FROM cdam_get_population_data_by_model_run_id_per_tr_flow('" & modelrunid & "'," & year & ",9999)"
+            'theSQL &= "AS (scenario_id varchar, year integer, gender varchar, category varchar, location varchar, value double precision, " & Chr(34)
+            'theSQL &= "GORName" & Chr(34) & " varchar, " & Chr(34) & "gor_id" & Chr(34) & " integer, " & Chr(34) & "tr_cdam_gor_id" & Chr(34)
+            'theSQL &= " integer, " & Chr(34) & "PortName" & Chr(34) & " varchar, " & Chr(34) & "port_id" & Chr(34) & " integer); "
+
+            theSQL = "SELECT * FROM cdam_get_population_data_by_model_run_id_per_tr_flow(" & modelrunid & "," & year & ",'rail',9999) "
+            theSQL &= " AS (scenario_id varchar, year integer, gender varchar, category varchar, flow_id integer," & Chr(34) & "PopOZ" & Chr(34)
+            theSQL &= " double precision, ozone_id integer, " & Chr(34) & "PopDZ" & Chr(34) & " double precision, "
+            theSQL &= "dzone_id integer);"
+
+
+
             If LoadSQLDataToArray(zoneDemogArray, theSQL) = False Then
                 zoneDemogArray = Nothing
                 Return 0
@@ -881,11 +896,23 @@ Module DBaseInterface
         End If
 
         'Get the population for the specified zone
-        For i = 1 To UBound(zoneDemogArray, 1)
-            If CInt(seaDemogArray(i, 5)) = ZoneID Then
-                Return CDbl(zoneDemogArray(i, 8))
-            End If
-        Next
+        Select Case type
+            Case "OZ"
+                For i = 1 To UBound(zoneDemogArray, 1)
+                    If CInt(zoneDemogArray(i, 4)) = FlowID Then
+                        Return (CDbl(zoneDemogArray(i, 5)) / 1000)
+                    End If
+                Next
+            Case "DZ"
+                For i = 1 To UBound(zoneDemogArray, 1)
+                    If CInt(zoneDemogArray(i, 4)) = FlowID Then
+                        Return (CDbl(zoneDemogArray(i, 7)) / 1000)
+                    End If
+                Next
+            Case Else
+                Return 0
+        End Select
+
 
         'If portid not found then return 0
         Return 0
@@ -895,6 +922,11 @@ Module DBaseInterface
 
     Function get_population_data_by_seaportID(ByVal modelrunid As Integer, ByVal year As Integer, ByVal PortID As Integer) As Double
         Dim theSQL As String = ""
+
+        If PortID = 1 Then
+            'reset seaGVAArray value to read from database
+            seaDemogArray = Nothing
+        End If
 
 
         'If the Demographic data has not been loaded then load it for each zone or port.
@@ -914,7 +946,7 @@ Module DBaseInterface
         'Get the population for the specified port
         For i = 1 To UBound(seaDemogArray, 1)
             If CInt(seaDemogArray(i, 9)) = PortID Then
-                Return CDbl(seaDemogArray(i, 4))
+                Return CDbl((seaDemogArray(i, 4)) / 1000)
             End If
         Next
 
@@ -927,14 +959,20 @@ Module DBaseInterface
 
 #Region "...Get GVA..."
 
-    Function get_gva_data_by_zoneID(ByVal modelrunid As Integer, ByVal year As Integer, ByVal ZoneID As Integer)
+    Function get_gva_data_by_zoneID(ByVal modelrunid As Integer, ByVal year As Integer, ByVal FlowID As Integer, ByVal type As String)
         Dim theSQL As String = ""
 
+        If FlowID = 1 And type = "OZ" Then
+            'reset zoneGVAArray value at the beginning of each year
+            '"OZ" has to be called first to avoid errors
+            zoneGVAArray = Nothing
+        End If
+
         If zoneGVAArray Is Nothing Then
-            theSQL = "SELECT * FROM SELECT * FROM cdam_get_economics_data_by_model_run_id_per_tr_gor(" & modelrunid & "," & year & ",9999) "
-            theSQL &= " AS (scenario_id varchar, year integer," & Chr(34) & "GORName" & Chr(34)
-            theSQL &= " varchar, " & Chr(34) & "GVAZ" & Chr(34) & " double precision, tr_cdam_gor_id integer, "
-            theSQL &= Chr(34) & "PortName" & Chr(34) & " varchar, port_id integer);"
+            theSQL = "SELECT * FROM cdam_get_economics_data_by_model_run_id_per_tr_flow(" & modelrunid & "," & year & ",'rail',9999) "
+            theSQL &= " AS (economics_scenario_id varchar, year integer, flow_id integer," & Chr(34) & "GVAOZ" & Chr(34)
+            theSQL &= " double precision, ozone_id integer, " & Chr(34) & "GVADZ" & Chr(34) & " double precision, "
+            theSQL &= "dzone_id integer);"
 
             If LoadSQLDataToArray(zoneGVAArray, theSQL) = False Then
                 zoneGVAArray = Nothing
@@ -942,12 +980,23 @@ Module DBaseInterface
             End If
         End If
 
-        'Get the population for the specified zone
-        For i = 1 To UBound(zoneGVAArray, 1)
-            If CInt(zoneGVAArray(i, 6)) = ZoneID Then
-                Return CDbl(zoneGVAArray(i, 3))
-            End If
-        Next
+        'Get the gva for the specified zone
+        Select Case type
+            Case "OZ"
+                For i = 1 To UBound(zoneGVAArray, 1)
+                    If CInt(zoneGVAArray(i, 2)) = FlowID Then
+                        Return (CDbl(zoneGVAArray(i, 3)) / 1000000)
+                    End If
+                Next
+            Case "DZ"
+                For i = 1 To UBound(zoneGVAArray, 1)
+                    If CInt(zoneGVAArray(i, 2)) = FlowID Then
+                        Return (CDbl(zoneGVAArray(i, 5)) / 1000000)
+                    End If
+                Next
+            Case Else
+                Return 0
+        End Select
 
         'If portid not found then return 0
         Return 0
@@ -986,9 +1035,14 @@ Module DBaseInterface
         Dim theSQL As String = ""
         Dim i As Integer
 
+        If PortID = 1 Then
+            'reset seaGVAArray value to read from database
+            seaGVAArray = Nothing
+        End If
+
         If seaGVAArray Is Nothing Then
 
-            theSQL = "SELECT * FROM cdam_get_economics_data_by_model_run_id_per_tr_gor(" & modelrunid & "," & year & ",'sea',9999) "
+            theSQL = "SELECT * FROM cdam_get_economics_data_by_model_run_id_per_tr_gor(" & modelrunid & "," & year & ",'sea', 9999) "
             theSQL &= " AS (scenario_id varchar, year integer," & Chr(34) & "GORName" & Chr(34)
             theSQL &= " varchar, " & Chr(34) & "GVAZ" & Chr(34) & " double precision, tr_cdam_gor_id integer, "
             theSQL &= Chr(34) & "PortName" & Chr(34) & " varchar, port_id integer);"
@@ -1002,7 +1056,7 @@ Module DBaseInterface
         'Get the population for the specified zone
         For i = 1 To UBound(seaGVAArray, 1)
             If CInt(seaGVAArray(i, 6)) = PortID Then
-                Return CDbl(seaGVAArray(i, 3))
+                Return CDbl((seaGVAArray(i, 3)) / 1000000)
             End If
         Next
 
@@ -1025,6 +1079,38 @@ Module DBaseInterface
         End If
 
     End Sub
+    Function get_single_data(ByVal table_name As String, ByVal id_column As String, ByVal year_column As String, ByVal target_column As String, ByVal year As Integer, ByVal id As Integer)
+        'read specific data from specific table
+        Dim theSQL As String = ""
+        Dim temp As Double
+
+        If id = 1 Then
+            'reset dataArray value to read from database
+            dataArray = Nothing
+        End If
+
+        If dataArray Is Nothing Then
+
+            theSQL = "SELECT " & id_column & "," & year_column & "," & target_column & " FROM " & Chr(34) & table_name & Chr(34) & " WHERE " & year_column & " = " & year & " ORDER BY " & id_column
+
+            If LoadSQLDataToArray(dataArray, theSQL) = False Then
+                dataArray = Nothing
+                Return 0
+            End If
+        End If
+
+        'Get the population for the specified zone
+        For i = 1 To UBound(dataArray, 1)
+            If CInt(dataArray(i, 0)) = id Then
+                Return CDbl(dataArray(i, 2))
+            End If
+        Next
+
+        'If portid not found then return 0
+        Return 0
+
+    End Function
+
 
     '****************************************************************************************
     ' Function: ReadData 
@@ -1152,14 +1238,14 @@ Module DBaseInterface
                     Case "Input"
                         If IsInitialYear = True Then
                             TheFileName = "RailLinkInputData2010.csv"
-                            theSQL = "SELECT * FROM " & Chr(34) & "TR_I_RailLink_Base" & Chr(34) & " WHERE year = " & 2010
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_I_RailLink_Base" & Chr(34) & " WHERE year = " & 2010 & " ORDER BY year, flow_id"
                         ElseIf IsInitialYear = False Then
                             TheFileName = FilePrefix & "RailLinkTemp.csv"
                             theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RailLink" & Chr(34) & " WHERE modelrun_id = " & ModelRunID
                         End If
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "RailLinkExtVar" & EVFileSuffix & ".csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_O_RailLinkExternalVariables" & Chr(34) & " WHERE year = " & Year
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_O_RailLinkExternalVariables" & Chr(34) & " WHERE year = " & Year & " ORDER BY flow_id"
                     Case "CapChange"
                         TheFileName = CapFilePrefix & "RailLinkCapChange.csv"
                     Case "Elasticity"
@@ -1204,11 +1290,6 @@ Module DBaseInterface
                         ElseIf IsInitialYear = False Then
                             TheFileName = FilePrefix & "AirNodeTemp.csv"
                             theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_AirNode" & Chr(34) & " WHERE modelrun_id = " & ModelRunID
-                        End If
-                        If IsInitialYear = True Then
-                            TheFileName = "AirNodeInputData2010.csv"
-                        ElseIf IsInitialYear = False Then
-                            TheFileName = FilePrefix & "AirNodeTemp.csv"
                         End If
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "AirNodeExtVar" & EVFileSuffix & ".csv"
@@ -1337,7 +1418,7 @@ Module DBaseInterface
             End If
 
             'Store column names in the 0 row
-            ReDim aryData(DataRows, DataColumns - 1)
+            ReDim aryData(DataRows + 1, DataColumns - 1)
             For iC = 0 To DataColumns - 1
                 aryData(0, iC) = Trim(CStr(TableData.Columns(iC).ColumnName))
             Next

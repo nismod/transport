@@ -2040,7 +2040,7 @@
                     End If
                 Case "StartYear"
                     TextBox39.Text = controlarray(1)
-                Case " Duration"
+                Case "Duration"
                     TextBox40.Text = controlarray(1)
             End Select
             controlstring = cfo.ReadLine

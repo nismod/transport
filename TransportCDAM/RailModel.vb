@@ -54,7 +54,7 @@ Module RailModel
     Dim ModelPeakHeadway(238, 0) As Double
     Dim FuelUsed(90, 1) As Double
     Dim RlFuelEff(90, 1) As Double
-    Dim FuelString(90, 2) As String
+    Dim FuelString(91, 3) As String
     Dim RlTripRates(90) As Double
     Dim InputCount As Long
     Dim OutputRow As String
@@ -62,8 +62,8 @@ Module RailModel
     Dim RlLinkArray() As String
     Dim CalcCheck1 As Integer
     Dim InputArray(238, 17) As String
-    Dim OutputArray(238, 5) As String
-    Dim TempArray(238, 13) As String
+    Dim OutputArray(239, 5) As String
+    Dim TempArray(239, 13) As String
     Dim stratarray(90, 95) As String
     Dim NewCapArray(238, 2) As String
     Dim NewCapNum As Integer
@@ -155,10 +155,11 @@ Module RailModel
         Loop
 
         'Write fuel consumption output file
-        For y = 1 To Duration
-            FuelString(y, 0) = y
-            FuelString(y, 1) = FuelUsed(y, 0)
-            FuelString(y, 2) = FuelUsed(y, 1)
+        For y = StartYear To StartYear + Duration
+            FuelString(y, 0) = modelRunID
+            FuelString(y, 1) = y
+            FuelString(y, 2) = FuelUsed(y, 0)
+            FuelString(y, 3) = FuelUsed(y, 1)
         Next
         Call WriteData("RailLink", "RlLinkFuelUsed", FuelString)
 
@@ -198,22 +199,27 @@ Module RailModel
         Dim Zone1ID As Integer
         Dim Zone2ID As Integer
 
-        If YearNum = 1 Then
+        If YearNum = StartYear Then
             'assign values to variables in the order of the initial file
             FlowNum(InputCount, 0) = InputArray(InputCount, 4)
             OldTracks(InputCount, 0) = InputArray(InputCount, 7)
             OldTrains(InputCount, 0) = InputArray(InputCount, 8)
-            PopZ1Base(InputCount, 0) = get_population_data_by_zoneID(modelRunID, modelRunYear, Zone1ID)
-            PopZ2Base(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, modelRunYear, Zone1ID)
-            GVAZ1Base(InputCount, 0) = get_population_data_by_zoneID(modelRunID, modelRunYear, Zone2ID)
-            GVAZ2Base(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, modelRunYear, Zone2ID)
+            'read previous years' value as base value
+            PopZ1Base(InputCount, 0) = get_population_data_by_zoneID(modelRunID, YearNum + 2009, FlowNum(InputCount, 0), "OZ")
+            PopZ2Base(InputCount, 0) = get_population_data_by_zoneID(modelRunID, YearNum + 2009, FlowNum(InputCount, 0), "DZ")
+            GVAZ1Base(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, YearNum + 2009, FlowNum(InputCount, 0), "OZ")
+            GVAZ2Base(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, YearNum + 2009, FlowNum(InputCount, 0), "DZ")
             OldDelays(InputCount, 0) = InputArray(InputCount, 9)
             RlLinkCost(InputCount, 0) = InputArray(InputCount, 10)
             CarFuel(InputCount, 0) = InputArray(InputCount, 11)
             MaxTDBase(InputCount, 0) = InputArray(InputCount, 12)
             If RailCUPeriod = "Hour" Then
                 BusyTrains(InputCount, 0) = InputArray(InputCount, 15)
-                BusyPer(InputCount, 0) = BusyTrains(InputCount, 0) / OldTrains(InputCount, 0)
+                If OldTrains(InputCount, 0) = 0 Then
+                    BusyPer(InputCount, 0) = 0
+                Else
+                    BusyPer(InputCount, 0) = BusyTrains(InputCount, 0) / OldTrains(InputCount, 0)
+                End If
                 ModelPeakHeadway(InputCount, 0) = RlPeakHeadway
             End If
 
@@ -224,14 +230,15 @@ Module RailModel
         Else
             'assign values to variables in the order of the temp file
             FlowNum(InputCount, 0) = InputArray(InputCount, 3)
-            PopZ1Base(InputCount, 0) = get_population_data_by_zoneID(modelRunID, modelRunYear, Zone1ID)
-            PopZ2Base(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, modelRunYear, Zone1ID)
-            GVAZ1Base(InputCount, 0) = get_population_data_by_zoneID(modelRunID, modelRunYear, Zone1ID)
-            GVAZ2Base(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, modelRunYear, Zone2ID)
+            'read previous years' value as base value
+            PopZ1Base(InputCount, 0) = get_population_data_by_zoneID(modelRunID, YearNum + 2009, FlowNum(InputCount, 0), "OZ")
+            PopZ2Base(InputCount, 0) = get_population_data_by_zoneID(modelRunID, YearNum + 2009, FlowNum(InputCount, 0), "DZ")
+            GVAZ1Base(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, YearNum + 2009, FlowNum(InputCount, 0), "OZ")
+            GVAZ2Base(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, YearNum + 2009, FlowNum(InputCount, 0), "DZ")
             OldDelays(InputCount, 0) = InputArray(InputCount, 4)
             RlLinkCost(InputCount, 0) = InputArray(InputCount, 5)
             'needs to create a new function to get cost from the external variable from previous year
-            'CarFuel(InputCount, 0) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "raillink", InputCount)
+            CarFuel(InputCount, 0) = get_single_data("TR_O_RailLinkExternalVariables", "flow_id", "year", Chr(34) & "CarFuel" & Chr(34), YearNum - 1, FlowNum(InputCount, 0))
             OldTrains(InputCount, 0) = InputArray(InputCount, 6)
             OldTracks(InputCount, 0) = InputArray(InputCount, 7)
             MaxTDBase(InputCount, 0) = InputArray(InputCount, 8)
@@ -368,7 +375,7 @@ Module RailModel
             OldX = OldTrains(InputCount, 0)
             'pop ratio
             OldY = PopZ1Base(InputCount, 0) + PopZ2Base(InputCount, 0)
-            If TripRates = "Strategy" Then
+            If TripRates = "SubStrategy" Then
                 NewY = (CDbl(RlLinkExtVars(InputCount, 5)) + RlLinkExtVars(InputCount, 6)) * RlTripRates(YearNum)
             Else
                 NewY = CDbl(RlLinkExtVars(InputCount, 6)) + RlLinkExtVars(InputCount, 6)
@@ -379,7 +386,7 @@ Module RailModel
                 Call VarElCalc()
                 PopRat = VarRat
             Else
-                If TripRates = "Strategy" Then
+                If TripRates = "SubStrategy" Then
                     PopRat = (((CDbl(RlLinkExtVars(InputCount, 5)) + RlLinkExtVars(InputCount, 6)) * RlTripRates(YearNum)) / (PopZ1Base(InputCount, 0) + PopZ2Base(InputCount, 0))) ^ RlLinkEl(YearNum, 1)
                 Else
                     PopRat = ((CDbl(RlLinkExtVars(InputCount, 5)) + RlLinkExtVars(InputCount, 6)) / (PopZ1Base(InputCount, 0) + PopZ2Base(InputCount, 0))) ^ RlLinkEl(YearNum, 1)
@@ -427,7 +434,7 @@ Module RailModel
                 CarFuelRat = (RlLinkExtVars(InputCount, 10) / CarFuel(InputCount, 0)) ^ RlLinkEl(YearNum, 5)
             End If
         Else
-            If TripRates = "Strategy" Then
+            If TripRates = "SubStrategy" Then
                 PopRat = (((CDbl(RlLinkExtVars(InputCount, 5)) + RlLinkExtVars(InputCount, 6)) * RlTripRates(YearNum)) / (PopZ1Base(InputCount, 0) + PopZ2Base(InputCount, 0))) ^ RlLinkEl(YearNum, 1)
             Else
                 PopRat = ((CDbl(RlLinkExtVars(InputCount, 5)) + RlLinkExtVars(InputCount, 6)) / (PopZ1Base(InputCount, 0) + PopZ2Base(InputCount, 0))) ^ RlLinkEl(YearNum, 1)
@@ -488,6 +495,7 @@ Module RailModel
 
         'write to outputarray
         If CalcCheck(InputCount, 0) = True Then
+            OutputArray(InputCount, 0) = modelRunID
             OutputArray(InputCount, 1) = FlowNum(InputCount, 0)
             OutputArray(InputCount, 2) = YearNum
             'TODO update newtrain every year, otherwise it will read the previous link value
@@ -501,6 +509,7 @@ Module RailModel
             OutputArray(InputCount, 4) = NewDelays(InputCount, 0)
             OutputArray(InputCount, 5) = CUNew(InputCount, 0)
         Else
+            OutputArray(InputCount, 0) = modelRunID
             OutputArray(InputCount, 1) = FlowNum(InputCount, 0)
             OutputArray(InputCount, 2) = YearNum
             OutputArray(InputCount, 3) = RlLinkExtVars(InputCount, 14)
@@ -529,6 +538,7 @@ Module RailModel
         End If
 
         'write to temparray
+        TempArray(InputCount, 0) = modelRunID
         TempArray(InputCount, 1) = YearNum
         TempArray(InputCount, 2) = FlowNum(InputCount, 0)
 

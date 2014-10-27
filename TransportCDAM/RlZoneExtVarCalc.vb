@@ -195,8 +195,8 @@
                 If Year = 1 Then
 
                     ZoneID(InputCount, 0) = InputArray(InputCount, 4)
-                    PopOld(InputCount, 0) = get_population_data_by_zoneID(modelRunID, modelRunYear, ZoneID(InputCount, 0))
-                    GVAOld(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, modelRunYear, ZoneID(InputCount, 0))
+                    'PopOld(InputCount, 0) = get_population_data_by_zoneID(modelRunID, modelRunYear, ZoneID(InputCount, 0))
+                    'GVAOld(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, modelRunYear, ZoneID(InputCount, 0))
                     CostOld(InputCount, 0) = InputArray(InputCount, 8)
                     StationsOld(InputCount, 0) = InputArray(InputCount, 9)
                     FuelOld(InputCount, 0) = InputArray(InputCount, 10)
