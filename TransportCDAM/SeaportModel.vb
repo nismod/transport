@@ -57,7 +57,7 @@
             If YearNum = 1 Then
                 Call ReadData("Seaport", "Input", InputArray, modelRunID, True)
             Else
-                Call ReadData("Seaport", "Input", InputArray, modelRunID, False)
+                Call ReadData("Seaport", "Input", InputArray, modelRunID, False, YearNum)
             End If
 
 

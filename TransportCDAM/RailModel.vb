@@ -87,7 +87,7 @@ Module RailModel
             If YearNum = 1 Then
                 Call ReadData("RailLink", "Input", InputArray, modelRunID, True)
             Else
-                Call ReadData("RailLink", "Input", InputArray, modelRunID, False)
+                Call ReadData("RailLink", "Input", InputArray, modelRunID, False, YearNum)
             End If
 
             InputCount = 1

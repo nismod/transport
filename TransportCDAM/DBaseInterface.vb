@@ -1174,7 +1174,7 @@ Module DBaseInterface
                             theSQL = "SELECT * FROM " & Chr(34) & "TR_I_RoadZone_Base" & Chr(34) & " WHERE year = " & 2010
                         ElseIf IsInitialYear = False Then
                             TheFileName = FilePrefix & "RoadZoneTemp.csv"
-                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadZone" & Chr(34) & " WHERE modelrun_id = " & ModelRunID
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadZone" & Chr(34) & " WHERE modelrun_id = " & ModelRunID & ", year = " & Year - 1
                         End If
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "RoadZoneExtVar" & EVFileSuffix & ".csv"
@@ -1241,7 +1241,7 @@ Module DBaseInterface
                             theSQL = "SELECT * FROM " & Chr(34) & "TR_I_RailLink_Base" & Chr(34) & " WHERE year = " & 2010 & " ORDER BY year, flow_id"
                         ElseIf IsInitialYear = False Then
                             TheFileName = FilePrefix & "RailLinkTemp.csv"
-                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RailLink" & Chr(34) & " WHERE modelrun_id = " & ModelRunID
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RailLink" & Chr(34) & " WHERE modelrun_id = " & ModelRunID & "and year = " & Year - 1
                         End If
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "RailLinkExtVar" & EVFileSuffix & ".csv"
@@ -1269,7 +1269,7 @@ Module DBaseInterface
                             theSQL = "SELECT * FROM " & Chr(34) & "TR_I_SeaFreight_Base" & Chr(34) & " WHERE year = " & 2010
                         ElseIf IsInitialYear = False Then
                             TheFileName = FilePrefix & "SeaTemplate.csv"
-                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_SeaFreight" & Chr(34) & " WHERE modelrun_id = " & ModelRunID
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_SeaFreight" & Chr(34) & " WHERE modelrun_id = " & ModelRunID & "and year = " & Year - 1
                         End If
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "SeaFreightExtVar" & EVFileSuffix & ".csv"
