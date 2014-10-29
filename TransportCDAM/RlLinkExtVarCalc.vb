@@ -290,7 +290,7 @@
             Call ReadData("RailLink", "EVScale", ScalingData, modelRunID)
         End If
 
-        'set year as 1 to start with
+        'start with the input start year
         Year = StartYear
 
         Do Until Year > StartYear + Duration
@@ -310,6 +310,8 @@
             InputCount = 1
 
             Do Until InputCount > 238
+
+                'read from the initial data file if it is year 1 (calculation for year 2011, and initial data file is for 2010)
                 If Year = 1 Then
                     FlowID(InputCount, 0) = InputArray(InputCount, 4)
                     OZone(InputCount, 0) = InputArray(InputCount, 5)

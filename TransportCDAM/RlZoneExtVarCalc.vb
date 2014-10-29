@@ -40,7 +40,7 @@
     Dim enearray(91, 6) As String
     Dim ScalingData(90, 8) As String
     Dim InputArray(144, 14) As String
-    Dim OutputArray(144, 10) As String
+    Dim OutputArray(145, 10) As String
 
 
 
@@ -170,8 +170,8 @@
         Dim InputCount As Long
         Dim InDieselOldAll, InElectricOldAll, InDieselNewAll, InElectricNewAll
 
-        'start from year 1
-        Year = 1
+        'start from the input start year
+        Year = StartYear
 
         'initialize values
         If RlZOthSource = "File" Then
@@ -180,8 +180,8 @@
             InElectricOldAll = enearray(1, 3)
         End If
 
-        'loop through all 90 years
-        Do Until Year > 90
+        'loop through all input duration years
+        Do Until Year > StartYear + Duration
 
             If RlZEneSource = "Database" Then
                 InDieselNewAll = enearray(Year + 1, 2)
@@ -195,15 +195,15 @@
                 If Year = 1 Then
 
                     ZoneID(InputCount, 0) = InputArray(InputCount, 4)
-                    'PopOld(InputCount, 0) = get_population_data_by_zoneID(modelRunID, modelRunYear, ZoneID(InputCount, 0))
-                    'GVAOld(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, modelRunYear, ZoneID(InputCount, 0))
+                    PopOld(InputCount, 0) = get_population_data_by_zoneID(modelRunID, Year + 2010, ZoneID(InputCount, 0), "Zone")
+                    GVAOld(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, Year + 2010, ZoneID(InputCount, 0), "Zone")
                     CostOld(InputCount, 0) = InputArray(InputCount, 8)
                     StationsOld(InputCount, 0) = InputArray(InputCount, 9)
                     FuelOld(InputCount, 0) = InputArray(InputCount, 10)
                     GJTOld(InputCount, 0) = InputArray(InputCount, 11)
-                    Country(InputCount, 0) = InputArray(InputCount, 14)
-                    ElPOld(InputCount, 0) = InputArray(InputCount, 12)
-                    ElStat(InputCount, 0) = InputArray(InputCount, 13)
+                    Country(InputCount, 0) = InputArray(InputCount, 12)
+                    ElPOld(InputCount, 0) = InputArray(InputCount, 13)
+                    ElStat(InputCount, 0) = InputArray(InputCount, 14)
                     NewTrips = 0
 
                     'need to set StationsNew to equal StationsOld to start with, as it gets reset every year but doesn't change every year
@@ -274,14 +274,11 @@ NextYear:
                 End If
                 If RlZPopSource = "File" Then
                     Select Case Country(InputCount, 0)
-                        'Case "E"
-                        Case "1"
+                        Case "E"
                             PopGrowth = 1 + ScalingData(Year, 1)
-                            'Case "S"
-                        Case "3"
+                        Case "S"
                             PopGrowth = 1 + ScalingData(Year, 2)
-                            'Case "W"
-                        Case "2"
+                        Case "W"
                             PopGrowth = 1 + ScalingData(Year, 3)
                     End Select
                     PopNew = PopOld(InputCount, 0) * PopGrowth
@@ -393,6 +390,7 @@ NextYear:
                     End If
                 End If
                 'write to output file
+                OutputArray(InputCount, 0) = modelRunID
                 OutputArray(InputCount, 1) = ZoneID(InputCount, 0)
                 OutputArray(InputCount, 2) = Year
                 OutputArray(InputCount, 3) = PopNew

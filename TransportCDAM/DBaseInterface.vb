@@ -873,21 +873,25 @@ Module DBaseInterface
         If FlowID = 1 And type = "OZ" Then
             'reset zoneDemogArray value at the beginning of each year
             '"OZ" has to be called first to avoid errors
-            zoneDemogArray = Nothing
+            If type = "OZ" Or type = "Zone" Then
+                zoneDemogArray = Nothing
+            End If
         End If
 
         If zoneDemogArray Is Nothing Then
-            'theSQL = "SELECT * FROM cdam_get_population_data_by_model_run_id_per_tr_flow('" & modelrunid & "'," & year & ",9999)"
-            'theSQL &= "AS (scenario_id varchar, year integer, gender varchar, category varchar, location varchar, value double precision, " & Chr(34)
-            'theSQL &= "GORName" & Chr(34) & " varchar, " & Chr(34) & "gor_id" & Chr(34) & " integer, " & Chr(34) & "tr_cdam_gor_id" & Chr(34)
-            'theSQL &= " integer, " & Chr(34) & "PortName" & Chr(34) & " varchar, " & Chr(34) & "port_id" & Chr(34) & " integer); "
 
-            theSQL = "SELECT * FROM cdam_get_population_data_by_model_run_id_per_tr_flow(" & modelrunid & "," & year & ",'rail',9999) "
-            theSQL &= " AS (scenario_id varchar, year integer, gender varchar, category varchar, flow_id integer," & Chr(34) & "PopOZ" & Chr(34)
-            theSQL &= " double precision, ozone_id integer, " & Chr(34) & "PopDZ" & Chr(34) & " double precision, "
-            theSQL &= "dzone_id integer);"
-
-
+            'call different SQL function for zone and for link
+            If type = "Zone" Then
+                theSQL = "SELECT * FROM cdam_get_population_data_by_model_run_id_per_tr_zone(" & modelrunid & "," & year & ", 9999) "
+                theSQL &= " AS (scenario_id varchar, year integer, gender varchar, category varchar, " & Chr(34) & "DistrictName" & Chr(34)
+                theSQL &= " varchar, zone_id integer, " & Chr(34) & "ZoneName" & Chr(34) & " varchar, district_code varchar, "
+                theSQL &= "value double precision);"
+            Else
+                theSQL = "SELECT * FROM cdam_get_population_data_by_model_run_id_per_tr_flow(" & modelrunid & "," & year & ",'rail',9999) "
+                theSQL &= " AS (scenario_id varchar, year integer, gender varchar, category varchar, flow_id integer," & Chr(34) & "PopOZ" & Chr(34)
+                theSQL &= " double precision, ozone_id integer, " & Chr(34) & "PopDZ" & Chr(34) & " double precision, "
+                theSQL &= "dzone_id integer);"
+            End If
 
             If LoadSQLDataToArray(zoneDemogArray, theSQL) = False Then
                 zoneDemogArray = Nothing
@@ -907,6 +911,12 @@ Module DBaseInterface
                 For i = 1 To UBound(zoneDemogArray, 1)
                     If CInt(zoneDemogArray(i, 4)) = FlowID Then
                         Return (CDbl(zoneDemogArray(i, 7)) / 1000)
+                    End If
+                Next
+            Case "Zone"
+                For i = 1 To UBound(zoneDemogArray, 1)
+                    If CInt(zoneDemogArray(i, 5)) = FlowID Then
+                        Return (CDbl(zoneDemogArray(i, 8)) / 1000)
                     End If
                 Next
             Case Else
@@ -963,16 +973,26 @@ Module DBaseInterface
         Dim theSQL As String = ""
 
         If FlowID = 1 And type = "OZ" Then
-            'reset zoneGVAArray value at the beginning of each year
+            'reset zoneDemogArray value at the beginning of each year
             '"OZ" has to be called first to avoid errors
-            zoneGVAArray = Nothing
+            If type = "OZ" Or type = "Zone" Then
+                zoneDemogArray = Nothing
+            End If
         End If
 
         If zoneGVAArray Is Nothing Then
-            theSQL = "SELECT * FROM cdam_get_economics_data_by_model_run_id_per_tr_flow(" & modelrunid & "," & year & ",'rail',9999) "
-            theSQL &= " AS (economics_scenario_id varchar, year integer, flow_id integer," & Chr(34) & "GVAOZ" & Chr(34)
-            theSQL &= " double precision, ozone_id integer, " & Chr(34) & "GVADZ" & Chr(34) & " double precision, "
-            theSQL &= "dzone_id integer);"
+            'call different SQL function for zone and for link
+            If type = "Zone" Then
+                theSQL = "SELECT * FROM cdam_get_economics_data_by_model_run_id_per_tr_zone(" & modelrunid & "," & year & ", 9999) "
+                theSQL &= " AS (economics_scenario_id varchar, year integer, " & Chr(34) & "GOR" & Chr(34)
+                theSQL &= " varchar, zone_id integer, " & Chr(34) & "GVAZ" & Chr(34) & " double precision);"
+            Else
+                theSQL = "SELECT * FROM cdam_get_economics_data_by_model_run_id_per_tr_flow(" & modelrunid & "," & year & ",'rail',9999) "
+                theSQL &= " AS (economics_scenario_id varchar, year integer, flow_id integer," & Chr(34) & "GVAOZ" & Chr(34)
+                theSQL &= " double precision, ozone_id integer, " & Chr(34) & "GVADZ" & Chr(34) & " double precision, "
+                theSQL &= "dzone_id integer);"
+            End If
+
 
             If LoadSQLDataToArray(zoneGVAArray, theSQL) = False Then
                 zoneGVAArray = Nothing
@@ -992,6 +1012,12 @@ Module DBaseInterface
                 For i = 1 To UBound(zoneGVAArray, 1)
                     If CInt(zoneGVAArray(i, 2)) = FlowID Then
                         Return (CDbl(zoneGVAArray(i, 5)) / 1000000)
+                    End If
+                Next
+            Case "Zone"
+                For i = 1 To UBound(zoneDemogArray, 1)
+                    If CInt(zoneGVAArray(i, 3)) = FlowID Then
+                        Return (CDbl(zoneGVAArray(i, 4)) / 1000000)
                     End If
                 Next
             Case Else
@@ -1214,14 +1240,14 @@ Module DBaseInterface
                     Case "Input"
                         If IsInitialYear = True Then
                             TheFileName = "RailZoneInputData2010.csv"
-                            theSQL = "SELECT * FROM " & Chr(34) & "TR_I_RailZone_Base" & Chr(34) & " WHERE year = " & 2010
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_I_RailZone_Base" & Chr(34) & " WHERE year = " & 2010 & " ORDER BY year, zone_id"
                         ElseIf IsInitialYear = False Then
                             TheFileName = FilePrefix & "RailZoneTemp.csv"
-                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RailZone" & Chr(34) & " WHERE modelrun_id = " & ModelRunID
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RailZone" & Chr(34) & " WHERE modelrun_id = " & ModelRunID & "and year = " & Year - 1
                         End If
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "RailZoneExtVar" & EVFileSuffix & ".csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_O_RailZoneExternalVariables" & Chr(34) & " WHERE year = " & Year
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_O_RailZoneExternalVariables" & Chr(34) & " WHERE year = " & Year & " ORDER BY zone_id"
                     Case "CapChange"
                         TheFileName = CapFilePrefix & "RailZoneCapChange.csv"
                     Case "Elasticity"
@@ -1266,7 +1292,7 @@ Module DBaseInterface
                     Case "Input"
                         If IsInitialYear = True Then
                             TheFileName = "SeaFreightInputData.csv"
-                            theSQL = "SELECT * FROM " & Chr(34) & "TR_I_SeaFreight_Base" & Chr(34) & " WHERE year = " & 2010
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_I_SeaFreight_Base" & Chr(34) & " WHERE year = " & 2010 & " ORDER BY year, port_id"
                         ElseIf IsInitialYear = False Then
                             TheFileName = FilePrefix & "SeaTemplate.csv"
                             theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_SeaFreight" & Chr(34) & " WHERE modelrun_id = " & ModelRunID & "and year = " & Year - 1

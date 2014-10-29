@@ -73,7 +73,7 @@ Module RailModel
         'read related files
         Call RailLinkInputFiles()
 
-
+        'start from input start year
         YearNum = StartYear
 
         Do Until YearNum > StartYear + Duration

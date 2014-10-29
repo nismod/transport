@@ -203,9 +203,9 @@
             DieselOld = enearray(1, 2)
         End If
 
-
+        'start from the input start year
         YearNum = StartYear
-        'calculate new values for port variables
+        'calculate new values for port variables for input duration
         Do Until YearNum > StartYear + Duration
             'calculate new values where needed
             'if including capacity changes, then check if there are any capacity changes for this zone
@@ -217,6 +217,7 @@
                 DieselNew = enearray(YearNum + 1, 2)
             End If
 
+            'loop through all ports
             PortCount = 1
             Do Until PortCount > 47
 
@@ -227,7 +228,7 @@
                         PortBaseData(PortCount, i) = InputArray(PortCount, i + 4)
                     Next
 
-                    'get GORPop and GORGva
+                    'get GORPop and GORGva by using database function
                     PortID = InputArray(PortCount, 4)
                     PortBaseData(PortCount, 11) = get_population_data_by_seaportID(modelRunID, YearNum + 2010, PortCount)
                     PortBaseData(PortCount, 12) = get_gva_data_by_seaportID(modelRunID, YearNum + 2010, PortCount)
@@ -325,7 +326,7 @@
                 Else
                     PortNewData(PortCount, 9) = 1
                 End If
-                'modelrun_id,year,port_id, LBCap,DBCap,GCCap,LLCap,RRCap,GORPop,GORGva,Cost,FuelEff
+
                 'write values to output array
                 OutputArray(PortCount, 0) = modelRunID
                 OutputArray(PortCount, 1) = PortBaseData(PortCount, 0)
@@ -352,6 +353,8 @@
                 DieselOld = DieselNew
             End If
 
+            'write output
+            'create file if it is the first year
             If YearNum = 1 Then
                 Call WriteData("Seaport", "ExtVar", OutputArray, , True)
             Else

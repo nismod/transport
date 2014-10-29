@@ -58,8 +58,8 @@
     Dim ZoneArray() As String
     Dim OutputRow As String
     Dim InputArray(144, 35) As String
-    Dim OutputArray(144, 29) As String
-    Dim TempArray(144, 60) As String
+    Dim OutputArray(145, 29) As String
+    Dim TempArray(145, 60) As String
     Dim CapNum As Integer
     Dim NewCapNum As Integer
     Dim FuelArray(145, 20) As String
