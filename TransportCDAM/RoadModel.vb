@@ -32,10 +32,10 @@
     Dim Zone2(291, 1) As String
     'SpeedCatFlows is an array containing the flows in all the speed categories
     Dim SpeedCatFlows(291, 20) As Double
-    Dim Z1Pop(291, 1) As Long
-    Dim Z2Pop(291, 1) As Long
-    Dim Z1GVA(291, 1) As Long
-    Dim Z2GVA(291, 1) As Long
+    Dim Z1Pop(291, 1) As Double
+    Dim Z2Pop(291, 1) As Double
+    Dim Z1GVA(291, 1) As Double
+    Dim Z2GVA(291, 1) As Double
     Dim CostOld(291, 19, 24), CostNew(19, 24) As Double
     Dim MStartFlow() As Long
     Dim DStartFlow() As Long
@@ -466,91 +466,91 @@
 
 
             'Old code for inputing Temp RoadLink data from text file 
-                'FlowID(link, 1) = InputArray(link, 1)
-                'RoadTypeLanes(link, 0) = InputArray(link, 2)
-                'RoadTypeLanes(link, 1) = InputArray(link, 3)
-                'RoadTypeLanes(link, 2) = InputArray(link, 4)
-                'RoadTypeLanesNew(link, 0) = InputArray(link, 5)
-                'RoadTypeLanesNew(link, 1) = InputArray(link, 6)
-                'RoadTypeLanesNew(link, 2) = InputArray(link, 7)
-                'For x = 0 To 19
-                '    SpeedCatFlows(link, x) = InputArray(link, 8 + x)
-                'Next
-                'Z1Pop(link, 1) = InputArray(link, 28)
-                'Z2Pop(link, 1) = InputArray(link, 29)
-                'Z1GVA(link, 1) = InputArray(link, 30)
-                'Z2GVA(link, 1) = InputArray(link, 31)
+            'FlowID(link, 1) = InputArray(link, 1)
+            'RoadTypeLanes(link, 0) = InputArray(link, 2)
+            'RoadTypeLanes(link, 1) = InputArray(link, 3)
+            'RoadTypeLanes(link, 2) = InputArray(link, 4)
+            'RoadTypeLanesNew(link, 0) = InputArray(link, 5)
+            'RoadTypeLanesNew(link, 1) = InputArray(link, 6)
+            'RoadTypeLanesNew(link, 2) = InputArray(link, 7)
+            'For x = 0 To 19
+            '    SpeedCatFlows(link, x) = InputArray(link, 8 + x)
+            'Next
+            'Z1Pop(link, 1) = InputArray(link, 28)
+            'Z2Pop(link, 1) = InputArray(link, 29)
+            'Z1GVA(link, 1) = InputArray(link, 30)
+            'Z2GVA(link, 1) = InputArray(link, 31)
 
-                'i = 32
-                'For x = 0 To 19
-                '    For c = 0 To 23
-                '        CostOld(link, x, c) = InputArray(link, i)
-                '        i += 1
-                '    Next
-                'Next
+            'i = 32
+            'For x = 0 To 19
+            '    For c = 0 To 23
+            '        CostOld(link, x, c) = InputArray(link, i)
+            '        i += 1
+            '    Next
+            'Next
 
-                'MaxCap(link, 0) = InputArray(link, 512)
-                'MaxCap(link, 1) = InputArray(link, 513)
-                'MaxCap(link, 2) = InputArray(link, 514)
-                'AddedLanes(link, 0) = InputArray(link, 515)
-                'AddedLanes(link, 1) = InputArray(link, 516)
-                'AddedLanes(link, 2) = InputArray(link, 517)
+            'MaxCap(link, 0) = InputArray(link, 512)
+            'MaxCap(link, 1) = InputArray(link, 513)
+            'MaxCap(link, 2) = InputArray(link, 514)
+            'AddedLanes(link, 0) = InputArray(link, 515)
+            'AddedLanes(link, 1) = InputArray(link, 516)
+            'AddedLanes(link, 2) = InputArray(link, 517)
 
-                ''XUCHENG - you need to put more commenting in your code - why does this only do this until sc < 20 ?
-                'i = 518
-                'sc = 0
-                'Do While sc < 20
-                '    RoadType = AssignRoadType(sc)
-                '    h = 0
-                '    Do Until h > 23
-                '        OldHourlyFlows(link, sc, h) = InputArray(link, i)
-                '        i += 1
-                '        RoadTypeFlows(link, RoadType, h) = InputArray(link, i)
-                '        i += 1
-                '        ChargeOld(link, sc, h) = InputArray(link, i)
-                '        i += 1
-                '        LatentHourlyFlows(link, sc, h) = InputArray(link, i)
-                '        i += 1
-                '        NewHourlySpeeds(link, sc, h) = InputArray(link, i)
-                '        i += 1
-                '        h += 1
-                '    Loop
-                '    sc += 1
-                'Loop
+            ''XUCHENG - you need to put more commenting in your code - why does this only do this until sc < 20 ?
+            'i = 518
+            'sc = 0
+            'Do While sc < 20
+            '    RoadType = AssignRoadType(sc)
+            '    h = 0
+            '    Do Until h > 23
+            '        OldHourlyFlows(link, sc, h) = InputArray(link, i)
+            '        i += 1
+            '        RoadTypeFlows(link, RoadType, h) = InputArray(link, i)
+            '        i += 1
+            '        ChargeOld(link, sc, h) = InputArray(link, i)
+            '        i += 1
+            '        LatentHourlyFlows(link, sc, h) = InputArray(link, i)
+            '        i += 1
+            '        NewHourlySpeeds(link, sc, h) = InputArray(link, i)
+            '        i += 1
+            '        h += 1
+            '    Loop
+            '    sc += 1
+            'Loop
 
-                'read standard cost value and each hour value into array "InputDetail"
-                'For i = 0 To 24
-                '    If i = 0 Then
-                '        FlowID(link, 1) = InputArray(link, 1)
-                '        'update lane variables to current values
-                '        RoadTypeLanesNew(link, 0) = InputArray(link, 22)
-                '        RoadTypeLanesNew(link, 1) = InputArray(link, 23)
-                '        RoadTypeLanesNew(link, 2) = InputArray(link, 24)
-                '    End If
-                '    For j = 0 To 19
-                '        InputDetail(i, j) = CDbl(Val(result(j + 2)))
-                '        If i <> 0 Then
-                '            CostOld(link, j, i - 1) = CDbl(Val(result(j + 25)))
-                '            LatentHourlyFlows(link, j, i - 1) = CDbl(Val(result(j + 45)))
-                '            If CongestionCharge = True Then
-                '                ChargeOld(link, j, i - 1) = CDbl(Val(result(j + 65)))
-                '            End If
-                '            NewHourlySpeeds(link, j, i - 1) = CDbl(Val(result(j + 85)))
-                '        End If
-                '    Next
-                'Next
+            'read standard cost value and each hour value into array "InputDetail"
+            'For i = 0 To 24
+            '    If i = 0 Then
+            '        FlowID(link, 1) = InputArray(link, 1)
+            '        'update lane variables to current values
+            '        RoadTypeLanesNew(link, 0) = InputArray(link, 22)
+            '        RoadTypeLanesNew(link, 1) = InputArray(link, 23)
+            '        RoadTypeLanesNew(link, 2) = InputArray(link, 24)
+            '    End If
+            '    For j = 0 To 19
+            '        InputDetail(i, j) = CDbl(Val(result(j + 2)))
+            '        If i <> 0 Then
+            '            CostOld(link, j, i - 1) = CDbl(Val(result(j + 25)))
+            '            LatentHourlyFlows(link, j, i - 1) = CDbl(Val(result(j + 45)))
+            '            If CongestionCharge = True Then
+            '                ChargeOld(link, j, i - 1) = CDbl(Val(result(j + 65)))
+            '            End If
+            '            NewHourlySpeeds(link, j, i - 1) = CDbl(Val(result(j + 85)))
+            '        End If
+            '    Next
+            'Next
 
-                ''store the values into computer memory
-                'sc = 0
-                'Do While sc < 20
-                '    SpeedCatFlowsNew(sc) = InputDetail(0, sc)
-                '    h = 0
-                '    Do While h < 24
-                '        NewHourlyFlows(sc, h) = InputDetail(h + 1, sc)
-                '        h += 1
-                '    Loop
-                '    sc += 1
-                'Loop
+            ''store the values into computer memory
+            'sc = 0
+            'Do While sc < 20
+            '    SpeedCatFlowsNew(sc) = InputDetail(0, sc)
+            '    h = 0
+            '    Do While h < 24
+            '        NewHourlyFlows(sc, h) = InputDetail(h + 1, sc)
+            '        h += 1
+            '    Loop
+            '    sc += 1
+            'Loop
 
         End If
     End Sub
@@ -1641,7 +1641,7 @@
         h = 0
         Do Until h > 23
             'work out the row number for the hourly data
-            hrow = (link - 1) * 24 + h
+            hrow = (link - 1) * 24 + h + 1
             'write to TempFlow array
             TempHArray(hrow, 0) = modelRunID
             TempHArray(hrow, 1) = YearNum

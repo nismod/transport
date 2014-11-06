@@ -365,7 +365,6 @@
             YearNum += 1
         Loop
 
-        zer.Close()
 
     End Sub
 
