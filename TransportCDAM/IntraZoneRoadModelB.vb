@@ -22,6 +22,7 @@
     Dim ZoneSpeed(145, 1) As Double
     Dim ZoneCarCost(145, 1), ZoneLGVCost(145, 1), ZoneHGV1Cost(145, 1), ZoneHGV2Cost(145, 1), ZonePSVCost(145, 1) As Double
     Dim ZoneExtVar(145, 47) As String
+    Dim ZonePreExtVar(145, 47) As String
     Dim YearCount As Integer
     Dim NewVkm As Double
     Dim ZoneOutputRow As String
@@ -57,7 +58,8 @@
     Dim ZoneLine As String
     Dim ZoneArray() As String
     Dim OutputRow As String
-    Dim InputArray(144, 35) As String
+    Dim Zone_ID(144, 1) As String
+    Dim InputArray(144, 61) As String
     Dim OutputArray(145, 29) As String
     Dim TempArray(145, 60) As String
     Dim CapNum As Integer
@@ -84,12 +86,15 @@
             'get external variable values
             Call ReadData("RoadZone", "ExtVar", ZoneExtVar, modelRunID, , YearCount)
 
+            'get external variable values from previous year as base values
+            Call ReadData("RoadZone", "ExtVar", ZonePreExtVar, modelRunID, , YearCount - 1)
+
             'read from the initial file if it is year 2010
             If YearCount = 1 Then
                 Call ReadData("RoadZone", "Input", InputArray, modelRunID, True)
             Else
-                ReDim Preserve InputArray(144, 61)
-                Call ReadData("RoadZone", "Input", InputArray, modelRunID, False)
+                'ReDim Preserve InputArray(144, 61)
+                Call ReadData("RoadZone", "Input", InputArray, modelRunID, False, YearCount)
             End If
 
             ZoneID = 1
@@ -156,9 +161,9 @@
         CapNum = 1
         If RoadCapArray(CapNum, 0) Is Nothing Then
             '130514 addition of line
-            RoadCapArray(CapNum, 0) = 0
-            RoadCapArray(CapNum, 1) = -1
-            RoadCapArray(CapNum, 2) = ""
+            RoadCapArray(CapNum, 2) = 0
+            RoadCapArray(CapNum, 3) = -1
+            RoadCapArray(CapNum, 4) = ""
         End If
 
         'get the strategy file
@@ -174,10 +179,10 @@
         'read the input data for the inputarray which is from the database
         If YearCount = 1 Then
             'read the input data for the zone
-
+            Zone_ID(ZoneID, 1) = InputArray(ZoneID, 4)
             BaseVkm(ZoneID, 1) = InputArray(ZoneID, 6)
-            'ZonePop(ZoneID, 1) = get_population_data_by_zoneID(modelRunID, modelRunYear, ZoneID)
-            'ZoneGVA(ZoneID, 1) = get_gva_data_by_zoneID(modelRunID, modelRunYear, ZoneID)
+            ZonePop(ZoneID, 1) = get_population_data_by_zoneID(modelRunID, YearCount + 2009, Zone_ID(ZoneID, 1), "Zone", "'road'")
+            ZoneGVA(ZoneID, 1) = get_gva_data_by_zoneID(modelRunID, YearCount + 2009, Zone_ID(ZoneID, 1), "Zone", "'road'")
             ZoneSpeed(ZoneID, 1) = InputArray(ZoneID, 7)
             ZoneCarCost(ZoneID, 1) = InputArray(ZoneID, 8)
             ZoneLGVCost(ZoneID, 1) = InputArray(ZoneID, 20)
@@ -256,26 +261,27 @@
                 BuiltLaneKm(ZoneID, x) = 0
             Next
         Else
-            'ZonePop(ZoneID, 1) = get_population_data_by_zoneID(modelRunID, modelRunYear, ZoneID)
-            'ZoneGVA(ZoneID, 1) = get_gva_data_by_zoneID(modelRunID, modelRunYear, ZoneID)
+            Zone_ID(ZoneID, 1) = CDbl(InputArray(ZoneID, 3))
+            ZonePop(ZoneID, 1) = get_population_data_by_zoneID(modelRunID, YearCount + 2009, Zone_ID(ZoneID, 1), "Zone", "'road'")
+            ZoneGVA(ZoneID, 1) = get_gva_data_by_zoneID(modelRunID, YearCount + 2009, Zone_ID(ZoneID, 1), "Zone", "'road'")
             ZoneSpeed(ZoneID, 1) = CDbl(InputArray(ZoneID, 4))
             BaseVkm(ZoneID, 1) = CDbl(InputArray(ZoneID, 5))
 
-            'need a function to pop out values from external variable files from previous year
-            'ZoneCarCost(ZoneID, 1) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "roadzone", ZoneID)
-            'ZoneLGVCost(ZoneID, 1) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "roadzone", ZoneID)
-            'ZoneHGV1Cost(ZoneID, 1) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "roadzone", ZoneID)
-            'ZoneHGV2Cost(ZoneID, 1) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "roadzone", ZoneID)
-            'ZonePSVCost(ZoneID, 1) = get_regional_gva_data_by_economics_scenario_tr_zone(ScenarioID, modelRunYear, "roadzone", ZoneID)
+            'read from previous year's external variable tables
+            ZoneCarCost(ZoneID, 1) = ZonePreExtVar(ZoneID, 6)
+            ZoneLGVCost(ZoneID, 1) = ZonePreExtVar(ZoneID, 44)
+            ZoneHGV1Cost(ZoneID, 1) = ZonePreExtVar(ZoneID, 45)
+            ZoneHGV2Cost(ZoneID, 1) = ZonePreExtVar(ZoneID, 46)
+            ZonePSVCost(ZoneID, 1) = ZonePreExtVar(ZoneID, 47)
 
-            ZoneLaneKm(ZoneID, 1) = ZoneExtVar(ZoneID, 8)
-            ZoneLaneKm(ZoneID, 2) = CDbl(ZoneExtVar(ZoneID, 9)) + CDbl(ZoneExtVar(ZoneID, 10))
-            ZoneLaneKm(ZoneID, 3) = ZoneExtVar(ZoneID, 11)
-            ZoneLaneKm(ZoneID, 4) = CDbl(ZoneExtVar(ZoneID, 12)) + CDbl(ZoneExtVar(ZoneID, 13))
-            RoadCatKm(ZoneID, 1) = ZoneExtVar(ZoneID, 8) / 6
-            RoadCatKm(ZoneID, 2) = (CDbl(ZoneExtVar(ZoneID, 9)) / 4) + (CDbl(ZoneExtVar(ZoneID, 10)) / 2)
-            RoadCatKm(ZoneID, 3) = ZoneExtVar(ZoneID, 11) / 2
-            RoadCatKm(ZoneID, 4) = (CDbl(ZoneExtVar(ZoneID, 12)) / 4) + (CDbl(ZoneExtVar(ZoneID, 13)) / 2)
+            ZoneLaneKm(ZoneID, 1) = ZonePreExtVar(ZoneID, 8)
+            ZoneLaneKm(ZoneID, 2) = CDbl(ZonePreExtVar(ZoneID, 9)) + CDbl(ZonePreExtVar(ZoneID, 10))
+            ZoneLaneKm(ZoneID, 3) = ZonePreExtVar(ZoneID, 11)
+            ZoneLaneKm(ZoneID, 4) = CDbl(ZonePreExtVar(ZoneID, 12)) + CDbl(ZonePreExtVar(ZoneID, 13))
+            RoadCatKm(ZoneID, 1) = ZonePreExtVar(ZoneID, 8) / 6
+            RoadCatKm(ZoneID, 2) = (CDbl(ZonePreExtVar(ZoneID, 9)) / 4) + (CDbl(ZonePreExtVar(ZoneID, 10)) / 2)
+            RoadCatKm(ZoneID, 3) = ZonePreExtVar(ZoneID, 11) / 2
+            RoadCatKm(ZoneID, 4) = (CDbl(ZonePreExtVar(ZoneID, 12)) / 4) + (CDbl(ZonePreExtVar(ZoneID, 13)) / 2)
 
 
             'loop through 4 road type (motorway, rural, ruralmin, urban)
@@ -394,12 +400,12 @@
 
         'v1.4 mod - check if there is any change in road capacity in this zone and year
         '130514 modified to take in both prespecified capacity and capacity built as part of TR1
-        If RoadCapArray(CapNum, 0) = ZoneID Then
-            If RoadCapArray(CapNum, 1) = YearCount Then
-                AddedLaneKm(ZoneID, 1) += RoadCapArray(CapNum, 2)
-                AddedLaneKm(ZoneID, 2) += CDbl(RoadCapArray(CapNum, 3)) + RoadCapArray(CapNum, 4)
-                AddedLaneKm(ZoneID, 3) += RoadCapArray(CapNum, 5)
-                AddedLaneKm(ZoneID, 4) += CDbl(RoadCapArray(CapNum, 6)) + RoadCapArray(CapNum, 7)
+        If RoadCapArray(CapNum, 2) = ZoneID Then
+            If RoadCapArray(CapNum, 3) = YearCount Then
+                AddedLaneKm(ZoneID, 1) += RoadCapArray(CapNum, 4)
+                AddedLaneKm(ZoneID, 2) += CDbl(RoadCapArray(CapNum, 5)) + RoadCapArray(CapNum, 6)
+                AddedLaneKm(ZoneID, 3) += RoadCapArray(CapNum, 7)
+                AddedLaneKm(ZoneID, 4) += CDbl(RoadCapArray(CapNum, 8)) + RoadCapArray(CapNum, 9)
                 CapNum += 1
             End If
         End If
@@ -1529,6 +1535,7 @@
         Next
 
         'write disaggregated fuel outputs to file
+        FuelArray(ZoneID, 0) = modelRunID
         FuelArray(ZoneID, 1) = ZoneID
         FuelArray(ZoneID, 2) = YearCount
         'car petrol
@@ -1643,6 +1650,7 @@
     Sub WriteRoadZoneOutput()
 
         'write to output array
+        OutputArray(ZoneID, 0) = modelRunID
         OutputArray(ZoneID, 1) = ZoneID
         OutputArray(ZoneID, 2) = YearCount
         OutputArray(ZoneID, 3) = NewVkm
@@ -1730,6 +1738,7 @@
         HydrogenUsed = 0
 
         'write to temp array
+        TempArray(ZoneID, 0) = modelRunID
         TempArray(ZoneID, 1) = YearCount
         TempArray(ZoneID, 2) = ZoneID
         TempArray(ZoneID, 3) = ZoneSpeed(ZoneID, 1)

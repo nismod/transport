@@ -44,7 +44,7 @@
     Dim TimeProfile(1, 23) As String
     Dim OldHourlyFlows(291, 20, 24) As Double
     Dim HourlySpeeds(291, 20, 24) As Double
-    Dim RoadTypeFlows(291, 2, 24) As Double
+    Dim RoadTypeFlows(291, 2, 23) As Double
     Dim RoadTypeFlowsNew As Double
     Dim sc As Integer
     Dim h As Integer
@@ -59,7 +59,7 @@
     Dim PFlowRatio(19) As Double
     Dim FFlowRatio(19) As Double
     Dim FlowRatio As Double
-    Dim ExternalValues(291, 31) As String
+    Dim ExternalValues(291, 33) As String
     Dim YearNum As Long
     Dim ScaledHourlyFlows(20, 24) As Double
     Dim NewHourlyFlows(20, 24) As Double
@@ -115,10 +115,10 @@
     Dim SCH As Long
     Dim stratarray(90, 95) As String
     Dim InputArray(291, 54) As String
-    Dim OutputArray(291, 58) As String
-    Dim TempArray(291, 3037) As String
-    Dim TempAnArray(291, 34) As String
-    Dim TempHArray(7007, 483) As String
+    Dim OutputArray(292, 59) As String
+    Dim TempArray(292, 3037) As String
+    Dim TempAnArray(292, 34) As String
+    Dim TempHArray(7007, 86) As String
     Dim NewCapArray(291, 3) As String
     Dim NewCapNum As Integer
 
@@ -144,12 +144,12 @@
 
             'read from initial file if year 1, otherwise update from temp file
             If YearNum = 1 Then
-                Call ReadData("RoadLink", "Input", InputArray, True)
+                Call ReadData("RoadLink", "Input", InputArray, modelRunID, True)
             Else
-                Call ReadData("RoadLink", "Temp Annual", TempAnArray, False)
-                Call ReadData("RoadLink", "Temp Hourly", TempHArray, False)
-                ReDim Preserve InputArray(291, 3037)
-                Call ReadData("RoadLink", "Input", InputArray, False)
+                Call ReadData("RoadLink", "Temp Annual", TempAnArray, modelRunID, False, YearNum)
+                Call ReadData("RoadLink", "Temp Hourly", TempHArray, modelRunID, False, YearNum)
+                'ReDim Preserve InputArray(291, 3037)
+                'Call ReadData("RoadLink", "Input", InputArray, False)
             End If
 
             link = 1
@@ -193,18 +193,27 @@
                 link += 1
             Loop
 
-            'create file is true if it is the initial year and write to outputfile and temp file
+            'create file is true if it is the initial year, otherwise update existing files
+            'in database version, write to Temp Annual and Temp Hourly tables
             If YearNum = StartYear Then
-                Call WriteData("RoadLink", "Output", OutputArray, TempArray, True)
+                Call WriteData("RoadLink", "Output", OutputArray, , True)
+                Call WriteData("RoadLink", "Temp Annual", TempAnArray, , True)
+                Call WriteData("RoadLink", "Temp Hourly", TempHArray, , True)
+
                 If BuildInfra = True Then
                     Call WriteData("RoadLink", "RoadLinkNewCap", NewCapArray, , True)
                 End If
             Else
-                Call WriteData("RoadLink", "Output", OutputArray, TempArray, False)
+                Call WriteData("RoadLink", "Output", OutputArray, , False)
+                Call WriteData("RoadLink", "Temp Annual", TempAnArray, , False)
+                Call WriteData("RoadLink", "Temp Hourly", TempHArray, , False)
+
                 If BuildInfra = True Then
                     Call WriteData("RoadLink", "RoadLinkNewCap", NewCapArray, , False)
                 End If
             End If
+            Erase TempAnArray
+            Erase TempHArray
 
             YearNum += 1
         Loop
@@ -221,12 +230,28 @@
         'Dim rls As IO.StreamReader
         Dim stratarray(90, 95) As String
 
-        'read daily trip data
-        Call ReadData("RoadLink", "DailyProfile", TimeProfile, modelRunID)
-
 
         'read free flow speed data
-        Call ReadData("RoadLink", "FreeFlowSpeed", FreeFlowSpeeds, modelRunID)
+        FreeFlowSpeeds(1, 0) = 68
+        FreeFlowSpeeds(1, 1) = 69
+        FreeFlowSpeeds(1, 2) = 69
+        FreeFlowSpeeds(1, 3) = 61
+        FreeFlowSpeeds(1, 4) = 61
+        FreeFlowSpeeds(1, 5) = 54
+        FreeFlowSpeeds(1, 6) = 69
+        FreeFlowSpeeds(1, 7) = 68
+        FreeFlowSpeeds(1, 8) = 68
+        FreeFlowSpeeds(1, 9) = 60
+        FreeFlowSpeeds(1, 10) = 60
+        FreeFlowSpeeds(1, 11) = 53
+        FreeFlowSpeeds(1, 12) = 52
+        FreeFlowSpeeds(1, 13) = 47
+        FreeFlowSpeeds(1, 14) = 48
+        FreeFlowSpeeds(1, 15) = 45
+        FreeFlowSpeeds(1, 16) = 46
+        FreeFlowSpeeds(1, 17) = 42
+        FreeFlowSpeeds(1, 18) = 43
+        FreeFlowSpeeds(1, 19) = 44
 
         If UpdateExtVars = True Then
             If NewRdLCap = True Then
@@ -254,6 +279,30 @@
 
     Sub DailyProfile()
         'sets up an array giving the proportion of trips made in each hour of the day
+        TimeProfile(1, 0) = 0.002311731
+        TimeProfile(1, 1) = 0.000851411
+        TimeProfile(1, 2) = 0.000380483
+        TimeProfile(1, 3) = 0.000545189
+        TimeProfile(1, 4) = 0.001517647
+        TimeProfile(1, 5) = 0.0075728
+        TimeProfile(1, 6) = 0.021769267
+        TimeProfile(1, 7) = 0.060988724
+        TimeProfile(1, 8) = 0.103219878
+        TimeProfile(1, 9) = 0.068846733
+        TimeProfile(1, 10) = 0.054557509
+        TimeProfile(1, 11) = 0.057086921
+        TimeProfile(1, 12) = 0.059255707
+        TimeProfile(1, 13) = 0.055765601
+        TimeProfile(1, 14) = 0.058740984
+        TimeProfile(1, 15) = 0.075171658
+        TimeProfile(1, 16) = 0.084500595
+        TimeProfile(1, 17) = 0.096034906
+        TimeProfile(1, 18) = 0.070378729
+        TimeProfile(1, 19) = 0.04767223
+        TimeProfile(1, 20) = 0.028124521
+        TimeProfile(1, 21) = 0.021275761
+        TimeProfile(1, 22) = 0.015110714
+        TimeProfile(1, 23) = 0.008320301
 
         Dim d As Byte
 
@@ -275,42 +324,42 @@
 
         If YearNum = 1 Then
             'read base year (year 0) data
-            FlowID(link, 1) = InputArray(link, 0)
-            Zone1(link, 1) = InputArray(link, 1)
-            Zone2(link, 1) = InputArray(link, 2)
-            RoadTypeLanes(link, 0) = InputArray(link, 4)
-            RoadTypeLanes(link, 1) = InputArray(link, 5)
-            RoadTypeLanes(link, 2) = InputArray(link, 6)
+            FlowID(link, 1) = InputArray(link, 4)
+            Zone1(link, 1) = InputArray(link, 5)
+            Zone2(link, 1) = InputArray(link, 6)
+            RoadTypeLanes(link, 0) = InputArray(link, 8)
+            RoadTypeLanes(link, 1) = InputArray(link, 9)
+            RoadTypeLanes(link, 2) = InputArray(link, 10)
             'need the total lanes to start with as stable variable - this is because once there has been any capacity change will need to recalculate the base flows per lane each year
             TotalLanesOriginal(link, 1) = RoadTypeLanes(link, 0) + RoadTypeLanes(link, 1) + RoadTypeLanes(link, 2)
             'set road type lanes new equal to road type lanes to start with, otherwise it will assume a capacity change to start with
-            RoadTypeLanesNew(link, 0) = InputArray(link, 4)
-            RoadTypeLanesNew(link, 1) = InputArray(link, 5)
-            RoadTypeLanesNew(link, 2) = InputArray(link, 6)
-            SpeedCatFlows(link, 0) = InputArray(link, 8)
-            SpeedCatFlows(link, 1) = InputArray(link, 9)
-            SpeedCatFlows(link, 2) = InputArray(link, 10)
-            SpeedCatFlows(link, 3) = InputArray(link, 11)
-            SpeedCatFlows(link, 4) = InputArray(link, 12)
-            SpeedCatFlows(link, 5) = InputArray(link, 13)
-            SpeedCatFlows(link, 6) = InputArray(link, 14)
-            SpeedCatFlows(link, 7) = InputArray(link, 15)
-            SpeedCatFlows(link, 8) = InputArray(link, 16)
-            SpeedCatFlows(link, 9) = InputArray(link, 17)
-            SpeedCatFlows(link, 10) = InputArray(link, 18)
-            SpeedCatFlows(link, 11) = InputArray(link, 19)
-            SpeedCatFlows(link, 12) = InputArray(link, 20)
-            SpeedCatFlows(link, 13) = InputArray(link, 21)
-            SpeedCatFlows(link, 14) = InputArray(link, 22)
-            SpeedCatFlows(link, 15) = InputArray(link, 23)
-            SpeedCatFlows(link, 16) = InputArray(link, 24)
-            SpeedCatFlows(link, 17) = InputArray(link, 25)
-            SpeedCatFlows(link, 18) = InputArray(link, 26)
-            SpeedCatFlows(link, 19) = InputArray(link, 27)
-            Z1Pop(link, 1) = InputArray(link, 28)
-            Z2Pop(link, 1) = InputArray(link, 29)
-            Z1GVA(link, 1) = InputArray(link, 30)
-            Z2GVA(link, 1) = InputArray(link, 31)
+            RoadTypeLanesNew(link, 0) = InputArray(link, 8)
+            RoadTypeLanesNew(link, 1) = InputArray(link, 9)
+            RoadTypeLanesNew(link, 2) = InputArray(link, 10)
+            SpeedCatFlows(link, 0) = InputArray(link, 12)
+            SpeedCatFlows(link, 1) = InputArray(link, 13)
+            SpeedCatFlows(link, 2) = InputArray(link, 14)
+            SpeedCatFlows(link, 3) = InputArray(link, 15)
+            SpeedCatFlows(link, 4) = InputArray(link, 16)
+            SpeedCatFlows(link, 5) = InputArray(link, 17)
+            SpeedCatFlows(link, 6) = InputArray(link, 18)
+            SpeedCatFlows(link, 7) = InputArray(link, 19)
+            SpeedCatFlows(link, 8) = InputArray(link, 20)
+            SpeedCatFlows(link, 9) = InputArray(link, 21)
+            SpeedCatFlows(link, 10) = InputArray(link, 22)
+            SpeedCatFlows(link, 11) = InputArray(link, 23)
+            SpeedCatFlows(link, 12) = InputArray(link, 24)
+            SpeedCatFlows(link, 13) = InputArray(link, 25)
+            SpeedCatFlows(link, 14) = InputArray(link, 26)
+            SpeedCatFlows(link, 15) = InputArray(link, 27)
+            SpeedCatFlows(link, 16) = InputArray(link, 28)
+            SpeedCatFlows(link, 17) = InputArray(link, 29)
+            SpeedCatFlows(link, 18) = InputArray(link, 30)
+            SpeedCatFlows(link, 19) = InputArray(link, 31)
+            Z1Pop(link, 1) = get_population_data_by_zoneID(modelRunID, YearNum + 2009, FlowID(link, 1), "OZ", "'road'", Zone1(link, 1))
+            Z2Pop(link, 1) = get_population_data_by_zoneID(modelRunID, YearNum + 2009, FlowID(link, 1), "DZ", "'road'", Zone2(link, 1))
+            Z1GVA(link, 1) = get_gva_data_by_zoneID(modelRunID, YearNum + 2009, FlowID(link, 1), "OZ", "'road'", Zone1(link, 1))
+            Z2GVA(link, 1) = get_gva_data_by_zoneID(modelRunID, YearNum + 2009, FlowID(link, 1), "DZ", "'road'", Zone2(link, 1))
             '24 hours for category 0
             For c = 0 To 24
                 CostOld(link, 0, c) = InputArray(link, 32)
@@ -362,7 +411,7 @@
         Else
             'if not first year, read the values 
             ' from the Temp Annual array
-            FlowID(link, 1) = TempAnArray(link, 2)
+            FlowID(link, 1) = TempAnArray(link, 3)
             RoadTypeLanes(link, 0) = TempAnArray(link, 4)
             RoadTypeLanes(link, 1) = TempAnArray(link, 5)
             RoadTypeLanes(link, 2) = TempAnArray(link, 6)
@@ -384,14 +433,16 @@
             h = 0
             Do Until h > 23
                 'work out the row number for the hourly data
-                hrow = (link - 1) * 24 + h
-                i = 4
+                hrow = (link - 1) * 24 + h + 1
+                RoadTypeFlows(link, 0, h) = TempHArray(hrow, 5)
+                RoadTypeFlows(link, 1, h) = TempHArray(hrow, 6)
+                RoadTypeFlows(link, 2, h) = TempHArray(hrow, 7)
+                i = 8
                 sc = 0
                 Do While sc < 20
                     RoadType = AssignRoadType(sc)
+
                     OldHourlyFlows(link, sc, h) = TempHArray(hrow, i)
-                    i += 1
-                    RoadTypeFlows(link, RoadType, h) = TempHArray(hrow, i)
                     i += 1
                     ChargeOld(link, sc, h) = TempHArray(hrow, i)
                     i += 1
@@ -399,17 +450,19 @@
                     i += 1
                     NewHourlySpeeds(link, sc, h) = TempHArray(hrow, i)
                     i += 1
+
+                    sc += 1
                 Loop
-                sc += 1
+                h += 1
             Loop
 
-
+            'TODO - need to fix the problem that the zone1 and zone2 ids defined in database are not match with the ids defined in Simon's RoadLink initial file
+            'get_zone_by_flowid(FlowID(link, 1), Zone1(link, 1), Zone2(link, 1))
             'Get Population and GVA data
-            get_zone_by_flowid(FlowID(link, 1), Zone1ID, Zone2ID)
-            Z1Pop(link, 1) = get_population_data_by_zoneID(modelRunID, YearNum + 2010, link, "OZ")
-            Z2Pop(link, 1) = get_population_data_by_zoneID(modelRunID, YearNum + 2010, link, "DZ")
-            Z1GVA(link, 1) = get_gva_data_by_zoneID(modelRunID, YearNum + 2010, link, "OZ")
-            Z2GVA(link, 1) = get_gva_data_by_zoneID(modelRunID, YearNum + 2010, link, "DZ")
+            Z1Pop(link, 1) = get_population_data_by_zoneID(modelRunID, YearNum + 2009, FlowID(link, 1), "OZ", "'road'", Zone1(link, 1))
+            Z2Pop(link, 1) = get_population_data_by_zoneID(modelRunID, YearNum + 2009, FlowID(link, 1), "DZ", "'road'", Zone2(link, 1))
+            Z1GVA(link, 1) = get_gva_data_by_zoneID(modelRunID, YearNum + 2009, FlowID(link, 1), "OZ", "'road'", Zone1(link, 1))
+            Z2GVA(link, 1) = get_gva_data_by_zoneID(modelRunID, YearNum + 2009, FlowID(link, 1), "DZ", "'road'", Zone2(link, 1))
 
 
             'Old code for inputing Temp RoadLink data from text file 
@@ -580,10 +633,6 @@
         Next
     End Sub
 
-    Sub GetExternalValues()
-        'v1.2 modification - now get external variable values for maximum road capacities
-    End Sub
-
     Sub BaseSpeeds()
         'calculate the speed for each of the hourly segments for each of the speed categories
         'in this case don't need to iterate to get speeds - we know the total base flow for each road type, so just use the speed calculator to adjust the speeds if conditions are congested - flows are observed and therefore held constant
@@ -595,14 +644,14 @@
 
             'v1.2 mod update the maximum capacity values
             'v1.3 mod moved inside the if clause as otherwise fails in 1st year if maximum capacity has been reset in base year
-            If ExternalValues(link, 10) > MaxCap(link, 0) Then
-                MaxCap(link, 0) = ExternalValues(link, 10)
+            If ExternalValues(link, 11) > MaxCap(link, 0) Then
+                MaxCap(link, 0) = ExternalValues(link, 11)
             End If
-            If ExternalValues(link, 11) > MaxCap(link, 1) Then
-                MaxCap(link, 1) = ExternalValues(link, 11)
+            If ExternalValues(link, 12) > MaxCap(link, 1) Then
+                MaxCap(link, 1) = ExternalValues(link, 12)
             End If
-            If ExternalValues(link, 12) > MaxCap(link, 2) Then
-                MaxCap(link, 2) = ExternalValues(link, 12)
+            If ExternalValues(link, 13) > MaxCap(link, 2) Then
+                MaxCap(link, 2) = ExternalValues(link, 13)
             End If
 
 
@@ -635,9 +684,9 @@
             Loop
         Else
             'v1.3 mod moved inside the if clause as otherwise fails in 1st year if maximum capacity has been reset in base year
-            MaxCap(link, 0) = ExternalValues(link, 10)
-            MaxCap(link, 1) = ExternalValues(link, 11)
-            MaxCap(link, 2) = ExternalValues(link, 12)
+            MaxCap(link, 0) = ExternalValues(link, 11)
+            MaxCap(link, 1) = ExternalValues(link, 12)
+            MaxCap(link, 2) = ExternalValues(link, 13)
             'if it isn't the first year then we need to check if the capacity has changed
             If CapChangeNew(link, 1) = True Then
 
@@ -826,13 +875,8 @@
         Dim concharge(19) As Double
 
         'get the new costs
-        For c = 0 To 24
-            CostNew(0, c) = ExternalValues(link, 6)
-        Next
-
-        'jump to 14th column in the external variable array, to follow the format
-        ratnum = 13
-        For x = 1 To 19
+        ratnum = 14
+        For x = 0 To 19
             For c = 0 To 24
                 CostNew(x, c) = ExternalValues(link, ratnum)
             Next
@@ -845,12 +889,12 @@
         'calculate the individual variable ratios for passenger traffic
         'v1.3 mod
         If TripRates = "SubStrategy" Then
-            rat1 = (((CDbl(ExternalValues(link, 2)) + ExternalValues(link, 3)) * RdTripRates(0, YearNum)) / (Z1Pop(link, 1) + Z2Pop(link, 1))) ^ RoadEls(YearNum, 1)
+            rat1 = (((CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)) * RdTripRates(0, YearNum)) / (Z1Pop(link, 1) + Z2Pop(link, 1))) ^ RoadEls(YearNum, 1)
         Else
-            rat1 = ((CDbl(ExternalValues(link, 2)) + ExternalValues(link, 3)) / (Z1Pop(link, 1) + Z2Pop(link, 1))) ^ RoadEls(YearNum, 1)
+            rat1 = ((CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)) / (Z1Pop(link, 1) + Z2Pop(link, 1))) ^ RoadEls(YearNum, 1)
         End If
 
-        rat3 = ((CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)) / (Z1GVA(link, 1) + Z2GVA(link, 1))) ^ RoadEls(YearNum, 2)
+        rat3 = ((CDbl(ExternalValues(link, 6)) + ExternalValues(link, 7)) / (Z1GVA(link, 1) + Z2GVA(link, 1))) ^ RoadEls(YearNum, 2)
         'initially set speed new and speed old as equal to speed in previous year, so ratio = 1 - can be altered if desired as part of scenario
         rat5 = 1 ^ RoadEls(YearNum, 3)
 
@@ -859,12 +903,12 @@
         'calculate the individual variable ratios for freight traffic
         'v1.3 mod
         If TripRates = "SubStrategy" Then
-            ratf1 = (((CDbl(ExternalValues(link, 2)) + ExternalValues(link, 3)) * RdTripRates(1, YearNum)) / (Z1Pop(link, 1) + Z2Pop(link, 1))) ^ RoadEls(YearNum, 5)
+            ratf1 = (((CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)) * RdTripRates(1, YearNum)) / (Z1Pop(link, 1) + Z2Pop(link, 1))) ^ RoadEls(YearNum, 5)
         Else
-            ratf1 = ((CDbl(ExternalValues(link, 2)) + ExternalValues(link, 3)) / (Z1Pop(link, 1) + Z2Pop(link, 1))) ^ RoadEls(YearNum, 5)
+            ratf1 = ((CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)) / (Z1Pop(link, 1) + Z2Pop(link, 1))) ^ RoadEls(YearNum, 5)
         End If
 
-        ratf3 = ((CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)) / (Z1GVA(link, 1) + Z2GVA(link, 1))) ^ RoadEls(YearNum, 6)
+        ratf3 = ((CDbl(ExternalValues(link, 6)) + ExternalValues(link, 7)) / (Z1GVA(link, 1) + Z2GVA(link, 1))) ^ RoadEls(YearNum, 6)
         '***NOTE - if altering this elasticity will also need to alter the flow-speed iteration process as this used the rat5 variable only
         ratf5 = 1 ^ RoadEls(YearNum, 7)
         'cost ratio now estimated in getflowratio sub
@@ -1119,11 +1163,11 @@
             'pop ratio
             OldY = Z1Pop(link, 1) + Z2Pop(link, 1)
             If TripRates = "SubStrategy" Then
-                NewY = (CDbl(ExternalValues(link, 2)) + ExternalValues(link, 3)) * RdTripRates(1, YearNum)
+                NewY = (CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)) * RdTripRates(1, YearNum)
             Else
-                NewY = CDbl(ExternalValues(link, 2)) + ExternalValues(link, 3)
+                NewY = CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)
             End If
-            NewY = CDbl(ExternalValues(link, 2)) + ExternalValues(link, 3)
+            NewY = CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
                 OldEl = RoadEls(YearNum, 1)
                 Call VarElCalc()
@@ -1131,7 +1175,7 @@
             End If
             'gva ratio
             OldY = Z1GVA(link, 1) + Z2GVA(link, 1)
-            NewY = CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)
+            NewY = CDbl(ExternalValues(link, 6)) + ExternalValues(link, 7)
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
                 OldEl = RoadEls(YearNum, 2)
                 Call VarElCalc()
@@ -1152,9 +1196,9 @@
             'freight pop ratio
             OldY = Z1Pop(link, 1) + Z2Pop(link, 1)
             If TripRates = "SubStrategy" Then
-                NewY = (CDbl(ExternalValues(link, 2)) + ExternalValues(link, 3)) * RdTripRates(1, YearNum)
+                NewY = (CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)) * RdTripRates(1, YearNum)
             Else
-                NewY = CDbl(ExternalValues(link, 2)) + ExternalValues(link, 3)
+                NewY = CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)
             End If
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
                 OldEl = RoadEls(YearNum, 5)
@@ -1163,7 +1207,7 @@
             End If
             'freight gva ratio
             OldY = Z1GVA(link, 1) + Z2GVA(link, 1)
-            NewY = CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)
+            NewY = CDbl(ExternalValues(link, 6)) + ExternalValues(link, 7)
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
                 OldEl = RoadEls(YearNum, 6)
                 Call VarElCalc()
@@ -1439,38 +1483,39 @@
         Dim hrow As Integer
 
         'write to output array
-        OutputArray(link, 0) = YearNum
+        OutputArray(link, 0) = modelRunID
         OutputArray(link, 1) = FlowID(link, 1)
-        OutputArray(link, 2) = TotalFlowNew
-        OutputArray(link, 3) = MeanSpeedNew
-        OutputArray(link, 4) = MwayFlowNew
-        OutputArray(link, 5) = DualFlowNew
-        OutputArray(link, 6) = SingFlowNew
-        OutputArray(link, 7) = MWaySpdNew
-        OutputArray(link, 8) = DualSpdNew
-        OutputArray(link, 9) = SingSpdNew
+        OutputArray(link, 2) = YearNum
+        OutputArray(link, 3) = TotalFlowNew
+        OutputArray(link, 4) = MeanSpeedNew
+        OutputArray(link, 5) = MwayFlowNew
+        OutputArray(link, 6) = DualFlowNew
+        OutputArray(link, 7) = SingFlowNew
+        OutputArray(link, 8) = MWaySpdNew
+        OutputArray(link, 9) = DualSpdNew
+        OutputArray(link, 10) = SingSpdNew
         sc = 0
         Do While sc < 20
-            OutputArray(link, 10 + sc) = SpeedCatFlowsNew(sc)
+            OutputArray(link, 11 + sc) = SpeedCatFlowsNew(sc)
             sc += 1
         Loop
         sc = 0
         Do While sc < 20
-            OutputArray(link, 30 + sc) = SpeedCatSpeedsNew(sc)
+            OutputArray(link, 31 + sc) = SpeedCatSpeedsNew(sc)
             sc += 1
         Loop
-        OutputArray(link, 50) = MWayLatFlowNew
-        OutputArray(link, 51) = DualLatFlowNew
-        OutputArray(link, 52) = SingLatFlowNew
-        OutputArray(link, 53) = MFullHrs
-        OutputArray(link, 54) = DFullHrs
-        OutputArray(link, 55) = SFullHrs
-        OutputArray(link, 56) = MeanCostNew(0)
-        OutputArray(link, 57) = MeanCostNew(1)
-        OutputArray(link, 58) = MeanCostNew(2)
+        OutputArray(link, 51) = MWayLatFlowNew
+        OutputArray(link, 52) = DualLatFlowNew
+        OutputArray(link, 53) = SingLatFlowNew
+        OutputArray(link, 54) = MFullHrs
+        OutputArray(link, 55) = DFullHrs
+        OutputArray(link, 56) = SFullHrs
+        OutputArray(link, 57) = MeanCostNew(0)
+        OutputArray(link, 58) = MeanCostNew(1)
+        OutputArray(link, 59) = MeanCostNew(2)
 
         'update variables
-        ReDim RoadTypeFlows(291, 2, 24)
+        ReDim RoadTypeFlows(291, 2, 23)
         sc = 0
         Do While sc < 20
             SpeedCatFlows(link, sc) = SpeedCatFlowsNew(sc)
@@ -1490,19 +1535,19 @@
             sc += 1
         Loop
         'update population, gva and cost variables based on values from external variables input file
-        Z1Pop(link, 1) = ExternalValues(link, 2)
-        Z2Pop(link, 1) = ExternalValues(link, 3)
-        Z1GVA(link, 1) = ExternalValues(link, 4)
-        Z2GVA(link, 1) = ExternalValues(link, 5)
+        Z1Pop(link, 1) = ExternalValues(link, 4)
+        Z2Pop(link, 1) = ExternalValues(link, 5)
+        Z1GVA(link, 1) = ExternalValues(link, 6)
+        Z2GVA(link, 1) = ExternalValues(link, 7)
         'new
         For x = 0 To 19
             For c = 0 To 24
                 CostOld(link, x, c) = CostNew(x, c)
             Next
         Next
-        RoadTypeLanesNew(link, 0) = CDbl(ExternalValues(link, 7)) + AddedLanes(link, 0)
-        RoadTypeLanesNew(link, 1) = CDbl(ExternalValues(link, 8)) + AddedLanes(link, 1)
-        RoadTypeLanesNew(link, 2) = CDbl(ExternalValues(link, 9)) + AddedLanes(link, 2)
+        RoadTypeLanesNew(link, 0) = CDbl(ExternalValues(link, 8)) + AddedLanes(link, 0)
+        RoadTypeLanesNew(link, 1) = CDbl(ExternalValues(link, 9)) + AddedLanes(link, 1)
+        RoadTypeLanesNew(link, 2) = CDbl(ExternalValues(link, 10)) + AddedLanes(link, 2)
         'v1.4 blank mean cost variables
         MeanCostNew(0) = 0
         MeanCostNew(1) = 0
@@ -1602,13 +1647,14 @@
             TempHArray(hrow, 1) = YearNum
             TempHArray(hrow, 2) = FlowID(link, 1)
             TempHArray(hrow, 3) = h + 1
-            i = 4
+            TempHArray(hrow, 4) = RoadTypeFlows(link, 0, h)
+            TempHArray(hrow, 5) = RoadTypeFlows(link, 1, h)
+            TempHArray(hrow, 6) = RoadTypeFlows(link, 2, h)
+            i = 7
             sc = 0
             Do While sc < 20
                 RoadType = AssignRoadType(sc)
                 TempHArray(hrow, i) = OldHourlyFlows(link, sc, h)
-                i += 1
-                TempHArray(hrow, i) = RoadTypeFlows(link, RoadType, h)
                 i += 1
                 TempHArray(hrow, i) = ChargeOld(link, sc, h)
                 i += 1
@@ -1616,63 +1662,67 @@
                 i += 1
                 TempHArray(hrow, i) = NewHourlySpeeds(link, sc, h)
                 i += 1
+
+                sc += 1
             Loop
+
+            h += 1
         Loop
 
         'write to Temp array - NO LONGER NEEDED
-        TempArray(link, 0) = YearNum
-        TempArray(link, 1) = FlowID(link, 1)
-        TempArray(link, 2) = RoadTypeLanes(link, 0)
-        TempArray(link, 3) = RoadTypeLanes(link, 1)
-        TempArray(link, 4) = RoadTypeLanes(link, 2)
-        TempArray(link, 5) = RoadTypeLanesNew(link, 0)
-        TempArray(link, 6) = RoadTypeLanesNew(link, 1)
-        TempArray(link, 7) = RoadTypeLanesNew(link, 2)
-        For x = 0 To 19
-            TempArray(link, 8 + x) = SpeedCatFlows(link, x)
-        Next
-        TempArray(link, 28) = Z1Pop(link, 1)
-        TempArray(link, 29) = Z2Pop(link, 1)
-        TempArray(link, 30) = Z1GVA(link, 1)
-        TempArray(link, 31) = Z2GVA(link, 1)
+        'TempArray(link, 0) = YearNum
+        'TempArray(link, 1) = FlowID(link, 1)
+        'TempArray(link, 2) = RoadTypeLanes(link, 0)
+        'TempArray(link, 3) = RoadTypeLanes(link, 1)
+        'TempArray(link, 4) = RoadTypeLanes(link, 2)
+        'TempArray(link, 5) = RoadTypeLanesNew(link, 0)
+        'TempArray(link, 6) = RoadTypeLanesNew(link, 1)
+        'TempArray(link, 7) = RoadTypeLanesNew(link, 2)
+        'For x = 0 To 19
+        '    TempArray(link, 8 + x) = SpeedCatFlows(link, x)
+        'Next
+        'TempArray(link, 28) = Z1Pop(link, 1)
+        'TempArray(link, 29) = Z2Pop(link, 1)
+        'TempArray(link, 30) = Z1GVA(link, 1)
+        'TempArray(link, 31) = Z2GVA(link, 1)
 
-        i = 32
-        For x = 0 To 19
-            For c = 0 To 23
-                TempArray(link, i) = CostOld(link, x, c)
-                i += 1
-            Next
-        Next
-        TempArray(link, 512) = MaxCap(link, 0)
-        TempArray(link, 513) = MaxCap(link, 1)
-        TempArray(link, 514) = MaxCap(link, 2)
-        TempArray(link, 515) = AddedLanes(link, 0)
-        TempArray(link, 516) = AddedLanes(link, 1)
-        TempArray(link, 517) = AddedLanes(link, 2)
+        'i = 32
+        'For x = 0 To 19
+        '    For c = 0 To 23
+        '        TempArray(link, i) = CostOld(link, x, c)
+        '        i += 1
+        '    Next
+        'Next
+        'TempArray(link, 512) = MaxCap(link, 0)
+        'TempArray(link, 513) = MaxCap(link, 1)
+        'TempArray(link, 514) = MaxCap(link, 2)
+        'TempArray(link, 515) = AddedLanes(link, 0)
+        'TempArray(link, 516) = AddedLanes(link, 1)
+        'TempArray(link, 517) = AddedLanes(link, 2)
 
-        i = 518
+        'i = 518
 
 
-        'for all 20 road link categories and 24 hours
-        sc = 0
-        Do While sc < 20
-            RoadType = AssignRoadType(sc)
-            h = 0
-            Do Until h > 23
-                TempArray(link, i) = OldHourlyFlows(link, sc, h)
-                i += 1
-                TempArray(link, i) = RoadTypeFlows(link, RoadType, h)
-                i += 1
-                TempArray(link, i) = ChargeOld(link, sc, h)
-                i += 1
-                TempArray(link, i) = LatentHourlyFlows(link, sc, h)
-                i += 1
-                TempArray(link, i) = NewHourlySpeeds(link, sc, h)
-                i += 1
-                h += 1
-            Loop
-            sc += 1
-        Loop
+        ''for all 20 road link categories and 24 hours
+        'sc = 0
+        'Do While sc < 20
+        '    RoadType = AssignRoadType(sc)
+        '    h = 0
+        '    Do Until h > 23
+        '        TempArray(link, i) = OldHourlyFlows(link, sc, h)
+        '        i += 1
+        '        TempArray(link, i) = RoadTypeFlows(link, RoadType, h)
+        '        i += 1
+        '        TempArray(link, i) = ChargeOld(link, sc, h)
+        '        i += 1
+        '        TempArray(link, i) = LatentHourlyFlows(link, sc, h)
+        '        i += 1
+        '        TempArray(link, i) = NewHourlySpeeds(link, sc, h)
+        '        i += 1
+        '        h += 1
+        '    Loop
+        '    sc += 1
+        'Loop
 
 
     End Sub

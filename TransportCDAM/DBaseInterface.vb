@@ -843,22 +843,30 @@ Module DBaseInterface
     Function get_population_data_by_airportID(ByVal modelrunid As Integer, ByVal year As Integer, ByVal PortID As Integer)
         Dim theSQL As String = ""
 
+        If PortID = 1 Then
+            'reset airGVAArray value to read from database
+            airDemogArray = Nothing
+        End If
+
+
         'If the Demographic data has not been loaded then load it for each zone or port.
         If airDemogArray Is Nothing Then
-            theSQL = "SELECT * FROM " & Chr(34) & "CDAM_get_population_data_by_model_run_id_per_tr_gor" & Chr(34) & "('" & modelrunid & "', " & year & ", 'air', 9999) "
-            theSQL &= "AS (scenario_id varchar, year integer, gender varchar, category varchar, location varchar, value double precision, " & Chr(34)
-            theSQL &= "GORName" & Chr(34) & " varchar, " & Chr(34) & "gor_id" & Chr(34) & " integer, " & Chr(34) & "tr_cdam_gor_id" & Chr(34)
-            theSQL &= " integer, " & Chr(34) & "PortName" & Chr(34) & " varchar, " & Chr(34) & "port_id" & Chr(34) & " integer); "
+
+            theSQL = "SELECT * FROM cdam_get_population_data_by_model_run_id_per_tr_gor(" & modelrunid & "," & year & ",'air',9999) "
+            theSQL &= " AS (scenario_id varchar, year integer, gender varchar, category varchar, value double precision, " & Chr(34) & "GORName" & Chr(34)
+            theSQL &= " varchar, gor_id integer, tr_cdam_gor_id integer, "
+            theSQL &= Chr(34) & "PortName" & Chr(34) & " varchar, port_id integer);"
+
             If LoadSQLDataToArray(airDemogArray, theSQL) = False Then
                 airDemogArray = Nothing
                 Return 0
             End If
         End If
 
-        'Get the population for the specified port
-        For i = 1 To UBound(seaDemogArray, 1)
-            If CInt(seaDemogArray(i, 9)) = PortID Then
-                Return CDbl(seaDemogArray(i, 4))
+        'Get the population for the specified airport
+        For i = 1 To UBound(airDemogArray, 1)
+            If CInt(airDemogArray(i, 9)) = PortID Then
+                Return CDbl((airDemogArray(i, 4)) / 1000)
             End If
         Next
 
@@ -867,13 +875,13 @@ Module DBaseInterface
 
     End Function
 
-    Function get_population_data_by_zoneID(ByVal modelrunid As Integer, ByVal year As Integer, ByVal FlowID As Integer, ByVal type As String)
+    Function get_population_data_by_zoneID(ByVal modelrunid As Integer, ByVal year As Integer, ByVal ZoneID As Integer, ByVal zoneType As String, ByVal type As String, Optional ByVal ODZoneID As Integer = 0)
         Dim theSQL As String = ""
 
-        If FlowID = 1 And type = "OZ" Then
+        If ZoneID = 1 Then
             'reset zoneDemogArray value at the beginning of each year
             '"OZ" has to be called first to avoid errors
-            If type = "OZ" Or type = "Zone" Then
+            If zoneType = "OZ" Or zoneType = "Zone" Then
                 zoneDemogArray = Nothing
             End If
         End If
@@ -881,13 +889,13 @@ Module DBaseInterface
         If zoneDemogArray Is Nothing Then
 
             'call different SQL function for zone and for link
-            If type = "Zone" Then
+            If zoneType = "Zone" Then
                 theSQL = "SELECT * FROM cdam_get_population_data_by_model_run_id_per_tr_zone(" & modelrunid & "," & year & ", 9999) "
                 theSQL &= " AS (scenario_id varchar, year integer, gender varchar, category varchar, " & Chr(34) & "DistrictName" & Chr(34)
                 theSQL &= " varchar, zone_id integer, " & Chr(34) & "ZoneName" & Chr(34) & " varchar, district_code varchar, "
                 theSQL &= "value double precision);"
             Else
-                theSQL = "SELECT * FROM cdam_get_population_data_by_model_run_id_per_tr_flow(" & modelrunid & "," & year & ",'rail',9999) "
+                theSQL = "SELECT * FROM cdam_get_population_data_by_model_run_id_per_tr_flow(" & modelrunid & "," & year & "," & type & ",9999) "
                 theSQL &= " AS (scenario_id varchar, year integer, gender varchar, category varchar, flow_id integer," & Chr(34) & "PopOZ" & Chr(34)
                 theSQL &= " double precision, ozone_id integer, " & Chr(34) & "PopDZ" & Chr(34) & " double precision, "
                 theSQL &= "dzone_id integer);"
@@ -900,22 +908,22 @@ Module DBaseInterface
         End If
 
         'Get the population for the specified zone
-        Select Case type
+        Select Case zoneType
             Case "OZ"
                 For i = 1 To UBound(zoneDemogArray, 1)
-                    If CInt(zoneDemogArray(i, 4)) = FlowID Then
+                    If CInt(zoneDemogArray(i, 6)) = ODZoneID Then
                         Return (CDbl(zoneDemogArray(i, 5)) / 1000)
                     End If
                 Next
             Case "DZ"
                 For i = 1 To UBound(zoneDemogArray, 1)
-                    If CInt(zoneDemogArray(i, 4)) = FlowID Then
+                    If CInt(zoneDemogArray(i, 8)) = ODZoneID Then
                         Return (CDbl(zoneDemogArray(i, 7)) / 1000)
                     End If
                 Next
             Case "Zone"
                 For i = 1 To UBound(zoneDemogArray, 1)
-                    If CInt(zoneDemogArray(i, 5)) = FlowID Then
+                    If CInt(zoneDemogArray(i, 5)) = ZoneID Then
                         Return (CDbl(zoneDemogArray(i, 8)) / 1000)
                     End If
                 Next
@@ -969,25 +977,25 @@ Module DBaseInterface
 
 #Region "...Get GVA..."
 
-    Function get_gva_data_by_zoneID(ByVal modelrunid As Integer, ByVal year As Integer, ByVal FlowID As Integer, ByVal type As String)
+    Function get_gva_data_by_zoneID(ByVal modelrunid As Integer, ByVal year As Integer, ByVal ZoneID As Integer, ByVal zoneType As String, ByVal type As String, Optional ByVal ODZoneID As Integer = 0)
         Dim theSQL As String = ""
 
-        If FlowID = 1 And type = "OZ" Then
+        If ZoneID = 1 Then
             'reset zoneDemogArray value at the beginning of each year
             '"OZ" has to be called first to avoid errors
-            If type = "OZ" Or type = "Zone" Then
-                zoneDemogArray = Nothing
+            If zoneType = "OZ" Or zoneType = "Zone" Then
+                zoneGVAArray = Nothing
             End If
         End If
 
         If zoneGVAArray Is Nothing Then
             'call different SQL function for zone and for link
-            If type = "Zone" Then
+            If zoneType = "Zone" Then
                 theSQL = "SELECT * FROM cdam_get_economics_data_by_model_run_id_per_tr_zone(" & modelrunid & "," & year & ", 9999) "
                 theSQL &= " AS (economics_scenario_id varchar, year integer, " & Chr(34) & "GOR" & Chr(34)
                 theSQL &= " varchar, zone_id integer, " & Chr(34) & "GVAZ" & Chr(34) & " double precision);"
             Else
-                theSQL = "SELECT * FROM cdam_get_economics_data_by_model_run_id_per_tr_flow(" & modelrunid & "," & year & ",'rail',9999) "
+                theSQL = "SELECT * FROM cdam_get_economics_data_by_model_run_id_per_tr_flow(" & modelrunid & "," & year & "," & type & ",9999) "
                 theSQL &= " AS (economics_scenario_id varchar, year integer, flow_id integer," & Chr(34) & "GVAOZ" & Chr(34)
                 theSQL &= " double precision, ozone_id integer, " & Chr(34) & "GVADZ" & Chr(34) & " double precision, "
                 theSQL &= "dzone_id integer);"
@@ -1001,22 +1009,22 @@ Module DBaseInterface
         End If
 
         'Get the gva for the specified zone
-        Select Case type
+        Select Case zoneType
             Case "OZ"
                 For i = 1 To UBound(zoneGVAArray, 1)
-                    If CInt(zoneGVAArray(i, 2)) = FlowID Then
+                    If CInt(zoneGVAArray(i, 4)) = ODZoneID Then
                         Return (CDbl(zoneGVAArray(i, 3)) / 1000000)
                     End If
                 Next
             Case "DZ"
                 For i = 1 To UBound(zoneGVAArray, 1)
-                    If CInt(zoneGVAArray(i, 2)) = FlowID Then
+                    If CInt(zoneGVAArray(i, 6)) = ODZoneID Then
                         Return (CDbl(zoneGVAArray(i, 5)) / 1000000)
                     End If
                 Next
             Case "Zone"
-                For i = 1 To UBound(zoneDemogArray, 1)
-                    If CInt(zoneGVAArray(i, 3)) = FlowID Then
+                For i = 1 To UBound(zoneGVAArray, 1)
+                    If CInt(zoneGVAArray(i, 3)) = ZoneID Then
                         Return (CDbl(zoneGVAArray(i, 4)) / 1000000)
                     End If
                 Next
@@ -1031,16 +1039,22 @@ Module DBaseInterface
 
     Function get_gva_data_by_airportID(ByVal modelrunid As Integer, ByVal year As Integer, ByVal PortID As Integer)
         Dim theSQL As String = ""
-        Dim InputArray(,) As String = Nothing
+        Dim i As Integer
+
+        If PortID = 1 Then
+            'reset airGVAArray value to read from database
+            airGVAArray = Nothing
+        End If
 
         If airGVAArray Is Nothing Then
+
             theSQL = "SELECT * FROM cdam_get_economics_data_by_model_run_id_per_tr_gor(" & modelrunid & "," & year & ",'air', 9999) "
             theSQL &= " AS (scenario_id varchar, year integer," & Chr(34) & "GORName" & Chr(34)
             theSQL &= " varchar, " & Chr(34) & "GVAZ" & Chr(34) & " double precision, tr_cdam_gor_id integer, "
             theSQL &= Chr(34) & "PortName" & Chr(34) & " varchar, port_id integer);"
 
             If LoadSQLDataToArray(airGVAArray, theSQL) = False Then
-                InputArray = Nothing
+                airGVAArray = Nothing
                 Return 0
             End If
         End If
@@ -1048,7 +1062,7 @@ Module DBaseInterface
         'Get the population for the specified zone
         For i = 1 To UBound(airGVAArray, 1)
             If CInt(airGVAArray(i, 6)) = PortID Then
-                Return CDbl(airGVAArray(i, 3))
+                Return CDbl((airGVAArray(i, 3)) / 1000000)
             End If
         Next
 
@@ -1093,15 +1107,22 @@ Module DBaseInterface
 
 
 #End Region
-    Sub get_zone_by_flowid(ByVal FlowID As Integer, ByRef Zone1ID As Integer, ByRef Zone2ID As Integer)
+    Sub get_zone_by_flowid(ByVal FlowID As Integer, ByRef Zone1ID As Integer, ByRef Zone2ID As Integer, ByVal type As String)
         Dim theSQL As String = ""
         Dim InputArray(,) As String = Nothing
 
-        theSQL = "SELECT * TR_LU_RoadInputFlows where id =" & FlowID
+        Select Case type
+            Case "air"
+                theSQL = "SELECT id, ozone_id, dzone_id FROM " & Chr(34) & "TR_LU_AirFlows" & Chr(34) & " WHERE id = " & FlowID
+            Case "rail"
+                theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RailLinkFlows" & Chr(34) & " WHERE id = " & FlowID
+            Case "road"
+                theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RoadInputFlows" & Chr(34) & " WHERE id = " & FlowID
+        End Select
 
         If LoadSQLDataToArray(InputArray, theSQL) = True Then
-            Zone1ID = InputArray(0, 1)
-            Zone2ID = InputArray(0, 1)
+            Zone1ID = InputArray(1, 1)
+            Zone2ID = InputArray(1, 2)
         End If
 
     End Sub
@@ -1195,20 +1216,22 @@ Module DBaseInterface
             Case "RoadZone"
                 Select Case SubType
                     Case "Input"
+                        'TODO - initial inputs are read from table "TR_I_XXX_Base", should be updated to "TR_I_XXX_Run" once the raw initial input files are import in the database.
                         If IsInitialYear = True Then
                             TheFileName = "RoadZoneInputData2010.csv"
-                            theSQL = "SELECT * FROM " & Chr(34) & "TR_I_RoadZone_Base" & Chr(34) & " WHERE year = " & 2010
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_I_RoadZone_Base" & Chr(34) & " ORDER BY zone_id"
                         ElseIf IsInitialYear = False Then
                             TheFileName = FilePrefix & "RoadZoneTemp.csv"
-                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadZone" & Chr(34) & " WHERE modelrun_id = " & ModelRunID & ", year = " & Year - 1
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadZone" & Chr(34) & " WHERE modelrun_id = " & ModelRunID & "and year = " & Year - 1
                         End If
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "RoadZoneExtVar" & EVFileSuffix & ".csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_O_RoadZoneExternalVariables" & Chr(34) & " WHERE year = " & Year
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_O_RoadZoneExternalVariables" & Chr(34) & " WHERE year = " & Year & " ORDER BY zone_id"
                     Case "NewCap"
                         TheFileName = CapFilePrefix & "RoadZoneCapChange.csv"
                     Case "CapChange"
                         TheFileName = FilePrefix & "RoadZoneCapChange.csv"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_O_RoadZoneCapacityChange" & Chr(34)
                     Case "Elasticity"
                         TheFileName = "Elasticity Files\TR" & SubStrategy & "\RoadZoneElasticities.csv"
                 End Select
@@ -1217,15 +1240,19 @@ Module DBaseInterface
                     Case "Input"
                         If IsInitialYear = True Then
                             TheFileName = "RoadInputData2010.csv"
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_I_RoadInput_Base" & Chr(34) & " WHERE year = " & 2010 & " ORDER BY year, flow_id"
                         ElseIf IsInitialYear = False Then
                             TheFileName = FilePrefix & "RoadLinkTemp.csv"
                         End If
                     Case "Temp Annual"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadLink_Annual" & Chr(34) & " WHERE modelrun_id = " & ModelRunID & "year =" & Year
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadLink_Annual" & Chr(34) & " WHERE modelrun_id = " & ModelRunID & "and year = " & Year - 1
                     Case "Temp Hourly"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadLink_Hourly" & Chr(34) & " WHERE modelrun_id = " & ModelRunID & "year =" & Year
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadLink_Hourly" & Chr(34) & " WHERE modelrun_id = " & ModelRunID & "and year = " & Year - 1
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "ExternalVariables" & EVFileSuffix & ".csv"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_O_RoadLinkExternalVariables" & Chr(34) & " WHERE year = " & Year & " ORDER BY flow_id"
+                    Case "CapChange"
+                        TheFileName = CapFilePrefix & "RoadLinkCapChange.csv"
                     Case "Elasticity"
                         TheFileName = "Elasticity Files\TR" & SubStrategy & "\RoadLinkElasticities.csv"
                     Case "FreeFlowSpeed"
@@ -1312,10 +1339,10 @@ Module DBaseInterface
                     Case "Input"
                         If IsInitialYear = True Then
                             TheFileName = "AirNodeInputData2010.csv"
-                            theSQL = "SELECT * FROM " & Chr(34) & "TR_I_AirNode_Base" & Chr(34) & " WHERE year = " & 2010
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_I_AirNode_Base" & Chr(34) & " WHERE year = " & 2010 & " ORDER BY year, airport_id"
                         ElseIf IsInitialYear = False Then
                             TheFileName = FilePrefix & "AirNodeTemp.csv"
-                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_AirNode" & Chr(34) & " WHERE modelrun_id = " & ModelRunID
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_AirNode" & Chr(34) & " WHERE modelrun_id = " & ModelRunID & "and year = " & Year - 1
                         End If
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "AirNodeExtVar" & EVFileSuffix & ".csv"
@@ -1330,10 +1357,10 @@ Module DBaseInterface
                     Case "Input"
                         If IsInitialYear = True Then
                             TheFileName = "AirFlowInputData2010.csv"
-                            theSQL = "SELECT * FROM " & Chr(34) & "TR_I_AirFlow_Base" & Chr(34) & " WHERE year = " & 2010
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_I_AirFlow_Base" & Chr(34) & " WHERE year = " & 2010 & " ORDER BY year, flow_id"
                         ElseIf IsInitialYear = False Then
                             TheFileName = FilePrefix & "AirFlowTemp.csv"
-                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_AirFlow" & Chr(34) & " WHERE modelrun_id = " & ModelRunID
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_AirFlow" & Chr(34) & " WHERE modelrun_id = " & ModelRunID & "and year = " & Year - 1
                         End If
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "AirFlowExtVar.csv"
@@ -1519,7 +1546,7 @@ Module DBaseInterface
                         TableName = "TR_O_RoadZoneOutputData"
                         OutFileName = FilePrefix & "RoadZoneOutputData.csv"
                         'header = "Yeary,ZoneID,Vkmy,Spdy,Petroly,Diesely,Electricy,LPGy,CNGy,Hydrogeny,VKmMwayy,VkmRurAy,VkmRurMiny,VkmUrby,SpdMWayy,SpdRurAy,SpdRurMiny,SpdUrby,VkmPet,VkmDie,VkmPH,VkmDH,VkmPEH,VkmE,VkmLPG,VkmCNG,VkmHyd,VkmFC"
-                        header = "modelrun_id, zone_id, year, Vkm, Spd, Petrol, Diesel, Electric, LPG, CNG, Hydrogen, VKmMway, VkmRurA, VkmRurMin, VkmUrb, SpdMWay, SpdRurA, SpdRurMin, SpdUrb, VkmPet, VkmDie, VkmPH, VkmDH, VkmPEH, VkmE, VkmLPG, VkmCNG, VkmHyd, VkmFC, country_id"
+                        header = "modelrun_id, zone_id, year, Vkm, Spd, Petrol, Diesel, Electric, LPG, CNG, Hydrogen, VKmMway, VkmRurA, VkmRurMin, VkmUrb, SpdMWay, SpdRurA, SpdRurMin, SpdUrb, VkmPet, VkmDie, VkmPH, VkmDH, VkmPEH, VkmE, VkmLPG, VkmCNG, VkmHyd, VkmFC"
                     Case "Temp"
                         ToSQL = True
                         TableName = "TR_IO_RoadZone"
@@ -1531,16 +1558,21 @@ Module DBaseInterface
                         TableName = "TR_O_RoadZoneExternalVariables"
                         OutFileName = EVFilePrefix & "RoadZoneExtVar.csv"
                         'header = "Yeary,ZoneID,PopZy,GVAZy,Costy,LaneKm,LKmMway,LKmRurAD,LKmRurAS,LKmRurMin,LKmUrbD,LKmUrbS,PCar,DCar,ECar,PLGV,DLGV,ELGV,DHGV,EHGV,DPSV,EPSV,PBike,EBike,FCBike,PHCar,DHCar,PECar,HCar,FCCar,DHLGV,PELGV,LLGV,CLGV,DHPSV,PEPSV,LPSV,CPSV,FCPSV,DHHGV,HHGV,FCHGV"
-                        header = "modelrun_id, zone_id, year, PopZ, GVAZ, Cost, LaneKm, LKmMway, LKmRurAD, LKmRurAS, LKmRurMin, LKmUrbD, LKmUrbD, LKmUrbS, PCar, DCar, ECar, PLGV, DLGV, ELGV, DHGV, EHGV, DPSV, EPSV, PBike, EBike, FCBike, PHCar, DHCar, PECar, HCar, FCCar, DHLGV, PELGV, LLGV, CLGV, DHPSV, PEPSV, LPSV, CPSV, FCPSV, DHHGV, HHGV, FCHGV, LGVCost, HGV1Cost, HGV2Cost, PSVCost"
-                    Case "NewCap"
+                        header = "modelrun_id, zone_id, year, PopZ, GVAZ, Cost, LaneKm, LKmMway, LKmRurAD, LKmRurAS, LKmRurMin, LKmUrbD, LKmUrbS, PCar, DCar, ECar, PLGV, DLGV, ELGV, DHGV, EHGV, DPSV, EPSV, PBike, EBike, FCBike, PHCar, DHCar, PECar, HCar, FCCar, DHLGV, PELGV, LLGV, CLGV, DHPSV, PEPSV, LPSV, CPSV, FCPSV, DHHGV, HHGV, FCHGV, LGVCost, HGV1Cost, HGV2Cost, PSVCost"
+                    Case "RoadZoneCapChange"
+                        ToSQL = True
+                        TableName = "TR_O_RoadZoneCapacityChange"
                         OutFileName = EVFilePrefix & "RoadZoneCapChange.csv"
-                        header = "ZoneID,ChangeYear,MWayLaneKmCh,RurADLaneKmCh,RurASLaneKmCh,RurMLaneKmCh,UrbDLaneKmCh,UrbSLaneKmCh"
+                        header = "modelrun_id, zone_id, changeyear, MWayLaneKmCh, RurADLaneKmCh, RurASLaneKmCh, RurMLaneKmCh, UrbDLaneKmCh, UrbSLaneKmCh"
                     Case "RoadZoneNewCap"
+                        'missing table for this output
                         OutFileName = FilePrefix & "RoadZoneNewCap.csv"
                         header = "ZoneID,Yeary,MWayCap,RurACap,RurMinCap,UrbCap"
                     Case "RoadZoneFuel"
+                        ToSQL = True
+                        TableName = "TR_O_RoadZoneFuelConsumption"
                         OutFileName = FilePrefix & "RoadZoneFuelConsumption.csv"
-                        header = "ZoneID,Yeary,PetCary,PetLGVy,DieCary,DieLGVy,DieHGV23y,DieHGV4y,DiePSVy,EleCary,EleLGVy,ElePSVy,LPGLGVy,LPGPSVy,CNGLGVy,CNGPSVy,HydCary,HydHGV23y,HydHGV4y,HydPSVy"
+                        header = "modelrun_id, zone_id, year, PetCar, PetLGV, DieCar, DieLGV, DieHGV23, DieHGV4, DiePSV, EleCar, EleLGV, ElePSV, LPGLGV, LPGPSV, CNGLGV, CNGPSV, HydCar, HydHGV23, HydHGV4, HydPSV"
                 End Select
             Case "RoadLink"
                 Select Case SubType
@@ -1548,23 +1580,23 @@ Module DBaseInterface
                         ToSQL = True
                         TableName = "TR_O_RoadOutputFlows"
                         'header = "Yeary,FlowID,PCUTotal,SpeedMean,PCUMway,PCUDual,PCUSing,SpdMway,SpdDual,SpdSing,MSC1,MSC2,MSC3,MSC4,MSC5,MSC6,DSC1,DSC2,DSC3,DSC4,DSC5,DSC6,SSC1,SSC2,SSC3,SSC4,SSC5,SSC6,SSC7,SSC8,SpdMSC1,SpdMSC2,SpdMSC3,SpdMSC4,SpdMSC5,SpdMSC6,SpdDSC1,SpdDSC2,SpdDSC3,SpdDSC4,SpdDSC5,SpdDSC6,SpdSSC1,SpdSSC2,SpdSSC3,SpdSSC4,SpdSSC5,SpdSSC6,SpdSSC7,SpdSSC8,MWayLatent,DualLatent,SingLatent,MFullHrs,DFullHrs,SFullHrs,CostMway,CostDual,CostSing"
-                        header = "modelrun_id, year,flow_id,PCUTotal,SpeedMean,PCUMway,PCUDual,PCUSing,SpdMway,SpdDual,SpdSing,MSC1,MSC2,MSC3,MSC4,MSC5,MSC6,DSC1,DSC2,DSC3,DSC4,DSC5,DSC6,SSC1,SSC2,SSC3,SSC4,SSC5,SSC6,SSC7,SSC8,SpdMSC1,SpdMSC2,SpdMSC3,SpdMSC4,SpdMSC5,SpdMSC6,SpdDSC1,SpdDSC2,SpdDSC3,SpdDSC4,SpdDSC5,SpdDSC6,SpdSSC1,SpdSSC2,SpdSSC3,SpdSSC4,SpdSSC5,SpdSSC6,SpdSSC7,SpdSSC8,MWayLatent,DualLatent,SingLatent,MFullHrs,DFullHrs,SFullHrs,CostMway,CostDual,CostSing"
+                        header = "modelrun_id, flow_id, year, PCUTotal, SpeedMean, PCUMway, PCUDual, PCUSing, SpdMway, SpdDual, SpdSing, MSC1, MSC2, MSC3, MSC4, MSC5, MSC6, DSC1, DSC2, DSC3, DSC4, DSC5, DSC6, SSC1, SSC2, SSC3, SSC4, SSC5, SSC6, SSC7, SSC8, SpdMSC1, SpdMSC2, SpdMSC3, SpdMSC4, SpdMSC5, SpdMSC6, SpdDSC1, SpdDSC2, SpdDSC3, SpdDSC4, SpdDSC5, SpdDSC6, SpdSSC1, SpdSSC2, SpdSSC3, SpdSSC4, SpdSSC5, SpdSSC6, SpdSSC7, SpdSSC8, MWayLatent, DualLatent, SingLatent, MFullHrs, DFullHrs, SFullHrs, CostMway, CostDual, CostSing"
                     Case "Temp Annual"
                         ToSQL = True
                         TableName = "TR_IO_RoadLink_Annual"
-                        header = "modelrun_id, year,flow_id,MLanes,DLanes,SLanes,MLanesNew,DLanesNew,SLanesNew,msc1,msc2,msc3,msc4,msc5,msc6,dsc1,dsc2,dsc3,dsc4,dsc5,dsc6,ssc1,ssc2,ssc3,ssc4,ssc5,ssc6,ssc7,ssc8,MaxCapM,MaxCapD,MaxCapS,AddedLane0,AddedLane1,AddedLane2"
+                        header = "modelrun_id, year, flow_id, MLanes, DLanes, SLanes, MLanesNew, DLanesNew, SLanesNew, MSC1, MSC2, MSC3, MSC4, MSC5, MSC6, DSC1, DSC2, DSC3, DSC4, DSC5, DSC6, SSC1, SSC2, SSC3, SSC4, SSC5, SSC6, SSC7, SSC8, MaxCapM, MaxCapD, MaxCapS, AddedLane0, AddedLane1, AddedLane2"
                     Case "Temp Hourly"
                         ToSQL = True
                         TableName = "TR_IO_RoadLink_Hourly"
-                        header = "modelrun_id, year,flow_id,hour_id, MRoadTypeFlows,DRoadTypeFlows,SRoadTypeFlows,"
+                        header = "modelrun_id, year, flow_id, hour_id, MRoadTypeFlows, DRoadTypeFlows, SRoadTypeFlows"
                         For x = 1 To 6
-                            header = header & "M" & x & "HourlyFlows" & "," & "M" & x & "Charge" & "," & "M" & x & "LatentFlows" & "," & "M" & x & "NewHourlySpeeds" & ","
+                            header = header & ", M" & x & "HourlyFlows" & "," & "M" & x & "Charge" & "," & "M" & x & "LatentFlows" & "," & "M" & x & "NewHourlySpeeds"
                         Next
                         For x = 1 To 6
-                            header = header & "D" & x & "HourlyFlows" & "," & "D" & x & "Charge" & "," & "D" & x & "LatentFlows" & "," & "D" & x & "NewHourlySpeeds" & ","
+                            header = header & ", D" & x & "HourlyFlows" & "," & "D" & x & "Charge" & "," & "D" & x & "LatentFlows" & "," & "D" & x & "NewHourlySpeeds"
                         Next
                         For x = 1 To 8
-                            header = header & "S" & x & "HourlyFlows" & "," & "S" & x & "Charge" & "," & "S" & x & "LatentFlows" & "," & "S" & x & "NewHourlySpeeds" & ","
+                            header = header & ", S" & x & "HourlyFlows" & "," & "S" & x & "Charge" & "," & "S" & x & "LatentFlows" & "," & "S" & x & "NewHourlySpeeds"
                         Next
                     Case "Temp"
                         TempFileName = FilePrefix & "RoadLinkTemp.csv"
@@ -1601,8 +1633,15 @@ Module DBaseInterface
                             Next
                         Next
                     Case "ExtVar"
+                        ToSQL = True
+                        TableName = "TR_O_RoadLinkExternalVariables"
                         OutFileName = EVFilePrefix & "ExternalVariables.csv"
-                        header = "Yeary,FlowID,PopZ1y,PopZ2y,GVAZ1y,GVAZ2y,M1Costy,MLanesy,DLanesy,SLanesy,MaxCapMy,MaxCapDy,MaxCapSy,M2Costy,M3Costy,M4Costy,M5Costy,M6Costy,D1Costy,D2Costy,D3Costy,D4Costy,D5Costy,D6Costy,S1Costy,S2Costy,S3Costy,S4Costy,S5Costy,S6Costy,S7Costy,S8Costy"
+                        header = "modelrun_id, flow_id, year, PopZ1, PopZ2, GVAZ1, GVAZ2, MLanes, DLanes, SLanes, MaxCapM, MaxCapD, MaxCapS, M1Cost, M2Cost, M3Cost, M4Cost, M5Cost, M6Cost, D1Cost, D2Cost, D3Cost, D4Cost, D5Cost, D6Cost, S1Cost, S2Cost, S3Cost, S4Cost, S5Cost, S6Cost, S7Cost, S8Cost"
+                    Case "NewCap"
+                        ToSQL = True
+                        TableName = "TR_O_RoadLinkNewCapacity"
+                        OutFileName = EVFilePrefix & "RoadLinkNewCap.csv"
+                        header = "modelrun_id, changeyear, flow_id, MLaneChange, DLaneChange, SLaneChange"
                     Case "RoadLinkNewCap"
                         OutFileName = FilePrefix & "RoadLinkNewCap.csv"
                         header = "FlowID,Yeary,RoadType,LanesAdded"
@@ -1715,10 +1754,12 @@ Module DBaseInterface
                         ToSQL = True
                         TableName = "TR_O_AirNodeExternalVariables"
                         OutFileName = EVFilePrefix & "AirNodeExtVar.csv"
-                        header = "modelrun_id, airport_id, year, GORPop, GORGva, Cost, TermCap, MaxATM, PlaneSizeDom,PlaneSizeInt, LFDom, LFInt, IntTripDist, FuelSeatKm"
+                        header = "modelrun_id, airport_id, year, GORPop, GORGva, Cost, TermCap, MaxATM, PlaneSizeDom, PlaneSizeInt, LFDom, LFInt, IntTripDist, FuelSeatKM"
                     Case "NewCap"
+                        ToSQL = True
+                        TableName = "TR_O_AirNodeNewCapacity"
                         OutFileName = EVFilePrefix & "AirNodeNewCap.csv"
-                        header = "NodeID,ChangeYear,NewTermCap,NewATMCap"
+                        header = "modelrun_id, airport_id, changeyear,NewTermCapacity, NewATMCap"
                     Case "AirNewCap"
                         OutFileName = FilePrefix & "AirNewCap.csv"
                         header = "AirportID,Yeary,TermCapAdded,RunCapAdded"

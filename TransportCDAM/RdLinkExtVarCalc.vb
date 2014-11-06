@@ -66,7 +66,6 @@
     Dim CostsNew(19) As Double
     Dim countvar As Integer
     Dim enestring As String
-    Dim enearray() As String
     Dim PetOld, PetNew, DieOld, DieNew, EleOld, EleNew, LPGOld, LPGNew, CNGOld, CNGNew, HydOld, HydNew As Double
     Dim PetOldArr(291, 1), DieOldArr(291, 1), EleOldArr(291, 1), LPGOldArr(291, 1), CNGOldArr(291, 1), HydOldArr(291, 1) As Double
     Dim PetRat, DieRat, EleRat, LPGRat, CNGRat, HydRat As Double
@@ -76,7 +75,15 @@
     Dim VehFuelCosts(291, 19, 9) As Double
     Dim CarbCharge(19, 9) As Double
     Dim stratstring As String
-    Dim stratarray() As String
+    Dim stratarray(90, 95) As String
+    Dim enearray(91, 6) As String
+    Dim InputArray(291, 54) As String
+    Dim OutputArray(292, 32) As String
+    Dim CapArray(6835, 6) As String
+    Dim CapNum As Integer
+    Dim NewCapArray(6835, 5) As String
+
+
 
     Public Sub RoadLinkEVMain()
 
@@ -104,11 +111,13 @@
         'so we created another file containing sorted implemented capacity enhancements (in get files sub)
         'need initial file to be sorted by file type then by change year then by order of priority
         'first read all compulsory enhancements to intermediate array
-        CapRow = rc.ReadLine
+
+        'start from the first row of CapArray
+        CapNum = 1
         CapCount = 0
         AddingCap = False
         LanesToBuild = 0
-        Do Until CapRow Is Nothing
+        Do Until CapArray(CapNum, 0) Is Nothing
             Call GetCapData()
             Select Case CapType
                 Case "C"
@@ -162,7 +171,7 @@
             If Breakout = True Then
                 Exit Do
             End If
-            CapRow = rc.ReadLine
+
             CapCount += 1
         Loop
         'then sort the intermediate array by flow ID, then by year of implementation
@@ -179,92 +188,96 @@
             sortedline = sortarray(v)
             splitline = Split(sortedline, "&")
             arraynum = splitline(2)
-            OutputRow = NewCapDetails(arraynum, 0) & "," & NewCapDetails(arraynum, 1) & "," & NewCapDetails(arraynum, 2) & "," & NewCapDetails(arraynum, 3) & "," & NewCapDetails(arraynum, 4)
+            NewCapArray(v + 1, 0) = modelRunID
+            NewCapArray(v + 1, 1) = NewCapDetails(arraynum, 1)
+            NewCapArray(v + 1, 2) = NewCapDetails(arraynum, 0)
+            NewCapArray(v + 1, 3) = NewCapDetails(arraynum, 2)
+            NewCapArray(v + 1, 4) = NewCapDetails(arraynum, 3)
+            NewCapArray(v + 1, 5) = NewCapDetails(arraynum, 4)
             RLCapYear(v) = NewCapDetails(arraynum, 1)
-            rnc.WriteLine(OutputRow)
         Next
+
+        'write all lines from NewCapArray to intermediate capacity file
+        Call WriteData("RoadLink", "NewCap", NewCapArray)
 
         'this variable is needed to select new capacity for the interzonal model
         RoadCapNum = CapCount
 
-        rc.Close()
-        rnc.Close()
 
-        'reopen the capacity file as a reader
-        RoadLinkNewCapData = New IO.FileStream(DirPath & EVFilePrefix & "RoadLinkNewCap.csv", IO.FileMode.Open, IO.FileAccess.Read)
-        rncr = New IO.StreamReader(RoadLinkNewCapData, System.Text.Encoding.Default)
-        'read header
-        rncr.ReadLine()
-        'read first line of new capacity
-        CapRow = rncr.ReadLine
+        'reset NewCapArray row to the begining
+        CapNum = 1
+
         AddingCap = True
         Call GetCapData()
 
         'v1.6 now calculate external variables and write output in annual timesteps
         Call CalcFlowData()
 
-        stf.Close()
-        ri.Close()
-        ev.Close()
-        rncr.Close()
 
     End Sub
 
     Sub GetFiles()
 
-        RoadInputData = New IO.FileStream(DirPath & "RoadInputData2010.csv", IO.FileMode.Open, IO.FileAccess.Read)
-        ri = New IO.StreamReader(RoadInputData, System.Text.Encoding.Default)
-        'read header row
-        InputRow = ri.ReadLine
+        'RoadInputData = New IO.FileStream(DirPath & "RoadInputData2010.csv", IO.FileMode.Open, IO.FileAccess.Read)
+        'ri = New IO.StreamReader(RoadInputData, System.Text.Encoding.Default)
+        ''read header row
+        'InputRow = ri.ReadLine
 
-        ExtVarOutputData = New IO.FileStream(DirPath & EVFilePrefix & "ExternalVariables.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
-        ev = New IO.StreamWriter(ExtVarOutputData, System.Text.Encoding.Default)
+        'read initial input data
+        Call ReadData("RoadLink", "Input", InputArray, modelRunID, True)
+
+
+        'ExtVarOutputData = New IO.FileStream(DirPath & EVFilePrefix & "ExternalVariables.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
+        'ev = New IO.StreamWriter(ExtVarOutputData, System.Text.Encoding.Default)
 
         'if capacity is changing then get capacity change file
         'v1.3 do this anyway to include compulsory changes
-        RoadLinkCapData = New IO.FileStream(DirPath & CapFilePrefix & "RoadLinkCapChange.csv", IO.FileMode.Open, IO.FileAccess.Read)
-        rc = New IO.StreamReader(RoadLinkCapData, System.Text.Encoding.Default)
-        'read header row
-        rc.ReadLine()
+        'RoadLinkCapData = New IO.FileStream(DirPath & CapFilePrefix & "RoadLinkCapChange.csv", IO.FileMode.Open, IO.FileAccess.Read)
+        'rc = New IO.StreamReader(RoadLinkCapData, System.Text.Encoding.Default)
+        ''read header row
+        'rc.ReadLine()
         'If NewRdLCap = True Then
         '    RoadLinkCapData = New IO.FileStream(DirPath & CapFilePrefix & "RoadLinkCapChange.csv", IO.FileMode.Open, IO.FileAccess.Read)
         '    rc = New IO.StreamReader(RoadLinkCapData, System.Text.Encoding.Default)
         '    'read header row
         '    rc.ReadLine()
         'End If
+
+        'now read from database
+        Call ReadData("RoadLink", "CapChange", CapArray, modelRunID)
+
+
         'v1.4 new intermediate capacity file
-        RoadLinkNewCapData = New IO.FileStream(DirPath & EVFilePrefix & "RoadLinkNewCap.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
-        rnc = New IO.StreamWriter(RoadLinkNewCapData, System.Text.Encoding.Default)
-        'writeheaderrow
-        OutString = "FlowID,ChangeYear,MLaneChange,DLaneChange,SLaneChange"
-        rnc.WriteLine(OutString)
+        'RoadLinkNewCapData = New IO.FileStream(DirPath & EVFilePrefix & "RoadLinkNewCap.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
+        'rnc = New IO.StreamWriter(RoadLinkNewCapData, System.Text.Encoding.Default)
+        ''writeheaderrow
+        'OutString = "FlowID,ChangeYear,MLaneChange,DLaneChange,SLaneChange"
+        'rnc.WriteLine(OutString)
 
         '1.3 get the strategy file
         'open the strategy file
-        SubStrategyFile = New IO.FileStream(DirPath & "CommonVariablesTR" & SubStrategy & ".csv", IO.FileMode.Open, IO.FileAccess.Read)
-        stf = New IO.StreamReader(SubStrategyFile, System.Text.Encoding.Default)
-        'read header row
-        stf.ReadLine()
+        Call ReadData("SubStrategy", "", stratarray, modelRunID)
 
+        'SubStrategyFile = New IO.FileStream(DirPath & "CommonVariablesTR" & SubStrategy & ".csv", IO.FileMode.Open, IO.FileAccess.Read)
+        'stf = New IO.StreamReader(SubStrategyFile, System.Text.Encoding.Default)
+        ''read header row
+        'stf.ReadLine()
+        If RdLEneSource = "Database" Then
+            'v1.4 altered so that scenario file is read directly as an input file
+            Call ReadData("Energy", "", enearray, modelRunID)
+        End If
     End Sub
 
     Sub CalcFlowData()
 
         If RdLEneSource = "Database" Then
-            'v1.4 altered so that scenario file is read directly as an input file
-            ZoneEneFile = New IO.FileStream(DBaseEneFile, IO.FileMode.Open, IO.FileAccess.Read)
-            zer = New IO.StreamReader(ZoneEneFile, System.Text.Encoding.Default)
-            'read header row
-            enestring = zer.ReadLine
-            'read first line of data
-            enestring = zer.ReadLine
-            enearray = Split(enestring, ",")
-            PetOld = enearray(1)
-            DieOld = enearray(2)
-            EleOld = enearray(3)
-            LPGOld = enearray(4)
-            CNGOld = enearray(5)
-            HydOld = enearray(6)
+
+            PetOld = enearray(1, 1)
+            DieOld = enearray(1, 2)
+            EleOld = enearray(1, 3)
+            LPGOld = enearray(1, 4)
+            CNGOld = enearray(1, 5)
+            HydOld = enearray(1, 6)
 
             'set base levels of fixed and fuel costs = the first array value is the speed category
             'fixed costs
@@ -436,22 +449,11 @@
             Next
         End If
 
-        'Set year as 1 to start with
+        'Set year as the entered year to start with
         Year = 1
 
 
-        Do While Year < 91
-
-            'read line of strategy file for each year
-            stratstring = stf.ReadLine
-            stratarray = Split(stratstring, ",")
-
-
-            If RdLEneSource = "Database" Then
-                'read in new fuel values
-                enestring = zer.ReadLine
-                enearray = Split(enestring, ",")
-            End If
+        Do Until Year > 40
 
 
 
@@ -461,25 +463,25 @@
 
                 If Year = 1 Then
                     'v1.6 read input file if year 1, data will be updated if not year 1
-                    InputRow = ri.ReadLine
-                    InputData = Split(InputRow, ",")
-                    FlowID(InputCount, 1) = InputData(0)
-                    OZone(InputCount, 1) = InputData(1)
-                    DZone(InputCount, 1) = InputData(2)
-                    Pop1Old(InputCount, 1) = InputData(28)
-                    Pop2Old(InputCount, 1) = InputData(29)
-                    GVA1Old(InputCount, 1) = InputData(30)
-                    GVA2Old(InputCount, 1) = InputData(31)
-                    CostsOld(InputCount, 0) = InputData(32)
-                    MLanes(InputCount, 1) = InputData(4)
-                    DLanes(InputCount, 1) = InputData(5)
-                    SLanes(InputCount, 1) = InputData(6)
-                    MCap(InputCount, 1) = InputData(33)
-                    DCap(InputCount, 1) = InputData(34)
-                    SCap(InputCount, 1) = InputData(35)
+
+                    FlowID(InputCount, 1) = InputArray(InputCount, 4)
+                    OZone(InputCount, 1) = InputArray(InputCount, 5)
+                    DZone(InputCount, 1) = InputArray(InputCount, 6)
+                    Pop1Old(InputCount, 1) = get_population_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 1), "OZ", "'road'")
+                    Pop2Old(InputCount, 1) = get_population_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 1), "DZ", "'road'")
+                    GVA1Old(InputCount, 1) = get_gva_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 1), "OZ", "'road'")
+                    GVA2Old(InputCount, 1) = get_gva_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 1), "DZ", "'road'")
+
+                    CostsOld(InputCount, 0) = InputArray(InputCount, 32)
+                    MLanes(InputCount, 1) = InputArray(InputCount, 8)
+                    DLanes(InputCount, 1) = InputArray(InputCount, 9)
+                    SLanes(InputCount, 1) = InputArray(InputCount, 10)
+                    MCap(InputCount, 1) = InputArray(InputCount, 33)
+                    DCap(InputCount, 1) = InputArray(InputCount, 34)
+                    SCap(InputCount, 1) = InputArray(InputCount, 35)
                     countvar = 36
                     For x = 1 To 19
-                        CostsOld(InputCount, x) = CDbl(InputData(countvar))
+                        CostsOld(InputCount, x) = CDbl(InputArray(InputCount, countvar))
                         countvar += 1
                     Next
                     PetOldArr(InputCount, 1) = PetOld
@@ -559,12 +561,12 @@
                 ElseIf RdLEneSource = "File" Then
                     'not set up for scaling files
                 ElseIf RdLEneSource = "Database" Then
-                    PetNew = enearray(1)
-                    DieNew = enearray(2)
-                    EleNew = enearray(3)
-                    LPGNew = enearray(4)
-                    CNGNew = enearray(5)
-                    HydNew = enearray(6)
+                    PetNew = enearray(Year + 1, 1)
+                    DieNew = enearray(Year + 1, 2)
+                    EleNew = enearray(Year + 1, 3)
+                    LPGNew = enearray(Year + 1, 4)
+                    CNGNew = enearray(Year + 1, 5)
+                    HydNew = enearray(Year + 1, 6)
                     'calculate ratio for each fuel
                     PetRat = PetNew / PetOldArr(InputCount, 1)
                     DieRat = DieNew / DieOldArr(InputCount, 1)
@@ -574,7 +576,7 @@
                     HydRat = HydNew / HydOldArr(InputCount, 1)
                     '0301014 corrected fuel efficiency change calculation - was previously just multiplying by figure straight from strategy array (which meant that fuel costs quickly declined to zero)
                     For f = 0 To 34
-                        FuelEffNew(InputCount, f) = stratarray(f + 31)
+                        FuelEffNew(InputCount, f) = stratarray(Year, f + 31)
                         FuelEffChange(f) = FuelEffNew(InputCount, f) / FuelEffOld(InputCount, f)
                     Next
                     'calculate cost for each vehicle type - these are the 19 speed categories
@@ -693,113 +695,113 @@
                         If Year >= CarbChargeYear Then
                             'note that we assume base (2010) petrol price of 122.1 p/litre when calculating the base fuel consumption (full calculations from base figures not included in model run)
                             'calculation is: (base fuel units per km * change in fuel efficiency from base year * CO2 per unit of fuel * CO2 price per kg in pence)
-                            CarbCharge(0, 0) = (0.04 * stratarray(63) * stratarray(72) * (stratarray(71) / 10))
-                            CarbCharge(0, 5) = (0.032 * stratarray(64) * stratarray(74) * (stratarray(70) / 10))
-                            CarbCharge(0, 9) = (0.123 * stratarray(65) * stratarray(77) * (stratarray(71) / 10))
-                            CarbCharge(1, 0) = (0.086 * stratarray(31) * stratarray(72) * (stratarray(71) / 10))
-                            CarbCharge(1, 1) = (0.057 * stratarray(32) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(1, 2) = (0.056 * stratarray(43) * stratarray(72) * (stratarray(71) / 10))
-                            CarbCharge(1, 3) = (0.038 * stratarray(44) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(1, 4) = (0.06 * stratarray(45) * stratarray(72) * (stratarray(71) / 10))
-                            CarbCharge(1, 5) = (0.165 * stratarray(33) * stratarray(74) * (stratarray(70) / 10))
-                            CarbCharge(1, 8) = (0.438 * stratarray(46) * stratarray(77) * (stratarray(71) / 10))
-                            CarbCharge(1, 9) = (0.178 * stratarray(47) * stratarray(77) * (stratarray(71) / 10))
-                            CarbCharge(2, 0) = (0.088 * stratarray(34) * stratarray(72) * (stratarray(71) / 10))
-                            CarbCharge(2, 1) = (0.079 * stratarray(35) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(2, 3) = (0.044 * stratarray(48) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(2, 4) = (0.058 * stratarray(49) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(2, 5) = (0.562 * stratarray(36) * stratarray(74) * (stratarray(70) / 10))
-                            CarbCharge(2, 6) = (0.118 * stratarray(50) * stratarray(75) * (stratarray(71) / 10))
-                            CarbCharge(2, 7) = (0.808 * stratarray(51) * stratarray(76) * (stratarray(71) / 10))
-                            CarbCharge(3, 1) = (0.176 * stratarray(41) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(3, 3) = (0.185 * stratarray(52) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(3, 4) = (0.119 * stratarray(53) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(3, 5) = (0.2554 * stratarray(42) * stratarray(74) * (stratarray(70) / 10))
-                            CarbCharge(3, 6) = (0.954 * stratarray(54) * stratarray(75) * (stratarray(71) / 10))
-                            CarbCharge(3, 7) = (3.749 * stratarray(55) * stratarray(76) * (stratarray(71) / 10))
-                            CarbCharge(3, 9) = (0.546 * stratarray(56) * stratarray(77) * (stratarray(71) / 10))
-                            CarbCharge(4, 1) = (0.259 * stratarray(37) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(4, 3) = (0.15 * stratarray(57) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(4, 8) = (0.957 * stratarray(58) * stratarray(77) * (stratarray(71) / 10))
-                            CarbCharge(4, 9) = (0.898 * stratarray(59) * stratarray(77) * (stratarray(71) / 10))
-                            CarbCharge(5, 1) = (0.376 * stratarray(39) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(5, 3) = (0.221 * stratarray(60) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(5, 8) = (1.398 * stratarray(61) * stratarray(77) * (stratarray(71) / 10))
-                            CarbCharge(5, 9) = (1.123 * stratarray(62) * stratarray(77) * (stratarray(71) / 10))
-                            CarbCharge(6, 0) = (0.04 * stratarray(63) * stratarray(72) * (stratarray(71) / 10))
-                            CarbCharge(6, 5) = (0.032 * stratarray(64) * stratarray(74) * (stratarray(70) / 10))
-                            CarbCharge(6, 9) = (0.123 * stratarray(65) * stratarray(77) * (stratarray(71) / 10))
-                            CarbCharge(7, 0) = (0.086 * stratarray(31) * stratarray(72) * (stratarray(71) / 10))
-                            CarbCharge(7, 1) = (0.057 * stratarray(32) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(7, 2) = (0.056 * stratarray(43) * stratarray(72) * (stratarray(71) / 10))
-                            CarbCharge(7, 3) = (0.038 * stratarray(44) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(7, 4) = (0.06 * stratarray(45) * stratarray(72) * (stratarray(71) / 10))
-                            CarbCharge(7, 5) = (0.165 * stratarray(33) * stratarray(74) * (stratarray(70) / 10))
-                            CarbCharge(7, 8) = (0.438 * stratarray(46) * stratarray(77) * (stratarray(71) / 10))
-                            CarbCharge(7, 9) = (0.178 * stratarray(47) * stratarray(77) * (stratarray(71) / 10))
-                            CarbCharge(8, 0) = (0.088 * stratarray(34) * stratarray(72) * (stratarray(71) / 10))
-                            CarbCharge(8, 1) = (0.079 * stratarray(35) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(8, 3) = (0.044 * stratarray(48) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(8, 4) = (0.058 * stratarray(49) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(8, 5) = (0.562 * stratarray(36) * stratarray(74) * (stratarray(70) / 10))
-                            CarbCharge(8, 6) = (0.118 * stratarray(50) * stratarray(75) * (stratarray(71) / 10))
-                            CarbCharge(8, 7) = (0.808 * stratarray(51) * stratarray(76) * (stratarray(71) / 10))
-                            CarbCharge(9, 1) = (0.176 * stratarray(41) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(9, 3) = (0.185 * stratarray(52) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(9, 4) = (0.119 * stratarray(53) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(9, 5) = (2.554 * stratarray(42) * stratarray(74) * (stratarray(70) / 10))
-                            CarbCharge(9, 6) = (0.954 * stratarray(54) * stratarray(75) * (stratarray(71) / 10))
-                            CarbCharge(9, 7) = (3.749 * stratarray(55) * stratarray(76) * (stratarray(71) / 10))
-                            CarbCharge(9, 9) = (0.546 * stratarray(56) * stratarray(77) * (stratarray(71) / 10))
-                            CarbCharge(10, 1) = (0.259 * stratarray(37) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(10, 3) = (0.15 * stratarray(57) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(10, 8) = (0.957 * stratarray(58) * stratarray(77) * (stratarray(71) / 10))
-                            CarbCharge(10, 9) = (0.898 * stratarray(59) * stratarray(77) * (stratarray(71) / 10))
-                            CarbCharge(11, 1) = (0.376 * stratarray(39) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(11, 3) = (0.221 * stratarray(60) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(11, 8) = (1.398 * stratarray(61) * stratarray(77) * (stratarray(71) / 10))
-                            CarbCharge(11, 9) = (1.123 * stratarray(62) * stratarray(77) * (stratarray(71) / 10))
-                            CarbCharge(12, 0) = (0.04 * stratarray(63) * stratarray(72) * (stratarray(71) / 10))
-                            CarbCharge(12, 5) = (0.032 * stratarray(64) * stratarray(74) * (stratarray(70) / 10))
-                            CarbCharge(12, 9) = (0.123 * stratarray(65) * stratarray(77) * (stratarray(71) / 10))
-                            CarbCharge(13, 0) = (0.086 * stratarray(31) * stratarray(72) * (stratarray(71) / 10))
-                            CarbCharge(13, 1) = (0.057 * stratarray(32) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(13, 2) = (0.056 * stratarray(43) * stratarray(72) * (stratarray(71) / 10))
-                            CarbCharge(13, 3) = (0.038 * stratarray(44) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(13, 4) = (0.016 * stratarray(45) * stratarray(72) * (stratarray(70) / 10))
-                            CarbCharge(13, 5) = (0.165 * stratarray(33) * stratarray(74) * (stratarray(70) / 10))
-                            CarbCharge(13, 8) = (0.438 * stratarray(46) * stratarray(77) * (stratarray(71) / 10))
-                            CarbCharge(13, 9) = (0.178 * stratarray(47) * stratarray(77) * (stratarray(71) / 10))
-                            CarbCharge(14, 0) = (0.088 * stratarray(34) * stratarray(72) * (stratarray(71) / 10))
-                            CarbCharge(14, 1) = (0.079 * stratarray(35) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(14, 3) = (0.044 * stratarray(48) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(14, 4) = (0.423 * stratarray(49) * stratarray(73) * (stratarray(70) / 10))
-                            CarbCharge(14, 5) = (0.562 * stratarray(36) * stratarray(74) * (stratarray(70) / 10))
-                            CarbCharge(14, 6) = (0.118 * stratarray(50) * stratarray(75) * (stratarray(71) / 10))
-                            CarbCharge(14, 7) = (0.808 * stratarray(51) * stratarray(76) * (stratarray(71) / 10))
-                            CarbCharge(15, 1) = (0.196 * stratarray(41) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(15, 3) = (0.119 * stratarray(52) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(15, 4) = (1.037 * stratarray(53) * stratarray(73) * (stratarray(70) / 10))
-                            CarbCharge(15, 5) = (1.7 * stratarray(42) * stratarray(74) * (stratarray(70) / 10))
-                            CarbCharge(15, 6) = (0.364 * stratarray(54) * stratarray(75) * (stratarray(71) / 10))
-                            CarbCharge(15, 7) = (6.283 * stratarray(55) * stratarray(76) * (stratarray(71) / 10))
-                            CarbCharge(15, 9) = (0.546 * stratarray(56) * stratarray(77) * (stratarray(71) / 10))
-                            CarbCharge(16, 1) = (0.259 * stratarray(37) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(16, 3) = (0.15 * stratarray(57) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(16, 8) = (0.957 * stratarray(58) * stratarray(77) * (stratarray(71) / 10))
-                            CarbCharge(16, 9) = (0.898 * stratarray(59) * stratarray(77) * (stratarray(71) / 10))
-                            CarbCharge(17, 1) = (0.259 * stratarray(37) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(17, 3) = (0.15 * stratarray(57) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(17, 8) = (0.957 * stratarray(58) * stratarray(77) * (stratarray(71) / 10))
-                            CarbCharge(17, 9) = (0.898 * stratarray(59) * stratarray(77) * (stratarray(71) / 10))
-                            CarbCharge(18, 1) = (0.376 * stratarray(39) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(18, 3) = (0.221 * stratarray(60) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(18, 8) = (1.398 * stratarray(61) * stratarray(77) * (stratarray(71) / 10))
-                            CarbCharge(18, 9) = (1.123 * stratarray(62) * stratarray(77) * (stratarray(71) / 10))
-                            CarbCharge(19, 1) = (0.376 * stratarray(39) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(19, 3) = (0.221 * stratarray(60) * stratarray(73) * (stratarray(71) / 10))
-                            CarbCharge(19, 8) = (1.398 * stratarray(61) * stratarray(77) * (stratarray(71) / 10))
-                            CarbCharge(19, 9) = (1.123 * stratarray(62) * stratarray(77) * (stratarray(71) / 10))
+                            CarbCharge(0, 0) = (0.04 * stratarray(Year, 63) * stratarray(Year, 72) * (stratarray(Year, 71) / 10))
+                            CarbCharge(0, 5) = (0.032 * stratarray(Year, 64) * stratarray(Year, 74) * (stratarray(Year, 70) / 10))
+                            CarbCharge(0, 9) = (0.123 * stratarray(Year, 65) * stratarray(Year, 77) * (stratarray(Year, 71) / 10))
+                            CarbCharge(1, 0) = (0.086 * stratarray(Year, 31) * stratarray(Year, 72) * (stratarray(Year, 71) / 10))
+                            CarbCharge(1, 1) = (0.057 * stratarray(Year, 32) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(1, 2) = (0.056 * stratarray(Year, 43) * stratarray(Year, 72) * (stratarray(Year, 71) / 10))
+                            CarbCharge(1, 3) = (0.038 * stratarray(Year, 44) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(1, 4) = (0.06 * stratarray(Year, 45) * stratarray(Year, 72) * (stratarray(Year, 71) / 10))
+                            CarbCharge(1, 5) = (0.165 * stratarray(Year, 33) * stratarray(Year, 74) * (stratarray(Year, 70) / 10))
+                            CarbCharge(1, 8) = (0.438 * stratarray(Year, 46) * stratarray(Year, 77) * (stratarray(Year, 71) / 10))
+                            CarbCharge(1, 9) = (0.178 * stratarray(Year, 47) * stratarray(Year, 77) * (stratarray(Year, 71) / 10))
+                            CarbCharge(2, 0) = (0.088 * stratarray(Year, 34) * stratarray(Year, 72) * (stratarray(Year, 71) / 10))
+                            CarbCharge(2, 1) = (0.079 * stratarray(Year, 35) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(2, 3) = (0.044 * stratarray(Year, 48) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(2, 4) = (0.058 * stratarray(Year, 49) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(2, 5) = (0.562 * stratarray(Year, 36) * stratarray(Year, 74) * (stratarray(Year, 70) / 10))
+                            CarbCharge(2, 6) = (0.118 * stratarray(Year, 50) * stratarray(Year, 75) * (stratarray(Year, 71) / 10))
+                            CarbCharge(2, 7) = (0.808 * stratarray(Year, 51) * stratarray(Year, 76) * (stratarray(Year, 71) / 10))
+                            CarbCharge(3, 1) = (0.176 * stratarray(Year, 41) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(3, 3) = (0.185 * stratarray(Year, 52) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(3, 4) = (0.119 * stratarray(Year, 53) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(3, 5) = (0.2554 * stratarray(Year, 42) * stratarray(Year, 74) * (stratarray(Year, 70) / 10))
+                            CarbCharge(3, 6) = (0.954 * stratarray(Year, 54) * stratarray(Year, 75) * (stratarray(Year, 71) / 10))
+                            CarbCharge(3, 7) = (3.749 * stratarray(Year, 55) * stratarray(Year, 76) * (stratarray(Year, 71) / 10))
+                            CarbCharge(3, 9) = (0.546 * stratarray(Year, 56) * stratarray(Year, 77) * (stratarray(Year, 71) / 10))
+                            CarbCharge(4, 1) = (0.259 * stratarray(Year, 37) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(4, 3) = (0.15 * stratarray(Year, 57) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(4, 8) = (0.957 * stratarray(Year, 58) * stratarray(Year, 77) * (stratarray(Year, 71) / 10))
+                            CarbCharge(4, 9) = (0.898 * stratarray(Year, 59) * stratarray(Year, 77) * (stratarray(Year, 71) / 10))
+                            CarbCharge(5, 1) = (0.376 * stratarray(Year, 39) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(5, 3) = (0.221 * stratarray(Year, 60) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(5, 8) = (1.398 * stratarray(Year, 61) * stratarray(Year, 77) * (stratarray(Year, 71) / 10))
+                            CarbCharge(5, 9) = (1.123 * stratarray(Year, 62) * stratarray(Year, 77) * (stratarray(Year, 71) / 10))
+                            CarbCharge(6, 0) = (0.04 * stratarray(Year, 63) * stratarray(Year, 72) * (stratarray(Year, 71) / 10))
+                            CarbCharge(6, 5) = (0.032 * stratarray(Year, 64) * stratarray(Year, 74) * (stratarray(Year, 70) / 10))
+                            CarbCharge(6, 9) = (0.123 * stratarray(Year, 65) * stratarray(Year, 77) * (stratarray(Year, 71) / 10))
+                            CarbCharge(7, 0) = (0.086 * stratarray(Year, 31) * stratarray(Year, 72) * (stratarray(Year, 71) / 10))
+                            CarbCharge(7, 1) = (0.057 * stratarray(Year, 32) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(7, 2) = (0.056 * stratarray(Year, 43) * stratarray(Year, 72) * (stratarray(Year, 71) / 10))
+                            CarbCharge(7, 3) = (0.038 * stratarray(Year, 44) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(7, 4) = (0.06 * stratarray(Year, 45) * stratarray(Year, 72) * (stratarray(Year, 71) / 10))
+                            CarbCharge(7, 5) = (0.165 * stratarray(Year, 33) * stratarray(Year, 74) * (stratarray(Year, 70) / 10))
+                            CarbCharge(7, 8) = (0.438 * stratarray(Year, 46) * stratarray(Year, 77) * (stratarray(Year, 71) / 10))
+                            CarbCharge(7, 9) = (0.178 * stratarray(Year, 47) * stratarray(Year, 77) * (stratarray(Year, 71) / 10))
+                            CarbCharge(8, 0) = (0.088 * stratarray(Year, 34) * stratarray(Year, 72) * (stratarray(Year, 71) / 10))
+                            CarbCharge(8, 1) = (0.079 * stratarray(Year, 35) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(8, 3) = (0.044 * stratarray(Year, 48) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(8, 4) = (0.058 * stratarray(Year, 49) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(8, 5) = (0.562 * stratarray(Year, 36) * stratarray(Year, 74) * (stratarray(Year, 70) / 10))
+                            CarbCharge(8, 6) = (0.118 * stratarray(Year, 50) * stratarray(Year, 75) * (stratarray(Year, 71) / 10))
+                            CarbCharge(8, 7) = (0.808 * stratarray(Year, 51) * stratarray(Year, 76) * (stratarray(Year, 71) / 10))
+                            CarbCharge(9, 1) = (0.176 * stratarray(Year, 41) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(9, 3) = (0.185 * stratarray(Year, 52) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(9, 4) = (0.119 * stratarray(Year, 53) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(9, 5) = (2.554 * stratarray(Year, 42) * stratarray(Year, 74) * (stratarray(Year, 70) / 10))
+                            CarbCharge(9, 6) = (0.954 * stratarray(Year, 54) * stratarray(Year, 75) * (stratarray(Year, 71) / 10))
+                            CarbCharge(9, 7) = (3.749 * stratarray(Year, 55) * stratarray(Year, 76) * (stratarray(Year, 71) / 10))
+                            CarbCharge(9, 9) = (0.546 * stratarray(Year, 56) * stratarray(Year, 77) * (stratarray(Year, 71) / 10))
+                            CarbCharge(10, 1) = (0.259 * stratarray(Year, 37) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(10, 3) = (0.15 * stratarray(Year, 57) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(10, 8) = (0.957 * stratarray(Year, 58) * stratarray(Year, 77) * (stratarray(Year, 71) / 10))
+                            CarbCharge(10, 9) = (0.898 * stratarray(Year, 59) * stratarray(Year, 77) * (stratarray(Year, 71) / 10))
+                            CarbCharge(11, 1) = (0.376 * stratarray(Year, 39) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(11, 3) = (0.221 * stratarray(Year, 60) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(11, 8) = (1.398 * stratarray(Year, 61) * stratarray(Year, 77) * (stratarray(Year, 71) / 10))
+                            CarbCharge(11, 9) = (1.123 * stratarray(Year, 62) * stratarray(Year, 77) * (stratarray(Year, 71) / 10))
+                            CarbCharge(12, 0) = (0.04 * stratarray(Year, 63) * stratarray(Year, 72) * (stratarray(Year, 71) / 10))
+                            CarbCharge(12, 5) = (0.032 * stratarray(Year, 64) * stratarray(Year, 74) * (stratarray(Year, 70) / 10))
+                            CarbCharge(12, 9) = (0.123 * stratarray(Year, 65) * stratarray(Year, 77) * (stratarray(Year, 71) / 10))
+                            CarbCharge(13, 0) = (0.086 * stratarray(Year, 31) * stratarray(Year, 72) * (stratarray(Year, 71) / 10))
+                            CarbCharge(13, 1) = (0.057 * stratarray(Year, 32) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(13, 2) = (0.056 * stratarray(Year, 43) * stratarray(Year, 72) * (stratarray(Year, 71) / 10))
+                            CarbCharge(13, 3) = (0.038 * stratarray(Year, 44) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(13, 4) = (0.016 * stratarray(Year, 45) * stratarray(Year, 72) * (stratarray(Year, 70) / 10))
+                            CarbCharge(13, 5) = (0.165 * stratarray(Year, 33) * stratarray(Year, 74) * (stratarray(Year, 70) / 10))
+                            CarbCharge(13, 8) = (0.438 * stratarray(Year, 46) * stratarray(Year, 77) * (stratarray(Year, 71) / 10))
+                            CarbCharge(13, 9) = (0.178 * stratarray(Year, 47) * stratarray(Year, 77) * (stratarray(Year, 71) / 10))
+                            CarbCharge(14, 0) = (0.088 * stratarray(Year, 34) * stratarray(Year, 72) * (stratarray(Year, 71) / 10))
+                            CarbCharge(14, 1) = (0.079 * stratarray(Year, 35) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(14, 3) = (0.044 * stratarray(Year, 48) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(14, 4) = (0.423 * stratarray(Year, 49) * stratarray(Year, 73) * (stratarray(Year, 70) / 10))
+                            CarbCharge(14, 5) = (0.562 * stratarray(Year, 36) * stratarray(Year, 74) * (stratarray(Year, 70) / 10))
+                            CarbCharge(14, 6) = (0.118 * stratarray(Year, 50) * stratarray(Year, 75) * (stratarray(Year, 71) / 10))
+                            CarbCharge(14, 7) = (0.808 * stratarray(Year, 51) * stratarray(Year, 76) * (stratarray(Year, 71) / 10))
+                            CarbCharge(15, 1) = (0.196 * stratarray(Year, 41) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(15, 3) = (0.119 * stratarray(Year, 52) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(15, 4) = (1.037 * stratarray(Year, 53) * stratarray(Year, 73) * (stratarray(Year, 70) / 10))
+                            CarbCharge(15, 5) = (1.7 * stratarray(Year, 42) * stratarray(Year, 74) * (stratarray(Year, 70) / 10))
+                            CarbCharge(15, 6) = (0.364 * stratarray(Year, 54) * stratarray(Year, 75) * (stratarray(Year, 71) / 10))
+                            CarbCharge(15, 7) = (6.283 * stratarray(Year, 55) * stratarray(Year, 76) * (stratarray(Year, 71) / 10))
+                            CarbCharge(15, 9) = (0.546 * stratarray(Year, 56) * stratarray(Year, 77) * (stratarray(Year, 71) / 10))
+                            CarbCharge(16, 1) = (0.259 * stratarray(Year, 37) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(16, 3) = (0.15 * stratarray(Year, 57) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(16, 8) = (0.957 * stratarray(Year, 58) * stratarray(Year, 77) * (stratarray(Year, 71) / 10))
+                            CarbCharge(16, 9) = (0.898 * stratarray(Year, 59) * stratarray(Year, 77) * (stratarray(Year, 71) / 10))
+                            CarbCharge(17, 1) = (0.259 * stratarray(Year, 37) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(17, 3) = (0.15 * stratarray(Year, 57) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(17, 8) = (0.957 * stratarray(Year, 58) * stratarray(Year, 77) * (stratarray(Year, 71) / 10))
+                            CarbCharge(17, 9) = (0.898 * stratarray(Year, 59) * stratarray(Year, 77) * (stratarray(Year, 71) / 10))
+                            CarbCharge(18, 1) = (0.376 * stratarray(Year, 39) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(18, 3) = (0.221 * stratarray(Year, 60) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(18, 8) = (1.398 * stratarray(Year, 61) * stratarray(Year, 77) * (stratarray(Year, 71) / 10))
+                            CarbCharge(18, 9) = (1.123 * stratarray(Year, 62) * stratarray(Year, 77) * (stratarray(Year, 71) / 10))
+                            CarbCharge(19, 1) = (0.376 * stratarray(Year, 39) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(19, 3) = (0.221 * stratarray(Year, 60) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
+                            CarbCharge(19, 8) = (1.398 * stratarray(Year, 61) * stratarray(Year, 77) * (stratarray(Year, 71) / 10))
+                            CarbCharge(19, 9) = (1.123 * stratarray(Year, 62) * stratarray(Year, 77) * (stratarray(Year, 71) / 10))
                         End If
                     End If
 
@@ -827,26 +829,26 @@
                     'Next
                     'then multiply these costs by the proportions of vehicles in each fuel type (from strategy file), and aggregate the cost for each vehicle type
                     'v1.6 CostNew does not need to increase dimension, as it is the output for each step
-                    CostsNew(0) = (VehCosts(0, 0) * stratarray(11)) + (VehCosts(0, 5) * stratarray(12)) + (VehCosts(0, 9) * stratarray(13))
-                    CostsNew(1) = (VehCosts(1, 0) * stratarray(1)) + (VehCosts(1, 1) * stratarray(2)) + (VehCosts(1, 2) * stratarray(14)) + (VehCosts(1, 3) * stratarray(15)) + (VehCosts(1, 4) * stratarray(16)) + (VehCosts(1, 5) * stratarray(3)) + (VehCosts(1, 8) * stratarray(17)) + (VehCosts(1, 9) * stratarray(18))
-                    CostsNew(2) = (VehCosts(2, 0) * stratarray(4)) + (VehCosts(2, 1) * stratarray(5)) + (VehCosts(2, 3) * stratarray(19)) + (VehCosts(2, 4) * stratarray(20)) + (VehCosts(2, 5) * stratarray(6)) + (VehCosts(2, 6) * stratarray(21)) + (VehCosts(2, 7) * stratarray(22))
-                    CostsNew(3) = (VehCosts(3, 1) * stratarray(9)) + (VehCosts(3, 3) * stratarray(23)) + (VehCosts(3, 4) * stratarray(24)) + (VehCosts(3, 5) * stratarray(10)) + (VehCosts(3, 6) * stratarray(25)) + (VehCosts(3, 7) * stratarray(26)) + (VehCosts(3, 9) * stratarray(27))
-                    CostsNew(4) = (VehCosts(4, 1) * stratarray(7)) + (VehCosts(4, 3) * stratarray(28)) + (VehCosts(4, 8) * stratarray(29)) + (VehCosts(4, 9) * stratarray(30))
-                    CostsNew(5) = (VehCosts(5, 1) * stratarray(7)) + (VehCosts(5, 3) * stratarray(28)) + (VehCosts(5, 8) * stratarray(29)) + (VehCosts(5, 9) * stratarray(30))
-                    CostsNew(6) = (VehCosts(6, 0) * stratarray(11)) + (VehCosts(6, 5) * stratarray(12)) + (VehCosts(6, 9) * stratarray(13))
-                    CostsNew(7) = (VehCosts(7, 0) * stratarray(1)) + (VehCosts(7, 1) * stratarray(2)) + (VehCosts(7, 2) * stratarray(14)) + (VehCosts(7, 3) * stratarray(15)) + (VehCosts(7, 4) * stratarray(16)) + (VehCosts(7, 5) * stratarray(3)) + (VehCosts(7, 8) * stratarray(17)) + (VehCosts(7, 9) * stratarray(18))
-                    CostsNew(8) = (VehCosts(8, 0) * stratarray(4)) + (VehCosts(8, 1) * stratarray(5)) + (VehCosts(8, 3) * stratarray(19)) + (VehCosts(8, 4) * stratarray(20)) + (VehCosts(8, 5) * stratarray(6)) + (VehCosts(8, 6) * stratarray(21)) + (VehCosts(8, 7) * stratarray(22))
-                    CostsNew(9) = (VehCosts(9, 1) * stratarray(9)) + (VehCosts(9, 3) * stratarray(23)) + (VehCosts(9, 4) * stratarray(24)) + (VehCosts(9, 5) * stratarray(10)) + (VehCosts(9, 6) * stratarray(25)) + (VehCosts(9, 7) * stratarray(26)) + (VehCosts(9, 9) * stratarray(27))
-                    CostsNew(10) = (VehCosts(10, 1) * stratarray(7)) + (VehCosts(10, 3) * stratarray(28)) + (VehCosts(10, 8) * stratarray(29)) + (VehCosts(10, 9) * stratarray(30))
-                    CostsNew(11) = (VehCosts(11, 1) * stratarray(7)) + (VehCosts(11, 3) * stratarray(28)) + (VehCosts(11, 8) * stratarray(29)) + (VehCosts(11, 9) * stratarray(30))
-                    CostsNew(12) = (VehCosts(12, 0) * stratarray(11)) + (VehCosts(12, 5) * stratarray(12)) + (VehCosts(12, 9) * stratarray(13))
-                    CostsNew(13) = (VehCosts(13, 0) * stratarray(1)) + (VehCosts(13, 1) * stratarray(2)) + (VehCosts(13, 2) * stratarray(14)) + (VehCosts(13, 3) * stratarray(15)) + (VehCosts(13, 4) * stratarray(16)) + (VehCosts(13, 5) * stratarray(3)) + (VehCosts(13, 8) * stratarray(17)) + (VehCosts(13, 9) * stratarray(18))
-                    CostsNew(14) = (VehCosts(14, 0) * stratarray(4)) + (VehCosts(14, 1) * stratarray(5)) + (VehCosts(14, 3) * stratarray(19)) + (VehCosts(14, 4) * stratarray(20)) + (VehCosts(14, 5) * stratarray(6)) + (VehCosts(14, 6) * stratarray(21)) + (VehCosts(14, 7) * stratarray(22))
-                    CostsNew(15) = (VehCosts(15, 1) * stratarray(9)) + (VehCosts(15, 3) * stratarray(23)) + (VehCosts(15, 4) * stratarray(24)) + (VehCosts(15, 5) * stratarray(10)) + (VehCosts(15, 6) * stratarray(25)) + (VehCosts(15, 7) * stratarray(26)) + (VehCosts(15, 9) * stratarray(27))
-                    CostsNew(16) = (VehCosts(16, 1) * stratarray(7)) + (VehCosts(16, 3) * stratarray(28)) + (VehCosts(16, 8) * stratarray(29)) + (VehCosts(16, 9) * stratarray(30))
-                    CostsNew(17) = (VehCosts(17, 1) * stratarray(7)) + (VehCosts(17, 3) * stratarray(28)) + (VehCosts(17, 8) * stratarray(29)) + (VehCosts(17, 9) * stratarray(30))
-                    CostsNew(18) = (VehCosts(18, 1) * stratarray(7)) + (VehCosts(18, 3) * stratarray(28)) + (VehCosts(18, 8) * stratarray(29)) + (VehCosts(18, 9) * stratarray(30))
-                    CostsNew(19) = (VehCosts(19, 1) * stratarray(7)) + (VehCosts(19, 3) * stratarray(28)) + (VehCosts(19, 8) * stratarray(29)) + (VehCosts(19, 9) * stratarray(30))
+                    CostsNew(0) = (VehCosts(0, 0) * stratarray(Year, 11)) + (VehCosts(0, 5) * stratarray(Year, 12)) + (VehCosts(0, 9) * stratarray(Year, 13))
+                    CostsNew(1) = (VehCosts(1, 0) * stratarray(Year, 1)) + (VehCosts(1, 1) * stratarray(Year, 2)) + (VehCosts(1, 2) * stratarray(Year, 14)) + (VehCosts(1, 3) * stratarray(Year, 15)) + (VehCosts(1, 4) * stratarray(Year, 16)) + (VehCosts(1, 5) * stratarray(Year, 3)) + (VehCosts(1, 8) * stratarray(Year, 17)) + (VehCosts(1, 9) * stratarray(Year, 18))
+                    CostsNew(2) = (VehCosts(2, 0) * stratarray(Year, 4)) + (VehCosts(2, 1) * stratarray(Year, 5)) + (VehCosts(2, 3) * stratarray(Year, 19)) + (VehCosts(2, 4) * stratarray(Year, 20)) + (VehCosts(2, 5) * stratarray(Year, 6)) + (VehCosts(2, 6) * stratarray(Year, 21)) + (VehCosts(2, 7) * stratarray(Year, 22))
+                    CostsNew(3) = (VehCosts(3, 1) * stratarray(Year, 9)) + (VehCosts(3, 3) * stratarray(Year, 23)) + (VehCosts(3, 4) * stratarray(Year, 24)) + (VehCosts(3, 5) * stratarray(Year, 10)) + (VehCosts(3, 6) * stratarray(Year, 25)) + (VehCosts(3, 7) * stratarray(Year, 26)) + (VehCosts(3, 9) * stratarray(Year, 27))
+                    CostsNew(4) = (VehCosts(4, 1) * stratarray(Year, 7)) + (VehCosts(4, 3) * stratarray(Year, 28)) + (VehCosts(4, 8) * stratarray(Year, 29)) + (VehCosts(4, 9) * stratarray(Year, 30))
+                    CostsNew(5) = (VehCosts(5, 1) * stratarray(Year, 7)) + (VehCosts(5, 3) * stratarray(Year, 28)) + (VehCosts(5, 8) * stratarray(Year, 29)) + (VehCosts(5, 9) * stratarray(Year, 30))
+                    CostsNew(6) = (VehCosts(6, 0) * stratarray(Year, 11)) + (VehCosts(6, 5) * stratarray(Year, 12)) + (VehCosts(6, 9) * stratarray(Year, 13))
+                    CostsNew(7) = (VehCosts(7, 0) * stratarray(Year, 1)) + (VehCosts(7, 1) * stratarray(Year, 2)) + (VehCosts(7, 2) * stratarray(Year, 14)) + (VehCosts(7, 3) * stratarray(Year, 15)) + (VehCosts(7, 4) * stratarray(Year, 16)) + (VehCosts(7, 5) * stratarray(Year, 3)) + (VehCosts(7, 8) * stratarray(Year, 17)) + (VehCosts(7, 9) * stratarray(Year, 18))
+                    CostsNew(8) = (VehCosts(8, 0) * stratarray(Year, 4)) + (VehCosts(8, 1) * stratarray(Year, 5)) + (VehCosts(8, 3) * stratarray(Year, 19)) + (VehCosts(8, 4) * stratarray(Year, 20)) + (VehCosts(8, 5) * stratarray(Year, 6)) + (VehCosts(8, 6) * stratarray(Year, 21)) + (VehCosts(8, 7) * stratarray(Year, 22))
+                    CostsNew(9) = (VehCosts(9, 1) * stratarray(Year, 9)) + (VehCosts(9, 3) * stratarray(Year, 23)) + (VehCosts(9, 4) * stratarray(Year, 24)) + (VehCosts(9, 5) * stratarray(Year, 10)) + (VehCosts(9, 6) * stratarray(Year, 25)) + (VehCosts(9, 7) * stratarray(Year, 26)) + (VehCosts(9, 9) * stratarray(Year, 27))
+                    CostsNew(10) = (VehCosts(10, 1) * stratarray(Year, 7)) + (VehCosts(10, 3) * stratarray(Year, 28)) + (VehCosts(10, 8) * stratarray(Year, 29)) + (VehCosts(10, 9) * stratarray(Year, 30))
+                    CostsNew(11) = (VehCosts(11, 1) * stratarray(Year, 7)) + (VehCosts(11, 3) * stratarray(Year, 28)) + (VehCosts(11, 8) * stratarray(Year, 29)) + (VehCosts(11, 9) * stratarray(Year, 30))
+                    CostsNew(12) = (VehCosts(12, 0) * stratarray(Year, 11)) + (VehCosts(12, 5) * stratarray(Year, 12)) + (VehCosts(12, 9) * stratarray(Year, 13))
+                    CostsNew(13) = (VehCosts(13, 0) * stratarray(Year, 1)) + (VehCosts(13, 1) * stratarray(Year, 2)) + (VehCosts(13, 2) * stratarray(Year, 14)) + (VehCosts(13, 3) * stratarray(Year, 15)) + (VehCosts(13, 4) * stratarray(Year, 16)) + (VehCosts(13, 5) * stratarray(Year, 3)) + (VehCosts(13, 8) * stratarray(Year, 17)) + (VehCosts(13, 9) * stratarray(Year, 18))
+                    CostsNew(14) = (VehCosts(14, 0) * stratarray(Year, 4)) + (VehCosts(14, 1) * stratarray(Year, 5)) + (VehCosts(14, 3) * stratarray(Year, 19)) + (VehCosts(14, 4) * stratarray(Year, 20)) + (VehCosts(14, 5) * stratarray(Year, 6)) + (VehCosts(14, 6) * stratarray(Year, 21)) + (VehCosts(14, 7) * stratarray(Year, 22))
+                    CostsNew(15) = (VehCosts(15, 1) * stratarray(Year, 9)) + (VehCosts(15, 3) * stratarray(Year, 23)) + (VehCosts(15, 4) * stratarray(Year, 24)) + (VehCosts(15, 5) * stratarray(Year, 10)) + (VehCosts(15, 6) * stratarray(Year, 25)) + (VehCosts(15, 7) * stratarray(Year, 26)) + (VehCosts(15, 9) * stratarray(Year, 27))
+                    CostsNew(16) = (VehCosts(16, 1) * stratarray(Year, 7)) + (VehCosts(16, 3) * stratarray(Year, 28)) + (VehCosts(16, 8) * stratarray(Year, 29)) + (VehCosts(16, 9) * stratarray(Year, 30))
+                    CostsNew(17) = (VehCosts(17, 1) * stratarray(Year, 7)) + (VehCosts(17, 3) * stratarray(Year, 28)) + (VehCosts(17, 8) * stratarray(Year, 29)) + (VehCosts(17, 9) * stratarray(Year, 30))
+                    CostsNew(18) = (VehCosts(18, 1) * stratarray(Year, 7)) + (VehCosts(18, 3) * stratarray(Year, 28)) + (VehCosts(18, 8) * stratarray(Year, 29)) + (VehCosts(18, 9) * stratarray(Year, 30))
+                    CostsNew(19) = (VehCosts(19, 1) * stratarray(Year, 7)) + (VehCosts(19, 3) * stratarray(Year, 28)) + (VehCosts(19, 8) * stratarray(Year, 29)) + (VehCosts(19, 9) * stratarray(Year, 30))
                 End If
 
                 'if including capacity changes, then check if there are any capacity changes on this flow
@@ -859,21 +861,36 @@
                         MLanes(InputCount, 1) += MLaneChange
                         DLanes(InputCount, 1) += DLaneChange
                         SLanes(InputCount, 1) += SLaneChange
-                        CapRow = rncr.ReadLine()
+
                         Call GetCapData()
                     End If
                 End If
 
                 'v1.4 now updates maximum lane capacities from common variables file
-                MCap(InputCount, 1) = stratarray(79)
-                DCap(InputCount, 1) = stratarray(80)
-                SCap(InputCount, 1) = stratarray(81)
+                MCap(InputCount, 1) = stratarray(Year, 79)
+                DCap(InputCount, 1) = stratarray(Year, 80)
+                SCap(InputCount, 1) = stratarray(Year, 81)
+
+
+
                 'write to output file
-                OutputRow = Year & "," & FlowID(InputCount, 1) & "," & Pop1New & "," & Pop2New & "," & GVA1New & "," & GVA2New & "," & CostsNew(0) & "," & MLanes(InputCount, 1) & "," & DLanes(InputCount, 1) & "," & SLanes(InputCount, 1) & "," & MCap(InputCount, 1) & "," & DCap(InputCount, 1) & "," & SCap(InputCount, 1)
-                For x = 1 To 19
-                    OutputRow = OutputRow & "," & CostsNew(x)
+                OutputArray(InputCount, 0) = modelRunID
+                OutputArray(InputCount, 1) = FlowID(InputCount, 1)
+                OutputArray(InputCount, 2) = Year
+                OutputArray(InputCount, 3) = Pop1New
+                OutputArray(InputCount, 4) = Pop2New
+                OutputArray(InputCount, 5) = GVA1New
+                OutputArray(InputCount, 6) = GVA2New
+                OutputArray(InputCount, 7) = MLanes(InputCount, 1)
+                OutputArray(InputCount, 8) = DLanes(InputCount, 1)
+                OutputArray(InputCount, 9) = SLanes(InputCount, 1)
+                OutputArray(InputCount, 10) = MCap(InputCount, 1)
+                OutputArray(InputCount, 11) = DCap(InputCount, 1)
+                OutputArray(InputCount, 12) = SCap(InputCount, 1)
+                For x = 0 To 19
+                    OutputArray(InputCount, 13 + x) = CostsNew(x)
                 Next
-                ev.WriteLine(OutputRow)
+
                 'set old values as previous new values
                 Pop1Old(InputCount, 1) = Pop1New
                 Pop2Old(InputCount, 1) = Pop2New
@@ -885,7 +902,7 @@
                 LPGOldArr(InputCount, 1) = LPGNew
                 CNGOldArr(InputCount, 1) = CNGNew
                 HydOldArr(InputCount, 1) = HydNew
-                For x = 1 To 19
+                For x = 0 To 19
                     CostsOld(InputCount, x) = CostsNew(x)
                 Next
                 '030114 change
@@ -896,38 +913,43 @@
                 InputCount += 1
             Loop
 
-            ri.Close()
+            'create output file if year 1, otherwise update
+            If Year = 1 Then
+                Call WriteData("RoadLink", "ExtVar", OutputArray, , True)
+            Else
+                Call WriteData("RoadLink", "ExtVar", OutputArray, , False)
+            End If
+
 
             'update year
             Year += 1
         Loop
 
-        If RdLEneSource = "Database" Then
-            zer.Close()
-        End If
-
     End Sub
 
     Sub GetCapData()
-        If CapRow Is Nothing Then
+
+        If CapArray(CapNum, 0) Is Nothing Then
         Else
-            InputData = Split(CapRow, ",")
-            CapID = InputData(0)
-            If InputData(1) = "-1" Then
+
+            CapID = CapArray(CapNum, 0)
+            If CapArray(CapNum, 1) = "-1" Then
                 CapYear = -1
             Else
                 If AddingCap = False Then
-                    CapYear = InputData(1) - 2010
+                    CapYear = CapArray(CapNum, 1) - 2010
                 Else
-                    CapYear = InputData(1)
+                    CapYear = CapArray(CapNum, 1)
                 End If
             End If
-            MLaneChange = InputData(2)
-            DLaneChange = InputData(3)
-            SLaneChange = InputData(4)
+            MLaneChange = CapArray(CapNum, 2)
+            DLaneChange = CapArray(CapNum, 3)
+            SLaneChange = CapArray(CapNum, 4)
             If AddingCap = False Then
-                CapType = InputData(5)
+                CapType = CapArray(CapNum, 5)
             End If
+
+            CapNum += 1
         End If
 
     End Sub

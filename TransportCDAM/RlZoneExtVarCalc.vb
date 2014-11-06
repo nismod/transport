@@ -171,7 +171,7 @@
         Dim InDieselOldAll, InElectricOldAll, InDieselNewAll, InElectricNewAll
 
         'start from the input start year
-        Year = StartYear
+        Year = 1
 
         'initialize values
         If RlZOthSource = "File" Then
@@ -181,7 +181,7 @@
         End If
 
         'loop through all input duration years
-        Do Until Year > StartYear + Duration
+        Do Until Year > 40
 
             If RlZEneSource = "Database" Then
                 InDieselNewAll = enearray(Year + 1, 2)
@@ -195,8 +195,8 @@
                 If Year = 1 Then
 
                     ZoneID(InputCount, 0) = InputArray(InputCount, 4)
-                    PopOld(InputCount, 0) = get_population_data_by_zoneID(modelRunID, Year + 2010, ZoneID(InputCount, 0), "Zone")
-                    GVAOld(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, Year + 2010, ZoneID(InputCount, 0), "Zone")
+                    PopOld(InputCount, 0) = get_population_data_by_zoneID(modelRunID, Year + 2010, ZoneID(InputCount, 0), "Zone", "'rail'")
+                    GVAOld(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, Year + 2010, ZoneID(InputCount, 0), "Zone", "'rail'")
                     CostOld(InputCount, 0) = InputArray(InputCount, 8)
                     StationsOld(InputCount, 0) = InputArray(InputCount, 9)
                     FuelOld(InputCount, 0) = InputArray(InputCount, 10)

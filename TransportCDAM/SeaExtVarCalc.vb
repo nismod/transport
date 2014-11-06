@@ -204,9 +204,9 @@
         End If
 
         'start from the input start year
-        YearNum = StartYear
+        YearNum = 1
         'calculate new values for port variables for input duration
-        Do Until YearNum > StartYear + Duration
+        Do Until YearNum > 40
             'calculate new values where needed
             'if including capacity changes, then check if there are any capacity changes for this zone
             'v1.3 changed to include compulsory capacity changes where construction has already begun

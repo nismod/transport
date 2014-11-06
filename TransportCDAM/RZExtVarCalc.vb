@@ -41,7 +41,7 @@
     Dim arraynum As Long
     Dim stratstring As String
     Dim stratarray(90, 95) As String
-    Dim ZoneID As String
+    Dim ZoneID(144, 0) As String
     Dim PopOld(144, 0) As Double
     Dim GVAOld(144, 0) As Double
     Dim CostOld(144, 4) As Double
@@ -69,11 +69,11 @@
     Dim UrbRoadPer, WPPLTripPer As Double
     Dim CarbCharge(4, 9) As Double
     Dim newcapnum As Integer
-    Dim zonecaparray(144, 7) As String
+    Dim zonecaparray(145, 8) As String
     Dim zonecapnum As Integer
     Dim enearray(91, 6) As String
     Dim InputArray(144, 35) As String
-    Dim OutputArray(144, 46) As String
+    Dim OutputArray(145, 46) As String
 
 
     Public Sub RoadZoneEVMain()
@@ -138,13 +138,14 @@
             sortedline = sortarray(v)
             splitline = Split(sortedline, "&")
             arraynum = splitline(2)
+            zonecaparray(zonecapnum, 0) = modelRunID
             For c = 0 To 7
-                zonecaparray(zonecapnum, c) = zonecapdetails(arraynum, c)
+                zonecaparray(zonecapnum, c + 1) = zonecapdetails(arraynum, c)
             Next
             zonecapnum += 1
         Next
         'write all lines to intermediate capacity file
-        Call WriteData("RoadZone", "NewCap", zonecaparray)
+        Call WriteData("RoadZone", "RoadZoneCapChange", zonecaparray)
 
         'restart new cap array lines
         zonecapnum = 1
@@ -194,8 +195,8 @@
             WPPLStart = WPPLYear - 2010
         End If
 
-        'loop through all 90 years
-        Do While Year < 91
+        'loop through all years
+        Do Until Year > 40
 
             InputCount = 1
 
@@ -244,25 +245,25 @@
 
 
         If Year = 1 Then
-            ZoneID = InputArray(InputCount, 4)
-            'PopOld(ZoneID, 0) = get_population_data_by_zoneID(modelRunID, modelRunYear, ZoneID)
-            'GVAOld(ZoneID, 0) = get_gva_data_by_zoneID(modelRunID, modelRunYear, ZoneID)
-            CostOld(ZoneID, 0) = InputArray(InputCount, 8)
-            LaneKm(ZoneID, 0) = InputArray(InputCount, 9)
-            MLaneKm(ZoneID, 0) = InputArray(InputCount, 10)
-            RurADLaneKm(ZoneID, 0) = InputArray(InputCount, 11)
-            RurASLaneKm(ZoneID, 0) = InputArray(InputCount, 12)
-            RurMinLaneKm(ZoneID, 0) = InputArray(InputCount, 13)
-            UrbDLaneKm(ZoneID, 0) = InputArray(InputCount, 14)
-            UrbSLaneKm(ZoneID, 0) = InputArray(InputCount, 15)
-            CostOld(ZoneID, 1) = InputArray(InputCount, 20)
-            CostOld(ZoneID, 2) = InputArray(InputCount, 21)
-            CostOld(ZoneID, 3) = InputArray(InputCount, 22)
-            CostOld(ZoneID, 4) = InputArray(InputCount, 23)
+            ZoneID(InputCount, 0) = InputArray(InputCount, 4)
+            PopOld(InputCount, 0) = get_population_data_by_zoneID(modelRunID, Year + 2010, ZoneID(InputCount, 0), "Zone", "'road'")
+            GVAOld(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, Year + 2010, ZoneID(InputCount, 0), "Zone", "'road'")
+            CostOld(InputCount, 0) = InputArray(InputCount, 8)
+            LaneKm(InputCount, 0) = InputArray(InputCount, 9)
+            MLaneKm(InputCount, 0) = InputArray(InputCount, 10)
+            RurADLaneKm(InputCount, 0) = InputArray(InputCount, 11)
+            RurASLaneKm(InputCount, 0) = InputArray(InputCount, 12)
+            RurMinLaneKm(InputCount, 0) = InputArray(InputCount, 13)
+            UrbDLaneKm(InputCount, 0) = InputArray(InputCount, 14)
+            UrbSLaneKm(InputCount, 0) = InputArray(InputCount, 15)
+            CostOld(InputCount, 1) = InputArray(InputCount, 20)
+            CostOld(InputCount, 2) = InputArray(InputCount, 21)
+            CostOld(InputCount, 3) = InputArray(InputCount, 22)
+            CostOld(InputCount, 4) = InputArray(InputCount, 23)
 
             'v1.4 change set fuel efficiency old values to one
             For f = 0 To 34
-                FuelEffOld(ZoneID, f) = 1
+                FuelEffOld(InputCount, f) = 1
             Next
 
             If RdZEneSource = "Database" Then
@@ -306,48 +307,46 @@
 
         End If
 
-        'change indicator to ZoneId for lookup
-        ZoneID = InputCount
 
 
         'loop through scaling up values for each year and writing to output file until the 90th year
 
         If RdZPopSource = "Constant" Then
-            PopNew = PopOld(ZoneID, 0) * PopGrowth
+            PopNew = PopOld(InputCount, 0) * PopGrowth
         ElseIf RdZPopSource = "File" Then
             '***scaling files not currently set up for road zones module
         ElseIf RdZPopSource = "Database" Then
             'if year is after 2093 then no population forecasts are available so assume population remains constant
             'now modified as population data available up to 2100 - so should never need 'else'
             If Year < 91 Then
-                keylookup = Year & "_" & ZoneID
+                keylookup = Year & "_" & ZoneID(InputCount, 0)
                 If PopYearLookup.TryGetValue(keylookup, newval) Then
                     PopNew = newval
                 Else
-                    ErrorString = "population found in lookup table for zone " & ZoneID & " in year " & Year
+                    ErrorString = "population found in lookup table for zone " & ZoneID(InputCount, 0) & " in year " & Year
                     Call DictionaryMissingVal()
                 End If
             Else
-                PopNew = PopOld(ZoneID, 0)
+                PopNew = PopOld(InputCount, 0)
             End If
         End If
         If RdZEcoSource = "Constant" Then
-            GVANew = GVAOld(ZoneID, 0) * GVAGrowth
+            GVANew = GVAOld(InputCount, 0) * GVAGrowth
         ElseIf RdZEcoSource = "File" Then
             '***scaling files not currently set up for road zones module
         ElseIf RdZEcoSource = "Database" Then
             'if year is after 2050 then no gva forecasts are available so assume gva remains constant
             'now modified as gva data available up to 2100 - so should never need 'else'
             If Year < 91 Then
-                keylookup = Year & "_" & ZoneID
+                keylookup = Year & "_" & ZoneID(InputCount, 0)
                 If EcoYearLookup.TryGetValue(keylookup, newval) Then
                     GVANew = newval
                 Else
-                    ErrorString = "gva found in lookup table for zone " & ZoneID & "in year " & Year
+                    ErrorString = "gva found in lookup table for zone " & ZoneID(InputCount, 0) & "in year " & Year
                     Call DictionaryMissingVal()
                 End If
             Else
-                GVANew = GVAOld(ZoneID, 0)
+                GVANew = GVAOld(InputCount, 0)
             End If
         End If
 
@@ -361,54 +360,54 @@
             CNGNew = enearray(Year + 1, 5)
             HydNew = enearray(Year + 1, 6)
             'calculate ratio for each fuel
-            PetRat = PetNew / PetOld(ZoneID, 0)
-            DieRat = DieNew / DieOld(ZoneID, 0)
-            EleRat = EleNew / EleOld(ZoneID, 0)
-            LPGRat = LPGNew / LPGOld(ZoneID, 0)
-            CNGRat = CNGNew / CNGOld(ZoneID, 0)
-            HydRat = HydNew / HydOld(ZoneID, 0)
+            PetRat = PetNew / PetOld(InputCount, 0)
+            DieRat = DieNew / DieOld(InputCount, 0)
+            EleRat = EleNew / EleOld(InputCount, 0)
+            LPGRat = LPGNew / LPGOld(InputCount, 0)
+            CNGRat = CNGNew / CNGOld(InputCount, 0)
+            HydRat = HydNew / HydOld(InputCount, 0)
             'v1.4 change corrected fuel efficiency change calculation  - was previously just multiplying by figure straight from strategy array (which meant that fuel costs quickly declined to zero)
             For f = 0 To 34
                 FuelEffNew(f) = stratarray(Year, f + 31)
-                FuelEffChange(f) = FuelEffNew(f) / FuelEffOld(ZoneID, f)
+                FuelEffChange(f) = FuelEffNew(f) / FuelEffOld(InputCount, f)
             Next
             'calculate cost for each vehicle type - 0 is car, 1 is LGV, 2 is small HGV, 3 is large HGV, 4 is PSV
             'calculate new cost for each fuel type within each vehicle type - 0 is petrol, 1 is diesel, 2 is petrol hybrid, 3 is diesel hybrid, 4 is plug-in hybrid, 5 is battery electric,
             '...6 is LPG, 7 is CNG, 8 is hydrogen IC, 9 is hydrogen fuel cell - by multiplying the fuel cost by the fuel ratio
             'the cost is also multiplied by changes in fuel efficiency
-            VehFuelCosts(ZoneID, 0, 0) = VehFuelCosts(ZoneID, 0, 0) * PetRat * FuelEffChange(0)
-            VehFuelCosts(ZoneID, 0, 1) = VehFuelCosts(ZoneID, 0, 1) * DieRat * FuelEffChange(1)
-            VehFuelCosts(ZoneID, 0, 2) = VehFuelCosts(ZoneID, 0, 2) * PetRat * FuelEffChange(12)
-            VehFuelCosts(ZoneID, 0, 3) = VehFuelCosts(ZoneID, 0, 3) * DieRat * FuelEffChange(13)
-            PHPerNew(0) = (PHPerOld(ZoneID, 0) * VehFuelCosts(ZoneID, 0, 4) * PetRat) / ((PHPerOld(ZoneID, 0) * VehFuelCosts(ZoneID, 0, 4) * PetRat) + ((1 - PHPerOld(ZoneID, 0)) * VehFuelCosts(ZoneID, 0, 4) * EleRat))
-            VehFuelCosts(ZoneID, 0, 4) = ((PHPerOld(ZoneID, 0) * VehFuelCosts(ZoneID, 0, 4) * PetRat) + ((1 - PHPerOld(ZoneID, 0)) * VehFuelCosts(ZoneID, 0, 4) * EleRat)) * FuelEffChange(14)
-            VehFuelCosts(ZoneID, 0, 5) = VehFuelCosts(ZoneID, 0, 5) * EleRat * FuelEffChange(2)
-            VehFuelCosts(ZoneID, 0, 8) = VehFuelCosts(ZoneID, 0, 8) * HydRat * FuelEffChange(15)
-            VehFuelCosts(ZoneID, 0, 9) = VehFuelCosts(ZoneID, 0, 9) * HydRat * FuelEffChange(16)
-            VehFuelCosts(ZoneID, 1, 0) = VehFuelCosts(ZoneID, 1, 0) * PetRat * FuelEffChange(3)
-            VehFuelCosts(ZoneID, 1, 1) = VehFuelCosts(ZoneID, 1, 1) * DieRat * FuelEffChange(4)
-            VehFuelCosts(ZoneID, 1, 3) = VehFuelCosts(ZoneID, 1, 3) * DieRat * FuelEffChange(17)
-            PHPerNew(1) = (PHPerOld(ZoneID, 1) * VehFuelCosts(ZoneID, 1, 4) * DieRat) / ((PHPerOld(ZoneID, 1) * VehFuelCosts(ZoneID, 1, 4) * DieRat) + ((1 - PHPerOld(ZoneID, 1)) * VehFuelCosts(ZoneID, 1, 4) * EleRat))
-            VehFuelCosts(ZoneID, 1, 4) = (PHPerOld(ZoneID, 1) * VehFuelCosts(ZoneID, 1, 4) * DieRat) + ((1 - PHPerOld(ZoneID, 1)) * VehFuelCosts(ZoneID, 1, 4) * EleRat) * FuelEffChange(18)
-            VehFuelCosts(ZoneID, 1, 5) = VehFuelCosts(ZoneID, 1, 5) * EleRat * FuelEffChange(5)
-            VehFuelCosts(ZoneID, 1, 6) = VehFuelCosts(ZoneID, 1, 6) * LPGRat * FuelEffChange(19)
-            VehFuelCosts(ZoneID, 1, 7) = VehFuelCosts(ZoneID, 1, 7) * CNGRat * FuelEffChange(20)
-            VehFuelCosts(ZoneID, 2, 1) = VehFuelCosts(ZoneID, 2, 1) * DieRat * FuelEffChange(6)
-            VehFuelCosts(ZoneID, 2, 3) = VehFuelCosts(ZoneID, 2, 3) * DieRat * FuelEffChange(26)
-            VehFuelCosts(ZoneID, 2, 8) = VehFuelCosts(ZoneID, 2, 8) * HydRat * FuelEffChange(27)
-            VehFuelCosts(ZoneID, 2, 9) = VehFuelCosts(ZoneID, 2, 9) * HydRat * FuelEffChange(28)
-            VehFuelCosts(ZoneID, 3, 1) = VehFuelCosts(ZoneID, 3, 1) * DieRat * FuelEffChange(8)
-            VehFuelCosts(ZoneID, 3, 3) = VehFuelCosts(ZoneID, 3, 3) * DieRat * FuelEffChange(29)
-            VehFuelCosts(ZoneID, 3, 8) = VehFuelCosts(ZoneID, 3, 8) * HydRat * FuelEffChange(31)
-            VehFuelCosts(ZoneID, 3, 9) = VehFuelCosts(ZoneID, 3, 9) * HydRat * FuelEffChange(32)
-            VehFuelCosts(ZoneID, 4, 1) = VehFuelCosts(ZoneID, 4, 1) * DieRat * FuelEffChange(10)
-            VehFuelCosts(ZoneID, 4, 3) = VehFuelCosts(ZoneID, 4, 3) * DieRat * FuelEffChange(21)
-            PHPerNew(4) = (PHPerOld(ZoneID, 4) * VehFuelCosts(ZoneID, 4, 4) * DieRat) / ((PHPerOld(ZoneID, 4) * VehFuelCosts(ZoneID, 4, 4) * DieRat) + ((1 - PHPerOld(ZoneID, 4)) * VehFuelCosts(ZoneID, 4, 4) * EleRat))
-            VehFuelCosts(ZoneID, 4, 4) = (PHPerOld(ZoneID, 4) * VehFuelCosts(ZoneID, 4, 4) * DieRat) + ((1 - PHPerOld(ZoneID, 4)) * VehFuelCosts(ZoneID, 4, 4) * EleRat) * FuelEffChange(22)
-            VehFuelCosts(ZoneID, 4, 5) = VehFuelCosts(ZoneID, 4, 5) * EleRat * FuelEffChange(11)
-            VehFuelCosts(ZoneID, 4, 6) = VehFuelCosts(ZoneID, 4, 6) * LPGRat * FuelEffChange(23)
-            VehFuelCosts(ZoneID, 4, 7) = VehFuelCosts(ZoneID, 4, 7) * CNGRat * FuelEffChange(24)
-            VehFuelCosts(ZoneID, 4, 9) = VehFuelCosts(ZoneID, 4, 9) * HydRat * FuelEffChange(25)
+            VehFuelCosts(InputCount, 0, 0) = VehFuelCosts(InputCount, 0, 0) * PetRat * FuelEffChange(0)
+            VehFuelCosts(InputCount, 0, 1) = VehFuelCosts(InputCount, 0, 1) * DieRat * FuelEffChange(1)
+            VehFuelCosts(InputCount, 0, 2) = VehFuelCosts(InputCount, 0, 2) * PetRat * FuelEffChange(12)
+            VehFuelCosts(InputCount, 0, 3) = VehFuelCosts(InputCount, 0, 3) * DieRat * FuelEffChange(13)
+            PHPerNew(0) = (PHPerOld(InputCount, 0) * VehFuelCosts(InputCount, 0, 4) * PetRat) / ((PHPerOld(InputCount, 0) * VehFuelCosts(InputCount, 0, 4) * PetRat) + ((1 - PHPerOld(InputCount, 0)) * VehFuelCosts(InputCount, 0, 4) * EleRat))
+            VehFuelCosts(InputCount, 0, 4) = ((PHPerOld(InputCount, 0) * VehFuelCosts(InputCount, 0, 4) * PetRat) + ((1 - PHPerOld(InputCount, 0)) * VehFuelCosts(InputCount, 0, 4) * EleRat)) * FuelEffChange(14)
+            VehFuelCosts(InputCount, 0, 5) = VehFuelCosts(InputCount, 0, 5) * EleRat * FuelEffChange(2)
+            VehFuelCosts(InputCount, 0, 8) = VehFuelCosts(InputCount, 0, 8) * HydRat * FuelEffChange(15)
+            VehFuelCosts(InputCount, 0, 9) = VehFuelCosts(InputCount, 0, 9) * HydRat * FuelEffChange(16)
+            VehFuelCosts(InputCount, 1, 0) = VehFuelCosts(InputCount, 1, 0) * PetRat * FuelEffChange(3)
+            VehFuelCosts(InputCount, 1, 1) = VehFuelCosts(InputCount, 1, 1) * DieRat * FuelEffChange(4)
+            VehFuelCosts(InputCount, 1, 3) = VehFuelCosts(InputCount, 1, 3) * DieRat * FuelEffChange(17)
+            PHPerNew(1) = (PHPerOld(InputCount, 1) * VehFuelCosts(InputCount, 1, 4) * DieRat) / ((PHPerOld(InputCount, 1) * VehFuelCosts(InputCount, 1, 4) * DieRat) + ((1 - PHPerOld(InputCount, 1)) * VehFuelCosts(InputCount, 1, 4) * EleRat))
+            VehFuelCosts(InputCount, 1, 4) = (PHPerOld(InputCount, 1) * VehFuelCosts(InputCount, 1, 4) * DieRat) + ((1 - PHPerOld(InputCount, 1)) * VehFuelCosts(InputCount, 1, 4) * EleRat) * FuelEffChange(18)
+            VehFuelCosts(InputCount, 1, 5) = VehFuelCosts(InputCount, 1, 5) * EleRat * FuelEffChange(5)
+            VehFuelCosts(InputCount, 1, 6) = VehFuelCosts(InputCount, 1, 6) * LPGRat * FuelEffChange(19)
+            VehFuelCosts(InputCount, 1, 7) = VehFuelCosts(InputCount, 1, 7) * CNGRat * FuelEffChange(20)
+            VehFuelCosts(InputCount, 2, 1) = VehFuelCosts(InputCount, 2, 1) * DieRat * FuelEffChange(6)
+            VehFuelCosts(InputCount, 2, 3) = VehFuelCosts(InputCount, 2, 3) * DieRat * FuelEffChange(26)
+            VehFuelCosts(InputCount, 2, 8) = VehFuelCosts(InputCount, 2, 8) * HydRat * FuelEffChange(27)
+            VehFuelCosts(InputCount, 2, 9) = VehFuelCosts(InputCount, 2, 9) * HydRat * FuelEffChange(28)
+            VehFuelCosts(InputCount, 3, 1) = VehFuelCosts(InputCount, 3, 1) * DieRat * FuelEffChange(8)
+            VehFuelCosts(InputCount, 3, 3) = VehFuelCosts(InputCount, 3, 3) * DieRat * FuelEffChange(29)
+            VehFuelCosts(InputCount, 3, 8) = VehFuelCosts(InputCount, 3, 8) * HydRat * FuelEffChange(31)
+            VehFuelCosts(InputCount, 3, 9) = VehFuelCosts(InputCount, 3, 9) * HydRat * FuelEffChange(32)
+            VehFuelCosts(InputCount, 4, 1) = VehFuelCosts(InputCount, 4, 1) * DieRat * FuelEffChange(10)
+            VehFuelCosts(InputCount, 4, 3) = VehFuelCosts(InputCount, 4, 3) * DieRat * FuelEffChange(21)
+            PHPerNew(4) = (PHPerOld(InputCount, 4) * VehFuelCosts(InputCount, 4, 4) * DieRat) / ((PHPerOld(InputCount, 4) * VehFuelCosts(InputCount, 4, 4) * DieRat) + ((1 - PHPerOld(InputCount, 4)) * VehFuelCosts(InputCount, 4, 4) * EleRat))
+            VehFuelCosts(InputCount, 4, 4) = (PHPerOld(InputCount, 4) * VehFuelCosts(InputCount, 4, 4) * DieRat) + ((1 - PHPerOld(InputCount, 4)) * VehFuelCosts(InputCount, 4, 4) * EleRat) * FuelEffChange(22)
+            VehFuelCosts(InputCount, 4, 5) = VehFuelCosts(InputCount, 4, 5) * EleRat * FuelEffChange(11)
+            VehFuelCosts(InputCount, 4, 6) = VehFuelCosts(InputCount, 4, 6) * LPGRat * FuelEffChange(23)
+            VehFuelCosts(InputCount, 4, 7) = VehFuelCosts(InputCount, 4, 7) * CNGRat * FuelEffChange(24)
+            VehFuelCosts(InputCount, 4, 9) = VehFuelCosts(InputCount, 4, 9) * HydRat * FuelEffChange(25)
             'v1.3 if using carbon charge then need to add that, assuming it is after the year of introduction
             If CarbonCharge = True Then
                 If Year >= CarbChargeYear Then
@@ -418,14 +417,14 @@
                     CarbCharge(0, 1) = (0.057 * stratarray(Year, 32) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
                     CarbCharge(0, 2) = (0.056 * stratarray(Year, 43) * stratarray(Year, 72) * (stratarray(Year, 71) / 10))
                     CarbCharge(0, 3) = (0.038 * stratarray(Year, 44) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
-                    CarbCharge(0, 4) = (PHPerOld(ZoneID, 0) * (0.06 * stratarray(Year, 45) * stratarray(Year, 72) * (stratarray(Year, 71) / 10))) + ((1 - PHPerOld(ZoneID, 0)) * (0.016 * stratarray(Year, 45) * stratarray(Year, 72) * (stratarray(Year, 70) / 10)))
+                    CarbCharge(0, 4) = (PHPerOld(InputCount, 0) * (0.06 * stratarray(Year, 45) * stratarray(Year, 72) * (stratarray(Year, 71) / 10))) + ((1 - PHPerOld(InputCount, 0)) * (0.016 * stratarray(Year, 45) * stratarray(Year, 72) * (stratarray(Year, 70) / 10)))
                     CarbCharge(0, 5) = (0.165 * stratarray(Year, 33) * stratarray(Year, 74) * (stratarray(Year, 70) / 10))
                     CarbCharge(0, 8) = (0.438 * stratarray(Year, 46) * stratarray(Year, 77) * (stratarray(Year, 71) / 10))
                     CarbCharge(0, 9) = (0.178 * stratarray(Year, 47) * stratarray(Year, 77) * (stratarray(Year, 71) / 10))
                     CarbCharge(1, 0) = (0.088 * stratarray(Year, 34) * stratarray(Year, 72) * (stratarray(Year, 71) / 10))
                     CarbCharge(1, 1) = (0.079 * stratarray(Year, 35) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
                     CarbCharge(1, 3) = (0.044 * stratarray(Year, 48) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
-                    CarbCharge(1, 4) = (PHPerOld(ZoneID, 1) * (0.058 * stratarray(Year, 49) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))) + ((1 - PHPerOld(ZoneID, 1)) * (0.423 * stratarray(Year, 49) * stratarray(Year, 73) * (stratarray(Year, 70) / 10)))
+                    CarbCharge(1, 4) = (PHPerOld(InputCount, 1) * (0.058 * stratarray(Year, 49) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))) + ((1 - PHPerOld(InputCount, 1)) * (0.423 * stratarray(Year, 49) * stratarray(Year, 73) * (stratarray(Year, 70) / 10)))
                     CarbCharge(1, 5) = (0.562 * stratarray(Year, 36) * stratarray(Year, 74) * (stratarray(Year, 70) / 10))
                     CarbCharge(1, 6) = (0.118 * stratarray(Year, 50) * stratarray(Year, 75) * (stratarray(Year, 71) / 10))
                     CarbCharge(1, 7) = (0.808 * stratarray(Year, 51) * stratarray(Year, 76) * (stratarray(Year, 71) / 10))
@@ -439,7 +438,7 @@
                     CarbCharge(3, 9) = (1.123 * stratarray(Year, 62) * stratarray(Year, 77) * (stratarray(Year, 71) / 10))
                     CarbCharge(4, 1) = (0.176 * stratarray(Year, 41) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
                     CarbCharge(4, 3) = (0.185 * stratarray(Year, 52) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))
-                    CarbCharge(4, 4) = (PHPerOld(ZoneID, 4) * (0.119 * stratarray(Year, 53) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))) + ((1 - PHPerOld(ZoneID, 4)) * (1.037 * stratarray(Year, 53) * stratarray(Year, 73) * (stratarray(Year, 70) / 10)))
+                    CarbCharge(4, 4) = (PHPerOld(InputCount, 4) * (0.119 * stratarray(Year, 53) * stratarray(Year, 73) * (stratarray(Year, 71) / 10))) + ((1 - PHPerOld(InputCount, 4)) * (1.037 * stratarray(Year, 53) * stratarray(Year, 73) * (stratarray(Year, 70) / 10)))
                     CarbCharge(4, 5) = (0.2554 * stratarray(Year, 42) * stratarray(Year, 74) * (stratarray(Year, 70) / 10))
                     CarbCharge(4, 6) = (0.954 * stratarray(Year, 54) * stratarray(Year, 75) * (stratarray(Year, 71) / 10))
                     CarbCharge(4, 7) = (3.749 * stratarray(Year, 55) * stratarray(Year, 76) * (stratarray(Year, 71) / 10))
@@ -451,13 +450,13 @@
             If CarbonCharge = True Then
                 For x = 0 To 4
                     For y = 0 To 9
-                        VehCosts(x, y) = VehFixedCosts(x, y) + VehFuelCosts(ZoneID, x, y) + CarbCharge(x, y)
+                        VehCosts(x, y) = VehFixedCosts(x, y) + VehFuelCosts(InputCount, x, y) + CarbCharge(x, y)
                     Next
                 Next
             Else
                 For x = 0 To 4
                     For y = 0 To 9
-                        VehCosts(x, y) = VehFixedCosts(x, y) + VehFuelCosts(ZoneID, x, y)
+                        VehCosts(x, y) = VehFixedCosts(x, y) + VehFuelCosts(InputCount, x, y)
                     Next
                 Next
             End If
@@ -469,30 +468,30 @@
             CostNew(4) = (VehCosts(4, 1) * stratarray(Year, 9)) + (VehCosts(4, 3) * stratarray(Year, 23)) + (VehCosts(4, 4) * stratarray(Year, 24)) + (VehCosts(4, 5) * stratarray(Year, 10)) + (VehCosts(4, 6) * stratarray(Year, 25)) + (VehCosts(4, 7) * stratarray(Year, 26)) + (VehCosts(4, 9) * stratarray(Year, 27))
         Else
             For x = 0 To 4
-                CostNew(x) = CostOld(ZoneID, x) * CostGrowth
+                CostNew(x) = CostOld(InputCount, x) * CostGrowth
             Next
         End If
 
         'if including capacity changes, then check if there are any capacity changes for this zone
 
-        If ZoneID = CapID Then
+        If ZoneID(InputCount, 0) = CapID Then
             'if there are any capacity changes for this zone, check if there are any capacity changes for this year
             If Year = CapYear Then
                 'if there are, then update the capacity variables, and read in the next row from the capacity file
-                MLaneKm(ZoneID, 0) += MwayKmChange
-                RurADLaneKm(ZoneID, 0) += RurADKmChange
-                RurASLaneKm(ZoneID, 0) += RurASKmChange
-                RurMinLaneKm(ZoneID, 0) += RurMinKmChange
-                UrbDLaneKm(ZoneID, 0) += UrbDKmChange
-                UrbSLaneKm(ZoneID, 0) += UrbSKmChange
-                LaneKm(ZoneID, 0) = MLaneKm(ZoneID, 0) + RurADLaneKm(ZoneID, 0) + RurASLaneKm(ZoneID, 0) + RurMinLaneKm(ZoneID, 0) + UrbDLaneKm(ZoneID, 0) + UrbSLaneKm(ZoneID, 0)
+                MLaneKm(InputCount, 0) += MwayKmChange
+                RurADLaneKm(InputCount, 0) += RurADKmChange
+                RurASLaneKm(InputCount, 0) += RurASKmChange
+                RurMinLaneKm(InputCount, 0) += RurMinKmChange
+                UrbDLaneKm(InputCount, 0) += UrbDKmChange
+                UrbSLaneKm(InputCount, 0) += UrbSKmChange
+                LaneKm(InputCount, 0) = MLaneKm(InputCount, 0) + RurADLaneKm(InputCount, 0) + RurASLaneKm(InputCount, 0) + RurMinLaneKm(InputCount, 0) + UrbDLaneKm(InputCount, 0) + UrbSLaneKm(InputCount, 0)
                 Call GetCapData()
             End If
         End If
         'add in workplace parking levy if necessary
         If WPPL = True Then
             If Year >= WPPLStart Then
-                UrbRoadPer = (UrbDLaneKm(ZoneID, 0) + UrbSLaneKm(ZoneID, 0)) / LaneKm(ZoneID, 0)
+                UrbRoadPer = (UrbDLaneKm(InputCount, 0) + UrbSLaneKm(InputCount, 0)) / LaneKm(InputCount, 0)
                 'levy only applies to 20% of trips on urban roads
                 WPPLTripPer = 0.2 * UrbRoadPer
                 CostNew(0) = ((1 - WPPLTripPer) * CostNew(0)) + (WPPLTripPer * (CostNew(0) * (1 + (WPPLPer / 100))))
@@ -501,19 +500,19 @@
         'define fuel split - this is now specified via the strategy common variables file
         'FuelString = "0.598,0.402,0,0.055,0.945,0,1,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"
         'write to output file
-
-        OutputArray(InputCount, 1) = ZoneID
+        OutputArray(InputCount, 0) = modelRunID
+        OutputArray(InputCount, 1) = ZoneID(InputCount, 0)
         OutputArray(InputCount, 2) = Year
         OutputArray(InputCount, 3) = PopNew
         OutputArray(InputCount, 4) = GVANew
         OutputArray(InputCount, 5) = CostNew(0)
-        OutputArray(InputCount, 6) = LaneKm(ZoneID, 0)
-        OutputArray(InputCount, 7) = MLaneKm(ZoneID, 0)
-        OutputArray(InputCount, 8) = RurADLaneKm(ZoneID, 0)
-        OutputArray(InputCount, 9) = RurASLaneKm(ZoneID, 0)
-        OutputArray(InputCount, 10) = RurMinLaneKm(ZoneID, 0)
-        OutputArray(InputCount, 11) = UrbDLaneKm(ZoneID, 0)
-        OutputArray(InputCount, 12) = UrbSLaneKm(ZoneID, 0)
+        OutputArray(InputCount, 6) = LaneKm(InputCount, 0)
+        OutputArray(InputCount, 7) = MLaneKm(InputCount, 0)
+        OutputArray(InputCount, 8) = RurADLaneKm(InputCount, 0)
+        OutputArray(InputCount, 9) = RurASLaneKm(InputCount, 0)
+        OutputArray(InputCount, 10) = RurMinLaneKm(InputCount, 0)
+        OutputArray(InputCount, 11) = UrbDLaneKm(InputCount, 0)
+        OutputArray(InputCount, 12) = UrbSLaneKm(InputCount, 0)
         'fuel split now comes from the strategy file
         'build the fuel string from the strategy file row
         stratcount = 1
@@ -526,21 +525,21 @@
         OutputArray(InputCount, 45) = CostNew(3)
         OutputArray(InputCount, 46) = CostNew(4)
         'set old values as previous new values
-        PopOld(ZoneID, 0) = PopNew
-        GVAOld(ZoneID, 0) = GVANew
-        PetOld(ZoneID, 0) = PetNew
-        DieOld(ZoneID, 0) = DieNew
-        EleOld(ZoneID, 0) = EleNew
-        LPGOld(ZoneID, 0) = LPGNew
-        CNGOld(ZoneID, 0) = CNGNew
-        HydOld(ZoneID, 0) = HydNew
+        PopOld(InputCount, 0) = PopNew
+        GVAOld(InputCount, 0) = GVANew
+        PetOld(InputCount, 0) = PetNew
+        DieOld(InputCount, 0) = DieNew
+        EleOld(InputCount, 0) = EleNew
+        LPGOld(InputCount, 0) = LPGNew
+        CNGOld(InputCount, 0) = CNGNew
+        HydOld(InputCount, 0) = HydNew
         For x = 0 To 4
-            CostOld(ZoneID, x) = CostNew(x)
-            PHPerOld(ZoneID, x) = PHPerNew(x)
+            CostOld(InputCount, x) = CostNew(x)
+            PHPerOld(InputCount, x) = PHPerNew(x)
         Next
         'v1.4 change
         For f = 0 To 34
-            FuelEffOld(ZoneID, f) = FuelEffNew(f)
+            FuelEffOld(InputCount, f) = FuelEffNew(f)
         Next
 
 

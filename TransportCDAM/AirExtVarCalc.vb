@@ -51,6 +51,7 @@
     Dim NodeOutputArray(29, 13) As String
     Dim FlowOutputArray(224, 7) As String
     Dim CapArray(47, 5) As String
+    Dim NewCapArray(47, 5) As String
     Dim CapNum As Integer
 
 
@@ -189,12 +190,13 @@
             sortedline = sortarray(v)
             splitline = Split(sortedline, "&")
             arraynum = splitline(2)
+            NewCapArray(v + 1, 0) = modelRunID
             For i = 0 To 3
-                CapArray(v, i) = NewCapDetails(arraynum, i)
+                NewCapArray(v + 1, i + 1) = NewCapDetails(arraynum, i)
             Next
         Next
 
-        Call WriteData("AirNode", "NewCap", CapArray)
+        Call WriteData("AirNode", "NewCap", NewCapArray)
 
         AddingCap = True
         'reset Capnum to read the first line
@@ -208,7 +210,7 @@
         YearNum = 1
 
         'then loop through rest of rows in input data file
-        Do Until YearNum > 90
+        Do Until YearNum > 40
             Call CalcFlowData()
 
             If YearNum = 1 Then
@@ -256,10 +258,11 @@
         If YearNum = 1 Then
             NodeCount = 1
             Do While NodeCount < 29
+                NodeOldData(NodeCount, 0) = NodeInputArray(NodeCount, 4)
                 'pop
-                NodeOldData(NodeCount, 1) = get_population_data_by_airportID(modelRunID, modelRunYear, NodeCount)
+                NodeOldData(NodeCount, 1) = get_population_data_by_airportID(modelRunID, YearNum + 2010, NodeOldData(NodeCount, 0))
                 'gva
-                NodeOldData(NodeCount, 2) = get_gva_data_by_airportID(ScenarioID, modelRunYear, NodeCount)
+                NodeOldData(NodeCount, 2) = get_gva_data_by_airportID(modelRunID, YearNum + 2010, NodeOldData(NodeCount, 0))
                 'cost
                 NodeOldData(NodeCount, 3) = NodeInputArray(NodeCount, 10) * 0.29
                 airnodefixedcost(NodeCount) = NodeInputArray(NodeCount, 10) * 0.71
@@ -286,15 +289,15 @@
             FlowCount = 1
             Do While FlowCount < 224
                 FlowOldData(FlowCount, 0) = FlowInputArray(FlowCount, 4)
-                FlowOldData(FlowCount, 1) = get_population_data_by_airportID(ScenarioID, modelRunYear, FlowCount)
-                FlowOldData(FlowCount, 2) = get_population_data_by_airportID(ScenarioID, modelRunYear, FlowCount)
-                FlowOldData(FlowCount, 3) = get_gva_data_by_airportID(ScenarioID, modelRunYear, FlowCount)
-                FlowOldData(FlowCount, 4) = get_gva_data_by_airportID(ScenarioID, modelRunYear, FlowCount)
-
-                FlowOldData(FlowCount, 5) = FlowInputArray(FlowCount, 8) * 0.29
-                airflowfixedcost(FlowCount) = FlowInputArray(FlowCount, 8) * 0.71
                 OZone(FlowCount) = FlowInputArray(FlowCount, 10)
                 DZone(FlowCount) = FlowInputArray(FlowCount, 11)
+                FlowOldData(FlowCount, 5) = FlowInputArray(FlowCount, 8) * 0.29
+                airflowfixedcost(FlowCount) = FlowInputArray(FlowCount, 8) * 0.71
+                FlowOldData(FlowCount, 1) = get_population_data_by_zoneID(modelRunID, YearNum + 2010, FlowOldData(FlowCount, 0), "OZ", "'air'", OZone(FlowCount))
+                FlowOldData(FlowCount, 2) = get_population_data_by_zoneID(modelRunID, YearNum + 2010, FlowOldData(FlowCount, 0), "DZ", "'air'", DZone(FlowCount))
+                FlowOldData(FlowCount, 3) = get_gva_data_by_zoneID(modelRunID, YearNum + 2010, FlowOldData(FlowCount, 0), "OZ", "'air'", OZone(FlowCount))
+                FlowOldData(FlowCount, 4) = get_gva_data_by_zoneID(modelRunID, YearNum + 2010, FlowOldData(FlowCount, 0), "DZ", "'air'", DZone(FlowCount))
+
                 'add in the Flow ID number as some are missing from the input file
 
                 FlowLength(FlowCount) = FlowInputArray(FlowCount, 9)
@@ -555,25 +558,25 @@
 
     Sub GetCapData()
         'modified in v1.3
-        If CapRow Is Nothing Then
-        Else
-            NodeInputData = Split(CapRow, ",")
-            CapID = NodeInputData(0)
-            If NodeInputData(1) = "-1" Then
-                CapYear = -1
-            Else
-                If AddingCap = False Then
-                    CapYear = NodeInputData(1) - 2010
-                Else
-                    CapYear = NodeInputData(1)
-                End If
-            End If
-            TermCapChange = NodeInputData(2)
-            ATMChange = NodeInputData(3)
-            If AddingCap = False Then
-                CapType = NodeInputData(4)
-            End If
-        End If
+        'If CapRow Is Nothing Then
+        'Else
+        '    NodeInputData = Split(CapRow, ",")
+        '    CapID = NodeInputData(0)
+        '    If NodeInputData(1) = "-1" Then
+        '        CapYear = -1
+        '    Else
+        '        If AddingCap = False Then
+        '            CapYear = NodeInputData(1) - 2010
+        '        Else
+        '            CapYear = NodeInputData(1)
+        '        End If
+        '    End If
+        '    TermCapChange = NodeInputData(2)
+        '    ATMChange = NodeInputData(3)
+        '    If AddingCap = False Then
+        '        CapType = NodeInputData(4)
+        '    End If
+        'End If
 
         If CapArray(CapNum, 0) <> "" Then
             CapID = CapArray(CapNum, 0)
@@ -591,6 +594,7 @@
             If AddingCap = False Then
                 CapType = CapArray(CapNum, 4)
             End If
+            CapNum += 1
         Else
 
         End If

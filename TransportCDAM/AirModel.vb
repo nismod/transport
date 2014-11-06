@@ -130,12 +130,6 @@
             Call ReadData("AirNode", "ExtVar", NodePreExtVar, modelRunID, , YearNum - 1)
             Call ReadData("AirFlow", "ExtVar", FlowPreExtVar, modelRunID, , YearNum - 1)
 
-            'read input data
-
-
- 
-
-
 
             'run air node model
 

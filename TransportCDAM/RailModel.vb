@@ -202,13 +202,15 @@ Module RailModel
         If YearNum = StartYear Then
             'assign values to variables in the order of the initial file
             FlowNum(InputCount, 0) = InputArray(InputCount, 4)
+            Zone1ID = InputArray(InputCount, 5)
+            Zone2ID = InputArray(InputCount, 6)
             OldTracks(InputCount, 0) = InputArray(InputCount, 7)
             OldTrains(InputCount, 0) = InputArray(InputCount, 8)
             'read previous years' value as base value
-            PopZ1Base(InputCount, 0) = get_population_data_by_zoneID(modelRunID, YearNum + 2009, FlowNum(InputCount, 0), "OZ")
-            PopZ2Base(InputCount, 0) = get_population_data_by_zoneID(modelRunID, YearNum + 2009, FlowNum(InputCount, 0), "DZ")
-            GVAZ1Base(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, YearNum + 2009, FlowNum(InputCount, 0), "OZ")
-            GVAZ2Base(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, YearNum + 2009, FlowNum(InputCount, 0), "DZ")
+            PopZ1Base(InputCount, 0) = get_population_data_by_zoneID(modelRunID, YearNum + 2009, FlowNum(InputCount, 0), "OZ", "'rail'", Zone1ID)
+            PopZ2Base(InputCount, 0) = get_population_data_by_zoneID(modelRunID, YearNum + 2009, FlowNum(InputCount, 0), "DZ", "'rail'", Zone2ID)
+            GVAZ1Base(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, YearNum + 2009, FlowNum(InputCount, 0), "OZ", "'rail'", Zone1ID)
+            GVAZ2Base(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, YearNum + 2009, FlowNum(InputCount, 0), "DZ", "'rail'", Zone2ID)
             OldDelays(InputCount, 0) = InputArray(InputCount, 9)
             RlLinkCost(InputCount, 0) = InputArray(InputCount, 10)
             CarFuel(InputCount, 0) = InputArray(InputCount, 11)
@@ -230,11 +232,15 @@ Module RailModel
         Else
             'assign values to variables in the order of the temp file
             FlowNum(InputCount, 0) = InputArray(InputCount, 3)
+
+            'read OZone and DZone ID
+            Call get_zone_by_flowid(FlowNum(InputCount, 0), Zone1ID, Zone2ID, "rail")
+
             'read previous years' value as base value
-            PopZ1Base(InputCount, 0) = get_population_data_by_zoneID(modelRunID, YearNum + 2009, FlowNum(InputCount, 0), "OZ")
-            PopZ2Base(InputCount, 0) = get_population_data_by_zoneID(modelRunID, YearNum + 2009, FlowNum(InputCount, 0), "DZ")
-            GVAZ1Base(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, YearNum + 2009, FlowNum(InputCount, 0), "OZ")
-            GVAZ2Base(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, YearNum + 2009, FlowNum(InputCount, 0), "DZ")
+            PopZ1Base(InputCount, 0) = get_population_data_by_zoneID(modelRunID, YearNum + 2009, FlowNum(InputCount, 0), "OZ", "'rail'", Zone1ID)
+            PopZ2Base(InputCount, 0) = get_population_data_by_zoneID(modelRunID, YearNum + 2009, FlowNum(InputCount, 0), "DZ", "'rail'", Zone2ID)
+            GVAZ1Base(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, YearNum + 2009, FlowNum(InputCount, 0), "OZ", "'rail'", Zone1ID)
+            GVAZ2Base(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, YearNum + 2009, FlowNum(InputCount, 0), "DZ", "'rail'", Zone2ID)
             OldDelays(InputCount, 0) = InputArray(InputCount, 4)
             RlLinkCost(InputCount, 0) = InputArray(InputCount, 5)
             'needs to create a new function to get cost from the external variable from previous year

@@ -198,7 +198,7 @@
 
         'reset NewCapArray row to the begining
         CapNum = 1
-        ReDim CapArray(238, 4)
+        'ReDim CapArray(238, 4)
         AddingCap = True
         Call GetCapData()
 
@@ -291,9 +291,9 @@
         End If
 
         'start with the input start year
-        Year = StartYear
+        Year = 1
 
-        Do Until Year > StartYear + Duration
+        Do Until Year > 40
             'loop through scaling up values for each year and writing to output file
 
             If RlLEneSource = "Database" Then
@@ -317,10 +317,10 @@
                     OZone(InputCount, 0) = InputArray(InputCount, 5)
                     DZone(InputCount, 0) = InputArray(InputCount, 6)
                     Tracks(InputCount, 0) = InputArray(InputCount, 7)
-                    Pop1Old(InputCount, 0) = get_population_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 0), "OZ")
-                    Pop2Old(InputCount, 0) = get_population_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 0), "DZ")
-                    GVA1Old(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 0), "OZ")
-                    GVA2Old(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 0), "DZ")
+                    Pop1Old(InputCount, 0) = get_population_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 0), "OZ", "'rail'", OZone(InputCount, 0))
+                    Pop2Old(InputCount, 0) = get_population_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 0), "DZ", "'rail'", DZone(InputCount, 0))
+                    GVA1Old(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 0), "OZ", "'rail'", OZone(InputCount, 0))
+                    GVA2Old(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 0), "DZ", "'rail'", DZone(InputCount, 0))
                     CostOld(InputCount, 0) = InputArray(InputCount, 10)
                     FuelOld(InputCount, 0) = InputArray(InputCount, 11)
                     MaxTDOld(InputCount, 0) = InputArray(InputCount, 12)
