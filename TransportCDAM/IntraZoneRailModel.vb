@@ -10,6 +10,7 @@
     'values from previous year are stored in temp file and read at the start of the calculation for each year
     'v1.7 now corporate with Database function, read/write are using the function in database interface
     'now all file related functions are using databaseinterface
+    '1.9 now the module can run with database connection and read/write from/to database
 
     Dim RlZOutputRow As String
     Dim RlZInput As String
@@ -54,7 +55,9 @@
             'get external variable values
             Call ReadData("RailZone", "ExtVar", RlZExtVar, modelRunID, , YearCount)
 
+            'get previous year external variable values as base value
             Call ReadData("RailZone", "ExtVar", RlZPreExtVar, modelRunID, , YearCount - 1)
+
             'read from initial file if year 1, otherwise update from temp file
             If YearCount = 1 Then
                 Call ReadData("RailZone", "Input", InputArray, modelRunID, True)
@@ -80,6 +83,7 @@
             Loop
 
             'create file is true if it is the initial year and write to outputfile and temp file
+            'v1.9 now write to database
             If YearCount = StartYear Then
                 Call WriteData("RailZone", "Output", OutputArray, , True)
                 Call WriteData("RailZone", "Temp", TempArray, , True)
@@ -292,23 +296,12 @@
 
         'update the variables
         RlZTripsS(InputCount, 0) = NewTripsS
-        'RlZPop(InputCount, 0) = RlZExtVar(InputCount, 4)
-        'RlZGva(InputCount, 0) = RlZExtVar(InputCount, 5)
-        'RlZCost(InputCount, 0) = RlZExtVar(InputCount, 6)
-        'RlZStat(InputCount, 0) = RlZExtVar(InputCount, 7)
-        'RlZCarFuel(InputCount, 0) = RlZExtVar(InputCount, 8)
-        'RlZGJT(InputCount, 0) = RlZExtVar(InputCount, 10)
+
 
         'write to the temp file
         TempArray(InputCount, 0) = modelRunID
         TempArray(InputCount, 1) = YearCount
         TempArray(InputCount, 2) = RlZID(InputCount, 0)
-        'TempArray(InputCount, 2) = RlZPop(InputCount, 0)
-        'TempArray(InputCount, 3) = RlZGva(InputCount, 0)
-        'TempArray(InputCount, 4) = RlZCost(InputCount, 0)
-        'TempArray(InputCount, 5) = RlZStat(InputCount, 0)
-        'TempArray(InputCount, 6) = RlZCarFuel(InputCount, 0)
-        'TempArray(InputCount, 7) = RlZGJT(InputCount, 0)
         TempArray(InputCount, 3) = RlZTripsS(InputCount, 0)
         TempArray(InputCount, 4) = FareE(InputCount, 0)
 

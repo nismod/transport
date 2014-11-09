@@ -12,6 +12,7 @@ Module RailModel
     'two errors in the old code are identified: NEWCOST was not reseted for each link each year, external variable file doesn't read the complete RailLinkElectrificationDates (becasue to link260 year 2017 data)
     'v1.7 now corporate with Database function, read/write are using the function in database interface
     'now all file related functions are using databaseinterface
+    '1.9 now the module can run with database connection and read/write from/to database
 
     Dim InputRow As String
     Dim RlLinkDetails() As String
@@ -83,7 +84,7 @@ Module RailModel
             'get external variables for this year
             Call ReadData("RailLink", "ExtVar", RlLinkExtVars, modelRunID, , YearNum)
 
-            'read from initial file if year 1, otherwise update from temp file
+            'read from initial file if year 1, otherwise update from temp table
             If YearNum = 1 Then
                 Call ReadData("RailLink", "Input", InputArray, modelRunID, True)
             Else
@@ -134,7 +135,7 @@ Module RailModel
                 InputCount += 1
             Loop
 
-            'create file if it is the initial year, otherwise update
+            'create file if it is the initial year, otherwise update to temp file table
             If YearNum = StartYear Then
                 Call WriteData("RailLink", "Output", OutputArray, , True)
                 Call WriteData("RailLink", "Temp", TempArray, , True)
@@ -243,7 +244,6 @@ Module RailModel
             GVAZ2Base(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, YearNum + 2009, FlowNum(InputCount, 0), "DZ", "'rail'", Zone2ID)
             OldDelays(InputCount, 0) = InputArray(InputCount, 4)
             RlLinkCost(InputCount, 0) = InputArray(InputCount, 5)
-            'needs to create a new function to get cost from the external variable from previous year
             CarFuel(InputCount, 0) = get_single_data("TR_O_RailLinkExternalVariables", "flow_id", "year", Chr(34) & "CarFuel" & Chr(34), YearNum - 1, FlowNum(InputCount, 0))
             OldTrains(InputCount, 0) = InputArray(InputCount, 6)
             OldTracks(InputCount, 0) = InputArray(InputCount, 7)
@@ -526,13 +526,8 @@ Module RailModel
         End If
 
         'update variables
-        'PopZ1Base(InputCount, 0) = RlLinkExtVars(InputCount, 5)
-        'PopZ2Base(InputCount, 0) = RlLinkExtVars(InputCount, 6)
-        'GVAZ1Base(InputCount, 0) = RlLinkExtVars(InputCount, 7)
-        'GVAZ2Base(InputCount, 0) = RlLinkExtVars(InputCount, 8)
         OldDelays(InputCount, 0) = NewDelays(InputCount, 0)
         RlLinkCost(InputCount, 0) = Newcost
-        'CarFuel(InputCount, 0) = RlLinkExtVars(InputCount, 10)
         OldTrains(InputCount, 0) = NewTrains
         OldTracks(InputCount, 0) = NewTracks
         MaxTDBase(InputCount, 0) = MaxTDNew

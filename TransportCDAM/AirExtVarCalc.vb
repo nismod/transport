@@ -5,6 +5,7 @@
     '1.3 this version allows input from the database
     '1.4 fuel efficiency calculation corrected
     'now all file related functions are using databaseinterface
+    '1.9 now the module can run with database connection and read/write from/to database
 
     Dim NodeInputRow As String
     Dim FlowInputRow As String
@@ -213,6 +214,8 @@
         Do Until YearNum > 40
             Call CalcFlowData()
 
+            'create file if it is the first year
+            'it is now writting to database, therefore no difference if it is year 1 or not
             If YearNum = 1 Then
                 Call WriteData("AirNode", "ExtVar", NodeOutputArray, , True)
                 Call WriteData("AirFlow", "ExtVar", FlowOutputArray, , True)
@@ -327,14 +330,9 @@
             If AirPopSource = "Database" Then
                 'if year is after 2093 then no population forecasts are available so assume population remains constant
                 'now modified as population data available up to 2100 - so should never need 'else'
+                'v1.9 now read pop data using database function
                 If YearNum < 91 Then
-                    keylookup = YearNum & "_" & GORID(NodeCount)
-                    If PopYearLookup.TryGetValue(keylookup, newval) Then
-                        NodeNewData(NodeCount, 1) = newval
-                    Else
-                        ErrorString = "population found in lookup table for zone " & GORID(NodeCount) & " in year " & YearNum
-                        Call DictionaryMissingVal()
-                    End If
+                    NodeNewData(NodeCount, 1) = get_population_data_by_airportID(modelRunID, YearNum + 2010, NodeOldData(NodeCount, 0))
                 Else
                     NodeNewData(NodeCount, 1) = NodeOldData(NodeCount, 1)
                 End If
@@ -346,14 +344,10 @@
             ElseIf AirEcoSource = "Database" Then
                 'if year is after 2050 then no gva forecasts are available so assume gva remains constant
                 'now modified as gva data available up to 2100 - so should never need 'else'
+                'v1.9 now read gva data using database function
+                'database does not have gva forecasts after year 2050, and the calculation is only available before year 2050
                 If YearNum < 91 Then
-                    keylookup = YearNum & "_" & GORID(NodeCount)
-                    If EcoYearLookup.TryGetValue(keylookup, newval) Then
-                        NodeNewData(NodeCount, 2) = newval
-                    Else
-                        ErrorString = "GVA found in lookup table for zone " & GORID(NodeCount) & " in year " & YearNum
-                        Call DictionaryMissingVal()
-                    End If
+                    NodeNewData(NodeCount, 2) = get_gva_data_by_airportID(modelRunID, YearNum + 2010, NodeOldData(NodeCount, 0))
                 Else
                     NodeNewData(NodeCount, 2) = NodeNewData(NodeCount, 2)
                 End If
@@ -457,21 +451,10 @@
             If AirPopSource = "Database" Then
                 'if year is after 2093 then no population forecasts are available so assume population remains constant
                 'now modified as population data available up to 2100 - so should never need 'else'
+                'v1.9 now read pop data using database function
                 If YearNum < 91 Then
-                    keylookup = YearNum & "_" & OZone(FlowCount)
-                    If PopYearLookup.TryGetValue(keylookup, newval) Then
-                        FlowNewData(FlowCount, 1) = newval
-                    Else
-                        ErrorString = "population found in lookup table for zone " & OZone(FlowCount) & " in year " & YearNum & "with air flow " & FlowCount
-                        Call DictionaryMissingVal()
-                    End If
-                    keylookup = YearNum & "_" & DZone(FlowCount)
-                    If PopYearLookup.TryGetValue(keylookup, newval) Then
-                        FlowNewData(FlowCount, 2) = newval
-                    Else
-                        ErrorString = "population found in lookup table for zone " & DZone(FlowCount) & " in year " & YearNum & "with air flow " & FlowCount
-                        Call DictionaryMissingVal()
-                    End If
+                    FlowNewData(FlowCount, 1) = get_population_data_by_zoneID(modelRunID, YearNum + 2010, FlowOldData(FlowCount, 0), "OZ", "'air'", OZone(FlowCount))
+                    FlowNewData(FlowCount, 2) = get_population_data_by_zoneID(modelRunID, YearNum + 2010, FlowOldData(FlowCount, 0), "DZ", "'air'", DZone(FlowCount))
                 Else
                     FlowNewData(FlowCount, 1) = FlowOldData(FlowCount, 1)
                     FlowNewData(FlowCount, 2) = FlowOldData(FlowCount, 2)
@@ -484,21 +467,11 @@
                 'air model not yet set up for scaling files
             ElseIf AirEcoSource = "Database" Then
                 'now modified as gva data available up to 2100 - so should never need 'else'
+                'v1.9 now read gva data using database function
+                'database does not have gva forecasts after year 2050, and the calculation is only available before year 2050
                 If YearNum < 91 Then
-                    keylookup = YearNum & "_" & OZone(FlowCount)
-                    If EcoYearLookup.TryGetValue(keylookup, newval) Then
-                        FlowNewData(FlowCount, 3) = newval
-                    Else
-                        ErrorString = "gva found in lookup table for zone " & OZone(FlowCount) & " in year " & YearNum
-                        Call DictionaryMissingVal()
-                    End If
-                    keylookup = YearNum & "_" & DZone(FlowCount)
-                    If EcoYearLookup.TryGetValue(keylookup, newval) Then
-                        FlowNewData(FlowCount, 4) = newval
-                    Else
-                        ErrorString = "gva found in lookup table for zone " & DZone(FlowCount) & " in year " & YearNum
-                        Call DictionaryMissingVal()
-                    End If
+                    FlowNewData(FlowCount, 3) = get_gva_data_by_zoneID(modelRunID, YearNum + 2010, FlowOldData(FlowCount, 0), "OZ", "'air'", OZone(FlowCount))
+                    FlowNewData(FlowCount, 4) = get_gva_data_by_zoneID(modelRunID, YearNum + 2010, FlowOldData(FlowCount, 0), "DZ", "'air'", DZone(FlowCount))
                 Else
                     FlowNewData(FlowCount, 3) = FlowOldData(FlowCount, 3)
                     FlowNewData(FlowCount, 4) = FlowOldData(FlowCount, 4)
@@ -558,26 +531,7 @@
 
     Sub GetCapData()
         'modified in v1.3
-        'If CapRow Is Nothing Then
-        'Else
-        '    NodeInputData = Split(CapRow, ",")
-        '    CapID = NodeInputData(0)
-        '    If NodeInputData(1) = "-1" Then
-        '        CapYear = -1
-        '    Else
-        '        If AddingCap = False Then
-        '            CapYear = NodeInputData(1) - 2010
-        '        Else
-        '            CapYear = NodeInputData(1)
-        '        End If
-        '    End If
-        '    TermCapChange = NodeInputData(2)
-        '    ATMChange = NodeInputData(3)
-        '    If AddingCap = False Then
-        '        CapType = NodeInputData(4)
-        '    End If
-        'End If
-
+        'read cap data from CapArray until all rows are read
         If CapArray(CapNum, 0) <> "" Then
             CapID = CapArray(CapNum, 0)
             If CapArray(CapNum, 1) = "-1" Then

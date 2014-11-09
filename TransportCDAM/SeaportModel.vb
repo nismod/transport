@@ -8,6 +8,7 @@
     'now includes variable trip rate option
     'v1.7 now corporate with Database function, read/write are using the function in database interface
     'now all file related functions are using databaseinterface
+    '1.9 now the module can run with database connection and read/write from/to database
 
     Dim InputRow As String
     Dim YearNum As Long
@@ -370,9 +371,6 @@
             End If
             FreightType += 1
         Loop
-        'PopBase = PortExtVar(PortID, 7)
-        'GVABase = PortExtVar(PortID, 8)
-        'CostBase = PortExtVar(PortID, 9)
 
         'write to temp array
         TempArray(InputCount, 0) = modelRunID

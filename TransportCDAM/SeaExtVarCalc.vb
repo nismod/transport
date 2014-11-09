@@ -6,6 +6,7 @@
     '1.3 mod fuel efficiency calculations corrected
     '1.4 fuel efficiency and cost calculation corrected
     'now all file related functions are using databaseinterface
+    '1.9 now the module can run with database connection and read/write from/to database
 
     Dim InputRow As String
     Dim OutputRow As String
@@ -22,7 +23,6 @@
     Dim CapType, CapRow As String
     Dim CapChanged, Breakout As Boolean
     Dim ErrorString As String
-    Dim stf As IO.StreamReader
     Dim stratstring As String
     Dim stratarray(90, 95) As String
     Dim FuelEff(90) As Double
@@ -68,10 +68,10 @@
             Call ReadData("Energy", "", enearray, modelRunID)
         End If
 
-        'read initial input data
+        'read initial input data for year 2010
         Call ReadData("Seaport", "Input", InputArray, modelRunID, True)
 
-        'start read CapArray into the first row
+        'read CapArray into the first row of NewCapDetails array
         CapCount = 0
         AddingCap = False
         tonnestobuild = 0
@@ -168,10 +168,6 @@
         'reset CapNum to read the first row
         CapNum = 1
         Call GetCapData()
-
-        'If NewSeaCap = True Then
-        '    Call GetCapData()
-        'End If
 
         'v1.3
         'get fuel efficiency values from the strategy file
@@ -277,15 +273,9 @@
                 If SeaPopSource = "Database" Then
                     'if year is after 2093 then no population forecasts are available so assume population remains constant
                     'now modified as population data available up to 2100 - so should never need 'else'
+                    'v1.9 now read pop data using database function
                     If YearNum < 91 Then
                         PortNewData(PortCount, 6) = get_population_data_by_seaportID(modelRunID, YearNum + 2010, PortCount)
-                        'keylookup = YearNum & "_" & GORID(PortCount, 1)
-                        'If PopYearLookup.TryGetValue(keylookup, newval) Then
-                        '    PortNewData(PortCount, 6) = newval
-                        'Else
-                        '    ErrorString = "population found in lookup table for zone " & GORID(PortCount, 1) & " in year " & YearNum
-                        '    Call DictionaryMissingVal()
-                        'End If
                     Else
                         PortNewData(PortCount, 6) = PortBaseData(PortCount, 11)
                     End If
@@ -298,15 +288,10 @@
                 ElseIf SeaEcoSource = "Database" Then
                     'if year is after 2050 then no gva forecasts are available so assume gva remains constant
                     'now modified as population data available up to 2100 - so should never need 'else'
+                    'v1.9 now read gva data using database function
+                    'database does not have gva forecasts after year 2050, and the calculation is only available before year 2050
                     If YearNum < 91 Then
                         PortNewData(PortCount, 7) = get_gva_data_by_seaportID(modelRunID, YearNum + 2010, PortCount)
-                        'keylookup = YearNum & "_" & GORID(PortCount, 1)
-                        'If EcoYearLookup.TryGetValue(keylookup, newval) Then
-                        '    PortNewData(PortCount, 7) = newval
-                        'Else
-                        '    ErrorString = "GVA found in lookup table for zone " & GORID(PortCount, 1) & " in year " & YearNum
-                        '    Call DictionaryMissingVal()
-                        'End If
                     Else
                         PortNewData(PortCount, 7) = PortBaseData(PortCount, 12)
                     End If
@@ -355,6 +340,7 @@
 
             'write output
             'create file if it is the first year
+            'it is now writting to database, therefore no difference if it is year 1 or not
             If YearNum = 1 Then
                 Call WriteData("Seaport", "ExtVar", OutputArray, , True)
             Else

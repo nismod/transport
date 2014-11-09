@@ -1111,6 +1111,7 @@ Module DBaseInterface
         Dim theSQL As String = ""
         Dim InputArray(,) As String = Nothing
 
+        'get origin zone ID and destination zone ID based on the type and flow ID
         Select Case type
             Case "air"
                 theSQL = "SELECT id, ozone_id, dzone_id FROM " & Chr(34) & "TR_LU_AirFlows" & Chr(34) & " WHERE id = " & FlowID

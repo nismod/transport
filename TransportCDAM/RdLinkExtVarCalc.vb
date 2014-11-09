@@ -6,17 +6,8 @@
     '1.4 corrects the cost calculations - previously was referring to the wrong place in the strategy file
     '1.5 corrects the fuel efficiency calculations
     '1.6 recode to calculate by annual timesteps, parameters' dimensions are increased by one to store for each roadlink to avoid override
+    '1.9 now the module can run with database connection and read/write from/to database
 
-    Dim RoadInputData As IO.FileStream
-    Dim ri As IO.StreamReader
-    Dim ExtVarOutputData As IO.FileStream
-    Dim ev As IO.StreamWriter
-    Dim RoadLinkCapData As IO.FileStream
-    Dim rc As IO.StreamReader
-    Dim stf As IO.StreamReader
-    Dim RoadLinkNewCapData As IO.FileStream
-    Dim rnc As IO.StreamWriter
-    Dim rncr As IO.StreamReader
     Dim InputRow As String
     Dim OutputRow As String
     Dim InputData() As String
@@ -90,10 +81,6 @@
 
         'get the input and output file names
         Call GetFiles()
-
-        'write header row to output file
-        'OutputRow = "Yeary,FlowID,PopZ1y,PopZ2y,GVAZ1y,GVAZ2y,M1Costy,MLanesy,DLanesy,SLanesy,MaxCapMy,MaxCapDy,MaxCapSy,M2Costy,M3Costy,M4Costy,M5Costy,M6Costy,D1Costy,D2Costy,D3Costy,D4Costy,D5Costy,D6Costy,S1Costy,S2Costy,S3Costy,S4Costy,S5Costy,S6Costy,S7Costy,S8Costy"
-        'ev.WriteLine(OutputRow)
 
         'if we are using a single scaling factor then set scaling factors - as a default they are just set to be constant over time
         If RdLPopSource = "Constant" Then
@@ -218,50 +205,21 @@
 
     Sub GetFiles()
 
-        'RoadInputData = New IO.FileStream(DirPath & "RoadInputData2010.csv", IO.FileMode.Open, IO.FileAccess.Read)
-        'ri = New IO.StreamReader(RoadInputData, System.Text.Encoding.Default)
-        ''read header row
-        'InputRow = ri.ReadLine
-
         'read initial input data
         Call ReadData("RoadLink", "Input", InputArray, modelRunID, True)
 
 
-        'ExtVarOutputData = New IO.FileStream(DirPath & EVFilePrefix & "ExternalVariables.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
-        'ev = New IO.StreamWriter(ExtVarOutputData, System.Text.Encoding.Default)
 
         'if capacity is changing then get capacity change file
         'v1.3 do this anyway to include compulsory changes
-        'RoadLinkCapData = New IO.FileStream(DirPath & CapFilePrefix & "RoadLinkCapChange.csv", IO.FileMode.Open, IO.FileAccess.Read)
-        'rc = New IO.StreamReader(RoadLinkCapData, System.Text.Encoding.Default)
-        ''read header row
-        'rc.ReadLine()
-        'If NewRdLCap = True Then
-        '    RoadLinkCapData = New IO.FileStream(DirPath & CapFilePrefix & "RoadLinkCapChange.csv", IO.FileMode.Open, IO.FileAccess.Read)
-        '    rc = New IO.StreamReader(RoadLinkCapData, System.Text.Encoding.Default)
-        '    'read header row
-        '    rc.ReadLine()
-        'End If
-
         'now read from database
         Call ReadData("RoadLink", "CapChange", CapArray, modelRunID)
 
-
-        'v1.4 new intermediate capacity file
-        'RoadLinkNewCapData = New IO.FileStream(DirPath & EVFilePrefix & "RoadLinkNewCap.csv", IO.FileMode.CreateNew, IO.FileAccess.Write)
-        'rnc = New IO.StreamWriter(RoadLinkNewCapData, System.Text.Encoding.Default)
-        ''writeheaderrow
-        'OutString = "FlowID,ChangeYear,MLaneChange,DLaneChange,SLaneChange"
-        'rnc.WriteLine(OutString)
 
         '1.3 get the strategy file
         'open the strategy file
         Call ReadData("SubStrategy", "", stratarray, modelRunID)
 
-        'SubStrategyFile = New IO.FileStream(DirPath & "CommonVariablesTR" & SubStrategy & ".csv", IO.FileMode.Open, IO.FileAccess.Read)
-        'stf = New IO.StreamReader(SubStrategyFile, System.Text.Encoding.Default)
-        ''read header row
-        'stf.ReadLine()
         If RdLEneSource = "Database" Then
             'v1.4 altered so that scenario file is read directly as an input file
             Call ReadData("Energy", "", enearray, modelRunID)
@@ -449,7 +407,7 @@
             Next
         End If
 
-        'Set year as the entered year to start with
+        'Start from year 2011
         Year = 1
 
 
@@ -506,21 +464,10 @@
                 ElseIf RdLPopSource = "Database" Then
                     'if year is after 2093 then no population forecasts are available so assume population remains constant
                     'now modified as population data available up to 2100 - so should never need 'else'
+                    'v1.9 now read by using database function
                     If Year < 91 Then
-                        keylookup = Year & "_" & OZone(InputCount, 1)
-                        If PopYearLookup.TryGetValue(keylookup, newval) Then
-                            Pop1New = newval
-                        Else
-                            ErrorString = "population found in lookup table for zone " & OZone(InputCount, 1) & " in year " & Year
-                            Call DictionaryMissingVal()
-                        End If
-                        keylookup = Year & "_" & DZone(InputCount, 1)
-                        If PopYearLookup.TryGetValue(keylookup, newval) Then
-                            Pop2New = newval
-                        Else
-                            ErrorString = "population found in lookup table for zone " & DZone(InputCount, 1) & " in year " & Year
-                            Call DictionaryMissingVal()
-                        End If
+                        Pop1New = get_population_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 1), "OZ", "'road'")
+                        Pop2New = get_population_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 1), "DZ", "'road'")
                     Else
                         Pop1New = Pop1Old(InputCount, 1)
                         Pop2New = Pop2Old(InputCount, 1)
@@ -534,21 +481,11 @@
                 ElseIf RdLEcoSource = "Database" Then
                     'if year is after 2050 then no gva forecasts are available so assume gva remains constant
                     'now modified as gva data available up to 2100 - so should never need 'else'
+                    'v1.9 now read by using database function
+                    'database does not have gva forecasts after year 2050, and the calculation is only available before year 2050
                     If Year < 91 Then
-                        keylookup = Year & "_" & OZone(InputCount, 1)
-                        If EcoYearLookup.TryGetValue(keylookup, newval) Then
-                            GVA1New = newval
-                        Else
-                            ErrorString = "gva found in lookup table for zone " & OZone(InputCount, 1) & "in year " & Year
-                            Call DictionaryMissingVal()
-                        End If
-                        keylookup = Year & "_" & DZone(InputCount, 1)
-                        If EcoYearLookup.TryGetValue(keylookup, newval) Then
-                            GVA2New = newval
-                        Else
-                            ErrorString = "gva found in lookup table for zone " & DZone(InputCount, 1) & "in year " & Year
-                            Call DictionaryMissingVal()
-                        End If
+                        GVA1New = get_gva_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 1), "OZ", "'road'")
+                        GVA2New = get_gva_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 1), "DZ", "'road'")
                     Else
                         GVA1New = GVA1Old(InputCount, 1)
                         GVA2New = GVA2Old(InputCount, 1)
@@ -914,6 +851,7 @@
             Loop
 
             'create output file if year 1, otherwise update
+            'it is now writting to database, therefore no difference if it is year 1 or not
             If Year = 1 Then
                 Call WriteData("RoadLink", "ExtVar", OutputArray, , True)
             Else

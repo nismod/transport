@@ -10,6 +10,7 @@
     '1.6 Recode to calculate by annual timesteps, the dimension of the parameter array has been increased by one to store previous year's data
     'may need to check if the code works if RdZEneSource is not = "Database"
     'now all file related functions are using databaseinterface
+    '1.9 now the module can run with database connection and read/write from/to database
 
     Dim InputRow As String
     Dim OutputRow As String
@@ -207,6 +208,7 @@
             Loop
 
             'create the file if year 1
+            'it is now writting to database, therefore no difference if it is year 1 or not
             If Year = 1 Then
                 Call WriteData("RoadZone", "ExtVar", OutputArray, , True)
             Else
@@ -243,7 +245,7 @@
 
     Sub CalcZoneData()
 
-
+        'read from initial file table if it is year 2011
         If Year = 1 Then
             ZoneID(InputCount, 0) = InputArray(InputCount, 4)
             PopOld(InputCount, 0) = get_population_data_by_zoneID(modelRunID, Year + 2010, ZoneID(InputCount, 0), "Zone", "'road'")
@@ -318,14 +320,9 @@
         ElseIf RdZPopSource = "Database" Then
             'if year is after 2093 then no population forecasts are available so assume population remains constant
             'now modified as population data available up to 2100 - so should never need 'else'
+            'v1.9 now read by using database function
             If Year < 91 Then
-                keylookup = Year & "_" & ZoneID(InputCount, 0)
-                If PopYearLookup.TryGetValue(keylookup, newval) Then
-                    PopNew = newval
-                Else
-                    ErrorString = "population found in lookup table for zone " & ZoneID(InputCount, 0) & " in year " & Year
-                    Call DictionaryMissingVal()
-                End If
+                PopNew = get_population_data_by_zoneID(modelRunID, Year + 2010, ZoneID(InputCount, 0), "Zone", "'road'")
             Else
                 PopNew = PopOld(InputCount, 0)
             End If
@@ -337,14 +334,10 @@
         ElseIf RdZEcoSource = "Database" Then
             'if year is after 2050 then no gva forecasts are available so assume gva remains constant
             'now modified as gva data available up to 2100 - so should never need 'else'
+            'v1.9 now read by using database function
+            'database does not have gva forecasts after year 2050, and the calculation is only available before year 2050
             If Year < 91 Then
-                keylookup = Year & "_" & ZoneID(InputCount, 0)
-                If EcoYearLookup.TryGetValue(keylookup, newval) Then
-                    GVANew = newval
-                Else
-                    ErrorString = "gva found in lookup table for zone " & ZoneID(InputCount, 0) & "in year " & Year
-                    Call DictionaryMissingVal()
-                End If
+                GVANew = get_gva_data_by_zoneID(modelRunID, Year + 2010, ZoneID(InputCount, 0), "Zone", "'road'")
             Else
                 GVANew = GVAOld(InputCount, 0)
             End If

@@ -11,6 +11,7 @@
     'v1.6 now calculated by annual time steps
     'v1.7 now corporate with Database function, read/write are using the function in database interface
     'now all file related functions are using databaseinterface
+    '1.9 now the module can run with database connection and read/write from/to database
 
     Dim RoadCapArray(145, 7) As String
     Dim ZoneInput As String
@@ -89,11 +90,10 @@
             'get external variable values from previous year as base values
             Call ReadData("RoadZone", "ExtVar", ZonePreExtVar, modelRunID, , YearCount - 1)
 
-            'read from the initial file if it is year 2010
+            'read from the initial file if it is year 2011
             If YearCount = 1 Then
                 Call ReadData("RoadZone", "Input", InputArray, modelRunID, True)
             Else
-                'ReDim Preserve InputArray(144, 61)
                 Call ReadData("RoadZone", "Input", InputArray, modelRunID, False, YearCount)
             End If
 
@@ -117,6 +117,7 @@
             Loop
 
             'create file is true if it is the initial year and write to outputfile and temp file
+            'v1.9 now write to database
             If YearCount = StartYear Then
                 Call WriteData("RoadZone", "Output", OutputArray, , True)
                 Call WriteData("RoadZone", "Temp", TempArray, , True)
@@ -261,6 +262,7 @@
                 BuiltLaneKm(ZoneID, x) = 0
             Next
         Else
+            'read from temp file table
             Zone_ID(ZoneID, 1) = CDbl(InputArray(ZoneID, 3))
             ZonePop(ZoneID, 1) = get_population_data_by_zoneID(modelRunID, YearCount + 2009, Zone_ID(ZoneID, 1), "Zone", "'road'")
             ZoneGVA(ZoneID, 1) = get_gva_data_by_zoneID(modelRunID, YearCount + 2009, Zone_ID(ZoneID, 1), "Zone", "'road'")
@@ -1713,6 +1715,7 @@
         End If
 
         'update variables
+        'now most of them can be read from external variable table
         'ZonePop(ZoneID, 1) = ZoneExtVar(ZoneID, 4)
         'ZoneGVA(ZoneID, 1) = ZoneExtVar(ZoneID, 5)
         ZoneSpeed(ZoneID, 1) = ZoneSpdNew
@@ -1743,14 +1746,6 @@
         TempArray(ZoneID, 2) = ZoneID
         TempArray(ZoneID, 3) = ZoneSpeed(ZoneID, 1)
         TempArray(ZoneID, 4) = BaseVkm(ZoneID, 1)
-        'TempArray(ZoneID, 11) = ZoneLaneKm(ZoneID, 1)
-        'TempArray(ZoneID, 12) = ZoneLaneKm(ZoneID, 2)
-        'TempArray(ZoneID, 13) = ZoneLaneKm(ZoneID, 3)
-        'TempArray(ZoneID, 14) = ZoneLaneKm(ZoneID, 4)
-        'TempArray(ZoneID, 15) = RoadCatKm(ZoneID, 1)
-        'TempArray(ZoneID, 16) = RoadCatKm(ZoneID, 2)
-        'TempArray(ZoneID, 17) = RoadCatKm(ZoneID, 3)
-        'TempArray(ZoneID, 18) = RoadCatKm(ZoneID, 4)
         For x = 0 To 3
             TempArray(ZoneID, 5 + 6 * (x)) = RoadCatTraffic(ZoneID, x + 1)
             For y = 0 To 4

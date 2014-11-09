@@ -9,7 +9,7 @@
     'correct the error that the original code doesnot read the electrificationdata correctly
     'note this module needs to run RlLinkExtVarCalc first
     'now all file related functions are using databaseinterface
-
+    '1.9 now the module can run with database connection and read/write from/to database
     Dim InputRow As String
     Dim OutputRow As String
     Dim PopGrowth As Double
@@ -25,7 +25,6 @@
     Dim StationChange As Integer
     Dim TripChange As Double
     Dim ErrorString As String
-    Dim stf As IO.StreamReader
     Dim stratstring As String
     Dim stratarray(90, 95) As String
     Dim FuelEff(1, 90), CO2Vol(1, 90), CO2Price(1, 90), GJTProp(1, 90) As Double
@@ -86,7 +85,7 @@
         FuelEffOld(1) = 1
         'v1.4 fuel efficiency change calculation corrected
         For y = 1 To 90
-            'read line from file
+            'read line from strategy array
             FuelEff(0, y) = stratarray(y, 66) / FuelEffOld(0)
             FuelEff(1, y) = stratarray(y, 67) / FuelEffOld(1)
             CO2Vol(0, y) = stratarray(y, 74)
@@ -115,7 +114,7 @@
     Sub GetRlZEVFiles()
 
 
-        'read initial input data
+        'read initial input of year 2010
         Call ReadData("RailZone", "Input", InputArray, modelRunID)
 
         'if capacity is changing then get capacity change file
@@ -170,7 +169,7 @@
         Dim InputCount As Long
         Dim InDieselOldAll, InElectricOldAll, InDieselNewAll, InElectricNewAll
 
-        'start from the input start year
+        'start from year 2011
         Year = 1
 
         'initialize values
@@ -180,7 +179,7 @@
             InElectricOldAll = enearray(1, 3)
         End If
 
-        'loop through all input duration years
+        'loop through all 40 years until 2050
         Do Until Year > 40
 
             If RlZEneSource = "Database" Then
@@ -192,9 +191,11 @@
 
             Do Until InputCount > 144
 
+                'read initial year input
                 If Year = 1 Then
 
                     ZoneID(InputCount, 0) = InputArray(InputCount, 4)
+                    'read pop and gva by using database function
                     PopOld(InputCount, 0) = get_population_data_by_zoneID(modelRunID, Year + 2010, ZoneID(InputCount, 0), "Zone", "'rail'")
                     GVAOld(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, Year + 2010, ZoneID(InputCount, 0), "Zone", "'rail'")
                     CostOld(InputCount, 0) = InputArray(InputCount, 8)
@@ -287,14 +288,9 @@ NextYear:
                 If RlZPopSource = "Database" Then
                     'if year is after 2093 then no population forecasts are available so assume population remains constant
                     'now modified as population data available up to 2100 - so should never need 'else'
+                    'v1.9 now read pop by using database function
                     If Year < 91 Then
-                        keylookup = Year & "_" & ZoneID(InputCount, 0)
-                        If PopYearLookup.TryGetValue(keylookup, newval) Then
-                            PopNew = newval
-                        Else
-                            ErrorString = "population found in lookup table for zone " & ZoneID(InputCount, 0) & " in year " & Year
-                            Call DictionaryMissingVal()
-                        End If
+                        PopNew = get_population_data_by_zoneID(modelRunID, Year + 2010, ZoneID(InputCount, 0), "Zone", "'rail'")
                     Else
                         PopNew = PopOld(InputCount, 0)
                     End If
@@ -307,14 +303,9 @@ NextYear:
                 ElseIf RlZEcoSource = "Database" Then
                     'if year is after 2050 then no gva forecasts are available so assume gva remains constant
                     'now modified as gva data available up to 2100 - so should never need 'else'
+                    'v1.9 now read gva by using database function
                     If Year < 91 Then
-                        keylookup = Year & "_" & ZoneID(InputCount, 0)
-                        If EcoYearLookup.TryGetValue(keylookup, newval) Then
-                            GVANew = newval
-                        Else
-                            ErrorString = "GVA found in lookup table for zone " & ZoneID(InputCount, 0) & " in year " & Year
-                            Call DictionaryMissingVal()
-                        End If
+                        GVANew = get_gva_data_by_zoneID(modelRunID, Year + 2010, ZoneID(InputCount, 0), "Zone", "'rail'")
                     Else
                         GVANew = GVAOld(InputCount, 0)
                     End If
@@ -429,6 +420,7 @@ NextYear:
             Loop
 
             'create file if year 1, otherwise update
+            'it is now writting to database, therefore no difference if it is year 1 or not
             If Year = 1 Then
                 Call WriteData("RailZone", "ExtVar", OutputArray, , True)
             Else

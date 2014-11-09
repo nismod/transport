@@ -12,19 +12,8 @@
     'run time has been increased because the increased dimension requires extra memory and the temp file needs to be read and write for every step, but still acceptable
     'v1.7 now corporate with Database function, read/write are using the function in database interface
     'now all file related functions are using databaseinterface
-    Dim RlLinkInputData As IO.FileStream
-    Dim rai As IO.StreamReader
-    Dim RlLinkExtVar As IO.FileStream
-    Dim rae As IO.StreamReader
-    Dim RlLinkOutputData As IO.FileStream
-    Dim rao As IO.StreamWriter
-    Dim RlLinkElasticities As IO.FileStream
-    Dim ral As IO.StreamReader
-    Dim RlLinkNewCap As IO.FileStream
-    Dim ranc As IO.StreamWriter
-    Dim RlLinkFuelUsed As IO.FileStream
-    Dim rafc As IO.StreamWriter
-    Dim rast As IO.StreamReader
+    '1.9 now the module can run with database connection and read/write from/to database
+
     Dim InputFlow As String
     Dim FlowDetails() As String
     Dim FlowID(291, 1) As Long
@@ -134,6 +123,7 @@
         'v1.2 modification: for the moment we are saying that if capacity utilisation is less than 0.25 then traffic flows at free flow speed - but may wish to alter this
         FreeFlowCU = 0.25
 
+        'set start year as the entered value
         YearNum = StartYear
 
         'Loop through flow and speed calculation modules for each year until end of period
@@ -148,8 +138,6 @@
             Else
                 Call ReadData("RoadLink", "Temp Annual", TempAnArray, modelRunID, False, YearNum)
                 Call ReadData("RoadLink", "Temp Hourly", TempHArray, modelRunID, False, YearNum)
-                'ReDim Preserve InputArray(291, 3037)
-                'Call ReadData("RoadLink", "Input", InputArray, False)
             End If
 
             link = 1
@@ -222,12 +210,6 @@
     End Sub
 
     Sub SetFiles()
-        'Dim DayTripProfile As IO.FileStream
-        'Dim tp As IO.StreamReader
-        'Dim row As String
-        'Dim SpeedInput As IO.FileStream
-        'Dim si As IO.StreamReader
-        'Dim rls As IO.StreamReader
         Dim stratarray(90, 95) As String
 
 
@@ -465,92 +447,6 @@
             Z2GVA(link, 1) = get_gva_data_by_zoneID(modelRunID, YearNum + 2009, FlowID(link, 1), "DZ", "'road'", Zone2(link, 1))
 
 
-            'Old code for inputing Temp RoadLink data from text file 
-            'FlowID(link, 1) = InputArray(link, 1)
-            'RoadTypeLanes(link, 0) = InputArray(link, 2)
-            'RoadTypeLanes(link, 1) = InputArray(link, 3)
-            'RoadTypeLanes(link, 2) = InputArray(link, 4)
-            'RoadTypeLanesNew(link, 0) = InputArray(link, 5)
-            'RoadTypeLanesNew(link, 1) = InputArray(link, 6)
-            'RoadTypeLanesNew(link, 2) = InputArray(link, 7)
-            'For x = 0 To 19
-            '    SpeedCatFlows(link, x) = InputArray(link, 8 + x)
-            'Next
-            'Z1Pop(link, 1) = InputArray(link, 28)
-            'Z2Pop(link, 1) = InputArray(link, 29)
-            'Z1GVA(link, 1) = InputArray(link, 30)
-            'Z2GVA(link, 1) = InputArray(link, 31)
-
-            'i = 32
-            'For x = 0 To 19
-            '    For c = 0 To 23
-            '        CostOld(link, x, c) = InputArray(link, i)
-            '        i += 1
-            '    Next
-            'Next
-
-            'MaxCap(link, 0) = InputArray(link, 512)
-            'MaxCap(link, 1) = InputArray(link, 513)
-            'MaxCap(link, 2) = InputArray(link, 514)
-            'AddedLanes(link, 0) = InputArray(link, 515)
-            'AddedLanes(link, 1) = InputArray(link, 516)
-            'AddedLanes(link, 2) = InputArray(link, 517)
-
-            ''XUCHENG - you need to put more commenting in your code - why does this only do this until sc < 20 ?
-            'i = 518
-            'sc = 0
-            'Do While sc < 20
-            '    RoadType = AssignRoadType(sc)
-            '    h = 0
-            '    Do Until h > 23
-            '        OldHourlyFlows(link, sc, h) = InputArray(link, i)
-            '        i += 1
-            '        RoadTypeFlows(link, RoadType, h) = InputArray(link, i)
-            '        i += 1
-            '        ChargeOld(link, sc, h) = InputArray(link, i)
-            '        i += 1
-            '        LatentHourlyFlows(link, sc, h) = InputArray(link, i)
-            '        i += 1
-            '        NewHourlySpeeds(link, sc, h) = InputArray(link, i)
-            '        i += 1
-            '        h += 1
-            '    Loop
-            '    sc += 1
-            'Loop
-
-            'read standard cost value and each hour value into array "InputDetail"
-            'For i = 0 To 24
-            '    If i = 0 Then
-            '        FlowID(link, 1) = InputArray(link, 1)
-            '        'update lane variables to current values
-            '        RoadTypeLanesNew(link, 0) = InputArray(link, 22)
-            '        RoadTypeLanesNew(link, 1) = InputArray(link, 23)
-            '        RoadTypeLanesNew(link, 2) = InputArray(link, 24)
-            '    End If
-            '    For j = 0 To 19
-            '        InputDetail(i, j) = CDbl(Val(result(j + 2)))
-            '        If i <> 0 Then
-            '            CostOld(link, j, i - 1) = CDbl(Val(result(j + 25)))
-            '            LatentHourlyFlows(link, j, i - 1) = CDbl(Val(result(j + 45)))
-            '            If CongestionCharge = True Then
-            '                ChargeOld(link, j, i - 1) = CDbl(Val(result(j + 65)))
-            '            End If
-            '            NewHourlySpeeds(link, j, i - 1) = CDbl(Val(result(j + 85)))
-            '        End If
-            '    Next
-            'Next
-
-            ''store the values into computer memory
-            'sc = 0
-            'Do While sc < 20
-            '    SpeedCatFlowsNew(sc) = InputDetail(0, sc)
-            '    h = 0
-            '    Do While h < 24
-            '        NewHourlyFlows(sc, h) = InputDetail(h + 1, sc)
-            '        h += 1
-            '    Loop
-            '    sc += 1
-            'Loop
 
         End If
     End Sub
@@ -1668,61 +1564,6 @@
 
             h += 1
         Loop
-
-        'write to Temp array - NO LONGER NEEDED
-        'TempArray(link, 0) = YearNum
-        'TempArray(link, 1) = FlowID(link, 1)
-        'TempArray(link, 2) = RoadTypeLanes(link, 0)
-        'TempArray(link, 3) = RoadTypeLanes(link, 1)
-        'TempArray(link, 4) = RoadTypeLanes(link, 2)
-        'TempArray(link, 5) = RoadTypeLanesNew(link, 0)
-        'TempArray(link, 6) = RoadTypeLanesNew(link, 1)
-        'TempArray(link, 7) = RoadTypeLanesNew(link, 2)
-        'For x = 0 To 19
-        '    TempArray(link, 8 + x) = SpeedCatFlows(link, x)
-        'Next
-        'TempArray(link, 28) = Z1Pop(link, 1)
-        'TempArray(link, 29) = Z2Pop(link, 1)
-        'TempArray(link, 30) = Z1GVA(link, 1)
-        'TempArray(link, 31) = Z2GVA(link, 1)
-
-        'i = 32
-        'For x = 0 To 19
-        '    For c = 0 To 23
-        '        TempArray(link, i) = CostOld(link, x, c)
-        '        i += 1
-        '    Next
-        'Next
-        'TempArray(link, 512) = MaxCap(link, 0)
-        'TempArray(link, 513) = MaxCap(link, 1)
-        'TempArray(link, 514) = MaxCap(link, 2)
-        'TempArray(link, 515) = AddedLanes(link, 0)
-        'TempArray(link, 516) = AddedLanes(link, 1)
-        'TempArray(link, 517) = AddedLanes(link, 2)
-
-        'i = 518
-
-
-        ''for all 20 road link categories and 24 hours
-        'sc = 0
-        'Do While sc < 20
-        '    RoadType = AssignRoadType(sc)
-        '    h = 0
-        '    Do Until h > 23
-        '        TempArray(link, i) = OldHourlyFlows(link, sc, h)
-        '        i += 1
-        '        TempArray(link, i) = RoadTypeFlows(link, RoadType, h)
-        '        i += 1
-        '        TempArray(link, i) = ChargeOld(link, sc, h)
-        '        i += 1
-        '        TempArray(link, i) = LatentHourlyFlows(link, sc, h)
-        '        i += 1
-        '        TempArray(link, i) = NewHourlySpeeds(link, sc, h)
-        '        i += 1
-        '        h += 1
-        '    Loop
-        '    sc += 1
-        'Loop
 
 
     End Sub

@@ -12,21 +12,8 @@
     'and old InDieselOld/New and InElectricOld/New now increase dimension to seperate the values for each link
     'and each time the calculation start, the values in new parameters (InDieselOldAll etc) will be read into the original parameters
     'now all file related functions are using databaseinterface
+    '1.9 now the module can run with database connection and read/write from/to database
 
-    Dim RlLinkInputData As IO.FileStream
-    Dim rai As IO.StreamReader
-    Dim RlLinkExtVar As IO.FileStream
-    Dim rae As IO.StreamWriter
-    Dim RlLinkCapData As IO.FileStream
-    Dim rac As IO.StreamReader
-    Dim RlLinkEVScale As IO.FileStream
-    Dim ras As IO.StreamReader
-    Dim RlLinkElSchemes As IO.FileStream
-    Dim res As IO.StreamWriter
-    Dim rel As IO.StreamReader
-    Dim RlLinkNewCapData As IO.FileStream
-    Dim rlnc As IO.StreamWriter
-    Dim rlnr As IO.StreamReader
     Dim InputCount As Integer
     Dim InputRow As String
     Dim InputData() As String
@@ -43,7 +30,6 @@
     Dim MaxTDChange As Double
     Dim ErrorString As String
     Dim ElectFlow, ElectYear, ElectTracks As Long
-    Dim stf As IO.StreamReader
     Dim stratstring As String
     Dim FuelEff(1, 90), CO2Vol(1, 90), CO2Price(1, 90), MaxTD(90) As Double
     Dim OutString As String
@@ -389,21 +375,10 @@
                 ElseIf RlLPopSource = "Database" Then
                     'if year is after 2093 then no population forecasts are available so assume population remains constant
                     'now modified as population data available up to 2100 - so should never need 'else'
+                    'v1.9 now read by using database function
                     If Year < 91 Then
-                        keylookup = Year & "_" & OZone(InputCount, 0)
-                        If PopYearLookup.TryGetValue(keylookup, newval) Then
-                            Pop1New = newval
-                        Else
-                            ErrorString = "population found in lookup table for zone " & OZone(InputCount, 0) & " in year " & Year
-                            Call DictionaryMissingVal()
-                        End If
-                        keylookup = Year & "_" & DZone(InputCount, 0)
-                        If PopYearLookup.TryGetValue(keylookup, newval) Then
-                            Pop2New = newval
-                        Else
-                            ErrorString = "population found in lookup table for zone " & DZone(InputCount, 0) & " in year " & Year
-                            Call DictionaryMissingVal()
-                        End If
+                        Pop1New = get_population_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 0), "OZ", "'rail'", OZone(InputCount, 0))
+                        Pop2New = get_population_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 0), "DZ", "'rail'", DZone(InputCount, 0))
                     Else
                         Pop1New = Pop1Old(InputCount, 0)
                         Pop2New = Pop2Old(InputCount, 0)
@@ -420,21 +395,11 @@
                 ElseIf RlLEcoSource = "Database" Then
                     'if year is after 2050 then no gva forecasts are available so assume gva remains constant
                     'now modified as GVA data available up to 2100 - so should never need 'else'
+                    'v1.9 now read by using database function
+                    'database does not have gva forecasts after year 2050, and the calculation is only available before year 2050
                     If Year < 91 Then
-                        keylookup = Year & "_" & OZone(InputCount, 0)
-                        If EcoYearLookup.TryGetValue(keylookup, newval) Then
-                            GVA1New = newval
-                        Else
-                            ErrorString = "GVA found in lookup table for zone " & OZone(InputCount, 0) & " in year " & Year
-                            Call DictionaryMissingVal()
-                        End If
-                        keylookup = Year & "_" & DZone(InputCount, 0)
-                        If EcoYearLookup.TryGetValue(keylookup, newval) Then
-                            GVA2New = newval
-                        Else
-                            ErrorString = "GVA found in lookup table for zone " & DZone(InputCount, 0) & " in year " & Year
-                            Call DictionaryMissingVal()
-                        End If
+                        GVA1New = get_gva_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 0), "OZ", "'rail'", OZone(InputCount, 0))
+                        GVA2New = get_gva_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 0), "DZ", "'rail'", DZone(InputCount, 0))
                     Else
                         GVA1New = GVA1Old(InputCount, 0)
                         GVA2New = GVA2Old(InputCount, 0)
@@ -590,6 +555,7 @@ NextYear:
             Loop
 
             'create file if year 1, otherwise update
+            'it is now writting to database, therefore no difference if it is year 1 or not
             If Year = 1 Then
                 Call WriteData("RailLink", "ExtVar", OutputArray, , True)
             Else
