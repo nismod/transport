@@ -438,8 +438,8 @@
                 h += 1
             Loop
 
-            'TODO - need to fix the problem that the zone1 and zone2 ids defined in database are not match with the ids defined in Simon's RoadLink initial file
-            'get_zone_by_flowid(FlowID(link, 1), Zone1(link, 1), Zone2(link, 1))
+            'get zone1 ID and zone2 ID
+            get_zone_by_flowid(FlowID(link, 1), Zone1(link, 1), Zone2(link, 1), "road")
             'Get Population and GVA data
             Z1Pop(link, 1) = get_population_data_by_zoneID(modelRunID, YearNum + 2009, FlowID(link, 1), "OZ", "'road'", Zone1(link, 1))
             Z2Pop(link, 1) = get_population_data_by_zoneID(modelRunID, YearNum + 2009, FlowID(link, 1), "DZ", "'road'", Zone2(link, 1))

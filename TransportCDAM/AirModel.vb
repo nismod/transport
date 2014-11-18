@@ -74,7 +74,7 @@
     Dim MaxAirNode As Long
     Dim MaxAirFlow As Long
     Dim NodeInputArray(28, 16) As String
-    Dim FlowInputArray(223, 11) As String
+    Dim FlowInputArray(223, 12) As String
     Dim NodeOutputArray(29, 7) As String
     Dim FlowOutputArray(224, 4) As String
     Dim NodeTempArray(29, 6) As String
@@ -118,8 +118,8 @@
                 Call ReadData("AirFlow", "Input", FlowInputArray, modelRunID, True)
 
             Else
-                Call ReadData("AirNode", "Input", NodeInputArray, modelRunID, False)
-                Call ReadData("AirFlow", "Input", FlowInputArray, modelRunID, False)
+                Call ReadData("AirNode", "Input", NodeInputArray, modelRunID, False, YearNum)
+                Call ReadData("AirFlow", "Input", FlowInputArray, modelRunID, False, YearNum)
             End If
 
             'get external variables for this year
@@ -177,19 +177,26 @@
 
             'create file is true if it is the initial year and write to outputfile and temp file
             If YearNum = StartYear Then
-                Call WriteData("AirNode", "Output", NodeOutputArray, NodeTempArray, True)
-                Call WriteData("AirFlow", "Output", FlowOutputArray, FlowTempArray, True)
+                Call WriteData("AirNode", "Output", NodeOutputArray, , True)
+                Call WriteData("AirFlow", "Output", FlowOutputArray, , True)
+                'write to IO tables
+                Call WriteData("AirNode", "Temp", NodeTempArray, , True)
+                Call WriteData("AirFlow", "Temp", FlowTempArray, , True)
+
                 If BuildInfra = True Then
                     Call WriteData("AirNode", "AirNewCap", NewCapArray, , True)
                 End If
             Else
-                Call WriteData("AirNode", "Output", NodeOutputArray, NodeTempArray, False)
-                Call WriteData("AirFlow", "Output", FlowOutputArray, FlowTempArray, False)
+                Call WriteData("AirNode", "Output", NodeOutputArray, , False)
+                Call WriteData("AirFlow", "Output", FlowOutputArray, , False)
+                'write to IO tables
+                Call WriteData("AirNode", "Temp", NodeTempArray, , False)
+                Call WriteData("AirFlow", "Temp", FlowTempArray, , False)
+
                 If BuildInfra = True Then
                     Call WriteData("AirNode", "AirNewCap", NewCapArray, , False)
                 End If
             End If
-
 
             'repeat for duration
             YearNum += 1
@@ -249,7 +256,7 @@
                 AirpTripsLatent(AirportCount) = 0
             Else
                 'if it is not initial year, read from the temp input format
-                AirFlowID(AirportCount, 0) = NodeInputArray(AirportCount, 3)
+                AirNodeID(AirportCount, 0) = NodeInputArray(AirportCount, 3)
                 'loop through all elements of the input line, transferring the data to the airport base data array
                 For AirportField = 1 To 3
                     AirportBaseData(AirportCount, AirportField) = NodeInputArray(AirportCount, AirportField + 3)
@@ -485,12 +492,12 @@
                 'set all the capacity constraint checks for the flow 
                 If FlowInputArray(AirportCount, 6) = 0 Then
                     AirfCapConst(AirportCount, 0) = False
-                ElseIf FlowInputArray(AirportCount, 11) = 1 Then
+                ElseIf FlowInputArray(AirportCount, 6) = 1 Then
                     AirfCapConst(AirportCount, 0) = True
                 End If
                 If FlowInputArray(AirportCount, 7) = 0 Then
                     AirfCapConst(AirportCount, 1) = False
-                ElseIf FlowInputArray(AirportCount, 12) = 1 Then
+                ElseIf FlowInputArray(AirportCount, 7) = 1 Then
                     AirfCapConst(AirportCount, 1) = True
                 End If
 
@@ -931,11 +938,6 @@
                     AirpDomTripsLatent(aircount) = latentdomtrips
                     'add the difference between the scaled and unscaled figures to the latent demand arrays - and add a latent airport domestic trips array
                     'finally, recalculate all the domestic trip totals, so that airports on the other end of the constrained flows have the new correct totals
-                    If YearNum = 1 Then
-                        Dim msg = 3 & "," & AirfTripsNew(1)
-                        MsgBox(msg)
-                    End If
-
                     Call UpdateDomesticTrips()
                 End If
             End If
@@ -1068,7 +1070,7 @@
         Do Until flownum > MaxAirFlow
             'concatenate the output row for the flow file
             FlowOutputArray(flownum, 0) = modelRunID
-            FlowOutputArray(flownum, 1) = AirFlowID(aircount, 0)
+            FlowOutputArray(flownum, 1) = AirFlowID(flownum, 0)
             FlowOutputArray(flownum, 2) = YearNum
             FlowOutputArray(flownum, 3) = AirfTripsNew(flownum)
             FlowOutputArray(flownum, 4) = AirfFuel(flownum)
@@ -1086,7 +1088,7 @@
             AirportBaseData(aircount, 3) = AirpTripsNew(aircount)
             AirportBaseData(aircount, 4) = AirportExtVar(aircount, 7)
             AirportBaseData(aircount, 5) = AirportExtVar(aircount, 8)
-            AirportBaseData(aircount, 8) = AirportExtVar(aircount, 6) + AirpCapU(aircount, 3)
+            AirportBaseData(aircount, 8) = CDbl(AirportExtVar(aircount, 6)) + AirpCapU(aircount, 3)
             AirportBaseData(aircount, 9) = AirportExtVar(aircount, 9)
             AirportBaseData(aircount, 10) = AirportExtVar(aircount, 10)
             AirportBaseData(aircount, 11) = AirportExtVar(aircount, 11)
@@ -1140,7 +1142,8 @@
             End If
             'write to temp file
             NodeTempArray(aircount, 0) = modelRunID
-            NodeTempArray(aircount, 1) = AirNodeID(aircount, 0)
+            NodeTempArray(aircount, 1) = YearNum
+            NodeTempArray(aircount, 2) = AirNodeID(aircount, 0)
             For x = 1 To 3
                 NodeTempArray(aircount, x + 2) = AirportBaseData(aircount, x)
             Next
@@ -1159,12 +1162,12 @@
             AirFlowBaseData(flownum, 5) = AirFlowExtVar(flownum, 5)
             AirFlowBaseData(flownum, 6) = AirFlowExtVar(flownum, 6)
             AirFlowBaseData(flownum, 7) = AirFlowExtVar(flownum, 7)
-            AirFlowBaseData(flownum, 8) = AirFlowExtVar(flownum, 8) + FlowCharge(aircount)
+            AirFlowBaseData(flownum, 8) = CDbl(AirFlowExtVar(flownum, 8)) + FlowCharge(aircount)
 
             'write to temp
             FlowTempArray(flownum, 0) = modelRunID
             FlowTempArray(flownum, 1) = YearNum
-            FlowTempArray(flownum, 2) = AirFlowID(aircount, 0)
+            FlowTempArray(flownum, 2) = AirFlowID(flownum, 0)
             FlowTempArray(flownum, 3) = AirFlowBaseData(flownum, 3)
             FlowTempArray(flownum, 4) = AirFlowBaseData(flownum, 9)
             FlowTempArray(flownum, 5) = AirfTripsLatent(flownum)

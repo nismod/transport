@@ -1778,7 +1778,7 @@ Module DBaseInterface
                         TableName = "TR_IO_AirFlow"
                         OutFileName = FilePrefix & "AirFlowTemp.csv"
                         'tempheader = "FlowID, OAirID, DAirID, Trips, PopOZ, PopDZ, GVAOZ, GVADZ, Cost, FlowKm, AirFlowTripsLatent, AirFlowCapConstant0, AirFlowCapConstant1"
-                        header = "modelrun_id, year, flow_id, Trips, AirFlowTripsLatent, AirFlowCapConstant0, AirFlowCapConstant1"
+                        header = "modelrun_id, year, flow_id, Trips, FlowKm, AirFlowTripsLatent, AirFlowCapConstant0, AirFlowCapConstant1"
                     Case "ExtVar"
                         ToSQL = True
                         TableName = "TR_O_AirFlowExternalVariables"
