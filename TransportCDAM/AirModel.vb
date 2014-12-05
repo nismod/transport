@@ -11,6 +11,7 @@
     '**may need to add in a further refinement so that if demand for that flow/node actually decreases in a given year then it can drop even if it is 'locked'
     'v1.7 now work with the databse interface functions for read/write data
     'now all file related functions are using databaseinterface
+    '011214 flow constraint modified to fix TR3 - means that constraint 'lock' works more precisely
 
     Dim AirNodeInputData As IO.FileStream
     Dim an As IO.StreamReader
@@ -332,17 +333,20 @@
             End If
             If planechange = True Then
                 'check if a runway capacity constraint applies, if so then set the capacity constraint checkers to false - but don't do this if it was a terminal constrant
-                If AirpRunCapCheck(rowcount) = True Then
-                    AirpOldConstraint(rowcount) = False
-                    AirpRunCapCheck(rowcount) = False
-                    For f = 1 To 223
-                        If AirFlowBaseData(f, 1) = rowcount Then
-                            AirfCapConst(f, 0) = False
-                        ElseIf AirFlowBaseData(f, 2) = rowcount Then
-                            AirfCapConst(f, 1) = False
-                        End If
-                    Next
-                End If
+                '011214 modification - do it if it was a terminal constraint too!
+                'If AirpRunCapCheck(rowcount) = True Then
+                AirpOldConstraint(rowcount) = False
+                AirpRunCapCheck(rowcount) = False
+                '011214 next line added
+                AirpTermCapCheck(rowcount) = False
+                For f = 1 To 223
+                    If AirFlowBaseData(f, 1) = rowcount Then
+                        AirfCapConst(f, 0) = False
+                    ElseIf AirFlowBaseData(f, 2) = rowcount Then
+                        AirfCapConst(f, 1) = False
+                    End If
+                Next
+                'End If
             End If
             rowcount += 1
         Loop
@@ -782,41 +786,47 @@
                         'check if origin airport is the one we're currently scaling
                         If AirFlowBaseData(flownum, 1) = aircount Then
                             '1009Change only do this if a constraint doesn't already apply to the flow
-                            If AirfOldConstraint(flownum) = False Then
-                                'set temporary variable to equal unconstrained trips
-                                latenttrips = AirfTripsNew(flownum)
-                                'if so then scale it by the ratio
-                                AirfTripsNew(flownum) = AirfTripsNew(flownum) / termrat
-                                'estimate the number of suppressed trips and add to the latent demand array
-                                latenttrips = latenttrips - AirfTripsNew(flownum)
-                                latentdomtrips = latentdomtrips - AirfTripsNew(flownum)
-                                AirfTripsLatent(flownum) = AirfTripsLatent(flownum) + latenttrips
-                                'change the origin capacity constraint check to true
-                                AirfCapConst(flownum, 0) = True
-                                AirfOldConstraint(flownum) = True
-                            Else
-                                'otherwise just add the existing latent trips for this flow to the latent domestic trip total
-                                latentdomtrips = latentdomtrips - AirfTripsNew(flownum) + AirfTripsLatent(flownum)
-                            End If
+                            '0112
+                            'If AirfOldConstraint(flownum) = False Then
+                            'set temporary variable to equal unconstrained trips
+                            latenttrips = AirfTripsNew(flownum)
+                            'if so then scale it by the ratio
+                            AirfTripsNew(flownum) = AirfTripsNew(flownum) / termrat
+                            'estimate the number of suppressed trips and add to the latent demand array
+                            latenttrips = latenttrips - AirfTripsNew(flownum)
+                            latentdomtrips = latentdomtrips - AirfTripsNew(flownum)
+                            AirfTripsLatent(flownum) = AirfTripsLatent(flownum) + latenttrips
+                            'change the origin capacity constraint check to true
+                            AirfCapConst(flownum, 0) = True
+                            AirfOldConstraint(flownum) = True
+                            '0112
+                            'Else
+                            'otherwise just add the existing latent trips for this flow to the latent domestic trip total
+                            'latentdomtrips = (latentdomtrips - AirfTripsNew(flownum)) + AirfTripsLatent(flownum)
+                            '0112
+                            'End If
 
                             'if not then check if destination airport is the one we're currently scaling
                         ElseIf AirFlowBaseData(flownum, 2) = aircount Then
                             '1009Change only do this if a constraint doesn't already apply to the flow
-                            If AirfOldConstraint(flownum) = False Then
-                                'set temporary variable to equal unconstrained trips
-                                latenttrips = AirfTripsNew(flownum)
-                                AirfTripsNew(flownum) = AirfTripsNew(flownum) / termrat
-                                'estimate the number of suppressed trips and add to the latent demand array
-                                latenttrips = latenttrips - AirfTripsNew(flownum)
-                                latentdomtrips = latentdomtrips - AirfTripsNew(flownum)
-                                AirfTripsLatent(flownum) = AirfTripsLatent(flownum) + latenttrips
-                                'change the destination capacity constraint check to true
-                                AirfCapConst(flownum, 1) = True
-                                AirfOldConstraint(flownum) = True
-                            Else
-                                'otherwise just add the existing latent trips for this flow to the latent domestic trip total
-                                latentdomtrips = latentdomtrips - AirfTripsNew(flownum) + AirfTripsLatent(flownum)
-                            End If
+                            '0112
+                            'If AirfOldConstraint(flownum) = False Then
+                            'set temporary variable to equal unconstrained trips
+                            latenttrips = AirfTripsNew(flownum)
+                            AirfTripsNew(flownum) = AirfTripsNew(flownum) / termrat
+                            'estimate the number of suppressed trips and add to the latent demand array
+                            latenttrips = latenttrips - AirfTripsNew(flownum)
+                            latentdomtrips = latentdomtrips - AirfTripsNew(flownum)
+                            AirfTripsLatent(flownum) = AirfTripsLatent(flownum) + latenttrips
+                            'change the destination capacity constraint check to true
+                            AirfCapConst(flownum, 1) = True
+                            AirfOldConstraint(flownum) = True
+                            '0112
+                            'Else
+                            'otherwise just add the existing latent trips for this flow to the latent domestic trip total
+                            'latentdomtrips = (latentdomtrips - AirfTripsNew(flownum)) + AirfTripsLatent(flownum)
+                            '0112
+                            'End If
                         Else
                             'otherwise do nothing and move on to next flow
                         End If
@@ -895,40 +905,46 @@
                         'first check whether the origin airport is one of those being modelled
                         If AirFlowBaseData(flownum, 1) = aircount Then
                             '1009Change only do this if a constraint doesn't already apply to the flow
-                            If AirfOldConstraint(flownum) = False Then
-                                'set temporary variable to equal unconstrained flow trips
-                                latenttrips = AirfTripsNew(flownum)
-                                AirfTripsNew(flownum) = AirfTripsNew(flownum) * airpdomtriprat
-                                'estimate the number of suppressed trips and add to the latent demand array
-                                latenttrips = latenttrips - AirfTripsNew(flownum)
-                                latentdomtrips = latentdomtrips - AirfTripsNew(flownum)
-                                AirfTripsLatent(flownum) = AirfTripsLatent(flownum) + latenttrips
-                                'change the origin capacity constraint check to true
-                                AirfCapConst(flownum, 0) = True
-                                AirfOldConstraint(flownum) = True
-                            Else
-                                'otherwise just add the existing latent trips for this flow to the latent domestic trip total
-                                latentdomtrips = latentdomtrips - AirfTripsNew(flownum) + AirfTripsLatent(flownum)
-                            End If
+                            '0112
+                            'If AirfOldConstraint(flownum) = False Then
+                            'set temporary variable to equal unconstrained flow trips
+                            latenttrips = AirfTripsNew(flownum)
+                            AirfTripsNew(flownum) = AirfTripsNew(flownum) * airpdomtriprat
+                            'estimate the number of suppressed trips and add to the latent demand array
+                            latenttrips = latenttrips - AirfTripsNew(flownum)
+                            latentdomtrips = latentdomtrips - AirfTripsNew(flownum)
+                            AirfTripsLatent(flownum) = AirfTripsLatent(flownum) + latenttrips
+                            'change the origin capacity constraint check to true
+                            AirfCapConst(flownum, 0) = True
+                            AirfOldConstraint(flownum) = True
+                            '0112
+                            'Else
+                            'otherwise just add the existing latent trips for this flow to the latent domestic trip total
+                            'latentdomtrips = (latentdomtrips - AirfTripsNew(flownum)) + AirfTripsLatent(flownum)
+                            '0112
+                            'End If
 
                             'if not then check whether the destination airport is one of those being modelled
                         ElseIf AirFlowBaseData(flownum, 2) = aircount Then
                             '1009Change only do this if a constraint doesn't already apply to the flow
-                            If AirfOldConstraint(flownum) = False Then
-                                'set temporary variable to equal unconstrained flow trips
-                                latenttrips = AirfTripsNew(flownum)
-                                AirfTripsNew(flownum) = AirfTripsNew(flownum) * airpdomtriprat
-                                'estimate the number of suppressed trips and add to the latent demand array
-                                latenttrips = latenttrips - AirfTripsNew(flownum)
-                                latentdomtrips = latentdomtrips - AirfTripsNew(flownum)
-                                AirfTripsLatent(flownum) = AirfTripsLatent(flownum) + latenttrips
-                                'change the destination capacity constraint check to true
-                                AirfCapConst(flownum, 1) = True
-                                AirfOldConstraint(flownum) = True
-                            Else
-                                'otherwise just add the existing latent trips for this flow to the latent domestic trip total
-                                latentdomtrips = latentdomtrips - AirfTripsNew(flownum) + AirfTripsLatent(flownum)
-                            End If
+                            '0112
+                            'If AirfOldConstraint(flownum) = False Then
+                            'set temporary variable to equal unconstrained flow trips
+                            latenttrips = AirfTripsNew(flownum)
+                            AirfTripsNew(flownum) = AirfTripsNew(flownum) * airpdomtriprat
+                            'estimate the number of suppressed trips and add to the latent demand array
+                            latenttrips = latenttrips - AirfTripsNew(flownum)
+                            latentdomtrips = latentdomtrips - AirfTripsNew(flownum)
+                            AirfTripsLatent(flownum) = AirfTripsLatent(flownum) + latenttrips
+                            'change the destination capacity constraint check to true
+                            AirfCapConst(flownum, 1) = True
+                            AirfOldConstraint(flownum) = True
+                            '0112
+                            'Else
+                            'otherwise just add the existing latent trips for this flow to the latent domestic trip total
+                            'latentdomtrips = (latentdomtrips - AirfTripsNew(flownum)) + AirfTripsLatent(flownum)
+                            '0112
+                            'End If
                         Else
                             'otherwise move to next flow
                         End If
