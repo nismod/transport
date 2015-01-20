@@ -890,10 +890,11 @@ Module DBaseInterface
 
             'call different SQL function for zone and for link
             If zoneType = "Zone" Then
-                theSQL = "SELECT * FROM cdam_get_population_data_by_model_run_id_per_tr_zone(" & modelrunid & "," & year & ", 9999) "
-                theSQL &= " AS (scenario_id varchar, year integer, gender varchar, category varchar, " & Chr(34) & "DistrictName" & Chr(34)
-                theSQL &= " varchar, zone_id integer, " & Chr(34) & "ZoneName" & Chr(34) & " varchar, district_code varchar, "
-                theSQL &= "value double precision);"
+                theSQL = "SELECT * FROM cdam_get_population_data_by_model_run_id_per_tr_zone(" & modelrunid & "," & year & ", 1) "
+                '200115 edit - SQL commented out for next three lines and "9999" changed to "1" in previous line
+                'theSQL &= " AS (scenario_id varchar, year integer, gender varchar, category varchar, " & Chr(34) & "DistrictName" & Chr(34)
+                'theSQL &= " varchar, zone_id integer, " & Chr(34) & "ZoneName" & Chr(34) & " varchar, district_code varchar, "
+                'theSQL &= "value double precision);"
             Else
                 theSQL = "SELECT * FROM cdam_get_population_data_by_model_run_id_per_tr_flow(" & modelrunid & "," & year & "," & type & ",9999) "
                 theSQL &= " AS (scenario_id varchar, year integer, gender varchar, category varchar, flow_id integer," & Chr(34) & "PopOZ" & Chr(34)
@@ -991,9 +992,10 @@ Module DBaseInterface
         If zoneGVAArray Is Nothing Then
             'call different SQL function for zone and for link
             If zoneType = "Zone" Then
-                theSQL = "SELECT * FROM cdam_get_economics_data_by_model_run_id_per_tr_zone(" & modelrunid & "," & year & ", 9999) "
-                theSQL &= " AS (economics_scenario_id varchar, year integer, " & Chr(34) & "GOR" & Chr(34)
-                theSQL &= " varchar, zone_id integer, " & Chr(34) & "GVAZ" & Chr(34) & " double precision);"
+                theSQL = "SELECT * FROM cdam_get_economics_data_by_model_run_id_per_tr_zone(" & modelrunid & "," & year & ", 1) "
+                '200115 change next two lines commented out and "9999" changed to "1" in previous line
+                'theSQL &= " AS (economics_scenario_id varchar, year integer, " & Chr(34) & "GOR" & Chr(34)
+                'theSQL &= " varchar, zone_id integer, " & Chr(34) & "GVAZ" & Chr(34) & " double precision);"
             Else
                 theSQL = "SELECT * FROM cdam_get_economics_data_by_model_run_id_per_tr_flow(" & modelrunid & "," & year & "," & type & ",9999) "
                 theSQL &= " AS (economics_scenario_id varchar, year integer, flow_id integer," & Chr(34) & "GVAOZ" & Chr(34)
