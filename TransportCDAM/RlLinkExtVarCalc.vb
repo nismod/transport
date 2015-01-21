@@ -299,21 +299,21 @@
 
                 'read from the initial data file if it is year 1 (calculation for year 2011, and initial data file is for 2010)
                 If Year = 1 Then
-                    FlowID(InputCount, 0) = InputArray(InputCount, 4)
-                    OZone(InputCount, 0) = InputArray(InputCount, 5)
-                    DZone(InputCount, 0) = InputArray(InputCount, 6)
-                    Tracks(InputCount, 0) = InputArray(InputCount, 7)
+                    FlowID(InputCount, 0) = InputArray(InputCount, 2)
+                    OZone(InputCount, 0) = InputArray(InputCount, 3)
+                    DZone(InputCount, 0) = InputArray(InputCount, 4)
+                    Tracks(InputCount, 0) = InputArray(InputCount, 5)
                     Pop1Old(InputCount, 0) = get_population_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 0), "OZ", "'rail'", OZone(InputCount, 0))
                     Pop2Old(InputCount, 0) = get_population_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 0), "DZ", "'rail'", DZone(InputCount, 0))
                     GVA1Old(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 0), "OZ", "'rail'", OZone(InputCount, 0))
                     GVA2Old(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 0), "DZ", "'rail'", DZone(InputCount, 0))
-                    CostOld(InputCount, 0) = InputArray(InputCount, 10)
-                    FuelOld(InputCount, 0) = InputArray(InputCount, 11)
-                    MaxTDOld(InputCount, 0) = InputArray(InputCount, 12)
-                    ElPOld(InputCount, 0) = InputArray(InputCount, 13)
-                    OCountry(InputCount, 0) = InputArray(InputCount, 16)
-                    DCountry(InputCount, 0) = InputArray(InputCount, 17)
-                    ElectTracksOld(InputCount, 0) = InputArray(InputCount, 14)
+                    CostOld(InputCount, 0) = InputArray(InputCount, 8)
+                    FuelOld(InputCount, 0) = InputArray(InputCount, 9)
+                    MaxTDOld(InputCount, 0) = InputArray(InputCount, 10)
+                    ElPOld(InputCount, 0) = InputArray(InputCount, 11)
+                    OCountry(InputCount, 0) = InputArray(InputCount, 14)
+                    DCountry(InputCount, 0) = InputArray(InputCount, 15)
+                    ElectTracksOld(InputCount, 0) = InputArray(InputCount, 12)
                     NewTrains = 0
 
                     If RlLEneSource = "Database" Then
