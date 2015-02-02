@@ -1,4 +1,5 @@
-﻿Imports System.IO
+﻿Option Explicit On
+Imports System.IO
 
 Module DBaseInterface
     'this gets the input files from the database, and converts them into a form suitable for input to the model files
@@ -27,6 +28,10 @@ Module DBaseInterface
     Dim zoneGVAArray(,) As String = Nothing
     Dim dataArray(,) As String = Nothing
 
+    'Global variables
+    Public g_modelRunID As Integer
+    Public g_modelRunYear As Integer
+    Public g_initialYear As Integer = 2010
 
 
     Sub ConnectToDBase()
@@ -840,7 +845,7 @@ Module DBaseInterface
     'These Get Population/GVA functions return large amount of data (every zone/flow/port data for the year), which are not necessary. We can either call these function at the start of each year or improve these function to read specified data (Xucheng)
 #Region "...Get Population..."
 
-    Function get_population_data_by_airportID(ByVal modelrunid As Integer, ByVal year As Integer, ByVal PortID As Integer)
+    Function get_population_data_by_airportID(ByVal year As Integer, ByVal PortID As Integer)
         Dim theSQL As String = ""
 
         If PortID = 1 Then
@@ -852,7 +857,7 @@ Module DBaseInterface
         'If the Demographic data has not been loaded then load it for each zone or port.
         If airDemogArray Is Nothing Then
 
-            theSQL = "SELECT * FROM cdam_get_population_data_by_model_run_id_per_tr_gor(" & modelrunid & "," & year & ",'air',9999) "
+            theSQL = "SELECT * FROM cdam_get_population_data_by_model_run_id_per_tr_gor(" & g_modelRunID & "," & year & ",'air',9999) "
             theSQL &= " AS (scenario_id varchar, year integer, gender varchar, category varchar, value double precision, " & Chr(34) & "GORName" & Chr(34)
             theSQL &= " varchar, gor_id integer, tr_cdam_gor_id integer, "
             theSQL &= Chr(34) & "PortName" & Chr(34) & " varchar, port_id integer);"
@@ -875,7 +880,7 @@ Module DBaseInterface
 
     End Function
 
-    Function get_population_data_by_zoneID(ByVal modelrunid As Integer, ByVal year As Integer, ByVal ZoneID As Integer, ByVal zoneType As String, ByVal type As String, Optional ByVal ODZoneID As Integer = 0)
+    Function get_population_data_by_zoneID(ByVal year As Integer, ByVal ZoneID As Integer, ByVal zoneType As String, ByVal type As String, Optional ByVal ODZoneID As Integer = 0)
         Dim theSQL As String = ""
 
         '    If ZoneID = 1 Then
@@ -890,13 +895,13 @@ Module DBaseInterface
 
         'call different SQL function for zone and for link
         If zoneType = "Zone" Then
-            theSQL = "SELECT * FROM cdam_get_population_data_by_model_run_id_per_tr_zone(" & modelrunid & "," & year & "," & ZoneID & ") "
+            theSQL = "SELECT * FROM cdam_get_population_data_by_model_run_id_per_tr_zone(" & g_modelRunID & "," & year & "," & ZoneID & ") "
             '200115 edit - SQL commented out for next three lines and "9999" changed to "1" in previous line
             'theSQL &= " AS (scenario_id varchar, year integer, gender varchar, category varchar, " & Chr(34) & "DistrictName" & Chr(34)
             'theSQL &= " varchar, zone_id integer, " & Chr(34) & "ZoneName" & Chr(34) & " varchar, district_code varchar, "
             'theSQL &= "value double precision);"
         Else
-            theSQL = "SELECT * FROM cdam_get_population_data_by_model_run_id_per_tr_flow(" & modelrunid & "," & year & "," & type & "," & ZoneID & ") "
+            theSQL = "SELECT * FROM cdam_get_population_data_by_model_run_id_per_tr_flow(" & g_modelRunID & "," & year & "," & type & "," & ZoneID & ") "
             theSQL &= " AS (scenario_id varchar, year integer, gender varchar, category varchar, flow_id integer," & Chr(34) & "PopOZ" & Chr(34)
             theSQL &= " double precision, ozone_id integer, " & Chr(34) & "PopDZ" & Chr(34) & " double precision, "
             theSQL &= "dzone_id integer);"
@@ -939,7 +944,7 @@ Module DBaseInterface
     End Function
 
 
-    Function get_population_data_by_seaportID(ByVal modelrunid As Integer, ByVal year As Integer, ByVal PortID As Integer) As Double
+    Function get_population_data_by_seaportID(ByVal year As Integer, ByVal PortID As Integer) As Double
         Dim theSQL As String = ""
 
         If PortID = 1 Then
@@ -951,7 +956,7 @@ Module DBaseInterface
         'If the Demographic data has not been loaded then load it for each zone or port.
         If seaDemogArray Is Nothing Then
 
-            theSQL = "SELECT * FROM cdam_get_population_data_by_model_run_id_per_tr_gor(" & modelrunid & "," & year & ",'sea',9999) "
+            theSQL = "SELECT * FROM cdam_get_population_data_by_model_run_id_per_tr_gor(" & g_modelRunID & "," & year & ",'sea',9999) "
             theSQL &= " AS (scenario_id varchar, year integer, gender varchar, category varchar, value double precision, " & Chr(34) & "GORName" & Chr(34)
             theSQL &= " varchar, gor_id integer, tr_cdam_gor_id integer, "
             theSQL &= Chr(34) & "PortName" & Chr(34) & " varchar, port_id integer);"
@@ -978,26 +983,17 @@ Module DBaseInterface
 
 #Region "...Get GVA..."
 
-    Function get_gva_data_by_zoneID(ByVal modelrunid As Integer, ByVal year As Integer, ByVal ZoneID As Integer, ByVal zoneType As String, ByVal type As String, Optional ByVal ODZoneID As Integer = 0)
+    Function get_gva_data_by_zoneID(ByVal year As Integer, ByVal ZoneID As Integer, ByVal zoneType As String, ByVal type As String, Optional ByVal ODZoneID As Integer = 0)
         Dim theSQL As String = ""
 
-        'If ZoneID = 1 Then
-        'reset zoneDemogArray value at the beginning of each year
-        '"OZ" has to be called first to avoid errors
-        'If zoneType = "OZ" Or zoneType = "Zone" Then
-        'zoneGVAArray = Nothing
-        'End If
-        'End If
-
-        'If zoneGVAArray Is Nothing Then
-            'call different SQL function for zone and for link
+        'call different SQL function for zone and for link
         If zoneType = "Zone" Then
-            theSQL = "SELECT * FROM cdam_get_economics_data_by_model_run_id_per_tr_zone(" & modelrunid & "," & year & "," & ZoneID & ") "
+            theSQL = "SELECT * FROM cdam_get_economics_data_by_model_run_id_per_tr_zone(" & g_modelRunID & "," & year & "," & ZoneID & ") "
             '200115 change next two lines commented out and "9999" changed to "1" in previous line
             'theSQL &= " AS (economics_scenario_id varchar, year integer, " & Chr(34) & "GOR" & Chr(34)
             'theSQL &= " varchar, zone_id integer, " & Chr(34) & "GVAZ" & Chr(34) & " double precision);"
         Else
-            theSQL = "SELECT * FROM cdam_get_economics_data_by_model_run_id_per_tr_flow(" & modelrunid & "," & year & "," & type & "," & ZoneID & ") "
+            theSQL = "SELECT * FROM cdam_get_economics_data_by_model_run_id_per_tr_flow(" & g_modelRunID & "," & year & "," & type & "," & ZoneID & ") "
             theSQL &= " AS (economics_scenario_id varchar, year integer, flow_id integer," & Chr(34) & "GVAOZ" & Chr(34)
             theSQL &= " double precision, ozone_id integer, " & Chr(34) & "GVADZ" & Chr(34) & " double precision, "
             theSQL &= "dzone_id integer);"
@@ -1039,7 +1035,7 @@ Module DBaseInterface
 
     End Function
 
-    Function get_gva_data_by_airportID(ByVal modelrunid As Integer, ByVal year As Integer, ByVal PortID As Integer)
+    Function get_gva_data_by_airportID(ByVal year As Integer, ByVal PortID As Integer)
         Dim theSQL As String = ""
         Dim i As Integer
 
@@ -1050,7 +1046,7 @@ Module DBaseInterface
 
         If airGVAArray Is Nothing Then
 
-            theSQL = "SELECT * FROM cdam_get_economics_data_by_model_run_id_per_tr_gor(" & modelrunid & "," & year & ",'air', 9999) "
+            theSQL = "SELECT * FROM cdam_get_economics_data_by_model_run_id_per_tr_gor(" & g_modelRunID & "," & year & ",'air', 9999) "
             theSQL &= " AS (scenario_id varchar, year integer," & Chr(34) & "GORName" & Chr(34)
             theSQL &= " varchar, " & Chr(34) & "GVAZ" & Chr(34) & " double precision, tr_cdam_gor_id integer, "
             theSQL &= Chr(34) & "PortName" & Chr(34) & " varchar, port_id integer);"
@@ -1073,7 +1069,7 @@ Module DBaseInterface
 
     End Function
 
-    Function get_gva_data_by_seaportID(ByVal modelrunid As Integer, ByVal year As Integer, ByVal PortID As Integer)
+    Function get_gva_data_by_seaportID(ByVal year As Integer, ByVal PortID As Integer)
         Dim theSQL As String = ""
         Dim i As Integer
 
@@ -1084,7 +1080,7 @@ Module DBaseInterface
 
         If seaGVAArray Is Nothing Then
 
-            theSQL = "SELECT * FROM cdam_get_economics_data_by_model_run_id_per_tr_gor(" & modelrunid & "," & year & ",'sea', 9999) "
+            theSQL = "SELECT * FROM cdam_get_economics_data_by_model_run_id_per_tr_gor(" & g_modelRunID & "," & year & ",'sea', 9999) "
             theSQL &= " AS (scenario_id varchar, year integer," & Chr(34) & "GORName" & Chr(34)
             theSQL &= " varchar, " & Chr(34) & "GVAZ" & Chr(34) & " double precision, tr_cdam_gor_id integer, "
             theSQL &= Chr(34) & "PortName" & Chr(34) & " varchar, port_id integer);"
@@ -1141,7 +1137,9 @@ Module DBaseInterface
 
         If dataArray Is Nothing Then
 
-            theSQL = "SELECT " & id_column & "," & year_column & "," & target_column & " FROM " & Chr(34) & table_name & Chr(34) & " WHERE " & year_column & " = " & year & " ORDER BY " & id_column
+            theSQL = "SELECT " & id_column & "," & year_column & "," & target_column & _
+                        " FROM " & Chr(34) & table_name & Chr(34) & _
+                        " WHERE " & year_column & " = " & year & " AND modelrun_id=" & g_modelRunID & " ORDER BY " & id_column
 
             If LoadSQLDataToArray(dataArray, theSQL) = False Then
                 dataArray = Nothing
@@ -1170,8 +1168,6 @@ Module DBaseInterface
     ' Parameters:   Type - type of data (e.g. Road, Rail)
     '               SubType - subtype of data
     '               Inputrray - array of data to be output
-    '               ModelRunID - used in most WHERE clauses
-    '               IsInitialYear - TRUE - read from initial file, FALSE - read from temp file
     '               Year - current year of the calculation, this is for external variable file to read from the correct line
     '               datatype - variant type of data in array (e.g. string, integer)
     '               Connection - file path - to be replaced with database connection string
@@ -1179,7 +1175,6 @@ Module DBaseInterface
     '****************************************************************************************
 
     Function ReadData(ByVal Type As String, ByVal SubType As String, ByRef InputArray(,) As String,
-                       ByVal ModelRunID As Integer, Optional ByVal IsInitialYear As Boolean = True,
                        Optional ByVal Year As Integer = 0, Optional ByVal datatype As VariantType = VariantType.String,
                        Optional Connection As String = "", Optional whereID As Integer = 0) As Boolean
         Dim TheFileName As String = ""
@@ -1209,165 +1204,190 @@ Module DBaseInterface
             Case "System"
                 Select Case SubType
                     Case "ModelRunDetails"
-                        theSQL = "SELECT * FROM " & Chr(34) & "ISL_ModelRuns" & Chr(34) & " WHERE modelrun_id = " & ModelRunID
-                End Select
-            Case "Scenario"
-                Select Case SubType
-                    Case "Pop by Zone"
-
+                        theSQL = "SELECT * FROM " & Chr(34) & "ISL_ModelRuns" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID
+                    Case Else
+                        'for error handling
                 End Select
             Case "RoadZone"
                 Select Case SubType
                     Case "Input"
-                        'TODO - initial inputs are read from table "TR_I_XXX_Base", should be updated to "TR_I_XXX_Run" once the raw initial input files are import in the database.
-                        If IsInitialYear = True Then
+                        If Year = g_initialYear Then
                             TheFileName = "RoadZoneInputData2010.csv"
-                            theSQL = "SELECT * FROM " & Chr(34) & "TR_I_RoadZone_Base" & Chr(34) & " ORDER BY zone_id"
-                        ElseIf IsInitialYear = False Then
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_Initial_RoadZone" & Chr(34) & " ORDER BY zone_id AND modelrun_id = " & g_modelRunID & " AND year = " & Year
+                        Else
                             TheFileName = FilePrefix & "RoadZoneTemp.csv"
-                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadZone" & Chr(34) & " WHERE modelrun_id = " & ModelRunID & " and year = " & Year - 1
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadZone" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year - 1
                         End If
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "RoadZoneExtVar" & EVFileSuffix & ".csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_O_RoadZoneExternalVariables" & Chr(34) & " WHERE year = " & Year & " ORDER BY zone_id"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadZoneExternalVariables" & Chr(34) & " WHERE year = " & Year & " ORDER BY zone_id AND modelrun_id = " & g_modelRunID
                     Case "NewCap"
                         TheFileName = CapFilePrefix & "RoadZoneCapChange.csv"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RoadZoneCapacityChange" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & "and year = " & Year
                     Case "CapChange"
                         TheFileName = FilePrefix & "RoadZoneCapChange.csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_O_RoadZoneCapacityChange" & Chr(34)
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadZoneCapacityChange" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID
                     Case "Elasticity"
                         TheFileName = "Elasticity Files\TR" & SubStrategy & "\RoadZoneElasticities.csv"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_I_RoadZoneElasticities_Run" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & "and year = " & Year
+                    Case Else
+                        'for error handling
                 End Select
             Case "RoadLink"
                 Select Case SubType
                     Case "Input"
-                        If IsInitialYear = True Then
+                        If Year = g_initialYear Then
                             TheFileName = "RoadInputData2010.csv"
-                            theSQL = "SELECT * FROM " & Chr(34) & "TR_I_RoadInput_Base" & Chr(34) & " WHERE year = " & 2010 & " ORDER BY year, flow_id"
-                        ElseIf IsInitialYear = False Then
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_Initial_RoadLink" & Chr(34) & " WHERE year = " & Year & " AND modelrun_id=" & g_modelRunID & " ORDER BY year, flow_id"
+                        Else
                             TheFileName = FilePrefix & "RoadLinkTemp.csv"
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RailLink" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & "and year = " & Year - 1
                         End If
                     Case "Temp Annual"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadLink_Annual" & Chr(34) & " WHERE modelrun_id = " & ModelRunID & "and year = " & Year - 1
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadLink_Annual" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & "and year = " & Year - 1
                     Case "Temp Hourly"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadLink_Hourly" & Chr(34) & " WHERE modelrun_id = " & ModelRunID & "and year = " & Year - 1
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadLink_Hourly" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & "and year = " & Year - 1
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "ExternalVariables" & EVFileSuffix & ".csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_O_RoadLinkExternalVariables" & Chr(34) & " WHERE year = " & Year & " ORDER BY flow_id"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadLinkExternalVariables" & Chr(34) & " WHERE year = " & Year & " AND modelrun_id=" & g_modelRunID & " ORDER BY flow_id"
                     Case "CapChange"
                         TheFileName = CapFilePrefix & "RoadLinkCapChange.csv"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RoadLinkCapacityChange" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & "and year = " & Year
                     Case "Elasticity"
                         TheFileName = "Elasticity Files\TR" & SubStrategy & "\RoadLinkElasticities.csv"
-                    Case "FreeFlowSpeed"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_I_RoadLinkElasticities_Run" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & "and year = " & Year
+                    Case "FreeFlowSpeeds"
                         'A header has been added to the original file to keep in the same format
                         TheFileName = "FreeFlowSpeedsv0.7.csv"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RoadLink_FreeFlowSpeeds" & Chr(34)
                     Case "DailyProfile"
                         'A header has been added to the original file to keep in the same format
                         TheFileName = "DailyTripProfile.csv"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RoadLink_DailyProfile" & Chr(34)
+                    Case Else
+                        'for error handling
                 End Select
             Case "RailZone"
                 Select Case SubType
                     Case "Input"
-                        If IsInitialYear = True Then
+                        If Year = g_initialYear Then
                             TheFileName = "RailZoneInputData2010.csv"
-                            theSQL = "SELECT * FROM " & Chr(34) & "TR_I_RailZone_Base" & Chr(34) & " WHERE year = " & 2010 & " ORDER BY year, zone_id"
-                        ElseIf IsInitialYear = False Then
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_Initial_RailZone" & Chr(34) & " WHERE year = " & Year & " ORDER BY zone_id"
+                        Else
                             TheFileName = FilePrefix & "RailZoneTemp.csv"
-                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RailZone" & Chr(34) & " WHERE modelrun_id = " & ModelRunID & "and year = " & Year - 1
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RailZone" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & "and year = " & Year - 1
                         End If
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "RailZoneExtVar" & EVFileSuffix & ".csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_O_RailZoneExternalVariables" & Chr(34) & " WHERE year = " & Year & " ORDER BY zone_id"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RailZoneExternalVariables" & Chr(34) & " WHERE year = " & Year & " AND modelrun_id=" & g_modelRunID & " ORDER BY zone_id"
                     Case "CapChange"
                         TheFileName = CapFilePrefix & "RailZoneCapChange.csv"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RailZoneCapacityChange" & Chr(34) & " WHERE  changeyear = " & Year
                     Case "Elasticity"
                         TheFileName = "Elasticity Files\TR" & SubStrategy & "\RailZoneElasticities.csv"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_I_RailZoneElasticities_Run" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & "and year = " & Year
                     Case "ElSchemes"
                         TheFileName = EVFilePrefix & "RailZoneElectrificationDates.csv"
-                        'theSQL = "SELECT * FROM " & Chr(34) & "TR_O_RailZoneElectrificationDates" & Chr(34) & " WHERE modelrun_id = " & ModelRunID
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_O_RailZoneElectrificationDates" & Chr(34)
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RailZoneElectrificationDates" & Chr(34) & " WHERE modelrun_id=" & g_modelRunID
                     Case "EVScale"
                         TheFileName = "RailZoneEVScaling.csv"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RailZone_EVScaling" & Chr(34) & " WHERE year = " & Year
+                    Case Else
+                        'for error handling
                 End Select
             Case "RailLink"
                 Select Case SubType
                     Case "Input"
-                        If IsInitialYear = True Then
+                        If Year = g_initialYear Then
                             TheFileName = "RailLinkInputData2010.csv"
-                            theSQL = "SELECT * FROM " & Chr(34) & "TR_I_RailLink_Run" & Chr(34) & " WHERE year = " & 2010 & " ORDER BY year, flow_id"
-                        ElseIf IsInitialYear = False Then
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_Initial_RailLink" & Chr(34) & " WHERE year = " & Year & " ORDER BY year, flow_id"
+                        Else
                             TheFileName = FilePrefix & "RailLinkTemp.csv"
-                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RailLink" & Chr(34) & " WHERE modelrun_id = " & ModelRunID & "and year = " & Year - 1
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RailLink" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & "and year = " & Year - 1
                         End If
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "RailLinkExtVar" & EVFileSuffix & ".csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_O_RailLinkExternalVariables" & Chr(34) & " WHERE year = " & Year & " ORDER BY flow_id"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RailLinkExternalVariables" & Chr(34) & " WHERE year = " & Year & " AND modelrun_id=" & g_modelRunID & " ORDER BY flow_id"
                     Case "CapChange"
                         TheFileName = CapFilePrefix & "RailLinkCapChange.csv"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RailLinkCapacityChange" & Chr(34) & " WHERE changeyear = " & Year
                     Case "Elasticity"
                         TheFileName = "Elasticity Files\TR" & SubStrategy & "\RailLinkElasticities.csv"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_I_RailLinkElasticities_Run" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & "and year = " & Year
                     Case "ElSchemes"
                         TheFileName = EVFilePrefix & "RailLinkElectrificationDates.csv"
-                        'theSQL = "SELECT * FROM " & Chr(34) & "TR_O_RailLinkElectrificationDates" & Chr(34) & " WHERE modelrun_id = " & ModelRunID
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_O_RailLinkElectrificationDates" & Chr(34)
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RailLinkElectrificationDates" & Chr(34) & " WHERE modelrun_id=" & g_modelRunID & "and year = " & Year
                     Case "EVScale"
                         TheFileName = "RailLinkEVScaling.csv"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RailLink_EVScaling" & Chr(34) & " WHERE year = " & Year
                     Case "OldRlEl"
                         TheFileName = "RailElectrificationSchemes.csv"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RailLink_ElectrificationSchemes"
                     Case "OldRzEl"
                         TheFileName = "RailZoneElectrificationSchemes.csv"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RailZone_ElectrificationSchemes"
+                    Case Else
+                        'for error handling
                 End Select
             Case "Seaport"
                 Select Case SubType
                     Case "Input"
-                        If IsInitialYear = True Then
+                        If Year = g_initialYear Then
                             TheFileName = "SeaFreightInputData.csv"
-                            theSQL = "SELECT * FROM " & Chr(34) & "TR_I_SeaFreight_Base" & Chr(34) & " WHERE year = " & 2010 & " ORDER BY year, port_id"
-                        ElseIf IsInitialYear = False Then
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_Initial_SeaFreight" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " AND year = " & Year & " ORDER BY port_id"
+                        Else
                             TheFileName = FilePrefix & "SeaTemplate.csv"
-                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_SeaFreight" & Chr(34) & " WHERE modelrun_id = " & ModelRunID & "and year = " & Year - 1
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_SeaFreight" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & "and year = " & Year - 1
                         End If
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "SeaFreightExtVar" & EVFileSuffix & ".csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_O_SeaFreightExternalVariables" & Chr(34) & " WHERE year = " & Year
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_SeaFreightExternalVariables" & Chr(34) & " WHERE year = " & Year & " AND modelrun_id=" & g_modelRunID
                     Case "CapChange"
                         TheFileName = CapFilePrefix & "SeaFreightCapChange.csv"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_SeaFreightCapacityChange" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & "and year = " & Year
                     Case "Elasticity"
                         TheFileName = "Elasticity Files\TR" & SubStrategy & "\SeaFreightElasticities.csv"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_I_SeaFreightElasticities_Run" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & "and year = " & Year
                     Case Else
                         'for error handling
                 End Select
             Case "AirNode"
                 Select Case SubType
                     Case "Input"
-                        If IsInitialYear = True Then
+                        If Year = g_initialYear Then
                             TheFileName = "AirNodeInputData2010.csv"
-                            theSQL = "SELECT * FROM " & Chr(34) & "TR_I_AirNode_Base" & Chr(34) & " WHERE year = " & 2010 & " ORDER BY year, airport_id"
-                        ElseIf IsInitialYear = False Then
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_Initial_AirNode" & Chr(34) & " WHERE year = " & 2010 & " AND modelrun_id=" & g_modelRunID & " ORDER BY year, airport_id"
+                        Else
                             TheFileName = FilePrefix & "AirNodeTemp.csv"
-                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_AirNode" & Chr(34) & " WHERE modelrun_id = " & ModelRunID & "and year = " & Year - 1
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_AirNode" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & "and year = " & Year - 1
                         End If
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "AirNodeExtVar" & EVFileSuffix & ".csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_O_AirNodeExternalVariables" & Chr(34) & " WHERE year = " & Year
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_AirNodeExternalVariables" & Chr(34) & " AND modelrun_id=" & g_modelRunID & " WHERE year = " & Year
                     Case "CapChange"
                         TheFileName = CapFilePrefix & "AirNodeCapChange.csv"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_AirNodeCapacityChange" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & "and year = " & Year
                     Case "Elasticity"
                         TheFileName = "Elasticity Files\TR" & SubStrategy & "\AirElasticities.csv"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_I_AirElasticities_Run" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & "and year = " & Year
+                    Case Else
+                        'for error handling
                 End Select
             Case "AirFlow"
                 Select Case SubType
                     Case "Input"
-                        If IsInitialYear = True Then
+                        If Year = g_initialYear Then
                             TheFileName = "AirFlowInputData2010.csv"
-                            theSQL = "SELECT * FROM " & Chr(34) & "TR_I_AirFlow_Base" & Chr(34) & " WHERE year = " & 2010 & " ORDER BY year, flow_id"
-                        ElseIf IsInitialYear = False Then
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_Initial_AirFlow" & Chr(34) & " WHERE year = " & 2010 & " ORDER BY year, flow_id"
+                        Else
                             TheFileName = FilePrefix & "AirFlowTemp.csv"
-                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_AirFlow" & Chr(34) & " WHERE modelrun_id = " & ModelRunID & "and year = " & Year - 1
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_AirFlow" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & "and year = " & Year - 1
                         End If
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "AirFlowExtVar.csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_O_AirFlowExternalVariables" & Chr(34) & " WHERE year = " & Year
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_AirFlowExternalVariables" & Chr(34) & " AND modelrun_id=" & g_modelRunID & " WHERE year = " & Year
+                    Case Else
+                        'for error handling
                 End Select
             Case "SubStrategy"
                 TheFileName = "CommonVariablesTR" & SubStrategy & ".csv"
@@ -1433,7 +1453,7 @@ Module DBaseInterface
 
             DataRead.Close()
 
-            If IsInitialYear = False Then
+            If g_modelRunYear = g_initialYear Then
                 'delete the temp file to recreate for current year
                 System.IO.File.Delete(Connection & TheFileName)
             End If
@@ -1558,13 +1578,13 @@ Module DBaseInterface
                         header = "modelrun_id, year, zone_id, Speed, Vkm, VKmMway, RVCatTraf_1_1, RVCatTraf_1_2, RVCatTraf_1_3, RVCatTraf_1_4, RVCatTraf_1_5, VKmRurA, RVCatTraf_2_1, RVCatTraf_2_2, RVCatTraf_2_3, RVCatTraf_2_4, RVCatTraf_2_5, VKmRurMin, RVCatTraf_3_1, RVCatTraf_3_2, RVCatTraf_3_3, RVCatTraf_3_4, RVCatTraf_3_5, VKmUrb, RVCatTraf_4_1, RVCatTraf_4_2, RVCatTraf_4_3, RVCatTraf_4_4, RVCatTraf_4_5, SuppressedTraffic_1_1, SuppressedTraffic_1_2, SuppressedTraffic_1_3, SuppressedTraffic_1_4, SuppressedTraffic_2_1, SuppressedTraffic_2_2, SuppressedTraffic_2_3, SuppressedTraffic_2_4, SuppressedTraffic_3_1, SuppressedTraffic_3_2, SuppressedTraffic_3_3, SuppressedTraffic_3_4, SuppressedTraffic_4_1, SuppressedTraffic_4_2, SuppressedTraffic_4_3, SuppressedTraffic_4_4, SpdMWay, SpdRurA, SpdRurMin, SpdUrb, LatentVkm1, LatentVkm2, LatentVkm3, LatentVkm4, AddedLaneKm1, AddedLaneKm2, AddedLaneKm3, AddedLaneKm4, BuiltLaneKm1, BuiltLaneKm2, BuiltLaneKm3, BuiltLaneKm4"
                     Case "ExtVar"
                         ToSQL = True
-                        TableName = "TR_O_RoadZoneExternalVariables"
+                        TableName = "TR_IO_RoadZoneExternalVariables"
                         OutFileName = EVFilePrefix & "RoadZoneExtVar.csv"
                         'header = "Yeary,ZoneID,PopZy,GVAZy,Costy,LaneKm,LKmMway,LKmRurAD,LKmRurAS,LKmRurMin,LKmUrbD,LKmUrbS,PCar,DCar,ECar,PLGV,DLGV,ELGV,DHGV,EHGV,DPSV,EPSV,PBike,EBike,FCBike,PHCar,DHCar,PECar,HCar,FCCar,DHLGV,PELGV,LLGV,CLGV,DHPSV,PEPSV,LPSV,CPSV,FCPSV,DHHGV,HHGV,FCHGV"
                         header = "modelrun_id, zone_id, year, PopZ, GVAZ, Cost, LaneKm, LKmMway, LKmRurAD, LKmRurAS, LKmRurMin, LKmUrbD, LKmUrbS, PCar, DCar, ECar, PLGV, DLGV, ELGV, DHGV, EHGV, DPSV, EPSV, PBike, EBike, FCBike, PHCar, DHCar, PECar, HCar, FCCar, DHLGV, PELGV, LLGV, CLGV, DHPSV, PEPSV, LPSV, CPSV, FCPSV, DHHGV, HHGV, FCHGV, LGVCost, HGV1Cost, HGV2Cost, PSVCost"
                     Case "RoadZoneCapChange"
                         ToSQL = True
-                        TableName = "TR_O_RoadZoneCapacityChange"
+                        TableName = "TR_IO_RoadZoneCapacityChange"
                         OutFileName = EVFilePrefix & "RoadZoneCapChange.csv"
                         header = "modelrun_id, zone_id, changeyear, MWayLaneKmCh, RurADLaneKmCh, RurASLaneKmCh, RurMLaneKmCh, UrbDLaneKmCh, UrbSLaneKmCh"
                     Case "RoadZoneNewCap"
@@ -1637,7 +1657,7 @@ Module DBaseInterface
                         Next
                     Case "ExtVar"
                         ToSQL = True
-                        TableName = "TR_O_RoadLinkExternalVariables"
+                        TableName = "TR_IO_RoadLinkExternalVariables"
                         OutFileName = EVFilePrefix & "ExternalVariables.csv"
                         header = "modelrun_id, flow_id, year, PopZ1, PopZ2, GVAZ1, GVAZ2, MLanes, DLanes, SLanes, MaxCapM, MaxCapD, MaxCapS, M1Cost, M2Cost, M3Cost, M4Cost, M5Cost, M6Cost, D1Cost, D2Cost, D3Cost, D4Cost, D5Cost, D6Cost, S1Cost, S2Cost, S3Cost, S4Cost, S5Cost, S6Cost, S7Cost, S8Cost"
                     Case "NewCap"
@@ -1665,7 +1685,7 @@ Module DBaseInterface
                         header = "modelrun_id, year, zone_id, TripsStat, FareE"
                     Case "ExtVar"
                         ToSQL = True
-                        TableName = "TR_O_RailZoneExternalVariables"
+                        TableName = "TR_IO_RailZoneExternalVariables"
                         OutFileName = EVFilePrefix & "RailZoneExtVar.csv"
                         'header = "Yeary,ZoneID,PopZy,GvaZy,Costy,Stationsy,CarFuely,NewTripsy,GJTy,ElPy"
                         header = "modelrun_id, zone_id, year, PopZ, GvaZ, Cost, Stations, CarFuel, NewTrips, GJT, ElP"
@@ -1686,7 +1706,7 @@ Module DBaseInterface
                         header = "modelrun_id, year, flow_id, Delays, Cost, Trains, Tracks, MaxTDBase, CUOld, CUNew, BusyTrains, BusyPer, ModelPeakHeadway, CalculationCheck"
                     Case "ExtVar"
                         ToSQL = True
-                        TableName = "TR_O_RailLinkExternalVariables"
+                        TableName = "TR_IO_RailLinkExternalVariables"
                         OutFileName = EVFilePrefix & "RailLinkExtVar.csv"
                         header = "modelrun_id, flow_id, year, Tracks, PopZ1, PopZ2, GVAZ1, GVAZ2, Cost, CarFuel, MaxTD, ElP, ElTracks, AddTrains"
                     Case "NewCap"
@@ -1786,7 +1806,7 @@ Module DBaseInterface
                         header = "modelrun_id, year, flow_id, Trips, FlowKm, AirFlowTripsLatent, AirFlowCapConstant0, AirFlowCapConstant1"
                     Case "ExtVar"
                         ToSQL = True
-                        TableName = "TR_O_AirFlowExternalVariables"
+                        TableName = "TR_IO_AirFlowExternalVariables"
                         OutFileName = EVFilePrefix & "AirFlowExtVar.csv"
                         header = "modelrun_id, year, flow_id, PopOZ, PopDZ, GVAOZ, GVADZ, Cost"
                 End Select

@@ -130,14 +130,14 @@
         Do Until YearNum > StartYear + Duration
 
             'load external variables
-            Call ReadData("RoadLink", "ExtVar", ExternalValues, modelRunID, , YearNum)
+            Call ReadData("RoadLink", "ExtVar", ExternalValues, g_modelRunYear)
 
             'read from initial file if year 1, otherwise update from temp file
-            If YearNum = 1 Then
-                Call ReadData("RoadLink", "Input", InputArray, modelRunID, True)
+            If g_modelRunYear = g_initialYear Then
+                Call ReadData("RoadLink", "Input", InputArray, g_modelRunYear)
             Else
-                Call ReadData("RoadLink", "Temp Annual", TempAnArray, modelRunID, False, YearNum)
-                Call ReadData("RoadLink", "Temp Hourly", TempHArray, modelRunID, False, YearNum)
+                Call ReadData("RoadLink", "Temp Annual", TempAnArray, g_modelRunYear)
+                Call ReadData("RoadLink", "Temp Hourly", TempHArray, g_modelRunYear)
             End If
 
             link = 1
@@ -212,28 +212,8 @@
     Sub SetFiles()
         Dim stratarray(90, 95) As String
 
-
-        'read free flow speed data
-        FreeFlowSpeeds(1, 0) = 68
-        FreeFlowSpeeds(1, 1) = 69
-        FreeFlowSpeeds(1, 2) = 69
-        FreeFlowSpeeds(1, 3) = 61
-        FreeFlowSpeeds(1, 4) = 61
-        FreeFlowSpeeds(1, 5) = 54
-        FreeFlowSpeeds(1, 6) = 69
-        FreeFlowSpeeds(1, 7) = 68
-        FreeFlowSpeeds(1, 8) = 68
-        FreeFlowSpeeds(1, 9) = 60
-        FreeFlowSpeeds(1, 10) = 60
-        FreeFlowSpeeds(1, 11) = 53
-        FreeFlowSpeeds(1, 12) = 52
-        FreeFlowSpeeds(1, 13) = 47
-        FreeFlowSpeeds(1, 14) = 48
-        FreeFlowSpeeds(1, 15) = 45
-        FreeFlowSpeeds(1, 16) = 46
-        FreeFlowSpeeds(1, 17) = 42
-        FreeFlowSpeeds(1, 18) = 43
-        FreeFlowSpeeds(1, 19) = 44
+        'load the time profiles from database
+        Call ReadData("RoadLink", "FreeFlowSpeeds", FreeFlowSpeeds, g_modelRunYear)
 
         If UpdateExtVars = True Then
             If NewRdLCap = True Then
@@ -245,12 +225,12 @@
 
 
         'load the elasticities
-        Call ReadData("RoadLink", "Elasticity", RoadEls, modelRunID)
+        Call ReadData("RoadLink", "Elasticity", RoadEls, g_modelRunYear)
 
         'if using variable trip rates then set up the trip rate variable
         If TripRates = "SubStrategy" Then
             'get the strat values
-            Call ReadData("SubStrategy", "", stratarray, modelRunID)
+            Call ReadData("SubStrategy", "", stratarray)
             For r = 1 To 90
                 RdTripRates(0, r) = stratarray(r, 91)
                 RdTripRates(1, r) = stratarray(r, 92)
@@ -261,31 +241,10 @@
 
     Sub DailyProfile()
         'sets up an array giving the proportion of trips made in each hour of the day
-        TimeProfile(1, 0) = 0.002311731
-        TimeProfile(1, 1) = 0.000851411
-        TimeProfile(1, 2) = 0.000380483
-        TimeProfile(1, 3) = 0.000545189
-        TimeProfile(1, 4) = 0.001517647
-        TimeProfile(1, 5) = 0.0075728
-        TimeProfile(1, 6) = 0.021769267
-        TimeProfile(1, 7) = 0.060988724
-        TimeProfile(1, 8) = 0.103219878
-        TimeProfile(1, 9) = 0.068846733
-        TimeProfile(1, 10) = 0.054557509
-        TimeProfile(1, 11) = 0.057086921
-        TimeProfile(1, 12) = 0.059255707
-        TimeProfile(1, 13) = 0.055765601
-        TimeProfile(1, 14) = 0.058740984
-        TimeProfile(1, 15) = 0.075171658
-        TimeProfile(1, 16) = 0.084500595
-        TimeProfile(1, 17) = 0.096034906
-        TimeProfile(1, 18) = 0.070378729
-        TimeProfile(1, 19) = 0.04767223
-        TimeProfile(1, 20) = 0.028124521
-        TimeProfile(1, 21) = 0.021275761
-        TimeProfile(1, 22) = 0.015110714
-        TimeProfile(1, 23) = 0.008320301
 
+        'load the time profiles from database
+        Call ReadData("RoadLink", "DailyProfile", TimeProfile, g_modelRunYear)
+        
         Dim d As Byte
 
         d = 0
@@ -301,9 +260,7 @@
         Dim varnum As Long
         Dim i As Long
         Dim hrow As Integer
-        Dim Zone1ID As Integer
-        Dim Zone2ID As Integer
-
+ 
         If YearNum = 1 Then
             'read base year (year 0) data
             FlowID(link, 1) = InputArray(link, 4)
@@ -338,10 +295,10 @@
             SpeedCatFlows(link, 17) = InputArray(link, 29)
             SpeedCatFlows(link, 18) = InputArray(link, 30)
             SpeedCatFlows(link, 19) = InputArray(link, 31)
-            Z1Pop(link, 1) = get_population_data_by_zoneID(modelRunID, YearNum + 2009, FlowID(link, 1), "OZ", "'road'", Zone1(link, 1))
-            Z2Pop(link, 1) = get_population_data_by_zoneID(modelRunID, YearNum + 2009, FlowID(link, 1), "DZ", "'road'", Zone2(link, 1))
-            Z1GVA(link, 1) = get_gva_data_by_zoneID(modelRunID, YearNum + 2009, FlowID(link, 1), "OZ", "'road'", Zone1(link, 1))
-            Z2GVA(link, 1) = get_gva_data_by_zoneID(modelRunID, YearNum + 2009, FlowID(link, 1), "DZ", "'road'", Zone2(link, 1))
+            Z1Pop(link, 1) = get_population_data_by_zoneID(g_modelRunYear, FlowID(link, 1), "OZ", "'road'", Zone1(link, 1))
+            Z2Pop(link, 1) = get_population_data_by_zoneID(g_modelRunYear, FlowID(link, 1), "DZ", "'road'", Zone2(link, 1))
+            Z1GVA(link, 1) = get_gva_data_by_zoneID(g_modelRunYear, FlowID(link, 1), "OZ", "'road'", Zone1(link, 1))
+            Z2GVA(link, 1) = get_gva_data_by_zoneID(g_modelRunYear, FlowID(link, 1), "DZ", "'road'", Zone2(link, 1))
             '24 hours for category 0
             For c = 0 To 24
                 CostOld(link, 0, c) = InputArray(link, 32)
@@ -441,10 +398,10 @@
             'get zone1 ID and zone2 ID
             get_zone_by_flowid(FlowID(link, 1), Zone1(link, 1), Zone2(link, 1), "road")
             'Get Population and GVA data
-            Z1Pop(link, 1) = get_population_data_by_zoneID(modelRunID, YearNum + 2009, FlowID(link, 1), "OZ", "'road'", Zone1(link, 1))
-            Z2Pop(link, 1) = get_population_data_by_zoneID(modelRunID, YearNum + 2009, FlowID(link, 1), "DZ", "'road'", Zone2(link, 1))
-            Z1GVA(link, 1) = get_gva_data_by_zoneID(modelRunID, YearNum + 2009, FlowID(link, 1), "OZ", "'road'", Zone1(link, 1))
-            Z2GVA(link, 1) = get_gva_data_by_zoneID(modelRunID, YearNum + 2009, FlowID(link, 1), "DZ", "'road'", Zone2(link, 1))
+            Z1Pop(link, 1) = get_population_data_by_zoneID(g_modelRunYear, FlowID(link, 1), "OZ", "'road'", Zone1(link, 1))
+            Z2Pop(link, 1) = get_population_data_by_zoneID(g_modelRunYear, FlowID(link, 1), "DZ", "'road'", Zone2(link, 1))
+            Z1GVA(link, 1) = get_gva_data_by_zoneID(g_modelRunYear, FlowID(link, 1), "OZ", "'road'", Zone1(link, 1))
+            Z2GVA(link, 1) = get_gva_data_by_zoneID(g_modelRunYear, FlowID(link, 1), "DZ", "'road'", Zone2(link, 1))
 
 
 
@@ -1379,7 +1336,7 @@
         Dim hrow As Integer
 
         'write to output array
-        OutputArray(link, 0) = modelRunID
+        OutputArray(link, 0) = g_modelRunID
         OutputArray(link, 1) = FlowID(link, 1)
         OutputArray(link, 2) = YearNum
         OutputArray(link, 3) = TotalFlowNew
@@ -1513,7 +1470,7 @@
         End If
 
         'write to Temp Annual array
-        TempAnArray(link, 0) = modelRunID
+        TempAnArray(link, 0) = g_modelRunID
         TempAnArray(link, 1) = YearNum
         TempAnArray(link, 2) = FlowID(link, 1)
         TempAnArray(link, 3) = RoadTypeLanes(link, 0)
@@ -1539,7 +1496,7 @@
             'work out the row number for the hourly data
             hrow = (link - 1) * 24 + h + 1
             'write to TempFlow array
-            TempHArray(hrow, 0) = modelRunID
+            TempHArray(hrow, 0) = g_modelRunID
             TempHArray(hrow, 1) = YearNum
             TempHArray(hrow, 2) = FlowID(link, 1)
             TempHArray(hrow, 3) = h + 1

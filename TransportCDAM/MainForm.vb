@@ -11,7 +11,6 @@
             FilePrefix = System.DateTime.Now.Millisecond
         End If
 
-        'Call FullMain()
         'Just use dummy values for ModelRunID and Year for now
         Call runCDAM(1, StartYear)
 
@@ -221,8 +220,8 @@
         If FilePrefix = "" Then
             FilePrefix = System.DateTime.Now
         End If
-        modelRunYear = 2010
-        Call runCDAM(1, StartYear)
+
+        Call runCDAM(1, 2010)
         End
     End Sub
 
@@ -236,8 +235,8 @@
         If FilePrefix = "" Then
             FilePrefix = System.DateTime.Now
         End If
-        modelRunYear = 2010
-        Call runCDAM(1, StartYear)
+
+        Call runCDAM(1, 2010)
         End
     End Sub
 
@@ -371,8 +370,8 @@
         If FilePrefix = "" Then
             FilePrefix = System.DateTime.Now
         End If
-        modelRunYear = 2010
-        Call runCDAM(1, StartYear)
+
+        Call runCDAM(1, 2010)
         End
     End Sub
 
@@ -386,8 +385,7 @@
         If FilePrefix = "" Then
             FilePrefix = System.DateTime.Now
         End If
-        modelRunYear = 2010
-        Call runCDAM(1, StartYear)
+        Call runCDAM(1, 2010)
         End
     End Sub
 

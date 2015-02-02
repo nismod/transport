@@ -1,4 +1,6 @@
-﻿Module AirModel
+﻿Option Explicit On
+
+Module AirModel
     'v1.2 fuel consumption estimation added
     'this version works, and is dependent on the Full CDAM module for file path definitions
     'it now also allows for variable elasticities over time, specified via input file
@@ -115,21 +117,21 @@
 
             'read from initial file if year 1, otherwise update from temp file
             If YearNum = 1 Then
-                Call ReadData("AirNode", "Input", NodeInputArray, modelRunID, True)
-                Call ReadData("AirFlow", "Input", FlowInputArray, modelRunID, True)
+                Call ReadData("AirNode", "Input", NodeInputArray, g_modelRunYear)
+                Call ReadData("AirFlow", "Input", FlowInputArray, g_modelRunYear)
 
             Else
-                Call ReadData("AirNode", "Input", NodeInputArray, modelRunID, False, YearNum)
-                Call ReadData("AirFlow", "Input", FlowInputArray, modelRunID, False, YearNum)
+                Call ReadData("AirNode", "Input", NodeInputArray, g_modelRunYear)
+                Call ReadData("AirFlow", "Input", FlowInputArray, g_modelRunYear)
             End If
 
             'get external variables for this year
-            Call ReadData("AirNode", "ExtVar", AirportExtVar, modelRunID, , YearNum)
-            Call ReadData("AirFlow", "ExtVar", AirFlowExtVar, modelRunID, , YearNum)
+            Call ReadData("AirNode", "ExtVar", AirportExtVar, g_modelRunYear)
+            Call ReadData("AirFlow", "ExtVar", AirFlowExtVar, g_modelRunYear)
 
             'read previous years external variable value as base values
-            Call ReadData("AirNode", "ExtVar", NodePreExtVar, modelRunID, , YearNum - 1)
-            Call ReadData("AirFlow", "ExtVar", FlowPreExtVar, modelRunID, , YearNum - 1)
+            Call ReadData("AirNode", "ExtVar", NodePreExtVar, g_modelRunYear - 1)
+            Call ReadData("AirFlow", "ExtVar", FlowPreExtVar, g_modelRunYear - 1)
 
 
             'run air node model
@@ -221,11 +223,11 @@
         End If
 
         'get the elasticity values
-        Call ReadData("AirNode", "Elasticity", AirEl, modelRunID)
+        Call ReadData("AirNode", "Elasticity", AirEl, g_modelRunYear)
 
         If TripRates = "SubStrategy" Then
             'read from the strategy file
-            Call ReadData("SubStrategy", "", stratarray, modelRunID)
+            Call ReadData("SubStrategy", "", stratarray, g_modelRunYear)
             For r = 1 To 90
                 AirTripRates(r) = stratarray(r, 94)
             Next
@@ -249,8 +251,8 @@
                 For AirportField = 1 To 5
                     AirportBaseData(AirportCount, AirportField) = NodeInputArray(AirportCount, AirportField + 4)
                 Next
-                AirportBaseData(AirportCount, 6) = get_population_data_by_airportID(modelRunID, YearNum + 2009, AirNodeID(AirportCount, 0))
-                AirportBaseData(AirportCount, 7) = get_gva_data_by_airportID(modelRunID, YearNum + 2009, AirNodeID(AirportCount, 0))
+                AirportBaseData(AirportCount, 6) = get_population_data_by_airportID(g_modelRunYear, AirNodeID(AirportCount, 0))
+                AirportBaseData(AirportCount, 7) = get_gva_data_by_airportID(g_modelRunYear, AirNodeID(AirportCount, 0))
                 For AirportField = 8 To 13
                     AirportBaseData(AirportCount, AirportField) = NodeInputArray(AirportCount, AirportField + 2)
                 Next
@@ -464,10 +466,10 @@
                 Next
                 OZoneID = FlowInputArray(AirportCount, 10)
                 DZoneID = FlowInputArray(AirportCount, 11)
-                AirFlowBaseData(AirportCount, 4) = get_population_data_by_zoneID(modelRunID, YearNum + 2009, AirFlowID(AirportCount, 0), "OZ", "'air'", OZoneID)
-                AirFlowBaseData(AirportCount, 5) = get_population_data_by_zoneID(modelRunID, YearNum + 2009, AirFlowID(AirportCount, 0), "DZ", "'air'", DZoneID)
-                AirFlowBaseData(AirportCount, 6) = get_gva_data_by_zoneID(modelRunID, YearNum + 2009, AirFlowID(AirportCount, 0), "OZ", "'air'", OZoneID)
-                AirFlowBaseData(AirportCount, 7) = get_gva_data_by_zoneID(modelRunID, YearNum + 2009, AirFlowID(AirportCount, 0), "DZ", "'air'", DZoneID)
+                AirFlowBaseData(AirportCount, 4) = get_population_data_by_zoneID(g_modelRunYear, AirFlowID(AirportCount, 0), "OZ", "'air'", OZoneID)
+                AirFlowBaseData(AirportCount, 5) = get_population_data_by_zoneID(g_modelRunYear, AirFlowID(AirportCount, 0), "DZ", "'air'", DZoneID)
+                AirFlowBaseData(AirportCount, 6) = get_gva_data_by_zoneID(g_modelRunYear, AirFlowID(AirportCount, 0), "OZ", "'air'", OZoneID)
+                AirFlowBaseData(AirportCount, 7) = get_gva_data_by_zoneID(g_modelRunYear, AirFlowID(AirportCount, 0), "DZ", "'air'", DZoneID)
                 For AirportField = 8 To 9
                     AirFlowBaseData(AirportCount, AirportField) = FlowInputArray(AirportCount, AirportField)
                 Next
@@ -1071,7 +1073,7 @@
         'loop through all airports writing values to the output files
         Do While aircount < 29
             'concatenate the output row for the node file
-            NodeOutputArray(aircount, 0) = modelRunID
+            NodeOutputArray(aircount, 0) = g_modelRunID
             NodeOutputArray(aircount, 1) = AirNodeID(aircount, 0)
             NodeOutputArray(aircount, 2) = YearNum
             NodeOutputArray(aircount, 3) = AirpPass(aircount)
@@ -1085,7 +1087,7 @@
         'loop through all flows writing values to the output files
         Do Until flownum > MaxAirFlow
             'concatenate the output row for the flow file
-            FlowOutputArray(flownum, 0) = modelRunID
+            FlowOutputArray(flownum, 0) = g_modelRunID
             FlowOutputArray(flownum, 1) = AirFlowID(flownum, 0)
             FlowOutputArray(flownum, 2) = YearNum
             FlowOutputArray(flownum, 3) = AirfTripsNew(flownum)
@@ -1157,7 +1159,7 @@
                 End If
             End If
             'write to temp file
-            NodeTempArray(aircount, 0) = modelRunID
+            NodeTempArray(aircount, 0) = g_modelRunID
             NodeTempArray(aircount, 1) = YearNum
             NodeTempArray(aircount, 2) = AirNodeID(aircount, 0)
             For x = 1 To 3
@@ -1181,7 +1183,7 @@
             AirFlowBaseData(flownum, 8) = CDbl(AirFlowExtVar(flownum, 8)) + FlowCharge(aircount)
 
             'write to temp
-            FlowTempArray(flownum, 0) = modelRunID
+            FlowTempArray(flownum, 0) = g_modelRunID
             FlowTempArray(flownum, 1) = YearNum
             FlowTempArray(flownum, 2) = AirFlowID(flownum, 0)
             FlowTempArray(flownum, 3) = AirFlowBaseData(flownum, 3)

@@ -175,7 +175,7 @@
             sortedline = sortarray(v)
             splitline = Split(sortedline, "&")
             arraynum = splitline(2)
-            NewCapArray(v + 1, 0) = modelRunID
+            NewCapArray(v + 1, 0) = g_modelRunID
             NewCapArray(v + 1, 1) = NewCapDetails(arraynum, 1)
             NewCapArray(v + 1, 2) = NewCapDetails(arraynum, 0)
             NewCapArray(v + 1, 3) = NewCapDetails(arraynum, 2)
@@ -206,23 +206,23 @@
     Sub GetFiles()
 
         'read initial input data
-        Call ReadData("RoadLink", "Input", InputArray, modelRunID, True)
+        Call ReadData("RoadLink", "Input", InputArray, g_modelRunYear)
 
 
 
         'if capacity is changing then get capacity change file
         'v1.3 do this anyway to include compulsory changes
         'now read from database
-        Call ReadData("RoadLink", "CapChange", CapArray, modelRunID)
+        Call ReadData("RoadLink", "CapChange", CapArray, g_modelRunYear)
 
 
         '1.3 get the strategy file
         'open the strategy file
-        Call ReadData("SubStrategy", "", stratarray, modelRunID)
+        Call ReadData("SubStrategy", "", stratarray)
 
         If RdLEneSource = "Database" Then
             'v1.4 altered so that scenario file is read directly as an input file
-            Call ReadData("Energy", "", enearray, modelRunID)
+            Call ReadData("Energy", "", enearray, g_modelRunYear)
         End If
     End Sub
 
@@ -425,10 +425,10 @@
                     FlowID(InputCount, 1) = InputArray(InputCount, 4)
                     OZone(InputCount, 1) = InputArray(InputCount, 5)
                     DZone(InputCount, 1) = InputArray(InputCount, 6)
-                    Pop1Old(InputCount, 1) = get_population_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 1), "OZ", "'road'")
-                    Pop2Old(InputCount, 1) = get_population_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 1), "DZ", "'road'")
-                    GVA1Old(InputCount, 1) = get_gva_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 1), "OZ", "'road'")
-                    GVA2Old(InputCount, 1) = get_gva_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 1), "DZ", "'road'")
+                    Pop1Old(InputCount, 1) = get_population_data_by_zoneID(g_modelRunYear, FlowID(InputCount, 1), "OZ", "'road'")
+                    Pop2Old(InputCount, 1) = get_population_data_by_zoneID(g_modelRunYear, FlowID(InputCount, 1), "DZ", "'road'")
+                    GVA1Old(InputCount, 1) = get_gva_data_by_zoneID(g_modelRunYear, FlowID(InputCount, 1), "OZ", "'road'")
+                    GVA2Old(InputCount, 1) = get_gva_data_by_zoneID(g_modelRunYear, FlowID(InputCount, 1), "DZ", "'road'")
 
                     CostsOld(InputCount, 0) = InputArray(InputCount, 32)
                     MLanes(InputCount, 1) = InputArray(InputCount, 8)
@@ -466,8 +466,8 @@
                     'now modified as population data available up to 2100 - so should never need 'else'
                     'v1.9 now read by using database function
                     If Year < 91 Then
-                        Pop1New = get_population_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 1), "OZ", "'road'")
-                        Pop2New = get_population_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 1), "DZ", "'road'")
+                        Pop1New = get_population_data_by_zoneID(g_modelRunYear, FlowID(InputCount, 1), "OZ", "'road'")
+                        Pop2New = get_population_data_by_zoneID(g_modelRunYear, FlowID(InputCount, 1), "DZ", "'road'")
                     Else
                         Pop1New = Pop1Old(InputCount, 1)
                         Pop2New = Pop2Old(InputCount, 1)
@@ -484,8 +484,8 @@
                     'v1.9 now read by using database function
                     'database does not have gva forecasts after year 2050, and the calculation is only available before year 2050
                     If Year < 91 Then
-                        GVA1New = get_gva_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 1), "OZ", "'road'")
-                        GVA2New = get_gva_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 1), "DZ", "'road'")
+                        GVA1New = get_gva_data_by_zoneID(g_modelRunYear, FlowID(InputCount, 1), "OZ", "'road'")
+                        GVA2New = get_gva_data_by_zoneID(g_modelRunYear, FlowID(InputCount, 1), "DZ", "'road'")
                     Else
                         GVA1New = GVA1Old(InputCount, 1)
                         GVA2New = GVA2Old(InputCount, 1)
@@ -811,7 +811,7 @@
 
 
                 'write to output file
-                OutputArray(InputCount, 0) = modelRunID
+                OutputArray(InputCount, 0) = g_modelRunID
                 OutputArray(InputCount, 1) = FlowID(InputCount, 1)
                 OutputArray(InputCount, 2) = Year
                 OutputArray(InputCount, 3) = Pop1New

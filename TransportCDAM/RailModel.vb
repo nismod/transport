@@ -82,14 +82,10 @@ Module RailModel
             NewCapNum = 1
 
             'get external variables for this year
-            Call ReadData("RailLink", "ExtVar", RlLinkExtVars, modelRunID, , YearNum)
+            Call ReadData("RailLink", "ExtVar", RlLinkExtVars, g_modelRunYear)
 
             'read from initial file if year 1, otherwise update from temp table
-            If YearNum = 1 Then
-                Call ReadData("RailLink", "Input", InputArray, modelRunID, True)
-            Else
-                Call ReadData("RailLink", "Input", InputArray, modelRunID, False, YearNum)
-            End If
+            Call ReadData("RailLink", "Input", InputArray, g_modelRunYear)
 
             InputCount = 1
 
@@ -157,7 +153,7 @@ Module RailModel
 
         'Write fuel consumption output file
         For y = StartYear To StartYear + Duration
-            FuelString(y, 0) = modelRunID
+            FuelString(y, 0) = g_modelRunID
             FuelString(y, 1) = y
             FuelString(y, 2) = FuelUsed(y, 0)
             FuelString(y, 3) = FuelUsed(y, 1)
@@ -180,12 +176,12 @@ Module RailModel
         End If
 
         'get the elasticity values
-        Call ReadData("RailLink", "Elasticity", RlLinkEl, modelRunID)
+        Call ReadData("RailLink", "Elasticity", RlLinkEl, g_modelRunYear)
 
 
         'get fuel efficiency data from strategy file
         'also get trip rate info
-        Call ReadData("SubStrategy", "", stratarray, modelRunID)
+        Call ReadData("SubStrategy", "", stratarray)
         yearchecker = 1
         Do Until yearchecker > 90
             RlFuelEff(yearchecker, 0) = stratarray(yearchecker, 67)
@@ -208,10 +204,10 @@ Module RailModel
             OldTracks(InputCount, 0) = InputArray(InputCount, 7)
             OldTrains(InputCount, 0) = InputArray(InputCount, 8)
             'read previous years' value as base value
-            PopZ1Base(InputCount, 0) = get_population_data_by_zoneID(modelRunID, YearNum + 2009, FlowNum(InputCount, 0), "OZ", "'rail'", Zone1ID)
-            PopZ2Base(InputCount, 0) = get_population_data_by_zoneID(modelRunID, YearNum + 2009, FlowNum(InputCount, 0), "DZ", "'rail'", Zone2ID)
-            GVAZ1Base(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, YearNum + 2009, FlowNum(InputCount, 0), "OZ", "'rail'", Zone1ID)
-            GVAZ2Base(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, YearNum + 2009, FlowNum(InputCount, 0), "DZ", "'rail'", Zone2ID)
+            PopZ1Base(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear, FlowNum(InputCount, 0), "OZ", "'rail'", Zone1ID)
+            PopZ2Base(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear, FlowNum(InputCount, 0), "DZ", "'rail'", Zone2ID)
+            GVAZ1Base(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear, FlowNum(InputCount, 0), "OZ", "'rail'", Zone1ID)
+            GVAZ2Base(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear, FlowNum(InputCount, 0), "DZ", "'rail'", Zone2ID)
             OldDelays(InputCount, 0) = InputArray(InputCount, 9)
             RlLinkCost(InputCount, 0) = InputArray(InputCount, 10)
             CarFuel(InputCount, 0) = InputArray(InputCount, 11)
@@ -238,10 +234,10 @@ Module RailModel
             Call get_zone_by_flowid(FlowNum(InputCount, 0), Zone1ID, Zone2ID, "rail")
 
             'read previous years' value as base value
-            PopZ1Base(InputCount, 0) = get_population_data_by_zoneID(modelRunID, YearNum + 2009, FlowNum(InputCount, 0), "OZ", "'rail'", Zone1ID)
-            PopZ2Base(InputCount, 0) = get_population_data_by_zoneID(modelRunID, YearNum + 2009, FlowNum(InputCount, 0), "DZ", "'rail'", Zone2ID)
-            GVAZ1Base(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, YearNum + 2009, FlowNum(InputCount, 0), "OZ", "'rail'", Zone1ID)
-            GVAZ2Base(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, YearNum + 2009, FlowNum(InputCount, 0), "DZ", "'rail'", Zone2ID)
+            PopZ1Base(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear, FlowNum(InputCount, 0), "OZ", "'rail'", Zone1ID)
+            PopZ2Base(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear, FlowNum(InputCount, 0), "DZ", "'rail'", Zone2ID)
+            GVAZ1Base(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear, FlowNum(InputCount, 0), "OZ", "'rail'", Zone1ID)
+            GVAZ2Base(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear, FlowNum(InputCount, 0), "DZ", "'rail'", Zone2ID)
             OldDelays(InputCount, 0) = InputArray(InputCount, 4)
             RlLinkCost(InputCount, 0) = InputArray(InputCount, 5)
             CarFuel(InputCount, 0) = get_single_data("TR_O_RailLinkExternalVariables", "flow_id", "year", Chr(34) & "CarFuel" & Chr(34), YearNum - 1, FlowNum(InputCount, 0))
@@ -501,7 +497,7 @@ Module RailModel
 
         'write to outputarray
         If CalcCheck(InputCount, 0) = True Then
-            OutputArray(InputCount, 0) = modelRunID
+            OutputArray(InputCount, 0) = g_modelRunID
             OutputArray(InputCount, 1) = FlowNum(InputCount, 0)
             OutputArray(InputCount, 2) = YearNum
             'TODO update newtrain every year, otherwise it will read the previous link value
@@ -515,7 +511,7 @@ Module RailModel
             OutputArray(InputCount, 4) = NewDelays(InputCount, 0)
             OutputArray(InputCount, 5) = CUNew(InputCount, 0)
         Else
-            OutputArray(InputCount, 0) = modelRunID
+            OutputArray(InputCount, 0) = g_modelRunID
             OutputArray(InputCount, 1) = FlowNum(InputCount, 0)
             OutputArray(InputCount, 2) = YearNum
             OutputArray(InputCount, 3) = RlLinkExtVars(InputCount, 14)
@@ -539,7 +535,7 @@ Module RailModel
         End If
 
         'write to temparray
-        TempArray(InputCount, 0) = modelRunID
+        TempArray(InputCount, 0) = g_modelRunID
         TempArray(InputCount, 1) = YearNum
         TempArray(InputCount, 2) = FlowNum(InputCount, 0)
 

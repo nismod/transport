@@ -139,7 +139,7 @@
             sortedline = sortarray(v)
             splitline = Split(sortedline, "&")
             arraynum = splitline(2)
-            zonecaparray(zonecapnum, 0) = modelRunID
+            zonecaparray(zonecapnum, 0) = g_modelRunID
             For c = 0 To 7
                 zonecaparray(zonecapnum, c + 1) = zonecapdetails(arraynum, c)
             Next
@@ -224,19 +224,19 @@
     Sub GetFiles()
 
         'read initial input data
-        Call ReadData("RoadZone", "Input", InputArray, modelRunID, True)
+        Call ReadData("RoadZone", "Input", InputArray, g_modelRunYear)
 
         'read new capacity data
-        Call ReadData("RoadZone", "NewCap", caparray, modelRunID)
+        Call ReadData("RoadZone", "NewCap", caparray, g_modelRunYear)
         newcapnum = 1
 
         'read energy file
         If RdZEneSource = "Database" Then
-            Call ReadData("Energy", "", enearray, modelRunID)
+            Call ReadData("Energy", "", enearray, g_modelRunYear)
         End If
 
         'open the strategy file
-        Call ReadData("SubStrategy", "", stratarray, modelRunID)
+        Call ReadData("SubStrategy", "", stratarray)
 
     End Sub
     'v1.6 to calculate by annual timesteps, parameters for each zone need to be seperated
@@ -248,8 +248,8 @@
         'read from initial file table if it is year 2011
         If Year = 1 Then
             ZoneID(InputCount, 0) = InputArray(InputCount, 4)
-            PopOld(InputCount, 0) = get_population_data_by_zoneID(modelRunID, Year + 2010, ZoneID(InputCount, 0), "Zone", "'road'")
-            GVAOld(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, Year + 2010, ZoneID(InputCount, 0), "Zone", "'road'")
+            PopOld(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear, ZoneID(InputCount, 0), "Zone", "'road'")
+            GVAOld(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear, Year + 2010, ZoneID(InputCount, 0), "Zone", "'road'")
             CostOld(InputCount, 0) = InputArray(InputCount, 8)
             LaneKm(InputCount, 0) = InputArray(InputCount, 9)
             MLaneKm(InputCount, 0) = InputArray(InputCount, 10)
@@ -322,7 +322,7 @@
             'now modified as population data available up to 2100 - so should never need 'else'
             'v1.9 now read by using database function
             If Year < 91 Then
-                PopNew = get_population_data_by_zoneID(modelRunID, Year + 2010, ZoneID(InputCount, 0), "Zone", "'road'")
+                PopNew = get_population_data_by_zoneID(g_modelRunYear, ZoneID(InputCount, 0), "Zone", "'road'")
             Else
                 PopNew = PopOld(InputCount, 0)
             End If
@@ -337,7 +337,7 @@
             'v1.9 now read by using database function
             'database does not have gva forecasts after year 2050, and the calculation is only available before year 2050
             If Year < 91 Then
-                GVANew = get_gva_data_by_zoneID(modelRunID, Year + 2010, ZoneID(InputCount, 0), "Zone", "'road'")
+                GVANew = get_gva_data_by_zoneID(g_modelRunYear, ZoneID(InputCount, 0), "Zone", "'road'")
             Else
                 GVANew = GVAOld(InputCount, 0)
             End If
@@ -493,7 +493,7 @@
         'define fuel split - this is now specified via the strategy common variables file
         'FuelString = "0.598,0.402,0,0.055,0.945,0,1,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"
         'write to output file
-        OutputArray(InputCount, 0) = modelRunID
+        OutputArray(InputCount, 0) = g_modelRunID
         OutputArray(InputCount, 1) = ZoneID(InputCount, 0)
         OutputArray(InputCount, 2) = Year
         OutputArray(InputCount, 3) = PopNew

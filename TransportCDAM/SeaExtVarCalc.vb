@@ -61,15 +61,15 @@
         'first read all compulsory enhancements to intermediate array
 
         'read capchange info
-        Call ReadData("Seaport", "CapChange", CapArray, modelRunID)
+        Call ReadData("Seaport", "CapChange", CapArray, g_modelRunYear)
 
         'read energy file
         If SeaEneSource = "Database" Then
-            Call ReadData("Energy", "", enearray, modelRunID)
+            Call ReadData("Energy", "", enearray, g_modelRunYear)
         End If
 
         'read initial input data for year 2010
-        Call ReadData("Seaport", "Input", InputArray, modelRunID, True)
+        Call ReadData("Seaport", "Input", InputArray, g_modelRunYear)
 
         'read CapArray into the first row of NewCapDetails array
         CapCount = 0
@@ -171,7 +171,7 @@
 
         'v1.3
         'get fuel efficiency values from the strategy file
-        Call ReadData("SubStrategy", "", stratarray, modelRunID)
+        Call ReadData("SubStrategy", "", stratarray)
         'v1.4 set FuelEff(0) to 1
         FuelEff(0) = 1
         For y = 1 To 90
@@ -188,8 +188,6 @@
         Dim newcount As Integer
         Dim basecount As Integer
         Dim GORID(47, 1) As Long
-        Dim keylookup As String
-        Dim newval As Double
         Dim DieselOld, DieselNew As Double
         Dim i As Integer
         Dim PortID As Integer
@@ -226,8 +224,8 @@
 
                     'get GORPop and GORGva by using database function
                     PortID = InputArray(PortCount, 4)
-                    PortBaseData(PortCount, 11) = get_population_data_by_seaportID(modelRunID, YearNum + 2010, PortCount)
-                    PortBaseData(PortCount, 12) = get_gva_data_by_seaportID(modelRunID, YearNum + 2010, PortCount)
+                    PortBaseData(PortCount, 11) = get_population_data_by_seaportID(g_modelRunYear, PortCount)
+                    PortBaseData(PortCount, 12) = get_gva_data_by_seaportID(g_modelRunYear, PortCount)
                     PortBaseData(PortCount, 13) = InputArray(PortCount, 15)
                     GORID(PortCount, 1) = InputArray(PortCount, 16)
                 End If
@@ -275,7 +273,7 @@
                     'now modified as population data available up to 2100 - so should never need 'else'
                     'v1.9 now read pop data using database function
                     If YearNum < 91 Then
-                        PortNewData(PortCount, 6) = get_population_data_by_seaportID(modelRunID, YearNum + 2010, PortCount)
+                        PortNewData(PortCount, 6) = get_population_data_by_seaportID(g_modelRunYear, PortCount)
                     Else
                         PortNewData(PortCount, 6) = PortBaseData(PortCount, 11)
                     End If
@@ -291,7 +289,7 @@
                     'v1.9 now read gva data using database function
                     'database does not have gva forecasts after year 2050, and the calculation is only available before year 2050
                     If YearNum < 91 Then
-                        PortNewData(PortCount, 7) = get_gva_data_by_seaportID(modelRunID, YearNum + 2010, PortCount)
+                        PortNewData(PortCount, 7) = get_gva_data_by_seaportID(g_modelRunYear, PortCount)
                     Else
                         PortNewData(PortCount, 7) = PortBaseData(PortCount, 12)
                     End If
@@ -313,7 +311,7 @@
                 End If
 
                 'write values to output array
-                OutputArray(PortCount, 0) = modelRunID
+                OutputArray(PortCount, 0) = g_modelRunID
                 OutputArray(PortCount, 1) = PortBaseData(PortCount, 0)
                 OutputArray(PortCount, 2) = YearNum
                 newcount = 1

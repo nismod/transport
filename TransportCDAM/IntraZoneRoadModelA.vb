@@ -23,7 +23,6 @@
     Dim ZoneSpeed As Double
     Dim ZoneCarCost, ZoneLGVCost, ZoneHGV1Cost, ZoneHGV2Cost, ZonePSVCost As Double
     Dim ZoneExtVar(45, 90) As Double
-    Dim YearCount As Integer
     Dim NewVkm As Double
     Dim ZoneOutputRow As String
     Dim ZoneLaneKm(4) As Double
@@ -48,14 +47,14 @@
 
     Public Sub RoadZoneMain()
 
-        Call ZoneSetFiles()
+        'read the input data for the zone
+        ZoneSetFiles()
 
         'read in the elasticities
         Call ReadZoneElasticities()
 
         'loop through all the zones in the input file
         Do
-            'read the input data for the zone
             ZoneInput = riz.ReadLine
 
             'check if at end if file
@@ -74,26 +73,18 @@
                 'get external variable values
                 Call GetZoneExtVar()
 
-                'set year counter to one
-                YearCount = 1
+                'apply zone equation to adjust demand
+                Call RoadZoneKm(g_modelRunYear)
 
-                Do Until YearCount > 90
+                'estimate fuel consumption
+                Call RoadZoneFuelConsumption()
 
-                    'apply zone equation to adjust demand
-                    Call RoadZoneKm()
+                'write output line with new demand figure
+                Call RoadZoneOutput()
 
-                    'estimate fuel consumption
-                    Call RoadZoneFuelConsumption()
+                'update base values
+                Call NewBaseValues()
 
-                    'write output line with new demand figure
-                    Call RoadZoneOutput()
-
-                    'update base values
-                    Call NewBaseValues()
-
-                    'move on to next year
-                    YearCount += 1
-                Loop
             End If
             stf.Close()
         Loop
@@ -220,7 +211,7 @@
                 rownum += 1
             Else
                 'otherwise stop the model and write an error to the log file
-                logarray(logNum, 0) = "ERROR in intrazonal road model Sub GetZoneExtVar - year counter does not correspond to year value in input data for Zone " & ZoneID & " in year " & YearCount
+                logarray(logNum, 0) = "ERROR in intrazonal road model Sub GetZoneExtVar - year counter does not correspond to year value in input data for Zone " & ZoneID & " in year " & g_modelRunYear
                 logNum += 1
                 logarray(logNum, 0) = "Model run prematurely terminated at" & System.DateTime.Now
                 Call WriteData("Logfile", "", logarray)
@@ -256,13 +247,17 @@
 
     End Sub
 
-    Sub RoadZoneKm()
+    Sub RoadZoneKm(Year As Integer)
         'v1.3 now calculate traffic separately for the different road types (this is to allow the fuel consumption calculations to work with changes in fuel mix and vehicle mix over time)
         Dim rdtype As Integer
+        Dim YearCount As Integer
+
+        YearCount = g_modelRunYear - g_initialYear
 
         'now incorporates variable elasticities - only do this here if we are not using them - otherwise do it in a separate sub
         If VariableEl = False Then
             'Calculate the values of the various input ratios for the different types of road vehicle (speed assumed to be the same for all)
+
             PopRat(1) = (ZoneExtVar(2, YearCount) / ZonePop) ^ RdZoneEl(1, YearCount)
             PopRat(2) = (ZoneExtVar(2, YearCount) / ZonePop) ^ RdZoneEl(6, YearCount)
             PopRat(3) = (ZoneExtVar(2, YearCount) / ZonePop) ^ RdZoneEl(6, YearCount)
@@ -498,6 +493,10 @@
     End Sub
 
     Sub GetVariableElasticities()
+        Dim YearCount As Integer
+
+        YearCount = g_modelRunYear - g_initialYear
+
         'Calculate the values of the various input ratios for the different types of road vehicle (speed assumed to be the same for all)
         OldX = NewLaneKm
         'pop1ratio
@@ -679,41 +678,9 @@
         Dim VCount As Integer
         Dim StratLine As String
         Dim StratArray() As String
+        Dim YearCount As Integer
 
-        ''convert lane km to road km for each road category, where Cat1 is motorways, Cat2 is rural A, Cat3 is rural minor and Cat4 is urban
-        'RoadCatKm(1) = ZoneExtVar(6, YearCount) / 6
-        'RoadCatKm(2) = (ZoneExtVar(7, YearCount) / 4) + (ZoneExtVar(8, YearCount) / 2)
-        'RoadCatKm(3) = ZoneExtVar(9, YearCount) / 2
-        'RoadCatKm(4) = (ZoneExtVar(10, YearCount) / 4) + (ZoneExtVar(11, YearCount) / 2)
-
-        ''split the estimated vehicle km between the four road categories
-        'SumProbKm = (RoadCatProb(1) * RoadCatKm(1)) + (RoadCatProb(2) * RoadCatKm(2)) + (RoadCatProb(3) * RoadCatKm(3)) + (RoadCatProb(4) * RoadCatKm(4))
-        'For CatCount = 1 To 4
-        '    RoadCatTraffic(CatCount) = NewVkm * ((RoadCatProb(CatCount) * RoadCatKm(CatCount)) / SumProbKm)
-        'Next
-
-        ''split the vehicle km for each road category into the five vehicle types, where Cat1 is cars/taxis, Cat2 is LGVs, Cat3 is light HGVs, Cat4 is heavy HGVs and Cat5 is PSVs
-        ''the proportions come from DfT Traffic Statistics Table TRA0204 - see model guide for more details
-        'RVCatTraf(1, 1) = RoadCatTraffic(1) * 0.755
-        'RVCatTraf(1, 2) = RoadCatTraffic(1) * 0.123
-        'RVCatTraf(1, 3) = RoadCatTraffic(1) * 0.037
-        'RVCatTraf(1, 4) = RoadCatTraffic(1) * 0.081
-        'RVCatTraf(1, 5) = RoadCatTraffic(1) * 0.004
-        'RVCatTraf(2, 1) = RoadCatTraffic(2) * 0.791
-        'RVCatTraf(2, 2) = RoadCatTraffic(2) * 0.135
-        'RVCatTraf(2, 3) = RoadCatTraffic(2) * 0.03
-        'RVCatTraf(2, 4) = RoadCatTraffic(2) * 0.038
-        'RVCatTraf(2, 5) = RoadCatTraffic(2) * 0.006
-        'RVCatTraf(3, 1) = RoadCatTraffic(3) * 0.794
-        'RVCatTraf(3, 2) = RoadCatTraffic(3) * 0.174
-        'RVCatTraf(3, 3) = RoadCatTraffic(3) * 0.019
-        'RVCatTraf(3, 4) = RoadCatTraffic(3) * 0.005
-        'RVCatTraf(3, 5) = RoadCatTraffic(3) * 0.009
-        'RVCatTraf(4, 1) = RoadCatTraffic(4) * 0.829
-        'RVCatTraf(4, 2) = RoadCatTraffic(4) * 0.132
-        'RVCatTraf(4, 3) = RoadCatTraffic(4) * 0.016
-        'RVCatTraf(4, 4) = RoadCatTraffic(4) * 0.006
-        'RVCatTraf(4, 5) = RoadCatTraffic(4) * 0.017
+        YearCount = g_modelRunYear - g_initialYear
 
         'split the vehicle km by vehicle category data into fuel types, where fuel 1 is petrol, fuel 2 is diesel, fuel 3 is petrol hybrid, fuel 4 is diesel hybrid, fuel 5 is plug-in hybrid,
         'fuel 6 is battery electric, fuel 7 is LPG, fuel 8 is CNG, fuel 9 is hydrogen ICE and fuel 10 is hydrogen fuel cell
@@ -1338,7 +1305,7 @@
 
     Sub RoadZoneOutput()
         'combine output values into output string
-        ZoneOutputRow = ZoneID & "," & YearCount & "," & NewVkm & "," & ZoneSpdNew & "," & PetrolUsed & "," & DieselUsed & "," & ElectricUsed & "," & LPGUsed & "," & CNGUsed & "," & HydrogenUsed
+        ZoneOutputRow = ZoneID & "," & g_modelRunYear & "," & NewVkm & "," & ZoneSpdNew & "," & PetrolUsed & "," & DieselUsed & "," & ElectricUsed & "," & LPGUsed & "," & CNGUsed & "," & HydrogenUsed
 
         'write output string to file
         roz.WriteLine(ZoneOutputRow)
@@ -1346,6 +1313,9 @@
     End Sub
 
     Sub NewBaseValues()
+        Dim YearCount As Integer
+
+        YearCount = g_modelRunYear - g_initialYear
         'set base values to equal the values from the current year
         ZonePop = ZoneExtVar(2, YearCount)
         ZoneGVA = ZoneExtVar(3, YearCount)

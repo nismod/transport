@@ -78,7 +78,7 @@
 
         '1.8
         'get fuel efficiency values from the strategy file using database interface
-        Call ReadData("SubStrategy", "", stratarray, modelRunID)
+        Call ReadData("SubStrategy", "", stratarray)
 
         'v1.4 set fuel efficiency old to 1
         FuelEffOld(0) = 1
@@ -115,25 +115,25 @@
 
 
         'read initial input of year 2010
-        Call ReadData("RailZone", "Input", InputArray, modelRunID)
+        Call ReadData("RailZone", "Input", InputArray, g_modelRunYear)
 
         'if capacity is changing then get capacity change file
         If NewRlZCap = True Then
             'read capchange info
-            Call ReadData("RailZone", "CapChange", CapArray, modelRunID)
+            Call ReadData("RailZone", "CapChange", CapArray, g_modelRunYear)
             CapNum = 1
         End If
 
 
         'read ele scheme info
-        Call ReadData("RailZone", "ElSchemes", elearray, modelRunID)
+        Call ReadData("RailZone", "ElSchemes", elearray, g_modelRunYear)
         EleNum = 1
 
         'read file according to the setting
         If RlZOthSource = "File" Then
-            Call ReadData("RailZone", "EVScale", ScalingData, modelRunID)
+            Call ReadData("RailZone", "EVScale", ScalingData, g_modelRunYear)
         ElseIf RlZEneSource = "Database" Then
-            Call ReadData("Energy", "", enearray, modelRunID)
+            Call ReadData("Energy", "", enearray, g_modelRunYear)
         End If
 
 
@@ -196,8 +196,8 @@
 
                     ZoneID(InputCount, 0) = InputArray(InputCount, 4)
                     'read pop and gva by using database function
-                    PopOld(InputCount, 0) = get_population_data_by_zoneID(modelRunID, Year + 2010, ZoneID(InputCount, 0), "Zone", "'rail'")
-                    GVAOld(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, Year + 2010, ZoneID(InputCount, 0), "Zone", "'rail'")
+                    PopOld(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear, ZoneID(InputCount, 0), "Zone", "'rail'")
+                    GVAOld(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear, ZoneID(InputCount, 0), "Zone", "'rail'")
                     CostOld(InputCount, 0) = InputArray(InputCount, 8)
                     StationsOld(InputCount, 0) = InputArray(InputCount, 9)
                     FuelOld(InputCount, 0) = InputArray(InputCount, 10)
@@ -290,7 +290,7 @@ NextYear:
                     'now modified as population data available up to 2100 - so should never need 'else'
                     'v1.9 now read pop by using database function
                     If Year < 91 Then
-                        PopNew = get_population_data_by_zoneID(modelRunID, Year + 2010, ZoneID(InputCount, 0), "Zone", "'rail'")
+                        PopNew = get_population_data_by_zoneID(g_modelRunYear, ZoneID(InputCount, 0), "Zone", "'rail'")
                     Else
                         PopNew = PopOld(InputCount, 0)
                     End If
@@ -305,7 +305,7 @@ NextYear:
                     'now modified as gva data available up to 2100 - so should never need 'else'
                     'v1.9 now read gva by using database function
                     If Year < 91 Then
-                        GVANew = get_gva_data_by_zoneID(modelRunID, Year + 2010, ZoneID(InputCount, 0), "Zone", "'rail'")
+                        GVANew = get_gva_data_by_zoneID(g_modelRunYear, ZoneID(InputCount, 0), "Zone", "'rail'")
                     Else
                         GVANew = GVAOld(InputCount, 0)
                     End If
@@ -381,7 +381,7 @@ NextYear:
                     End If
                 End If
                 'write to output file
-                OutputArray(InputCount, 0) = modelRunID
+                OutputArray(InputCount, 0) = g_modelRunID
                 OutputArray(InputCount, 1) = ZoneID(InputCount, 0)
                 OutputArray(InputCount, 2) = Year
                 OutputArray(InputCount, 3) = PopNew

@@ -59,8 +59,6 @@
     Public Duration As Integer
     Public logNum As Integer
     Public logarray(47, 0) As String
-    Public modelRunID As Integer
-    Public modelRunYear As Integer
     Public ScenarioID As Integer
     Public Scenario As Integer
     Public StrategyID As Integer
@@ -77,8 +75,9 @@
     Public Function runCDAM(ByVal ModelRun_ID As Integer, ByVal Model_Year As Integer) As Boolean
         'Try
 
-        modelRunID = ModelRun_ID
-        modelRunYear = Model_Year + 2009
+        'Store global variables
+        g_modelRunID = ModelRun_ID
+        g_modelRunYear = Model_Year
 
         'Get Model Run Details including 
         If getModelRunDetails() = False Then
@@ -99,7 +98,7 @@
     Private Function getModelRunDetails() As Boolean
         Dim mrdarray As String(,) = Nothing
 
-        Call ReadData("System", "ModelRunDetails", mrdarray, modelRunID)
+        Call ReadData("System", "ModelRunDetails", mrdarray)
 
         Return True
 
@@ -189,13 +188,10 @@
     End Sub
 
     Sub CreateLog()
-        'start from the first line
-        logNum = 1
         'write header rows
-        logarray(logNum, 0) = "ITRC Transport CDAM"
-        logNum += 1
-        logarray(logNum, 0) = "Model run commenced at " & System.DateTime.Now
-        logNum += 1
+        logarray(1, 0) = "ITRC Transport CDAM"
+        logarray(2, 0) = "Model run commenced at " & System.DateTime.Now
+        logNum = 3
     End Sub
 
     Sub ExtVarMain()
@@ -245,6 +241,7 @@
             logarray(logNum, 0) = "Seaport external variables"
             logNum += 1
         End If
+
         'if we are using database files then loop through transformed database file to start year (2010)
         If DBasePop = True Then
             ZonePopFile = New IO.FileStream(DirPath & "ZoneScenarioPopFile.csv", IO.FileMode.Open, IO.FileAccess.Read)
@@ -307,6 +304,7 @@
                 End If
             Loop
         End If
+
         'load 2010 energy data into energy dictionary
         If DBaseEne = True Then
             '***need to add in energy dictionary
@@ -437,6 +435,7 @@
                     rlif.Close()
                     rlin.Close()
                 End If
+
                 If NewRdZEV = True Then
                     'road zone input file
                     RdZInputFile = New IO.FileStream(DirPath & "RoadZoneInputDataInitial.csv", IO.FileMode.Open, IO.FileAccess.Read)
@@ -522,6 +521,7 @@
                     rzif.Close()
                     rzin.Close()
                 End If
+
                 If NewRlLEV = True Then
                     'rail link input file
                     'XUCHENG - IS THIS CODE USED? SHOULD THESE BE IN READDATA FUNCTION?
@@ -604,6 +604,7 @@
                     rllif.Close()
                     rllin.Close()
                 End If
+
                 If NewRlZEV = True Then
                     'rail zone input file
                     'XUCHENG - IS THIS CODE USED? SHOULD THESE BE IN READDATA FUNCTION?
@@ -670,6 +671,7 @@
                     rlzif.Close()
                     rlzin.Close()
                 End If
+
                 If NewAirEV = True Then
                     'air flow input file
                     'XUCHENG - IS THIS CODE USED? SHOULD THESE BE IN READDATA FUNCTION?

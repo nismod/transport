@@ -52,15 +52,9 @@
         Do Until YearNum > StartYear + Duration
 
             'get external variables for this port this year
-            Call ReadData("Seaport", "ExtVar", PortExtVar, modelRunID, , YearNum)
+            Call ReadData("Seaport", "ExtVar", PortExtVar, g_modelRunYear)
 
-            'read from initial file if year 1, otherwise update from temp file
-            If YearNum = 1 Then
-                Call ReadData("Seaport", "Input", InputArray, modelRunID, True)
-            Else
-                Call ReadData("Seaport", "Input", InputArray, modelRunID, False, YearNum)
-            End If
-
+            Call ReadData("Seaport", "Input", InputArray, g_modelRunYear)
 
             InputCount = 1
 
@@ -120,14 +114,14 @@
 
         If TripRates = "SubStrategy" Then
             'get the strat values
-            Call ReadData("SubStrategy", "", stratarray, modelRunID)
+            Call ReadData("SubStrategy", "", stratarray)
             For r = 1 To 90
                 SeaTripRates(r) = stratarray(r, 95)
             Next
         End If
 
         'get the elasticity values
-        Call ReadData("Seaport", "Elasticity", SeaEl, modelRunID)
+        Call ReadData("Seaport", "Elasticity", SeaEl, g_modelRunYear)
 
     End Sub
 
@@ -147,8 +141,8 @@
             BaseCap(4) = InputArray(InputCount, 13)
             BaseCap(5) = InputArray(InputCount, 14)
             'read previous years' value as base value
-            PopBase = get_population_data_by_seaportID(modelRunID, YearNum + 2009, PortID)
-            GVABase = get_gva_data_by_seaportID(modelRunID, YearNum + 2009, PortID)
+            PopBase = get_population_data_by_seaportID(g_modelRunYear, PortID)
+            GVABase = get_gva_data_by_seaportID(g_modelRunYear, PortID)
             CostBase = InputArray(InputCount, 15)
             For x = 1 To 5
                 AddedCap(x) = 0
@@ -168,8 +162,8 @@
             'BaseCap(5) = InputArray(InputCount, 10)
 
             'read previous years' value as base value
-            PopBase = get_population_data_by_seaportID(modelRunID, YearNum + 2009, PortID)
-            GVABase = get_gva_data_by_seaportID(modelRunID, YearNum + 2009, PortID)
+            PopBase = get_population_data_by_seaportID(g_modelRunYear, PortID)
+            GVABase = get_gva_data_by_seaportID(g_modelRunYear, PortID)
             CostBase = get_single_data("TR_O_SeaFreightExternalVariables", "port_id", "year", Chr(34) & "Cost" & Chr(34), YearNum - 1, PortID)
             For x = 1 To 5
                 AddedCap(x) = InputArray(InputCount, 8 + x)
@@ -315,7 +309,7 @@
 
     Sub WritePortOutput()
         'write to output array
-        OutputArray(InputCount, 0) = modelRunID
+        OutputArray(InputCount, 0) = g_modelRunID
         OutputArray(InputCount, 1) = PortID
         OutputArray(InputCount, 2) = YearNum
         OutputArray(InputCount, 3) = NewFreight(PortID, 1)
@@ -373,7 +367,7 @@
         Loop
 
         'write to temp array
-        TempArray(InputCount, 0) = modelRunID
+        TempArray(InputCount, 0) = g_modelRunID
         TempArray(InputCount, 1) = YearNum
         TempArray(InputCount, 2) = PortID
         TempArray(InputCount, 3) = BaseFreight(1)

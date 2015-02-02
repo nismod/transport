@@ -85,16 +85,16 @@
             NewCapNum = 1
 
             'get external variable values
-            Call ReadData("RoadZone", "ExtVar", ZoneExtVar, modelRunID, , YearCount)
+            Call ReadData("RoadZone", "ExtVar", ZoneExtVar, g_modelRunYear)
 
             'get external variable values from previous year as base values
-            Call ReadData("RoadZone", "ExtVar", ZonePreExtVar, modelRunID, , YearCount - 1)
+            Call ReadData("RoadZone", "ExtVar", ZonePreExtVar, g_modelRunYear)
 
             'read from the initial file if it is year 2011
             If YearCount = 1 Then
-                Call ReadData("RoadZone", "Input", InputArray, modelRunID, True)
+                Call ReadData("RoadZone", "Input", InputArray, g_modelRunYear)
             Else
-                Call ReadData("RoadZone", "Input", InputArray, modelRunID, False, YearCount)
+                Call ReadData("RoadZone", "Input", InputArray, g_modelRunYear)
             End If
 
             ZoneID = 1
@@ -155,10 +155,10 @@
         End If
 
         'read in elasticity array
-        Call ReadData("RoadZone", "Elasticity", RdZoneEl, modelRunID)
+        Call ReadData("RoadZone", "Elasticity", RdZoneEl, g_modelRunYear)
 
         '130514 note that at the moment this just reads a blank file - need to remove "fileprefix" from string, and then need to modify form1 and build procedure so that it picks up on additional capacity built (ie those tagged '-1' for year)
-        Call ReadData("RoadZone", "CapChange", RoadCapArray, modelRunID)
+        Call ReadData("RoadZone", "CapChange", RoadCapArray, g_modelRunYear)
         CapNum = 1
         If RoadCapArray(CapNum, 0) Is Nothing Then
             '130514 addition of line
@@ -168,7 +168,7 @@
         End If
 
         'get the strategy file
-        Call ReadData("SubStrategy", "", StratArray, modelRunID)
+        Call ReadData("SubStrategy", "", StratArray)
 
 
     End Sub
@@ -182,8 +182,8 @@
             'read the input data for the zone
             Zone_ID(ZoneID, 1) = InputArray(ZoneID, 4)
             BaseVkm(ZoneID, 1) = InputArray(ZoneID, 6)
-            ZonePop(ZoneID, 1) = get_population_data_by_zoneID(modelRunID, YearCount + 2009, Zone_ID(ZoneID, 1), "Zone", "'road'")
-            ZoneGVA(ZoneID, 1) = get_gva_data_by_zoneID(modelRunID, YearCount + 2009, Zone_ID(ZoneID, 1), "Zone", "'road'")
+            ZonePop(ZoneID, 1) = get_population_data_by_zoneID(g_modelRunYear - 1, Zone_ID(ZoneID, 1), "Zone", "'road'")
+            ZoneGVA(ZoneID, 1) = get_gva_data_by_zoneID(g_modelRunYear - 1, Zone_ID(ZoneID, 1), "Zone", "'road'")
             ZoneSpeed(ZoneID, 1) = InputArray(ZoneID, 7)
             ZoneCarCost(ZoneID, 1) = InputArray(ZoneID, 8)
             ZoneLGVCost(ZoneID, 1) = InputArray(ZoneID, 20)
@@ -264,8 +264,8 @@
         Else
             'read from temp file table
             Zone_ID(ZoneID, 1) = CDbl(InputArray(ZoneID, 3))
-            ZonePop(ZoneID, 1) = get_population_data_by_zoneID(modelRunID, YearCount + 2009, Zone_ID(ZoneID, 1), "Zone", "'road'")
-            ZoneGVA(ZoneID, 1) = get_gva_data_by_zoneID(modelRunID, YearCount + 2009, Zone_ID(ZoneID, 1), "Zone", "'road'")
+            ZonePop(ZoneID, 1) = get_population_data_by_zoneID(g_modelRunYear - 1, Zone_ID(ZoneID, 1), "Zone", "'road'")
+            ZoneGVA(ZoneID, 1) = get_gva_data_by_zoneID(g_modelRunYear - 1, Zone_ID(ZoneID, 1), "Zone", "'road'")
             ZoneSpeed(ZoneID, 1) = CDbl(InputArray(ZoneID, 4))
             BaseVkm(ZoneID, 1) = CDbl(InputArray(ZoneID, 5))
 
@@ -1537,7 +1537,7 @@
         Next
 
         'write disaggregated fuel outputs to file
-        FuelArray(ZoneID, 0) = modelRunID
+        FuelArray(ZoneID, 0) = g_modelRunID
         FuelArray(ZoneID, 1) = ZoneID
         FuelArray(ZoneID, 2) = YearCount
         'car petrol
@@ -1652,7 +1652,7 @@
     Sub WriteRoadZoneOutput()
 
         'write to output array
-        OutputArray(ZoneID, 0) = modelRunID
+        OutputArray(ZoneID, 0) = g_modelRunID
         OutputArray(ZoneID, 1) = ZoneID
         OutputArray(ZoneID, 2) = YearCount
         OutputArray(ZoneID, 3) = NewVkm
@@ -1741,7 +1741,7 @@
         HydrogenUsed = 0
 
         'write to temp array
-        TempArray(ZoneID, 0) = modelRunID
+        TempArray(ZoneID, 0) = g_modelRunID
         TempArray(ZoneID, 1) = YearCount
         TempArray(ZoneID, 2) = ZoneID
         TempArray(ZoneID, 3) = ZoneSpeed(ZoneID, 1)

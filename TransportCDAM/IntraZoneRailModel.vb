@@ -53,18 +53,14 @@
         Do Until YearCount > StartYear + Duration
 
             'get external variable values
-            Call ReadData("RailZone", "ExtVar", RlZExtVar, modelRunID, , YearCount)
+            Call ReadData("RailZone", "ExtVar", RlZExtVar, g_modelRunYear)
 
             'get previous year external variable values as base value
-            Call ReadData("RailZone", "ExtVar", RlZPreExtVar, modelRunID, , YearCount - 1)
+            Call ReadData("RailZone", "ExtVar", RlZPreExtVar, g_modelRunYear - 1)
 
-            'read from initial file if year 1, otherwise update from temp file
-            If YearCount = 1 Then
-                Call ReadData("RailZone", "Input", InputArray, modelRunID, True)
-            Else
-                Call ReadData("RailZone", "Input", InputArray, modelRunID, False, YearCount)
-            End If
-
+            'Input data
+            Call ReadData("RailZone", "Input", InputArray, g_modelRunYear)
+            
             'loop through all zones
             InputCount = 1
 
@@ -111,11 +107,11 @@
         End If
 
         'read in the elasticies
-        Call ReadData("RailZone", "Elasticity", RlZoneEl, modelRunID)
+        Call ReadData("RailZone", "Elasticity", RlZoneEl, g_modelRunYear)
 
         'read in the strategy
         If TripRates = "SubStrategy" Then
-            Call ReadData("SubStrategy", "", stratarray, modelRunID)
+            Call ReadData("SubStrategy", "", stratarray)
             For r = 1 To 90
                 RlzTripRates(r) = stratarray(r, 93)
             Next
@@ -132,8 +128,8 @@
             RlZID(InputCount, 0) = InputArray(InputCount, 4)
             FareE(InputCount, 0) = InputArray(InputCount, 6)
             RlZTripsS(InputCount, 0) = InputArray(InputCount, 7)
-            RlZPop(InputCount, 0) = get_population_data_by_zoneID(modelRunID, YearCount + 2009, RlZID(InputCount, 0), "Zone", "'rail'")
-            RlZGva(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, YearCount + 2009, RlZID(InputCount, 0), "Zone", "'rail'")
+            RlZPop(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear - 1, RlZID(InputCount, 0), "Zone", "'rail'")
+            RlZGva(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear - 1, RlZID(InputCount, 0), "Zone", "'rail'")
             RlZCost(InputCount, 0) = InputArray(InputCount, 8)
             RlZStat(InputCount, 0) = InputArray(InputCount, 9)
             RlZCarFuel(InputCount, 0) = InputArray(InputCount, 10)
@@ -287,7 +283,7 @@
 
     Sub RailZoneOutput()
         'combine output values into output array
-        OutputArray(InputCount, 0) = modelRunID
+        OutputArray(InputCount, 0) = g_modelRunID
         OutputArray(InputCount, 1) = YearCount
         OutputArray(InputCount, 2) = RlZID(InputCount, 0)
         OutputArray(InputCount, 3) = NewTripsS
@@ -299,7 +295,7 @@
 
 
         'write to the temp file
-        TempArray(InputCount, 0) = modelRunID
+        TempArray(InputCount, 0) = g_modelRunID
         TempArray(InputCount, 1) = YearCount
         TempArray(InputCount, 2) = RlZID(InputCount, 0)
         TempArray(InputCount, 3) = RlZTripsS(InputCount, 0)

@@ -77,7 +77,7 @@
         'v1.3 altered so that scenario file is read directly as an input file
         If AirEneSource = "Database" Then
             'read data to energy array from the file
-            Call ReadData("Energy", "", enearray, modelRunID)
+            Call ReadData("Energy", "", enearray, g_modelRunYear)
             For y = 0 To 90
                 FuelCost(y) = enearray(y + 1, 2)
             Next
@@ -191,7 +191,7 @@
             sortedline = sortarray(v)
             splitline = Split(sortedline, "&")
             arraynum = splitline(2)
-            NewCapArray(v + 1, 0) = modelRunID
+            NewCapArray(v + 1, 0) = g_modelRunID
             For i = 0 To 3
                 NewCapArray(v + 1, i + 1) = NewCapDetails(arraynum, i)
             Next
@@ -234,14 +234,14 @@
     Sub GetFiles()
 
         'read initial year files
-        Call ReadData("AirNode", "Input", NodeInputArray, modelRunID, True)
-        Call ReadData("AirFlow", "Input", FlowInputArray, modelRunID, True)
+        Call ReadData("AirNode", "Input", NodeInputArray, g_modelRunYear)
+        Call ReadData("AirFlow", "Input", FlowInputArray, g_modelRunYear)
 
         'read capchange info
-        Call ReadData("AirNode", "CapChange", CapArray, modelRunID)
+        Call ReadData("AirNode", "CapChange", CapArray, g_modelRunYear)
 
         'now get strategy file too
-        Call ReadData("SubStrategy", "", stratarray, modelRunID)
+        Call ReadData("SubStrategy", "", stratarray)
 
     End Sub
 
@@ -252,8 +252,6 @@
         Dim OutVarCount As Integer
         Dim AddTermCap As Long
         Dim AddATMCap As Long
-        Dim keylookup As String
-        Dim newval As Double
         Dim newcost As Double
         Dim carbch As Double
 
@@ -263,9 +261,9 @@
             Do While NodeCount < 29
                 NodeOldData(NodeCount, 0) = NodeInputArray(NodeCount, 4)
                 'pop
-                NodeOldData(NodeCount, 1) = get_population_data_by_airportID(modelRunID, YearNum + 2010, NodeOldData(NodeCount, 0))
+                NodeOldData(NodeCount, 1) = get_population_data_by_airportID(g_modelRunYear, NodeOldData(NodeCount, 0))
                 'gva
-                NodeOldData(NodeCount, 2) = get_gva_data_by_airportID(modelRunID, YearNum + 2010, NodeOldData(NodeCount, 0))
+                NodeOldData(NodeCount, 2) = get_gva_data_by_airportID(g_modelRunYear, NodeOldData(NodeCount, 0))
                 'cost
                 NodeOldData(NodeCount, 3) = NodeInputArray(NodeCount, 10) * 0.29
                 airnodefixedcost(NodeCount) = NodeInputArray(NodeCount, 10) * 0.71
@@ -296,10 +294,10 @@
                 DZone(FlowCount) = FlowInputArray(FlowCount, 11)
                 FlowOldData(FlowCount, 5) = FlowInputArray(FlowCount, 8) * 0.29
                 airflowfixedcost(FlowCount) = FlowInputArray(FlowCount, 8) * 0.71
-                FlowOldData(FlowCount, 1) = get_population_data_by_zoneID(modelRunID, YearNum + 2010, FlowOldData(FlowCount, 0), "OZ", "'air'", OZone(FlowCount))
-                FlowOldData(FlowCount, 2) = get_population_data_by_zoneID(modelRunID, YearNum + 2010, FlowOldData(FlowCount, 0), "DZ", "'air'", DZone(FlowCount))
-                FlowOldData(FlowCount, 3) = get_gva_data_by_zoneID(modelRunID, YearNum + 2010, FlowOldData(FlowCount, 0), "OZ", "'air'", OZone(FlowCount))
-                FlowOldData(FlowCount, 4) = get_gva_data_by_zoneID(modelRunID, YearNum + 2010, FlowOldData(FlowCount, 0), "DZ", "'air'", DZone(FlowCount))
+                FlowOldData(FlowCount, 1) = get_population_data_by_zoneID(g_modelRunYear, FlowOldData(FlowCount, 0), "OZ", "'air'", OZone(FlowCount))
+                FlowOldData(FlowCount, 2) = get_population_data_by_zoneID(g_modelRunYear, FlowOldData(FlowCount, 0), "DZ", "'air'", DZone(FlowCount))
+                FlowOldData(FlowCount, 3) = get_gva_data_by_zoneID(g_modelRunYear, FlowOldData(FlowCount, 0), "OZ", "'air'", OZone(FlowCount))
+                FlowOldData(FlowCount, 4) = get_gva_data_by_zoneID(g_modelRunYear, FlowOldData(FlowCount, 0), "DZ", "'air'", DZone(FlowCount))
 
                 'add in the Flow ID number as some are missing from the input file
 
@@ -332,7 +330,7 @@
                 'now modified as population data available up to 2100 - so should never need 'else'
                 'v1.9 now read pop data using database function
                 If YearNum < 91 Then
-                    NodeNewData(NodeCount, 1) = get_population_data_by_airportID(modelRunID, YearNum + 2010, NodeOldData(NodeCount, 0))
+                    NodeNewData(NodeCount, 1) = get_population_data_by_airportID(g_modelRunYear, NodeOldData(NodeCount, 0))
                 Else
                     NodeNewData(NodeCount, 1) = NodeOldData(NodeCount, 1)
                 End If
@@ -347,7 +345,7 @@
                 'v1.9 now read gva data using database function
                 'database does not have gva forecasts after year 2050, and the calculation is only available before year 2050
                 If YearNum < 91 Then
-                    NodeNewData(NodeCount, 2) = get_gva_data_by_airportID(modelRunID, YearNum + 2010, NodeOldData(NodeCount, 0))
+                    NodeNewData(NodeCount, 2) = get_gva_data_by_airportID(g_modelRunYear, NodeOldData(NodeCount, 0))
                 Else
                     NodeNewData(NodeCount, 2) = NodeNewData(NodeCount, 2)
                 End If
@@ -401,7 +399,7 @@
             End If
 
             'write node output row
-            NodeOutputArray(NodeCount, 0) = modelRunID
+            NodeOutputArray(NodeCount, 0) = g_modelRunID
             NodeOutputArray(NodeCount, 1) = NodeCount
             NodeOutputArray(NodeCount, 2) = YearNum
             NodeOutputArray(NodeCount, 3) = NodeNewData(NodeCount, 1)
@@ -453,8 +451,8 @@
                 'now modified as population data available up to 2100 - so should never need 'else'
                 'v1.9 now read pop data using database function
                 If YearNum < 91 Then
-                    FlowNewData(FlowCount, 1) = get_population_data_by_zoneID(modelRunID, YearNum + 2010, FlowOldData(FlowCount, 0), "OZ", "'air'", OZone(FlowCount))
-                    FlowNewData(FlowCount, 2) = get_population_data_by_zoneID(modelRunID, YearNum + 2010, FlowOldData(FlowCount, 0), "DZ", "'air'", DZone(FlowCount))
+                    FlowNewData(FlowCount, 1) = get_population_data_by_zoneID(g_modelRunYear, FlowOldData(FlowCount, 0), "OZ", "'air'", OZone(FlowCount))
+                    FlowNewData(FlowCount, 2) = get_population_data_by_zoneID(g_modelRunYear, FlowOldData(FlowCount, 0), "DZ", "'air'", DZone(FlowCount))
                 Else
                     FlowNewData(FlowCount, 1) = FlowOldData(FlowCount, 1)
                     FlowNewData(FlowCount, 2) = FlowOldData(FlowCount, 2)
@@ -470,8 +468,8 @@
                 'v1.9 now read gva data using database function
                 'database does not have gva forecasts after year 2050, and the calculation is only available before year 2050
                 If YearNum < 91 Then
-                    FlowNewData(FlowCount, 3) = get_gva_data_by_zoneID(modelRunID, YearNum + 2010, FlowOldData(FlowCount, 0), "OZ", "'air'", OZone(FlowCount))
-                    FlowNewData(FlowCount, 4) = get_gva_data_by_zoneID(modelRunID, YearNum + 2010, FlowOldData(FlowCount, 0), "DZ", "'air'", DZone(FlowCount))
+                    FlowNewData(FlowCount, 3) = get_gva_data_by_zoneID(g_modelRunYear, FlowOldData(FlowCount, 0), "OZ", "'air'", OZone(FlowCount))
+                    FlowNewData(FlowCount, 4) = get_gva_data_by_zoneID(g_modelRunYear, FlowOldData(FlowCount, 0), "DZ", "'air'", DZone(FlowCount))
                 Else
                     FlowNewData(FlowCount, 3) = FlowOldData(FlowCount, 3)
                     FlowNewData(FlowCount, 4) = FlowOldData(FlowCount, 4)
@@ -500,7 +498,7 @@
             End If
 
             'write flow output row
-            FlowOutputArray(FlowCount, 0) = modelRunID
+            FlowOutputArray(FlowCount, 0) = g_modelRunID
             FlowOutputArray(FlowCount, 1) = YearNum
             FlowOutputArray(FlowCount, 2) = FlowOldData(FlowCount, 0)
             FlowOutputArray(FlowCount, 3) = FlowNewData(FlowCount, 1)

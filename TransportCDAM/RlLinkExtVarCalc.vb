@@ -89,9 +89,9 @@
         End If
 
         'read initial input data
-        Call ReadData("RailLink", "Input", InputArray, modelRunID, True)
+        Call ReadData("RailLink", "Input", InputArray, g_modelRunYear)
 
-        Call ReadData("RailLink", "CapChange", CapArray, modelRunID)
+        Call ReadData("RailLink", "CapChange", CapArray, g_modelRunYear)
 
         'start from the first row of CapArray
         CapNum = 1
@@ -171,7 +171,7 @@
             sortedline = sortarray(v)
             splitline = Split(sortedline, "&")
             arraynum = splitline(2)
-            NewCapArray(v + 1, 0) = modelRunID
+            NewCapArray(v + 1, 0) = g_modelRunID
             NewCapArray(v + 1, 1) = NewCapDetails(arraynum, 0)
             NewCapArray(v + 1, 2) = NewCapDetails(arraynum, 1)
             NewCapArray(v + 1, 3) = NewCapDetails(arraynum, 2)
@@ -197,13 +197,13 @@
         Elect = True
         'read the electrification list file as an input file
         'read ele scheme info
-        Call ReadData("RailLink", "ElSchemes", elearray, modelRunID)
+        Call ReadData("RailLink", "ElSchemes", elearray, g_modelRunYear)
         EleNum = 1
         Call GetElectData()
 
         'v1.4
         'get fuel efficiency and other values from the strategy file
-        Call ReadData("SubStrategy", "", stratarray, modelRunID)
+        Call ReadData("SubStrategy", "", stratarray)
         'v1.5 set fuel efficiency old to 1
         FuelEffOld(0) = 1
         FuelEffOld(1) = 1
@@ -266,14 +266,14 @@
 
         'need to set a base value for the diesel fuel cost for this zone
         If RlLEneSource = "Database" Then
-            Call ReadData("Energy", "", enearray, modelRunID)
+            Call ReadData("Energy", "", enearray, g_modelRunYear)
             InDieselOldAll = enearray(1, 2)
             InElectricOldAll = enearray(1, 3)
         End If
 
         'get scaling factor file if we are using one
         If RlLOthSource = "File" Then
-            Call ReadData("RailLink", "EVScale", ScalingData, modelRunID)
+            Call ReadData("RailLink", "EVScale", ScalingData, g_modelRunYear)
         End If
 
         'start with the input start year
@@ -303,10 +303,10 @@
                     OZone(InputCount, 0) = InputArray(InputCount, 3)
                     DZone(InputCount, 0) = InputArray(InputCount, 4)
                     Tracks(InputCount, 0) = InputArray(InputCount, 5)
-                    Pop1Old(InputCount, 0) = get_population_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 0), "OZ", "'rail'", OZone(InputCount, 0))
-                    Pop2Old(InputCount, 0) = get_population_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 0), "DZ", "'rail'", DZone(InputCount, 0))
-                    GVA1Old(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 0), "OZ", "'rail'", OZone(InputCount, 0))
-                    GVA2Old(InputCount, 0) = get_gva_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 0), "DZ", "'rail'", DZone(InputCount, 0))
+                    Pop1Old(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear, FlowID(InputCount, 0), "OZ", "'rail'", OZone(InputCount, 0))
+                    Pop2Old(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear, FlowID(InputCount, 0), "DZ", "'rail'", DZone(InputCount, 0))
+                    GVA1Old(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear, FlowID(InputCount, 0), "OZ", "'rail'", OZone(InputCount, 0))
+                    GVA2Old(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear, FlowID(InputCount, 0), "DZ", "'rail'", DZone(InputCount, 0))
                     CostOld(InputCount, 0) = InputArray(InputCount, 8)
                     FuelOld(InputCount, 0) = InputArray(InputCount, 9)
                     MaxTDOld(InputCount, 0) = InputArray(InputCount, 10)
@@ -377,8 +377,8 @@
                     'now modified as population data available up to 2100 - so should never need 'else'
                     'v1.9 now read by using database function
                     If Year < 91 Then
-                        Pop1New = get_population_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 0), "OZ", "'rail'", OZone(InputCount, 0))
-                        Pop2New = get_population_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 0), "DZ", "'rail'", DZone(InputCount, 0))
+                        Pop1New = get_population_data_by_zoneID(g_modelRunYear, FlowID(InputCount, 0), "OZ", "'rail'", OZone(InputCount, 0))
+                        Pop2New = get_population_data_by_zoneID(g_modelRunYear, FlowID(InputCount, 0), "DZ", "'rail'", DZone(InputCount, 0))
                     Else
                         Pop1New = Pop1Old(InputCount, 0)
                         Pop2New = Pop2Old(InputCount, 0)
@@ -398,8 +398,8 @@
                     'v1.9 now read by using database function
                     'database does not have gva forecasts after year 2050, and the calculation is only available before year 2050
                     If Year < 91 Then
-                        GVA1New = get_gva_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 0), "OZ", "'rail'", OZone(InputCount, 0))
-                        GVA2New = get_gva_data_by_zoneID(modelRunID, Year + 2010, FlowID(InputCount, 0), "DZ", "'rail'", DZone(InputCount, 0))
+                        GVA1New = get_gva_data_by_zoneID(g_modelRunYear, FlowID(InputCount, 0), "OZ", "'rail'", OZone(InputCount, 0))
+                        GVA2New = get_gva_data_by_zoneID(g_modelRunYear, FlowID(InputCount, 0), "DZ", "'rail'", DZone(InputCount, 0))
                     Else
                         GVA1New = GVA1Old(InputCount, 0)
                         GVA2New = GVA2Old(InputCount, 0)
@@ -518,7 +518,7 @@ NextYear:
 
                 MaxTDNew = MaxTD(Year)
                 'write to output file
-                OutputArray(InputCount, 0) = modelRunID
+                OutputArray(InputCount, 0) = g_modelRunID
                 OutputArray(InputCount, 1) = FlowID(InputCount, 0)
                 OutputArray(InputCount, 2) = Year
                 OutputArray(InputCount, 3) = Tracks(InputCount, 0)
@@ -633,10 +633,10 @@ NextYear:
         Dim zonecheck As Boolean
 
         'read old link scheme file
-        Call ReadData("RailLink", "OldRlEl", schemearray, modelRunID)
+        Call ReadData("RailLink", "OldRlEl", schemearray, g_modelRunYear)
 
         'read old zone scheme file
-        Call ReadData("RailLink", "OldRzEl", zonearray, modelRunID)
+        Call ReadData("RailLink", "OldRzEl", zonearray, g_modelRunYear)
 
         kmtoelectrify = 0
 
@@ -803,7 +803,7 @@ NextYear:
             arraynum = splitline(2)
             'skip lines which don't correspond to a flow
             If elschemes(arraynum, 0) > 0 Then
-                schemeoutputrow(RlElNum, 0) = modelRunID
+                schemeoutputrow(RlElNum, 0) = g_modelRunID
                 schemeoutputrow(RlElNum, 1) = elschemes(arraynum, 0)
                 schemeoutputrow(RlElNum, 2) = elschemes(arraynum, 1)
                 schemeoutputrow(RlElNum, 3) = elschemes(arraynum, 2)
@@ -829,7 +829,7 @@ NextYear:
             arraynum = splitline(2)
             'skip lines which have a zero station count
             If elzschemes(arraynum, 2) > 0 Then
-                zoneoutputrow(RzElNum, 0) = modelRunID
+                zoneoutputrow(RzElNum, 0) = g_modelRunID
                 zoneoutputrow(RzElNum, 1) = elzschemes(arraynum, 0)
                 zoneoutputrow(RzElNum, 2) = elzschemes(arraynum, 1)
                 zoneoutputrow(RzElNum, 3) = elzschemes(arraynum, 2)
