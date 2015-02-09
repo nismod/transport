@@ -837,8 +837,8 @@ NextYear:
             End If
         Next
 
-        Call WriteData("RailLink", "RlLinkElSchemes", schemeoutputrow)
-        Call WriteData("RailLink", "RlZoneElSchemes", zoneoutputrow)
+        Call WriteData("RailLink", "ElSchemes", schemeoutputrow)
+        Call WriteData("RailZone", "ElSchemes", zoneoutputrow)
 
     End Sub
 

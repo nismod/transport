@@ -66,8 +66,6 @@
     Public SubStrategy As Integer
 
     Dim OZone, DZone As Long
-    Dim ErrDict As String
-
     Dim ModelType As String
     Dim Subtype As String
 
@@ -342,14 +340,12 @@
                             If PopLookup.TryGetValue(OZone, newval) Then
                                 outline = outline & newval & ","
                             Else
-                                ErrDict = "population"
-                                Call DictionaryMissingVal()
+                                Call MissingValueError("population")
                             End If
                             If PopLookup.TryGetValue(DZone, newval) Then
                                 outline = outline & newval & ","
                             Else
-                                ErrDict = "population"
-                                Call DictionaryMissingVal()
+                                Call MissingValueError("population")
                             End If
                         Else
                             outline = outline & inarray(28) & "," & inarray(29) & ","
@@ -359,14 +355,12 @@
                             If EcoLookup.TryGetValue(OZone, newval) Then
                                 outline = outline & newval & ","
                             Else
-                                ErrDict = "gva"
-                                Call DictionaryMissingVal()
+                                Call MissingValueError("gva")
                             End If
                             If EcoLookup.TryGetValue(DZone, newval) Then
                                 outline = outline & newval & ","
                             Else
-                                ErrDict = "gva"
-                                Call DictionaryMissingVal()
+                                Call MissingValueError("gva")
                             End If
                         Else
                             outline = outline & inarray(30) & "," & inarray(31) & ","
@@ -463,8 +457,7 @@
                             If PopLookup.TryGetValue(OZone, newval) Then
                                 outline = outline & newval & ","
                             Else
-                                ErrDict = "population"
-                                Call DictionaryMissingVal()
+                                Call MissingValueError("population")
                             End If
                         Else
                             outline = outline & inarray(3) & ","
@@ -474,8 +467,7 @@
                             If EcoLookup.TryGetValue(OZone, newval) Then
                                 outline = outline & newval & ","
                             Else
-                                ErrDict = "gva"
-                                Call DictionaryMissingVal()
+                                Call MissingValueError("gva")
                             End If
                         Else
                             outline = outline & inarray(4) & ","
@@ -553,14 +545,12 @@
                             If PopLookup.TryGetValue(OZone, newval) Then
                                 outline = outline & newval & ","
                             Else
-                                ErrDict = "population"
-                                Call DictionaryMissingVal()
+                                Call MissingValueError("population")
                             End If
                             If PopLookup.TryGetValue(DZone, newval) Then
                                 outline = outline & newval & ","
                             Else
-                                ErrDict = "population"
-                                Call DictionaryMissingVal()
+                                Call MissingValueError("population")
                             End If
                         Else
                             outline = outline & inarray(5) & "," & inarray(6) & ","
@@ -570,14 +560,12 @@
                             If EcoLookup.TryGetValue(OZone, newval) Then
                                 outline = outline & newval & ","
                             Else
-                                ErrDict = "gva"
-                                Call DictionaryMissingVal()
+                                Call MissingValueError("gva")
                             End If
                             If EcoLookup.TryGetValue(DZone, newval) Then
                                 outline = outline & newval & ","
                             Else
-                                ErrDict = "gva"
-                                Call DictionaryMissingVal()
+                                Call MissingValueError("gva")
                             End If
                         Else
                             outline = outline & inarray(7) & "," & inarray(8) & ","
@@ -633,8 +621,7 @@
                             If PopLookup.TryGetValue(OZone, newval) Then
                                 outline = outline & newval & ","
                             Else
-                                ErrDict = "population"
-                                Call DictionaryMissingVal()
+                                Call MissingValueError("population")
                             End If
                         Else
                             outline = outline & inarray(4) & ","
@@ -644,8 +631,7 @@
                             If EcoLookup.TryGetValue(OZone, newval) Then
                                 outline = outline & newval & ","
                             Else
-                                ErrDict = "gva"
-                                Call DictionaryMissingVal()
+                                Call MissingValueError("gva")
                             End If
                         Else
                             outline = outline & inarray(5) & ","
@@ -701,14 +687,12 @@
                             If PopLookup.TryGetValue(OZone, newval) Then
                                 outline = outline & newval & ","
                             Else
-                                ErrDict = "population"
-                                Call DictionaryMissingVal()
+                                Call MissingValueError("population")
                             End If
                             If PopLookup.TryGetValue(DZone, newval) Then
                                 outline = outline & newval & ","
                             Else
-                                ErrDict = "population"
-                                Call DictionaryMissingVal()
+                                Call MissingValueError("population")
                             End If
                         Else
                             outline = outline & inarray(4) & "," & inarray(5) & ","
@@ -718,14 +702,12 @@
                             If EcoLookup.TryGetValue(OZone, newval) Then
                                 outline = outline & newval & ","
                             Else
-                                ErrDict = "gva"
-                                Call DictionaryMissingVal()
+                                Call MissingValueError("gva")
                             End If
                             If EcoLookup.TryGetValue(DZone, newval) Then
                                 outline = outline & newval & ","
                             Else
-                                ErrDict = "gva"
-                                Call DictionaryMissingVal()
+                                Call MissingValueError("gva")
                             End If
                         Else
                             outline = outline & inarray(6) & "," & inarray(7) & ","
@@ -774,8 +756,7 @@
                             If PopLookup.TryGetValue(OZone, newval) Then
                                 outline = outline & newval & ","
                             Else
-                                ErrDict = "population"
-                                Call DictionaryMissingVal()
+                                Call MissingValueError("population")
                             End If
                         Else
                             outline = outline & inarray(6) & ","
@@ -785,8 +766,7 @@
                             If EcoLookup.TryGetValue(OZone, newval) Then
                                 outline = outline & newval & ","
                             Else
-                                ErrDict = "gva"
-                                Call DictionaryMissingVal()
+                                Call MissingValueError("gva")
                             End If
                         Else
                             outline = outline & inarray(7) & ","
@@ -837,8 +817,7 @@
                             If PopLookup.TryGetValue(OZone, newval) Then
                                 outline = outline & newval & ","
                             Else
-                                ErrDict = "population"
-                                Call DictionaryMissingVal()
+                                Call MissingValueError("population")
                             End If
                         Else
                             outline = outline & inarray(11) & ","
@@ -848,8 +827,7 @@
                             If EcoLookup.TryGetValue(OZone, newval) Then
                                 outline = outline & newval & ","
                             Else
-                                ErrDict = "gva"
-                                Call DictionaryMissingVal()
+                                Call MissingValueError("gva")
                             End If
                         Else
                             outline = outline & inarray(12) & ","
@@ -977,7 +955,7 @@
         Call WriteData("Logfile", "", logarray)
     End Sub
 
-    Sub DictionaryMissingVal()
+    Sub MissingValueError(ByVal ErrDict As String)
         logarray(logNum, 0) = "No " & ErrDict & " value found in lookup table for Zone " & OZone & " when updating input files.  Model run terminated."
         logNum += 1
         Call WriteData("Logfile", "", logarray)

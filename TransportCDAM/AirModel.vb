@@ -115,15 +115,9 @@ Module AirModel
         'loop through all 90 years of modelling period - this is the outside loop for this model because need to aggregate across flows each year
         Do Until YearNum > StartYear + Duration
 
-            'read from initial file if year 1, otherwise update from temp file
-            If YearNum = 1 Then
-                Call ReadData("AirNode", "Input", NodeInputArray, g_modelRunYear)
-                Call ReadData("AirFlow", "Input", FlowInputArray, g_modelRunYear)
-
-            Else
-                Call ReadData("AirNode", "Input", NodeInputArray, g_modelRunYear)
-                Call ReadData("AirFlow", "Input", FlowInputArray, g_modelRunYear)
-            End If
+            'read input data
+            Call ReadData("AirNode", "Input", NodeInputArray, g_modelRunYear)
+            Call ReadData("AirFlow", "Input", FlowInputArray, g_modelRunYear)
 
             'get external variables for this year
             Call ReadData("AirNode", "ExtVar", AirportExtVar, g_modelRunYear)
@@ -187,7 +181,7 @@ Module AirModel
                 Call WriteData("AirFlow", "Temp", FlowTempArray, , True)
 
                 If BuildInfra = True Then
-                    Call WriteData("AirNode", "AirNewCap", NewCapArray, , True)
+                    Call WriteData("AirNode", "NewCap_Add", NewCapArray, , True)
                 End If
             Else
                 Call WriteData("AirNode", "Output", NodeOutputArray, , False)
@@ -197,7 +191,7 @@ Module AirModel
                 Call WriteData("AirFlow", "Temp", FlowTempArray, , False)
 
                 If BuildInfra = True Then
-                    Call WriteData("AirNode", "AirNewCap", NewCapArray, , False)
+                    Call WriteData("AirNode", "NewCap_Add", NewCapArray, , False)
                 End If
             End If
 

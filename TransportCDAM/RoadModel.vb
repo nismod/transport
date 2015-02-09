@@ -126,86 +126,69 @@
         'set start year as the entered value
         YearNum = StartYear
 
-        'Loop through flow and speed calculation modules for each year until end of period
-        Do Until YearNum > StartYear + Duration
+        'load external variables
+        Call ReadData("RoadLink", "ExtVar", ExternalValues, g_modelRunYear)
 
-            'load external variables
-            Call ReadData("RoadLink", "ExtVar", ExternalValues, g_modelRunYear)
+        'read from initial file if year 1, otherwise update from temp file
+        If g_modelRunYear = g_initialYear Then
+            Call ReadData("RoadLink", "Input", InputArray, g_modelRunYear)
+        Else
+            Call ReadData("RoadLink", "Temp Annual", TempAnArray, g_modelRunYear)
+            Call ReadData("RoadLink", "Temp Hourly", TempHArray, g_modelRunYear)
+        End If
 
-            'read from initial file if year 1, otherwise update from temp file
-            If g_modelRunYear = g_initialYear Then
-                Call ReadData("RoadLink", "Input", InputArray, g_modelRunYear)
-            Else
-                Call ReadData("RoadLink", "Temp Annual", TempAnArray, g_modelRunYear)
-                Call ReadData("RoadLink", "Temp Hourly", TempHArray, g_modelRunYear)
+        link = 1
+        'loop through all links
+        Do Until link > 291
+
+
+            'modification v1.2 - input file replaced by internally specified values - because these have to be altered for some links
+            'further modification - these are now specified in the input file (and therefore any alterations where base usage exceeds the theoretical maximum have to be made in the input file)
+
+            'set the new cap array to the first line to start with
+            NewCapNum = 1
+
+            'read from input array
+            Call LoadInputRow()
+
+            'calculate the starting hourly flows
+            If YearNum = 1 Then
+                Call StartFlows()
             End If
 
-            link = 1
-            'loop through all links
-            Do Until link > 291
+            'check if new capacity has been added
+            Call CapChange()
 
+            'alter speed category flows if capacity has changed
+            'modification completed v1.2 - now also adds latent demand to the previous demand figures, and blanks the relevant latent demand values
+            Call NewSpeedCatFlows()
 
-                'modification v1.2 - input file replaced by internally specified values - because these have to be altered for some links
-                'further modification - these are now specified in the input file (and therefore any alterations where base usage exceeds the theoretical maximum have to be made in the input file)
+            'calculate the base speeds
+            Call BaseSpeeds()
 
-                'set the new cap array to the first line to start with
-                NewCapNum = 1
+            'calculate each of the hourly flows
+            Call HourlyFlowCalc()
 
-                'read from input array
-                Call LoadInputRow()
+            'sum all the hourly flows to give an equivalent AADF figure
+            Call TotalFlow()
 
-                'calculate the starting hourly flows
-                If YearNum = 1 Then
-                    Call StartFlows()
-                End If
+            'write the flows to the output file and temp file
+            Call WriteOutputRow()
 
-                'check if new capacity has been added
-                Call CapChange()
-
-                'alter speed category flows if capacity has changed
-                'modification completed v1.2 - now also adds latent demand to the previous demand figures, and blanks the relevant latent demand values
-                Call NewSpeedCatFlows()
-
-                'calculate the base speeds
-                Call BaseSpeeds()
-
-                'calculate each of the hourly flows
-                Call HourlyFlowCalc()
-
-                'sum all the hourly flows to give an equivalent AADF figure
-                Call TotalFlow()
-
-                'write the flows to the output file and temp file
-                Call WriteOutputRow()
-
-                link += 1
-            Loop
-
-            'create file is true if it is the initial year, otherwise update existing files
-            'in database version, write to Temp Annual and Temp Hourly tables
-            If YearNum = StartYear Then
-                Call WriteData("RoadLink", "Output", OutputArray, , True)
-                Call WriteData("RoadLink", "Temp Annual", TempAnArray, , True)
-                Call WriteData("RoadLink", "Temp Hourly", TempHArray, , True)
-
-                If BuildInfra = True Then
-                    Call WriteData("RoadLink", "RoadLinkNewCap", NewCapArray, , True)
-                End If
-            Else
-                Call WriteData("RoadLink", "Output", OutputArray, , False)
-                Call WriteData("RoadLink", "Temp Annual", TempAnArray, , False)
-                Call WriteData("RoadLink", "Temp Hourly", TempHArray, , False)
-
-                If BuildInfra = True Then
-                    Call WriteData("RoadLink", "RoadLinkNewCap", NewCapArray, , False)
-                End If
-            End If
-            Erase TempAnArray
-            Erase TempHArray
-
-            YearNum += 1
+            link += 1
         Loop
 
+        'create file is true if it is the initial year, otherwise update existing files
+        'in database version, write to Temp Annual and Temp Hourly tables
+        Call WriteData("RoadLink", "Output", OutputArray, , False)
+        Call WriteData("RoadLink", "Temp Annual", TempAnArray, , False)
+        Call WriteData("RoadLink", "Temp Hourly", TempHArray, , False)
+
+        If BuildInfra = True Then
+            Call WriteData("RoadLink", "NewCap_Add", NewCapArray, , False)
+        End If
+        Erase TempAnArray
+        Erase TempHArray
 
     End Sub
 

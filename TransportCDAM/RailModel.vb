@@ -137,13 +137,13 @@ Module RailModel
                 Call WriteData("RailLink", "Temp", TempArray, , True)
                 'if the model is building capacity then create new capacity file
                 If BuildInfra = True Then
-                    Call WriteData("RailLink", "RlLinkNewCap", NewCapArray, , True)
+                    Call WriteData("RailLink", "NewCap_Add", NewCapArray, , True)
                 End If
             Else
                 Call WriteData("RailLink", "Output", OutputArray, , False)
                 Call WriteData("RailLink", "Temp", TempArray, , False)
                 If BuildInfra = True Then
-                    Call WriteData("RailLink", "RlLinkNewCap", NewCapArray, , False)
+                    Call WriteData("RailLink", "NewCap_Add", NewCapArray, , False)
                 End If
             End If
 

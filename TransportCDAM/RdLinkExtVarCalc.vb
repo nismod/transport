@@ -209,7 +209,6 @@
         Call ReadData("RoadLink", "Input", InputArray, g_modelRunYear)
 
 
-
         'if capacity is changing then get capacity change file
         'v1.3 do this anyway to include compulsory changes
         'now read from database

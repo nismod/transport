@@ -90,13 +90,9 @@
             'get external variable values from previous year as base values
             Call ReadData("RoadZone", "ExtVar", ZonePreExtVar, g_modelRunYear)
 
-            'read from the initial file if it is year 2011
-            If YearCount = 1 Then
-                Call ReadData("RoadZone", "Input", InputArray, g_modelRunYear)
-            Else
-                Call ReadData("RoadZone", "Input", InputArray, g_modelRunYear)
-            End If
-
+            'read input data
+            Call ReadData("RoadZone", "Input", InputArray, g_modelRunYear)
+            
             ZoneID = 1
 
             Do Until ZoneID > 144
@@ -122,17 +118,17 @@
                 Call WriteData("RoadZone", "Output", OutputArray, , True)
                 Call WriteData("RoadZone", "Temp", TempArray, , True)
 
-                Call WriteData("RoadZone", "RoadZoneFuel", FuelArray, , True)
+                Call WriteData("RoadZone", "Fuel", FuelArray, , True)
                 If BuildInfra = True Then
-                    Call WriteData("RoadZone", "RoadZoneNewCap", NewCapArray, , True)
+                    Call WriteData("RoadZone", "NewCap_Add", NewCapArray, , True)
                 End If
             Else
                 Call WriteData("RoadZone", "Output", OutputArray, , False)
                 Call WriteData("RoadZone", "Temp", TempArray, , False)
 
-                Call WriteData("RoadZone", "RoadZoneFuel", FuelArray, , False)
+                Call WriteData("RoadZone", "Fuel", FuelArray, , False)
                 If BuildInfra = True Then
-                    Call WriteData("RoadZone", "RoadZoneNewCap", NewCapArray, , False)
+                    Call WriteData("RoadZone", "NewCap_Add", NewCapArray, , False)
                 End If
             End If
 

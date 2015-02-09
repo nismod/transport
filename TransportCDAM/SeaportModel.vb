@@ -20,7 +20,6 @@
     Dim LBCap, DBCap, GCCap, LLCap, RRCap As Double
     Dim PopBase As Double
     Dim GVABase As Double
-    Dim CostBase As Double
     Dim PortExtVar(47, 10) As String
     Dim LatentFreight(5) As Double 'latent freight demand in the same order
     Dim PortPopRat As Double
@@ -40,6 +39,7 @@
     Dim OutputArray(48, 9) As String
     Dim TempArray(48, 12) As String
     Dim NewCapNum As Integer
+    Dim CostBase As Double
 
 
     Public Sub SeaMain()
@@ -82,13 +82,13 @@
                 Call WriteData("Seaport", "Temp", TempArray, , True)
                 'if the model is building capacity then create new capacity file
                 If BuildInfra = True Then
-                    Call WriteData("Seaport", "SeaNewCap", NewCapArray, , True)
+                    Call WriteData("Seaport", "NewCap_Add", NewCapArray, , True)
                 End If
             Else
                 Call WriteData("Seaport", "Output", OutputArray, , False)
                 Call WriteData("Seaport", "Temp", TempArray, , False)
                 If BuildInfra = True Then
-                    Call WriteData("Seaport", "SeaNewCap", NewCapArray, , False)
+                    Call WriteData("Seaport", "NewCap_Add", NewCapArray, , False)
                 End If
             End If
 
@@ -128,7 +128,7 @@
     Sub LoadPortInput()
 
         'read initial input file if year 1
-        If YearNum = 1 Then
+        If g_modelRunYear = g_initialYear Then
             PortID = InputArray(InputCount, 4)
             BaseFreight(1) = InputArray(InputCount, 5)
             BaseFreight(2) = InputArray(InputCount, 6)
@@ -155,16 +155,14 @@
             BaseFreight(3) = InputArray(InputCount, 6)
             BaseFreight(4) = InputArray(InputCount, 7)
             BaseFreight(5) = InputArray(InputCount, 8)
-            'BaseCap(1) = InputArray(InputCount, 6)
-            'BaseCap(2) = InputArray(InputCount, 7)
-            'BaseCap(3) = InputArray(InputCount, 8)
-            'BaseCap(4) = InputArray(InputCount, 9)
-            'BaseCap(5) = InputArray(InputCount, 10)
 
             'read previous years' value as base value
             PopBase = get_population_data_by_seaportID(g_modelRunYear, PortID)
             GVABase = get_gva_data_by_seaportID(g_modelRunYear, PortID)
-            CostBase = get_single_data("TR_O_SeaFreightExternalVariables", "port_id", "year", Chr(34) & "Cost" & Chr(34), YearNum - 1, PortID)
+            'get_single_data("TR_IO_SeaFreightExternalVariables", "port_id", "year", "cost", YearNum - 1, PortID)
+            'Get the cost by PortID
+            Call ReadData("Seaport", "ExtVar", PortExtVar, g_modelRunYear - 1, PortID)
+            CostBase = PortExtVar(1, 11)
             For x = 1 To 5
                 AddedCap(x) = InputArray(InputCount, 8 + x)
             Next

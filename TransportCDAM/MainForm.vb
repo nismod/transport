@@ -4,7 +4,8 @@
         RunModel = True
         'Check if file path has been selected - if not then use default.
         If DirPath = "" Then
-            DirPath = "\\soton.ac.uk\ude\PersonalFiles\Users\spb1g09\mydocuments\Southampton Work\ITRC\Transport CDAM\Model Inputs\"
+            'DirPath = "\\soton.ac.uk\ude\PersonalFiles\Users\spb1g09\mydocuments\Southampton Work\ITRC\Transport CDAM\Model Inputs\"
+            DirPath = "C:\Users\cenv0384\Documents\Visual Studio 2013\Projects\ITRCWS1C3\Transport\TransportCDAM\Model Input and Output\Model Inputs\"
         End If
         'Check if prefix has been set - if not then use default
         If FilePrefix = "" Then
@@ -215,6 +216,7 @@
         'Check if file path has been selected - if not then use default
         If DirPath = "" Then
             DirPath = "\\soton.ac.uk\ude\PersonalFiles\Users\spb1g09\mydocuments\Southampton Work\ITRC\Transport CDAM\Model Inputs\"
+            'DirPath = "C:\Users\cenv0384\Documents\Visual Studio 2013\Projects\ITRCWS1C3\Transport\TransportCDAM\Model Input and Output\Model Inputs\"
         End If
         'Check if prefix has been set - if not then use default
         If FilePrefix = "" Then
@@ -230,6 +232,7 @@
         'Check if file path has been selected - if not then use default
         If DirPath = "" Then
             DirPath = "\\soton.ac.uk\ude\PersonalFiles\Users\spb1g09\mydocuments\Southampton Work\ITRC\Transport CDAM\Model Inputs\"
+            'DirPath = "C:\Users\cenv0384\Documents\Visual Studio 2013\Projects\ITRCWS1C3\Transport\TransportCDAM\Model Input and Output\Model Inputs\"
         End If
         'Check if prefix has been set - if not then use default
         If FilePrefix = "" Then
@@ -365,6 +368,7 @@
         'Check if file path has been selected - if not then use default
         If DirPath = "" Then
             DirPath = "\\soton.ac.uk\ude\PersonalFiles\Users\spb1g09\mydocuments\Southampton Work\ITRC\Transport CDAM\Model Inputs\"
+            'DirPath = "C:\Users\cenv0384\Documents\Visual Studio 2013\Projects\ITRCWS1C3\Transport\TransportCDAM\Model Input and Output\Model Inputs\"
         End If
         'Check if prefix has been set - if not then use default
         If FilePrefix = "" Then
@@ -380,6 +384,7 @@
         'Check if file path has been selected - if not then use default
         If DirPath = "" Then
             DirPath = "\\soton.ac.uk\ude\PersonalFiles\Users\spb1g09\mydocuments\Southampton Work\ITRC\Transport CDAM\Model Inputs\"
+            'DirPath = "C:\Users\cenv0384\Documents\Visual Studio 2013\Projects\ITRCWS1C3\Transport\TransportCDAM\Model Input and Output\Model Inputs\"
         End If
         'Check if prefix has been set - if not then use default
         If FilePrefix = "" Then
