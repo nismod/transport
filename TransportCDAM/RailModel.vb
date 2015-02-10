@@ -240,6 +240,7 @@ Module RailModel
             GVAZ2Base(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear, FlowNum(InputCount, 0), "DZ", "'rail'", Zone2ID)
             OldDelays(InputCount, 0) = InputArray(InputCount, 4)
             RlLinkCost(InputCount, 0) = InputArray(InputCount, 5)
+            'TODO This get_single_data should be replaced with a ReadData command
             CarFuel(InputCount, 0) = get_single_data("TR_O_RailLinkExternalVariables", "flow_id", "year", Chr(34) & "CarFuel" & Chr(34), YearNum - 1, FlowNum(InputCount, 0))
             OldTrains(InputCount, 0) = InputArray(InputCount, 6)
             OldTracks(InputCount, 0) = InputArray(InputCount, 7)

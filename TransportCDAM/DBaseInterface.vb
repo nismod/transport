@@ -106,6 +106,8 @@ Module DBaseInterface
         Dim GORYear As Long
         Dim rowtype As String
 
+        'TODO - This doesn't seem to be getting data from the dbase?
+
         badregioncount = 0
 
         'set up input file
@@ -1203,6 +1205,8 @@ Module DBaseInterface
                 Select Case SubType
                     Case "ModelRunDetails"
                         theSQL = "SELECT * FROM " & Chr(34) & "ISL_ModelRuns" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID
+                    Case "Parameters"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_I_Parameters_Run" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID
                     Case Else
                         'for error handling
                 End Select
