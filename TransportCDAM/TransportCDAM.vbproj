@@ -112,7 +112,6 @@
     <Compile Include="RZExtVarCalc.vb" />
     <Compile Include="SeaExtVarCalc.vb" />
     <Compile Include="SeaportModel.vb" />
-    <Compile Include="TransportCDAM.vb" />
     <Compile Include="UpdateEVs.vb" />
   </ItemGroup>
   <ItemGroup>
