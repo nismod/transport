@@ -241,7 +241,10 @@ Module RailModel
             OldDelays(InputCount, 0) = InputArray(InputCount, 4)
             RlLinkCost(InputCount, 0) = InputArray(InputCount, 5)
             'TODO This get_single_data should be replaced with a ReadData command
-            CarFuel(InputCount, 0) = get_single_data("TR_O_RailLinkExternalVariables", "flow_id", "year", Chr(34) & "CarFuel" & Chr(34), YearNum - 1, FlowNum(InputCount, 0))
+            Dim thisIn(,) As String
+            'CarFuel(InputCount, 0) = get_single_data("TR_O_RailLinkExternalVariables", "flow_id", "year", Chr(34) & "CarFuel" & Chr(34), YearNum - 1, FlowNum(InputCount, 0))
+            CarFuel(InputCount, 0) = ReadData("RailLink", "ExtVar", thisIn, g_modelRunYear - 1, FlowNum(InputCount, 0))
+
             OldTrains(InputCount, 0) = InputArray(InputCount, 6)
             OldTracks(InputCount, 0) = InputArray(InputCount, 7)
             MaxTDBase(InputCount, 0) = InputArray(InputCount, 8)

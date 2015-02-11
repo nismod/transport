@@ -1127,38 +1127,8 @@ Module DBaseInterface
         End If
 
     End Sub
-    Function get_single_data(ByVal table_name As String, ByVal id_column As String, ByVal year_column As String, ByVal target_column As String, ByVal year As Integer, ByVal id As Integer)
-        'read specific data from specific table
-        Dim theSQL As String = ""
 
-        If id = 1 Then
-            'reset dataArray value to read from database
-            dataArray = Nothing
-        End If
-
-        If dataArray Is Nothing Then
-
-            theSQL = "SELECT " & id_column & "," & year_column & "," & target_column & _
-                        " FROM " & Chr(34) & table_name & Chr(34) & _
-                        " WHERE " & year_column & " = " & year & " AND modelrun_id=" & g_modelRunID & " ORDER BY " & id_column
-
-            If LoadSQLDataToArray(dataArray, theSQL) = False Then
-                dataArray = Nothing
-                Return 0
-            End If
-        End If
-
-        'Get the population for the specified zone
-        For i = 1 To UBound(dataArray, 1)
-            If CInt(dataArray(i, 0)) = id Then
-                Return CDbl(dataArray(i, 2))
-            End If
-        Next
-
-        'If portid not found then return 0
-        Return 0
-
-    End Function
+  
 
 
     '****************************************************************************************
@@ -1251,7 +1221,11 @@ Module DBaseInterface
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadLink_Hourly" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & "and year = " & Year - 1
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "ExternalVariables" & EVFileSuffix & ".csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadLinkExternalVariables" & Chr(34) & " WHERE year = " & Year & " AND modelrun_id=" & g_modelRunID & " ORDER BY flow_id"
+                        If whereID = 0 Then
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadLinkExternalVariables" & Chr(34) & " WHERE year = " & Year & " AND modelrun_id=" & g_modelRunID & " ORDER BY flow_id"
+                        Else
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadLinkExternalVariables" & Chr(34) & " WHERE year = " & Year & " AND modelrun_id=" & g_modelRunID & " AND flow_id = " & whereID & " ORDER BY flow_id"
+                        End If
                     Case "CapChange"
                         TheFileName = CapFilePrefix & "RoadLinkCapChange.csv"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RoadLinkCapacityChange" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & "and year = " & Year

@@ -64,10 +64,12 @@
     Public StrategyID As Integer
     Public StrategyCode As String
     Public SubStrategy As Integer
+    Public DBaseMode As Boolean
 
     Dim OZone, DZone As Long
     Dim ModelType As String
     Dim Subtype As String
+
 
 
     Public Function runCDAM(ByVal ModelRun_ID As Integer, ByVal Model_Year As Integer) As Boolean
@@ -81,6 +83,9 @@
         If getModelRunDetails() = False Then
             Throw New System.Exception("Error getting Model Run details from database")
         End If
+
+        'get model run parameters from dbase
+        If DBaseMode = True Then GetParameters()
 
         'Run Transport Model
         FullMain()
@@ -138,6 +143,8 @@
                     CongestionCharge = CBool(ary(5, i))
                 Case "ConChargeYear"
                     ConChargeYear = CInt(ary(5, i))
+                Case "ConChargePer"
+                    ConChargePer = CInt(ary(5, i))
                 Case Else
                     '....
             End Select
@@ -154,7 +161,7 @@
         Call CreateLog()
 
         'call database input sub - this will check whether we actually need to get such input
-        Call DBaseInputMain()
+        'Call DBaseInputMain()
 
         'check if creating external variable files
         If CreateExtVars = True Then

@@ -1,6 +1,8 @@
 ﻿Public Class MainForm
 
     Private Sub Button1_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles Button1.Click
+        DBaseMode = Me.cbxDBaseMode.Checked
+
         RunModel = True
         'Check if file path has been selected - if not then use default.
         If DirPath = "" Then
