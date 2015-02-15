@@ -65,6 +65,7 @@
     Public StrategyCode As String
     Public SubStrategy As Integer
     Public DBaseMode As Boolean
+    Public theYear As Integer
 
     Dim OZone, DZone As Long
     Dim ModelType As String

@@ -49,7 +49,6 @@
     Dim FFlowRatio(19) As Double
     Dim FlowRatio As Double
     Dim ExternalValues(291, 33) As String
-    Dim YearNum As Long
     Dim ScaledHourlyFlows(20, 24) As Double
     Dim NewHourlyFlows(20, 24) As Double
     Dim NewHourlySpeeds(291, 20, 24) As Double
@@ -123,8 +122,6 @@
         'v1.2 modification: for the moment we are saying that if capacity utilisation is less than 0.25 then traffic flows at free flow speed - but may wish to alter this
         FreeFlowCU = 0.25
 
-        'set start year as the entered value
-        YearNum = StartYear
 
         'load external variables
         Call ReadData("RoadLink", "ExtVar", ExternalValues, g_modelRunYear)
@@ -152,7 +149,7 @@
             Call LoadInputRow()
 
             'calculate the starting hourly flows
-            If YearNum = 1 Then
+            If g_modelRunYear = 1 Then
                 Call StartFlows()
             End If
 
@@ -213,11 +210,9 @@
         'if using variable trip rates then set up the trip rate variable
         If TripRates = "SubStrategy" Then
             'get the strat values
-            Call ReadData("SubStrategy", "", stratarray)
-            For r = 1 To 90
-                RdTripRates(0, r) = stratarray(r, 91)
-                RdTripRates(1, r) = stratarray(r, 92)
-            Next
+            Call ReadData("SubStrategy", "", stratarray, g_modelRunYear)
+            RdTripRates(0, 1) = stratarray(1, 91)
+            RdTripRates(1, 1) = stratarray(1, 92)
         End If
 
     End Sub
@@ -244,7 +239,7 @@
         Dim i As Long
         Dim hrow As Integer
  
-        If YearNum = 1 Then
+        If g_modelRunYear = 1 Then
             'read base year (year 0) data
             FlowID(link, 1) = InputArray(link, 4)
             Zone1(link, 1) = InputArray(link, 5)
@@ -474,7 +469,7 @@
         'in this case don't need to iterate to get speeds - we know the total base flow for each road type, so just use the speed calculator to adjust the speeds if conditions are congested - flows are observed and therefore held constant
         'if this is the first year, we need to calculate the base speeds from the input data
 
-        If YearNum = 1 Then
+        If g_modelRunYear = 1 Then
             sc = 0
             h = 0
 
@@ -688,14 +683,14 @@
             OldY = FlowOld
             NewY = FlowNew
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                OldEl = RoadEls(YearNum, 9)
+                OldEl = RoadEls(1, 9)
                 Call VarElCalc()
                 SpeedRatio = VarRat
             Else
-                SpeedRatio = (FlowNew / FlowOld) ^ RoadEls(YearNum, 9)
+                SpeedRatio = (FlowNew / FlowOld) ^ RoadEls(1, 9)
             End If
         Else
-            SpeedRatio = (FlowNew / FlowOld) ^ RoadEls(YearNum, 9)
+            SpeedRatio = (FlowNew / FlowOld) ^ RoadEls(1, 9)
         End If
         SpeedNew = SpeedOld * SpeedRatio
     End Sub
@@ -725,28 +720,28 @@
         'calculate the individual variable ratios for passenger traffic
         'v1.3 mod
         If TripRates = "SubStrategy" Then
-            rat1 = (((CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)) * RdTripRates(0, YearNum)) / (Z1Pop(link, 1) + Z2Pop(link, 1))) ^ RoadEls(YearNum, 1)
+            rat1 = (((CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)) * RdTripRates(0, 1)) / (Z1Pop(link, 1) + Z2Pop(link, 1))) ^ RoadEls(1, 1)
         Else
-            rat1 = ((CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)) / (Z1Pop(link, 1) + Z2Pop(link, 1))) ^ RoadEls(YearNum, 1)
+            rat1 = ((CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)) / (Z1Pop(link, 1) + Z2Pop(link, 1))) ^ RoadEls(1, 1)
         End If
 
-        rat3 = ((CDbl(ExternalValues(link, 6)) + ExternalValues(link, 7)) / (Z1GVA(link, 1) + Z2GVA(link, 1))) ^ RoadEls(YearNum, 2)
+        rat3 = ((CDbl(ExternalValues(link, 6)) + ExternalValues(link, 7)) / (Z1GVA(link, 1) + Z2GVA(link, 1))) ^ RoadEls(1, 2)
         'initially set speed new and speed old as equal to speed in previous year, so ratio = 1 - can be altered if desired as part of scenario
-        rat5 = 1 ^ RoadEls(YearNum, 3)
+        rat5 = 1 ^ RoadEls(1, 3)
 
         'cost ratio now estimated in getflowratio sub
 
         'calculate the individual variable ratios for freight traffic
         'v1.3 mod
         If TripRates = "SubStrategy" Then
-            ratf1 = (((CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)) * RdTripRates(1, YearNum)) / (Z1Pop(link, 1) + Z2Pop(link, 1))) ^ RoadEls(YearNum, 5)
+            ratf1 = (((CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)) * RdTripRates(1, 1)) / (Z1Pop(link, 1) + Z2Pop(link, 1))) ^ RoadEls(1, 5)
         Else
-            ratf1 = ((CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)) / (Z1Pop(link, 1) + Z2Pop(link, 1))) ^ RoadEls(YearNum, 5)
+            ratf1 = ((CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)) / (Z1Pop(link, 1) + Z2Pop(link, 1))) ^ RoadEls(1, 5)
         End If
 
-        ratf3 = ((CDbl(ExternalValues(link, 6)) + ExternalValues(link, 7)) / (Z1GVA(link, 1) + Z2GVA(link, 1))) ^ RoadEls(YearNum, 6)
+        ratf3 = ((CDbl(ExternalValues(link, 6)) + ExternalValues(link, 7)) / (Z1GVA(link, 1) + Z2GVA(link, 1))) ^ RoadEls(1, 6)
         '***NOTE - if altering this elasticity will also need to alter the flow-speed iteration process as this used the rat5 variable only
-        ratf5 = 1 ^ RoadEls(YearNum, 7)
+        ratf5 = 1 ^ RoadEls(1, 7)
         'cost ratio now estimated in getflowratio sub
 
         Do While h < 24
@@ -935,9 +930,9 @@
             End If
             'if using smart logistics then need to scale the HGV traffic
             If SmartFrt = True Then
-                If YearNum > SmFrtIntro Then
+                If g_modelRunYear > SmFrtIntro Then
                     'if year is after the introduction year and before or equal to the year when the final effect is realised then need to scale HGV traffic
-                    If YearNum <= SmFrtIntro + SmFrtYears Then
+                    If g_modelRunYear <= SmFrtIntro + SmFrtYears Then
                         NewHourlyFlows(4, h) = NewHourlyFlows(4, h) * (1 - (SmFrtPer / SmFrtYears))
                         NewHourlyFlows(5, h) = NewHourlyFlows(5, h) * (1 - (SmFrtPer / SmFrtYears))
                         NewHourlyFlows(10, h) = NewHourlyFlows(10, h) * (1 - (SmFrtPer / SmFrtYears))
@@ -970,7 +965,7 @@
         'add in congestion charge if using this - have to do this here because it will vary by the hour
         If CongestionCharge = True Then
             'check if we are in a year after the charge has started
-            If YearNum >= ConChargeYear Then
+            If g_modelRunYear >= ConChargeYear Then
                 If ClassFlowNew < (FreeFlowCU * MaxCap(link, RoadType)) Then
                     conchargeprop = 0
                 Else
@@ -999,13 +994,13 @@
             'pop ratio
             OldY = Z1Pop(link, 1) + Z2Pop(link, 1)
             If TripRates = "SubStrategy" Then
-                NewY = (CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)) * RdTripRates(1, YearNum)
+                NewY = (CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)) * RdTripRates(1, 1)
             Else
                 NewY = CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)
             End If
             NewY = CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                OldEl = RoadEls(YearNum, 1)
+                OldEl = RoadEls(1, 1)
                 Call VarElCalc()
                 rat1 = VarRat
             End If
@@ -1013,7 +1008,7 @@
             OldY = Z1GVA(link, 1) + Z2GVA(link, 1)
             NewY = CDbl(ExternalValues(link, 6)) + ExternalValues(link, 7)
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                OldEl = RoadEls(YearNum, 2)
+                OldEl = RoadEls(1, 2)
                 Call VarElCalc()
                 rat3 = VarRat
             End If
@@ -1023,21 +1018,21 @@
             OldY = CostOld(link, sc, h) + ChargeOld(link, sc, h)
             NewY = CostNew(sc, h) + ChargeNew(sc, h)
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                OldEl = RoadEls(YearNum, 4)
+                OldEl = RoadEls(1, 4)
                 Call VarElCalc()
                 rat6(sc) = VarRat
             Else
-                rat6(sc) = (NewY / OldY) ^ RoadEls(YearNum, 4)
+                rat6(sc) = (NewY / OldY) ^ RoadEls(1, 4)
             End If
             'freight pop ratio
             OldY = Z1Pop(link, 1) + Z2Pop(link, 1)
             If TripRates = "SubStrategy" Then
-                NewY = (CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)) * RdTripRates(1, YearNum)
+                NewY = (CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)) * RdTripRates(1, 1)
             Else
                 NewY = CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)
             End If
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                OldEl = RoadEls(YearNum, 5)
+                OldEl = RoadEls(1, 5)
                 Call VarElCalc()
                 ratf1 = VarRat
             End If
@@ -1045,7 +1040,7 @@
             OldY = Z1GVA(link, 1) + Z2GVA(link, 1)
             NewY = CDbl(ExternalValues(link, 6)) + ExternalValues(link, 7)
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                OldEl = RoadEls(YearNum, 6)
+                OldEl = RoadEls(1, 6)
                 Call VarElCalc()
                 ratf3 = VarRat
             End If
@@ -1054,24 +1049,24 @@
             OldY = CostOld(link, sc, h) + ChargeOld(link, sc, h)
             NewY = CostNew(sc, h) + ChargeNew(sc, h)
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                OldEl = RoadEls(YearNum, 8)
+                OldEl = RoadEls(1, 8)
                 Call VarElCalc()
                 ratf6(sc) = VarRat
             Else
-                ratf6(sc) = (CostNew(sc, h) / CostOld(link, sc, h)) ^ RoadEls(YearNum, 8)
+                ratf6(sc) = (CostNew(sc, h) / CostOld(link, sc, h)) ^ RoadEls(1, 8)
             End If
         Else
             'still need to recalculate ratio if using congestion charging and to calculate cost ratio if not (latter now moved from hourly flow calc sub
             If CongestionCharge = True Then
                 OldY = CostOld(link, sc, h) + ChargeOld(link, sc, h)
                 NewY = CostNew(sc, h) + ChargeNew(sc, h)
-                rat6(sc) = (NewY / OldY) ^ RoadEls(YearNum, 4)
+                rat6(sc) = (NewY / OldY) ^ RoadEls(1, 4)
                 OldY = CostOld(link, sc, h) + ChargeOld(link, sc, h)
                 NewY = CostNew(sc, h) + ChargeNew(sc, h)
-                ratf6(sc) = (NewY / OldY) ^ RoadEls(YearNum, 8)
+                ratf6(sc) = (NewY / OldY) ^ RoadEls(1, 8)
             Else
-                rat6(sc) = (CostNew(sc, h) / CostOld(link, sc, h)) ^ RoadEls(YearNum, 4)
-                ratf6(sc) = (CostNew(sc, h) / CostOld(link, sc, h)) ^ RoadEls(YearNum, 8)
+                rat6(sc) = (CostNew(sc, h) / CostOld(link, sc, h)) ^ RoadEls(1, 4)
+                ratf6(sc) = (CostNew(sc, h) / CostOld(link, sc, h)) ^ RoadEls(1, 8)
             End If
         End If
 
@@ -1142,7 +1137,7 @@
             'Debugger - checks if stuck in loop and writes to log
             z += 1
             If z > 1000 Then
-                logarray(logNum, 0) = "ERROR in Road Link Module: Flow" & FlowID(link, 1) & " Year" & YearNum & " Road Type " & RoadType & " speed and flow failed to converge after 1000 iterations"
+                logarray(logNum, 0) = "ERROR in Road Link Module: Flow" & FlowID(link, 1) & " Year" & g_modelRunYear & " Road Type " & RoadType & " speed and flow failed to converge after 1000 iterations"
                 logNum += 1
                 Call WriteData("Logfile", "", logarray)
                 Exit Do
@@ -1321,7 +1316,7 @@
         'write to output array
         OutputArray(link, 0) = g_modelRunID
         OutputArray(link, 1) = FlowID(link, 1)
-        OutputArray(link, 2) = YearNum
+        OutputArray(link, 2) = g_modelRunYear
         OutputArray(link, 3) = TotalFlowNew
         OutputArray(link, 4) = MeanSpeedNew
         OutputArray(link, 5) = MwayFlowNew
@@ -1401,7 +1396,7 @@
                         AddedLanes(link, 0) += 2
                         'write details to output file
                         NewCapArray(NewCapNum, 0) = FlowID(link, 1)
-                        NewCapArray(NewCapNum, 1) = (YearNum + 1)
+                        NewCapArray(NewCapNum, 1) = (g_modelRunYear + 1)
                         NewCapArray(NewCapNum, 2) = 0
                         NewCapArray(NewCapNum, 3) = 2
                         NewCapNum += 1
@@ -1421,7 +1416,7 @@
                         AddedLanes(link, 1) += 2
                         'write details to output file
                         NewCapArray(NewCapNum, 0) = FlowID(link, 1)
-                        NewCapArray(NewCapNum, 1) = (YearNum + 1)
+                        NewCapArray(NewCapNum, 1) = (g_modelRunYear + 1)
                         NewCapArray(NewCapNum, 2) = 1
                         NewCapArray(NewCapNum, 3) = 2
                         NewCapNum += 1
@@ -1441,7 +1436,7 @@
                         AddedLanes(link, 2) += 2
                         'write details to output file
                         NewCapArray(NewCapNum, 0) = FlowID(link, 1)
-                        NewCapArray(NewCapNum, 1) = (YearNum + 1)
+                        NewCapArray(NewCapNum, 1) = (g_modelRunYear + 1)
                         NewCapArray(NewCapNum, 2) = 2
                         NewCapArray(NewCapNum, 3) = 2
                         NewCapNum += 1
@@ -1454,7 +1449,7 @@
 
         'write to Temp Annual array
         TempAnArray(link, 0) = g_modelRunID
-        TempAnArray(link, 1) = YearNum
+        TempAnArray(link, 1) = g_modelRunYear
         TempAnArray(link, 2) = FlowID(link, 1)
         TempAnArray(link, 3) = RoadTypeLanes(link, 0)
         TempAnArray(link, 4) = RoadTypeLanes(link, 1)
@@ -1480,7 +1475,7 @@
             hrow = (link - 1) * 24 + h + 1
             'write to TempFlow array
             TempHArray(hrow, 0) = g_modelRunID
-            TempHArray(hrow, 1) = YearNum
+            TempHArray(hrow, 1) = g_modelRunYear
             TempHArray(hrow, 2) = FlowID(link, 1)
             TempHArray(hrow, 3) = h + 1
             TempHArray(hrow, 4) = RoadTypeFlows(link, 0, h)

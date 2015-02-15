@@ -52,7 +52,8 @@
     Dim NewCapArray(238, 5) As String
     Dim CapNum As Integer
     Dim InputArray(238, 17) As String
-    Dim OutputArray(239, 13) As String
+    Dim RlLEVInputArray(238, 17) As String
+    Dim OutputArray(239, 17) As String
     Dim stratarray(90, 95) As String
     Dim elearray(238, 5) As String
     Dim EleNum As Integer
@@ -90,97 +91,26 @@
 
         'read initial input data
         Call ReadData("RailLink", "Input", InputArray, g_modelRunYear)
+        If g_modelRunYear <> g_initialYear Then
+            'read from previous year
+            Call ReadData("RailLink", "ExtVar", RlLEVInputArray, g_modelRunYear)
+        End If
 
-        Call ReadData("RailLink", "CapChange", CapArray, g_modelRunYear)
 
-        'start from the first row of CapArray
-        CapNum = 1
+        'only do the cap change calculation for the intermediate cap change file if it is year 1
+        If g_modelRunYear = g_initialYear Then
+            'read new capacity data
+            Call ReadData("RailLink", "CapChange", CapArray, g_modelRunYear)
 
-        'need initial file to be sorted by scheme type then by change year then by order of priority
-        'first read all compulsory enhancements to intermediate array
-        CapCount = 0
-        AddingCap = False
-        TracksToBuild = 0
-        Do Until CapArray(CapNum, 0) Is Nothing
-            Call GetCapData()
-            Select Case CapType
-                Case "C"
-                    NewCapDetails(CapCount, 0) = CapID
-                    NewCapDetails(CapCount, 1) = CapYear
-                    NewCapDetails(CapCount, 2) = TrackChange
-                    NewCapDetails(CapCount, 3) = MaxTDChange
-                    NewCapDetails(CapCount, 4) = TrainChange
-                    CapNewYear = CapYear
-                Case "O"
-                    'then if adding optional capacity read all optional dated enhancements to intermediate array
-                    If NewRlLCap = True Then
-                        If CapYear >= 0 Then
-                            NewCapDetails(CapCount, 0) = CapID
-                            NewCapDetails(CapCount, 1) = CapYear
-                            NewCapDetails(CapCount, 2) = TrackChange
-                            NewCapDetails(CapCount, 3) = MaxTDChange
-                            NewCapDetails(CapCount, 4) = TrainChange
-                            CapNewYear = CapYear
-                        Else
-                            'finally add all other enhancements to intermediate array until we have run out of additional capacity
-                            If TracksToBuild >= TrackChange Then
-                                NewCapDetails(CapCount, 0) = CapID
-                                NewCapDetails(CapCount, 1) = CapNewYear
-                                NewCapDetails(CapCount, 2) = TrackChange
-                                NewCapDetails(CapCount, 3) = MaxTDChange
-                                NewCapDetails(CapCount, 4) = TrainChange
-                                TracksToBuild = TracksToBuild - TrackChange
-                            Else
-                                Do Until TracksToBuild >= TrackChange
-                                    CapNewYear += 1
-                                    If CapNewYear > 90 Then
-                                        Breakout = True
-                                        Exit Select
-                                    End If
-                                    TracksToBuild += NewRailTracks
-                                Loop
-                                NewCapDetails(CapCount, 0) = CapID
-                                NewCapDetails(CapCount, 1) = CapNewYear
-                                NewCapDetails(CapCount, 2) = TrackChange
-                                NewCapDetails(CapCount, 3) = MaxTDChange
-                                NewCapDetails(CapCount, 4) = TrainChange
-                                TracksToBuild = TracksToBuild - TrackChange
-                            End If
-                        End If
-                    Else
-                        Exit Do
-                    End If
-            End Select
-            'exit if year is greater than our range (90 years)
-            If Breakout = True Then
-                Exit Do
-            End If
-            CapCount += 1
-        Loop
-        'then sort the intermediate array by year, then by flow ID of implementation
-        ReDim sortarray(CapCount - 1)
-        For v = 0 To (CapCount - 1)
-            padflow = String.Format("{0:000}", NewCapDetails(v, 0))
-            padyear = String.Format("{0:00}", NewCapDetails(v, 1))
-            sortarray(v) = padyear & "&" & padflow & "&" & v
-        Next
-        Array.Sort(sortarray)
+            'do capacity change requirement calculation
+            Call CapChangeCalc()
 
-        'write all lines to NewCapArray
-        For v = 0 To (CapCount - 1)
-            sortedline = sortarray(v)
-            splitline = Split(sortedline, "&")
-            arraynum = splitline(2)
-            NewCapArray(v + 1, 0) = g_modelRunID
-            NewCapArray(v + 1, 1) = NewCapDetails(arraynum, 0)
-            NewCapArray(v + 1, 2) = NewCapDetails(arraynum, 1)
-            NewCapArray(v + 1, 3) = NewCapDetails(arraynum, 2)
-            NewCapArray(v + 1, 4) = NewCapDetails(arraynum, 3)
-            NewCapArray(v + 1, 5) = NewCapDetails(arraynum, 4)
-        Next
+            'write all lines from NewCapArray to intermediate capacity file
+            Call WriteData("RailLink", "NewCap", NewCapArray)
+        End If
 
-        'write all lines from NewCapArray to intermediate capacity file
-        Call WriteData("RailLink", "NewCap", NewCapArray)
+        'read new capacity info
+        Call ReadData("RailLink", "NewCap", CapArray, g_modelRunYear)
 
         'reset NewCapArray row to the begining
         CapNum = 1
@@ -191,7 +121,10 @@
         'if including rail electrification then create the intermediate file sorted by flow then by date
         'mod - now do this anyway as some schemes are non-discretionary
         'create intermediate file listing timings of scheme implementations
-        Call CreateElectrificationList()
+        'create list only if it is year 1
+        If g_modelRunYear = g_initialYear Then
+            Call CreateElectrificationList()
+        End If
 
         'initiallize read elelct file
         Elect = True
@@ -251,7 +184,7 @@
         Dim DieselOld(238, 0), DieselNew, ElectricOld(238, 0), ElectricNew As Double
         Dim DMaintOld(238, 0), EMaintOld(238, 0) As Double
         Dim ElPOld(238, 0), ElPNew As Double
-        Dim ScalingData(90, 8) As String
+        Dim ScalingData(1, 8) As String
         Dim OCountry(238, 0), DCountry(238, 0) As String
         Dim OZone(238, 0), DZone(238, 0) As Long
         Dim keylookup As String
@@ -266,9 +199,13 @@
 
         'need to set a base value for the diesel fuel cost for this zone
         If RlLEneSource = "Database" Then
-            Call ReadData("Energy", "", enearray, g_modelRunYear)
-            InDieselOldAll = enearray(1, 2)
-            InElectricOldAll = enearray(1, 3)
+            Call ReadData("Energy", "", enearray)
+
+            InDieselOldAll = enearray(g_modelRunYear - 2010, 2)
+            InElectricOldAll = enearray(g_modelRunYear - 2010, 3)
+
+            InDieselNewAll = enearray(g_modelRunYear - 2010 + 1, 2)
+            InElectricNewAll = enearray(g_modelRunYear - 2010 + 1, 3)
         End If
 
         'get scaling factor file if we are using one
@@ -276,295 +213,302 @@
             Call ReadData("RailLink", "EVScale", ScalingData, g_modelRunYear)
         End If
 
-        'start with the input start year
-        Year = 1
 
-        Do Until Year > 40
-            'loop through scaling up values for each year and writing to output file
+        InputCount = 1
 
-            If RlLEneSource = "Database" Then
+        Do Until InputCount > 238
 
-                InDieselNewAll = enearray(Year + 1, 2)
-                InElectricNewAll = enearray(Year + 1, 3)
+            'read from the initial data file if it is year 1 (calculation for year 2011, and initial data file is for 2010)
+            If g_modelRunYear = g_initialYear Then
+                FlowID(InputCount, 0) = InputArray(InputCount, 2)
+                OZone(InputCount, 0) = InputArray(InputCount, 3)
+                DZone(InputCount, 0) = InputArray(InputCount, 4)
+                Tracks(InputCount, 0) = InputArray(InputCount, 5)
+                Pop1Old(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear - 1, FlowID(InputCount, 0), "OZ", "'rail'", OZone(InputCount, 0))
+                Pop2Old(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear - 1, FlowID(InputCount, 0), "DZ", "'rail'", DZone(InputCount, 0))
+                GVA1Old(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear - 1, FlowID(InputCount, 0), "OZ", "'rail'", OZone(InputCount, 0))
+                GVA2Old(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear - 1, FlowID(InputCount, 0), "DZ", "'rail'", DZone(InputCount, 0))
+                CostOld(InputCount, 0) = InputArray(InputCount, 8)
+                FuelOld(InputCount, 0) = InputArray(InputCount, 9)
+                MaxTDOld(InputCount, 0) = InputArray(InputCount, 10)
+                ElPOld(InputCount, 0) = InputArray(InputCount, 11)
+                OCountry(InputCount, 0) = InputArray(InputCount, 14)
+                DCountry(InputCount, 0) = InputArray(InputCount, 15)
+                ElectTracksOld(InputCount, 0) = InputArray(InputCount, 12)
+                NewTrains = 0
+
+                If RlLEneSource = "Database" Then
+                    InDieselOld(InputCount, 0) = InDieselOldAll
+                    InElectricOld(InputCount, 0) = InElectricOldAll
+                    DieselOld(InputCount, 0) = 29.204
+                    ElectricOld(InputCount, 0) = 16.156
+
+                    DMaintOld(InputCount, 0) = 37.282
+                    EMaintOld(InputCount, 0) = 24.855
+
+                Else
+                    'can assume that 8.77% of total costs (which in all cases are set to 1) are made up of fuel, and that electric costs 55.3% of diesel price
+                    '0.0877 = (ElP * DieselPrice * 0.553) + (DP * DieselPrice)
+                    '0.0877 = DieselPrice((ElP * 0.553) + DP)
+                    'DieselPrice = 0.0877/(0.553ElP + DP)
+                    DieselOld(InputCount, 0) = 0.0877 / ((0.553 * ElPOld(InputCount, 0)) + (1 - ElPOld(InputCount, 0)))
+                    ElectricOld(InputCount, 0) = 0.553 * DieselOld(InputCount, 0)
+                    'also need to set a base value for the maintenance and lease costs for this zone
+                    'can assume that 26.62% of total costs (which in all cases are set to 1) are made up of maintenance and leasing, and that electric trains cost 75.8% of diesel trains
+                    '0.2662 = (ElP * DMaint * 0.758) + (DP * DMaint)
+                    '0.2662 = DMaint((ElP * 0.758) + DP)
+                    'DMaint = 0.2662/(0.758ElP + DP)
+                    DMaintOld(InputCount, 0) = 0.2662 / ((0.758 * ElPOld(InputCount, 0)) + (1 - ElPOld(InputCount, 0)))
+                    EMaintOld(InputCount, 0) = 0.758 * DMaintOld(InputCount, 0)
+
+                End If
+
+            Else
+                'read from previous year's data
+                FlowID(InputCount, 0) = InputArray(InputCount, 2)
+                OZone(InputCount, 0) = InputArray(InputCount, 3)
+                DZone(InputCount, 0) = InputArray(InputCount, 4)
+                Tracks(InputCount, 0) = RlLEVInputArray(InputCount, 4)
+                Pop1Old(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear - 1, FlowID(InputCount, 0), "OZ", "'rail'", OZone(InputCount, 0))
+                Pop2Old(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear - 1, FlowID(InputCount, 0), "DZ", "'rail'", DZone(InputCount, 0))
+                GVA1Old(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear - 1, FlowID(InputCount, 0), "OZ", "'rail'", OZone(InputCount, 0))
+                GVA2Old(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear - 1, FlowID(InputCount, 0), "DZ", "'rail'", DZone(InputCount, 0))
+
+                CostOld(InputCount, 0) = RlLEVInputArray(InputCount, 9)
+                FuelOld(InputCount, 0) = RlLEVInputArray(InputCount, 10)
+                MaxTDOld(InputCount, 0) = RlLEVInputArray(InputCount, 11)
+                ElPOld(InputCount, 0) = RlLEVInputArray(InputCount, 12)
+                ElectTracksOld(InputCount, 0) = RlLEVInputArray(InputCount, 13)
+                OCountry(InputCount, 0) = InputArray(InputCount, 14)
+                DCountry(InputCount, 0) = InputArray(InputCount, 15)
+
+                DieselOld(InputCount, 0) = DieselNew = RlLEVInputArray(InputCount, 15)
+                ElectricOld(InputCount, 0) = ElectricNew = RlLEVInputArray(InputCount, 16)
+
+                If RlLEneSource = "Database" Then
+                    InDieselOld(InputCount, 0) = InDieselNew = RlLEVInputArray(InputCount, 17)
+                    InElectricOld(InputCount, 0) = InElectricNew = RlLEVInputArray(InputCount, 18)
+
+                    DMaintOld(InputCount, 0) = 37.282
+                    EMaintOld(InputCount, 0) = 24.855
+
+                Else
+                    DMaintOld(InputCount, 0) = 0.2662 / ((0.758 * ElPOld(InputCount, 0)) + (1 - ElPOld(InputCount, 0)))
+                    EMaintOld(InputCount, 0) = 0.758 * DMaintOld(InputCount, 0)
+
+                End If
+
+                NewTrains = 0
 
             End If
 
+            If RlLPopSource = "Constant" Then
+                Pop1New = Pop1Old(InputCount, 0) * OPopGrowth
+                Pop2New = Pop2Old(InputCount, 0) * DPopGrowth
+            ElseIf RlLPopSource = "File" Then
+                Select Case OCountry(InputCount, 0)
+                    'Case "E"
+                    Case "1"
+                        OPopGrowth = 1 + ScalingData(1, 1)
+                        'Case "S"
+                    Case "3"
+                        OPopGrowth = 1 + ScalingData(1, 2)
+                        'Case "w"
+                    Case "2"
+                        OPopGrowth = 1 + ScalingData(1, 3)
+                End Select
+                Select Case DCountry(InputCount, 0)
+                    'Case "E"
+                    Case "1"
+                        DPopGrowth = 1 + ScalingData(1, 1)
+                        'Case "S"
+                    Case "3"
+                        DPopGrowth = 1 + ScalingData(1, 2)
+                        'Case "W"
+                    Case "2"
+                        DPopGrowth = 1 + ScalingData(1, 3)
+                End Select
+                Pop1New = Pop1Old(InputCount, 0) * OPopGrowth
+                Pop2New = Pop2Old(InputCount, 0) * DPopGrowth
+            ElseIf RlLPopSource = "Database" Then
+                'if year is after 2093 then no population forecasts are available so assume population remains constant
+                'now modified as population data available up to 2100 - so should never need 'else'
+                'v1.9 now read by using database function
+                If g_modelRunYear < 91 Then
+                    Pop1New = get_population_data_by_zoneID(g_modelRunYear, FlowID(InputCount, 0), "OZ", "'rail'", OZone(InputCount, 0))
+                    Pop2New = get_population_data_by_zoneID(g_modelRunYear, FlowID(InputCount, 0), "DZ", "'rail'", DZone(InputCount, 0))
+                Else
+                    Pop1New = Pop1Old(InputCount, 0)
+                    Pop2New = Pop2Old(InputCount, 0)
+                End If
+            End If
+            If RlLEcoSource = "Constant" Then
+                GVA1New = GVA1Old(InputCount, 0) * OGVAGrowth
+                GVA2New = GVA2Old(InputCount, 0) * DGVAGrowth
+            ElseIf RlLEcoSource = "File" Then
+                OGVAGrowth = 1 + ScalingData(1, 4)
+                DGVAGrowth = 1 + ScalingData(1, 4)
+                GVA1New = GVA1Old(InputCount, 0) * OGVAGrowth
+                GVA2New = GVA2Old(InputCount, 0) * DGVAGrowth
+            ElseIf RlLEcoSource = "Database" Then
+                'if year is after 2050 then no gva forecasts are available so assume gva remains constant
+                'now modified as GVA data available up to 2100 - so should never need 'else'
+                'v1.9 now read by using database function
+                'database does not have gva forecasts after year 2050, and the calculation is only available before year 2050
+                If g_modelRunYear < 91 Then
+                    GVA1New = get_gva_data_by_zoneID(g_modelRunYear, FlowID(InputCount, 0), "OZ", "'rail'", OZone(InputCount, 0))
+                    GVA2New = get_gva_data_by_zoneID(g_modelRunYear, FlowID(InputCount, 0), "DZ", "'rail'", DZone(InputCount, 0))
+                Else
+                    GVA1New = GVA1Old(InputCount, 0)
+                    GVA2New = GVA2Old(InputCount, 0)
+                End If
+            End If
+            'need to leave cost growth factor until we know new proportion of electric/diesel trains
             If RlLOthSource = "File" Then
-                'if using scaling factors then read in the scaling factors for this year
+                'MaxTDGrowth = 1 + ScalingData(1,7)
+                ElPGrowth = ScalingData(1, 8)
             End If
 
-            InputCount = 1
-
-            Do Until InputCount > 238
-
-                'read from the initial data file if it is year 1 (calculation for year 2011, and initial data file is for 2010)
-                If Year = 1 Then
-                    FlowID(InputCount, 0) = InputArray(InputCount, 2)
-                    OZone(InputCount, 0) = InputArray(InputCount, 3)
-                    DZone(InputCount, 0) = InputArray(InputCount, 4)
-                    Tracks(InputCount, 0) = InputArray(InputCount, 5)
-                    Pop1Old(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear, FlowID(InputCount, 0), "OZ", "'rail'", OZone(InputCount, 0))
-                    Pop2Old(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear, FlowID(InputCount, 0), "DZ", "'rail'", DZone(InputCount, 0))
-                    GVA1Old(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear, FlowID(InputCount, 0), "OZ", "'rail'", OZone(InputCount, 0))
-                    GVA2Old(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear, FlowID(InputCount, 0), "DZ", "'rail'", DZone(InputCount, 0))
-                    CostOld(InputCount, 0) = InputArray(InputCount, 8)
-                    FuelOld(InputCount, 0) = InputArray(InputCount, 9)
-                    MaxTDOld(InputCount, 0) = InputArray(InputCount, 10)
-                    ElPOld(InputCount, 0) = InputArray(InputCount, 11)
-                    OCountry(InputCount, 0) = InputArray(InputCount, 14)
-                    DCountry(InputCount, 0) = InputArray(InputCount, 15)
-                    ElectTracksOld(InputCount, 0) = InputArray(InputCount, 12)
-                    NewTrains = 0
-
-                    If RlLEneSource = "Database" Then
-                        InDieselOld(InputCount, 0) = InDieselOldAll
-                        InElectricOld(InputCount, 0) = InElectricOldAll
-                        DieselOld(InputCount, 0) = 29.204
-                        ElectricOld(InputCount, 0) = 16.156
-                        DMaintOld(InputCount, 0) = 37.282
-                        EMaintOld(InputCount, 0) = 24.855
-                    Else
-                        'can assume that 8.77% of total costs (which in all cases are set to 1) are made up of fuel, and that electric costs 55.3% of diesel price
-                        '0.0877 = (ElP * DieselPrice * 0.553) + (DP * DieselPrice)
-                        '0.0877 = DieselPrice((ElP * 0.553) + DP)
-                        'DieselPrice = 0.0877/(0.553ElP + DP)
-                        DieselOld(InputCount, 0) = 0.0877 / ((0.553 * ElPOld(InputCount, 0)) + (1 - ElPOld(InputCount, 0)))
-                        ElectricOld(InputCount, 0) = 0.553 * DieselOld(InputCount, 0)
-                        'also need to set a base value for the maintenance and lease costs for this zone
-                        'can assume that 26.62% of total costs (which in all cases are set to 1) are made up of maintenance and leasing, and that electric trains cost 75.8% of diesel trains
-                        '0.2662 = (ElP * DMaint * 0.758) + (DP * DMaint)
-                        '0.2662 = DMaint((ElP * 0.758) + DP)
-                        'DMaint = 0.2662/(0.758ElP + DP)
-                        DMaintOld(InputCount, 0) = 0.2662 / ((0.758 * ElPOld(InputCount, 0)) + (1 - ElPOld(InputCount, 0)))
-                        EMaintOld(InputCount, 0) = 0.758 * DMaintOld(InputCount, 0)
-
-                    End If
-
-
-
-                End If
-
-                If RlLPopSource = "Constant" Then
-                    Pop1New = Pop1Old(InputCount, 0) * OPopGrowth
-                    Pop2New = Pop2Old(InputCount, 0) * DPopGrowth
-                ElseIf RlLPopSource = "File" Then
-                    Select Case OCountry(InputCount, 0)
-                        'Case "E"
-                        Case "1"
-                            OPopGrowth = 1 + ScalingData(Year, 1)
-                            'Case "S"
-                        Case "3"
-                            OPopGrowth = 1 + ScalingData(Year, 2)
-                            'Case "w"
-                        Case "2"
-                            OPopGrowth = 1 + ScalingData(Year, 3)
-                    End Select
-                    Select Case DCountry(InputCount, 0)
-                        'Case "E"
-                        Case "1"
-                            DPopGrowth = 1 + ScalingData(Year, 1)
-                            'Case "S"
-                        Case "3"
-                            DPopGrowth = 1 + ScalingData(Year, 2)
-                            'Case "W"
-                        Case "2"
-                            DPopGrowth = 1 + ScalingData(Year, 3)
-                    End Select
-                    Pop1New = Pop1Old(InputCount, 0) * OPopGrowth
-                    Pop2New = Pop2Old(InputCount, 0) * DPopGrowth
-                ElseIf RlLPopSource = "Database" Then
-                    'if year is after 2093 then no population forecasts are available so assume population remains constant
-                    'now modified as population data available up to 2100 - so should never need 'else'
-                    'v1.9 now read by using database function
-                    If Year < 91 Then
-                        Pop1New = get_population_data_by_zoneID(g_modelRunYear, FlowID(InputCount, 0), "OZ", "'rail'", OZone(InputCount, 0))
-                        Pop2New = get_population_data_by_zoneID(g_modelRunYear, FlowID(InputCount, 0), "DZ", "'rail'", DZone(InputCount, 0))
-                    Else
-                        Pop1New = Pop1Old(InputCount, 0)
-                        Pop2New = Pop2Old(InputCount, 0)
-                    End If
-                End If
-                If RlLEcoSource = "Constant" Then
-                    GVA1New = GVA1Old(InputCount, 0) * OGVAGrowth
-                    GVA2New = GVA2Old(InputCount, 0) * DGVAGrowth
-                ElseIf RlLEcoSource = "File" Then
-                    OGVAGrowth = 1 + ScalingData(Year, 4)
-                    DGVAGrowth = 1 + ScalingData(Year, 4)
-                    GVA1New = GVA1Old(InputCount, 0) * OGVAGrowth
-                    GVA2New = GVA2Old(InputCount, 0) * DGVAGrowth
-                ElseIf RlLEcoSource = "Database" Then
-                    'if year is after 2050 then no gva forecasts are available so assume gva remains constant
-                    'now modified as GVA data available up to 2100 - so should never need 'else'
-                    'v1.9 now read by using database function
-                    'database does not have gva forecasts after year 2050, and the calculation is only available before year 2050
-                    If Year < 91 Then
-                        GVA1New = get_gva_data_by_zoneID(g_modelRunYear, FlowID(InputCount, 0), "OZ", "'rail'", OZone(InputCount, 0))
-                        GVA2New = get_gva_data_by_zoneID(g_modelRunYear, FlowID(InputCount, 0), "DZ", "'rail'", DZone(InputCount, 0))
-                    Else
-                        GVA1New = GVA1Old(InputCount, 0)
-                        GVA2New = GVA2Old(InputCount, 0)
-                    End If
-                End If
-                'need to leave cost growth factor until we know new proportion of electric/diesel trains
-                If RlLOthSource = "File" Then
-                    'MaxTDGrowth = 1 + ScalingData(7)
-                    ElPGrowth = ScalingData(Year, 8)
-                End If
-
-                'check if using list of electrification schemes
-                ''mod - now do this anyway as some schemes are non-discretionary
-                'If RlElect = True Then
-                'check if in correct year for the current scheme
+            'check if using list of electrification schemes
+            ''mod - now do this anyway as some schemes are non-discretionary
+            'If RlElect = True Then
+            'check if in correct year for the current scheme
 Elect:
-                If Year = ElectYear Then
-                    'if so check if correct row for the current scheme
-                    If FlowID(InputCount, 0) = ElectFlow Then
-                        'if so, then need to alter proportions of diesel and electric trains
-                        ElPNew = ElPOld(InputCount, 0) + (0.9 * ((1 - ElPOld(InputCount, 0)) * (ElectTracks / (Tracks(InputCount, 0) - ElectTracksOld(InputCount, 0)))))
-                        ElectTracksNew = ElectTracksOld(InputCount, 0) + ElectTracks
-                        'read next scheme from list
-                        Call GetElectData()
+            If g_modelRunYear = ElectYear Then
+                'if so check if correct row for the current scheme
+                If FlowID(InputCount, 0) = ElectFlow Then
+                    'if so, then need to alter proportions of diesel and electric trains
+                    ElPNew = ElPOld(InputCount, 0) + (0.9 * ((1 - ElPOld(InputCount, 0)) * (ElectTracks / (Tracks(InputCount, 0) - ElectTracksOld(InputCount, 0)))))
+                    ElectTracksNew = ElectTracksOld(InputCount, 0) + ElectTracks
+                    'read next scheme from list
+                    Call GetElectData()
 
-                        'if there is no data left in the Elect file then go to next calculation
-                        If Elect = False Then
-                            GoTo NextYear
-                        End If
-
-                    Else
-                        ElPNew = ElPOld(InputCount, 0)
-                        ElectTracksNew = ElectTracksOld(InputCount, 0)
+                    'if there is no data left in the Elect file then go to next calculation
+                    If Elect = False Then
+                        GoTo NextYear
                     End If
+
                 Else
                     ElPNew = ElPOld(InputCount, 0)
                     ElectTracksNew = ElectTracksOld(InputCount, 0)
                 End If
+            Else
+                ElPNew = ElPOld(InputCount, 0)
+                ElectTracksNew = ElectTracksOld(InputCount, 0)
+            End If
 
-                If FlowID(InputCount, 0) = ElectFlow Then
-                    If Year = ElectYear Then
-                        GoTo Elect
-                    Else
-                        GoTo NextYear
-                    End If
+            If FlowID(InputCount, 0) = ElectFlow Then
+                If g_modelRunYear = ElectYear Then
+                    GoTo Elect
+                Else
+                    GoTo NextYear
                 End If
+            End If
 NextYear:
-                'Else
-                '    '***1.4 commented out, as don't want any growth if not using list of schemes
-                '    'ElPNew = ElPOld + ElPGrowth#
-                '    ElPNew = ElPOld
-                '    ElectTracksNew = ElectTracksOld
-                'End If
-                'constrain proportion of electric trains to 1
-                If ElPNew > 1 Then
-                    ElPNew = 1
-                End If
-                'once we know new proportion of electric and diesel trains can calculate cost growth factor
-                If RlLEneSource = "File" Then
-                    'fuel forms 8.77% of costs, and in base year electric costs are set as being 0.553 times diesel costs - base prices set above
-                    'scale both base prices
-                    DieselNew = DieselOld(InputCount, 0) * (1 + ScalingData(Year, 5)) * FuelEff(1, Year)
-                    ElectricNew = ElectricOld(InputCount, 0) * (1 + ScalingData(Year, 6)) * FuelEff(0, Year)
-                    '*****this assumes car fuel costs are only based on oil prices - when really we need to integrate this with the road model to look at road fuel/split
-                    FuelGrowth = 1 + ScalingData(Year, 5)
-                ElseIf RlLEneSource = "Constant" Then
-                    DieselNew = DieselOld(InputCount, 0) * CostGrowth * FuelEff(1, Year)
-                    ElectricNew = ElectricOld(InputCount, 0) * CostGrowth * FuelEff(0, Year)
-                ElseIf RlLEneSource = "Database" Then
-                    InDieselNew = InDieselNewAll
-                    InElectricNew = InElectricNewAll
-                    DieselNew = DieselOld(InputCount, 0) * (InDieselNew / InDieselOld(InputCount, 0)) * FuelEff(1, Year)
-                    ElectricNew = ElectricOld(InputCount, 0) * (InElectricNew / InElectricOld(InputCount, 0)) * FuelEff(0, Year)
-                    '*****this assumes car fuel costs are only based on oil prices - when really we need to integrate this with the road model to look at road fuel/split
-                    FuelGrowth = InDieselNew / InDieselOld(InputCount, 0)
-                End If
-                'v1.4 if carbon charge is applied then calculate it
-                If RlCaCharge = True Then
-                    'check if it is a relevant year
-                    If Year >= CarbChargeYear Then
-                        'calculation is: (base fuel units per km * change in fuel efficiency from base year * CO2 per unit of fuel * CO2 price per kg in pence)
-                        'as a base assuming that diesel trains use 1.873 litres/train km and electric trains use 12.611 kWh/train km
-                        diecarch = 1.873 * FuelEff(1, Year) * CO2Vol(1, Year) * (CO2Price(1, Year) / 10)
-                        elecarch = 12.611 * FuelEff(0, Year) * CO2Vol(0, Year) * (CO2Price(0, Year) / 10)
-                    Else
-                        diecarch = 0
-                        elecarch = 0
-                    End If
+            'Else
+            '    '***1.4 commented out, as don't want any growth if not using list of schemes
+            '    'ElPNew = ElPOld + ElPGrowth#
+            '    ElPNew = ElPOld
+            '    ElectTracksNew = ElectTracksOld
+            'End If
+            'constrain proportion of electric trains to 1
+            If ElPNew > 1 Then
+                ElPNew = 1
+            End If
+            'once we know new proportion of electric and diesel trains can calculate cost growth factor
+            If RlLEneSource = "File" Then
+                'fuel forms 8.77% of costs, and in base year electric costs are set as being 0.553 times diesel costs - base prices set above
+                'scale both base prices
+                DieselNew = DieselOld(InputCount, 0) * (1 + ScalingData(1, 5)) * FuelEff(1, Year)
+                ElectricNew = ElectricOld(InputCount, 0) * (1 + ScalingData(1, 6)) * FuelEff(0, Year)
+                '*****this assumes car fuel costs are only based on oil prices - when really we need to integrate this with the road model to look at road fuel/split
+                FuelGrowth = 1 + ScalingData(1, 5)
+            ElseIf RlLEneSource = "Constant" Then
+                DieselNew = DieselOld(InputCount, 0) * CostGrowth * FuelEff(1, Year)
+                ElectricNew = ElectricOld(InputCount, 0) * CostGrowth * FuelEff(0, Year)
+            ElseIf RlLEneSource = "Database" Then
+                InDieselNew = InDieselNewAll
+                InElectricNew = InElectricNewAll
+                DieselNew = DieselOld(InputCount, 0) * (InDieselNew / InDieselOld(InputCount, 0)) * FuelEff(1, Year)
+                ElectricNew = ElectricOld(InputCount, 0) * (InElectricNew / InElectricOld(InputCount, 0)) * FuelEff(0, Year)
+                '*****this assumes car fuel costs are only based on oil prices - when really we need to integrate this with the road model to look at road fuel/split
+                FuelGrowth = InDieselNew / InDieselOld(InputCount, 0)
+            End If
+            'v1.4 if carbon charge is applied then calculate it
+            If RlCaCharge = True Then
+                'check if it is a relevant year
+                If Year >= CarbChargeYear Then
+                    'calculation is: (base fuel units per km * change in fuel efficiency from base year * CO2 per unit of fuel * CO2 price per kg in pence)
+                    'as a base assuming that diesel trains use 1.873 litres/train km and electric trains use 12.611 kWh/train km
+                    diecarch = 1.873 * FuelEff(1, Year) * CO2Vol(1, Year) * (CO2Price(1, Year) / 10)
+                    elecarch = 12.611 * FuelEff(0, Year) * CO2Vol(0, Year) * (CO2Price(0, Year) / 10)
                 Else
                     diecarch = 0
                     elecarch = 0
                 End If
-
-                'maintenance and leasing forms 26.62% of total costs, and in base year electric costs are set as being 0.758 times diesel costs - base prices set above
-                'don't need to scale as assuming these costs remain constant per train over time
-                'multiply new prices by new proportions and add to fixed costs
-                'v1.4 replaced old fixed costs of 0.6461 with fixed cost of 121.381p
-                CostNew = 121.381 + ((DieselNew + diecarch) * (1 - ElPNew)) + ((ElectricNew + elecarch) * ElPNew) + (EMaintOld(InputCount, 0) * ElPNew) + (DMaintOld(InputCount, 0) * (1 - ElPNew))
-                'estimate new fuel efficiency for road vehicles
-                FuelNew = FuelOld(InputCount, 0) * FuelGrowth
-                'if including capacity changes, then check if there are any capacity changes on this flow
-                'v1.4 changed to include compulsory capacity changes where construction has already begun
-                'all this involves is removing the if newrllcap = true clause, because this was already accounted for when generating the intermediate file, and adding a lineread above getcapdata because this sub was amended
-
-                'if there are any capacity changes on this flow, check if there are any capacity changes in this year
-                If Year = CapYear Then
-                    If FlowID(InputCount, 0) = CapID Then
-                        'if there are, then update the capacity variables, and read in the next row from the capacity file
-                        Tracks(InputCount, 0) += TrackChange
-                        'note that MaxTDChange now doesn't work - replaced by strategy common variables file
-                        MaxTDOld(InputCount, 0) += MaxTDChange
-                        NewTrains = TrainChange
-                        Call GetCapData()
-                    End If
-                End If
-
-                MaxTDNew = MaxTD(Year)
-                'write to output file
-                OutputArray(InputCount, 0) = g_modelRunID
-                OutputArray(InputCount, 1) = FlowID(InputCount, 0)
-                OutputArray(InputCount, 2) = Year
-                OutputArray(InputCount, 3) = Tracks(InputCount, 0)
-                OutputArray(InputCount, 4) = Pop1New
-                OutputArray(InputCount, 5) = Pop2New
-                OutputArray(InputCount, 6) = GVA1New
-                OutputArray(InputCount, 7) = GVA2New
-                OutputArray(InputCount, 8) = CostNew
-                OutputArray(InputCount, 9) = FuelNew
-                OutputArray(InputCount, 10) = MaxTDNew
-                OutputArray(InputCount, 11) = ElPNew
-                OutputArray(InputCount, 12) = ElectTracksNew
-                OutputArray(InputCount, 13) = NewTrains
-
-                'set old values as previous new values
-                Pop1Old(InputCount, 0) = Pop1New
-                Pop2Old(InputCount, 0) = Pop2New
-                GVA1Old(InputCount, 0) = GVA1New
-                GVA2Old(InputCount, 0) = GVA2New
-                CostOld(InputCount, 0) = CostNew
-                FuelOld(InputCount, 0) = FuelNew
-                MaxTDOld(InputCount, 0) = MaxTDNew
-                ElPOld(InputCount, 0) = ElPNew
-                ElectTracksOld(InputCount, 0) = ElectTracksNew
-                DieselOld(InputCount, 0) = DieselNew
-                ElectricOld(InputCount, 0) = ElectricNew
-                If RlLEneSource = "Database" Then
-                    InDieselOld(InputCount, 0) = InDieselNew
-                    InElectricOld(InputCount, 0) = InElectricNew
-                End If
-                NewTrains = 0
-                'update year
-                InputCount += 1
-            Loop
-
-            'create file if year 1, otherwise update
-            'it is now writting to database, therefore no difference if it is year 1 or not
-            If Year = 1 Then
-                Call WriteData("RailLink", "ExtVar", OutputArray, , True)
             Else
-                Call WriteData("RailLink", "ExtVar", OutputArray, , False)
+                diecarch = 0
+                elecarch = 0
             End If
 
-            Year += 1
+            'maintenance and leasing forms 26.62% of total costs, and in base year electric costs are set as being 0.758 times diesel costs - base prices set above
+            'don't need to scale as assuming these costs remain constant per train over time
+            'multiply new prices by new proportions and add to fixed costs
+            'v1.4 replaced old fixed costs of 0.6461 with fixed cost of 121.381p
+            CostNew = 121.381 + ((DieselNew + diecarch) * (1 - ElPNew)) + ((ElectricNew + elecarch) * ElPNew) + (EMaintOld(InputCount, 0) * ElPNew) + (DMaintOld(InputCount, 0) * (1 - ElPNew))
+            'estimate new fuel efficiency for road vehicles
+            FuelNew = FuelOld(InputCount, 0) * FuelGrowth
+            'if including capacity changes, then check if there are any capacity changes on this flow
+            'v1.4 changed to include compulsory capacity changes where construction has already begun
+            'all this involves is removing the if newrllcap = true clause, because this was already accounted for when generating the intermediate file, and adding a lineread above getcapdata because this sub was amended
 
+            'if there are any capacity changes on this flow, check if there are any capacity changes in this year
+            If Year = CapYear Then
+                If FlowID(InputCount, 0) = CapID Then
+                    'if there are, then update the capacity variables, and read in the next row from the capacity file
+                    Tracks(InputCount, 0) += TrackChange
+                    'note that MaxTDChange now doesn't work - replaced by strategy common variables file
+                    MaxTDOld(InputCount, 0) += MaxTDChange
+                    NewTrains = TrainChange
+                    Call GetCapData()
+                End If
+            End If
+
+            MaxTDNew = MaxTD(Year)
+            'write to output file
+            OutputArray(InputCount, 0) = g_modelRunID
+            OutputArray(InputCount, 1) = FlowID(InputCount, 0)
+            OutputArray(InputCount, 2) = Year
+            OutputArray(InputCount, 3) = Tracks(InputCount, 0)
+            OutputArray(InputCount, 4) = Pop1New
+            OutputArray(InputCount, 5) = Pop2New
+            OutputArray(InputCount, 6) = GVA1New
+            OutputArray(InputCount, 7) = GVA2New
+            OutputArray(InputCount, 8) = CostNew
+            OutputArray(InputCount, 9) = FuelNew
+            OutputArray(InputCount, 10) = MaxTDNew
+            OutputArray(InputCount, 11) = ElPNew
+            OutputArray(InputCount, 12) = ElectTracksNew
+            OutputArray(InputCount, 13) = NewTrains
+            OutputArray(InputCount, 14) = DieselNew
+            OutputArray(InputCount, 15) = ElectricNew
+            If RlLEneSource = "Database" Then
+                OutputArray(InputCount, 16) = InDieselNew
+                OutputArray(InputCount, 17) = InElectricNew
+            End If
+
+            'next link
+            InputCount += 1
         Loop
+
+        'create file if year 1, otherwise update
+        'it is now writting to database, therefore no difference if it is year 1 or not
+        If g_modelRunYear = g_initialYear Then
+            Call WriteData("RailLink", "ExtVar", OutputArray, , True)
+        Else
+            Call WriteData("RailLink", "ExtVar", OutputArray, , False)
+        End If
+
 
 
 
@@ -585,7 +529,7 @@ NextYear:
                 CapYear = -1
             Else
                 If AddingCap = False Then
-                    CapYear = CapArray(CapNum, 1) - 2010
+                    CapYear = CapArray(CapNum, 1)
                 Else
                     CapYear = CapArray(CapNum, 1)
                 End If
@@ -848,9 +792,99 @@ NextYear:
             Elect = False
         Else
             ElectFlow = elearray(EleNum, 2)
-            ElectYear = elearray(EleNum, 3) - 2010
+            ElectYear = elearray(EleNum, 3)
             ElectTracks = elearray(EleNum, 4)
             EleNum += 1
         End If
+    End Sub
+
+    Sub CapChangeCalc()
+
+        'start from the first row of CapArray
+        CapNum = 1
+
+        'need initial file to be sorted by scheme type then by change year then by order of priority
+        'first read all compulsory enhancements to intermediate array
+        CapCount = 0
+        AddingCap = False
+        TracksToBuild = 0
+        Do Until CapArray(CapNum, 0) Is Nothing
+            Call GetCapData()
+            Select Case CapType
+                Case "C"
+                    NewCapDetails(CapCount, 0) = CapID
+                    NewCapDetails(CapCount, 1) = CapYear
+                    NewCapDetails(CapCount, 2) = TrackChange
+                    NewCapDetails(CapCount, 3) = MaxTDChange
+                    NewCapDetails(CapCount, 4) = TrainChange
+                    CapNewYear = CapYear
+                Case "O"
+                    'then if adding optional capacity read all optional dated enhancements to intermediate array
+                    If NewRlLCap = True Then
+                        If CapYear >= 0 Then
+                            NewCapDetails(CapCount, 0) = CapID
+                            NewCapDetails(CapCount, 1) = CapYear
+                            NewCapDetails(CapCount, 2) = TrackChange
+                            NewCapDetails(CapCount, 3) = MaxTDChange
+                            NewCapDetails(CapCount, 4) = TrainChange
+                            CapNewYear = CapYear
+                        Else
+                            'finally add all other enhancements to intermediate array until we have run out of additional capacity
+                            If TracksToBuild >= TrackChange Then
+                                NewCapDetails(CapCount, 0) = CapID
+                                NewCapDetails(CapCount, 1) = CapNewYear
+                                NewCapDetails(CapCount, 2) = TrackChange
+                                NewCapDetails(CapCount, 3) = MaxTDChange
+                                NewCapDetails(CapCount, 4) = TrainChange
+                                TracksToBuild = TracksToBuild - TrackChange
+                            Else
+                                Do Until TracksToBuild >= TrackChange
+                                    CapNewYear += 1
+                                    If CapNewYear > 90 Then
+                                        Breakout = True
+                                        Exit Select
+                                    End If
+                                    TracksToBuild += NewRailTracks
+                                Loop
+                                NewCapDetails(CapCount, 0) = CapID
+                                NewCapDetails(CapCount, 1) = CapNewYear
+                                NewCapDetails(CapCount, 2) = TrackChange
+                                NewCapDetails(CapCount, 3) = MaxTDChange
+                                NewCapDetails(CapCount, 4) = TrainChange
+                                TracksToBuild = TracksToBuild - TrackChange
+                            End If
+                        End If
+                    Else
+                        Exit Do
+                    End If
+            End Select
+            'exit if year is greater than our range (90 years)
+            If Breakout = True Then
+                Exit Do
+            End If
+            CapCount += 1
+        Loop
+        'then sort the intermediate array by year, then by flow ID of implementation
+        ReDim sortarray(CapCount - 1)
+        For v = 0 To (CapCount - 1)
+            padflow = String.Format("{0:000}", NewCapDetails(v, 0))
+            padyear = String.Format("{0:00}", NewCapDetails(v, 1))
+            sortarray(v) = padyear & "&" & padflow & "&" & v
+        Next
+        Array.Sort(sortarray)
+
+        'write all lines to NewCapArray
+        For v = 0 To (CapCount - 1)
+            sortedline = sortarray(v)
+            splitline = Split(sortedline, "&")
+            arraynum = splitline(2)
+            NewCapArray(v + 1, 0) = g_modelRunID
+            NewCapArray(v + 1, 1) = NewCapDetails(arraynum, 0)
+            NewCapArray(v + 1, 2) = NewCapDetails(arraynum, 1)
+            NewCapArray(v + 1, 3) = NewCapDetails(arraynum, 2)
+            NewCapArray(v + 1, 4) = NewCapDetails(arraynum, 3)
+            NewCapArray(v + 1, 5) = NewCapDetails(arraynum, 4)
+        Next
+
     End Sub
 End Module

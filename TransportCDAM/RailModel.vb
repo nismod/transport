@@ -26,7 +26,6 @@ Module RailModel
     Dim RlLinkCost(238, 0) As Double
     Dim CarFuel(238, 0) As Double
     Dim RlLinkExtVars(238, 14) As String
-    Dim YearNum As Long
     Dim TrainRat As Double
     Dim PopRat As Double
     Dim GVARat As Double
@@ -56,7 +55,7 @@ Module RailModel
     Dim FuelUsed(90, 1) As Double
     Dim RlFuelEff(90, 1) As Double
     Dim FuelString(91, 3) As String
-    Dim RlTripRates(90) As Double
+    Dim RlTripRates As Double
     Dim InputCount As Long
     Dim OutputRow As String
     Dim RlLinkLine As String
@@ -74,82 +73,77 @@ Module RailModel
         'read related files
         Call RailLinkInputFiles()
 
-        'start from input start year
-        YearNum = StartYear
+        'reset Cap number
+        NewCapNum = 1
 
-        Do Until YearNum > StartYear + Duration
-            'reset Cap number
-            NewCapNum = 1
+        'get external variables for this year
+        Call ReadData("RailLink", "ExtVar", RlLinkExtVars, g_modelRunYear)
 
-            'get external variables for this year
-            Call ReadData("RailLink", "ExtVar", RlLinkExtVars, g_modelRunYear)
+        'read from initial file if year 1, otherwise update from temp table
+        Call ReadData("RailLink", "Input", InputArray, g_modelRunYear)
 
-            'read from initial file if year 1, otherwise update from temp table
-            Call ReadData("RailLink", "Input", InputArray, g_modelRunYear)
+        InputCount = 1
 
-            InputCount = 1
+        Do While InputCount < 239
+            'update the input variables
+            Call LoadRailLinkInput()
 
-            Do While InputCount < 239
-                'update the input variables
-                Call LoadRailLinkInput()
+            'mod - check if number of tracks is greater than 0
+            If RlLinkExtVars(InputCount, 4) > 0 Then
+                'check if calculating check is false or true
+                If CalcCheck(InputCount, 0) = True Then
+                    'calculate constrained traffic level
+                    Call ConstTrainCalc()
 
-                'mod - check if number of tracks is greater than 0
-                If RlLinkExtVars(InputCount, 4) > 0 Then
-                    'check if calculating check is false or true
-                    If CalcCheck(InputCount, 0) = True Then
-                        'calculate constrained traffic level
-                        Call ConstTrainCalc()
-
-                        'write the flows to the output file
-                        Call WriteRlLinkOutput()
-                    Else
-                        'if not then this is the first year there have been track and trains on this route
-                        If RailCUPeriod = "Hour" Then
-                            BusyPer(InputCount, 0) = 0.08
-                        End If
-                        'calculate CU
-                        If RailCUPeriod = "Hour" Then
-                            CUNew(InputCount, 0) = ((RlLinkExtVars(InputCount, 14) * 0.08) / RlLinkExtVars(InputCount, 4)) / (60 / ModelPeakHeadway(InputCount, 0))
-                        Else
-                            CUNew(InputCount, 0) = (RlLinkExtVars(InputCount, 14) / RlLinkExtVars(InputCount, 4)) / RlLinkExtVars(InputCount, 11)
-                        End If
-                        'write the flows to the output file
-                        CalcCheck(InputCount, 0) = True
-                        Call WriteRlLinkOutput()
-                    End If
-                Else
-                    'if not set calculating check to false
-                    CalcCheck(InputCount, 0) = False
-                    CUNew(InputCount, 0) = 0
                     'write the flows to the output file
                     Call WriteRlLinkOutput()
-                End If
-
-                'reset the input values for the next year
-                Call ResetRailInputs()
-
-                InputCount += 1
-            Loop
-
-            'create file if it is the initial year, otherwise update to temp file table
-            If YearNum = StartYear Then
-                Call WriteData("RailLink", "Output", OutputArray, , True)
-                Call WriteData("RailLink", "Temp", TempArray, , True)
-                'if the model is building capacity then create new capacity file
-                If BuildInfra = True Then
-                    Call WriteData("RailLink", "NewCap_Add", NewCapArray, , True)
+                Else
+                    'if not then this is the first year there have been track and trains on this route
+                    If RailCUPeriod = "Hour" Then
+                        BusyPer(InputCount, 0) = 0.08
+                    End If
+                    'calculate CU
+                    If RailCUPeriod = "Hour" Then
+                        CUNew(InputCount, 0) = ((RlLinkExtVars(InputCount, 14) * 0.08) / RlLinkExtVars(InputCount, 4)) / (60 / ModelPeakHeadway(InputCount, 0))
+                    Else
+                        CUNew(InputCount, 0) = (RlLinkExtVars(InputCount, 14) / RlLinkExtVars(InputCount, 4)) / RlLinkExtVars(InputCount, 11)
+                    End If
+                    'write the flows to the output file
+                    CalcCheck(InputCount, 0) = True
+                    Call WriteRlLinkOutput()
                 End If
             Else
-                Call WriteData("RailLink", "Output", OutputArray, , False)
-                Call WriteData("RailLink", "Temp", TempArray, , False)
-                If BuildInfra = True Then
-                    Call WriteData("RailLink", "NewCap_Add", NewCapArray, , False)
-                End If
+                'if not set calculating check to false
+                CalcCheck(InputCount, 0) = False
+                CUNew(InputCount, 0) = 0
+                'write the flows to the output file
+                Call WriteRlLinkOutput()
             End If
 
+            'reset the input values for the next year
+            Call ResetRailInputs()
 
-            YearNum += 1
+            InputCount += 1
         Loop
+
+        'create file if it is the initial year, otherwise update to temp file table
+        If g_modelRunYear = StartYear Then
+            Call WriteData("RailLink", "Output", OutputArray, , True)
+            Call WriteData("RailLink", "Temp", TempArray, , True)
+            'if the model is building capacity then create new capacity file
+            If BuildInfra = True Then
+                Call WriteData("RailLink", "NewCap_Add", NewCapArray, , True)
+            End If
+        Else
+            Call WriteData("RailLink", "Output", OutputArray, , False)
+            Call WriteData("RailLink", "Temp", TempArray, , False)
+            If BuildInfra = True Then
+                Call WriteData("RailLink", "NewCap_Add", NewCapArray, , False)
+            End If
+        End If
+
+
+
 
         'Write fuel consumption output file
         For y = StartYear To StartYear + Duration
@@ -164,7 +158,6 @@ Module RailModel
 
     Sub RailLinkInputFiles()
 
-        Dim yearchecker As Integer
 
         'get rail external variables file suffix
         If UpdateExtVars = True Then
@@ -181,14 +174,10 @@ Module RailModel
 
         'get fuel efficiency data from strategy file
         'also get trip rate info
-        Call ReadData("SubStrategy", "", stratarray)
-        yearchecker = 1
-        Do Until yearchecker > 90
-            RlFuelEff(yearchecker, 0) = stratarray(yearchecker, 67)
-            RlFuelEff(yearchecker, 1) = stratarray(yearchecker, 66)
-            RlTripRates(yearchecker) = stratarray(yearchecker, 93)
-            yearchecker += 1
-        Loop
+        Call ReadData("SubStrategy", "", stratarray, g_modelRunYear)
+        RlFuelEff(1, 0) = stratarray(1, 67)
+        RlFuelEff(1, 1) = stratarray(1, 66)
+        RlTripRates = stratarray(1, 93)
 
     End Sub
 
@@ -196,7 +185,7 @@ Module RailModel
         Dim Zone1ID As Integer
         Dim Zone2ID As Integer
 
-        If YearNum = StartYear Then
+        If g_modelRunYear = StartYear Then
             'assign values to variables in the order of the initial file
             FlowNum(InputCount, 0) = InputArray(InputCount, 4)
             Zone1ID = InputArray(InputCount, 5)
@@ -242,7 +231,7 @@ Module RailModel
             RlLinkCost(InputCount, 0) = InputArray(InputCount, 5)
             'TODO This get_single_data should be replaced with a ReadData command
             Dim thisIn(,) As String
-            'CarFuel(InputCount, 0) = get_single_data("TR_O_RailLinkExternalVariables", "flow_id", "year", Chr(34) & "CarFuel" & Chr(34), YearNum - 1, FlowNum(InputCount, 0))
+            'CarFuel(InputCount, 0) = get_single_data("TR_O_RailLinkExternalVariables", "flow_id", "year", Chr(34) & "CarFuel" & Chr(34), g_modelRunYear - 1, FlowNum(InputCount, 0))
             CarFuel(InputCount, 0) = ReadData("RailLink", "ExtVar", thisIn, g_modelRunYear - 1, FlowNum(InputCount, 0))
 
             OldTrains(InputCount, 0) = InputArray(InputCount, 6)
@@ -306,14 +295,14 @@ Module RailModel
                 OldY = OldDelays(InputCount, 0)
                 NewY = NewDelays(InputCount, 0)
                 If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                    OldEl = RlLinkEl(YearNum, 3)
+                    OldEl = RlLinkEl(g_modelRunYear, 3)
                     Call VarElCalc()
                     DelayRat = VarRat
                 Else
-                    DelayRat = (NewDelays(InputCount, 0) / OldDelays(InputCount, 0)) ^ RlLinkEl(YearNum, 3)
+                    DelayRat = (NewDelays(InputCount, 0) / OldDelays(InputCount, 0)) ^ RlLinkEl(g_modelRunYear, 3)
                 End If
             Else
-                DelayRat = (NewDelays(InputCount, 0) / OldDelays(InputCount, 0)) ^ RlLinkEl(YearNum, 3)
+                DelayRat = (NewDelays(InputCount, 0) / OldDelays(InputCount, 0)) ^ RlLinkEl(g_modelRunYear, 3)
             End If
         Else
             'recalculate growth subject to delay constraint
@@ -340,7 +329,7 @@ Module RailModel
                 ElseIf (RatCheck - CloseTrainRat) > 0.1 Then
                     NewTrains = BestTrains
                     NewDelays(InputCount, 0) = BestDelays
-                    logarray(logNum, 0) = "Flow " & FlowNum(InputCount, 0) & " failed to converge in Year " & YearNum & " in rail link model.  Best convergence ratio was " & CloseTrainRat & "."
+                    logarray(logNum, 0) = "Flow " & FlowNum(InputCount, 0) & " failed to converge in Year " & g_modelRunYear & " in rail link model.  Best convergence ratio was " & CloseTrainRat & "."
                     logNum += 1
                     Exit Do
                 Else
@@ -363,7 +352,7 @@ Module RailModel
         basecost = RlLinkExtVars(InputCount, 9)
         FixedCost = 121.381 + (RlLinkExtVars(InputCount, 12) * 24.855) + ((1 - RlLinkExtVars(InputCount, 12)) * 37.282)
         If RailCCharge = True Then
-            If YearNum >= RlCChargeYear Then
+            If g_modelRunYear >= RlCChargeYear Then
                 If CUOld(InputCount, 0) >= 0.25 Then
                     newcost = basecost + (0.6461 * FixedCost * RailChargePer * (CUOld(InputCount, 0) ^ 2))
                 Else
@@ -382,74 +371,74 @@ Module RailModel
             'pop ratio
             OldY = PopZ1Base(InputCount, 0) + PopZ2Base(InputCount, 0)
             If TripRates = "SubStrategy" Then
-                NewY = (CDbl(RlLinkExtVars(InputCount, 5)) + RlLinkExtVars(InputCount, 6)) * RlTripRates(YearNum)
+                NewY = (CDbl(RlLinkExtVars(InputCount, 5)) + RlLinkExtVars(InputCount, 6)) * RlTripRates
             Else
                 NewY = CDbl(RlLinkExtVars(InputCount, 6)) + RlLinkExtVars(InputCount, 6)
             End If
 
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                OldEl = RlLinkEl(YearNum, 1)
+                OldEl = RlLinkEl(g_modelRunYear, 1)
                 Call VarElCalc()
                 PopRat = VarRat
             Else
                 If TripRates = "SubStrategy" Then
-                    PopRat = (((CDbl(RlLinkExtVars(InputCount, 5)) + RlLinkExtVars(InputCount, 6)) * RlTripRates(YearNum)) / (PopZ1Base(InputCount, 0) + PopZ2Base(InputCount, 0))) ^ RlLinkEl(YearNum, 1)
+                    PopRat = (((CDbl(RlLinkExtVars(InputCount, 5)) + RlLinkExtVars(InputCount, 6)) * RlTripRates) / (PopZ1Base(InputCount, 0) + PopZ2Base(InputCount, 0))) ^ RlLinkEl(g_modelRunYear, 1)
                 Else
-                    PopRat = ((CDbl(RlLinkExtVars(InputCount, 5)) + RlLinkExtVars(InputCount, 6)) / (PopZ1Base(InputCount, 0) + PopZ2Base(InputCount, 0))) ^ RlLinkEl(YearNum, 1)
+                    PopRat = ((CDbl(RlLinkExtVars(InputCount, 5)) + RlLinkExtVars(InputCount, 6)) / (PopZ1Base(InputCount, 0) + PopZ2Base(InputCount, 0))) ^ RlLinkEl(g_modelRunYear, 1)
                 End If
             End If
             'gva ratio
             OldY = GVAZ1Base(InputCount, 0) + GVAZ2Base(InputCount, 0)
             NewY = CDbl(RlLinkExtVars(InputCount, 7)) + RlLinkExtVars(InputCount, 8)
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                OldEl = RlLinkEl(YearNum, 2)
+                OldEl = RlLinkEl(g_modelRunYear, 2)
                 Call VarElCalc()
                 GVARat = VarRat
             Else
-                GVARat = ((CDbl(RlLinkExtVars(InputCount, 7)) + RlLinkExtVars(InputCount, 8)) / (GVAZ1Base(InputCount, 0) + GVAZ2Base(InputCount, 0))) ^ RlLinkEl(YearNum, 2)
+                GVARat = ((CDbl(RlLinkExtVars(InputCount, 7)) + RlLinkExtVars(InputCount, 8)) / (GVAZ1Base(InputCount, 0) + GVAZ2Base(InputCount, 0))) ^ RlLinkEl(g_modelRunYear, 2)
             End If
             'delay ratio
             OldY = OldDelays(InputCount, 0)
             NewY = NewDelays(InputCount, 0)
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                OldEl = RlLinkEl(YearNum, 3)
+                OldEl = RlLinkEl(g_modelRunYear, 3)
                 Call VarElCalc()
                 DelayRat = VarRat
             Else
-                DelayRat = (NewDelays(InputCount, 0) / OldDelays(InputCount, 0)) ^ RlLinkEl(YearNum, 3)
+                DelayRat = (NewDelays(InputCount, 0) / OldDelays(InputCount, 0)) ^ RlLinkEl(g_modelRunYear, 3)
             End If
             'cost ratio
             OldY = RlLinkCost(InputCount, 0)
             NewY = newcost
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                OldEl = RlLinkEl(YearNum, 4)
+                OldEl = RlLinkEl(g_modelRunYear, 4)
                 Call VarElCalc()
                 CostRat = VarRat
             Else
-                CostRat = (Newcost / RlLinkCost(InputCount, 0)) ^ RlLinkEl(YearNum, 4)
+                CostRat = (Newcost / RlLinkCost(InputCount, 0)) ^ RlLinkEl(g_modelRunYear, 4)
             End If
 
             'car fuel ratio
             OldY = CarFuel(InputCount, 0)
             NewY = RlLinkExtVars(InputCount, 10)
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                OldEl = RlLinkEl(YearNum, 5)
+                OldEl = RlLinkEl(g_modelRunYear, 5)
                 Call VarElCalc()
                 CarFuelRat = VarRat
             Else
-                CarFuelRat = (RlLinkExtVars(InputCount, 10) / CarFuel(InputCount, 0)) ^ RlLinkEl(YearNum, 5)
+                CarFuelRat = (RlLinkExtVars(InputCount, 10) / CarFuel(InputCount, 0)) ^ RlLinkEl(g_modelRunYear, 5)
             End If
         Else
             If TripRates = "SubStrategy" Then
-                PopRat = (((CDbl(RlLinkExtVars(InputCount, 5)) + RlLinkExtVars(InputCount, 6)) * RlTripRates(YearNum)) / (PopZ1Base(InputCount, 0) + PopZ2Base(InputCount, 0))) ^ RlLinkEl(YearNum, 1)
+                PopRat = (((CDbl(RlLinkExtVars(InputCount, 5)) + RlLinkExtVars(InputCount, 6)) * RlTripRates) / (PopZ1Base(InputCount, 0) + PopZ2Base(InputCount, 0))) ^ RlLinkEl(g_modelRunYear, 1)
             Else
-                PopRat = ((CDbl(RlLinkExtVars(InputCount, 5)) + RlLinkExtVars(InputCount, 6)) / (PopZ1Base(InputCount, 0) + PopZ2Base(InputCount, 0))) ^ RlLinkEl(YearNum, 1)
+                PopRat = ((CDbl(RlLinkExtVars(InputCount, 5)) + RlLinkExtVars(InputCount, 6)) / (PopZ1Base(InputCount, 0) + PopZ2Base(InputCount, 0))) ^ RlLinkEl(g_modelRunYear, 1)
             End If
 
-            GVARat = ((CDbl(RlLinkExtVars(InputCount, 7)) + RlLinkExtVars(InputCount, 8)) / (GVAZ1Base(InputCount, 0) + GVAZ2Base(InputCount, 0))) ^ RlLinkEl(YearNum, 2)
-            DelayRat = (NewDelays(InputCount, 0) / OldDelays(InputCount, 0)) ^ RlLinkEl(YearNum, 3)
-            CostRat = (Newcost / RlLinkCost(InputCount, 0)) ^ RlLinkEl(YearNum, 4)
-            CarFuelRat = (CDbl(RlLinkExtVars(InputCount, 10)) / CarFuel(InputCount, 0)) ^ RlLinkEl(YearNum, 5)
+            GVARat = ((CDbl(RlLinkExtVars(InputCount, 7)) + RlLinkExtVars(InputCount, 8)) / (GVAZ1Base(InputCount, 0) + GVAZ2Base(InputCount, 0))) ^ RlLinkEl(g_modelRunYear, 2)
+            DelayRat = (NewDelays(InputCount, 0) / OldDelays(InputCount, 0)) ^ RlLinkEl(g_modelRunYear, 3)
+            CostRat = (Newcost / RlLinkCost(InputCount, 0)) ^ RlLinkEl(g_modelRunYear, 4)
+            CarFuelRat = (CDbl(RlLinkExtVars(InputCount, 10)) / CarFuel(InputCount, 0)) ^ RlLinkEl(g_modelRunYear, 5)
         End If
         NewTrains = OldTrains(InputCount, 0) * PopRat * GVARat * DelayRat * CostRat * CarFuelRat
 
@@ -481,14 +470,14 @@ Module RailModel
             OldY = OldDelays(InputCount, 0)
             NewY = NewDelays(InputCount, 0)
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                OldEl = RlLinkEl(YearNum, 3)
+                OldEl = RlLinkEl(g_modelRunYear, 3)
                 Call VarElCalc()
                 DelayRat = VarRat
             Else
-                DelayRat = (NewDelays(InputCount, 0) / OldDelays(InputCount, 0)) ^ RlLinkEl(YearNum, 3)
+                DelayRat = (NewDelays(InputCount, 0) / OldDelays(InputCount, 0)) ^ RlLinkEl(g_modelRunYear, 3)
             End If
         Else
-            DelayRat = (NewDelays(InputCount, 0) / OldDelays(InputCount, 0)) ^ RlLinkEl(YearNum, 3)
+            DelayRat = (NewDelays(InputCount, 0) / OldDelays(InputCount, 0)) ^ RlLinkEl(g_modelRunYear, 3)
         End If
         '***TEST MOD
         OldDelays(InputCount, 0) = NewDelays(InputCount, 0)
@@ -496,17 +485,17 @@ Module RailModel
 
     Sub WriteRlLinkOutput()
         'update fuelused
-        FuelUsed(YearNum, 0) += ((1 - RlLinkExtVars(InputCount, 12)) * NewTrains * 17695 * RlFuelEff(YearNum, 0))
-        FuelUsed(YearNum, 1) += (RlLinkExtVars(InputCount, 12) * NewTrains * 107421 * RlFuelEff(YearNum, 1))
+        FuelUsed(g_modelRunYear, 0) += ((1 - RlLinkExtVars(InputCount, 12)) * NewTrains * 17695 * RlFuelEff(1, 0))
+        FuelUsed(g_modelRunYear, 1) += (RlLinkExtVars(InputCount, 12) * NewTrains * 107421 * RlFuelEff(1, 1))
 
         'write to outputarray
         If CalcCheck(InputCount, 0) = True Then
             OutputArray(InputCount, 0) = g_modelRunID
             OutputArray(InputCount, 1) = FlowNum(InputCount, 0)
-            OutputArray(InputCount, 2) = YearNum
+            OutputArray(InputCount, 2) = g_modelRunYear
             'TODO update newtrain every year, otherwise it will read the previous link value
             'now it forces the output to be the old output value, need to fix this
-            If YearNum = 6 Then
+            If g_modelRunYear = 6 Then
                 If InputCount = 177 Then
                     NewTrains = 36
                 End If
@@ -517,7 +506,7 @@ Module RailModel
         Else
             OutputArray(InputCount, 0) = g_modelRunID
             OutputArray(InputCount, 1) = FlowNum(InputCount, 0)
-            OutputArray(InputCount, 2) = YearNum
+            OutputArray(InputCount, 2) = g_modelRunYear
             OutputArray(InputCount, 3) = RlLinkExtVars(InputCount, 14)
             OutputArray(InputCount, 4) = 1
             OutputArray(InputCount, 5) = CUNew(InputCount, 0)
@@ -540,7 +529,7 @@ Module RailModel
 
         'write to temparray
         TempArray(InputCount, 0) = g_modelRunID
-        TempArray(InputCount, 1) = YearNum
+        TempArray(InputCount, 1) = g_modelRunYear
         TempArray(InputCount, 2) = FlowNum(InputCount, 0)
 
         TempArray(InputCount, 3) = OldDelays(InputCount, 0)
@@ -577,7 +566,7 @@ Module RailModel
                     newtrackcount = 2
                 End If
                 'write details to output file
-                NewCapArray(NewCapNum, 0) = YearNum + 1
+                NewCapArray(NewCapNum, 0) = g_modelRunYear + 1
                 NewCapArray(NewCapNum, 1) = FlowNum(InputCount, 0)
                 NewCapArray(NewCapNum, 2) = newtrackcount
                 NewCapNum += 1

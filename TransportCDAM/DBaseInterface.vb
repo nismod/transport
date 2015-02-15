@@ -1128,7 +1128,7 @@ Module DBaseInterface
 
     End Sub
 
-  
+
 
 
     '****************************************************************************************
@@ -1229,6 +1229,9 @@ Module DBaseInterface
                     Case "CapChange"
                         TheFileName = CapFilePrefix & "RoadLinkCapChange.csv"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RoadLinkCapacityChange" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & "and year = " & Year
+                    Case "NewCap"
+                        TheFileName = EVFilePrefix & "RoadLinkNewCap.csv"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_O_RoadLinkNewCapacity" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & "and year = " & Year
                     Case "Elasticity"
                         TheFileName = "Elasticity Files\TR" & SubStrategy & "\RoadLinkElasticities.csv"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_I_RoadLinkElasticities_Run" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & "and year = " & Year
@@ -1287,6 +1290,9 @@ Module DBaseInterface
                     Case "CapChange"
                         TheFileName = CapFilePrefix & "RailLinkCapChange.csv"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RailLinkCapacityChange" & Chr(34) & " WHERE changeyear = " & Year
+                    Case "NewCap"
+                        TheFileName = EVFilePrefix & "RailLinkNewCap.csv"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_O_RailLinkNewCapacity" & Chr(34) & " WHERE changeyear = " & Year
                     Case "Elasticity"
                         TheFileName = "Elasticity Files\TR" & SubStrategy & "\RailLinkElasticities.csv"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_I_RailLinkElasticities_Run" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & "and year = " & Year
@@ -1321,6 +1327,9 @@ Module DBaseInterface
                     Case "CapChange"
                         TheFileName = CapFilePrefix & "SeaFreightCapChange.csv"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_SeaFreightCapacityChange" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & "and year = " & Year
+                    Case "NewCap"
+                        TheFileName = EVFilePrefix & "SeaFreightNewCap.csv"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_O_SeaFreightNewCapacity" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & "and year = " & Year
                     Case "Elasticity"
                         TheFileName = "Elasticity Files\TR" & SubStrategy & "\SeaFreightElasticities.csv"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_I_SeaFreightElasticities_Run" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & "and year = " & Year
@@ -1343,6 +1352,9 @@ Module DBaseInterface
                     Case "CapChange"
                         TheFileName = CapFilePrefix & "AirNodeCapChange.csv"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_AirNodeCapacityChange" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & "and year = " & Year
+                    Case "NewCap"
+                        TheFileName = EVFilePrefix & "AirNodeNewCap.csv"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_O_AirNodeNewCapacity" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & "and year = " & Year
                     Case "Elasticity"
                         TheFileName = "Elasticity Files\TR" & SubStrategy & "\AirElasticities.csv"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_I_AirElasticities_Run" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & "and year = " & Year
@@ -1554,7 +1566,7 @@ Module DBaseInterface
                         ToSQL = True
                         TableName = "TR_IO_RoadZoneExternalVariables"
                         OutFileName = EVFilePrefix & "RoadZoneExtVar.csv"
-                        header = "modelrun_id, zone_id, year, pop_z, gva_z, cost, lane_km, mway_lkm, rur_ad_lkm, rur_as_lkm, rur_min_lkm, urb_d_lkm, urb_s_lkm,  p_car, d_car, e_car, p_lgv, d_lgv, e_lgv, d_hgv, e_hgv, d_psv, e_psv, p_bike, e_bike, fc_bike, ph_car, dh_car, pe_car, h_car, fc_car, dh_lgv, pe_lgv, l_lgv, c_lgv, dh_psv, pe_psv, l_psv, c_psv, fc_psv, dh_hgv, h_hgv, fc_hgv, lgv_cost, hgv1_cost, hgv2_cost, psv_cost"
+                        header = "modelrun_id, zone_id, year, pop_z, gva_z, cost, lane_km, mway_lkm, rur_ad_lkm, rur_as_lkm, rur_min_lkm, urb_d_lkm, urb_s_lkm,  p_car, d_car, e_car, p_lgv, d_lgv, e_lgv, d_hgv, e_hgv, d_psv, e_psv, p_bike, e_bike, fc_bike, ph_car, dh_car, pe_car, h_car, fc_car, dh_lgv, pe_lgv, l_lgv, c_lgv, dh_psv, pe_psv, l_psv, c_psv, fc_psv, dh_hgv, h_hgv, fc_hgv, lgv_cost, hgv1_cost, hgv2_cost, psv_cost, p_car_cost,d_car_cost, ph_car_cost, dh_car_cost, phper_car, pih_car_cost, be_car_cost, hic_car_cost, hfc_car_cost, p_lgv_cost, d_lgv_cost, dh_lgv_cost, phper_lgv, pih_lgv_cost, be_lgv_cost, lpg_lgv_cost, cng_lgv_cost, d_hgv1_cost, dh_hgv1_cost, hic_hgv1_cost, hfc_hgv1_cost, d_hgv2_cost, dh_hgv2_cost, hic_hgv2_cost, hfc_hgv2_cost, d_psv_cost,dh_psv_cost, phper_psv, pih_psv_cost, be_psv_cost, lgp_psv_cost, cng_psv_cost, hfc_psv_cost"
                     Case "CapChange"
                         ToSQL = True
                         TableName = "TR_IO_RoadZoneCapacityChange"
@@ -1616,7 +1628,10 @@ Module DBaseInterface
                         ToSQL = True
                         TableName = "TR_IO_RoadLinkExternalVariables"
                         OutFileName = EVFilePrefix & "ExternalVariables.csv"
+                        'MATT do these headers match the database table headers?
                         header = "modelrun_id, flow_id, year,  pop_z, gva_z, cost, lane_km, mway_lkm, rur_ad_lkm, rur_as_lkm, rur_min_lkm, urb_d_lkm, urb_s_lkm, p_car, d_car, e_car, p_lgv, d_lgv, e_lgv, d_hgv, e_hgv, d_psv, e_psv, p_bike, e_bike, fc_bike, ph_car, dh_car, pe_car, h_car, fc_car, dh_lgv, pe_lgv, l_lgv, c_lgv, dh_psv, pe_psv, l_psv, c_psv, fc_psv, dh_hgv, h_hgv, fc_hgv, lgv_cost, hgv1_cost, hgv2_cost, psv_cost "
+                        'additional variable names that should be added to header are:
+                        'sc0_p_cost, sc0_be_cost, sc0_hfc_cost, sc1_p_cost, sc1_d_cost, sc1_ph_cost, sc1_dh_cost, sc1_pih_cost, sc1_be_cost, sc1_hic_cost, sc1_hfc_cost, sc2_p_cost, sc2_d_cost, sc2_ph_cost, sc2_dh_cost, sc2_pih_cost, sc2_be_cost, sc2_lpg_cost, sc2_cng_cost, sc3_d_cost, sc3_dh_cost, sc3_pih_cost, sc3_be_cost, sc3_lpg_cost, sc3_cng_cost, sc3_hfc_cost, sc4_d_cost, sc4_dh_cost, sc4_hic_cost, sc4_hfc_cost, sc5_d_cost, sc5_dh_cost, sc5_hic_cost, sc5_hfc_cost, sc6_p_cost, sc6_be_cost, sc6_hfc_cost, sc7_p_cost, sc7_d_cost, sc7_ph_cost, sc7_dh_cost, sc7_pih_cost, sc7_be_cost, sc7_hic_cost, sc7_hfc_cost, sc8_p_cost, sc8_d_cost, sc8_dh_cost, sc8_pih_cost, sc8_be_cost, sc8_lpg_cost, sc8_cng_cost, sc9_d_cost, sc9_dh_cost, sc9_pih_cost, sc9_be_cost, sc9_lpg_cost, sc9_cng_cost, sc9_hfc_cost, sc10_d_cost, sc10_dh_cost, sc10_hic_cost, sc10_hfc_cost, sc11_d_cost, sc11_dh_cost, sc11_hic_cost, sc11_hfc_cost, sc12_p_cost, sc12_be_cost, sc12_hfc_cost, sc13_p_cost, sc13_d_cost, sc13_ph_cost, sc13_dh_cost, sc13_pih_cost, sc13_be_cost, sc13_hic_cost, sc13_hfc_cost, sc14_p_cost, sc15_d_cost, sc14_dh_cost, sc14_pih_cost, sc14_be_cost, sc14_lpg_cost, sc14_cng_cost, sc15_d_cost, sc15_dh_cost, sc15_pih_cost, sc15_be_cost, sc15_lpg_cost, sc15_cng_cost, sc15_hfc_cost, sc16_d_cost, sc16_dh_cost, sc16_hic_cost, sc16_hfc_cost, sc17_d_cost, sc17_dh_cost, sc17_hic_cost, sc17_hfc_cost, sc18_d_cost, sc18_dh_cost, sc18_hic_cost, sc18_hfc_cost, sc19_d_cost, sc19_dh_cost, sc19_hic_cost, sc19_hfc_cost
                     Case "NewCap"
                         ToSQL = True
                         TableName = "TR_O_RoadLinkNewCapacity"

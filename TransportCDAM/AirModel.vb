@@ -32,7 +32,6 @@ Module AirModel
     Dim AirNewCap As IO.FileStream
     Dim anc As IO.StreamWriter
     Dim asf As IO.StreamReader
-    Dim YearNum As Long
     Dim NodeInput As String
     Dim NodeDetails() As String
     Dim FlowInput As String
@@ -73,7 +72,7 @@ Module AirModel
     Dim AirpNonFuelCost(28) As Double
     Dim FlowCharge(223) As Double
     Dim AirpOldConstraint(28), AirfOldConstraint(223) As Boolean
-    Dim AirTripRates(90) As Double
+    Dim AirTripRates As Double
     Dim MaxAirNode As Long
     Dim MaxAirFlow As Long
     Dim NodeInputArray(28, 16) As String
@@ -101,8 +100,6 @@ Module AirModel
         Call AirInputFiles()
 
 
-        'Set year number to initial year
-        YearNum = StartYear
 
         'Set capacity constraint checkers to false
         c = 0
@@ -112,93 +109,88 @@ Module AirModel
             c += 1
         Loop
 
-        'loop through all 90 years of modelling period - this is the outside loop for this model because need to aggregate across flows each year
-        Do Until YearNum > StartYear + Duration
 
-            'read input data
-            Call ReadData("AirNode", "Input", NodeInputArray, g_modelRunYear)
-            Call ReadData("AirFlow", "Input", FlowInputArray, g_modelRunYear)
+        'read input data
+        Call ReadData("AirNode", "Input", NodeInputArray, g_modelRunYear)
+        Call ReadData("AirFlow", "Input", FlowInputArray, g_modelRunYear)
 
-            'get external variables for this year
-            Call ReadData("AirNode", "ExtVar", AirportExtVar, g_modelRunYear)
-            Call ReadData("AirFlow", "ExtVar", AirFlowExtVar, g_modelRunYear)
+        'get external variables for this year
+        Call ReadData("AirNode", "ExtVar", AirportExtVar, g_modelRunYear)
+        Call ReadData("AirFlow", "ExtVar", AirFlowExtVar, g_modelRunYear)
 
-            'read previous years external variable value as base values
-            Call ReadData("AirNode", "ExtVar", NodePreExtVar, g_modelRunYear - 1)
-            Call ReadData("AirFlow", "ExtVar", FlowPreExtVar, g_modelRunYear - 1)
+        'read previous years external variable value as base values
+        Call ReadData("AirNode", "ExtVar", NodePreExtVar, g_modelRunYear - 1)
+        Call ReadData("AirFlow", "ExtVar", FlowPreExtVar, g_modelRunYear - 1)
 
 
-            'run air node model
+        'run air node model
 
-            'get airport input from inputarray
-            Call GetAirportInputData()
+        'get airport input from inputarray
+        Call GetAirportInputData()
 
-            'get external variables for relevant year for all airports
-            Call GetAirportExtVar()
+        'get external variables for relevant year for all airports
+        Call GetAirportExtVar()
 
-            '1.3 addition to allow capacity-based charging
-            'calculate airport capacity utilisation values
-            Call CalcAirpCapU()
+        '1.3 addition to allow capacity-based charging
+        'calculate airport capacity utilisation values
+        Call CalcAirpCapU()
 
-            'calculate new airport international passenger totals
-            Call AirNodeChange()
+        'calculate new airport international passenger totals
+        Call AirNodeChange()
 
 
 
 
-            'run air flow model
+        'run air flow model
 
-            'get air flow data from input file
-            Call GetAirFlowInputData()
+        'get air flow data from input file
+        Call GetAirFlowInputData()
 
-            'get external variables for relevant year for all flows
-            Call GetAirFlowExtVar()
+        'get external variables for relevant year for all flows
+        Call GetAirFlowExtVar()
 
-            'calculate new air flow totals, and sum them to give airport domestic traffic totals
-            'add new flow level from each flow to airport total domestic flow value contained in an array
-            'note that the airport domestic flow calculations are based on 
-            Call AirFlowChange()
+        'calculate new air flow totals, and sum them to give airport domestic traffic totals
+        'add new flow level from each flow to airport total domestic flow value contained in an array
+        'note that the airport domestic flow calculations are based on 
+        Call AirFlowChange()
 
-            'for each airport check if the growth means that capacity limits have been reached, and if so apply the constraints
-            'this then reestimates constrained flows and nodal totals as required
-            Call AirConstraints()
+        'for each airport check if the growth means that capacity limits have been reached, and if so apply the constraints
+        'this then reestimates constrained flows and nodal totals as required
+        Call AirConstraints()
 
-            'estimate fuel consumpion
-            Call AirFuelConsumption()
+        'estimate fuel consumpion
+        Call AirFuelConsumption()
 
-            'write output values and temp array
-            Call AirOutputValues()
+        'write output values and temp array
+        Call AirOutputValues()
 
-            '***note - do we want to alter this to cope with reductions in capacity? - also with reductions in load factors and/or aircraft sizes?
+        '***note - do we want to alter this to cope with reductions in capacity? - also with reductions in load factors and/or aircraft sizes?
 
 
-            'create file is true if it is the initial year and write to outputfile and temp file
-            If YearNum = StartYear Then
-                Call WriteData("AirNode", "Output", NodeOutputArray, , True)
-                Call WriteData("AirFlow", "Output", FlowOutputArray, , True)
-                'write to IO tables
-                Call WriteData("AirNode", "Temp", NodeTempArray, , True)
-                Call WriteData("AirFlow", "Temp", FlowTempArray, , True)
+        'create file is true if it is the initial year and write to outputfile and temp file
+        If g_modelRunYear = StartYear Then
+            Call WriteData("AirNode", "Output", NodeOutputArray, , True)
+            Call WriteData("AirFlow", "Output", FlowOutputArray, , True)
+            'write to IO tables
+            Call WriteData("AirNode", "Temp", NodeTempArray, , True)
+            Call WriteData("AirFlow", "Temp", FlowTempArray, , True)
 
-                If BuildInfra = True Then
-                    Call WriteData("AirNode", "NewCap_Add", NewCapArray, , True)
-                End If
-            Else
-                Call WriteData("AirNode", "Output", NodeOutputArray, , False)
-                Call WriteData("AirFlow", "Output", FlowOutputArray, , False)
-                'write to IO tables
-                Call WriteData("AirNode", "Temp", NodeTempArray, , False)
-                Call WriteData("AirFlow", "Temp", FlowTempArray, , False)
-
-                If BuildInfra = True Then
-                    Call WriteData("AirNode", "NewCap_Add", NewCapArray, , False)
-                End If
+            If BuildInfra = True Then
+                Call WriteData("AirNode", "NewCap_Add", NewCapArray, , True)
             End If
+        Else
+            Call WriteData("AirNode", "Output", NodeOutputArray, , False)
+            Call WriteData("AirFlow", "Output", FlowOutputArray, , False)
+            'write to IO tables
+            Call WriteData("AirNode", "Temp", NodeTempArray, , False)
+            Call WriteData("AirFlow", "Temp", FlowTempArray, , False)
 
-            'repeat for duration
-            YearNum += 1
+            If BuildInfra = True Then
+                Call WriteData("AirNode", "NewCap_Add", NewCapArray, , False)
+            End If
+        End If
 
-        Loop
+
 
 
     End Sub
@@ -223,7 +215,7 @@ Module AirModel
             'read from the strategy file
             Call ReadData("SubStrategy", "", stratarray, g_modelRunYear)
             For r = 1 To 90
-                AirTripRates(r) = stratarray(r, 94)
+                AirTripRates = stratarray(1, 94)
             Next
         End If
 
@@ -238,7 +230,7 @@ Module AirModel
 
         Do Until AirportCount > MaxAirNode
 
-            If YearNum = 1 Then
+            If g_modelRunYear = 1 Then
                 'if it is initial year, read from the initial input
                 AirNodeID(AirportCount, 0) = NodeInputArray(AirportCount, 4)
                 'loop through all elements of the input line, transferring the data to the airport base data array
@@ -365,20 +357,20 @@ Module AirModel
                 'pop ratio
                 OldY = AirportBaseData(aircount, 6)
                 If TripRates = "SubStrategy" Then
-                    NewY = AirportExtVar(aircount, 4) * AirTripRates(YearNum)
+                    NewY = AirportExtVar(aircount, 4) * AirTripRates
                 Else
                     NewY = AirportExtVar(aircount, 4)
                 End If
 
                 If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                    OldEl = AirEl(YearNum, 4)
+                    OldEl = AirEl(1, 4)
                     Call VarElCalc()
                     AirpPopRat = VarRat
                 Else
                     If TripRates = "SubStrategy" Then
-                        AirpPopRat = ((AirportExtVar(aircount, 4) * AirTripRates(YearNum)) / AirportBaseData(aircount, 6)) ^ AirEl(YearNum, 4)
+                        AirpPopRat = ((AirportExtVar(aircount, 4) * AirTripRates) / AirportBaseData(aircount, 6)) ^ AirEl(1, 4)
                     Else
-                        AirpPopRat = (AirportExtVar(aircount, 4) / AirportBaseData(aircount, 6)) ^ AirEl(YearNum, 4)
+                        AirpPopRat = (AirportExtVar(aircount, 4) / AirportBaseData(aircount, 6)) ^ AirEl(1, 4)
                     End If
 
                 End If
@@ -386,22 +378,22 @@ Module AirModel
                 OldY = AirportBaseData(aircount, 7)
                 NewY = AirportExtVar(aircount, 5)
                 If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                    OldEl = AirEl(YearNum, 5)
+                    OldEl = AirEl(1, 5)
                     Call VarElCalc()
                     AirpGvaRat = VarRat
                 Else
-                    AirpGvaRat = (AirportExtVar(aircount, 5) / AirportBaseData(aircount, 7)) ^ AirEl(YearNum, 5)
+                    AirpGvaRat = (AirportExtVar(aircount, 5) / AirportBaseData(aircount, 7)) ^ AirEl(1, 5)
                 End If
                 'cost ratio
                 OldY = AirportBaseData(aircount, 8)
                 NewY = AirportExtVar(aircount, 6) + AirpCapU(aircount, 3)
                 If OldY > 0 Then
                     If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                        OldEl = AirEl(YearNum, 6)
+                        OldEl = AirEl(1, 6)
                         Call VarElCalc()
                         AirpCostRat = VarRat
                     Else
-                        AirpCostRat = ((AirportExtVar(aircount, 6) + AirpCapU(aircount, 3)) / AirportBaseData(aircount, 8)) ^ AirEl(YearNum, 6)
+                        AirpCostRat = ((AirportExtVar(aircount, 6) + AirpCapU(aircount, 3)) / AirportBaseData(aircount, 8)) ^ AirEl(1, 6)
                     End If
                 Else
                     AirpCostRat = 1
@@ -409,12 +401,12 @@ Module AirModel
 
             Else
                 If TripRates = "SubStrategy" Then
-                    AirpPopRat = ((AirportExtVar(aircount, 4) * AirTripRates(YearNum)) / AirportBaseData(aircount, 6)) ^ AirEl(YearNum, 4)
+                    AirpPopRat = ((AirportExtVar(aircount, 4) * AirTripRates) / AirportBaseData(aircount, 6)) ^ AirEl(1, 4)
                 Else
-                    AirpPopRat = (AirportExtVar(aircount, 4) / AirportBaseData(aircount, 6)) ^ AirEl(YearNum, 4)
+                    AirpPopRat = (AirportExtVar(aircount, 4) / AirportBaseData(aircount, 6)) ^ AirEl(1, 4)
                 End If
-                AirpGvaRat = (AirportExtVar(aircount, 5) / AirportBaseData(aircount, 7)) ^ AirEl(YearNum, 5)
-                AirpCostRat = ((AirportExtVar(aircount, 6) + AirpCapU(aircount, 3)) / AirportBaseData(aircount, 8)) ^ AirEl(YearNum, 6)
+                AirpGvaRat = (AirportExtVar(aircount, 5) / AirportBaseData(aircount, 7)) ^ AirEl(1, 5)
+                AirpCostRat = ((AirportExtVar(aircount, 6) + AirpCapU(aircount, 3)) / AirportBaseData(aircount, 8)) ^ AirEl(1, 6)
             End If
 
             AirpTripRat = AirpPopRat * AirpGvaRat * AirpCostRat
@@ -451,7 +443,7 @@ Module AirModel
         AirportCount = 1
 
         Do Until AirportCount > MaxAirFlow
-            If YearNum = 1 Then
+            If g_modelRunYear = 1 Then
                 'if it is initial year, read from the initial input
                 AirFlowID(AirportCount, 0) = FlowInputArray(AirportCount, 4)
                 'loop through all elements of the input line, transferring the data to the airport base data array
@@ -547,56 +539,56 @@ Module AirModel
                     'pop ratio
                     OldY = AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5)
                     If TripRates = "SubStrategy" Then
-                        NewY = (CDbl(AirFlowExtVar(aircount, 4)) + CDbl(AirFlowExtVar(aircount, 5))) * AirTripRates(YearNum)
+                        NewY = (CDbl(AirFlowExtVar(aircount, 4)) + CDbl(AirFlowExtVar(aircount, 5))) * AirTripRates
                     Else
                         NewY = AirFlowExtVar(aircount, 4) + AirFlowExtVar(aircount, 5)
                     End If
 
                     If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                        OldEl = AirEl(YearNum, 1)
+                        OldEl = AirEl(1, 1)
                         Call VarElCalc()
                         AirfPopRat = VarRat
                     Else
-                        AirfPopRat = ((CDbl(AirFlowExtVar(aircount, 4)) + CDbl(AirFlowExtVar(aircount, 5))) / (AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5))) ^ AirEl(YearNum, 1)
+                        AirfPopRat = ((CDbl(AirFlowExtVar(aircount, 4)) + CDbl(AirFlowExtVar(aircount, 5))) / (AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5))) ^ AirEl(1, 1)
                     End If
                     'gva ratio
                     OldY = AirFlowBaseData(aircount, 6) + AirFlowBaseData(aircount, 7)
                     NewY = CDbl(AirFlowExtVar(aircount, 6)) + CDbl(AirFlowExtVar(aircount, 7))
                     If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                        OldEl = AirEl(YearNum, 2)
+                        OldEl = AirEl(1, 2)
                         Call VarElCalc()
                         AirfGvaRat = VarRat
                     Else
-                        AirfGvaRat = ((CDbl(AirFlowExtVar(aircount, 6)) + CDbl(AirFlowExtVar(aircount, 7))) / (AirFlowBaseData(aircount, 6) + AirFlowBaseData(aircount, 7))) ^ AirEl(YearNum, 2)
+                        AirfGvaRat = ((CDbl(AirFlowExtVar(aircount, 6)) + CDbl(AirFlowExtVar(aircount, 7))) / (AirFlowBaseData(aircount, 6) + AirFlowBaseData(aircount, 7))) ^ AirEl(1, 2)
                     End If
 
                     'cost ratio
                     OldY = AirFlowBaseData(aircount, 8)
                     NewY = CDbl(AirFlowExtVar(aircount, 8)) + FlowCharge(aircount)
                     If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                        OldEl = AirEl(YearNum, 3)
+                        OldEl = AirEl(1, 3)
                         Call VarElCalc()
                         AirfCostRat = VarRat
                     Else
-                        AirfCostRat = ((CDbl(AirFlowExtVar(aircount, 8)) + FlowCharge(aircount)) / AirFlowBaseData(aircount, 8)) ^ AirEl(YearNum, 3)
+                        AirfCostRat = ((CDbl(AirFlowExtVar(aircount, 8)) + FlowCharge(aircount)) / AirFlowBaseData(aircount, 8)) ^ AirEl(1, 3)
                     End If
                 Else
                     If TripRates = "SubStrategy" Then
-                        AirfPopRat = (((CDbl(AirFlowExtVar(aircount, 4)) + CDbl(AirFlowExtVar(aircount, 5))) * AirTripRates(YearNum)) / (AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5))) ^ AirEl(YearNum, 1)
+                        AirfPopRat = (((CDbl(AirFlowExtVar(aircount, 4)) + CDbl(AirFlowExtVar(aircount, 5))) * AirTripRates) / (AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5))) ^ AirEl(1, 1)
                     Else
-                        AirfPopRat = ((CDbl(AirFlowExtVar(aircount, 4)) + CDbl(AirFlowExtVar(aircount, 5))) / (AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5))) ^ AirEl(YearNum, 1)
+                        AirfPopRat = ((CDbl(AirFlowExtVar(aircount, 4)) + CDbl(AirFlowExtVar(aircount, 5))) / (AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5))) ^ AirEl(1, 1)
                     End If
-                    AirfGvaRat = ((CDbl(AirFlowExtVar(aircount, 6)) + CDbl(AirFlowExtVar(aircount, 7))) / (AirFlowBaseData(aircount, 6) + AirFlowBaseData(aircount, 7))) ^ AirEl(YearNum, 2)
-                    AirfCostRat = ((CDbl(AirFlowExtVar(aircount, 8)) + FlowCharge(aircount)) / AirFlowBaseData(aircount, 8)) ^ AirEl(YearNum, 3)
+                    AirfGvaRat = ((CDbl(AirFlowExtVar(aircount, 6)) + CDbl(AirFlowExtVar(aircount, 7))) / (AirFlowBaseData(aircount, 6) + AirFlowBaseData(aircount, 7))) ^ AirEl(1, 2)
+                    AirfCostRat = ((CDbl(AirFlowExtVar(aircount, 8)) + FlowCharge(aircount)) / AirFlowBaseData(aircount, 8)) ^ AirEl(1, 3)
                 End If
             Else
                 If TripRates = "SubStrategy" Then
-                    AirfPopRat = (((CDbl(AirFlowExtVar(aircount, 4)) + CDbl(AirFlowExtVar(aircount, 5)))) * AirTripRates(YearNum)) / (AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5)) ^ AirEl(YearNum, 1)
+                    AirfPopRat = (((CDbl(AirFlowExtVar(aircount, 4)) + CDbl(AirFlowExtVar(aircount, 5)))) * AirTripRates) / (AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5)) ^ AirEl(1, 1)
                 Else
-                    AirfPopRat = ((CDbl(AirFlowExtVar(aircount, 4)) + CDbl(AirFlowExtVar(aircount, 5))) / (AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5))) ^ AirEl(YearNum, 1)
+                    AirfPopRat = ((CDbl(AirFlowExtVar(aircount, 4)) + CDbl(AirFlowExtVar(aircount, 5))) / (AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5))) ^ AirEl(1, 1)
                 End If
-                AirfGvaRat = ((CDbl(AirFlowExtVar(aircount, 6)) + CDbl(AirFlowExtVar(aircount, 7))) / (AirFlowBaseData(aircount, 6) + AirFlowBaseData(aircount, 7))) ^ AirEl(YearNum, 2)
-                AirfCostRat = ((CDbl(AirFlowExtVar(aircount, 8)) + FlowCharge(aircount)) / AirFlowBaseData(aircount, 8)) ^ AirEl(YearNum, 3)
+                AirfGvaRat = ((CDbl(AirFlowExtVar(aircount, 6)) + CDbl(AirFlowExtVar(aircount, 7))) / (AirFlowBaseData(aircount, 6) + AirFlowBaseData(aircount, 7))) ^ AirEl(1, 2)
+                AirfCostRat = ((CDbl(AirFlowExtVar(aircount, 8)) + FlowCharge(aircount)) / AirFlowBaseData(aircount, 8)) ^ AirEl(1, 3)
             End If
 
             'use the ratios to estimate the new actual and latent level of trips on the flow
@@ -1069,7 +1061,7 @@ Module AirModel
             'concatenate the output row for the node file
             NodeOutputArray(aircount, 0) = g_modelRunID
             NodeOutputArray(aircount, 1) = AirNodeID(aircount, 0)
-            NodeOutputArray(aircount, 2) = YearNum
+            NodeOutputArray(aircount, 2) = g_modelRunYear
             NodeOutputArray(aircount, 3) = AirpPass(aircount)
             NodeOutputArray(aircount, 4) = AirpDomTripsNew(aircount)
             NodeOutputArray(aircount, 5) = AirpTripsNew(aircount)
@@ -1083,7 +1075,7 @@ Module AirModel
             'concatenate the output row for the flow file
             FlowOutputArray(flownum, 0) = g_modelRunID
             FlowOutputArray(flownum, 1) = AirFlowID(flownum, 0)
-            FlowOutputArray(flownum, 2) = YearNum
+            FlowOutputArray(flownum, 2) = g_modelRunYear
             FlowOutputArray(flownum, 3) = AirfTripsNew(flownum)
             FlowOutputArray(flownum, 4) = AirfFuel(flownum)
             flownum += 1
@@ -1115,7 +1107,7 @@ Module AirModel
                     AirpAddedCap(aircount, 0) += 20000000
                     'write details to output file
                     NewCapArray(newcapnum, 0) = aircount
-                    NewCapArray(newcapnum, 1) = YearNum + 1
+                    NewCapArray(newcapnum, 1) = g_modelRunYear + 1
                     NewCapArray(newcapnum, 2) = 20000000
                     NewCapArray(newcapnum, 3) = 0
                     newcapnum += 1
@@ -1136,7 +1128,7 @@ Module AirModel
                     AirpAddedCap(aircount, 1) += 200000
                     'write details to output file
                     NewCapArray(newcapnum, 0) = aircount
-                    NewCapArray(newcapnum, 1) = YearNum + 1
+                    NewCapArray(newcapnum, 1) = g_modelRunYear + 1
                     NewCapArray(newcapnum, 2) = 0
                     NewCapArray(newcapnum, 3) = 200000
                     newcapnum += 1
@@ -1154,7 +1146,7 @@ Module AirModel
             End If
             'write to temp file
             NodeTempArray(aircount, 0) = g_modelRunID
-            NodeTempArray(aircount, 1) = YearNum
+            NodeTempArray(aircount, 1) = g_modelRunYear
             NodeTempArray(aircount, 2) = AirNodeID(aircount, 0)
             For x = 1 To 3
                 NodeTempArray(aircount, x + 2) = AirportBaseData(aircount, x)
@@ -1178,7 +1170,7 @@ Module AirModel
 
             'write to temp
             FlowTempArray(flownum, 0) = g_modelRunID
-            FlowTempArray(flownum, 1) = YearNum
+            FlowTempArray(flownum, 1) = g_modelRunYear
             FlowTempArray(flownum, 2) = AirFlowID(flownum, 0)
             FlowTempArray(flownum, 3) = AirFlowBaseData(flownum, 3)
             FlowTempArray(flownum, 4) = AirFlowBaseData(flownum, 9)
@@ -1203,9 +1195,9 @@ Module AirModel
     Sub CalcAirpCapU()
         'airport capacity utilisation array contains terminal CU as index 1 and runway CU as index 2, and the capacity charge as index 3
         'only do this if not in the first year - we assume that no charge is applied in the first year (because it's difficult to calculate flight numbers in this year)
-        If YearNum > 1 Then
+        If g_modelRunYear > 1 Then
             'check it is after the application of the charge
-            If YearNum >= AirChargeYear Then
+            If g_modelRunYear >= AirChargeYear Then
                 For x = 1 To 28
                     AirpCapU(x, 1) = AirportBaseData(x, 1) / AirportBaseData(x, 4)
                     AirpCapU(x, 2) = AirpATM(x) / AirportBaseData(x, 5)

@@ -49,6 +49,8 @@
     Dim stratarray(90, 95) As String
     Dim NodeInputArray(28, 16) As String
     Dim FlowInputArray(223, 11) As String
+    Dim NodeEVInputArray(28, 16) As String
+    Dim FlowEVInputArray(223, 11) As String
     Dim NodeOutputArray(29, 13) As String
     Dim FlowOutputArray(224, 7) As String
     Dim CapArray(47, 5) As String
@@ -77,7 +79,7 @@
         'v1.3 altered so that scenario file is read directly as an input file
         If AirEneSource = "Database" Then
             'read data to energy array from the file
-            Call ReadData("Energy", "", enearray, g_modelRunYear)
+            Call ReadData("Energy", "", enearray)
             For y = 0 To 90
                 FuelCost(y) = enearray(y + 1, 2)
             Next
@@ -88,6 +90,389 @@
         'so we created another file containing sorted implemented capacity enhancements (in get files sub)
         'need initial file to be sorted by scheme type then by change year then by order of priority
         'first read all compulsory enhancements to intermediate array
+
+        'only do the cap change calculation for the intermediate cap change file if it is year 1
+        If g_modelRunYear = g_initialYear Then
+            'read capchange info
+            Call ReadData("AirNode", "CapChange", CapArray, g_modelRunYear)
+
+            'do capacity change requirement calculation
+            Call CapChangeCalc()
+
+            'write all lines to intermediate capacity file
+            Call WriteData("AirNode", "NewCap", NewCapArray)
+        End If
+
+        'read capchange info for the current year
+        Call ReadData("AirNode", "NewCap", CapArray, g_modelRunYear)
+
+        AddingCap = True
+        'reset Capnum to read the first line
+        CapNum = 1
+        Call GetCapData()
+
+        'If NewAirCap = True Then
+        '    Call GetCapData()
+        'End If
+
+        Call CalcFlowData()
+
+        'create file if it is the first year
+        'it is now writting to database, therefore no difference if it is year 1 or not
+        If g_modelRunYear = g_initialYear Then
+            Call WriteData("AirNode", "ExtVar", NodeOutputArray, , True)
+            Call WriteData("AirFlow", "ExtVar", FlowOutputArray, , True)
+        Else
+            Call WriteData("AirNode", "ExtVar", NodeOutputArray, , False)
+            Call WriteData("AirFlow", "ExtVar", FlowOutputArray, , False)
+        End If
+
+
+
+
+    End Sub
+
+    Sub GetFiles()
+
+
+        'read initial year files
+        Call ReadData("AirNode", "Input", NodeInputArray, g_modelRunYear)
+        Call ReadData("AirFlow", "Input", FlowInputArray, g_modelRunYear)
+        If g_modelRunYear <> g_initialYear Then
+            'read from previous year
+            Call ReadData("AirNode", "ExtVar", NodeEVInputArray, g_modelRunYear - 1)
+            Call ReadData("AirFlow", "ExtVar", FlowEVInputArray, g_modelRunYear - 1)
+        End If
+
+
+        'now get strategy file too
+        Call ReadData("SubStrategy", "", stratarray)
+
+    End Sub
+
+    Sub CalcFlowData()
+
+        Dim NodeCount As Long
+        Dim FlowCount As Long
+        Dim OutVarCount As Integer
+        Dim AddTermCap As Long
+        Dim AddATMCap As Long
+        Dim newcost As Double
+        Dim carbch As Double
+
+        'if this is the first year load in node base values and flow base values
+        If g_modelRunYear = g_initialYear Then
+            NodeCount = 1
+            Do While NodeCount < 29
+                NodeOldData(NodeCount, 0) = NodeInputArray(NodeCount, 4)
+                'pop
+                NodeOldData(NodeCount, 1) = get_population_data_by_airportID(g_modelRunYear - 1, NodeOldData(NodeCount, 0))
+                'gva
+                NodeOldData(NodeCount, 2) = get_gva_data_by_airportID(g_modelRunYear - 1, NodeOldData(NodeCount, 0))
+                'cost
+                NodeOldData(NodeCount, 3) = NodeInputArray(NodeCount, 10) * 0.29
+                airnodefixedcost(NodeCount) = NodeInputArray(NodeCount, 10) * 0.71
+                'termcap
+                NodeOldData(NodeCount, 4) = NodeInputArray(NodeCount, 8)
+                'maxatm
+                NodeOldData(NodeCount, 5) = NodeInputArray(NodeCount, 9)
+                'psd
+                NodeOldData(NodeCount, 6) = NodeInputArray(NodeCount, 11)
+                'psi
+                NodeOldData(NodeCount, 7) = NodeInputArray(NodeCount, 12)
+                'lfd
+                NodeOldData(NodeCount, 8) = NodeInputArray(NodeCount, 13)
+                'lfi
+                NodeOldData(NodeCount, 9) = NodeInputArray(NodeCount, 14)
+                'inttripdist
+                NodeOldData(NodeCount, 10) = NodeInputArray(NodeCount, 15)
+                'fuelseatkm
+                NodeOldData(NodeCount, 11) = 0.037251
+                GORID(NodeCount) = NodeInputArray(NodeCount, 16)
+                NodeCount += 1
+            Loop
+
+            FlowCount = 1
+            Do While FlowCount < 224
+                FlowOldData(FlowCount, 0) = FlowInputArray(FlowCount, 4)
+                OZone(FlowCount) = FlowInputArray(FlowCount, 10)
+                DZone(FlowCount) = FlowInputArray(FlowCount, 11)
+                FlowOldData(FlowCount, 5) = FlowInputArray(FlowCount, 8) * 0.29
+                airflowfixedcost(FlowCount) = FlowInputArray(FlowCount, 8) * 0.71
+                FlowOldData(FlowCount, 1) = get_population_data_by_zoneID(g_modelRunYear - 1, FlowOldData(FlowCount, 0), "OZ", "'air'", OZone(FlowCount))
+                FlowOldData(FlowCount, 2) = get_population_data_by_zoneID(g_modelRunYear - 1, FlowOldData(FlowCount, 0), "DZ", "'air'", DZone(FlowCount))
+                FlowOldData(FlowCount, 3) = get_gva_data_by_zoneID(g_modelRunYear - 1, FlowOldData(FlowCount, 0), "OZ", "'air'", OZone(FlowCount))
+                FlowOldData(FlowCount, 4) = get_gva_data_by_zoneID(g_modelRunYear - 1, FlowOldData(FlowCount, 0), "DZ", "'air'", DZone(FlowCount))
+
+                'add in the Flow ID number as some are missing from the input file
+
+                FlowLength(FlowCount) = FlowInputArray(FlowCount, 9)
+                FlowCount += 1
+            Loop
+            'v1.4 set fueleffold value to 1
+            FuelEffOld = 1
+        Else
+            'read from previous year's data
+
+            'get airnode data from previous year
+            NodeCount = 1
+            Do While NodeCount < 29
+                NodeOldData(NodeCount, 0) = NodeInputArray(NodeCount, 4)
+                NodeOldData(NodeCount, 1) = get_population_data_by_airportID(g_modelRunYear - 1, NodeOldData(NodeCount, 0))
+                NodeOldData(NodeCount, 2) = get_gva_data_by_airportID(g_modelRunYear - 1, NodeOldData(NodeCount, 0))
+                NodeOldData(NodeCount, 3) = NodeEVInputArray(NodeCount, 15)
+
+                OutVarCount = 4
+                'v1.4 change, previously >10
+                Do Until OutVarCount > 11
+                    NodeOldData(NodeCount, OutVarCount) = NodeEVInputArray(NodeCount, OutVarCount + 3)
+                    OutVarCount += 1
+                Loop
+
+                NodeCount += 1
+            Loop
+
+            'get airflow data from previous year
+            FlowCount = 1
+            Do While FlowCount < 224
+                FlowOldData(FlowCount, 0) = FlowInputArray(FlowCount, 4)
+                OZone(FlowCount) = FlowInputArray(FlowCount, 10)
+                DZone(FlowCount) = FlowInputArray(FlowCount, 11)
+                FlowOldData(FlowCount, 1) = get_population_data_by_zoneID(g_modelRunYear - 1, FlowOldData(FlowCount, 0), "OZ", "'air'", OZone(FlowCount))
+                FlowOldData(FlowCount, 2) = get_population_data_by_zoneID(g_modelRunYear - 1, FlowOldData(FlowCount, 0), "DZ", "'air'", DZone(FlowCount))
+                FlowOldData(FlowCount, 3) = get_gva_data_by_zoneID(g_modelRunYear - 1, FlowOldData(FlowCount, 0), "OZ", "'air'", OZone(FlowCount))
+                FlowOldData(FlowCount, 4) = get_gva_data_by_zoneID(g_modelRunYear - 1, FlowOldData(FlowCount, 0), "DZ", "'air'", DZone(FlowCount))
+                FlowOldData(FlowCount, 5) = FlowEVInputArray(FlowCount, 9)
+
+                FlowCount += 1
+            Loop
+
+
+            FuelEffOld = stratarray(g_modelRunYear - 2010 - 1, 68)
+
+        End If
+
+        'get values from strategy file
+        FuelEff = stratarray(g_modelRunYear - 2010, 68) / FuelEffOld
+
+        'calculate new node values first
+        NodeCount = 1
+
+        'loop through all nodes
+        Do While NodeCount < 29
+            'scale up all variable values for this year
+            If AirPopSource = "Constant" Then
+                NodeNewData(NodeCount, 1) = NodeOldData(NodeCount, 1) * PopGrowth
+            End If
+            If AirPopSource = "File" Then
+                'air model not yet set up for use with scaling files
+            End If
+            If AirPopSource = "Database" Then
+                'if year is after 2093 then no population forecasts are available so assume population remains constant
+                'now modified as population data available up to 2100 - so should never need 'else'
+                'v1.9 now read pop data using database function
+                NodeNewData(NodeCount, 1) = get_population_data_by_airportID(g_modelRunYear, NodeOldData(NodeCount, 0))
+            End If
+            If AirEcoSource = "Constant" Then
+                NodeNewData(NodeCount, 2) = NodeOldData(NodeCount, 2) * GVAGrowth
+            ElseIf AirEcoSource = "File" Then
+                'air model not yet set up for use with scaling files
+            ElseIf AirEcoSource = "Database" Then
+                'if year is after 2050 then no gva forecasts are available so assume gva remains constant
+                'now modified as gva data available up to 2100 - so should never need 'else'
+                'v1.9 now read gva data using database function
+                'database does not have gva forecasts after year 2050, and the calculation is only available before year 2050
+                NodeNewData(NodeCount, 2) = get_gva_data_by_airportID(g_modelRunYear, NodeOldData(NodeCount, 0))
+            End If
+
+            If AirEneSource = "Constant" Then
+                NodeNewData(NodeCount, 3) = NodeOldData(NodeCount, 3) * CostGrowth
+            ElseIf AirEneSource = "File" Then
+                'air model not yet set up for use with scaling files
+            ElseIf AirEneSource = "Database" Then
+                NodeNewData(NodeCount, 3) = NodeOldData(NodeCount, 3) * (FuelCost(g_modelRunYear - 2010) / FuelCost(g_modelRunYear - 2010 - 1)) * FuelEff
+            End If
+
+            'if including capacity changes then check if there are any capacity changes in this year
+            'v1.3 changed to include compulsory capacity changes where construction has already begun
+            'all this involves is removing the if newrllcap = true clause, because this was already accounted for when generating the intermediate file, and adding a lineread above getcapdata because this sub was amended
+            If g_modelRunYear = CapYear Then
+                'if there are any capacity changes in this year, then check if there are any capacity changes at this airport
+                If NodeCount = CapID Then
+                    'if there are, then update the capacity variables, and read in the next row from the capacity file
+                    AddTermCap = TermCapChange
+                    AddATMCap = ATMChange
+                    CapNum += 1
+                    Call GetCapData()
+                End If
+            End If
+            NodeNewData(NodeCount, 4) = NodeOldData(NodeCount, 4) + AddTermCap
+            NodeNewData(NodeCount, 5) = NodeOldData(NodeCount, 5) + AddATMCap
+            NodeNewData(NodeCount, 6) = stratarray(g_modelRunYear - 2010, 83)
+            NodeNewData(NodeCount, 7) = stratarray(g_modelRunYear - 2010, 84)
+            NodeNewData(NodeCount, 8) = stratarray(g_modelRunYear - 2010, 85)
+            NodeNewData(NodeCount, 9) = stratarray(g_modelRunYear - 2010, 86)
+            NodeNewData(NodeCount, 10) = NodeOldData(NodeCount, 10)
+            If AirEneSource = "Database" Then
+                NodeNewData(NodeCount, 11) = NodeOldData(NodeCount, 11) * FuelEff
+            Else
+                NodeNewData(NodeCount, 11) = NodeOldData(NodeCount, 11)
+            End If
+
+            'if applying a carbon charge then calculate it
+            'calculation is: (base fuel units per journey * change in fuel efficiency from base year * CO2 per unit of fuel * CO2 price per kg in pence)
+            'base fuel units per journey = averagedist * intplanesize * fuelperseatkm
+            If AirCaCharge = True Then
+                If g_modelRunYear >= AirCaChYear Then
+                    carbch = (NodeNewData(NodeCount, 10) * NodeNewData(NodeCount, 7) * 0.037251) * FuelEff * stratarray(g_modelRunYear - 2010, 73) * (stratarray(g_modelRunYear - 2010, 71) / 10)
+                Else
+                    carbch = 0
+                End If
+            Else
+                carbch = 0
+            End If
+
+            'write node output row
+            NodeOutputArray(NodeCount, 0) = g_modelRunID
+            NodeOutputArray(NodeCount, 1) = NodeCount
+            NodeOutputArray(NodeCount, 2) = g_modelRunYear
+            NodeOutputArray(NodeCount, 3) = NodeNewData(NodeCount, 1)
+            NodeOutputArray(NodeCount, 4) = NodeNewData(NodeCount, 2)
+            newcost = airnodefixedcost(NodeCount) + NodeNewData(NodeCount, 3) + carbch
+            NodeOutputArray(NodeCount, 5) = newcost
+
+            For n = 4 To 11
+                NodeOutputArray(NodeCount, n + 2) = NodeNewData(NodeCount, n)
+            Next
+            NodeOutputArray(NodeCount, 14) = NodeNewData(NodeCount, 3)
+            'OutVarCount = 1
+            'Do Until OutVarCount > 11
+            '    OutputRow = OutputRow & NodeNewData(NodeCount, OutVarCount) & ","
+            '    OutVarCount += 1
+            'Loop
+            'reset additional capacity variables
+            AddTermCap = 0
+            AddATMCap = 0
+            NodeCount += 1
+        Loop
+
+
+
+
+
+
+        'then calculate new flow values
+        FlowCount = 1
+
+        'loop through all flows
+        Do While FlowCount < 224
+            'scale up all variable values for this year
+            If AirPopSource = "Constant" Then
+                FlowNewData(FlowCount, 1) = FlowOldData(FlowCount, 1) * PopGrowth
+                FlowNewData(FlowCount, 2) = FlowOldData(FlowCount, 2) * PopGrowth
+            End If
+            If AirPopSource = "File" Then
+                'air model not yet set up for scaling files
+            End If
+            If AirPopSource = "Database" Then
+                'if year is after 2093 then no population forecasts are available so assume population remains constant
+                'now modified as population data available up to 2100 - so should never need 'else'
+                'v1.9 now read pop data using database function
+                FlowNewData(FlowCount, 1) = get_population_data_by_zoneID(g_modelRunYear, FlowOldData(FlowCount, 0), "OZ", "'air'", OZone(FlowCount))
+                FlowNewData(FlowCount, 2) = get_population_data_by_zoneID(g_modelRunYear, FlowOldData(FlowCount, 0), "DZ", "'air'", DZone(FlowCount))
+            End If
+            If AirEcoSource = "Constant" Then
+                FlowNewData(FlowCount, 3) = FlowOldData(FlowCount, 3) * GVAGrowth
+                FlowNewData(FlowCount, 4) = FlowOldData(FlowCount, 4) * GVAGrowth
+            ElseIf AirEcoSource = "File" Then
+                'air model not yet set up for scaling files
+            ElseIf AirEcoSource = "Database" Then
+                'now modified as gva data available up to 2100 - so should never need 'else'
+                'v1.9 now read gva data using database function
+                'database does not have gva forecasts after year 2050, and the calculation is only available before year 2050
+                FlowNewData(FlowCount, 3) = get_gva_data_by_zoneID(g_modelRunYear, FlowOldData(FlowCount, 0), "OZ", "'air'", OZone(FlowCount))
+                FlowNewData(FlowCount, 4) = get_gva_data_by_zoneID(g_modelRunYear, FlowOldData(FlowCount, 0), "DZ", "'air'", DZone(FlowCount))
+            End If
+
+            If AirEneSource = "Constant" Then
+                FlowNewData(FlowCount, 5) = FlowOldData(FlowCount, 5) * CostGrowth
+            ElseIf AirEneSource = "File" Then
+                'air model not yet set up for scaling files
+            ElseIf AirEneSource = "Database" Then
+                FlowNewData(FlowCount, 5) = FlowOldData(FlowCount, 5) * (FuelCost(g_modelRunYear - 2010) / FuelCost(g_modelRunYear - 2010 - 1)) * FuelEff
+            End If
+
+            'if applying a carbon charge then calculate it
+            'calculation is: (base fuel units per journey * change in fuel efficiency from base year * CO2 per unit of fuel * CO2 price per kg in pence)
+            'base fuel units per journey = averagedist * domplanesize * fuelperseatkm
+            If AirCaCharge = True Then
+                If g_modelRunYear >= AirCaChYear Then
+                    carbch = (FlowLength(FlowCount) * stratarray(g_modelRunYear - 2010, 83) * 0.037251) * FuelEff * stratarray(g_modelRunYear - 2010, 73) * (stratarray(g_modelRunYear - 2010, 71) / 10)
+                Else
+                    carbch = 0
+                End If
+            Else
+                carbch = 0
+            End If
+
+            'write flow output row
+            FlowOutputArray(FlowCount, 0) = g_modelRunID
+            FlowOutputArray(FlowCount, 1) = g_modelRunYear
+            FlowOutputArray(FlowCount, 2) = FlowOldData(FlowCount, 0)
+            FlowOutputArray(FlowCount, 3) = FlowNewData(FlowCount, 1)
+            FlowOutputArray(FlowCount, 4) = FlowNewData(FlowCount, 2)
+            FlowOutputArray(FlowCount, 5) = FlowNewData(FlowCount, 3)
+            FlowOutputArray(FlowCount, 6) = FlowNewData(FlowCount, 4)
+            newcost = airflowfixedcost(FlowCount) + FlowNewData(FlowCount, 5) + carbch
+            FlowOutputArray(FlowCount, 7) = newcost
+            FlowOutputArray(FlowCount, 8) = FlowNewData(FlowCount, 5)
+            'OutVarCount = 1
+            'Do Until OutVarCount > 5
+            '    OutputRow = OutputRow & FlowNewData(FlowCount, OutVarCount) & ","
+            '    OutVarCount += 1
+            'Loop
+
+            FlowCount += 1
+        Loop
+
+
+    End Sub
+
+    Sub GetCapData()
+        'modified in v1.3
+        'read cap data from CapArray until all rows are read
+        If CapArray(CapNum, 0) <> "" Then
+            CapID = CapArray(CapNum, 0)
+            If CapArray(CapNum, 1) = "-1" Then
+                CapYear = -1
+            Else
+                If AddingCap = False Then
+                    CapYear = CapArray(CapNum, 1)
+                Else
+                    CapYear = CapArray(CapNum, 1)
+                End If
+            End If
+            TermCapChange = CapArray(CapNum, 2)
+            ATMChange = CapArray(CapNum, 3)
+            If AddingCap = False Then
+                CapType = CapArray(CapNum, 4)
+            End If
+            CapNum += 1
+        Else
+
+        End If
+
+    End Sub
+
+    Sub DictionaryMissingVal()
+        logarray(logNum, 0) = "No " & ErrorString & " when updating input files.  Model run terminated."
+        logNum += 1
+        Call WriteData("Logfile", "", logarray)
+        MsgBox("Model run failed.  Please consult the log file for details.")
+        End
+    End Sub
+
+    Sub CapChangeCalc()
 
         'initialise to read and write capacity change values
         CapCount = 0
@@ -197,367 +582,6 @@
             Next
         Next
 
-        Call WriteData("AirNode", "NewCap", NewCapArray)
 
-        AddingCap = True
-        'reset Capnum to read the first line
-        CapNum = 1
-        Call GetCapData()
-
-        'If NewAirCap = True Then
-        '    Call GetCapData()
-        'End If
-
-        YearNum = 1
-
-        'then loop through rest of rows in input data file
-        Do Until YearNum > 40
-            Call CalcFlowData()
-
-            'create file if it is the first year
-            'it is now writting to database, therefore no difference if it is year 1 or not
-            If YearNum = 1 Then
-                Call WriteData("AirNode", "ExtVar", NodeOutputArray, , True)
-                Call WriteData("AirFlow", "ExtVar", FlowOutputArray, , True)
-            Else
-                Call WriteData("AirNode", "ExtVar", NodeOutputArray, , False)
-                Call WriteData("AirFlow", "ExtVar", FlowOutputArray, , False)
-            End If
-
-
-            YearNum += 1
-        Loop
-
-
-    End Sub
-
-    Sub GetFiles()
-
-        'read initial year files
-        Call ReadData("AirNode", "Input", NodeInputArray, g_modelRunYear)
-        Call ReadData("AirFlow", "Input", FlowInputArray, g_modelRunYear)
-
-        'read capchange info
-        Call ReadData("AirNode", "CapChange", CapArray, g_modelRunYear)
-
-        'now get strategy file too
-        Call ReadData("SubStrategy", "", stratarray)
-
-    End Sub
-
-    Sub CalcFlowData()
-
-        Dim NodeCount As Long
-        Dim FlowCount As Long
-        Dim OutVarCount As Integer
-        Dim AddTermCap As Long
-        Dim AddATMCap As Long
-        Dim newcost As Double
-        Dim carbch As Double
-
-        'if this is the first year load in node base values and flow base values
-        If YearNum = 1 Then
-            NodeCount = 1
-            Do While NodeCount < 29
-                NodeOldData(NodeCount, 0) = NodeInputArray(NodeCount, 4)
-                'pop
-                NodeOldData(NodeCount, 1) = get_population_data_by_airportID(g_modelRunYear, NodeOldData(NodeCount, 0))
-                'gva
-                NodeOldData(NodeCount, 2) = get_gva_data_by_airportID(g_modelRunYear, NodeOldData(NodeCount, 0))
-                'cost
-                NodeOldData(NodeCount, 3) = NodeInputArray(NodeCount, 10) * 0.29
-                airnodefixedcost(NodeCount) = NodeInputArray(NodeCount, 10) * 0.71
-                'termcap
-                NodeOldData(NodeCount, 4) = NodeInputArray(NodeCount, 8)
-                'maxatm
-                NodeOldData(NodeCount, 5) = NodeInputArray(NodeCount, 9)
-                'psd
-                NodeOldData(NodeCount, 6) = NodeInputArray(NodeCount, 11)
-                'psi
-                NodeOldData(NodeCount, 7) = NodeInputArray(NodeCount, 12)
-                'lfd
-                NodeOldData(NodeCount, 8) = NodeInputArray(NodeCount, 13)
-                'lfi
-                NodeOldData(NodeCount, 9) = NodeInputArray(NodeCount, 14)
-                'inttripdist
-                NodeOldData(NodeCount, 10) = NodeInputArray(NodeCount, 15)
-                'fuelseatkm
-                NodeOldData(NodeCount, 11) = 0.037251
-                GORID(NodeCount) = NodeInputArray(NodeCount, 16)
-                NodeCount += 1
-            Loop
-
-            FlowCount = 1
-            Do While FlowCount < 224
-                FlowOldData(FlowCount, 0) = FlowInputArray(FlowCount, 4)
-                OZone(FlowCount) = FlowInputArray(FlowCount, 10)
-                DZone(FlowCount) = FlowInputArray(FlowCount, 11)
-                FlowOldData(FlowCount, 5) = FlowInputArray(FlowCount, 8) * 0.29
-                airflowfixedcost(FlowCount) = FlowInputArray(FlowCount, 8) * 0.71
-                FlowOldData(FlowCount, 1) = get_population_data_by_zoneID(g_modelRunYear, FlowOldData(FlowCount, 0), "OZ", "'air'", OZone(FlowCount))
-                FlowOldData(FlowCount, 2) = get_population_data_by_zoneID(g_modelRunYear, FlowOldData(FlowCount, 0), "DZ", "'air'", DZone(FlowCount))
-                FlowOldData(FlowCount, 3) = get_gva_data_by_zoneID(g_modelRunYear, FlowOldData(FlowCount, 0), "OZ", "'air'", OZone(FlowCount))
-                FlowOldData(FlowCount, 4) = get_gva_data_by_zoneID(g_modelRunYear, FlowOldData(FlowCount, 0), "DZ", "'air'", DZone(FlowCount))
-
-                'add in the Flow ID number as some are missing from the input file
-
-                FlowLength(FlowCount) = FlowInputArray(FlowCount, 9)
-                FlowCount += 1
-            Loop
-            'v1.4 set fueleffold value to 1
-            FuelEffOld = 1
-        Else
-            'can use the new values from the previous year if no
-        End If
-
-        'get values from strategy file
-        FuelEff = stratarray(YearNum, 68) / FuelEffOld
-
-        'calculate new node values first
-        NodeCount = 1
-
-        'loop through all nodes
-        Do While NodeCount < 29
-            'scale up all variable values for this year
-            If AirPopSource = "Constant" Then
-                NodeNewData(NodeCount, 1) = NodeOldData(NodeCount, 1) * PopGrowth
-            End If
-            If AirPopSource = "File" Then
-                'air model not yet set up for use with scaling files
-            End If
-            If AirPopSource = "Database" Then
-                'if year is after 2093 then no population forecasts are available so assume population remains constant
-                'now modified as population data available up to 2100 - so should never need 'else'
-                'v1.9 now read pop data using database function
-                If YearNum < 91 Then
-                    NodeNewData(NodeCount, 1) = get_population_data_by_airportID(g_modelRunYear, NodeOldData(NodeCount, 0))
-                Else
-                    NodeNewData(NodeCount, 1) = NodeOldData(NodeCount, 1)
-                End If
-            End If
-            If AirEcoSource = "Constant" Then
-                NodeNewData(NodeCount, 2) = NodeOldData(NodeCount, 2) * GVAGrowth
-            ElseIf AirEcoSource = "File" Then
-                'air model not yet set up for use with scaling files
-            ElseIf AirEcoSource = "Database" Then
-                'if year is after 2050 then no gva forecasts are available so assume gva remains constant
-                'now modified as gva data available up to 2100 - so should never need 'else'
-                'v1.9 now read gva data using database function
-                'database does not have gva forecasts after year 2050, and the calculation is only available before year 2050
-                If YearNum < 91 Then
-                    NodeNewData(NodeCount, 2) = get_gva_data_by_airportID(g_modelRunYear, NodeOldData(NodeCount, 0))
-                Else
-                    NodeNewData(NodeCount, 2) = NodeNewData(NodeCount, 2)
-                End If
-            End If
-
-            If AirEneSource = "Constant" Then
-                NodeNewData(NodeCount, 3) = NodeOldData(NodeCount, 3) * CostGrowth
-            ElseIf AirEneSource = "File" Then
-                'air model not yet set up for use with scaling files
-            ElseIf AirEneSource = "Database" Then
-                NodeNewData(NodeCount, 3) = NodeOldData(NodeCount, 3) * (FuelCost(YearNum) / FuelCost(YearNum - 1)) * FuelEff
-            End If
-
-            'if including capacity changes then check if there are any capacity changes in this year
-            'v1.3 changed to include compulsory capacity changes where construction has already begun
-            'all this involves is removing the if newrllcap = true clause, because this was already accounted for when generating the intermediate file, and adding a lineread above getcapdata because this sub was amended
-            If YearNum = CapYear Then
-                'if there are any capacity changes in this year, then check if there are any capacity changes at this airport
-                If NodeCount = CapID Then
-                    'if there are, then update the capacity variables, and read in the next row from the capacity file
-                    AddTermCap = TermCapChange
-                    AddATMCap = ATMChange
-                    CapNum += 1
-                    Call GetCapData()
-                End If
-            End If
-            NodeNewData(NodeCount, 4) = NodeOldData(NodeCount, 4) + AddTermCap
-            NodeNewData(NodeCount, 5) = NodeOldData(NodeCount, 5) + AddATMCap
-            NodeNewData(NodeCount, 6) = stratarray(YearNum, 83)
-            NodeNewData(NodeCount, 7) = stratarray(YearNum, 84)
-            NodeNewData(NodeCount, 8) = stratarray(YearNum, 85)
-            NodeNewData(NodeCount, 9) = stratarray(YearNum, 86)
-            NodeNewData(NodeCount, 10) = NodeOldData(NodeCount, 10)
-            If AirEneSource = "Database" Then
-                NodeNewData(NodeCount, 11) = NodeOldData(NodeCount, 11) * FuelEff
-            Else
-                NodeNewData(NodeCount, 11) = NodeOldData(NodeCount, 11)
-            End If
-
-            'if applying a carbon charge then calculate it
-            'calculation is: (base fuel units per journey * change in fuel efficiency from base year * CO2 per unit of fuel * CO2 price per kg in pence)
-            'base fuel units per journey = averagedist * intplanesize * fuelperseatkm
-            If AirCaCharge = True Then
-                If YearNum >= AirCaChYear Then
-                    carbch = (NodeNewData(NodeCount, 10) * NodeNewData(NodeCount, 7) * 0.037251) * FuelEff * stratarray(YearNum, 73) * (stratarray(YearNum, 71) / 10)
-                Else
-                    carbch = 0
-                End If
-            Else
-                carbch = 0
-            End If
-
-            'write node output row
-            NodeOutputArray(NodeCount, 0) = g_modelRunID
-            NodeOutputArray(NodeCount, 1) = NodeCount
-            NodeOutputArray(NodeCount, 2) = YearNum
-            NodeOutputArray(NodeCount, 3) = NodeNewData(NodeCount, 1)
-            NodeOutputArray(NodeCount, 4) = NodeNewData(NodeCount, 2)
-            newcost = airnodefixedcost(NodeCount) + NodeNewData(NodeCount, 3) + carbch
-            NodeOutputArray(NodeCount, 5) = newcost
-
-            For n = 4 To 11
-                NodeOutputArray(NodeCount, n + 2) = NodeNewData(NodeCount, n)
-            Next
-            'OutVarCount = 1
-            'Do Until OutVarCount > 11
-            '    OutputRow = OutputRow & NodeNewData(NodeCount, OutVarCount) & ","
-            '    OutVarCount += 1
-            'Loop
-            'set old values as previous new values
-            OutVarCount = 1
-            'v1.4 change, previously >10
-            Do Until OutVarCount > 11
-                NodeOldData(NodeCount, OutVarCount) = NodeNewData(NodeCount, OutVarCount)
-                OutVarCount += 1
-            Loop
-            'reset additional capacity variables
-            AddTermCap = 0
-            AddATMCap = 0
-            NodeCount += 1
-        Loop
-
-
-
-
-
-
-        'then calculate new flow values
-        FlowCount = 1
-
-        'loop through all flows
-        Do While FlowCount < 224
-            'scale up all variable values for this year
-            If AirPopSource = "Constant" Then
-                FlowNewData(FlowCount, 1) = FlowOldData(FlowCount, 1) * PopGrowth
-                FlowNewData(FlowCount, 2) = FlowOldData(FlowCount, 2) * PopGrowth
-            End If
-            If AirPopSource = "File" Then
-                'air model not yet set up for scaling files
-            End If
-            If AirPopSource = "Database" Then
-                'if year is after 2093 then no population forecasts are available so assume population remains constant
-                'now modified as population data available up to 2100 - so should never need 'else'
-                'v1.9 now read pop data using database function
-                If YearNum < 91 Then
-                    FlowNewData(FlowCount, 1) = get_population_data_by_zoneID(g_modelRunYear, FlowOldData(FlowCount, 0), "OZ", "'air'", OZone(FlowCount))
-                    FlowNewData(FlowCount, 2) = get_population_data_by_zoneID(g_modelRunYear, FlowOldData(FlowCount, 0), "DZ", "'air'", DZone(FlowCount))
-                Else
-                    FlowNewData(FlowCount, 1) = FlowOldData(FlowCount, 1)
-                    FlowNewData(FlowCount, 2) = FlowOldData(FlowCount, 2)
-                End If
-            End If
-            If AirEcoSource = "Constant" Then
-                FlowNewData(FlowCount, 3) = FlowOldData(FlowCount, 3) * GVAGrowth
-                FlowNewData(FlowCount, 4) = FlowOldData(FlowCount, 4) * GVAGrowth
-            ElseIf AirEcoSource = "File" Then
-                'air model not yet set up for scaling files
-            ElseIf AirEcoSource = "Database" Then
-                'now modified as gva data available up to 2100 - so should never need 'else'
-                'v1.9 now read gva data using database function
-                'database does not have gva forecasts after year 2050, and the calculation is only available before year 2050
-                If YearNum < 91 Then
-                    FlowNewData(FlowCount, 3) = get_gva_data_by_zoneID(g_modelRunYear, FlowOldData(FlowCount, 0), "OZ", "'air'", OZone(FlowCount))
-                    FlowNewData(FlowCount, 4) = get_gva_data_by_zoneID(g_modelRunYear, FlowOldData(FlowCount, 0), "DZ", "'air'", DZone(FlowCount))
-                Else
-                    FlowNewData(FlowCount, 3) = FlowOldData(FlowCount, 3)
-                    FlowNewData(FlowCount, 4) = FlowOldData(FlowCount, 4)
-                End If
-            End If
-
-            If AirEneSource = "Constant" Then
-                FlowNewData(FlowCount, 5) = FlowOldData(FlowCount, 5) * CostGrowth
-            ElseIf AirEneSource = "File" Then
-                'air model not yet set up for scaling files
-            ElseIf AirEneSource = "Database" Then
-                FlowNewData(FlowCount, 5) = FlowOldData(FlowCount, 5) * (FuelCost(YearNum) / FuelCost(YearNum - 1)) * FuelEff
-            End If
-
-            'if applying a carbon charge then calculate it
-            'calculation is: (base fuel units per journey * change in fuel efficiency from base year * CO2 per unit of fuel * CO2 price per kg in pence)
-            'base fuel units per journey = averagedist * domplanesize * fuelperseatkm
-            If AirCaCharge = True Then
-                If YearNum >= AirCaChYear Then
-                    carbch = (FlowLength(FlowCount) * stratarray(YearNum, 83) * 0.037251) * FuelEff * stratarray(YearNum, 73) * (stratarray(YearNum, 71) / 10)
-                Else
-                    carbch = 0
-                End If
-            Else
-                carbch = 0
-            End If
-
-            'write flow output row
-            FlowOutputArray(FlowCount, 0) = g_modelRunID
-            FlowOutputArray(FlowCount, 1) = YearNum
-            FlowOutputArray(FlowCount, 2) = FlowOldData(FlowCount, 0)
-            FlowOutputArray(FlowCount, 3) = FlowNewData(FlowCount, 1)
-            FlowOutputArray(FlowCount, 4) = FlowNewData(FlowCount, 2)
-            FlowOutputArray(FlowCount, 5) = FlowNewData(FlowCount, 3)
-            FlowOutputArray(FlowCount, 6) = FlowNewData(FlowCount, 4)
-            newcost = airflowfixedcost(FlowCount) + FlowNewData(FlowCount, 5) + carbch
-            FlowOutputArray(FlowCount, 7) = newcost
-            'OutVarCount = 1
-            'Do Until OutVarCount > 5
-            '    OutputRow = OutputRow & FlowNewData(FlowCount, OutVarCount) & ","
-            '    OutVarCount += 1
-            'Loop
-
-            'set old values as previous new values
-            OutVarCount = 1
-            Do Until OutVarCount > 5
-                FlowOldData(FlowCount, OutVarCount) = FlowNewData(FlowCount, OutVarCount)
-                OutVarCount += 1
-            Loop
-            FlowCount += 1
-        Loop
-
-        'v1.4 update FuelEffOld value
-        FuelEffOld = stratarray(YearNum, 68)
-
-    End Sub
-
-    Sub GetCapData()
-        'modified in v1.3
-        'read cap data from CapArray until all rows are read
-        If CapArray(CapNum, 0) <> "" Then
-            CapID = CapArray(CapNum, 0)
-            If CapArray(CapNum, 1) = "-1" Then
-                CapYear = -1
-            Else
-                If AddingCap = False Then
-                    CapYear = CapArray(CapNum, 1) - 2010
-                Else
-                    CapYear = CapArray(CapNum, 1) - 2010
-                End If
-            End If
-            TermCapChange = CapArray(CapNum, 2)
-            ATMChange = CapArray(CapNum, 3)
-            If AddingCap = False Then
-                CapType = CapArray(CapNum, 4)
-            End If
-            CapNum += 1
-        Else
-
-        End If
-
-    End Sub
-
-    Sub DictionaryMissingVal()
-        logarray(logNum, 0) = "No " & ErrorString & " when updating input files.  Model run terminated."
-        logNum += 1
-        Call WriteData("Logfile", "", logarray)
-        MsgBox("Model run failed.  Please consult the log file for details.")
-        End
     End Sub
 End Module

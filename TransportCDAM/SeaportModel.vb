@@ -11,7 +11,6 @@
     '1.9 now the module can run with database connection and read/write from/to database
 
     Dim InputRow As String
-    Dim YearNum As Long
     Dim PortDetails() As String
     Dim PortID As Long
     Dim FreightType As Integer
@@ -32,7 +31,7 @@
     Dim AddedCap(5) As Long
     Dim OldY, OldX, OldEl, NewY As Double
     Dim VarRat As Double
-    Dim SeaTripRates(90) As Double
+    Dim SeaTripRates As Double
     Dim InputCount As Integer
     Dim NewCapArray(47, 8) As String
     Dim InputArray(47, 15) As String
@@ -47,55 +46,48 @@
         'get input files and create output files
         Call SeaInputFiles()
 
-        'start from the entered year
-        YearNum = StartYear
-        Do Until YearNum > StartYear + Duration
+        'get external variables for this port this year
+        Call ReadData("Seaport", "ExtVar", PortExtVar, g_modelRunYear)
 
-            'get external variables for this port this year
-            Call ReadData("Seaport", "ExtVar", PortExtVar, g_modelRunYear)
+        Call ReadData("Seaport", "Input", InputArray, g_modelRunYear)
 
-            Call ReadData("Seaport", "Input", InputArray, g_modelRunYear)
+        InputCount = 1
 
-            InputCount = 1
+        Do While InputCount < 48
 
-            Do While InputCount < 48
+            'set the newcaparray to the first line to start with
+            NewCapNum = 1
+            'update the input variables
+            Call LoadPortInput()
+            'set latent traffic levels to zero
+            Call ResetPortLatent()
+            'calculate new traffic level, checking for capacity constraint
+            Call NewSeaFreightCalc()
+            'estimate fuel consumption
+            Call SeaFuelConsumption()
+            'write to output file
+            Call WritePortOutput()
 
-                'set the newcaparray to the first line to start with
-                NewCapNum = 1
-                'update the input variables
-                Call LoadPortInput()
-                'set latent traffic levels to zero
-                Call ResetPortLatent()
-                'calculate new traffic level, checking for capacity constraint
-                Call NewSeaFreightCalc()
-                'estimate fuel consumption
-                Call SeaFuelConsumption()
-                'write to output file
-                Call WritePortOutput()
-
-                InputCount += 1
-            Loop
-
-            'create file is true if it is the initial year and write to outputfile and temp file
-            If YearNum = StartYear Then
-                Call WriteData("Seaport", "Output", OutputArray, , True)
-                Call WriteData("Seaport", "Temp", TempArray, , True)
-                'if the model is building capacity then create new capacity file
-                If BuildInfra = True Then
-                    Call WriteData("Seaport", "NewCap_Add", NewCapArray, , True)
-                End If
-            Else
-                Call WriteData("Seaport", "Output", OutputArray, , False)
-                Call WriteData("Seaport", "Temp", TempArray, , False)
-                If BuildInfra = True Then
-                    Call WriteData("Seaport", "NewCap_Add", NewCapArray, , False)
-                End If
-            End If
-
-            'move on to next year
-            YearNum += 1
-
+            InputCount += 1
         Loop
+
+        'create file is true if it is the initial year and write to outputfile and temp file
+        If g_modelRunYear = StartYear Then
+            Call WriteData("Seaport", "Output", OutputArray, , True)
+            Call WriteData("Seaport", "Temp", TempArray, , True)
+            'if the model is building capacity then create new capacity file
+            If BuildInfra = True Then
+                Call WriteData("Seaport", "NewCap_Add", NewCapArray, , True)
+            End If
+        Else
+            Call WriteData("Seaport", "Output", OutputArray, , False)
+            Call WriteData("Seaport", "Temp", TempArray, , False)
+            If BuildInfra = True Then
+                Call WriteData("Seaport", "NewCap_Add", NewCapArray, , False)
+            End If
+        End If
+
+
 
     End Sub
 
@@ -114,10 +106,8 @@
 
         If TripRates = "SubStrategy" Then
             'get the strat values
-            Call ReadData("SubStrategy", "", stratarray)
-            For r = 1 To 90
-                SeaTripRates(r) = stratarray(r, 95)
-            Next
+            Call ReadData("SubStrategy", "", stratarray, g_modelRunYear)
+            SeaTripRates = stratarray(1, 95)
         End If
 
         'get the elasticity values
@@ -207,49 +197,49 @@
                 'pop ratio
                 OldY = PopBase
                 If TripRates = "SubStrategy" Then
-                    NewY = PortExtVar(PortID, 9) * SeaTripRates(YearNum)
+                    NewY = PortExtVar(PortID, 9) * SeaTripRates
                 Else
                     NewY = PortExtVar(PortID, 9)
                 End If
                 If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                    OldEl = SeaEl(YearNum, 1 + elindex)
+                    OldEl = SeaEl(1, 1 + elindex)
                     Call VarElCalc()
                     PortPopRat = VarRat
                 Else
                     If TripRates = "SubStrategy" Then
-                        PortPopRat = ((PortExtVar(PortID, 9) * SeaTripRates(YearNum)) / PopBase) ^ SeaEl(YearNum, 1 + elindex)
+                        PortPopRat = ((PortExtVar(PortID, 9) * SeaTripRates) / PopBase) ^ SeaEl(1, 1 + elindex)
                     Else
-                        PortPopRat = (PortExtVar(PortID, 7) / PopBase) ^ SeaEl(YearNum, 1 + elindex)
+                        PortPopRat = (PortExtVar(PortID, 7) / PopBase) ^ SeaEl(1, 1 + elindex)
                     End If
                 End If
                 'gva ratio
                 OldY = GVABase
                 NewY = PortExtVar(PortID, 10)
                 If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                    OldEl = SeaEl(YearNum, 2 + elindex)
+                    OldEl = SeaEl(1, 2 + elindex)
                     Call VarElCalc()
                     PortGVARat = VarRat
                 Else
-                    PortGVARat = (PortExtVar(PortID, 10) / GVABase) ^ SeaEl(YearNum, 2 + elindex)
+                    PortGVARat = (PortExtVar(PortID, 10) / GVABase) ^ SeaEl(1, 2 + elindex)
                 End If
                 'cost ratio
                 OldY = CostBase
                 NewY = PortExtVar(PortID, 11)
                 If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                    OldEl = SeaEl(YearNum, 3 + elindex)
+                    OldEl = SeaEl(1, 3 + elindex)
                     Call VarElCalc()
                     PortCostRat = VarRat
                 Else
-                    PortCostRat = (PortExtVar(PortID, 11) / CostBase) ^ SeaEl(YearNum, 3 + elindex)
+                    PortCostRat = (PortExtVar(PortID, 11) / CostBase) ^ SeaEl(1, 3 + elindex)
                 End If
             Else
                 If TripRates = "SubStrategy" Then
-                    PortPopRat = ((PortExtVar(PortID, 9) * SeaTripRates(YearNum)) / PopBase) ^ SeaEl(YearNum, 1 + elindex)
+                    PortPopRat = ((PortExtVar(PortID, 9) * SeaTripRates) / PopBase) ^ SeaEl(1, 1 + elindex)
                 Else
-                    PortPopRat = (PortExtVar(PortID, 9) / PopBase) ^ SeaEl(YearNum, 1 + elindex)
+                    PortPopRat = (PortExtVar(PortID, 9) / PopBase) ^ SeaEl(1, 1 + elindex)
                 End If
-                PortGVARat = (PortExtVar(PortID, 10) / GVABase) ^ SeaEl(YearNum, 2 + elindex)
-                PortCostRat = (PortExtVar(PortID, 11) / CostBase) ^ SeaEl(YearNum, 3 + elindex)
+                PortGVARat = (PortExtVar(PortID, 10) / GVABase) ^ SeaEl(1, 2 + elindex)
+                PortCostRat = (PortExtVar(PortID, 11) / CostBase) ^ SeaEl(1, 3 + elindex)
             End If
             FreightRat = PortPopRat * PortGVARat * PortCostRat
             If BaseFreight(FreightType) = 0 Then
@@ -309,7 +299,7 @@
         'write to output array
         OutputArray(InputCount, 0) = g_modelRunID
         OutputArray(InputCount, 1) = PortID
-        OutputArray(InputCount, 2) = YearNum
+        OutputArray(InputCount, 2) = g_modelRunYear
         OutputArray(InputCount, 3) = NewFreight(PortID, 1)
         OutputArray(InputCount, 4) = NewFreight(PortID, 2)
         OutputArray(InputCount, 5) = NewFreight(PortID, 3)
@@ -341,15 +331,15 @@
                         'write details to output file
                         Select Case FreightType
                             Case 1
-                                newcapstring = PortID & "," & YearNum - 1 & ",1000,0,0,0,0"
+                                newcapstring = PortID & "," & g_modelRunYear - 1 & ",1000,0,0,0,0"
                             Case 2
-                                newcapstring = PortID & "," & YearNum - 1 & ",0,1000,0,0,0"
+                                newcapstring = PortID & "," & g_modelRunYear - 1 & ",0,1000,0,0,0"
                             Case 3
-                                newcapstring = PortID & "," & YearNum - 1 & ",0,0,1000,0,0"
+                                newcapstring = PortID & "," & g_modelRunYear - 1 & ",0,0,1000,0,0"
                             Case 4
-                                newcapstring = PortID & "," & YearNum - 1 & ",0,0,0,1000,0"
+                                newcapstring = PortID & "," & g_modelRunYear - 1 & ",0,0,0,1000,0"
                             Case 5
-                                newcapstring = PortID & "," & YearNum - 1 & ",0,0,0,0,1000"
+                                newcapstring = PortID & "," & g_modelRunYear - 1 & ",0,0,0,0,1000"
                         End Select
                         'read newcapstring to array to writedata
                         Dim newcaps() As String
@@ -366,7 +356,7 @@
 
         'write to temp array
         TempArray(InputCount, 0) = g_modelRunID
-        TempArray(InputCount, 1) = YearNum
+        TempArray(InputCount, 1) = g_modelRunYear
         TempArray(InputCount, 2) = PortID
         TempArray(InputCount, 3) = BaseFreight(1)
         TempArray(InputCount, 4) = BaseFreight(2)

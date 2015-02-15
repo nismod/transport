@@ -15,7 +15,14 @@
         End If
 
         'Just use dummy values for ModelRunID and Year for now
-        Call runCDAM(1, StartYear)
+        'use the input start year and the number of year required to be run to loop the model in annual time step
+        theYear = StartYear
+        Do Until theYear = StartYear + Duration + 1
+
+            Call runCDAM(1, theYear)
+
+            theYear += 1
+        Loop
 
         End
     End Sub
@@ -225,7 +232,15 @@
             FilePrefix = System.DateTime.Now
         End If
 
-        Call runCDAM(1, 2010)
+        'use the input start year and the number of year required to be run to loop the model in annual time step
+        theYear = StartYear
+        Do Until theYear = StartYear + Duration + 1
+
+            Call runCDAM(1, theYear)
+
+            theYear += 1
+        Loop
+
         End
     End Sub
 
@@ -241,7 +256,15 @@
             FilePrefix = System.DateTime.Now
         End If
 
-        Call runCDAM(1, 2010)
+        'use the input start year and the number of year required to be run to loop the model in annual time step
+        theYear = StartYear
+        Do Until theYear = StartYear + Duration + 1
+
+            Call runCDAM(1, theYear)
+
+            theYear += 1
+        Loop
+
         End
     End Sub
 
@@ -377,7 +400,15 @@
             FilePrefix = System.DateTime.Now
         End If
 
-        Call runCDAM(1, 2010)
+        'use the input start year and the number of year required to be run to loop the model in annual time step
+        theYear = StartYear
+        Do Until theYear = StartYear + Duration + 1
+
+            Call runCDAM(1, theYear)
+
+            theYear += 1
+        Loop
+
         End
     End Sub
 
@@ -392,7 +423,15 @@
         If FilePrefix = "" Then
             FilePrefix = System.DateTime.Now
         End If
-        Call runCDAM(1, 2010)
+        'use the input start year and the number of year required to be run to loop the model in annual time step
+        theYear = StartYear
+        Do Until theYear = StartYear + Duration + 1
+
+            Call runCDAM(1, theYear)
+
+            theYear += 1
+        Loop
+
         End
     End Sub
 
@@ -2526,7 +2565,7 @@
 
     Private Sub TextBox40_TextChanged(sender As Object, e As EventArgs) Handles TextBox40.TextChanged
         Duration = CInt(TextBox40.Text) - 1
-        If StartYear + Duration > 90 Then
+        If StartYear + Duration > 2100 Then
             MsgBox("Maximum duration is 90 years")
         ElseIf Duration < 1 Then
             MsgBox("Duration must between 1 to 90 years !")
@@ -2534,7 +2573,7 @@
     End Sub
 
     Private Sub TextBox39_TextChanged(sender As Object, e As EventArgs) Handles TextBox39.TextChanged
-        StartYear = CInt(TextBox39.Text) - 2010 + 1
+        StartYear = CInt(TextBox39.Text)
     End Sub
 
     Private Sub CheckBox43_CheckedChanged(sender As Object, e As EventArgs) Handles CheckBox43.CheckedChanged

@@ -25,14 +25,13 @@
     Dim RlZCarFuel(144, 0) As Double
     Dim RlZExtVar(144, 11) As String
     Dim RlZPreExtVar(144, 11) As String
-    Dim YearCount As Integer
     Dim NewTripsS As Double
     Dim NewTripTotal As Double
     Dim RlZoneEl(90, 11) As String
     Dim RlZGJT(144, 0) As Double
     Dim OldY, OldX, OldEl, NewY As Double
     Dim VarRat As Double
-    Dim RlzTripRates(90) As Double
+    Dim RlzTripRates As Double
     Dim InputCount As Long
     Dim OutputRow As String
     Dim RlZLine As String
@@ -47,50 +46,44 @@
         'read all related files
         Call RlZSetFiles()
 
-        'initialise year count
-        YearCount = StartYear
 
-        Do Until YearCount > StartYear + Duration
+        'get external variable values
+        Call ReadData("RailZone", "ExtVar", RlZExtVar, g_modelRunYear)
 
-            'get external variable values
-            Call ReadData("RailZone", "ExtVar", RlZExtVar, g_modelRunYear)
+        'get previous year external variable values as base value
+        Call ReadData("RailZone", "ExtVar", RlZPreExtVar, g_modelRunYear - 1)
 
-            'get previous year external variable values as base value
-            Call ReadData("RailZone", "ExtVar", RlZPreExtVar, g_modelRunYear - 1)
+        'Input data
+        Call ReadData("RailZone", "Input", InputArray, g_modelRunYear)
 
-            'Input data
-            Call ReadData("RailZone", "Input", InputArray, g_modelRunYear)
-            
-            'loop through all zones
-            InputCount = 1
+        'loop through all zones
+        InputCount = 1
 
-            Do Until InputCount > 144
+        Do Until InputCount > 144
 
-                'update the input variables base on inputarray
-                Call LoadRlZInput()
+            'update the input variables base on inputarray
+            Call LoadRlZInput()
 
-                'apply zone equation to adjust demand per station, and to get new total demand
-                Call RailZoneTrips()
+            'apply zone equation to adjust demand per station, and to get new total demand
+            Call RailZoneTrips()
 
-                'write output line to outputarray and temp array
-                Call RailZoneOutput()
+            'write output line to outputarray and temp array
+            Call RailZoneOutput()
 
-                InputCount += 1
-            Loop
-
-            'create file is true if it is the initial year and write to outputfile and temp file
-            'v1.9 now write to database
-            If YearCount = StartYear Then
-                Call WriteData("RailZone", "Output", OutputArray, , True)
-                Call WriteData("RailZone", "Temp", TempArray, , True)
-            Else
-                Call WriteData("RailZone", "Output", OutputArray, , False)
-                Call WriteData("RailZone", "Temp", TempArray, , False)
-            End If
-
-
-            YearCount += 1
+            InputCount += 1
         Loop
+
+        'create file is true if it is the initial year and write to outputfile and temp file
+        'v1.9 now write to database
+        If g_modelRunYear = StartYear Then
+            Call WriteData("RailZone", "Output", OutputArray, , True)
+            Call WriteData("RailZone", "Temp", TempArray, , True)
+        Else
+            Call WriteData("RailZone", "Output", OutputArray, , False)
+            Call WriteData("RailZone", "Temp", TempArray, , False)
+        End If
+
+
 
 
     End Sub
@@ -111,10 +104,8 @@
 
         'read in the strategy
         If TripRates = "SubStrategy" Then
-            Call ReadData("SubStrategy", "", stratarray)
-            For r = 1 To 90
-                RlzTripRates(r) = stratarray(r, 93)
-            Next
+            Call ReadData("SubStrategy", "", stratarray, g_modelRunYear)
+            RlzTripRates = stratarray(1, 93)
         End If
 
     End Sub
@@ -123,7 +114,7 @@
 
         'Get ZoneID for the pop and gva functions
         'read the input data for the inputarray which is from the database
-        If YearCount = 1 Then
+        If g_modelRunYear = 1 Then
             'if it is initial year, read from the initial input
             RlZID(InputCount, 0) = InputArray(InputCount, 4)
             FareE(InputCount, 0) = InputArray(InputCount, 6)
@@ -159,17 +150,17 @@
         'Select the appropriate fare elasticity based on the FareE value
         Select Case FareE(InputCount, 0)
             Case 1
-                FarEl = RlZoneEl(YearCount, 3)
-                GJTEl = RlZoneEl(YearCount, 8)
+                FarEl = RlZoneEl(1, 3)
+                GJTEl = RlZoneEl(1, 8)
             Case 2
-                FarEl = RlZoneEl(YearCount, 4)
-                GJTEl = RlZoneEl(YearCount, 9)
+                FarEl = RlZoneEl(1, 4)
+                GJTEl = RlZoneEl(1, 9)
             Case 3
-                FarEl = RlZoneEl(YearCount, 5)
-                GJTEl = RlZoneEl(YearCount, 10)
+                FarEl = RlZoneEl(1, 5)
+                GJTEl = RlZoneEl(1, 10)
             Case 4
-                FarEl = RlZoneEl(YearCount, 6)
-                GJTEl = RlZoneEl(YearCount, 11)
+                FarEl = RlZoneEl(1, 6)
+                GJTEl = RlZoneEl(1, 11)
             Case Else
                 '****otherwise stop the model and write an error to the log file
         End Select
@@ -181,19 +172,19 @@
             'pop ratio
             OldY = RlZPop(InputCount, 0)
             If TripRates = "SubStrategy" Then
-                NewY = RlZExtVar(InputCount, 4) * RlzTripRates(YearCount)
+                NewY = RlZExtVar(InputCount, 4) * RlzTripRates
             Else
                 NewY = RlZExtVar(InputCount, 4)
             End If
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                OldEl = RlZoneEl(YearCount, 1)
+                OldEl = RlZoneEl(1, 1)
                 Call VarElCalc()
                 PopRat = VarRat
             Else
                 If TripRates = "SubStrategy" Then
-                    PopRat = ((RlZExtVar(InputCount, 4) * RlzTripRates(YearCount)) / RlZPop(InputCount, 0)) ^ RlZoneEl(YearCount, 1)
+                    PopRat = ((RlZExtVar(InputCount, 4) * RlzTripRates) / RlZPop(InputCount, 0)) ^ RlZoneEl(1, 1)
                 Else
-                    PopRat = (RlZExtVar(InputCount, 4) / RlZPop(InputCount, 0)) ^ RlZoneEl(YearCount, 1)
+                    PopRat = (RlZExtVar(InputCount, 4) / RlZPop(InputCount, 0)) ^ RlZoneEl(1, 1)
                 End If
 
             End If
@@ -201,11 +192,11 @@
             OldY = RlZGva(InputCount, 0)
             NewY = RlZExtVar(InputCount, 5)
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                OldEl = RlZoneEl(YearCount, 2)
+                OldEl = RlZoneEl(1, 2)
                 Call VarElCalc()
                 GVARat = VarRat
             Else
-                GVARat = (RlZExtVar(InputCount, 5) / RlZGva(InputCount, 0)) ^ RlZoneEl(YearCount, 2)
+                GVARat = (RlZExtVar(InputCount, 5) / RlZGva(InputCount, 0)) ^ RlZoneEl(1, 2)
             End If
             'fare ratio
             OldY = RlZCost(InputCount, 0)
@@ -221,11 +212,11 @@
             OldY = RlZCarFuel(InputCount, 0)
             NewY = RlZExtVar(InputCount, 8)
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                OldEl = RlZoneEl(YearCount, 7)
+                OldEl = RlZoneEl(1, 7)
                 Call VarElCalc()
                 CFuelRat = VarRat
             Else
-                CFuelRat = (RlZExtVar(InputCount, 8) / RlZCarFuel(InputCount, 0)) ^ RlZoneEl(YearCount, 7)
+                CFuelRat = (RlZExtVar(InputCount, 8) / RlZCarFuel(InputCount, 0)) ^ RlZoneEl(1, 7)
             End If
             'GJT ratio
             OldY = RlZGJT(InputCount, 0)
@@ -239,13 +230,13 @@
             End If
         Else
             If TripRates = "SubStrategy" Then
-                PopRat = ((RlZExtVar(InputCount, 4) * RlzTripRates(YearCount)) / RlZPop(InputCount, 0)) ^ RlZoneEl(YearCount, 1)
+                PopRat = ((RlZExtVar(InputCount, 4) * RlzTripRates) / RlZPop(InputCount, 0)) ^ RlZoneEl(1, 1)
             Else
-                PopRat = (RlZExtVar(InputCount, 4) / RlZPop(InputCount, 0)) ^ RlZoneEl(YearCount, 1)
+                PopRat = (RlZExtVar(InputCount, 4) / RlZPop(InputCount, 0)) ^ RlZoneEl(1, 1)
             End If
-            GVARat = (RlZExtVar(InputCount, 5) / RlZGva(InputCount, 0)) ^ RlZoneEl(YearCount, 2)
+            GVARat = (RlZExtVar(InputCount, 5) / RlZGva(InputCount, 0)) ^ RlZoneEl(1, 2)
             FarRat = (RlZExtVar(InputCount, 6) / RlZCost(InputCount, 0)) ^ FarEl
-            CFuelRat = (RlZExtVar(InputCount, 8) / RlZCarFuel(InputCount, 0)) ^ RlZoneEl(YearCount, 7)
+            CFuelRat = (RlZExtVar(InputCount, 8) / RlZCarFuel(InputCount, 0)) ^ RlZoneEl(1, 7)
             GJTRat = (RlZExtVar(InputCount, 9) / RlZGJT(InputCount, 0)) ^ GJTEl
         End If
 
@@ -284,7 +275,7 @@
     Sub RailZoneOutput()
         'combine output values into output array
         OutputArray(InputCount, 0) = g_modelRunID
-        OutputArray(InputCount, 1) = YearCount
+        OutputArray(InputCount, 1) = g_modelRunYear
         OutputArray(InputCount, 2) = RlZID(InputCount, 0)
         OutputArray(InputCount, 3) = NewTripsS
         OutputArray(InputCount, 4) = RlZExtVar(InputCount, 7)
@@ -296,7 +287,7 @@
 
         'write to the temp file
         TempArray(InputCount, 0) = g_modelRunID
-        TempArray(InputCount, 1) = YearCount
+        TempArray(InputCount, 1) = g_modelRunYear
         TempArray(InputCount, 2) = RlZID(InputCount, 0)
         TempArray(InputCount, 3) = RlZTripsS(InputCount, 0)
         TempArray(InputCount, 4) = FareE(InputCount, 0)
