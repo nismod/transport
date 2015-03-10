@@ -231,7 +231,7 @@
                     'v1.6 comment
                     'i is road link and there are 291 links in current model
                     'if the number of links are changed, i should be changed and the size of the arrays for each parameter should be changed 
-                    
+
                     VehFuelCosts(InputCount, 0, 0) = 0.3064 * 26.604
                     'calculation is: ((old el price / old petrol price) * (kwh/100km/l petrol/100km)) * %variable costs) / (%fixed costs + ((old el price / old petrol price) * (kwh/100km/l petrol/100km) * %variable costs)) * total base costs 
                     VehFuelCosts(InputCount, 0, 5) = ((EleOld / PetOld) * (3.2 / 4) * 0.3064) / (0.6936 + ((EleOld / PetOld) * (3.2 / 4) * 0.3064)) * 26.604
@@ -994,14 +994,7 @@
             InputCount += 1
         Loop
 
-        'create output file if year 1, otherwise update
-        'it is now writting to database, therefore no difference if it is year 1 or not
-        If g_modelRunYear = g_initialYear Then
-            Call WriteData("RoadLink", "ExtVar", OutputArray, , True)
-        Else
-            Call WriteData("RoadLink", "ExtVar", OutputArray, , False)
-        End If
-
+        Call WriteData("RoadLink", "ExtVar", OutputArray, , True)
 
     End Sub
 

@@ -2,6 +2,76 @@
 Imports System.IO
 
 Module DBaseInterface
+    Public RunRoadLink As Boolean
+    Public RunRoadZone As Boolean
+    Public RunRailLink As Boolean
+    Public RunRailZone As Boolean
+    Public RunAir As Boolean
+    Public RunSea As Boolean
+    Public DirPath As String
+    Public LogFile As IO.FileStream
+    Public lf As IO.StreamWriter
+    Public LogLine As String
+    Public FilePrefix As String
+    Public CreateExtVars As Boolean
+    Public UpdateExtVars As Boolean
+    Public NewRdLEV As Boolean
+    Public NewRdZEV As Boolean
+    Public NewRlLEV As Boolean
+    Public NewRlZEV As Boolean
+    Public NewAirEV As Boolean
+    Public NewSeaEV As Boolean
+    Public EVFilePrefix As String
+    Public RunModel As Boolean = True
+    Public NewRdLCap, NewRdZCap, NewRlLCap, NewRlZCap, NewAirCap, NewSeaCap As Boolean
+    Public CapFilePrefix As String
+    Public EVFileSuffix As String
+    Public RdZEVSource, RlLEVSource, RlZEVSource, AirEVSource, SeaEVSource As String
+    Public RdLPopSource, RdZPopSource, RlLPopSource, RlZPopSource, AirPopSource, SeaPopSource, RdLEcoSource, RdZEcoSource, RlLEcoSource, RlZEcoSource, AirEcoSource, SeaEcoSource, RdLEneSource, RdZEneSource, RlLEneSource, RlZEneSource, AirEneSource, SeaEneSource, RlLOthSource, RlZOthSource As String
+    Public DBasePop, DBaseEco, DBaseEne, DBasePopG, DBaseCheck As Boolean
+    Public DBasePopFile, DBaseEcoFile, DBaseEneFile, DBasePopGFile As String
+    Public ZonePopFile, ZoneEcoFile, ZoneEneFile As IO.FileStream
+    Public zpr, zer, znr As IO.StreamReader
+    Public PopLookup, EcoLookup As New Dictionary(Of Long, Double)
+    Public PopYearLookup, EcoYearLookup As New Dictionary(Of String, Double)
+    Public ControlFile, SubStrategyFile As IO.FileStream
+    Public BuildInfra As Boolean
+    Public CUCritValue As Double
+    Public VariableEl As Boolean
+    Public ElCritValue As Double
+    Public CongestionCharge, CarbonCharge, WPPL, RailCCharge, AirCCharge, RlCaCharge, AirCaCharge, UpdateInput As Boolean
+    Public ConChargePer, RailChargePer, AirChargePer As Double
+    Public ConChargeYear, WPPLYear, RlCChargeYear, CarbChargeYear, RlCaChYear, AirChargeYear, AirCaChYear As Long
+    Public WPPLPer As Double
+    Public RlElect As Boolean
+    Public ElectKmPerYear As Double
+    Public SWDisagg As Boolean
+    Public SmarterChoices, SmartFrt, UrbanFrt As Boolean
+    Public SmartIntro, SmartYears, SmFrtIntro, SmFrtYears, UrbFrtIntro, UrbFrtYears As Long
+    Public SmartPer, SmFrtPer, UrbFrtPer As Double
+    Public NewSeaTonnes, NewRoadLanes, NewRailTracks, NewAirRun, NewAirTerm As Double
+    Public RailCUPeriod As String
+    Public RlPeakHeadway As Double
+    Public RdZSpdSource As String
+    Public RoadCapNum As Long
+    Public RLCapYear(1) As Long
+    Public TripRates As String
+    Public StartYear As Integer
+    Public Duration As Integer
+    Public logNum As Integer
+    Public logarray(47, 0) As String
+    Public ScenarioID As Integer
+    Public Scenario As Integer
+    Public StrategyID As Integer
+    Public StrategyCode As String
+    Public SubStrategy As Integer
+    Public DBaseMode As Boolean = True
+    Public theYear As Integer
+
+    Public OZone, DZone As Long
+    Dim ModelType As String
+    Dim Subtype As String
+
     'this gets the input files from the database, and converts them into a form suitable for input to the model files
 
     'this stores the total population values for each zone with the array index equal to the zoneID, 145 is Scotland and 146 is Wales
@@ -38,7 +108,7 @@ Module DBaseInterface
         Try
             'If there is no connection to the database then establish one
             If m_conn Is Nothing Then
-                m_sConnString = "Driver={PostgreSQL ODBC Driver(ANSI)};DSN=PostgreSQL30;Server=localhost;Port=5432;Database=sandbox;UId=postgres;Password=P0stgr3s;"
+                m_sConnString = "Driver={PostgreSQL ODBC Driver(ANSI)};DSN=PostgreSQL30;Server=localhost;Port=5432;Database=itrc_sos;UId=postgres;Password=P0stgr3s;"
                 m_conn = New Odbc.OdbcConnection(m_sConnString)
                 m_conn.Open()
             End If
@@ -1157,14 +1227,14 @@ Module DBaseInterface
         Dim DataRows As Integer = 0, DataColumns As Integer = 0
         Dim theSQL As String = ""
 
-
-        'Check if file path has been selected - if not then use default.
-        If Connection = "" Then
-            Connection = DirPath
-        End If
-        'Make sure the file path ends with at \
-        If Connection.Substring(Len(Connection) - 1, 1) <> "\" Then
-            Connection = Connection & "\"
+        'Get connection path if not in Database mode
+        If DBaseMode = False Then
+            'Check if file path has been selected - if not then use default.
+            If Connection = "" Then Connection = DirPath
+            If Connection.Substring(Len(Connection) - 1, 1) <> "\" Then
+                'Make sure the file path ends with at \
+                Connection = Connection & "\"
+            End If
         End If
 
         'Get the filename of datafile based on Type and SubType
@@ -1180,6 +1250,13 @@ Module DBaseInterface
                     Case Else
                         'for error handling
                 End Select
+            Case "Inputs"
+                Select Case SubType
+                    Case "Parameters"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_I_Parameters_Run" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID
+
+                End Select
+
             Case "RoadZone"
                 Select Case SubType
                     Case "Input"
@@ -1538,56 +1615,151 @@ Module DBaseInterface
         Dim TempTableName As String = ""
         Dim TableName As String = ""
 
-        'Check if file path has been selected - if not then use default.
-        If Connection = "" Then
-            Connection = DirPath
+        'Get connection path if not in Database mode
+        If DBaseMode = False Then
+            'Check if file path has been selected - if not then use default.
+            If Connection = "" Then Connection = DirPath
+            If Connection.Substring(Len(Connection) - 1, 1) <> "\" Then
+                'Make sure the file path ends with at \
+                Connection = Connection & "\"
+            End If
         End If
-        'Make sure the file path ends with at \
-        If Connection.Substring(Len(Connection) - 1, 1) <> "\" Then
-            Connection = Connection & "\"
-        End If
-
         'Get the filename of datafile based on Type and SubType
         'TODO - replace with database calls
         Select Case Type
-            Case "RoadZone"
+            Case "AirFlow"
                 Select Case SubType
                     Case "Output"
                         ToSQL = True
-                        TableName = "TR_O_RoadZoneOutputData"
-                        OutFileName = FilePrefix & "RoadZoneOutputData.csv"
-                        header = "modelrun_id,  zone_id, country_id, year, v_km, speed, petrol, diesel, electric, lpg, cng, hydrogen, mway_vkm, rur_a_vkm, rur_m_vkm, urb_vkm, mway_spd, rur_a_spd, rur_m_spd, urb_spd, pet_vkm, die_vkm, ph_vkm, dh_vkm, peh_vkm, e_vkm, lpg_vkm, cng_vkm, hyd_vkm, fc_vkm"
+                        TableName = "TR_O_AirFlowOutputData"
+                        OutFileName = FilePrefix & "AirFlowOutputData.csv"
+                        header = "modelrun_id, flow_id, year, trips, fuel"
                     Case "Temp"
                         ToSQL = True
-                        TableName = "TR_IO_RoadZone"
-                        OutFileName = FilePrefix & "RoadZoneTemp.csv"
-                        header = "modelrun_id, year, zone_id, speed, vkm, vkm_mway, rv_cat_traf_1_1, rv_cat_traf_1_2, rv_cat_traf_1_3, rv_cat_traf_1_4,  rv_cat_traf_1_5, vkm_rur_a, rv_cat_traf_2_1, rv_cat_traf_2_2, rv_cat_traf_2_3, rv_cat_traf_2_4,  rv_cat_traf_2_5, vkm_rur_m, rv_cat_traf_3_1, rv_cat_traf_3_2, rv_cat_traf_3_3, rv_cat_traf_3_4,  rv_cat_traf_3_5, vkm_urb, rv_cat_traf_4_1, rv_cat_traf_4_2, rv_cat_traf_4_3, rv_cat_traf_4_4,  rv_cat_traf_4_5, supresd_traffic_1_1, supresd_traffic_1_2, supresd_traffic_1_3, supresd_traffic_1_4,  supresd_traffic_2_1, supresd_traffic_2_2, supresd_traffic_2_3, supresd_traffic_2_4, supresd_traffic_3_1, supresd_traffic_3_2, supresd_traffic_3_3, supresd_traffic_3_4,  supresd_traffic_4_1, supresd_traffic_4_2, supresd_traffic_4_3, supresd_traffic_4_4, spd_mway,  spd_rur_a, spd_rur_m, spd_urb" 'LatentVkm1, LatentVkm2, LatentVkm3, LatentVkm4, AddedLaneKm1, AddedLaneKm2, AddedLaneKm3, AddedLaneKm4, BuiltLaneKm1, BuiltLaneKm2, BuiltLaneKm3, BuiltLaneKm4"
+                        TableName = "TR_IO_AirFlow"
+                        OutFileName = FilePrefix & "AirFlowTemp.csv"
+                        header = "modelrun_id, year, flow_id, trips, air_flow_trips_latent, air_flow_cap_constant0, air_flow_cap_constant1, flow_km"
                     Case "ExtVar"
                         ToSQL = True
-                        TableName = "TR_IO_RoadZoneExternalVariables"
-                        OutFileName = EVFilePrefix & "RoadZoneExtVar.csv"
-                        header = "modelrun_id, zone_id, year, pop_z, gva_z, cost, lane_km, mway_lkm, rur_ad_lkm, rur_as_lkm, rur_min_lkm, urb_d_lkm, urb_s_lkm,  p_car, d_car, e_car, p_lgv, d_lgv, e_lgv, d_hgv, e_hgv, d_psv, e_psv, p_bike, e_bike, fc_bike, ph_car, dh_car, pe_car, h_car, fc_car, dh_lgv, pe_lgv, l_lgv, c_lgv, dh_psv, pe_psv, l_psv, c_psv, fc_psv, dh_hgv, h_hgv, fc_hgv, lgv_cost, hgv1_cost, hgv2_cost, psv_cost, p_car_cost,d_car_cost, ph_car_cost, dh_car_cost, phper_car, pih_car_cost, be_car_cost, hic_car_cost, hfc_car_cost, p_lgv_cost, d_lgv_cost, dh_lgv_cost, phper_lgv, pih_lgv_cost, be_lgv_cost, lpg_lgv_cost, cng_lgv_cost, d_hgv1_cost, dh_hgv1_cost, hic_hgv1_cost, hfc_hgv1_cost, d_hgv2_cost, dh_hgv2_cost, hic_hgv2_cost, hfc_hgv2_cost, d_psv_cost,dh_psv_cost, phper_psv, pih_psv_cost, be_psv_cost, lgp_psv_cost, cng_psv_cost, hfc_psv_cost"
-                    Case "CapChange"
-                        ToSQL = True
-                        TableName = "TR_IO_RoadZoneCapacityChange"
-                        OutFileName = EVFilePrefix & "RoadZoneCapChange.csv"
-                        header = "modelrun_id, zone_id, changeyear, mway_lane_kmch, rur_ad_lane_kmch, rur_as_lane_kmch, rur_m_lane_kmch, urb_d_lane_kmch, urb_s_lane_kmch"
+                        TableName = "TR_IO_AirFlowExternalVariables"
+                        OutFileName = EVFilePrefix & "AirFlowExtVar.csv"
+                        header = "modelrun_id, year, flow_id, ozone_pop, dzone_pop, ozone_gva, cost"
+                End Select
+            Case "AirNode"
+                Select Case SubType
                     Case "NewCap"
-                        TableName = "TR_O_RoadZoneNewCapacity"
-                        OutFileName = FilePrefix & "RoadZoneNewCap.csv"
-                        header = "modelrun_id, zone_id,changeyear,mway_cap,rur_a_cap,rur_m_cap,urb_cap"
-                    Case "Fuel"
                         ToSQL = True
-                        TableName = "TR_O_RoadZoneFuelConsumption"
-                        OutFileName = FilePrefix & "RoadZoneFuelConsumption.csv"
-                        header = "modelrun_id,  zone_id, year, pet_car, pet_lgv, die_car, die_lgv, die_hgv23, die_hgv4, die_psv, ele_car, ele_lgv, ele_psv, lpg_lgv, lpg_psv, cng_lgv, cng_psv, hyd_car, hyd_hgv23, hyd_hgv4, hyd_psv"
+                        TableName = "TR_O_AirNodeNewCapacity"
+                        OutFileName = EVFilePrefix & "AirNodeNewCap.csv"
+                        header = "modelrun_id, airport_id, changeyear, new_term_capacity, new_atm_cap"
+                    Case "NewCap_Add"
+                        TableName = "TR_O_AirNodeNewCapacity_Add"
+                        OutFileName = FilePrefix & "AirNewCap.csv"
+                        header = "modelrun_id, airport_id, changeyear, term_cap_added, run_cap_added"
+                    Case "Output"
+                        ToSQL = True
+                        TableName = "TR_O_AirNodeOutputData"
+                        OutFileName = FilePrefix & "AirNodeOutputData.csv"
+                        header = "modelrun_id, airport_id, year, all_pass, dom_pass, int_pass, atm, int_fuel"
+                    Case "Temp"
+                        ToSQL = True
+                        TableName = "TR_IO_AirNode"
+                        OutFileName = FilePrefix & "AirNodeTemp.csv"
+                        header = "modelrun_id, year, airport_id, all_pass_total, dom_pass, int_pass, airport_trips_latent"
+                    Case "ExtVar"
+                        ToSQL = True
+                        TableName = "TR_IO_AirNodeExternalVariables"
+                        OutFileName = EVFilePrefix & "AirNodeExtVar.csv"
+                        header = "modelrun_id, airport_id, year, gor_pop, gor_gva, cost, term_cap, max_atm, plane_size_dom, lf_dom, lf_int, int_trip_dist, fuel_seat_km, plane_size_int"
+                End Select
+            Case "RailLink"
+                Select Case SubType
+                    Case "ElSchemes"
+                        ToSQL = True
+                        TableName = "TR_O_RailLinkElectrificationDates"
+                        OutFileName = EVFilePrefix & "RailLinkElectrificationDates.csv"
+                        header = "modelrun_id, flow_id, electric_year, electric_tracks, route_km"
+                    Case "FuelUsed"
+                        ToSQL = True
+                        TableName = "TR_O_RailLinkFuelConsumption"
+                        OutFileName = FilePrefix & "RailLinkFuelConsumption.csv"
+                        header = "modelrun_id, year, diesel, electric"
+                    Case "NewCap"
+                        ToSQL = True
+                        TableName = "TR_O_RailLinkNewCapacity"
+                        OutFileName = EVFilePrefix & "RailLinkNewCap.csv"
+                        header = "modelrun_id, flow_id, changeyear, track_change, max_td_change, train_change"
+                    Case "NewCap_Added"
+                        TableName = "TR_O_RailLinkNewCapacity_Add"
+                        OutFileName = FilePrefix & "RailLinkNewCapacity.csv"
+                        header = "modelrun_id, flow_id, changeyear, tracks_added"
+                    Case "Output"
+                        ToSQL = True
+                        TableName = "TR_O_RailLinkOutputData"
+                        OutFileName = FilePrefix & "RailLinkOutputData.csv"
+                        header = "modelrun_id, flow_id, year, trains, delays, cu"
+                    Case "Temp"
+                        ToSQL = True
+                        TableName = "TR_IO_RailLink"
+                        OutFileName = FilePrefix & "RailLinkTemp.csv"
+                        header = "modelrun_id, year, flow_id, delays, cost, trains, tracks, max_td_base, cu_old, cu_new, busy_trains, busy_per, model_peak_headway, calculation_check"
+                    Case "ExtVar"
+                        ToSQL = True
+                        TableName = "TR_IO_RailLinkExternalVariables"
+                        OutFileName = EVFilePrefix & "RailLinkExtVar.csv"
+                        header = "modelrun_id, flow_id, year, tracks, pop_z1, pop_z2, gva_z1, gva_z2, cost, car_fuel, max_td, el_p, el_tracks, add_trains"
+                End Select
+            Case "RailZone"
+                Select Case SubType
+                    Case "ElSchemes"
+                        ToSQL = True
+                        TableName = "TR_O_RailZoneElectrificationDates"
+                        OutFileName = EVFilePrefix & "RailZoneElectrificationDates.csv"
+                        header = "modelrun_id, zone_id, electric_year, electric_stations"
+                    Case "Output"
+                        ToSQL = True
+                        TableName = "TR_O_RailZoneOutputData"
+                        OutFileName = FilePrefix & "RailZoneOutputData.csv"
+                        header = "modelrun_id, year, zone_id, trips_stat, stations, trips"
+                    Case "Temp"
+                        ToSQL = True
+                        TableName = "TR_IO_RailZone"
+                        OutFileName = FilePrefix & "RailZoneTemp.csv"
+                        header = "modelrun_id, year, zone_id, trips_stat, fare_e"
+                    Case "ExtVar"
+                        ToSQL = True
+                        TableName = "TR_IO_RailZoneExternalVariables"
+                        OutFileName = EVFilePrefix & "RailZoneExtVar.csv"
+                        header = "modelrun_id, zone_id, year, pop_z, gva_z, cost, stations, car_fuel, new_trips, gjt, elp"
                 End Select
             Case "RoadLink"
                 Select Case SubType
+                    Case "NewCap"
+                        ToSQL = True
+                        TableName = "TR_O_RoadLinkNewCapacity"
+                        OutFileName = EVFilePrefix & "RoadLinkNewCap.csv"
+                        header = "modelrun_id, flow_id, changeyear, mlane_change, dlane_change, slane_change"
+                    Case "NewCap_Add"
+                        TableName = "TR_O_RoadLinkNewCapacity_Added"
+                        OutFileName = FilePrefix & "RoadLinkNewCap.csv"
+                        header = "modelrun_id, flow_id, changeyear, road_type, lanes_added"
                     Case "Output"
                         ToSQL = True
                         TableName = "TR_O_RoadOutputFlows"
-                        header = "modelrun_id, flow_id, year, pcu_total,speed_mean, pcu_mway, pcu_dual, pcu_sing, spd_mway, spd_dual, spd_sing, msc1, msc2, msc3, msc4, msc5, msc6, dsc1, dsc2, dsc3, dsc4, dsc5, dsc6, ssc1, ssc2, ssc3, ssc4, ssc5, ssc6, ssc7, ssc8, msc1_spd, msc2_spd, msc3_spd, msc4_spd, msc5_spd, msc6_spd, dsc1_spd, dsc2_spd, dsc3_spd, dsc4_spd, dsc5_spd, dsc6_spd, ssc1_spd, ssc2_spd, ssc3_spd, ssc4_spd, ssc5_spd, ssc6_spd, ssc7_spd, ssc8_spd, mway_latent, dual_latent, sing_latent, mfull_hrs, dfull_hrs, sfull_hrs, mway_cost, dual_cost, sing_cost"
+                        header = "modelrun_id, flow_id, year, pcu_total, speed_mean, pcu_mway, pcu_dual, pcu_sing, spd_mway, spd_dual, spd_sing, msc1, msc2, msc3, msc4, msc5, msc6, dsc1, dsc2, dsc3, dsc4, dsc5, dsc6, ssc1, ssc2, ssc3, ssc4, ssc5, ssc6, ssc7, ssc8, msc1_spd, msc2_spd, msc3_spd, msc4_spd, msc5_spd, msc6_spd, dsc1_spd, dsc2_spd, dsc3_spd, dsc4_spd, dsc5_spd, dsc6_spd, ssc1_spd, ssc2_spd, ssc3_spd, ssc4_spd, ssc5_spd, ssc6_spd, ssc7_spd, ssc8_spd, mway_latent, dual_latent, sing_latent, mfull_hrs, dfull_hrs, sfull_hrs, mway_cost, dual_cost, sing_cost"
+                    Case "ExtVar"
+                        ToSQL = True
+                        TableName = "TR_IO_RoadLinkExternalVariables"
+                        OutFileName = EVFilePrefix & "ExternalVariables.csv"
+                        header = "modelrun_id, flow_id, year, , pop_z1, pop_z2, gva_z1, gva_z2, m_lanes, d_lanes, s_lanes, m_max_cap_m, d_max_cap_m, s_max_cap_m, m1_cost, m2_cost, m3_cost, m4_cost, m5_cost, m6_cost, d1_cost, "
+                        header = header & " d2_cost, d3_cost, d4_cost, d5_cost, d6_cost, s1_cost, s2_cost, s3_cost, s4_cost, s5_cost, s6_cost, s7_cost, s8_cost, sc0_p_cost, sc0_be_cost, sc0_hfc_cost, sc1_p_cost, sc1_d_costs, "
+                        header = header & " sc1_ph_cost, sc1_dh_cost, sc1_pih_cost, sc1_be_cost, sc1_hic_cost, sc1_hfc_cost, sc2_p_cost, sc2_d_cost, sc2_dh_cost, sc2_pih_cost, sc2_be_cost, sc2_lpg_cost, sc2_cng_cost, sc3_d_cost, sc3_dh_cost, sc3_pih_cost, "
+                        header = header & "sc3_be_cost, sc3_lpg_cost, sc3_cng_cost, sc3_hfc_cost, sc4_d_cost, sc4_dh_cost, sc4_hic_cost, sc4_hfc_cost, sc5_d_cost, sc5_dh_cost, sc5_hic_cost, sc5_hfc_cost, sc6_p_cost, sc6_be_cost, sc6_hfc_cost, "
+                        header = header & "sc7_p_cost, sc7_d_cost, sc7_ph_cost, sc7_dh_cost, sc7_pih_cost, sc7_be_cost, sc7_hic_cost, sc7_hfc_cost, sc8_p_cost, sc8_d_cost, sc8_dh_cost, sc8_pih_cost, sc8_be_cost, sc8_lpg_cost, sc8_cng_cost, "
+                        header = header & "sc9_d_cost, sc9_dh_cost, sc9_pih_cost, sc9_be_cost, sc9_lpg_cost, sc9_cng_cost, sc9_hfc_cost, sc10_d_cost, sc10_dh_cost, sc10_hic_cost, sc10_hfc_cost, sc11_d_cost, sc11_dh_cost, sc11_hic_cost, sc11_hfc_cost, "
+                        header = header & "sc12_d_cost, sc12_dh_cost, sc12_hfc_cost, sc13_p_cost, sc13_d_cost, sc13_ph_cost, sc13_dh_cost, sc13_pih_cost, sc13_be_cost, sc13_hic_cost, sc13_hfc_cost, sc14_p_cost, sc14_d_cost, sc14_dh_cost, sc14_pih_cost, "
+                        header = header & "sc14_be_cost, sc14_lpg_cost, sc14_cng_cost, sc15_d_cost, sc15_dh_cost, sc15_pih_cost, sc15_be_cost, sc15_lpg_cost, sc15_cng_cost, sc15_hfc_cost, sc16_d_cost, sc16_dh_cost, sc16_hic_cost, sc16_hfc_cost, sc17_d_cost, "
+                        header = header & "sc17_dh_cost, sc17_hic_cost, sc17_hfc_cost, sc18_d_cost, sc18_dh_cost, sc18_hic_cost, sc18_hfc_cost, sc19_d_cost, sc19_dh_cost, sc19_hic_cost, sc19_hfc_cost "
                     Case "Temp Annual"
                         ToSQL = True
                         TableName = "TR_IO_RoadLink_Annual"
@@ -1624,86 +1796,51 @@ Module DBaseInterface
                                 header = header & "S" & x & "HourlyFlows" & c & "," & "SRoadTypeFlows" & c & "," & "S" & x & "Charge" & c & "," & "S" & x & "LatentFlows" & c & "," & "S" & x & "NewHourlySpeeds" & c & ","
                             Next
                         Next
-                    Case "ExtVar"
-                        ToSQL = True
-                        TableName = "TR_IO_RoadLinkExternalVariables"
-                        OutFileName = EVFilePrefix & "ExternalVariables.csv"
-                        'MATT do these headers match the database table headers?
-                        header = "modelrun_id, flow_id, year,  pop_z, gva_z, cost, lane_km, mway_lkm, rur_ad_lkm, rur_as_lkm, rur_min_lkm, urb_d_lkm, urb_s_lkm, p_car, d_car, e_car, p_lgv, d_lgv, e_lgv, d_hgv, e_hgv, d_psv, e_psv, p_bike, e_bike, fc_bike, ph_car, dh_car, pe_car, h_car, fc_car, dh_lgv, pe_lgv, l_lgv, c_lgv, dh_psv, pe_psv, l_psv, c_psv, fc_psv, dh_hgv, h_hgv, fc_hgv, lgv_cost, hgv1_cost, hgv2_cost, psv_cost "
-                        'additional variable names that should be added to header are:
-                        'sc0_p_cost, sc0_be_cost, sc0_hfc_cost, sc1_p_cost, sc1_d_cost, sc1_ph_cost, sc1_dh_cost, sc1_pih_cost, sc1_be_cost, sc1_hic_cost, sc1_hfc_cost, sc2_p_cost, sc2_d_cost, sc2_ph_cost, sc2_dh_cost, sc2_pih_cost, sc2_be_cost, sc2_lpg_cost, sc2_cng_cost, sc3_d_cost, sc3_dh_cost, sc3_pih_cost, sc3_be_cost, sc3_lpg_cost, sc3_cng_cost, sc3_hfc_cost, sc4_d_cost, sc4_dh_cost, sc4_hic_cost, sc4_hfc_cost, sc5_d_cost, sc5_dh_cost, sc5_hic_cost, sc5_hfc_cost, sc6_p_cost, sc6_be_cost, sc6_hfc_cost, sc7_p_cost, sc7_d_cost, sc7_ph_cost, sc7_dh_cost, sc7_pih_cost, sc7_be_cost, sc7_hic_cost, sc7_hfc_cost, sc8_p_cost, sc8_d_cost, sc8_dh_cost, sc8_pih_cost, sc8_be_cost, sc8_lpg_cost, sc8_cng_cost, sc9_d_cost, sc9_dh_cost, sc9_pih_cost, sc9_be_cost, sc9_lpg_cost, sc9_cng_cost, sc9_hfc_cost, sc10_d_cost, sc10_dh_cost, sc10_hic_cost, sc10_hfc_cost, sc11_d_cost, sc11_dh_cost, sc11_hic_cost, sc11_hfc_cost, sc12_p_cost, sc12_be_cost, sc12_hfc_cost, sc13_p_cost, sc13_d_cost, sc13_ph_cost, sc13_dh_cost, sc13_pih_cost, sc13_be_cost, sc13_hic_cost, sc13_hfc_cost, sc14_p_cost, sc15_d_cost, sc14_dh_cost, sc14_pih_cost, sc14_be_cost, sc14_lpg_cost, sc14_cng_cost, sc15_d_cost, sc15_dh_cost, sc15_pih_cost, sc15_be_cost, sc15_lpg_cost, sc15_cng_cost, sc15_hfc_cost, sc16_d_cost, sc16_dh_cost, sc16_hic_cost, sc16_hfc_cost, sc17_d_cost, sc17_dh_cost, sc17_hic_cost, sc17_hfc_cost, sc18_d_cost, sc18_dh_cost, sc18_hic_cost, sc18_hfc_cost, sc19_d_cost, sc19_dh_cost, sc19_hic_cost, sc19_hfc_cost
-                    Case "NewCap"
-                        ToSQL = True
-                        TableName = "TR_O_RoadLinkNewCapacity"
-                        OutFileName = EVFilePrefix & "RoadLinkNewCap.csv"
-                        header = "modelrun_id, changeyear, flow_id, mlane_change, dlane_change, slane_change"
-                    Case "NewCap_Add"
-                        TableName = "TR_O_RoadLinkNewCapacity_Added"
-                        OutFileName = FilePrefix & "RoadLinkNewCap.csv"
-                        header = "flow_id, changeyear, road_type, lanes_added"
                 End Select
-            Case "RailZone"
+            Case "RoadZone"
                 Select Case SubType
+                    Case "Fuel"
+                        ToSQL = True
+                        TableName = "TR_O_RoadZoneFuelConsumption"
+                        OutFileName = FilePrefix & "RoadZoneFuelConsumption.csv"
+                        header = "modelrun_id,  zone_id, year, pet_car, pet_lgv, die_car, die_lgv, die_hgv23, die_hgv4, die_psv, ele_car, ele_lgv, ele_psv, lpg_lgv, lpg_psv, cng_lgv, cng_psv, hyd_car, hyd_hgv23, hyd_hgv4, hyd_psv"
+                    Case "NewCap"
+                        TableName = "TR_O_RoadZoneNewCapacity"
+                        OutFileName = FilePrefix & "RoadZoneNewCap.csv"
+                        header = "modelrun_id, zone_id,changeyear,mway_cap,rur_a_cap,rur_m_cap,urb_cap"
                     Case "Output"
                         ToSQL = True
-                        TableName = "TR_O_RailZoneOutputData"
-                        OutFileName = FilePrefix & "RailZoneOutputData.csv"
-                        header = "modelrun_id, year, zone_id, trips_stat, stations, trips"
+                        TableName = "TR_O_RoadZoneOutputData"
+                        OutFileName = FilePrefix & "RoadZoneOutputData.csv"
+                        header = "modelrun_id,  zone_id, country_id, year, v_km, speed, petrol, diesel, electric, lpg, cng, hydrogen, mway_vkm, rur_a_vkm, rur_m_vkm, urb_vkm, mway_spd, rur_a_spd, rur_m_spd, urb_spd, pet_vkm, die_vkm, ph_vkm, dh_vkm, peh_vkm, e_vkm, lpg_vkm, cng_vkm, hyd_vkm, fc_vkm"
                     Case "Temp"
                         ToSQL = True
-                        TableName = "TR_IO_RailZone"
-                        OutFileName = FilePrefix & "RailZoneTemp.csv"
-                        header = "modelrun_id, year, zone_id, trips_stat, fare_e"
+                        TableName = "TR_IO_RoadZone"
+                        OutFileName = FilePrefix & "RoadZoneTemp.csv"
+                        header = "modelrun_id, year, zone_id, speed, vkm, vkm_mway, rv_cat_traf_1_1, rv_cat_traf_1_2, rv_cat_traf_1_3, rv_cat_traf_1_4,  rv_cat_traf_1_5, vkm_rur_a, rv_cat_traf_2_1, rv_cat_traf_2_2, rv_cat_traf_2_3, rv_cat_traf_2_4,  rv_cat_traf_2_5, vkm_rur_m, rv_cat_traf_3_1, rv_cat_traf_3_2, rv_cat_traf_3_3, rv_cat_traf_3_4,  rv_cat_traf_3_5, vkm_urb, rv_cat_traf_4_1, rv_cat_traf_4_2, rv_cat_traf_4_3, rv_cat_traf_4_4,  rv_cat_traf_4_5, supresd_traffic_1_1, supresd_traffic_1_2, supresd_traffic_1_3, supresd_traffic_1_4,  supresd_traffic_2_1, supresd_traffic_2_2, supresd_traffic_2_3, supresd_traffic_2_4, supresd_traffic_3_1, supresd_traffic_3_2, supresd_traffic_3_3, supresd_traffic_3_4,  supresd_traffic_4_1, supresd_traffic_4_2, supresd_traffic_4_3, supresd_traffic_4_4, spd_mway,  spd_rur_a, spd_rur_m, spd_urb" 'LatentVkm1, LatentVkm2, LatentVkm3, LatentVkm4, AddedLaneKm1, AddedLaneKm2, AddedLaneKm3, AddedLaneKm4, BuiltLaneKm1, BuiltLaneKm2, BuiltLaneKm3, BuiltLaneKm4"
                     Case "ExtVar"
                         ToSQL = True
-                        TableName = "TR_IO_RailZoneExternalVariables"
-                        OutFileName = EVFilePrefix & "RailZoneExtVar.csv"
-                        header = "modelrun_id, zone_id, year, pop_z, gva_z, cost, stations, car_fuel, new_trips, gjt, elp"
-                    Case "ElSchemes"
+                        TableName = "TR_IO_RoadZoneExternalVariables"
+                        OutFileName = EVFilePrefix & "RoadZoneExtVar.csv"
+                        header = "modelrun_id, zone_id, Year, pop_z, gva_z, cost, stations, car_fuel, new_trips, gjt, elp"
+                        'header = "modelrun_id, zone_id, year, pop_z, gva_z, cost, lane_km, mway_lkm, rur_ad_lkm, rur_as_lkm, rur_min_lkm, urb_d_lkm, urb_s_lkm,  p_car, d_car, e_car, p_lgv, d_lgv, e_lgv, d_hgv, e_hgv, d_psv, e_psv, p_bike, e_bike, fc_bike, ph_car, dh_car, pe_car, h_car, fc_car, dh_lgv, pe_lgv, l_lgv, c_lgv, dh_psv, pe_psv, l_psv, c_psv, fc_psv, dh_hgv, h_hgv, fc_hgv, lgv_cost, hgv1_cost, hgv2_cost, psv_cost, p_car_cost,d_car_cost, ph_car_cost, dh_car_cost, phper_car, pih_car_cost, be_car_cost, hic_car_cost, hfc_car_cost, p_lgv_cost, d_lgv_cost, dh_lgv_cost, phper_lgv, pih_lgv_cost, be_lgv_cost, lpg_lgv_cost, cng_lgv_cost, d_hgv1_cost, dh_hgv1_cost, hic_hgv1_cost, hfc_hgv1_cost, d_hgv2_cost, dh_hgv2_cost, hic_hgv2_cost, hfc_hgv2_cost, d_psv_cost,dh_psv_cost, phper_psv, pih_psv_cost, be_psv_cost, lgp_psv_cost, cng_psv_cost, hfc_psv_cost"
+                    Case "CapChange"
                         ToSQL = True
-                        TableName = "TR_O_RailZoneElectrificationDates"
-                        OutFileName = EVFilePrefix & "RailZoneElectrificationDates.csv"
-                        header = "modelrun_id, zone_id, electric_year, electric_stations"
-                End Select
-            Case "RailLink"
-                Select Case SubType
-                    Case "Output"
-                        ToSQL = True
-                        TableName = "TR_O_RailLinkOutputData"
-                        OutFileName = FilePrefix & "RailLinkOutputData.csv"
-                        header = "modelrun_id, flow_id, year, trains, delays, cu"
-                    Case "Temp"
-                        ToSQL = True
-                        TableName = "TR_IO_RailLink"
-                        OutFileName = FilePrefix & "RailLinkTemp.csv"
-                        header = "modelrun_id, year, flow_id, delays, cost, trains, tracks, max_td_base, cu_old, cu_new, busy_trains, busy_per, model_peak_headway, calculation_check"
-                    Case "ExtVar"
-                        ToSQL = True
-                        TableName = "TR_IO_RailLinkExternalVariables"
-                        OutFileName = EVFilePrefix & "RailLinkExtVar.csv"
-                        header = "modelrun_id, flow_id, year, tracks, pop_z1, pop_z2, gva_z1, gva_z2, cost, car_fuel, max_td, el_p, el_tracks, add_trains"
-                    Case "NewCap"
-                        ToSQL = True
-                        TableName = "TR_O_RailLinkNewCapacity"
-                        OutFileName = EVFilePrefix & "RailLinkNewCap.csv"
-                        header = "modelrun_id, flow_id, changeyear, track_change, max_td_change, train_change"
-                    Case "NewCap_Added"
-                        TableName = "TR_O_RailLinkNewCapacity_Add"
-                        OutFileName = FilePrefix & "RailLinkNewCapacity.csv"
-                        header = "modelrun_id, year, flow_id, tracks_added"
-                    Case "FuelUsed"
-                        ToSQL = True
-                        TableName = "TR_O_RailLinkFuelConsumption"
-                        OutFileName = FilePrefix & "RailLinkFuelConsumption.csv"
-                        header = "modelrun_id, year, diesel, electric"
-                    Case "ElSchemes"
-                        ToSQL = True
-                        TableName = "TR_O_RailLinkElectrificationDates"
-                        OutFileName = EVFilePrefix & "RailLinkElectrificationDates.csv"
-                        header = "modelrun_id, flow_id, electric_year, electric_tracks, route_km"
+                        TableName = "TR_IO_RoadZoneCapacityChange"
+                        OutFileName = EVFilePrefix & "RoadZoneCapChange.csv"
+                        header = "modelrun_id, zone_id, changeyear, mway_lane_kmch, rur_ad_lane_kmch, rur_as_lane_kmch, rur_m_lane_kmch, urb_d_lane_kmch, urb_s_lane_kmch"
                 End Select
             Case "Seaport"
                 Select Case SubType
+                    Case "NewCap"
+                        ToSQL = True
+                        TableName = "TR_O_SeaFreightNewCapacity"
+                        OutFileName = EVFilePrefix & "SeaFreightNewCap.csv"
+                        header = "modelrun_id, portID, changeyear, new_lb_cap, new_db_cap, new_gc_cap, new_ll_cap, new_rr_cap"
+                    Case "NewCap_Add"
+                        TableName = "TR_O_SeaFreightNewCapacity_Add"
+                        OutFileName = FilePrefix & "SeaNewCap.csv"
+                        header = "modelrun_id, portID, changeyear, lb_cap_added,db_cap_added,gc_cap_added,ll_cap_added,rr_cap_added"
                     Case "Output"
                         ToSQL = True
                         TableName = "TR_O_SeaFreightOutputData"
@@ -1719,60 +1856,6 @@ Module DBaseInterface
                         TableName = "TR_IO_SeaFreightExternalVariables"
                         OutFileName = EVFilePrefix & "SeaFreightExtVar.csv"
                         header = "modelrun_id, port_id, year, lb_cap, db_cap, gc_cap, ll_cap, rr_cap, gor_pop,gor_gva, cost, fuel_eff"
-                    Case "NewCap"
-                        ToSQL = True
-                        TableName = "TR_O_SeaFreightNewCapacity"
-                        OutFileName = EVFilePrefix & "SeaFreightNewCap.csv"
-                        header = "modelrun_id, portID, changeyear, new_lb_cap, new_db_cap, new_gc_cap, new_ll_cap, new_rr_cap"
-                    Case "NewCap_Add"
-                        TableName = "TR_O_SeaFreightNewCapacity_Add"
-                        OutFileName = FilePrefix & "SeaNewCap.csv"
-                        header = "modelrun_id, portID, changeyear, lb_cap_added,db_cap_added,gc_cap_added,ll_cap_added,rr_cap_added"
-                End Select
-            Case "AirNode"
-                Select Case SubType
-                    Case "Output"
-                        ToSQL = True
-                        TableName = "TR_O_AirNodeOutputData"
-                        OutFileName = FilePrefix & "AirNodeOutputData.csv"
-                        header = "modelrun_id, airport_id, year, AllPass, DomPass, IntPass, ATM, IntFuel"
-                    Case "Temp"
-                        ToSQL = True
-                        TableName = "TR_IO_AirNode"
-                        OutFileName = FilePrefix & "AirNodeTemp.csv"
-                        header = "modelrun_id, year, airport_id, all_pass_total, dom_pass, int_pass, airport_trips_latent"
-                    Case "ExtVar"
-                        ToSQL = True
-                        TableName = "TR_IO_AirNodeExternalVariables"
-                        OutFileName = EVFilePrefix & "AirNodeExtVar.csv"
-                        header = "modelrun_id, airport_id, year, gor_pop, gor_gva, cost, term_cap, max_atm, plane_size_dom, lf_dom, lf_int, int_trip_dist, fuel_seat_km, plane_size_int"
-                    Case "NewCap"
-                        ToSQL = True
-                        TableName = "TR_O_AirNodeNewCapacity"
-                        OutFileName = EVFilePrefix & "AirNodeNewCap.csv"
-                        header = "modelrun_id, airport_id, changeyear, new_term_capacity, new_atm_cap"
-                    Case "NewCap_Add"
-                        TableName = "TR_O_AirNodeNewCapacity_Add"
-                        OutFileName = FilePrefix & "AirNewCap.csv"
-                        header = "modelrun_id, airport_id, changeyear, term_cap_added, run_cap_added"
-                End Select
-            Case "AirFlow"
-                Select Case SubType
-                    Case "Output"
-                        ToSQL = True
-                        TableName = "TR_O_AirFlowOutputData"
-                        OutFileName = FilePrefix & "AirFlowOutputData.csv"
-                        header = "modelrun_id, flow_id, year, Trips, Fuel"
-                    Case "Temp"
-                        ToSQL = True
-                        TableName = "TR_IO_AirFlow"
-                        OutFileName = FilePrefix & "AirFlowTemp.csv"
-                        header = "modelrun_id, year, flow_id, trips, air_flow_trips_latent, air_flow_cap_constant0, air_flow_cap_constant1, flow_km"
-                    Case "ExtVar"
-                        ToSQL = True
-                        TableName = "TR_IO_AirFlowExternalVariables"
-                        OutFileName = EVFilePrefix & "AirFlowExtVar.csv"
-                        header = "modelrun_id, year, flow_id, ozone_pop, dzone_pop, ozone_gva, cost"
                 End Select
             Case "Logfile"
                 OutFileName = FilePrefix & "TransportCDAMLog.txt"
@@ -1942,5 +2025,16 @@ Module DBaseInterface
 
         End If
     End Function
+
+    Public Sub CloseLog()
+        logarray(logNum, 0) = "Model run finished at " & System.DateTime.Now
+        logNum += 1
+        logarray(logNum, 0) = "Code written by Dr Simon Blainey, Transportation Research Group, University of Southampton"
+        logNum += 1
+        logarray(logNum, 0) = "All results are indicative estimates, and the authors accept no liability for any actions arising from the use of these results"
+        logNum += 1
+
+        Call WriteData("Logfile", "", logarray)
+    End Sub
 
 End Module

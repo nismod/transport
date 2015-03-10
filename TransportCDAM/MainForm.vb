@@ -1,4 +1,5 @@
 ﻿Public Class MainForm
+    Dim FullCDAM As New FullCDAM
 
     Private Sub Button1_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles Button1.Click
         DBaseMode = Me.cbxDBaseMode.Checked
@@ -14,12 +15,15 @@
             FilePrefix = System.DateTime.Now.Millisecond
         End If
 
+        'get model run parameters from dbase
+        If DBaseMode = True Then FullCDAM.GetParameters()
+
         'Just use dummy values for ModelRunID and Year for now
         'use the input start year and the number of year required to be run to loop the model in annual time step
         theYear = StartYear
         Do Until theYear = StartYear + Duration + 1
 
-            Call runCDAM(1, theYear)
+            Call FullCDAM.runCDAM(2010, theYear)
 
             theYear += 1
         Loop
@@ -236,7 +240,7 @@
         theYear = StartYear
         Do Until theYear = StartYear + Duration + 1
 
-            Call runCDAM(1, theYear)
+            Call FullCDAM.runCDAM(2010, theYear)
 
             theYear += 1
         Loop
@@ -260,7 +264,7 @@
         theYear = StartYear
         Do Until theYear = StartYear + Duration + 1
 
-            Call runCDAM(1, theYear)
+            Call FullCDAM.runCDAM(2010, theYear)
 
             theYear += 1
         Loop
@@ -404,7 +408,7 @@
         theYear = StartYear
         Do Until theYear = StartYear + Duration + 1
 
-            Call runCDAM(1, theYear)
+            Call FullCDAM.runCDAM(2010, theYear)
 
             theYear += 1
         Loop
@@ -427,7 +431,7 @@
         theYear = StartYear
         Do Until theYear = StartYear + Duration + 1
 
-            Call runCDAM(1, theYear)
+            Call FullCDAM.runCDAM(2010, theYear)
 
             theYear += 1
         Loop

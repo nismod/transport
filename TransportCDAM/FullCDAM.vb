@@ -1,77 +1,5 @@
-﻿Module FullCDAM
+﻿Public Class FullCDAM
     'this version incorporates EV input from the database.
-
-    Public RunRoadLink As Boolean
-    Public RunRoadZone As Boolean
-    Public RunRailLink As Boolean
-    Public RunRailZone As Boolean
-    Public RunAir As Boolean
-    Public RunSea As Boolean
-    Public DirPath As String
-    Public LogFile As IO.FileStream
-    Public lf As IO.StreamWriter
-    Public LogLine As String
-    Public FilePrefix As String
-    Public CreateExtVars As Boolean
-    Public UpdateExtVars As Boolean
-    Public NewRdLEV As Boolean
-    Public NewRdZEV As Boolean
-    Public NewRlLEV As Boolean
-    Public NewRlZEV As Boolean
-    Public NewAirEV As Boolean
-    Public NewSeaEV As Boolean
-    Public EVFilePrefix As String
-    Public RunModel As Boolean
-    Public NewRdLCap, NewRdZCap, NewRlLCap, NewRlZCap, NewAirCap, NewSeaCap As Boolean
-    Public CapFilePrefix As String
-    Public EVFileSuffix As String
-    Public RdZEVSource, RlLEVSource, RlZEVSource, AirEVSource, SeaEVSource As String
-    Public RdLPopSource, RdZPopSource, RlLPopSource, RlZPopSource, AirPopSource, SeaPopSource, RdLEcoSource, RdZEcoSource, RlLEcoSource, RlZEcoSource, AirEcoSource, SeaEcoSource, RdLEneSource, RdZEneSource, RlLEneSource, RlZEneSource, AirEneSource, SeaEneSource, RlLOthSource, RlZOthSource As String
-    Public DBasePop, DBaseEco, DBaseEne, DBasePopG, DBaseCheck As Boolean
-    Public DBasePopFile, DBaseEcoFile, DBaseEneFile, DBasePopGFile As String
-    Public ZonePopFile, ZoneEcoFile, ZoneEneFile As IO.FileStream
-    Public zpr, zer, znr As IO.StreamReader
-    Public PopLookup, EcoLookup As New Dictionary(Of Long, Double)
-    Public PopYearLookup, EcoYearLookup As New Dictionary(Of String, Double)
-    Public ControlFile, SubStrategyFile As IO.FileStream
-    Public BuildInfra As Boolean
-    Public CUCritValue As Double
-    Public VariableEl As Boolean
-    Public ElCritValue As Double
-    Public CongestionCharge, CarbonCharge, WPPL, RailCCharge, AirCCharge, RlCaCharge, AirCaCharge, UpdateInput As Boolean
-    Public ConChargePer, RailChargePer, AirChargePer As Double
-    Public ConChargeYear, WPPLYear, RlCChargeYear, CarbChargeYear, RlCaChYear, AirChargeYear, AirCaChYear As Long
-    Public WPPLPer As Double
-    Public RlElect As Boolean
-    Public ElectKmPerYear As Double
-    Public SWDisagg As Boolean
-    Public SmarterChoices, SmartFrt, UrbanFrt As Boolean
-    Public SmartIntro, SmartYears, SmFrtIntro, SmFrtYears, UrbFrtIntro, UrbFrtYears As Long
-    Public SmartPer, SmFrtPer, UrbFrtPer As Double
-    Public NewSeaTonnes, NewRoadLanes, NewRailTracks, NewAirRun, NewAirTerm As Double
-    Public RailCUPeriod As String
-    Public RlPeakHeadway As Double
-    Public RdZSpdSource As String
-    Public RoadCapNum As Long
-    Public RLCapYear(1) As Long
-    Public TripRates As String
-    Public StartYear As Integer
-    Public Duration As Integer
-    Public logNum As Integer
-    Public logarray(47, 0) As String
-    Public ScenarioID As Integer
-    Public Scenario As Integer
-    Public StrategyID As Integer
-    Public StrategyCode As String
-    Public SubStrategy As Integer
-    Public DBaseMode As Boolean
-    Public theYear As Integer
-
-    Dim OZone, DZone As Long
-    Dim ModelType As String
-    Dim Subtype As String
-
-
 
     Public Function runCDAM(ByVal ModelRun_ID As Integer, ByVal Model_Year As Integer) As Boolean
         'Try
@@ -85,8 +13,8 @@
             Throw New System.Exception("Error getting Model Run details from database")
         End If
 
-        'get model run parameters from dbase
-        If DBaseMode = True Then GetParameters()
+        'Get Model run parameters
+        GetParameters()
 
         'Run Transport Model
         FullMain()
@@ -109,7 +37,7 @@
     End Function
 
 
-    Sub GetParameters()
+    Public Sub GetParameters()
         Dim ary As String(,) = Nothing
         Dim i As Integer
         Dim ParamName As String
@@ -117,6 +45,7 @@
         'get plan details from the database
         ReadData("Inputs", "Parameters", ary)
 
+        'TODO - Would be nice to replace this with some EXECUTE function that assigns these variables dynamically
         For i = 1 To UBound(ary, 2)
             ParamName = CStr(ary(3, i))
             Select Case ParamName
@@ -144,9 +73,106 @@
                     CongestionCharge = CBool(ary(5, i))
                 Case "ConChargeYear"
                     ConChargeYear = CInt(ary(5, i))
-                Case "ConChargePer"
-                    ConChargePer = CInt(ary(5, i))
+                Case "CarbChargeYear"
+                    CarbChargeYear = CInt(ary(5, i))
+                Case "WPPL"
+                    WPPL = CInt(ary(5, i))
+                Case "WPPLYear"
+                    WPPLYear = CInt(ary(5, i))
+                Case "WPPLPer"
+                    WPPLPer = CInt(ary(5, i))
+                Case "RailCCharge"
+                    RailCCharge = CInt(ary(5, i))
+                Case "RlCChargeYear"
+                    RlCChargeYear = CInt(ary(5, i))
+                Case "RailChargePer"
+                    RailChargePer = CInt(ary(5, i))
+                Case "RlCaCharge"
+                    RlCaCharge = CInt(ary(5, i))
+                Case "RlCaChYear"
+                    RlCaChYear = CInt(ary(5, i))
+                Case "AirCCharge"
+                    AirCCharge = CInt(ary(5, i))
+                Case "AirChargeYear"
+                    AirChargeYear = CInt(ary(5, i))
+                Case "AirChargePer"
+                    AirChargePer = CInt(ary(5, i))
+                Case "AirCaCharge"
+                    AirCaCharge = CInt(ary(5, i))
+                Case "AirCaChYear"
+                    AirCaChYear = CInt(ary(5, i))
+                Case "SmarterChoices"
+                    SmarterChoices = CInt(ary(5, i))
+                Case "SmartIntro"
+                    SmartIntro = CInt(ary(5, i))
+                Case "SmartPer"
+                    SmartPer = CInt(ary(5, i))
+                Case "SmartYears"
+                    SmartYears = CInt(ary(5, i))
+                Case "SmartFrt"
+                    SmartFrt = CInt(ary(5, i))
+                Case "SmFrtIntro"
+                    SmFrtIntro = CInt(ary(5, i))
+                Case "SmFrtPer"
+                    SmFrtPer = CInt(ary(5, i))
+                Case "SmFrtYears"
+                    SmFrtYears = CInt(ary(5, i))
+                Case "UrbanFrt"
+                    UrbanFrt = CInt(ary(5, i))
+                Case "UrbFrtIntro"
+                    UrbFrtIntro = CInt(ary(5, i))
+                Case "UrbFrtPer"
+                    UrbFrtPer = CInt(ary(5, i))
+                Case "UrbFrtYears"
+                    UrbFrtYears = CInt(ary(5, i))
+                Case "NewRdLEV"
+                    NewRdLEV = CInt(ary(5, i))
+                Case "NewRdZEV"
+                    NewRdZEV = CInt(ary(5, i))
+                Case "NewRlLEV"
+                    NewRlLEV = CInt(ary(5, i))
+                Case "NewRlZEV"
+                    NewRlZEV = CInt(ary(5, i))
+                Case "NewAirEV"
+                    NewAirEV = CInt(ary(5, i))
+                Case "NewSeaEV"
+                    NewSeaEV = CInt(ary(5, i))
+                Case "NewRoadLanes"
+                    NewRoadLanes = CInt(ary(5, i))
+                Case "NewRailTracks"
+                    NewRailTracks = CInt(ary(5, i))
+                Case "NewRlZCap"
+                    NewRlZCap = CInt(ary(5, i))
+                Case "NewAirRun"
+                    NewAirRun = CInt(ary(5, i))
+                Case "NewAirTerm"
+                    NewAirTerm = CInt(ary(5, i))
+                Case "NewSeaCap"
+                    NewSeaCap = CInt(ary(5, i))
+                Case "NewSeaTonnes"
+                    NewSeaTonnes = CInt(ary(5, i))
+                Case "RlElect"
+                    RlElect = CInt(ary(5, i))
+                Case "ElectKmPerYear"
+                    ElectKmPerYear = CInt(ary(5, i))
+                Case "NewRdLCap"
+                    NewRdLCap = CInt(ary(5, i))
+                Case "NewRdZCap"
+                    NewRdZCap = CInt(ary(5, i))
+                Case "NewRlLCap"
+                    NewRlLCap = CInt(ary(5, i))
+                Case "NewAirCap"
+                    NewAirCap = CInt(ary(5, i))
+                Case "RailCUPeriod"
+                    RailCUPeriod = CInt(ary(5, i))
+                Case "RlPeakHeadway"
+                    RlPeakHeadway = CInt(ary(5, i))
+                Case "RdZSpdSource"
+                    RdZSpdSource = CInt(ary(5, i))
+                Case "TripRates"
+                    TripRates = CInt(ary(5, i))
                 Case Else
+                    Stop
                     '....
             End Select
         Next
@@ -995,17 +1021,6 @@
         End If
     End Sub
 
-    Sub CloseLog()
-        logarray(logNum, 0) = "Model run finished at " & System.DateTime.Now
-        logNum += 1
-        logarray(logNum, 0) = "Code written by Dr Simon Blainey, Transportation Research Group, University of Southampton"
-        logNum += 1
-        logarray(logNum, 0) = "All results are indicative estimates, and the authors accept no liability for any actions arising from the use of these results"
-        logNum += 1
-
-        Call WriteData("Logfile", "", logarray)
-    End Sub
-
     Sub MissingValueError(ByVal ErrDict As String)
         logarray(logNum, 0) = "No " & ErrDict & " value found in lookup table for Zone " & OZone & " when updating input files.  Model run terminated."
         logNum += 1
@@ -1013,4 +1028,4 @@
         MsgBox("Model run failed.  Please consult the log file for details.")
         End
     End Sub
-End Module
+End Class

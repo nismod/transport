@@ -2498,7 +2498,7 @@ Partial Class MainForm
         '
         'MainFormBindingSource
         '
-        Me.MainFormBindingSource.DataSource = GetType(TransportCDAM2._0.MainForm)
+        Me.MainFormBindingSource.DataSource = GetType(TransportCDAM.MainForm)
         '
         'MainForm
         '

@@ -8,13 +8,14 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{5ED25002-4779-40BB-BCB1-C756D93230B5}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <StartupObject>TransportCDAM2._0.My.MyApplication</StartupObject>
-    <RootNamespace>TransportCDAM2._0</RootNamespace>
-    <AssemblyName>TransportCDAM2.0</AssemblyName>
+    <StartupObject>TransportCDAM.My.MyApplication</StartupObject>
+    <RootNamespace>TransportCDAM</RootNamespace>
+    <AssemblyName>TransportCDAM</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <MyType>WindowsForms</MyType>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
     <SccProjectName>%24/Transport/TransportCDAM</SccProjectName>
     <SccLocalPath>.</SccLocalPath>
     <SccAuxPath>https://itrc.visualstudio.com/defaultcollection</SccAuxPath>
@@ -27,8 +28,9 @@
     <DefineDebug>true</DefineDebug>
     <DefineTrace>true</DefineTrace>
     <OutputPath>bin\Debug\</OutputPath>
-    <DocumentationFile>TransportCDAM2.0.xml</DocumentationFile>
+    <DocumentationFile>TransportCDAM.xml</DocumentationFile>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -37,8 +39,9 @@
     <DefineTrace>true</DefineTrace>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DocumentationFile>TransportCDAM2.0.xml</DocumentationFile>
+    <DocumentationFile>TransportCDAM.xml</DocumentationFile>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
     <OptionExplicit>On</OptionExplicit>
@@ -126,6 +129,7 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="My Project\Application.myapp">
       <Generator>MyApplicationCodeGenerator</Generator>
       <LastGenOutput>Application.Designer.vb</LastGenOutput>
