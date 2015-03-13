@@ -20,8 +20,8 @@
 
         'Just use dummy values for ModelRunID and Year for now
         'use the input start year and the number of year required to be run to loop the model in annual time step
-        theYear = StartYear
-        Do Until theYear = StartYear + Duration + 1
+        theYear = g_initialYear
+        Do Until theYear = g_initialYear + Duration + 1
 
             Call FullCDAM.runCDAM(2010, theYear)
 
@@ -237,8 +237,8 @@
         End If
 
         'use the input start year and the number of year required to be run to loop the model in annual time step
-        theYear = StartYear
-        Do Until theYear = StartYear + Duration + 1
+        theYear = g_initialYear
+        Do Until theYear = g_initialYear + Duration + 1
 
             Call FullCDAM.runCDAM(2010, theYear)
 
@@ -261,8 +261,8 @@
         End If
 
         'use the input start year and the number of year required to be run to loop the model in annual time step
-        theYear = StartYear
-        Do Until theYear = StartYear + Duration + 1
+        theYear = g_initialYear
+        Do Until theYear = g_initialYear + Duration + 1
 
             Call FullCDAM.runCDAM(2010, theYear)
 
@@ -405,8 +405,8 @@
         End If
 
         'use the input start year and the number of year required to be run to loop the model in annual time step
-        theYear = StartYear
-        Do Until theYear = StartYear + Duration + 1
+        theYear = g_initialYear
+        Do Until theYear = g_initialYear + Duration + 1
 
             Call FullCDAM.runCDAM(2010, theYear)
 
@@ -428,8 +428,8 @@
             FilePrefix = System.DateTime.Now
         End If
         'use the input start year and the number of year required to be run to loop the model in annual time step
-        theYear = StartYear
-        Do Until theYear = StartYear + Duration + 1
+        theYear = g_initialYear
+        Do Until theYear = g_initialYear + Duration + 1
 
             Call FullCDAM.runCDAM(2010, theYear)
 
@@ -2569,7 +2569,7 @@
 
     Private Sub TextBox40_TextChanged(sender As Object, e As EventArgs) Handles TextBox40.TextChanged
         Duration = CInt(TextBox40.Text) - 1
-        If StartYear + Duration > 2100 Then
+        If g_initialYear + Duration > 2100 Then
             MsgBox("Maximum duration is 90 years")
         ElseIf Duration < 1 Then
             MsgBox("Duration must between 1 to 90 years !")
@@ -2577,7 +2577,7 @@
     End Sub
 
     Private Sub TextBox39_TextChanged(sender As Object, e As EventArgs) Handles TextBox39.TextChanged
-        StartYear = CInt(TextBox39.Text)
+        g_initialYear = CInt(TextBox39.Text)
     End Sub
 
     Private Sub CheckBox43_CheckedChanged(sender As Object, e As EventArgs) Handles CheckBox43.CheckedChanged

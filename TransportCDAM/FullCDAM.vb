@@ -36,7 +36,6 @@
 
     End Function
 
-
     Public Sub GetParameters()
         Dim ary As String(,) = Nothing
         Dim i As Integer
@@ -46,131 +45,135 @@
         ReadData("Inputs", "Parameters", ary)
 
         'TODO - Would be nice to replace this with some EXECUTE function that assigns these variables dynamically
-        For i = 1 To UBound(ary, 2)
-            ParamName = CStr(ary(3, i))
+        For i = 1 To UBound(ary, 1) - 1
+            ParamName = CStr(ary(i, 3))
             Select Case ParamName
                 Case "RunRoadLink"
-                    RunRoadLink = CBool(ary(5, i))
+                    RunRoadLink = CBool(ary(i, 5))
                 Case "RunRoadZone"
-                    RunRoadZone = CBool(ary(5, i))
+                    RunRoadZone = CBool(ary(i, 5))
                 Case "RunRailLink"
-                    RunRailLink = CBool(ary(5, i))
+                    RunRailLink = CBool(ary(i, 5))
                 Case "RunRailZone"
-                    RunRailZone = CBool(ary(5, i))
+                    RunRailZone = CBool(ary(i, 5))
                 Case "RunAir"
-                    RunAir = CBool(ary(5, i))
+                    RunAir = CBool(ary(i, 5))
                 Case "RunSea"
-                    RunSea = CBool(ary(5, i))
+                    RunSea = CBool(ary(i, 5))
                 Case "BuildInfra"
-                    BuildInfra = CBool(ary(5, i))
+                    BuildInfra = CBool(ary(i, 5))
                 Case "CUCritValue"
-                    CUCritValue = CDbl(ary(5, i))
+                    CUCritValue = CDbl(ary(i, 5))
                 Case "VariableEl"
-                    VariableEl = CBool(ary(5, i))
+                    VariableEl = CBool(ary(i, 5))
                 Case "ElCritValue"
-                    ElCritValue = CDbl(ary(5, i))
+                    ElCritValue = CDbl(ary(i, 5))
                 Case "CongestionCharge"
-                    CongestionCharge = CBool(ary(5, i))
+                    CongestionCharge = CBool(ary(i, 5))
                 Case "ConChargeYear"
-                    ConChargeYear = CInt(ary(5, i))
+                    ConChargeYear = CInt(ary(i, 5))
+                Case "ConChargePer"
+                    ConChargePer = CInt(ary(i, 5))
+                Case "CarbonCharge"
+                    CarbonCharge = CBool(ary(i, 5))
                 Case "CarbChargeYear"
-                    CarbChargeYear = CInt(ary(5, i))
+                    CarbChargeYear = CInt(ary(i, 5))
                 Case "WPPL"
-                    WPPL = CInt(ary(5, i))
+                    WPPL = CBool(ary(i, 5))
                 Case "WPPLYear"
-                    WPPLYear = CInt(ary(5, i))
+                    WPPLYear = CInt(ary(i, 5))
                 Case "WPPLPer"
-                    WPPLPer = CInt(ary(5, i))
+                    WPPLPer = CInt(ary(i, 5))
                 Case "RailCCharge"
-                    RailCCharge = CInt(ary(5, i))
+                    RailCCharge = CBool(ary(i, 5))
                 Case "RlCChargeYear"
-                    RlCChargeYear = CInt(ary(5, i))
+                    RlCChargeYear = CInt(ary(i, 5))
                 Case "RailChargePer"
-                    RailChargePer = CInt(ary(5, i))
+                    RailChargePer = CInt(ary(i, 5))
                 Case "RlCaCharge"
-                    RlCaCharge = CInt(ary(5, i))
+                    RlCaCharge = CBool(ary(i, 5))
                 Case "RlCaChYear"
-                    RlCaChYear = CInt(ary(5, i))
+                    RlCaChYear = CInt(ary(i, 5))
                 Case "AirCCharge"
-                    AirCCharge = CInt(ary(5, i))
+                    AirCCharge = CBool(ary(i, 5))
                 Case "AirChargeYear"
-                    AirChargeYear = CInt(ary(5, i))
+                    AirChargeYear = CInt(ary(i, 5))
                 Case "AirChargePer"
-                    AirChargePer = CInt(ary(5, i))
+                    AirChargePer = CInt(ary(i, 5))
                 Case "AirCaCharge"
-                    AirCaCharge = CInt(ary(5, i))
+                    AirCaCharge = CBool(ary(i, 5))
                 Case "AirCaChYear"
-                    AirCaChYear = CInt(ary(5, i))
+                    AirCaChYear = CInt(ary(i, 5))
                 Case "SmarterChoices"
-                    SmarterChoices = CInt(ary(5, i))
+                    SmarterChoices = CBool(ary(i, 5))
                 Case "SmartIntro"
-                    SmartIntro = CInt(ary(5, i))
+                    SmartIntro = CInt(ary(i, 5))
                 Case "SmartPer"
-                    SmartPer = CInt(ary(5, i))
+                    SmartPer = CInt(ary(i, 5))
                 Case "SmartYears"
-                    SmartYears = CInt(ary(5, i))
+                    SmartYears = CInt(ary(i, 5))
                 Case "SmartFrt"
-                    SmartFrt = CInt(ary(5, i))
+                    SmartFrt = CBool(ary(i, 5))
                 Case "SmFrtIntro"
-                    SmFrtIntro = CInt(ary(5, i))
+                    SmFrtIntro = CInt(ary(i, 5))
                 Case "SmFrtPer"
-                    SmFrtPer = CInt(ary(5, i))
+                    SmFrtPer = CInt(ary(i, 5))
                 Case "SmFrtYears"
-                    SmFrtYears = CInt(ary(5, i))
+                    SmFrtYears = CInt(ary(i, 5))
                 Case "UrbanFrt"
-                    UrbanFrt = CInt(ary(5, i))
+                    UrbanFrt = CBool(ary(i, 5))
                 Case "UrbFrtIntro"
-                    UrbFrtIntro = CInt(ary(5, i))
+                    UrbFrtIntro = CInt(ary(i, 5))
                 Case "UrbFrtPer"
-                    UrbFrtPer = CInt(ary(5, i))
+                    UrbFrtPer = CInt(ary(i, 5))
                 Case "UrbFrtYears"
-                    UrbFrtYears = CInt(ary(5, i))
+                    UrbFrtYears = CInt(ary(i, 5))
                 Case "NewRdLEV"
-                    NewRdLEV = CInt(ary(5, i))
+                    NewRdLEV = CBool(ary(i, 5))
                 Case "NewRdZEV"
-                    NewRdZEV = CInt(ary(5, i))
+                    NewRdZEV = CBool(ary(i, 5))
                 Case "NewRlLEV"
-                    NewRlLEV = CInt(ary(5, i))
+                    NewRlLEV = CBool(ary(i, 5))
                 Case "NewRlZEV"
-                    NewRlZEV = CInt(ary(5, i))
+                    NewRlZEV = CBool(ary(i, 5))
                 Case "NewAirEV"
-                    NewAirEV = CInt(ary(5, i))
+                    NewAirEV = CBool(ary(i, 5))
                 Case "NewSeaEV"
-                    NewSeaEV = CInt(ary(5, i))
+                    NewSeaEV = CBool(ary(i, 5))
                 Case "NewRoadLanes"
-                    NewRoadLanes = CInt(ary(5, i))
+                    NewRoadLanes = CInt(ary(i, 5))
                 Case "NewRailTracks"
-                    NewRailTracks = CInt(ary(5, i))
+                    NewRailTracks = CInt(ary(i, 5))
                 Case "NewRlZCap"
-                    NewRlZCap = CInt(ary(5, i))
+                    NewRlZCap = CBool(ary(i, 5))
                 Case "NewAirRun"
-                    NewAirRun = CInt(ary(5, i))
+                    NewAirRun = CInt(ary(i, 5))
                 Case "NewAirTerm"
-                    NewAirTerm = CInt(ary(5, i))
+                    NewAirTerm = CInt(ary(i, 5))
                 Case "NewSeaCap"
-                    NewSeaCap = CInt(ary(5, i))
+                    NewSeaCap = CBool(ary(i, 5))
                 Case "NewSeaTonnes"
-                    NewSeaTonnes = CInt(ary(5, i))
+                    NewSeaTonnes = CInt(ary(i, 5))
                 Case "RlElect"
-                    RlElect = CInt(ary(5, i))
+                    RlElect = CBool(ary(i, 5))
                 Case "ElectKmPerYear"
-                    ElectKmPerYear = CInt(ary(5, i))
+                    ElectKmPerYear = CInt(ary(i, 5))
                 Case "NewRdLCap"
-                    NewRdLCap = CInt(ary(5, i))
+                    NewRdLCap = CBool(ary(i, 5))
                 Case "NewRdZCap"
-                    NewRdZCap = CInt(ary(5, i))
+                    NewRdZCap = CBool(ary(i, 5))
                 Case "NewRlLCap"
-                    NewRlLCap = CInt(ary(5, i))
+                    NewRlLCap = CBool(ary(i, 5))
                 Case "NewAirCap"
-                    NewAirCap = CInt(ary(5, i))
+                    NewAirCap = CBool(ary(i, 5))
                 Case "RailCUPeriod"
-                    RailCUPeriod = CInt(ary(5, i))
+                    RailCUPeriod = CStr(ary(i, 5))
                 Case "RlPeakHeadway"
-                    RlPeakHeadway = CInt(ary(5, i))
+                    RlPeakHeadway = CInt(ary(i, 5))
                 Case "RdZSpdSource"
-                    RdZSpdSource = CInt(ary(5, i))
+                    RdZSpdSource = CStr(ary(i, 5))
                 Case "TripRates"
-                    TripRates = CInt(ary(5, i))
+                    TripRates = CBool(ary(i, 5))
                 Case Else
                     Stop
                     '....
@@ -180,6 +183,7 @@
     End Sub
 
     Sub FullMain()
+        Dim y As Integer
 
         'get directory path for files - **now unnecessary as set by user
         'DirPath = "\\soton.ac.uk\ude\PersonalFiles\Users\spb1g09\mydocuments\Southampton Work\ITRC\Transport CDAM\Model Inputs\"
@@ -187,8 +191,20 @@
         'creates the log file for the model
         Call CreateLog()
 
-        'call database input sub - this will check whether we actually need to get such input
-        'Call DBaseInputMain()
+        'get strategy variables for this year from the database
+        Call ReadData("SubStrategy", "", stratarray, g_modelRunYear, g_modelRunID)
+
+        'Get energy data
+        Call ReadData("Energy", "", enearray)
+        If RlZEneSource = "Database" Then
+            y = g_modelRunYear - g_initialYear + 1 'TODO - this needs fixing once we go to database for energy 
+            InDieselOldAll = enearray(y, 2)
+            InElectricOldAll = enearray(y, 3)
+            InDieselNewAll = enearray(y + 1, 2)
+            InElectricNewAll = enearray(y + 1, 3)
+            InDieselOldAll = enearray(y, 2)
+            InElectricOldAll = enearray(y, 3)
+        End If
 
         'check if creating external variable files
         If CreateExtVars = True Then

@@ -26,21 +26,19 @@
     Dim TripChange As Double
     Dim ErrorString As String
     Dim stratstring As String
-    Dim stratarray(90, 95) As String
-    Dim FuelEff(1, 90), CO2Vol(1, 90), CO2Price(1, 90), GJTProp(1, 90) As Double
+    Dim FuelEff(1), CO2Vol(1), CO2Price(1), GJTProp(1) As Double
     Dim ElectricZone, ElectricYear, ElectricStations As Long
     Dim FuelEffOld(2) As Double
     Dim enestring As String
     Dim Elect As Boolean
-    Dim CapArray(144, 5) As String
+    Dim CapArray(,) As String
     Dim CapNum As Integer
-    Dim elearray(335, 4) As String
+    Dim elearray(,) As String
     Dim EleNum As Integer
-    Dim enearray(91, 6) As String
-    Dim ScalingData(1, 8) As String
-    Dim InputArray(144, 14) As String
-    Dim RlZEVInputArray(144, 16) As String
-    Dim OutputArray(145, 15) As String
+    Dim ScalingData(,) As String
+    Dim RlZ_InArray(,) As String
+    Dim RlZEVRlZ_InArray(,) As String
+    Dim RlZ_OutArray(145, 15) As String
 
 
 
@@ -94,11 +92,11 @@
 
 
         'read initial input of year 2010
-        Call ReadData("RailZone", "Input", InputArray, g_modelRunYear)
+        Call ReadData("RailZone", "Input", RlZ_InArray, g_modelRunYear)
 
         If g_modelRunYear <> g_initialYear Then
             'read previous year's data
-            Call ReadData("RailZone", "ExtVar", RlZEVInputArray, g_modelRunYear)
+            Call ReadData("RailZone", "ExtVar", RlZEVRlZ_InArray, g_modelRunYear)
         End If
 
         'if capacity is changing then get capacity change file
@@ -115,38 +113,29 @@
         'read file according to the setting
         If RlZOthSource = "File" Then
             Call ReadData("RailZone", "EVScale", ScalingData, g_modelRunYear)
-        ElseIf RlZEneSource = "Database" Then
-            Call ReadData("Energy", "", enearray)
         End If
-
-        '1.8
-        'get fuel efficiency values from the strategy file using database interface
-        Call ReadData("SubStrategy", "", stratarray)
 
         'v1.4 set fuel efficiency old to 1
         FuelEffOld(0) = 1
         FuelEffOld(1) = 1
         'v1.4 fuel efficiency change calculation corrected
-        For y = 1 To 90
-            'read line from strategy array
-            FuelEff(0, y) = stratarray(y, 66) / FuelEffOld(0)
-            FuelEff(1, y) = stratarray(y, 67) / FuelEffOld(1)
-            CO2Vol(0, y) = stratarray(y, 74)
-            CO2Vol(1, y) = stratarray(y, 73)
-            CO2Price(0, y) = stratarray(y, 70)
-            CO2Price(1, y) = stratarray(y, 71)
-            'also now get GJT growth value
-            GJTProp(1, y) = stratarray(y, 82)
-            'v1.4 update FuelEffOld values
-            FuelEffOld(0) = stratarray(y, 66)
-            FuelEffOld(1) = stratarray(y, 67)
-        Next
+        'read line from strategy array
+        FuelEff(0) = stratarray(1, 68) / FuelEffOld(0)
+        FuelEff(1) = stratarray(1, 69) / FuelEffOld(1)
+        CO2Vol(0) = stratarray(1, 76)
+        CO2Vol(1) = stratarray(1, 75)
+        CO2Price(0) = stratarray(1, 72)
+        CO2Price(1) = stratarray(1, 73)
+        'also now get GJT growth value
+        GJTProp(1) = stratarray(1, 84)
+        'v1.4 update FuelEffOld values
+        FuelEffOld(0) = stratarray(1, 68)
+        FuelEffOld(1) = stratarray(1, 69)
 
     End Sub
 
     Sub CalcRlZExtVars()
         Dim ZoneID(238, 0) As Integer
-        Dim Year As Integer
         Dim PopOld(238, 0) As Double
         Dim GVAOld(238, 0) As Double
         Dim CostOld(238, 0) As Double
@@ -165,23 +154,15 @@
         Dim DieselOld(238, 0), DieselNew, ElectricOld(238, 0), ElectricNew As Double
         Dim DMaintOld(238, 0), EMaintOld(238, 0) As Double
         Dim Country(238, 0) As String
-        Dim keylookup As String
-        Dim newval As Double
-        Dim InDieselOld(238, 0), InElectricOld(238, 0), InDieselNew, InElectricNew
+        Dim y As Integer
 
         Dim diecarch, elecarch As Double
         Dim ElStat(238, 0) As Long
         Dim InputCount As Long
-        Dim InDieselOldAll, InElectricOldAll, InDieselNewAll, InElectricNewAll
-
+        
 
         'initialize values
-        If RlZOthSource = "File" Then
-        ElseIf RlZEneSource = "Database" Then
-            InDieselOldAll = enearray(g_modelRunYear - 2010, 2)
-            InElectricOldAll = enearray(g_modelRunYear - 2010, 3)
-            InDieselNewAll = enearray(g_modelRunYear - 2010 + 1, 2)
-            InElectricNewAll = enearray(g_modelRunYear - 2010 + 1, 3)
+        If RlZOthSource = "File" Then 'TODO - what is here?
         End If
 
 
@@ -193,17 +174,17 @@
             'read initial year input
             If g_modelRunYear = g_initialYear Then
 
-                ZoneID(InputCount, 0) = InputArray(InputCount, 4)
+                ZoneID(InputCount, 0) = RlZ_InArray(InputCount, 1)
                 'read pop and gva by using database function
                 PopOld(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear - 1, ZoneID(InputCount, 0), "Zone", "'rail'")
                 GVAOld(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear - 1, ZoneID(InputCount, 0), "Zone", "'rail'")
-                CostOld(InputCount, 0) = InputArray(InputCount, 8)
-                StationsOld(InputCount, 0) = InputArray(InputCount, 9)
-                FuelOld(InputCount, 0) = InputArray(InputCount, 10)
-                GJTOld(InputCount, 0) = InputArray(InputCount, 11)
-                Country(InputCount, 0) = InputArray(InputCount, 12)
-                ElPOld(InputCount, 0) = InputArray(InputCount, 13)
-                ElStat(InputCount, 0) = InputArray(InputCount, 14)
+                CostOld(InputCount, 0) = RlZ_InArray(InputCount, 4)
+                StationsOld(InputCount, 0) = RlZ_InArray(InputCount, 5)
+                FuelOld(InputCount, 0) = RlZ_InArray(InputCount, 6)
+                GJTOld(InputCount, 0) = RlZ_InArray(InputCount, 7)
+                Country(InputCount, 0) = RlZ_InArray(InputCount, 8)
+                ElPOld(InputCount, 0) = RlZ_InArray(InputCount, 9)
+                ElStat(InputCount, 0) = RlZ_InArray(InputCount, 10)
                 NewTrips = 0
 
                 'need to set StationsNew to equal StationsOld to start with, as it gets reset every year but doesn't change every year
@@ -236,25 +217,25 @@
             Else
 
                 'update input parameters
-                ZoneID(InputCount, 0) = RlZEVInputArray(InputCount, 2)
+                ZoneID(InputCount, 0) = RlZEVRlZ_InArray(InputCount, 2)
                 PopOld(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear - 1, ZoneID(InputCount, 0), "Zone", "'rail'")
                 GVAOld(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear - 1, ZoneID(InputCount, 0), "Zone", "'rail'")
-                CostOld(InputCount, 0) = RlZEVInputArray(InputCount, 6)
-                FuelOld(InputCount, 0) = RlZEVInputArray(InputCount, 8)
-                StationsOld(InputCount, 0) = RlZEVInputArray(InputCount, 7)
+                CostOld(InputCount, 0) = RlZEVRlZ_InArray(InputCount, 6)
+                FuelOld(InputCount, 0) = RlZEVRlZ_InArray(InputCount, 8)
+                StationsOld(InputCount, 0) = RlZEVRlZ_InArray(InputCount, 7)
                 If RlZOthSource = "File" Then
-                    GJTOld(InputCount, 0) = RlZEVInputArray(InputCount, 10)
+                    GJTOld(InputCount, 0) = RlZEVRlZ_InArray(InputCount, 10)
                 End If
-                Country(InputCount, 0) = InputArray(InputCount, 12)
+                Country(InputCount, 0) = RlZ_InArray(InputCount, 12)
 
-                ElPOld(InputCount, 0) = RlZEVInputArray(InputCount, 11)
-                DieselOld(InputCount, 0) = RlZEVInputArray(InputCount, 12)
-                ElectricOld(InputCount, 0) = RlZEVInputArray(InputCount, 13)
+                ElPOld(InputCount, 0) = RlZEVRlZ_InArray(InputCount, 11)
+                DieselOld(InputCount, 0) = RlZEVRlZ_InArray(InputCount, 12)
+                ElectricOld(InputCount, 0) = RlZEVRlZ_InArray(InputCount, 13)
                 If RlZEneSource = "Database" Then
-                    InDieselOld(InputCount, 0) = RlZEVInputArray(InputCount, 14)
-                    InElectricOld(InputCount, 0) = RlZEVInputArray(InputCount, 15)
+                    InDieselOld(InputCount, 0) = RlZEVRlZ_InArray(InputCount, 14)
+                    InElectricOld(InputCount, 0) = RlZEVRlZ_InArray(InputCount, 15)
                 End If
-                ElStat(InputCount, 0) = RlZEVInputArray(InputCount, 16)
+                ElStat(InputCount, 0) = RlZEVRlZ_InArray(InputCount, 16)
 
                 NewTrips = 0
 
@@ -359,23 +340,20 @@ NextYear:
             If RlZEneSource = "File" Then
                 'fuel forms 8.77% of costs, and in base year electric costs are set as being 0.553 times diesel costs - base prices set above
                 'scale both base prices
-                DieselNew = DieselOld(InputCount, 0) * (1 + ScalingData(1, 5)) * FuelEff(1, Year)
-                ElectricNew = ElectricOld(InputCount, 0) * (1 + ScalingData(1, 6)) * FuelEff(0, Year)
+                DieselNew = DieselOld(InputCount, 0) * (1 + ScalingData(1, 5)) * FuelEff(1)
+                ElectricNew = ElectricOld(InputCount, 0) * (1 + ScalingData(1, 6)) * FuelEff(0)
                 ''maintenance and leasing forms 26.62% of total costs, and in base year electric costs are set as being 0.758 times diesel costs - base prices set above
                 ''don't need to scale as assuming these costs remain constant per train over time
                 '*****this assumes car fuel costs are only based on oil prices - when really we need to integrate this with the road model to look at road fuel/split
                 FuelGrowth = 1 + ScalingData(1, 5)
             ElseIf RlZEneSource = "Database" Then
-                InDieselNew = InDieselNewAll
-                InElectricNew = InElectricNewAll
-
-                DieselNew = DieselOld(InputCount, 0) * (InDieselNew / InDieselOld(InputCount, 0)) * FuelEff(1, Year)
-                ElectricNew = ElectricOld(InputCount, 0) * (InElectricNew / InElectricOld(InputCount, 0)) * FuelEff(0, Year)
+                DieselNew = DieselOld(InputCount, 0) * (InDieselNew / InDieselOld(InputCount, 0)) * FuelEff(1)
+                ElectricNew = ElectricOld(InputCount, 0) * (InElectricNew / InElectricOld(InputCount, 0)) * FuelEff(0)
                 '*****this assumes car fuel costs are only based on oil prices - when really we need to integrate this with the road model to look at road fuel/split
                 FuelGrowth = InDieselNew / InDieselOld(InputCount, 0)
             ElseIf RlZEneSource = "Constant" Then
-                DieselNew = DieselOld(InputCount, 0) * CostGrowth * FuelEff(1, Year)
-                ElectricNew = ElectricOld(InputCount, 0) * CostGrowth * FuelEff(0, Year)
+                DieselNew = DieselOld(InputCount, 0) * CostGrowth * FuelEff(1)
+                ElectricNew = ElectricOld(InputCount, 0) * CostGrowth * FuelEff(0)
             End If
 
             'v1.4 if carbon charge is applied then calculate it
@@ -384,8 +362,8 @@ NextYear:
                 If g_modelRunYear >= CarbChargeYear Then
                     'calculation is: (base fuel units per km * change in fuel efficiency from base year * CO2 per unit of fuel * CO2 price per kg in pence)
                     'as a base assuming that diesel trains use 1.873 litres/train km and electric trains use 12.611 kWh/train km
-                    diecarch = 1.873 * FuelEff(1, Year) * CO2Vol(1, Year) * (CO2Price(1, Year) / 10)
-                    elecarch = 12.611 * FuelEff(0, Year) * CO2Vol(0, Year) * (CO2Price(0, Year) / 10)
+                    diecarch = 1.873 * FuelEff(1) * CO2Vol(1) * (CO2Price(1) / 10)
+                    elecarch = 12.611 * FuelEff(0) * CO2Vol(0) * (CO2Price(0) / 10)
                 Else
                     diecarch = 0
                     elecarch = 0
@@ -403,7 +381,7 @@ NextYear:
             If RlZOthSource = "File" Then
                 GJTNew = GJTOld(InputCount, 0) * GJTGrowth
             Else
-                GJTNew = GJTOld(InputCount, 0) * GJTProp(1, Year)
+                GJTNew = GJTOld(InputCount, 0) * GJTProp(1)
             End If
 
             'if including capacity changes then check if there are any capacity changes on this flow
@@ -420,22 +398,22 @@ NextYear:
             End If
 
             'write to output file
-            OutputArray(InputCount, 0) = g_modelRunID
-            OutputArray(InputCount, 1) = ZoneID(InputCount, 0)
-            OutputArray(InputCount, 2) = g_modelRunYear
-            OutputArray(InputCount, 3) = PopNew
-            OutputArray(InputCount, 4) = GVANew
-            OutputArray(InputCount, 5) = CostNew
-            OutputArray(InputCount, 6) = StationsNew(InputCount, 0)
-            OutputArray(InputCount, 7) = FuelNew
-            OutputArray(InputCount, 8) = NewTrips
-            OutputArray(InputCount, 9) = GJTNew
-            OutputArray(InputCount, 10) = ElPNew
-            OutputArray(InputCount, 11) = DieselNew
-            OutputArray(InputCount, 12) = ElectricNew
-            OutputArray(InputCount, 13) = InDieselNew
-            OutputArray(InputCount, 14) = InElectricNew
-            OutputArray(InputCount, 15) = ElStat(InputCount, 0)
+            RlZ_OutArray(InputCount, 0) = g_modelRunID
+            RlZ_OutArray(InputCount, 1) = ZoneID(InputCount, 0)
+            RlZ_OutArray(InputCount, 2) = g_modelRunYear
+            RlZ_OutArray(InputCount, 3) = PopNew
+            RlZ_OutArray(InputCount, 4) = GVANew
+            RlZ_OutArray(InputCount, 5) = CostNew
+            RlZ_OutArray(InputCount, 6) = StationsNew(InputCount, 0)
+            RlZ_OutArray(InputCount, 7) = FuelNew
+            RlZ_OutArray(InputCount, 8) = NewTrips
+            RlZ_OutArray(InputCount, 9) = GJTNew
+            RlZ_OutArray(InputCount, 10) = ElPNew
+            RlZ_OutArray(InputCount, 11) = DieselNew
+            RlZ_OutArray(InputCount, 12) = ElectricNew
+            RlZ_OutArray(InputCount, 13) = InDieselNew
+            RlZ_OutArray(InputCount, 14) = InElectricNew
+            RlZ_OutArray(InputCount, 15) = ElStat(InputCount, 0)
 
 
             InputCount += 1
@@ -445,9 +423,9 @@ NextYear:
         'create file if year 1, otherwise update
         'it is now writting to database, therefore no difference if it is year 1 or not
         If g_modelRunYear = g_initialYear Then
-            Call WriteData("RailZone", "ExtVar", OutputArray, , True)
+            Call WriteData("RailZone", "ExtVar", RlZ_OutArray, , True)
         Else
-            Call WriteData("RailZone", "ExtVar", OutputArray, , False)
+            Call WriteData("RailZone", "ExtVar", RlZ_OutArray, , False)
         End If
 
 
@@ -471,8 +449,9 @@ NextYear:
 
     Sub ElectricRead()
         'read electrification array here
-
-        If elearray(EleNum, 2) = "" Then
+        If elearray Is Nothing Then 'TODO - had to add this as elearray IS NOTHING - is this wrong?
+            Elect = False
+        ElseIf elearray(EleNum, 2) = "" Then
             ElectricZone = 0
             Elect = False
         Else

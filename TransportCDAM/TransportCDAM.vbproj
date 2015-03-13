@@ -112,7 +112,7 @@
     <Compile Include="RlLinkExtVarCalc.vb" />
     <Compile Include="RlZoneExtVarCalc.vb" />
     <Compile Include="RoadModel.vb" />
-    <Compile Include="RZExtVarCalc.vb" />
+    <Compile Include="RdZoneExtVarCalc.vb" />
     <Compile Include="SeaExtVarCalc.vb" />
     <Compile Include="SeaportModel.vb" />
     <Compile Include="UpdateEVs.vb" />

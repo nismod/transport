@@ -52,9 +52,9 @@ Module RailModel
     Dim BusyTrains(238, 0) As Long
     Dim BusyPer(238, 0) As Double
     Dim ModelPeakHeadway(238, 0) As Double
-    Dim FuelUsed(90, 1) As Double
-    Dim RlFuelEff(90, 1) As Double
-    Dim FuelString(91, 3) As String
+    Dim FuelUsed(1) As Double
+    Dim RlFuelEff(1) As Double
+    Dim FuelString(1, 3) As String
     Dim RlTripRates As Double
     Dim InputCount As Long
     Dim OutputRow As String
@@ -64,7 +64,6 @@ Module RailModel
     Dim InputArray(238, 17) As String
     Dim OutputArray(239, 5) As String
     Dim TempArray(239, 13) As String
-    Dim stratarray(90, 95) As String
     Dim NewCapArray(238, 2) As String
     Dim NewCapNum As Integer
 
@@ -127,18 +126,18 @@ Module RailModel
         Loop
 
         'create file if it is the initial year, otherwise update to temp file table
-        If g_modelRunYear = StartYear Then
+        If g_modelRunYear = g_initialYear Then
             Call WriteData("RailLink", "Output", OutputArray, , True)
             Call WriteData("RailLink", "Temp", TempArray, , True)
             'if the model is building capacity then create new capacity file
             If BuildInfra = True Then
-                Call WriteData("RailLink", "NewCap_Add", NewCapArray, , True)
+                Call WriteData("RailLink", "NewCap_Added", NewCapArray, , True)
             End If
         Else
             Call WriteData("RailLink", "Output", OutputArray, , False)
             Call WriteData("RailLink", "Temp", TempArray, , False)
             If BuildInfra = True Then
-                Call WriteData("RailLink", "NewCap_Add", NewCapArray, , False)
+                Call WriteData("RailLink", "NewCap_Added", NewCapArray, , False)
             End If
         End If
 
@@ -146,12 +145,11 @@ Module RailModel
 
 
         'Write fuel consumption output file
-        For y = StartYear To StartYear + Duration
-            FuelString(y, 0) = g_modelRunID
-            FuelString(y, 1) = y
-            FuelString(y, 2) = FuelUsed(y, 0)
-            FuelString(y, 3) = FuelUsed(y, 1)
-        Next
+        FuelString(1, 0) = g_modelRunID
+        FuelString(1, 1) = g_modelRunYear
+        FuelString(1, 2) = FuelUsed(0)
+        FuelString(1, 3) = FuelUsed(1)
+
         Call WriteData("RailLink", "RlLinkFuelUsed", FuelString)
 
     End Sub
@@ -174,9 +172,8 @@ Module RailModel
 
         'get fuel efficiency data from strategy file
         'also get trip rate info
-        Call ReadData("SubStrategy", "", stratarray, g_modelRunYear)
-        RlFuelEff(1, 0) = stratarray(1, 67)
-        RlFuelEff(1, 1) = stratarray(1, 66)
+        RlFuelEff(0) = stratarray(1, 67)
+        RlFuelEff(1) = stratarray(1, 66)
         RlTripRates = stratarray(1, 93)
 
     End Sub
@@ -185,7 +182,7 @@ Module RailModel
         Dim Zone1ID As Integer
         Dim Zone2ID As Integer
 
-        If g_modelRunYear = StartYear Then
+        If g_modelRunYear = g_initialYear Then
             'assign values to variables in the order of the initial file
             FlowNum(InputCount, 0) = InputArray(InputCount, 4)
             Zone1ID = InputArray(InputCount, 5)
@@ -193,10 +190,10 @@ Module RailModel
             OldTracks(InputCount, 0) = InputArray(InputCount, 7)
             OldTrains(InputCount, 0) = InputArray(InputCount, 8)
             'read previous years' value as base value
-            PopZ1Base(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear, FlowNum(InputCount, 0), "OZ", "'rail'", Zone1ID)
-            PopZ2Base(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear, FlowNum(InputCount, 0), "DZ", "'rail'", Zone2ID)
-            GVAZ1Base(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear, FlowNum(InputCount, 0), "OZ", "'rail'", Zone1ID)
-            GVAZ2Base(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear, FlowNum(InputCount, 0), "DZ", "'rail'", Zone2ID)
+            PopZ1Base(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear - 1, Zone1ID, "OZ", "'rail'")
+            PopZ2Base(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear - 1, Zone2ID, "DZ", "'rail'")
+            GVAZ1Base(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear - 1, Zone1ID, "OZ", "'rail'")
+            GVAZ2Base(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear - 1, Zone2ID, "DZ", "'rail'")
             OldDelays(InputCount, 0) = InputArray(InputCount, 9)
             RlLinkCost(InputCount, 0) = InputArray(InputCount, 10)
             CarFuel(InputCount, 0) = InputArray(InputCount, 11)
@@ -223,10 +220,10 @@ Module RailModel
             Call get_zone_by_flowid(FlowNum(InputCount, 0), Zone1ID, Zone2ID, "rail")
 
             'read previous years' value as base value
-            PopZ1Base(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear, FlowNum(InputCount, 0), "OZ", "'rail'", Zone1ID)
-            PopZ2Base(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear, FlowNum(InputCount, 0), "DZ", "'rail'", Zone2ID)
-            GVAZ1Base(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear, FlowNum(InputCount, 0), "OZ", "'rail'", Zone1ID)
-            GVAZ2Base(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear, FlowNum(InputCount, 0), "DZ", "'rail'", Zone2ID)
+            PopZ1Base(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear - 1, Zone1ID, "OZ", "'rail'")
+            PopZ2Base(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear - 1, Zone2ID, "DZ", "'rail'")
+            GVAZ1Base(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear - 1, Zone1ID, "OZ", "'rail'")
+            GVAZ2Base(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear - 1, Zone2ID, "DZ", "'rail'")
             OldDelays(InputCount, 0) = InputArray(InputCount, 4)
             RlLinkCost(InputCount, 0) = InputArray(InputCount, 5)
             'TODO This get_single_data should be replaced with a ReadData command
@@ -485,8 +482,8 @@ Module RailModel
 
     Sub WriteRlLinkOutput()
         'update fuelused
-        FuelUsed(g_modelRunYear, 0) += ((1 - RlLinkExtVars(InputCount, 12)) * NewTrains * 17695 * RlFuelEff(1, 0))
-        FuelUsed(g_modelRunYear, 1) += (RlLinkExtVars(InputCount, 12) * NewTrains * 107421 * RlFuelEff(1, 1))
+        FuelUsed(0) += ((1 - RlLinkExtVars(InputCount, 12)) * NewTrains * 17695 * RlFuelEff(0))
+        FuelUsed(1) += (RlLinkExtVars(InputCount, 12) * NewTrains * 107421 * RlFuelEff(1))
 
         'write to outputarray
         If CalcCheck(InputCount, 0) = True Then

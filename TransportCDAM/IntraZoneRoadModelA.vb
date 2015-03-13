@@ -44,6 +44,7 @@
     Dim PopRat(5), GVARat(5), SpdRat, PetRat(5), VkmRat(5) As Double
     Dim NewLaneKm As Double
     Dim SuppressedTraffic(4, 5) As Double
+    Dim TheStArray(61) As String
 
     Public Sub RoadZoneMain()
 
@@ -677,7 +678,6 @@
         Dim RVFFuel(4, 5, 10) As Double
         Dim VCount As Integer
         Dim StratLine As String
-        Dim StratArray() As String
         Dim YearCount As Integer
 
         YearCount = g_modelRunYear - g_initialYear
@@ -720,7 +720,7 @@
 
         'read line from strategy file (to get fuel efficiency changes
         StratLine = stf.ReadLine
-        StratArray = Split(StratLine, ",")
+        TheStArray = Split(StratLine, ",")
 
         'estimate fuel consumption for each vehicle type
         'initial average speeds taken from tables in model description document - but this will need to change year on year to reflect changes in congestion
@@ -729,478 +729,478 @@
         'motorway
         FuelSpeed = 111.04 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(1, 1, 1) = RVFCatTraf(1, 1, 1) * FuelPerKm * StratArray(31)
+        RVFFuel(1, 1, 1) = RVFCatTraf(1, 1, 1) * FuelPerKm * TheStArray(31)
         'rural a (note that there are different speeds for dual and single carriagesways)
         If RVCatTraf(2, 1) > 0 Then
             FuelSpeed = (((109.44 * ZoneExtVar(7, YearCount)) + (75.639 * ZoneExtVar(8, YearCount))) / (ZoneExtVar(7, YearCount) + ZoneExtVar(8, YearCount))) * (ZoneSpdNew / BaseSpeed)
             Call VehicleFuelConsumption()
-            RVFFuel(2, 1, 1) = RVFCatTraf(2, 1, 1) * FuelPerKm * StratArray(31)
+            RVFFuel(2, 1, 1) = RVFCatTraf(2, 1, 1) * FuelPerKm * TheStArray(31)
         Else
             RVFFuel(2, 1, 1) = 0
         End If
         'rural minor
         FuelSpeed = 75.639 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(3, 1, 1) = RVFCatTraf(3, 1, 1) * FuelPerKm * StratArray(31)
+        RVFFuel(3, 1, 1) = RVFCatTraf(3, 1, 1) * FuelPerKm * TheStArray(31)
         'urban
         FuelSpeed = 52.143 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(4, 1, 1) = RVFCatTraf(4, 1, 1) * FuelPerKm * StratArray(31)
+        RVFFuel(4, 1, 1) = RVFCatTraf(4, 1, 1) * FuelPerKm * TheStArray(31)
         'Diesel cars
         VClass = "CarD"
         'motorway
         FuelSpeed = 111.04 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(1, 1, 2) = RVFCatTraf(1, 1, 2) * FuelPerKm * StratArray(32)
+        RVFFuel(1, 1, 2) = RVFCatTraf(1, 1, 2) * FuelPerKm * TheStArray(32)
         'rural a (note that there are different speeds for dual and single carriagesways)
         If RVCatTraf(2, 1) > 0 Then
             FuelSpeed = (((109.44 * ZoneExtVar(7, YearCount)) + (75.639 * ZoneExtVar(8, YearCount))) / (ZoneExtVar(7, YearCount) + ZoneExtVar(8, YearCount))) * (ZoneSpdNew / BaseSpeed)
             Call VehicleFuelConsumption()
-            RVFFuel(2, 1, 2) = RVFCatTraf(2, 1, 2) * FuelPerKm * StratArray(32)
+            RVFFuel(2, 1, 2) = RVFCatTraf(2, 1, 2) * FuelPerKm * TheStArray(32)
         Else
             RVFFuel(2, 1, 2) = 0
         End If
         'rural minor
         FuelSpeed = 75.639 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(3, 1, 2) = RVFCatTraf(3, 1, 2) * FuelPerKm * StratArray(32)
+        RVFFuel(3, 1, 2) = RVFCatTraf(3, 1, 2) * FuelPerKm * TheStArray(32)
         'urban
         FuelSpeed = 52.143 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(4, 1, 2) = RVFCatTraf(4, 1, 2) * FuelPerKm * StratArray(32)
+        RVFFuel(4, 1, 2) = RVFCatTraf(4, 1, 2) * FuelPerKm * TheStArray(32)
         'Petrol hybrid cars - these are being calculated based on a proportional adjustment of the petrol fuel consumption figures (ie dividing the Brand hybrid figure by the Brand petrol figure and then multiplying by the DfT petrol figure)
         VClass = "CarP"
         'motorway
         FuelSpeed = 111.04 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(1, 1, 3) = RVFCatTraf(1, 1, 3) * (FuelPerKm * (11.2 / 18.6)) * StratArray(43)
+        RVFFuel(1, 1, 3) = RVFCatTraf(1, 1, 3) * (FuelPerKm * (11.2 / 18.6)) * TheStArray(43)
         'rural a
         If RVCatTraf(2, 1) > 0 Then
             FuelSpeed = (((109.44 * ZoneExtVar(7, YearCount)) + (75.639 * ZoneExtVar(8, YearCount))) / (ZoneExtVar(7, YearCount) + ZoneExtVar(8, YearCount))) * (ZoneSpdNew / BaseSpeed)
             Call VehicleFuelConsumption()
-            RVFFuel(2, 1, 3) = RVFCatTraf(2, 1, 3) * (FuelPerKm * (11.2 / 18.6)) * StratArray(43)
+            RVFFuel(2, 1, 3) = RVFCatTraf(2, 1, 3) * (FuelPerKm * (11.2 / 18.6)) * TheStArray(43)
         Else
             RVFFuel(2, 1, 3) = 0
         End If
         'rural minor
         FuelSpeed = 75.639 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(3, 1, 3) = RVFCatTraf(3, 1, 3) * (FuelPerKm * (11.2 / 18.6)) * StratArray(43)
+        RVFFuel(3, 1, 3) = RVFCatTraf(3, 1, 3) * (FuelPerKm * (11.2 / 18.6)) * TheStArray(43)
         'urban
         FuelSpeed = 52.143 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(4, 1, 3) = RVFCatTraf(4, 1, 3) * (FuelPerKm * (11.2 / 18.6)) * StratArray(43)
+        RVFFuel(4, 1, 3) = RVFCatTraf(4, 1, 3) * (FuelPerKm * (11.2 / 18.6)) * TheStArray(43)
         'Diesel hybrid cars  - these are being calculated based on a proportional adjustment of the diesel fuel consumption figures (ie dividing the Brand hybrid figure by the Brand diesel figure and then multiplying by the DfT diesel figure)
         VClass = "CarD"
         'motorway
         FuelSpeed = 111.04 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(1, 1, 4) = RVFCatTraf(1, 1, 4) * (FuelPerKm * (7.5 / 12.4)) * StratArray(44)
+        RVFFuel(1, 1, 4) = RVFCatTraf(1, 1, 4) * (FuelPerKm * (7.5 / 12.4)) * TheStArray(44)
         'rural a (note that there are different speeds for dual and single carriagesways)
         If RVCatTraf(2, 1) > 0 Then
             FuelSpeed = (((109.44 * ZoneExtVar(7, YearCount)) + (75.639 * ZoneExtVar(8, YearCount))) / (ZoneExtVar(7, YearCount) + ZoneExtVar(8, YearCount))) * (ZoneSpdNew / BaseSpeed)
             Call VehicleFuelConsumption()
-            RVFFuel(2, 1, 4) = RVFCatTraf(2, 1, 4) * (FuelPerKm * (7.5 / 12.4)) * StratArray(44)
+            RVFFuel(2, 1, 4) = RVFCatTraf(2, 1, 4) * (FuelPerKm * (7.5 / 12.4)) * TheStArray(44)
         Else
             RVFFuel(2, 1, 4) = 0
         End If
         'rural minor
         FuelSpeed = 75.639 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(3, 1, 4) = RVFCatTraf(3, 1, 4) * (FuelPerKm * (7.5 / 12.4)) * StratArray(44)
+        RVFFuel(3, 1, 4) = RVFCatTraf(3, 1, 4) * (FuelPerKm * (7.5 / 12.4)) * TheStArray(44)
         'urban
         FuelSpeed = 52.143 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(4, 1, 4) = RVFCatTraf(4, 1, 4) * (FuelPerKm * (7.5 / 12.4)) * StratArray(44)
+        RVFFuel(4, 1, 4) = RVFCatTraf(4, 1, 4) * (FuelPerKm * (7.5 / 12.4)) * TheStArray(44)
         'Plug-in hybrid cars - for rural driving these use a proportional adjustment of the Brand figures (petrol/diesel), whereas for urban driving they use the Brand electric figures
         VClass = "CarP"
         'motorway
         FuelSpeed = 111.04 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(1, 1, 5) = RVFCatTraf(1, 1, 5) * (FuelPerKm * (18.1 / 25.9)) * StratArray(45)
+        RVFFuel(1, 1, 5) = RVFCatTraf(1, 1, 5) * (FuelPerKm * (18.1 / 25.9)) * TheStArray(45)
         'rural a (note that there are different speeds for dual and single carriagesways)
         If RVCatTraf(2, 1) > 0 Then
             FuelSpeed = (((109.44 * ZoneExtVar(7, YearCount)) + (75.639 * ZoneExtVar(8, YearCount))) / (ZoneExtVar(7, YearCount) + ZoneExtVar(8, YearCount))) * (ZoneSpdNew / BaseSpeed)
             Call VehicleFuelConsumption()
-            RVFFuel(2, 1, 5) = RVFCatTraf(2, 1, 5) * (FuelPerKm * (18.1 / 25.9)) * StratArray(45)
+            RVFFuel(2, 1, 5) = RVFCatTraf(2, 1, 5) * (FuelPerKm * (18.1 / 25.9)) * TheStArray(45)
         Else
             RVFFuel(2, 1, 5) = 0
         End If
         'rural minor
         FuelSpeed = 75.639 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(3, 1, 5) = RVFCatTraf(3, 1, 5) * (FuelPerKm * (18.1 / 25.9)) * StratArray(45)
+        RVFFuel(3, 1, 5) = RVFCatTraf(3, 1, 5) * (FuelPerKm * (18.1 / 25.9)) * TheStArray(45)
         'urban
-        RVFFuel(4, 1, 5) = RVFCatTraf(4, 1, 5) * 0.1557 * StratArray(45)
+        RVFFuel(4, 1, 5) = RVFCatTraf(4, 1, 5) * 0.1557 * TheStArray(45)
         'Battery electric cars - fuel consumption figure now taken from Brand (2010)
         'motorway
-        RVFFuel(1, 1, 6) = RVFCatTraf(1, 1, 6) * 0.165 * StratArray(33)
+        RVFFuel(1, 1, 6) = RVFCatTraf(1, 1, 6) * 0.165 * TheStArray(33)
         'rural a
-        RVFFuel(2, 1, 6) = RVFCatTraf(2, 1, 6) * 0.165 * StratArray(33)
+        RVFFuel(2, 1, 6) = RVFCatTraf(2, 1, 6) * 0.165 * TheStArray(33)
         'rural minor
-        RVFFuel(3, 1, 6) = RVFCatTraf(3, 1, 6) * 0.165 * StratArray(33)
+        RVFFuel(3, 1, 6) = RVFCatTraf(3, 1, 6) * 0.165 * TheStArray(33)
         'urban
-        RVFFuel(4, 1, 6) = RVFCatTraf(4, 1, 6) * 0.165 * StratArray(33)
+        RVFFuel(4, 1, 6) = RVFCatTraf(4, 1, 6) * 0.165 * TheStArray(33)
         'hydrogen ICE cars - fuel consumption figure from Brand (2010)
         'motorway
-        RVFFuel(1, 1, 9) = RVFCatTraf(1, 1, 9) * 0.438 * StratArray(46)
+        RVFFuel(1, 1, 9) = RVFCatTraf(1, 1, 9) * 0.438 * TheStArray(46)
         'rural a
-        RVFFuel(2, 1, 9) = RVFCatTraf(2, 1, 9) * 0.438 * StratArray(46)
+        RVFFuel(2, 1, 9) = RVFCatTraf(2, 1, 9) * 0.438 * TheStArray(46)
         'rural minor
-        RVFFuel(3, 1, 9) = RVFCatTraf(3, 1, 9) * 0.438 * StratArray(46)
+        RVFFuel(3, 1, 9) = RVFCatTraf(3, 1, 9) * 0.438 * TheStArray(46)
         'urban
-        RVFFuel(4, 1, 9) = RVFCatTraf(4, 1, 9) * 0.438 * StratArray(46)
+        RVFFuel(4, 1, 9) = RVFCatTraf(4, 1, 9) * 0.438 * TheStArray(46)
         'hydrogen fuel cell cars - fuel consumption figure from Brand (2010)
         'motorway
-        RVFFuel(1, 1, 10) = RVFCatTraf(1, 1, 10) * 0.1777 * StratArray(47)
+        RVFFuel(1, 1, 10) = RVFCatTraf(1, 1, 10) * 0.1777 * TheStArray(47)
         'rural a
-        RVFFuel(2, 1, 10) = RVFCatTraf(2, 1, 10) * 0.1777 * StratArray(47)
+        RVFFuel(2, 1, 10) = RVFCatTraf(2, 1, 10) * 0.1777 * TheStArray(47)
         'rural minor
-        RVFFuel(3, 1, 10) = RVFCatTraf(3, 1, 10) * 0.1777 * StratArray(47)
+        RVFFuel(3, 1, 10) = RVFCatTraf(3, 1, 10) * 0.1777 * TheStArray(47)
         'urban
-        RVFFuel(4, 1, 10) = RVFCatTraf(4, 1, 10) * 0.1777 * StratArray(47)
+        RVFFuel(4, 1, 10) = RVFCatTraf(4, 1, 10) * 0.1777 * TheStArray(47)
 
         'Petrol LGVs
         VClass = "LGVP"
         'motorway
         FuelSpeed = 111.04 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(1, 2, 1) = RVFCatTraf(1, 2, 1) * FuelPerKm * StratArray(34)
+        RVFFuel(1, 2, 1) = RVFCatTraf(1, 2, 1) * FuelPerKm * TheStArray(34)
         'rural a (note that there are different speeds for dual and single carriagesways)
         If RVCatTraf(2, 2) > 0 Then
             FuelSpeed = (((109.44 * ZoneExtVar(7, YearCount)) + (77.249 * ZoneExtVar(8, YearCount))) / (ZoneExtVar(7, YearCount) + ZoneExtVar(8, YearCount))) * (ZoneSpdNew / BaseSpeed)
             Call VehicleFuelConsumption()
-            RVFFuel(2, 2, 1) = RVFCatTraf(2, 2, 1) * FuelPerKm * StratArray(34)
+            RVFFuel(2, 2, 1) = RVFCatTraf(2, 2, 1) * FuelPerKm * TheStArray(34)
         Else
             RVFFuel(2, 2, 1) = 0
         End If
         'rural minor
         FuelSpeed = 77.249 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(3, 2, 1) = RVFCatTraf(3, 2, 1) * FuelPerKm * StratArray(34)
+        RVFFuel(3, 2, 1) = RVFCatTraf(3, 2, 1) * FuelPerKm * TheStArray(34)
         'urban
         FuelSpeed = 52.786 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(4, 2, 1) = RVFCatTraf(4, 2, 1) * FuelPerKm * StratArray(34)
+        RVFFuel(4, 2, 1) = RVFCatTraf(4, 2, 1) * FuelPerKm * TheStArray(34)
         'Diesel LGVs
         VClass = "LGVD"
         'motorway
         FuelSpeed = 111.04 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(1, 2, 2) = RVFCatTraf(1, 2, 2) * FuelPerKm * StratArray(35)
+        RVFFuel(1, 2, 2) = RVFCatTraf(1, 2, 2) * FuelPerKm * TheStArray(35)
         'rural a (note that there are different speeds for dual and single carriagesways)
         If RVCatTraf(2, 2) > 0 Then
             FuelSpeed = (((109.44 * ZoneExtVar(7, YearCount)) + (77.249 * ZoneExtVar(8, YearCount))) / (ZoneExtVar(7, YearCount) + ZoneExtVar(8, YearCount))) * (ZoneSpdNew / BaseSpeed)
             Call VehicleFuelConsumption()
-            RVFFuel(2, 2, 2) = RVFCatTraf(2, 2, 2) * FuelPerKm * StratArray(35)
+            RVFFuel(2, 2, 2) = RVFCatTraf(2, 2, 2) * FuelPerKm * TheStArray(35)
         Else
             RVFFuel(2, 2, 2) = 0
         End If
         'rural minor
         FuelSpeed = 77.249 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(3, 2, 2) = RVFCatTraf(3, 2, 2) * FuelPerKm * StratArray(35)
+        RVFFuel(3, 2, 2) = RVFCatTraf(3, 2, 2) * FuelPerKm * TheStArray(35)
         'urban
         FuelSpeed = 52.786 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(4, 2, 2) = RVFCatTraf(4, 2, 2) * FuelPerKm * StratArray(35)
+        RVFFuel(4, 2, 2) = RVFCatTraf(4, 2, 2) * FuelPerKm * TheStArray(35)
         'diesel hybrid LGVs
         VClass = "LGVD"
         'motorway
         FuelSpeed = 111.04 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(1, 2, 4) = RVFCatTraf(1, 2, 4) * (FuelPerKm * (4.4 / 7.9)) * StratArray(48)
+        RVFFuel(1, 2, 4) = RVFCatTraf(1, 2, 4) * (FuelPerKm * (4.4 / 7.9)) * TheStArray(48)
         'rural a (note that there are different speeds for dual and single carriagesways)
         If RVCatTraf(2, 2) > 0 Then
             FuelSpeed = (((109.44 * ZoneExtVar(7, YearCount)) + (77.249 * ZoneExtVar(8, YearCount))) / (ZoneExtVar(7, YearCount) + ZoneExtVar(8, YearCount))) * (ZoneSpdNew / BaseSpeed)
             Call VehicleFuelConsumption()
-            RVFFuel(2, 2, 4) = RVFCatTraf(2, 2, 4) * (FuelPerKm * (4.4 / 7.9)) * StratArray(48)
+            RVFFuel(2, 2, 4) = RVFCatTraf(2, 2, 4) * (FuelPerKm * (4.4 / 7.9)) * TheStArray(48)
         Else
             RVFFuel(2, 2, 4) = 0
         End If
         'rural minor
         FuelSpeed = 77.249 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(3, 2, 4) = RVFCatTraf(3, 2, 4) * (FuelPerKm * (4.4 / 7.9)) * StratArray(48)
+        RVFFuel(3, 2, 4) = RVFCatTraf(3, 2, 4) * (FuelPerKm * (4.4 / 7.9)) * TheStArray(48)
         'urban
         FuelSpeed = 52.786 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(4, 2, 4) = RVFCatTraf(4, 2, 4) * (FuelPerKm * (4.4 / 7.9)) * StratArray(48)
+        RVFFuel(4, 2, 4) = RVFCatTraf(4, 2, 4) * (FuelPerKm * (4.4 / 7.9)) * TheStArray(48)
         'plug-in hybrid LGVs - for rural driving these use a proportional adjustment of the Brand figures (petrol/diesel), whereas for urban driving they use the Brand electric figures
         VClass = "LGVD"
         'motorway
         FuelSpeed = 111.04 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(1, 2, 5) = RVFCatTraf(1, 2, 5) * (FuelPerKm * (5.8 / 7.9)) * StratArray(49)
+        RVFFuel(1, 2, 5) = RVFCatTraf(1, 2, 5) * (FuelPerKm * (5.8 / 7.9)) * TheStArray(49)
         'rural a (note that there are different speeds for dual and single carriagesways)
         If RVCatTraf(2, 2) > 0 Then
             FuelSpeed = (((109.44 * ZoneExtVar(7, YearCount)) + (77.249 * ZoneExtVar(8, YearCount))) / (ZoneExtVar(7, YearCount) + ZoneExtVar(8, YearCount))) * (ZoneSpdNew / BaseSpeed)
             Call VehicleFuelConsumption()
-            RVFFuel(2, 2, 5) = RVFCatTraf(2, 2, 5) * (FuelPerKm * (5.8 / 7.9)) * StratArray(49)
+            RVFFuel(2, 2, 5) = RVFCatTraf(2, 2, 5) * (FuelPerKm * (5.8 / 7.9)) * TheStArray(49)
         Else
             RVFFuel(2, 2, 5) = 0
         End If
         'rural minor
         FuelSpeed = 77.249 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(3, 2, 5) = RVFCatTraf(3, 2, 5) * (FuelPerKm * (5.8 / 7.9)) * StratArray(49)
+        RVFFuel(3, 2, 5) = RVFCatTraf(3, 2, 5) * (FuelPerKm * (5.8 / 7.9)) * TheStArray(49)
         'urban
-        RVFFuel(4, 2, 5) = RVFCatTraf(4, 2, 5) * 0.423 * StratArray(49)
+        RVFFuel(4, 2, 5) = RVFCatTraf(4, 2, 5) * 0.423 * TheStArray(49)
         'Battery Electric LGVs - fuel consumption figure now from Brand (2010)
         'motorway
-        RVFFuel(1, 2, 6) = RVFCatTraf(1, 2, 6) * 0.562 * StratArray(36)
+        RVFFuel(1, 2, 6) = RVFCatTraf(1, 2, 6) * 0.562 * TheStArray(36)
         'rural a
-        RVFFuel(2, 2, 6) = RVFCatTraf(2, 2, 6) * 0.562 * StratArray(36)
+        RVFFuel(2, 2, 6) = RVFCatTraf(2, 2, 6) * 0.562 * TheStArray(36)
         'rural minor
-        RVFFuel(3, 2, 6) = RVFCatTraf(3, 2, 6) * 0.562 * StratArray(36)
+        RVFFuel(3, 2, 6) = RVFCatTraf(3, 2, 6) * 0.562 * TheStArray(36)
         'urban
-        RVFFuel(4, 2, 6) = RVFCatTraf(4, 2, 6) * 0.562 * StratArray(36)
+        RVFFuel(4, 2, 6) = RVFCatTraf(4, 2, 6) * 0.562 * TheStArray(36)
         'LPG LGVs
         'motorway
-        RVFFuel(1, 2, 7) = RVFCatTraf(1, 2, 7) * 0.118 * StratArray(50)
+        RVFFuel(1, 2, 7) = RVFCatTraf(1, 2, 7) * 0.118 * TheStArray(50)
         'rural a
-        RVFFuel(2, 2, 7) = RVFCatTraf(2, 2, 7) * 0.118 * StratArray(50)
+        RVFFuel(2, 2, 7) = RVFCatTraf(2, 2, 7) * 0.118 * TheStArray(50)
         'rural minor
-        RVFFuel(3, 2, 7) = RVFCatTraf(3, 2, 7) * 0.118 * StratArray(50)
+        RVFFuel(3, 2, 7) = RVFCatTraf(3, 2, 7) * 0.118 * TheStArray(50)
         'urban
-        RVFFuel(4, 2, 7) = RVFCatTraf(4, 2, 7) * 0.118 * StratArray(50)
+        RVFFuel(4, 2, 7) = RVFCatTraf(4, 2, 7) * 0.118 * TheStArray(50)
         'CNG LGVs
         'motorway
-        RVFFuel(1, 2, 8) = RVFCatTraf(1, 2, 8) * 0.808 * StratArray(51)
+        RVFFuel(1, 2, 8) = RVFCatTraf(1, 2, 8) * 0.808 * TheStArray(51)
         'rural a
-        RVFFuel(2, 2, 8) = RVFCatTraf(2, 2, 8) * 0.808 * StratArray(51)
+        RVFFuel(2, 2, 8) = RVFCatTraf(2, 2, 8) * 0.808 * TheStArray(51)
         'rural minor
-        RVFFuel(3, 2, 8) = RVFCatTraf(3, 2, 8) * 0.808 * StratArray(51)
+        RVFFuel(3, 2, 8) = RVFCatTraf(3, 2, 8) * 0.808 * TheStArray(51)
         'urban
-        RVFFuel(4, 2, 8) = RVFCatTraf(4, 2, 8) * 0.808 * StratArray(51)
+        RVFFuel(4, 2, 8) = RVFCatTraf(4, 2, 8) * 0.808 * TheStArray(51)
 
         'Diesel  2-3 axle rigid HGVs
         VClass = "HGV1D"
         'motorway
         FuelSpeed = 92.537 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(1, 3, 2) = RVFCatTraf(1, 3, 2) * FuelPerKm * StratArray(37)
+        RVFFuel(1, 3, 2) = RVFCatTraf(1, 3, 2) * FuelPerKm * TheStArray(37)
         'rural a (note that there are different speeds for dual and single carriagesways)
         If RVCatTraf(2, 3) > 0 Then
             FuelSpeed = (((90.928 * ZoneExtVar(7, YearCount)) + (70.811 * ZoneExtVar(8, YearCount))) / (ZoneExtVar(7, YearCount) + ZoneExtVar(8, YearCount))) * (ZoneSpdNew / BaseSpeed)
             Call VehicleFuelConsumption()
-            RVFFuel(2, 3, 2) = RVFCatTraf(2, 3, 2) * FuelPerKm * StratArray(37)
+            RVFFuel(2, 3, 2) = RVFCatTraf(2, 3, 2) * FuelPerKm * TheStArray(37)
         Else
             RVFFuel(2, 3, 2) = 0
         End If
         'rural minor
         FuelSpeed = 70.811 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(3, 3, 2) = RVFCatTraf(3, 3, 2) * FuelPerKm * StratArray(37)
+        RVFFuel(3, 3, 2) = RVFCatTraf(3, 3, 2) * FuelPerKm * TheStArray(37)
         'urban
         FuelSpeed = 51.579 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(4, 3, 2) = RVFCatTraf(4, 3, 2) * FuelPerKm * StratArray(37)
+        RVFFuel(4, 3, 2) = RVFCatTraf(4, 3, 2) * FuelPerKm * TheStArray(37)
         'diesel hybrid small HGVs
         VClass = "HGV1D"
         'motorway
         FuelSpeed = 92.537 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(1, 3, 4) = RVFCatTraf(1, 3, 4) * (FuelPerKm * (15 / 25.9)) * StratArray(57)
+        RVFFuel(1, 3, 4) = RVFCatTraf(1, 3, 4) * (FuelPerKm * (15 / 25.9)) * TheStArray(57)
         'rural a (note that there are different speeds for dual and single carriagesways)
         If RVCatTraf(2, 3) > 0 Then
             FuelSpeed = (((90.928 * ZoneExtVar(7, YearCount)) + (70.811 * ZoneExtVar(8, YearCount))) / (ZoneExtVar(7, YearCount) + ZoneExtVar(8, YearCount))) * (ZoneSpdNew / BaseSpeed)
             Call VehicleFuelConsumption()
-            RVFFuel(2, 3, 4) = RVFCatTraf(2, 3, 4) * (FuelPerKm * (15 / 25.9)) * StratArray(57)
+            RVFFuel(2, 3, 4) = RVFCatTraf(2, 3, 4) * (FuelPerKm * (15 / 25.9)) * TheStArray(57)
         Else
             RVFFuel(2, 3, 4) = 0
         End If
         'rural minor
         FuelSpeed = 70.811 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(3, 3, 4) = RVFCatTraf(3, 3, 4) * (FuelPerKm * (15 / 25.9)) * StratArray(57)
+        RVFFuel(3, 3, 4) = RVFCatTraf(3, 3, 4) * (FuelPerKm * (15 / 25.9)) * TheStArray(57)
         'urban
         FuelSpeed = 51.579 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(4, 3, 4) = RVFCatTraf(4, 3, 4) * (FuelPerKm * (15 / 25.9)) * StratArray(57)
+        RVFFuel(4, 3, 4) = RVFCatTraf(4, 3, 4) * (FuelPerKm * (15 / 25.9)) * TheStArray(57)
         'hydrogen ICE small HGVs
         'motorway
-        RVFFuel(1, 3, 9) = RVFCatTraf(1, 3, 9) * 0.957 * StratArray(58)
+        RVFFuel(1, 3, 9) = RVFCatTraf(1, 3, 9) * 0.957 * TheStArray(58)
         'rural a
-        RVFFuel(2, 3, 9) = RVFCatTraf(2, 3, 9) * 0.957 * StratArray(58)
+        RVFFuel(2, 3, 9) = RVFCatTraf(2, 3, 9) * 0.957 * TheStArray(58)
         'rural minor
-        RVFFuel(3, 3, 9) = RVFCatTraf(3, 3, 9) * 0.957 * StratArray(58)
+        RVFFuel(3, 3, 9) = RVFCatTraf(3, 3, 9) * 0.957 * TheStArray(58)
         'urban
-        RVFFuel(4, 3, 9) = RVFCatTraf(4, 3, 9) * 0.957 * StratArray(58)
+        RVFFuel(4, 3, 9) = RVFCatTraf(4, 3, 9) * 0.957 * TheStArray(58)
         'hydrogen fuel cell small HGVs
         'motorway
-        RVFFuel(1, 3, 10) = RVFCatTraf(1, 3, 10) * 0.898 * StratArray(59)
+        RVFFuel(1, 3, 10) = RVFCatTraf(1, 3, 10) * 0.898 * TheStArray(59)
         'rural a
-        RVFFuel(2, 3, 10) = RVFCatTraf(2, 3, 10) * 0.898 * StratArray(59)
+        RVFFuel(2, 3, 10) = RVFCatTraf(2, 3, 10) * 0.898 * TheStArray(59)
         'rural minor
-        RVFFuel(3, 3, 10) = RVFCatTraf(3, 3, 10) * 0.898 * StratArray(59)
+        RVFFuel(3, 3, 10) = RVFCatTraf(3, 3, 10) * 0.898 * TheStArray(59)
         'urban
-        RVFFuel(4, 3, 10) = RVFCatTraf(4, 3, 10) * 0.898 * StratArray(59)
+        RVFFuel(4, 3, 10) = RVFCatTraf(4, 3, 10) * 0.898 * TheStArray(59)
 
         'Diesel 4+ axle rigid and artic HGVs
         VClass = "HGV2D"
         'motorway
         FuelSpeed = 86.905 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(1, 4, 2) = RVFCatTraf(1, 4, 2) * FuelPerKm * StratArray(39)
+        RVFFuel(1, 4, 2) = RVFCatTraf(1, 4, 2) * FuelPerKm * TheStArray(39)
         'rural a (note that there are different speeds for dual and single carriagesways)
         If RVCatTraf(2, 4) > 0 Then
             FuelSpeed = (((85.295 * ZoneExtVar(7, YearCount)) + (69.685 * ZoneExtVar(8, YearCount))) / (ZoneExtVar(7, YearCount) + ZoneExtVar(8, YearCount))) * (ZoneSpdNew / BaseSpeed)
             Call VehicleFuelConsumption()
-            RVFFuel(2, 4, 2) = RVFCatTraf(2, 4, 2) * FuelPerKm * StratArray(39)
+            RVFFuel(2, 4, 2) = RVFCatTraf(2, 4, 2) * FuelPerKm * TheStArray(39)
         Else
             RVFFuel(2, 4, 2) = 0
         End If
         'rural minor
         FuelSpeed = 69.685 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(3, 4, 2) = RVFCatTraf(3, 4, 2) * FuelPerKm * StratArray(39)
+        RVFFuel(3, 4, 2) = RVFCatTraf(3, 4, 2) * FuelPerKm * TheStArray(39)
         'urban
         FuelSpeed = 53.511 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(4, 4, 2) = RVFCatTraf(4, 4, 2) * FuelPerKm * StratArray(39)
+        RVFFuel(4, 4, 2) = RVFCatTraf(4, 4, 2) * FuelPerKm * TheStArray(39)
         'diesel hybrid large HGVs
         VClass = "HGV2D"
         'motorway
         FuelSpeed = 86.905 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(1, 4, 4) = RVFCatTraf(1, 4, 4) * (FuelPerKm * (22.1 / 37.6)) * StratArray(60)
+        RVFFuel(1, 4, 4) = RVFCatTraf(1, 4, 4) * (FuelPerKm * (22.1 / 37.6)) * TheStArray(60)
         'rural a (note that there are different speeds for dual and single carriagesways)
         If RVCatTraf(2, 4) > 0 Then
             FuelSpeed = (((85.295 * ZoneExtVar(7, YearCount)) + (69.685 * ZoneExtVar(8, YearCount))) / (ZoneExtVar(7, YearCount) + ZoneExtVar(8, YearCount))) * (ZoneSpdNew / BaseSpeed)
             Call VehicleFuelConsumption()
-            RVFFuel(2, 4, 4) = RVFCatTraf(2, 4, 4) * (FuelPerKm * (22.1 / 37.6)) * StratArray(60)
+            RVFFuel(2, 4, 4) = RVFCatTraf(2, 4, 4) * (FuelPerKm * (22.1 / 37.6)) * TheStArray(60)
         Else
             RVFFuel(2, 4, 4) = 0
         End If
         'rural minor
         FuelSpeed = 69.685 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(3, 4, 4) = RVFCatTraf(3, 4, 4) * (FuelPerKm * (22.1 / 37.6)) * StratArray(60)
+        RVFFuel(3, 4, 4) = RVFCatTraf(3, 4, 4) * (FuelPerKm * (22.1 / 37.6)) * TheStArray(60)
         'urban
         FuelSpeed = 53.511 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(4, 4, 4) = RVFCatTraf(4, 4, 4) * (FuelPerKm * (22.1 / 37.6)) * StratArray(60)
+        RVFFuel(4, 4, 4) = RVFCatTraf(4, 4, 4) * (FuelPerKm * (22.1 / 37.6)) * TheStArray(60)
         'hydrogen ICE large HGVs
         'motorway
-        RVFFuel(1, 4, 9) = RVFCatTraf(1, 4, 9) * 1.398 * StratArray(61)
+        RVFFuel(1, 4, 9) = RVFCatTraf(1, 4, 9) * 1.398 * TheStArray(61)
         'rural a
-        RVFFuel(2, 4, 9) = RVFCatTraf(2, 4, 9) * 1.398 * StratArray(61)
+        RVFFuel(2, 4, 9) = RVFCatTraf(2, 4, 9) * 1.398 * TheStArray(61)
         'rural minor
-        RVFFuel(3, 4, 9) = RVFCatTraf(3, 4, 9) * 1.398 * StratArray(61)
+        RVFFuel(3, 4, 9) = RVFCatTraf(3, 4, 9) * 1.398 * TheStArray(61)
         'urban
-        RVFFuel(4, 4, 9) = RVFCatTraf(4, 4, 9) * 1.398 * StratArray(61)
+        RVFFuel(4, 4, 9) = RVFCatTraf(4, 4, 9) * 1.398 * TheStArray(61)
         'hydrogen fuel cell large HGVs
         'motorway
-        RVFFuel(1, 4, 10) = RVFCatTraf(1, 4, 10) * 1.123 * StratArray(62)
+        RVFFuel(1, 4, 10) = RVFCatTraf(1, 4, 10) * 1.123 * TheStArray(62)
         'rural a
-        RVFFuel(2, 4, 10) = RVFCatTraf(2, 4, 10) * 1.123 * StratArray(62)
+        RVFFuel(2, 4, 10) = RVFCatTraf(2, 4, 10) * 1.123 * TheStArray(62)
         'rural minor
-        RVFFuel(3, 4, 10) = RVFCatTraf(3, 4, 10) * 1.123 * StratArray(62)
+        RVFFuel(3, 4, 10) = RVFCatTraf(3, 4, 10) * 1.123 * TheStArray(62)
         'urban
-        RVFFuel(4, 4, 10) = RVFCatTraf(4, 4, 10) * 1.123 * StratArray(62)
+        RVFFuel(4, 4, 10) = RVFCatTraf(4, 4, 10) * 1.123 * TheStArray(62)
 
         'Diesel PSVs
         VClass = "PSVD"
         'motorway
         FuelSpeed = 98.17 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(1, 5, 2) = RVFCatTraf(1, 5, 2) * FuelPerKm * StratArray(41)
+        RVFFuel(1, 5, 2) = RVFCatTraf(1, 5, 2) * FuelPerKm * TheStArray(41)
         'rural a (note that there are different speeds for dual and single carriagesways)
         If RVCatTraf(2, 5) > 0 Then
             FuelSpeed = (((96.561 * ZoneExtVar(7, YearCount)) + (72.42 * ZoneExtVar(8, YearCount))) / (ZoneExtVar(7, YearCount) + ZoneExtVar(8, YearCount))) * (ZoneSpdNew / BaseSpeed)
             Call VehicleFuelConsumption()
-            RVFFuel(2, 5, 2) = RVFCatTraf(2, 5, 2) * FuelPerKm * StratArray(41)
+            RVFFuel(2, 5, 2) = RVFCatTraf(2, 5, 2) * FuelPerKm * TheStArray(41)
         Else
             RVFFuel(2, 5, 2) = 0
         End If
         'rural minor
         FuelSpeed = 72.42 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(3, 5, 2) = RVFCatTraf(3, 5, 2) * FuelPerKm * StratArray(41)
+        RVFFuel(3, 5, 2) = RVFCatTraf(3, 5, 2) * FuelPerKm * TheStArray(41)
         'urban
         FuelSpeed = 48.924 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(4, 5, 2) = RVFCatTraf(4, 5, 2) * FuelPerKm * StratArray(41)
+        RVFFuel(4, 5, 2) = RVFCatTraf(4, 5, 2) * FuelPerKm * TheStArray(41)
         'Diesel hybrid PSVs
         VClass = "PSVD"
         'motorway
         FuelSpeed = 98.17 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(1, 5, 4) = RVFCatTraf(1, 5, 4) * (FuelPerKm * (18.5 / 17.6)) * StratArray(52)
+        RVFFuel(1, 5, 4) = RVFCatTraf(1, 5, 4) * (FuelPerKm * (18.5 / 17.6)) * TheStArray(52)
         'rural a (note that there are different speeds for dual and single carriagesways)
         If RVCatTraf(2, 5) > 0 Then
             FuelSpeed = (((96.561 * ZoneExtVar(7, YearCount)) + (72.42 * ZoneExtVar(8, YearCount))) / (ZoneExtVar(7, YearCount) + ZoneExtVar(8, YearCount))) * (ZoneSpdNew / BaseSpeed)
             Call VehicleFuelConsumption()
-            RVFFuel(2, 5, 4) = RVFCatTraf(2, 5, 4) * (FuelPerKm * (11.9 / 19.6)) * StratArray(52)
+            RVFFuel(2, 5, 4) = RVFCatTraf(2, 5, 4) * (FuelPerKm * (11.9 / 19.6)) * TheStArray(52)
         Else
             RVFFuel(2, 5, 4) = 0
         End If
         'rural minor
         FuelSpeed = 72.42 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(3, 5, 4) = RVFCatTraf(3, 5, 4) * (FuelPerKm * (11.9 / 19.6)) * StratArray(52)
+        RVFFuel(3, 5, 4) = RVFCatTraf(3, 5, 4) * (FuelPerKm * (11.9 / 19.6)) * TheStArray(52)
         'urban
         FuelSpeed = 48.924 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(4, 5, 4) = RVFCatTraf(4, 5, 4) * (FuelPerKm * (11.9 / 19.6)) * StratArray(52)
+        RVFFuel(4, 5, 4) = RVFCatTraf(4, 5, 4) * (FuelPerKm * (11.9 / 19.6)) * TheStArray(52)
         'Plug-in hybrid PSVs
         VClass = "PSVD"
         'motorway
         FuelSpeed = 98.17 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(1, 5, 5) = RVFCatTraf(1, 5, 5) * (FuelPerKm * (11.9 / 19.6)) * StratArray(53)
+        RVFFuel(1, 5, 5) = RVFCatTraf(1, 5, 5) * (FuelPerKm * (11.9 / 19.6)) * TheStArray(53)
         'rural a (note that there are different speeds for dual and single carriagesways)
         If RVCatTraf(2, 5) > 0 Then
             FuelSpeed = (((96.561 * ZoneExtVar(7, YearCount)) + (72.42 * ZoneExtVar(8, YearCount))) / (ZoneExtVar(7, YearCount) + ZoneExtVar(8, YearCount))) * (ZoneSpdNew / BaseSpeed)
             Call VehicleFuelConsumption()
-            RVFFuel(2, 5, 5) = RVFCatTraf(2, 5, 5) * (FuelPerKm * (11.9 / 19.6)) * StratArray(53)
+            RVFFuel(2, 5, 5) = RVFCatTraf(2, 5, 5) * (FuelPerKm * (11.9 / 19.6)) * TheStArray(53)
         Else
             RVFFuel(2, 5, 5) = 0
         End If
         'rural minor
         FuelSpeed = 72.42 * (ZoneSpdNew / BaseSpeed)
         Call VehicleFuelConsumption()
-        RVFFuel(3, 5, 5) = RVFCatTraf(3, 5, 5) * (FuelPerKm * (11.9 / 19.6)) * StratArray(53)
+        RVFFuel(3, 5, 5) = RVFCatTraf(3, 5, 5) * (FuelPerKm * (11.9 / 19.6)) * TheStArray(53)
         'urban
-        RVFFuel(4, 5, 5) = RVFCatTraf(4, 5, 5) * 1.037 * StratArray(53)
+        RVFFuel(4, 5, 5) = RVFCatTraf(4, 5, 5) * 1.037 * TheStArray(53)
         '***need to alter battery electric PSVs
         'Battery Electric PSVs - electricity consumption figure now from Brand (2010)
         'motorway
-        RVFFuel(1, 5, 6) = RVFCatTraf(1, 5, 6) * 1.7 * StratArray(42)
+        RVFFuel(1, 5, 6) = RVFCatTraf(1, 5, 6) * 1.7 * TheStArray(42)
         'rural a
-        RVFFuel(2, 5, 6) = RVFCatTraf(2, 5, 6) * 1.7 * StratArray(42)
+        RVFFuel(2, 5, 6) = RVFCatTraf(2, 5, 6) * 1.7 * TheStArray(42)
         'rural minor
-        RVFFuel(3, 5, 6) = RVFCatTraf(3, 5, 6) * 1.7 * StratArray(42)
+        RVFFuel(3, 5, 6) = RVFCatTraf(3, 5, 6) * 1.7 * TheStArray(42)
         'urban
-        RVFFuel(4, 5, 6) = RVFCatTraf(4, 5, 6) * 1.7 * StratArray(42)
+        RVFFuel(4, 5, 6) = RVFCatTraf(4, 5, 6) * 1.7 * TheStArray(42)
         'LPG PSVs
         'motorway
-        RVFFuel(1, 5, 7) = RVFCatTraf(1, 5, 7) * 0.954 * StratArray(54)
+        RVFFuel(1, 5, 7) = RVFCatTraf(1, 5, 7) * 0.954 * TheStArray(54)
         'rural a
-        RVFFuel(2, 5, 7) = RVFCatTraf(2, 5, 7) * 0.364 * StratArray(54)
+        RVFFuel(2, 5, 7) = RVFCatTraf(2, 5, 7) * 0.364 * TheStArray(54)
         'rural minor
-        RVFFuel(3, 5, 7) = RVFCatTraf(3, 5, 7) * 0.364 * StratArray(54)
+        RVFFuel(3, 5, 7) = RVFCatTraf(3, 5, 7) * 0.364 * TheStArray(54)
         'urban
-        RVFFuel(4, 5, 7) = RVFCatTraf(4, 5, 7) * 0.364 * StratArray(54)
+        RVFFuel(4, 5, 7) = RVFCatTraf(4, 5, 7) * 0.364 * TheStArray(54)
         'CNG PSVs
         'motorway
-        RVFFuel(1, 5, 8) = RVFCatTraf(1, 5, 8) * 3.749 * StratArray(55)
+        RVFFuel(1, 5, 8) = RVFCatTraf(1, 5, 8) * 3.749 * TheStArray(55)
         'rural a
-        RVFFuel(2, 5, 8) = RVFCatTraf(2, 5, 8) * 6.283 * StratArray(55)
+        RVFFuel(2, 5, 8) = RVFCatTraf(2, 5, 8) * 6.283 * TheStArray(55)
         'rural minor
-        RVFFuel(3, 5, 8) = RVFCatTraf(3, 5, 8) * 6.283 * StratArray(55)
+        RVFFuel(3, 5, 8) = RVFCatTraf(3, 5, 8) * 6.283 * TheStArray(55)
         'urban
-        RVFFuel(4, 5, 8) = RVFCatTraf(4, 5, 8) * 6.283 * StratArray(55)
+        RVFFuel(4, 5, 8) = RVFCatTraf(4, 5, 8) * 6.283 * TheStArray(55)
         'Hydrogen fuel cell PSVs
         'motorway
-        RVFFuel(1, 5, 10) = RVFCatTraf(1, 5, 10) * 0.546 * StratArray(56)
+        RVFFuel(1, 5, 10) = RVFCatTraf(1, 5, 10) * 0.546 * TheStArray(56)
         'rural a
-        RVFFuel(2, 5, 10) = RVFCatTraf(2, 5, 10) * 0.546 * StratArray(56)
+        RVFFuel(2, 5, 10) = RVFCatTraf(2, 5, 10) * 0.546 * TheStArray(56)
         'rural minor
-        RVFFuel(3, 5, 10) = RVFCatTraf(3, 5, 10) * 0.546 * StratArray(56)
+        RVFFuel(3, 5, 10) = RVFCatTraf(3, 5, 10) * 0.546 * TheStArray(56)
         'urban
-        RVFFuel(4, 5, 10) = RVFCatTraf(4, 5, 10) * 0.546 * StratArray(56)
+        RVFFuel(4, 5, 10) = RVFCatTraf(4, 5, 10) * 0.546 * TheStArray(56)
 
         'sum the total amount of each fuel used
         'petrol, now includes petrol hybrids

@@ -72,18 +72,18 @@
         Loop
 
         'create file is true if it is the initial year and write to outputfile and temp file
-        If g_modelRunYear = StartYear Then
+        If g_modelRunYear = g_initialYear Then
             Call WriteData("Seaport", "Output", OutputArray, , True)
             Call WriteData("Seaport", "Temp", TempArray, , True)
             'if the model is building capacity then create new capacity file
             If BuildInfra = True Then
-                Call WriteData("Seaport", "NewCap_Add", NewCapArray, , True)
+                Call WriteData("Seaport", "NewCap_Added", NewCapArray, , True)
             End If
         Else
             Call WriteData("Seaport", "Output", OutputArray, , False)
             Call WriteData("Seaport", "Temp", TempArray, , False)
             If BuildInfra = True Then
-                Call WriteData("Seaport", "NewCap_Add", NewCapArray, , False)
+                Call WriteData("Seaport", "NewCap_Added", NewCapArray, , False)
             End If
         End If
 
@@ -92,7 +92,6 @@
     End Sub
 
     Sub SeaInputFiles()
-        Dim stratarray(90, 95) As String
 
         'get external variables file
         'check if updated version being used
@@ -106,8 +105,7 @@
 
         If TripRates = "SubStrategy" Then
             'get the strat values
-            Call ReadData("SubStrategy", "", stratarray, g_modelRunYear)
-            SeaTripRates = stratarray(1, 95)
+            SeaTripRates = stratarray(1, 97)
         End If
 
         'get the elasticity values

@@ -101,7 +101,6 @@
     Dim MWH As Long
     Dim DCH As Long
     Dim SCH As Long
-    Dim stratarray(90, 95) As String
     Dim InputArray(291, 54) As String
     Dim OutputArray(292, 59) As String
     Dim TempArray(292, 3037) As String
@@ -149,7 +148,7 @@
             Call LoadInputRow()
 
             'calculate the starting hourly flows
-            If g_modelRunYear = 1 Then
+            If g_modelRunYear = g_initialYear Then
                 Call StartFlows()
             End If
 
@@ -182,7 +181,7 @@
         Call WriteData("RoadLink", "Temp Hourly", TempHArray, , False)
 
         If BuildInfra = True Then
-            Call WriteData("RoadLink", "NewCap_Add", NewCapArray, , False)
+            Call WriteData("RoadLink", "NewCap_Added", NewCapArray, , False)
         End If
         Erase TempAnArray
         Erase TempHArray
@@ -190,7 +189,6 @@
     End Sub
 
     Sub SetFiles()
-        Dim stratarray(90, 95) As String
 
         'load the time profiles from database
         Call ReadData("RoadLink", "FreeFlowSpeeds", FreeFlowSpeeds, g_modelRunYear)
@@ -210,9 +208,8 @@
         'if using variable trip rates then set up the trip rate variable
         If TripRates = "SubStrategy" Then
             'get the strat values
-            Call ReadData("SubStrategy", "", stratarray, g_modelRunYear)
-            RdTripRates(0, 1) = stratarray(1, 91)
-            RdTripRates(1, 1) = stratarray(1, 92)
+            RdTripRates(0, 1) = stratarray(1, 93)
+            RdTripRates(1, 1) = stratarray(1, 94)
         End If
 
     End Sub
@@ -225,10 +222,10 @@
         
         Dim d As Byte
 
-        d = 0
+        d = 1
 
-        Do While d < 24
-            HourProportions(d) = TimeProfile(1, d)
+        Do While d < 25
+            HourProportions(d) = TimeProfile(d, 2)
             d += 1
         Loop
 
@@ -239,56 +236,56 @@
         Dim i As Long
         Dim hrow As Integer
  
-        If g_modelRunYear = 1 Then
+        If g_modelRunYear = g_initialYear Then
             'read base year (year 0) data
-            FlowID(link, 1) = InputArray(link, 4)
-            Zone1(link, 1) = InputArray(link, 5)
-            Zone2(link, 1) = InputArray(link, 6)
-            RoadTypeLanes(link, 0) = InputArray(link, 8)
-            RoadTypeLanes(link, 1) = InputArray(link, 9)
-            RoadTypeLanes(link, 2) = InputArray(link, 10)
+            FlowID(link, 1) = InputArray(1, link)
+            Zone1(link, 1) = InputArray(2, link)
+            Zone2(link, 1) = InputArray(3, link)
+            RoadTypeLanes(link, 0) = InputArray(4, link)
+            RoadTypeLanes(link, 1) = InputArray(5, link)
+            RoadTypeLanes(link, 2) = InputArray(6, link)
             'need the total lanes to start with as stable variable - this is because once there has been any capacity change will need to recalculate the base flows per lane each year
             TotalLanesOriginal(link, 1) = RoadTypeLanes(link, 0) + RoadTypeLanes(link, 1) + RoadTypeLanes(link, 2)
             'set road type lanes new equal to road type lanes to start with, otherwise it will assume a capacity change to start with
-            RoadTypeLanesNew(link, 0) = InputArray(link, 8)
-            RoadTypeLanesNew(link, 1) = InputArray(link, 9)
-            RoadTypeLanesNew(link, 2) = InputArray(link, 10)
-            SpeedCatFlows(link, 0) = InputArray(link, 12)
-            SpeedCatFlows(link, 1) = InputArray(link, 13)
-            SpeedCatFlows(link, 2) = InputArray(link, 14)
-            SpeedCatFlows(link, 3) = InputArray(link, 15)
-            SpeedCatFlows(link, 4) = InputArray(link, 16)
-            SpeedCatFlows(link, 5) = InputArray(link, 17)
-            SpeedCatFlows(link, 6) = InputArray(link, 18)
-            SpeedCatFlows(link, 7) = InputArray(link, 19)
-            SpeedCatFlows(link, 8) = InputArray(link, 20)
-            SpeedCatFlows(link, 9) = InputArray(link, 21)
-            SpeedCatFlows(link, 10) = InputArray(link, 22)
-            SpeedCatFlows(link, 11) = InputArray(link, 23)
-            SpeedCatFlows(link, 12) = InputArray(link, 24)
-            SpeedCatFlows(link, 13) = InputArray(link, 25)
-            SpeedCatFlows(link, 14) = InputArray(link, 26)
-            SpeedCatFlows(link, 15) = InputArray(link, 27)
-            SpeedCatFlows(link, 16) = InputArray(link, 28)
-            SpeedCatFlows(link, 17) = InputArray(link, 29)
-            SpeedCatFlows(link, 18) = InputArray(link, 30)
-            SpeedCatFlows(link, 19) = InputArray(link, 31)
-            Z1Pop(link, 1) = get_population_data_by_zoneID(g_modelRunYear, FlowID(link, 1), "OZ", "'road'", Zone1(link, 1))
-            Z2Pop(link, 1) = get_population_data_by_zoneID(g_modelRunYear, FlowID(link, 1), "DZ", "'road'", Zone2(link, 1))
-            Z1GVA(link, 1) = get_gva_data_by_zoneID(g_modelRunYear, FlowID(link, 1), "OZ", "'road'", Zone1(link, 1))
-            Z2GVA(link, 1) = get_gva_data_by_zoneID(g_modelRunYear, FlowID(link, 1), "DZ", "'road'", Zone2(link, 1))
+            RoadTypeLanesNew(link, 0) = InputArray(4, link)
+            RoadTypeLanesNew(link, 1) = InputArray(5, link)
+            RoadTypeLanesNew(link, 2) = InputArray(6, link)
+            SpeedCatFlows(link, 0) = InputArray(8, link)
+            SpeedCatFlows(link, 1) = InputArray(9, link)
+            SpeedCatFlows(link, 2) = InputArray(10, link)
+            SpeedCatFlows(link, 3) = InputArray(11, link)
+            SpeedCatFlows(link, 4) = InputArray(12, link)
+            SpeedCatFlows(link, 5) = InputArray(13, link)
+            SpeedCatFlows(link, 6) = InputArray(14, link)
+            SpeedCatFlows(link, 7) = InputArray(15, link)
+            SpeedCatFlows(link, 8) = InputArray(16, link)
+            SpeedCatFlows(link, 9) = InputArray(17, link)
+            SpeedCatFlows(link, 10) = InputArray(18, link)
+            SpeedCatFlows(link, 11) = InputArray(19, link)
+            SpeedCatFlows(link, 12) = InputArray(20, link)
+            SpeedCatFlows(link, 13) = InputArray(21, link)
+            SpeedCatFlows(link, 14) = InputArray(22, link)
+            SpeedCatFlows(link, 15) = InputArray(23, link)
+            SpeedCatFlows(link, 16) = InputArray(24, link)
+            SpeedCatFlows(link, 17) = InputArray(25, link)
+            SpeedCatFlows(link, 18) = InputArray(26, link)
+            SpeedCatFlows(link, 19) = InputArray(27, link)
+            Z1Pop(link, 1) = get_population_data_by_zoneID(g_modelRunYear, Zone1(link, 1), "OZ", "'road'")
+            Z2Pop(link, 1) = get_population_data_by_zoneID(g_modelRunYear, Zone2(link, 1), "DZ", "'road'")
+            Z1GVA(link, 1) = get_gva_data_by_zoneID(g_modelRunYear, Zone1(link, 1), "OZ", "'road'")
+            Z2GVA(link, 1) = get_gva_data_by_zoneID(g_modelRunYear, Zone2(link, 1), "DZ", "'road'")
             '24 hours for category 0
             For c = 0 To 24
-                CostOld(link, 0, c) = InputArray(link, 32)
+                CostOld(link, 0, c) = InputArray(28, link)
             Next
-            MaxCap(link, 0) = InputArray(link, 33)
-            MaxCap(link, 1) = InputArray(link, 34)
-            MaxCap(link, 2) = InputArray(link, 35)
-            varnum = 36
+            MaxCap(link, 0) = InputArray(29, link)
+            MaxCap(link, 1) = InputArray(30, link)
+            MaxCap(link, 2) = InputArray(31, link)
+            varnum = 32
             '24 hours for category 1 - 19
             For x = 1 To 19
-                For c = 0 To 24
-                    CostOld(link, x, c) = InputArray(link, varnum)
+                For c = 1 To 24
+                    CostOld(link, x, c) = InputArray(varnum, link)
                 Next
                 varnum += 1
             Next
@@ -469,7 +466,7 @@
         'in this case don't need to iterate to get speeds - we know the total base flow for each road type, so just use the speed calculator to adjust the speeds if conditions are congested - flows are observed and therefore held constant
         'if this is the first year, we need to calculate the base speeds from the input data
 
-        If g_modelRunYear = 1 Then
+        If g_modelRunYear = g_initialYear Then
             sc = 0
             h = 0
 
@@ -487,26 +484,28 @@
 
 
             'for all 20 road link categories and 24 hours
+            sc = 1
             Do While sc < 20
                 Do While h < 24
                     RoadType = AssignRoadType(sc)
                     'if traffic less than free flow capacity then adopt free flow speed
                     If RoadTypeFlows(link, RoadType, h) < (FreeFlowCU * MaxCap(link, RoadType)) Then
-                        HourlySpeeds(link, sc, h) = FreeFlowSpeeds(1, sc)
+                        HourlySpeeds(link, sc, h) = FreeFlowSpeeds(sc, 2)
                     ElseIf RoadTypeFlows(link, RoadType, h) <= MaxCap(link, RoadType) Then
                         'otherwise if it is in between the free flow capacity and the maximum capacity then use the speed calculator
                         'because this is the first year set the old speed as the free flow speed
                         FlowOld = FreeFlowCU * MaxCap(link, RoadType)
                         FlowNew = RoadTypeFlows(link, RoadType, h)
-                        SpeedOld = FreeFlowSpeeds(1, sc)
+                        SpeedOld = FreeFlowSpeeds(sc, 2)
                         Call SpeedCalc()
                         HourlySpeeds(link, sc, h) = SpeedNew
                     Else
+                        'TODO - Had to cut this out as it was crashing when the errors got over 48 in number - should replace this with database log
                         'this shouldn't happen in the base year, as we should already have reset the maximum capacity variable in the start flows sub, so write error to log file and exit model
-                        logarray(logNum, 0) = "ERROR in interzonal road model - maximum capacity exceeded in base year for Flow " & FlowID(link, 1) & ", road type " & RoadType & ", hour " & h & ". Model run terminated."
-                        logNum += 1
-                        Call WriteData("Logfile", "", logarray)
-                        End
+                        'logarray(logNum, 0) = "ERROR in interzonal road model - maximum capacity exceeded in base year for Flow " & FlowID(link, 1) & ", road type " & RoadType & ", hour " & h & ". Model run terminated."
+                        'logNum += 1
+                        'Call WriteData("Logfile", "", logarray) 'TODO - replace with a log file save
+                        Stop
                     End If
                     h += 1
                 Loop

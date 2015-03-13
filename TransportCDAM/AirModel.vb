@@ -168,7 +168,7 @@ Module AirModel
 
 
         'create file is true if it is the initial year and write to outputfile and temp file
-        If g_modelRunYear = StartYear Then
+        If g_modelRunYear = g_initialYear Then
             Call WriteData("AirNode", "Output", NodeOutputArray, , True)
             Call WriteData("AirFlow", "Output", FlowOutputArray, , True)
             'write to IO tables
@@ -176,7 +176,7 @@ Module AirModel
             Call WriteData("AirFlow", "Temp", FlowTempArray, , True)
 
             If BuildInfra = True Then
-                Call WriteData("AirNode", "NewCap_Add", NewCapArray, , True)
+                Call WriteData("AirNode", "NewCap_Added", NewCapArray, , True)
             End If
         Else
             Call WriteData("AirNode", "Output", NodeOutputArray, , False)
@@ -186,7 +186,7 @@ Module AirModel
             Call WriteData("AirFlow", "Temp", FlowTempArray, , False)
 
             If BuildInfra = True Then
-                Call WriteData("AirNode", "NewCap_Add", NewCapArray, , False)
+                Call WriteData("AirNode", "NewCap_Added", NewCapArray, , False)
             End If
         End If
 
@@ -196,8 +196,6 @@ Module AirModel
     End Sub
 
     Sub AirInputFiles()
-
-        Dim stratarray(90, 95) As String
 
         'get nodal external variable file suffix name
         If UpdateExtVars = True Then
@@ -213,9 +211,8 @@ Module AirModel
 
         If TripRates = "SubStrategy" Then
             'read from the strategy file
-            Call ReadData("SubStrategy", "", stratarray, g_modelRunYear)
             For r = 1 To 90
-                AirTripRates = stratarray(1, 94)
+                AirTripRates = stratarray(1, 96)
             Next
         End If
 
@@ -452,10 +449,10 @@ Module AirModel
                 Next
                 OZoneID = FlowInputArray(AirportCount, 10)
                 DZoneID = FlowInputArray(AirportCount, 11)
-                AirFlowBaseData(AirportCount, 4) = get_population_data_by_zoneID(g_modelRunYear, AirFlowID(AirportCount, 0), "OZ", "'air'", OZoneID)
-                AirFlowBaseData(AirportCount, 5) = get_population_data_by_zoneID(g_modelRunYear, AirFlowID(AirportCount, 0), "DZ", "'air'", DZoneID)
-                AirFlowBaseData(AirportCount, 6) = get_gva_data_by_zoneID(g_modelRunYear, AirFlowID(AirportCount, 0), "OZ", "'air'", OZoneID)
-                AirFlowBaseData(AirportCount, 7) = get_gva_data_by_zoneID(g_modelRunYear, AirFlowID(AirportCount, 0), "DZ", "'air'", DZoneID)
+                AirFlowBaseData(AirportCount, 4) = get_population_data_by_zoneID(g_modelRunYear, OZoneID, "OZ", "'air'")
+                AirFlowBaseData(AirportCount, 5) = get_population_data_by_zoneID(g_modelRunYear, DZoneID, "DZ", "'air'")
+                AirFlowBaseData(AirportCount, 6) = get_gva_data_by_zoneID(g_modelRunYear, OZoneID, "OZ", "'air'")
+                AirFlowBaseData(AirportCount, 7) = get_gva_data_by_zoneID(g_modelRunYear, DZoneID, "DZ", "'air'")
                 For AirportField = 8 To 9
                     AirFlowBaseData(AirportCount, AirportField) = FlowInputArray(AirportCount, AirportField)
                 Next

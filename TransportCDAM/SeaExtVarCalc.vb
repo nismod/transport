@@ -23,8 +23,7 @@
     Dim CapChanged, Breakout As Boolean
     Dim ErrorString As String
     Dim stratstring As String
-    Dim stratarray(90, 95) As String
-    Dim FuelEff(90) As Double
+    Dim FuelEff(1) As Double
     Dim NewCapDetails(1, 6) As Double
     Dim CapCount As Long
     Dim tonnestobuild, captonnes As Double
@@ -34,10 +33,9 @@
     Dim arraynum As Long
     Dim AddingCap As Boolean
     Dim CapNum As Integer
-    Dim enearray(91, 6) As String
-    Dim InputArray(47, 16) As String
-    Dim CapArray(47, 8) As String
-    Dim OutputArray(48, 11) As String
+    Dim InputArray(,) As String
+    Dim CapArray(,) As String
+    Dim Se_OutputArray(48, 11) As String
 
 
     Sub SeaEVMain()
@@ -78,9 +76,6 @@
             Call ReadData("Seaport", "ExtVar", InputArray, g_modelRunYear - 1)
         End If
 
-        'as the energy is still reading csv file, the year is in year index
-        Call ReadData("Energy", "", enearray)
-
         'read all required new capacity for the current year
         Call ReadData("Seaport", "NewCap", CapArray, g_modelRunYear)
 
@@ -91,19 +86,12 @@
 
         'v1.3
         'get fuel efficiency values from the strategy file
-        Call ReadData("SubStrategy", "", stratarray)
         'v1.4 set FuelEff(0) to 1
         FuelEff(0) = 1
-        For y = 1 To 90
-            FuelEff(y) = stratarray(y, 69)
-        Next
-
-
+        FuelEff(1) = stratarray(1, 73)
 
         'then loop through rest of rows in input data file
         Call CalcPortData()
-
-
 
     End Sub
     Sub CalcPortData()
@@ -111,16 +99,15 @@
         Dim basecount As Integer
         Dim GORID(47, 1) As Long
         Dim DieselOld, DieselNew As Double
-        Dim i As Integer
+        Dim i, y As Integer
         Dim PortID As Integer
+        Dim theYear As Integer
 
         'read energy file
         If SeaEneSource = "Database" Then
-            'read old value from previous year
-            DieselOld = enearray(g_modelRunYear - 2010, 2)
-
-            'get the price for current year
-            DieselNew = enearray(g_modelRunYear - 2010 + 1, 2)
+            y = g_modelRunYear - g_initialYear + 1 'TODO - this needs fixing once we go to database for energy 
+            DieselOld = enearray(y, 2) 'last year
+            DieselNew = enearray(y + 1, 2) 'this year
         End If
 
         'calculate new values where needed
@@ -138,15 +125,20 @@
             If g_modelRunYear = g_initialYear Then
                 'read initial data if it is year 1
                 For i = 0 To 10
-                    PortBaseData(PortCount, i) = InputArray(PortCount, i + 4)
+                    PortBaseData(PortCount, i) = InputArray(PortCount, i + 3)
                 Next
 
                 'get GORPop and GORGva by using database function
-                PortID = InputArray(PortCount, 4)
-                PortBaseData(PortCount, 11) = get_population_data_by_seaportID(g_modelRunYear - 1, PortCount)
+                PortID = InputArray(PortCount, 1)
+                If g_modelRunYear = g_initialYear Then
+                    theYear = g_modelRunYear
+                Else
+                    theYear = g_modelRunYear - 1
+                End If
+                PortBaseData(PortCount, 11) = get_population_data_by_seaportID(theYear, PortCount)
                 PortBaseData(PortCount, 12) = get_gva_data_by_seaportID(g_modelRunYear - 1, PortCount)
-                PortBaseData(PortCount, 13) = InputArray(PortCount, 15) 'cost
-                GORID(PortCount, 1) = InputArray(PortCount, 16)
+                PortBaseData(PortCount, 13) = InputArray(PortCount, 13) 'cost
+                GORID(PortCount, 1) = InputArray(PortCount, 2)
             Else
                 PortID = InputArray(PortCount, 2)
                 For i = 6 To 10
@@ -154,7 +146,7 @@
                 Next
                 PortBaseData(PortCount, 11) = get_population_data_by_seaportID(g_modelRunYear - 1, PortCount)
                 PortBaseData(PortCount, 12) = get_gva_data_by_seaportID(g_modelRunYear - 1, PortCount)
-                PortBaseData(PortCount, 13) = InputArray(PortCount, 11) 'cost
+                PortBaseData(PortCount, 13) = InputArray(PortCount, 13) 'cost
             End If
 
 
@@ -220,22 +212,22 @@
                 'seaport model not yet set up for use with scaling files
             ElseIf SeaEneSource = "Database" Then
                 'v1.4 fuel efficiency change used instead of fuel efficiency
-                PortNewData(PortCount, 8) = PortBaseData(PortCount, 13) * (DieselNew / DieselOld) * (FuelEff(g_modelRunYear) / FuelEff(g_modelRunYear - 1))
+                PortNewData(PortCount, 8) = PortBaseData(PortCount, 13) * (DieselNew / DieselOld) * (FuelEff(1) / FuelEff(0))
             End If
 
             If SeaEneSource = "Database" Then
-                PortNewData(PortCount, 9) = FuelEff(g_modelRunYear)
+                PortNewData(PortCount, 9) = FuelEff(1)
             Else
                 PortNewData(PortCount, 9) = 1
             End If
 
             'write values to output array
-            OutputArray(PortCount, 0) = g_modelRunID
-            OutputArray(PortCount, 1) = PortID
-            OutputArray(PortCount, 2) = g_modelRunYear
+            Se_OutputArray(PortCount, 0) = g_modelRunID
+            Se_OutputArray(PortCount, 1) = PortID
+            Se_OutputArray(PortCount, 2) = g_modelRunYear
             newcount = 1
             Do Until newcount > 9
-                OutputArray(PortCount, 2 + newcount) = PortNewData(PortCount, newcount)
+                Se_OutputArray(PortCount, 2 + newcount) = PortNewData(PortCount, newcount)
                 newcount += 1
             Loop
 
@@ -255,9 +247,9 @@
         'create file if it is the first year
         'it is now writting to database, therefore no difference if it is year 1 or not
         If g_modelRunYear = g_initialYear Then
-            Call WriteData("Seaport", "ExtVar", OutputArray, , True)
+            Call WriteData("Seaport", "ExtVar", Se_OutputArray, , True)
         Else
-            Call WriteData("Seaport", "ExtVar", OutputArray, , False)
+            Call WriteData("Seaport", "ExtVar", Se_OutputArray, , False)
         End If
 
 
@@ -267,6 +259,11 @@
     Sub GetCapData()
 
         'read CapArray until reach the end
+        If CapArray Is Nothing Then 'TODO - it seems to hit this everytime??
+            'Stop
+            'do nothing
+            Exit Sub
+        End If
         If CapArray(CapNum, 0) <> "" Then
             CapID = CapArray(CapNum, 0)
             If CapArray(CapNum, 1) = "" Then
@@ -315,7 +312,8 @@
         Do
             Call GetCapData()
             'exit the loop if read to the end of the array
-            If CapArray(CapNum, 0) = "" Then
+            If CapArray Is Nothing Then 'TODO - seems to hit this every time
+                'Stop
                 Exit Do
             End If
             Select Case CapType
@@ -381,20 +379,23 @@
             End If
             CapCount += 1
         Loop
-        'then sort the intermediate array by PortID, then by year of implementation
-        For v = 0 To 0
-            sortarray(v) = NewCapDetails(v, 0) & "&" & NewCapDetails(v, 1) & "&" & v
-        Next
-        Array.Sort(sortarray)
 
-        For v = 0 To 0
-            sortedline = sortarray(v)
-            splitline = Split(sortedline, "&")
-            arraynum = splitline(2)
-            For i = 0 To 6
-                CapArray(v, i) = NewCapDetails(arraynum, i)
+        If CapCount > 0 Then 'Had to add this line for when CapCount = 0
+            'then sort the intermediate array by PortID, then by year of implementation
+            For v = 0 To 0
+                sortarray(v) = NewCapDetails(v, 0) & "&" & NewCapDetails(v, 1) & "&" & v
             Next
-        Next
+            Array.Sort(sortarray)
+
+            For v = 0 To 0
+                sortedline = sortarray(v)
+                splitline = Split(sortedline, "&")
+                arraynum = splitline(2)
+                For i = 0 To 6
+                    CapArray(v, i) = NewCapDetails(arraynum, i)
+                Next
+            Next
+        End If
 
     End Sub
 

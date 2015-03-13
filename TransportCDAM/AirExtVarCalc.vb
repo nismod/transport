@@ -27,7 +27,7 @@
     Dim ErrorString As String
     Dim OZone(223), DZone(223) As Long
     Dim GORID(28) As Long
-    Dim FuelCost(90) As Double
+    Dim FuelCost(1) As Double
     Dim stratstring As String
     Dim FuelEff As Double
     Dim airnodefixedcost(28), airflowfixedcost(223) As Double
@@ -45,17 +45,16 @@
     Dim arraynum As Long
     Dim padflow, padyear As String
     Dim FuelEffOld As Double
-    Dim enearray(91, 6) As String
-    Dim stratarray(90, 95) As String
     Dim NodeInputArray(28, 16) As String
     Dim FlowInputArray(223, 11) As String
     Dim NodeEVInputArray(28, 16) As String
     Dim FlowEVInputArray(223, 11) As String
-    Dim NodeOutputArray(29, 13) As String
+    Dim NodeOutputArray(29, 14) As String
     Dim FlowOutputArray(224, 7) As String
     Dim CapArray(47, 5) As String
     Dim NewCapArray(47, 5) As String
     Dim CapNum As Integer
+    Dim y As Object
 
 
 
@@ -79,10 +78,9 @@
         'v1.3 altered so that scenario file is read directly as an input file
         If AirEneSource = "Database" Then
             'read data to energy array from the file
-            Call ReadData("Energy", "", enearray)
-            For y = 0 To 90
-                FuelCost(y) = enearray(y + 1, 2)
-            Next
+            y = g_modelRunYear - g_initialYear + 1 'TODO - this needs fixing once we go to database for energy 
+            FuelCost(0) = enearray(y, 2) 'last year
+            FuelCost(1) = enearray(y + 1, 2) 'this year
         End If
 
         'if including capacity changes then read first line of the capacity file and break it down into relevant sections
@@ -144,10 +142,6 @@
             Call ReadData("AirFlow", "ExtVar", FlowEVInputArray, g_modelRunYear - 1)
         End If
 
-
-        'now get strategy file too
-        Call ReadData("SubStrategy", "", stratarray)
-
     End Sub
 
     Sub CalcFlowData()
@@ -164,49 +158,49 @@
         If g_modelRunYear = g_initialYear Then
             NodeCount = 1
             Do While NodeCount < 29
-                NodeOldData(NodeCount, 0) = NodeInputArray(NodeCount, 4)
+                NodeOldData(NodeCount, 0) = NodeInputArray(NodeCount, 1)
                 'pop
-                NodeOldData(NodeCount, 1) = get_population_data_by_airportID(g_modelRunYear - 1, NodeOldData(NodeCount, 0))
+                NodeOldData(NodeCount, 1) = get_population_data_by_airportID(g_modelRunYear, NodeOldData(NodeCount, 0))
                 'gva
-                NodeOldData(NodeCount, 2) = get_gva_data_by_airportID(g_modelRunYear - 1, NodeOldData(NodeCount, 0))
+                NodeOldData(NodeCount, 2) = get_gva_data_by_airportID(g_modelRunYear, NodeOldData(NodeCount, 0))
                 'cost
-                NodeOldData(NodeCount, 3) = NodeInputArray(NodeCount, 10) * 0.29
-                airnodefixedcost(NodeCount) = NodeInputArray(NodeCount, 10) * 0.71
+                NodeOldData(NodeCount, 3) = NodeInputArray(NodeCount, 7) * 0.29
+                airnodefixedcost(NodeCount) = NodeInputArray(NodeCount, 7) * 0.71
                 'termcap
-                NodeOldData(NodeCount, 4) = NodeInputArray(NodeCount, 8)
+                NodeOldData(NodeCount, 4) = NodeInputArray(NodeCount, 5)
                 'maxatm
-                NodeOldData(NodeCount, 5) = NodeInputArray(NodeCount, 9)
+                NodeOldData(NodeCount, 5) = NodeInputArray(NodeCount, 6)
                 'psd
-                NodeOldData(NodeCount, 6) = NodeInputArray(NodeCount, 11)
+                NodeOldData(NodeCount, 6) = NodeInputArray(NodeCount, 8)
                 'psi
-                NodeOldData(NodeCount, 7) = NodeInputArray(NodeCount, 12)
+                NodeOldData(NodeCount, 7) = NodeInputArray(NodeCount, 9)
                 'lfd
-                NodeOldData(NodeCount, 8) = NodeInputArray(NodeCount, 13)
+                NodeOldData(NodeCount, 8) = NodeInputArray(NodeCount, 10)
                 'lfi
-                NodeOldData(NodeCount, 9) = NodeInputArray(NodeCount, 14)
+                NodeOldData(NodeCount, 9) = NodeInputArray(NodeCount, 11)
                 'inttripdist
-                NodeOldData(NodeCount, 10) = NodeInputArray(NodeCount, 15)
+                NodeOldData(NodeCount, 10) = NodeInputArray(NodeCount, 12)
                 'fuelseatkm
                 NodeOldData(NodeCount, 11) = 0.037251
-                GORID(NodeCount) = NodeInputArray(NodeCount, 16)
+                GORID(NodeCount) = NodeInputArray(NodeCount, 2)
                 NodeCount += 1
             Loop
 
             FlowCount = 1
             Do While FlowCount < 224
-                FlowOldData(FlowCount, 0) = FlowInputArray(FlowCount, 4)
-                OZone(FlowCount) = FlowInputArray(FlowCount, 10)
-                DZone(FlowCount) = FlowInputArray(FlowCount, 11)
-                FlowOldData(FlowCount, 5) = FlowInputArray(FlowCount, 8) * 0.29
-                airflowfixedcost(FlowCount) = FlowInputArray(FlowCount, 8) * 0.71
-                FlowOldData(FlowCount, 1) = get_population_data_by_zoneID(g_modelRunYear - 1, FlowOldData(FlowCount, 0), "OZ", "'air'", OZone(FlowCount))
-                FlowOldData(FlowCount, 2) = get_population_data_by_zoneID(g_modelRunYear - 1, FlowOldData(FlowCount, 0), "DZ", "'air'", DZone(FlowCount))
-                FlowOldData(FlowCount, 3) = get_gva_data_by_zoneID(g_modelRunYear - 1, FlowOldData(FlowCount, 0), "OZ", "'air'", OZone(FlowCount))
-                FlowOldData(FlowCount, 4) = get_gva_data_by_zoneID(g_modelRunYear - 1, FlowOldData(FlowCount, 0), "DZ", "'air'", DZone(FlowCount))
+                FlowOldData(FlowCount, 0) = FlowInputArray(FlowCount, 1)
+                OZone(FlowCount) = FlowInputArray(FlowCount, 7)
+                DZone(FlowCount) = FlowInputArray(FlowCount, 8)
+                FlowOldData(FlowCount, 5) = FlowInputArray(FlowCount, 5) * 0.29
+                airflowfixedcost(FlowCount) = FlowInputArray(FlowCount, 5) * 0.71
+                FlowOldData(FlowCount, 1) = get_population_data_by_zoneID(g_modelRunYear, OZone(FlowCount), "OZ", "'air'")
+                FlowOldData(FlowCount, 2) = get_population_data_by_zoneID(g_modelRunYear, DZone(FlowCount), "DZ", "'air'")
+                FlowOldData(FlowCount, 3) = get_gva_data_by_zoneID(g_modelRunYear, OZone(FlowCount), "OZ", "'air'")
+                FlowOldData(FlowCount, 4) = get_gva_data_by_zoneID(g_modelRunYear, DZone(FlowCount), "DZ", "'air'")
 
                 'add in the Flow ID number as some are missing from the input file
 
-                FlowLength(FlowCount) = FlowInputArray(FlowCount, 9)
+                FlowLength(FlowCount) = FlowInputArray(FlowCount, 6)
                 FlowCount += 1
             Loop
             'v1.4 set fueleffold value to 1
@@ -220,7 +214,7 @@
                 NodeOldData(NodeCount, 0) = NodeInputArray(NodeCount, 4)
                 NodeOldData(NodeCount, 1) = get_population_data_by_airportID(g_modelRunYear - 1, NodeOldData(NodeCount, 0))
                 NodeOldData(NodeCount, 2) = get_gva_data_by_airportID(g_modelRunYear - 1, NodeOldData(NodeCount, 0))
-                NodeOldData(NodeCount, 3) = NodeEVInputArray(NodeCount, 15)
+                NodeOldData(NodeCount, 3) = NodeEVInputArray(NodeCount, 15) 'TODO - this code makes no sense, there are only 13 fields in TR_IO_AirNodeExternalVariables??
 
                 OutVarCount = 4
                 'v1.4 change, previously >10
@@ -238,22 +232,22 @@
                 FlowOldData(FlowCount, 0) = FlowInputArray(FlowCount, 4)
                 OZone(FlowCount) = FlowInputArray(FlowCount, 10)
                 DZone(FlowCount) = FlowInputArray(FlowCount, 11)
-                FlowOldData(FlowCount, 1) = get_population_data_by_zoneID(g_modelRunYear - 1, FlowOldData(FlowCount, 0), "OZ", "'air'", OZone(FlowCount))
-                FlowOldData(FlowCount, 2) = get_population_data_by_zoneID(g_modelRunYear - 1, FlowOldData(FlowCount, 0), "DZ", "'air'", DZone(FlowCount))
-                FlowOldData(FlowCount, 3) = get_gva_data_by_zoneID(g_modelRunYear - 1, FlowOldData(FlowCount, 0), "OZ", "'air'", OZone(FlowCount))
-                FlowOldData(FlowCount, 4) = get_gva_data_by_zoneID(g_modelRunYear - 1, FlowOldData(FlowCount, 0), "DZ", "'air'", DZone(FlowCount))
+                FlowOldData(FlowCount, 1) = get_population_data_by_zoneID(g_modelRunYear, OZone(FlowCount), "OZ", "'air'")
+                FlowOldData(FlowCount, 2) = get_population_data_by_zoneID(g_modelRunYear, DZone(FlowCount), "DZ", "'air'")
+                FlowOldData(FlowCount, 3) = get_gva_data_by_zoneID(g_modelRunYear, OZone(FlowCount), "OZ", "'air'")
+                FlowOldData(FlowCount, 4) = get_gva_data_by_zoneID(g_modelRunYear, DZone(FlowCount), "DZ", "'air'")
                 FlowOldData(FlowCount, 5) = FlowEVInputArray(FlowCount, 9)
 
                 FlowCount += 1
             Loop
 
 
-            FuelEffOld = stratarray(g_modelRunYear - 2010 - 1, 68)
+            FuelEffOld = stratarray(1 - 1, 68)
 
         End If
 
         'get values from strategy file
-        FuelEff = stratarray(g_modelRunYear - 2010, 68) / FuelEffOld
+        FuelEff = stratarray(1, 70) / FuelEffOld
 
         'calculate new node values first
         NodeCount = 1
@@ -290,7 +284,7 @@
             ElseIf AirEneSource = "File" Then
                 'air model not yet set up for use with scaling files
             ElseIf AirEneSource = "Database" Then
-                NodeNewData(NodeCount, 3) = NodeOldData(NodeCount, 3) * (FuelCost(g_modelRunYear - 2010) / FuelCost(g_modelRunYear - 2010 - 1)) * FuelEff
+                NodeNewData(NodeCount, 3) = NodeOldData(NodeCount, 3) * (FuelCost(1) / FuelCost(0)) * FuelEff
             End If
 
             'if including capacity changes then check if there are any capacity changes in this year
@@ -308,10 +302,10 @@
             End If
             NodeNewData(NodeCount, 4) = NodeOldData(NodeCount, 4) + AddTermCap
             NodeNewData(NodeCount, 5) = NodeOldData(NodeCount, 5) + AddATMCap
-            NodeNewData(NodeCount, 6) = stratarray(g_modelRunYear - 2010, 83)
-            NodeNewData(NodeCount, 7) = stratarray(g_modelRunYear - 2010, 84)
-            NodeNewData(NodeCount, 8) = stratarray(g_modelRunYear - 2010, 85)
-            NodeNewData(NodeCount, 9) = stratarray(g_modelRunYear - 2010, 86)
+            NodeNewData(NodeCount, 6) = stratarray(1, 85)
+            NodeNewData(NodeCount, 7) = stratarray(1, 86)
+            NodeNewData(NodeCount, 8) = stratarray(1, 87)
+            NodeNewData(NodeCount, 9) = stratarray(1, 88)
             NodeNewData(NodeCount, 10) = NodeOldData(NodeCount, 10)
             If AirEneSource = "Database" Then
                 NodeNewData(NodeCount, 11) = NodeOldData(NodeCount, 11) * FuelEff
@@ -324,7 +318,7 @@
             'base fuel units per journey = averagedist * intplanesize * fuelperseatkm
             If AirCaCharge = True Then
                 If g_modelRunYear >= AirCaChYear Then
-                    carbch = (NodeNewData(NodeCount, 10) * NodeNewData(NodeCount, 7) * 0.037251) * FuelEff * stratarray(g_modelRunYear - 2010, 73) * (stratarray(g_modelRunYear - 2010, 71) / 10)
+                    carbch = (NodeNewData(NodeCount, 10) * NodeNewData(NodeCount, 7) * 0.037251) * FuelEff * stratarray(1, 75) * (stratarray(1, 73) / 10)
                 Else
                     carbch = 0
                 End If
@@ -345,6 +339,8 @@
                 NodeOutputArray(NodeCount, n + 2) = NodeNewData(NodeCount, n)
             Next
             NodeOutputArray(NodeCount, 14) = NodeNewData(NodeCount, 3)
+
+
             'OutVarCount = 1
             'Do Until OutVarCount > 11
             '    OutputRow = OutputRow & NodeNewData(NodeCount, OutVarCount) & ","
@@ -378,8 +374,8 @@
                 'if year is after 2093 then no population forecasts are available so assume population remains constant
                 'now modified as population data available up to 2100 - so should never need 'else'
                 'v1.9 now read pop data using database function
-                FlowNewData(FlowCount, 1) = get_population_data_by_zoneID(g_modelRunYear, FlowOldData(FlowCount, 0), "OZ", "'air'", OZone(FlowCount))
-                FlowNewData(FlowCount, 2) = get_population_data_by_zoneID(g_modelRunYear, FlowOldData(FlowCount, 0), "DZ", "'air'", DZone(FlowCount))
+                FlowNewData(FlowCount, 1) = get_population_data_by_zoneID(g_modelRunYear, OZone(FlowCount), "OZ", "'air'")
+                FlowNewData(FlowCount, 2) = get_population_data_by_zoneID(g_modelRunYear, DZone(FlowCount), "DZ", "'air'")
             End If
             If AirEcoSource = "Constant" Then
                 FlowNewData(FlowCount, 3) = FlowOldData(FlowCount, 3) * GVAGrowth
@@ -390,8 +386,8 @@
                 'now modified as gva data available up to 2100 - so should never need 'else'
                 'v1.9 now read gva data using database function
                 'database does not have gva forecasts after year 2050, and the calculation is only available before year 2050
-                FlowNewData(FlowCount, 3) = get_gva_data_by_zoneID(g_modelRunYear, FlowOldData(FlowCount, 0), "OZ", "'air'", OZone(FlowCount))
-                FlowNewData(FlowCount, 4) = get_gva_data_by_zoneID(g_modelRunYear, FlowOldData(FlowCount, 0), "DZ", "'air'", DZone(FlowCount))
+                FlowNewData(FlowCount, 3) = get_gva_data_by_zoneID(g_modelRunYear, OZone(FlowCount), "OZ", "'air'")
+                FlowNewData(FlowCount, 4) = get_gva_data_by_zoneID(g_modelRunYear, DZone(FlowCount), "DZ", "'air'")
             End If
 
             If AirEneSource = "Constant" Then
@@ -399,7 +395,7 @@
             ElseIf AirEneSource = "File" Then
                 'air model not yet set up for scaling files
             ElseIf AirEneSource = "Database" Then
-                FlowNewData(FlowCount, 5) = FlowOldData(FlowCount, 5) * (FuelCost(g_modelRunYear - 2010) / FuelCost(g_modelRunYear - 2010 - 1)) * FuelEff
+                FlowNewData(FlowCount, 5) = FlowOldData(FlowCount, 5) * (FuelCost(1) / FuelCost(0)) * FuelEff
             End If
 
             'if applying a carbon charge then calculate it
@@ -407,7 +403,7 @@
             'base fuel units per journey = averagedist * domplanesize * fuelperseatkm
             If AirCaCharge = True Then
                 If g_modelRunYear >= AirCaChYear Then
-                    carbch = (FlowLength(FlowCount) * stratarray(g_modelRunYear - 2010, 83) * 0.037251) * FuelEff * stratarray(g_modelRunYear - 2010, 73) * (stratarray(g_modelRunYear - 2010, 71) / 10)
+                    carbch = (FlowLength(FlowCount) * stratarray(1, 85) * 0.037251) * FuelEff * stratarray(1, 75) * (stratarray(1, 73) / 10)
                 Else
                     carbch = 0
                 End If
@@ -441,6 +437,7 @@
     Sub GetCapData()
         'modified in v1.3
         'read cap data from CapArray until all rows are read
+        If CapArray Is Nothing Then Exit Sub 'TODO - this gets set off every time
         If CapArray(CapNum, 0) <> "" Then
             CapID = CapArray(CapNum, 0)
             If CapArray(CapNum, 1) = "-1" Then
@@ -483,6 +480,9 @@
 
         Do
             Call GetCapData()
+            If CapArray Is Nothing Then
+                Exit Do
+            End If
             If CapArray(CapNum, 0) = 0 Then
                 Exit Do
             End If

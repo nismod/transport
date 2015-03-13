@@ -38,7 +38,6 @@
     Dim InputArray(144, 14) As String
     Dim OutputArray(145, 5) As String
     Dim TempArray(145, 4) As String
-    Dim stratarray(90, 95) As String
 
 
     Public Sub RailZoneMain()
@@ -75,7 +74,7 @@
 
         'create file is true if it is the initial year and write to outputfile and temp file
         'v1.9 now write to database
-        If g_modelRunYear = StartYear Then
+        If g_modelRunYear = g_initialYear Then
             Call WriteData("RailZone", "Output", OutputArray, , True)
             Call WriteData("RailZone", "Temp", TempArray, , True)
         Else
@@ -104,7 +103,6 @@
 
         'read in the strategy
         If TripRates = "SubStrategy" Then
-            Call ReadData("SubStrategy", "", stratarray, g_modelRunYear)
             RlzTripRates = stratarray(1, 93)
         End If
 
@@ -114,7 +112,7 @@
 
         'Get ZoneID for the pop and gva functions
         'read the input data for the inputarray which is from the database
-        If g_modelRunYear = 1 Then
+        If g_modelRunYear = g_initialYear Then
             'if it is initial year, read from the initial input
             RlZID(InputCount, 0) = InputArray(InputCount, 4)
             FareE(InputCount, 0) = InputArray(InputCount, 6)
@@ -128,8 +126,8 @@
         Else
             'if not year 1, read from the Input file
             RlZID(InputCount, 0) = InputArray(InputCount, 3)
-            RlZPop(InputCount, 0) = RlZPreExtVar(InputCount, 4)
-            RlZGva(InputCount, 0) = RlZPreExtVar(InputCount, 5)
+            RlZPop(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear - 1, RlZID(InputCount, 0), "Zone", "'rail'")
+            RlZGva(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear - 1, RlZID(InputCount, 0), "Zone", "'rail'")
             RlZCost(InputCount, 0) = RlZPreExtVar(InputCount, 6)
             RlZStat(InputCount, 0) = RlZPreExtVar(InputCount, 7)
             RlZCarFuel(InputCount, 0) = RlZPreExtVar(InputCount, 8)
