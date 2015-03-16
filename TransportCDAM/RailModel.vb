@@ -98,11 +98,11 @@ Module RailModel
                     Call WriteRlLinkOutput()
                 Else
                     'if not then this is the first year there have been track and trains on this route
-                    If RailCUPeriod = "Hour" Then
+                    If RailCUPeriod = "busy" Then
                         BusyPer(InputCount, 0) = 0.08
                     End If
                     'calculate CU
-                    If RailCUPeriod = "Hour" Then
+                    If RailCUPeriod = "busy" Then
                         CUNew(InputCount, 0) = ((RlLinkExtVars(InputCount, 14) * 0.08) / RlLinkExtVars(InputCount, 4)) / (60 / ModelPeakHeadway(InputCount, 0))
                     Else
                         CUNew(InputCount, 0) = (RlLinkExtVars(InputCount, 14) / RlLinkExtVars(InputCount, 4)) / RlLinkExtVars(InputCount, 11)
@@ -198,7 +198,7 @@ Module RailModel
             RlLinkCost(InputCount, 0) = InputArray(InputCount, 7)
             CarFuel(InputCount, 0) = InputArray(InputCount, 8)
             MaxTDBase(InputCount, 0) = InputArray(InputCount, 9)
-            If RailCUPeriod = "Hour" Then
+            If RailCUPeriod = "busy" Then
                 BusyTrains(InputCount, 0) = InputArray(InputCount, 14)
                 If OldTrains(InputCount, 0) = 0 Then
                     BusyPer(InputCount, 0) = 0
@@ -270,7 +270,7 @@ Module RailModel
         'apply delay constraint
         NewTracks = RlLinkExtVars(InputCount, 4) + AddedTracks(InputCount, 0)
         MaxTDNew = RlLinkExtVars(InputCount, 11)
-        If RailCUPeriod = "Hour" Then
+        If RailCUPeriod = "busy" Then
             If MaxTDNew <> MaxTDBase(InputCount, 0) Then
                 ModelPeakHeadway(InputCount, 0) = ModelPeakHeadway(InputCount, 0) / (MaxTDNew / MaxTDBase(InputCount, 0))
             End If
@@ -280,7 +280,7 @@ Module RailModel
         'if CUNew is greater than 1 (ie over the maximum), then set the number of trains to be equal to the maximum and move on
         '***arguably should store the latent demand - but not doing this currently
         If CUNew(InputCount, 0) > 1 Then
-            If RailCUPeriod = "Hour" Then
+            If RailCUPeriod = "busy" Then
                 NewTrains = NewTracks * (60 / ModelPeakHeadway(InputCount, 0)) / BusyPer(InputCount, 0)
             Else
                 NewTrains = NewTracks * MaxTDNew
@@ -453,7 +453,7 @@ Module RailModel
     End Sub
 
     Sub DelayCalc()
-        If RailCUPeriod = "Hour" Then
+        If RailCUPeriod = "busy" Then
             CUOld(InputCount, 0) = ((OldTrains(InputCount, 0) * BusyPer(InputCount, 0)) / OldTracks(InputCount, 0)) / (60 / ModelPeakHeadway(InputCount, 0))
             CUNew(InputCount, 0) = ((NewTrains * BusyPer(InputCount, 0)) / NewTracks) / (60 / ModelPeakHeadway(InputCount, 0))
         Else
