@@ -112,6 +112,12 @@
 
     Public Sub RoadLinkMain()
 
+        If g_modelRunYear = 2010 Then
+            'create data for year 2010
+            Call Year2010()
+            Exit Sub
+        End If
+
         'read all related files
         Call SetFiles()
 
@@ -219,7 +225,7 @@
 
         'load the time profiles from database
         Call ReadData("RoadLink", "DailyProfile", TimeProfile, g_modelRunYear)
-        
+
         Dim d As Byte
 
         d = 1
@@ -235,7 +241,7 @@
         Dim varnum As Long
         Dim i As Long
         Dim hrow As Integer
- 
+
         If g_modelRunYear = g_initialYear Then
             'read base year (year 0) data
             FlowID(link, 1) = InputArray(link, 1)
@@ -1516,6 +1522,33 @@
         Else
             CapChangeNew(link, 1) = True
         End If
+
+    End Sub
+
+    Sub Year2010()
+        Call ReadData("RoadLink", "Input", InputArray, g_modelRunYear)
+
+        'read initial data and write to output table as the 2010 result
+        link = 1
+
+        Do Until link > 291
+            'TODO complete the output of road link for year 2010
+            OutputArray(link, 0) = g_modelRunID
+            OutputArray(link, 1) = InputArray(link, 1)
+            OutputArray(link, 2) = g_modelRunYear
+            OutputArray(link, 3) = InputArray(link, 7)
+            OutputArray(link, 4) = MeanSpeedNew
+            OutputArray(link, 5) = MwayFlowNew
+            OutputArray(link, 6) = DualFlowNew
+            OutputArray(link, 7) = SingFlowNew
+            OutputArray(link, 8) = MWaySpdNew
+            OutputArray(link, 9) = DualSpdNew
+            OutputArray(link, 10) = SingSpdNew
+
+            link += 1
+        Loop
+
+        Call WriteData("RoadLink", "Output", OutputArray, , False)
 
     End Sub
 

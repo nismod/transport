@@ -44,6 +44,11 @@
 
     Public Sub RlZoneEVMain()
 
+        If g_modelRunYear = 2010 Then
+
+            Exit Sub
+        End If
+
         'read all related files
         Call GetRlZEVFiles()
 
@@ -159,7 +164,7 @@
         Dim diecarch, elecarch As Double
         Dim ElStat(238, 0) As Long
         Dim InputCount As Long
-        
+
 
         'initialize values
         If RlZOthSource = "File" Then 'TODO - what is here?

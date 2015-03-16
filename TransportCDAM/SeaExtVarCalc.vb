@@ -39,6 +39,12 @@
 
 
     Sub SeaEVMain()
+
+        If g_modelRunYear = 2010 Then
+
+            Exit Sub
+        End If
+
         'set scaling factors - as a default they are just set to be constant over time
         If SeaPopSource = "Constant" Then
             PopGrowth = 1.005

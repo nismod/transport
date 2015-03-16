@@ -62,7 +62,11 @@
 
 
     Public Sub RailLinkEVMain()
-        Dim y As Integer
+
+        If g_modelRunYear = 2010 Then
+
+            Exit Sub
+        End If
 
         'check if there is any value assigned to RlLEVSource - if not then set to constant as default
         If RlLEVSource = "" Then

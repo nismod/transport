@@ -77,6 +77,10 @@
 
     Public Sub RoadLinkEVMain()
 
+        If g_modelRunYear = 2010 Then
+
+            Exit Sub
+        End If
 
         'get the input and output file names
         Call GetFiles()

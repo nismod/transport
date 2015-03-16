@@ -60,6 +60,11 @@
 
     Public Sub AirEVMain()
 
+        If g_modelRunYear = 2010 Then
+
+            Exit Sub
+        End If
+
         'get all related files
         Call GetFiles()
 

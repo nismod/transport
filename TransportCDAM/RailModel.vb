@@ -69,6 +69,12 @@ Module RailModel
 
 
     Public Sub RailLinkMain()
+
+        If g_modelRunYear = 2010 Then
+
+            Exit Sub
+        End If
+
         'read related files
         Call RailLinkInputFiles()
 

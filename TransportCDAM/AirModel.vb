@@ -95,6 +95,10 @@ Module AirModel
         MaxAirNode = 28
         MaxAirFlow = 223
 
+        If g_modelRunYear = 2010 Then
+
+            Exit Sub
+        End If
 
         'read all related files
         Call AirInputFiles()

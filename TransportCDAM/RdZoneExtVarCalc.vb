@@ -77,6 +77,10 @@
 
     Public Sub RoadZoneEVMain()
 
+        If g_modelRunYear = 2010 Then
+
+            Exit Sub
+        End If
 
         'if using WPPL then check if the start year is a valid value
         'maybe we can move these warning to the setup stage rather than the run model stage? e.g. simply not allow users to enter years not between 2011 and 2100

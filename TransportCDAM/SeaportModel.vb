@@ -43,6 +43,13 @@
 
     Public Sub SeaMain()
 
+        If g_modelRunYear = 2010 Then
+            'create data for year 2010
+            Call Year2010()
+
+            Exit Sub
+        End If
+
         'get input files and create output files
         Call SeaInputFiles()
 
@@ -367,4 +374,26 @@
 
     End Sub
 
+    Sub Year2010()
+        Call ReadData("Seaport", "Input", InputArray, g_modelRunYear)
+
+        'read initial data and write to output table as the 2010 result
+        InputCount = 1
+
+        Do While InputCount < 48
+            OutputArray(InputCount, 0) = g_modelRunID
+            OutputArray(InputCount, 1) = InputArray(InputCount, 1)
+            OutputArray(InputCount, 2) = g_modelRunYear
+            OutputArray(InputCount, 3) = InputArray(InputCount, 3)
+            OutputArray(InputCount, 4) = InputArray(InputCount, 4)
+            OutputArray(InputCount, 5) = InputArray(InputCount, 5)
+            OutputArray(InputCount, 6) = InputArray(InputCount, 6)
+            OutputArray(InputCount, 7) = InputArray(InputCount, 7)
+
+            InputCount += 1
+        Loop
+
+        Call WriteData("Seaport", "Output", OutputArray, , True)
+
+    End Sub
 End Module

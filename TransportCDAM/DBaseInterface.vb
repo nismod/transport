@@ -120,7 +120,7 @@ Module DBaseInterface
     Dim airGVAArray(,) As String = Nothing
     Dim zoneGVAArray(,) As String = Nothing
     Dim dataArray(,) As String = Nothing
-    
+
     'Global variables
     Public g_modelRunID As Integer
     Public g_modelRunYear As Integer
@@ -962,7 +962,7 @@ Module DBaseInterface
 
         'NOT USED FOR DATABASE ANYMORE 
 
-        Select zoneType
+        Select Case zoneType
             Case "Zone"
                 theSQL = "SELECT * FROM CDAM_tr_zone_get_pop_by_model_run_id(" & g_modelRunID & "," & year & "," & type & "," & ZoneID & ") "
                 theSQL &= " AS (scenario_id varchar, year integer, gender varchar, category varchar, flow_id integer," & Chr(34) & "PopOZ" & Chr(34)
@@ -981,7 +981,7 @@ Module DBaseInterface
             Return 0
         End If
 
-        
+
         'Get the population for the specified zone
         Select Case zoneType
             Case "OZ"
@@ -1128,14 +1128,14 @@ Module DBaseInterface
             theSQL &= "dzone_id integer);"
         End If
 
-        
+
         If LoadSQLDataToArray(zoneGVAArray, theSQL) = False Then
             zoneGVAArray = Nothing
             Return 0
         End If
-        
+
         'Get the gva for the specified zone
-        Select zoneType
+        Select Case zoneType
             Case "OZ"
                 For i = 1 To UBound(zoneGVAArray, 2)
                     If CInt(zoneGVAArray(4, i)) = ODZoneID Then
@@ -1574,8 +1574,8 @@ Module DBaseInterface
 
             End If
 
-            
-            
+
+
             'reDim the input array by getting the count of rows
             DataColumns = dbarray.Count
             DataRows = 0
