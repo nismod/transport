@@ -2562,7 +2562,7 @@
         If ComboBox30.SelectedItem = "Constant" Then
             TripRates = "Constant"
         ElseIf ComboBox30.SelectedItem = "Strategy File" Then
-            TripRates = "SubStrategy"
+            TripRates = True
         End If
     End Sub
 

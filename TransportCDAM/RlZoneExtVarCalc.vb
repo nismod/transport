@@ -258,8 +258,8 @@
             'if using scaling factors then read in the scaling factors for this year
             If RlZOthSource = "File" Then
                 'need to leave cost growth factor until we know the new proportion of electric/diesel trains
-                GJTGrowth = 1 + ScalingData(1, 7)
-                ElPGrowth = ScalingData(1, 8)
+                GJTGrowth = 1 + ScalingData(1, 8)
+                ElPGrowth = ScalingData(1, 9)
             Else
 Elect:          'altered to allow reading in electrification input file***
                 If ZoneID(InputCount, 0) = ElectricZone Then
@@ -295,11 +295,11 @@ NextYear:
             If RlZPopSource = "File" Then
                 Select Case Country(InputCount, 0)
                     Case "E"
-                        PopGrowth = 1 + ScalingData(1, 1)
-                    Case "S"
                         PopGrowth = 1 + ScalingData(1, 2)
-                    Case "W"
+                    Case "S"
                         PopGrowth = 1 + ScalingData(1, 3)
+                    Case "W"
+                        PopGrowth = 1 + ScalingData(1, 4)
                 End Select
                 PopNew = PopOld(InputCount, 0) * PopGrowth
             End If
@@ -317,7 +317,7 @@ NextYear:
             If RlZEcoSource = "Constant" Then
                 GVANew = GVAOld(InputCount, 0) * GVAGrowth
             ElseIf RlZEcoSource = "File" Then
-                GVAGrowth = 1 + ScalingData(1, 4)
+                GVAGrowth = 1 + ScalingData(1, 5)
                 GVANew = GVAOld(InputCount, 0) * GVAGrowth
             ElseIf RlZEcoSource = "Database" Then
                 'if year is after 2050 then no gva forecasts are available so assume gva remains constant
@@ -340,12 +340,12 @@ NextYear:
             If RlZEneSource = "File" Then
                 'fuel forms 8.77% of costs, and in base year electric costs are set as being 0.553 times diesel costs - base prices set above
                 'scale both base prices
-                DieselNew = DieselOld(InputCount, 0) * (1 + ScalingData(1, 5)) * FuelEff(1)
-                ElectricNew = ElectricOld(InputCount, 0) * (1 + ScalingData(1, 6)) * FuelEff(0)
+                DieselNew = DieselOld(InputCount, 0) * (1 + ScalingData(1, 6)) * FuelEff(1)
+                ElectricNew = ElectricOld(InputCount, 0) * (1 + ScalingData(1, 7)) * FuelEff(0)
                 ''maintenance and leasing forms 26.62% of total costs, and in base year electric costs are set as being 0.758 times diesel costs - base prices set above
                 ''don't need to scale as assuming these costs remain constant per train over time
                 '*****this assumes car fuel costs are only based on oil prices - when really we need to integrate this with the road model to look at road fuel/split
-                FuelGrowth = 1 + ScalingData(1, 5)
+                FuelGrowth = 1 + ScalingData(1, 6)
             ElseIf RlZEneSource = "Database" Then
                 DieselNew = DieselOld(InputCount, 0) * (InDieselNew / InDieselOld(InputCount, 0)) * FuelEff(1)
                 ElectricNew = ElectricOld(InputCount, 0) * (InElectricNew / InElectricOld(InputCount, 0)) * FuelEff(0)
@@ -434,30 +434,30 @@ NextYear:
 
     Sub GetCapData()
         'read capacity data here
+        If CapArray Is Nothing Then Exit Sub
 
-
-        If CapArray(CapNum, 0) = "" Then
+        If CapArray(CapNum, 1) = "" Then
             'do nothing if reach the end
         Else
-            CapID = CapArray(CapNum, 0)
-            CapYear = CapArray(CapNum, 1) - 2010
-            StationChange = CapArray(CapNum, 2)
-            TripChange = CapArray(CapNum, 3)
+            CapID = CapArray(CapNum, 1)
+            CapYear = CapArray(CapNum, 2)
+            StationChange = CapArray(CapNum, 3)
+            TripChange = CapArray(CapNum, 4)
             CapNum += 1
         End If
     End Sub
 
     Sub ElectricRead()
         'read electrification array here
-        If elearray Is Nothing Then 'TODO - had to add this as elearray IS NOTHING - is this wrong?
+        If elearray Is Nothing Then 'TODO - had to add this as elearray IS NOTHING - is this wrong? 'A: it is correct
             Elect = False
-        ElseIf elearray(EleNum, 2) = "" Then
+        ElseIf elearray(EleNum, 1) = "" Then
             ElectricZone = 0
             Elect = False
         Else
-            ElectricZone = elearray(EleNum, 2)
-            ElectricYear = elearray(EleNum, 3)
-            ElectricStations = elearray(EleNum, 4)
+            ElectricZone = elearray(EleNum, 1)
+            ElectricYear = elearray(EleNum, 2)
+            ElectricStations = elearray(EleNum, 3)
             EleNum += 1
         End If
 

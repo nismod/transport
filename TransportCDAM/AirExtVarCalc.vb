@@ -50,9 +50,9 @@
     Dim NodeEVInputArray(28, 16) As String
     Dim FlowEVInputArray(223, 11) As String
     Dim NodeOutputArray(29, 14) As String
-    Dim FlowOutputArray(224, 7) As String
-    Dim CapArray(47, 5) As String
-    Dim NewCapArray(47, 5) As String
+    Dim FlowOutputArray(224, 8) As String
+    Dim CapArray(47, 6) As String
+    Dim NewCapArray(47, 6) As String
     Dim CapNum As Integer
     Dim y As Object
 
@@ -98,7 +98,9 @@
             Call CapChangeCalc()
 
             'write all lines to intermediate capacity file
-            Call WriteData("AirNode", "NewCap", NewCapArray)
+            If Not NewCapArray Is Nothing Then
+                Call WriteData("AirNode", "NewCap", NewCapArray)
+            End If
         End If
 
         'read capchange info for the current year
@@ -438,21 +440,21 @@
         'modified in v1.3
         'read cap data from CapArray until all rows are read
         If CapArray Is Nothing Then Exit Sub 'TODO - this gets set off every time
-        If CapArray(CapNum, 0) <> "" Then
-            CapID = CapArray(CapNum, 0)
-            If CapArray(CapNum, 1) = "-1" Then
+        If CapArray(CapNum, 1) <> "" Then
+            CapID = CapArray(CapNum, 1)
+            If CapArray(CapNum, 2) = "-1" Then
                 CapYear = -1
             Else
                 If AddingCap = False Then
-                    CapYear = CapArray(CapNum, 1)
+                    CapYear = CapArray(CapNum, 2)
                 Else
-                    CapYear = CapArray(CapNum, 1)
+                    CapYear = CapArray(CapNum, 2)
                 End If
             End If
-            TermCapChange = CapArray(CapNum, 2)
-            ATMChange = CapArray(CapNum, 3)
+            TermCapChange = CapArray(CapNum, 3)
+            ATMChange = CapArray(CapNum, 4)
             If AddingCap = False Then
-                CapType = CapArray(CapNum, 4)
+                CapType = CapArray(CapNum, 5)
             End If
             CapNum += 1
         Else
@@ -478,12 +480,14 @@
         RunToBuild = 0
         CapNum = 1
 
+        If CapArray Is Nothing Then Exit Sub
+
         Do
             Call GetCapData()
             If CapArray Is Nothing Then
                 Exit Do
             End If
-            If CapArray(CapNum, 0) = 0 Then
+            If CapArray(CapNum, 1) = 0 Then
                 Exit Do
             End If
             Select Case CapType

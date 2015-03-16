@@ -65,7 +65,9 @@
             Call CapChangeCalc()
 
             'write all lines to intermediate capacity file
-            Call WriteData("Seaport", "NewCap", CapArray)
+            If Not CapArray Is Nothing Then
+                Call WriteData("Seaport", "NewCap", CapArray)
+            End If
         End If
 
 
@@ -264,25 +266,25 @@
             'do nothing
             Exit Sub
         End If
-        If CapArray(CapNum, 0) <> "" Then
-            CapID = CapArray(CapNum, 0)
-            If CapArray(CapNum, 1) = "" Then
+        If CapArray(CapNum, 1) <> "" Then
+            CapID = CapArray(CapNum, 1)
+            If CapArray(CapNum, 2) = "" Then
                 CapYear = -1
             Else
                 If AddingCap = False Then
-                    CapYear = CapArray(CapNum, 1)
+                    CapYear = CapArray(CapNum, 2)
                 Else
-                    CapYear = CapArray(CapNum, 1)
+                    CapYear = CapArray(CapNum, 2)
                 End If
             End If
 
-            LBChange = CapArray(CapNum, 2)
-            DBChange = CapArray(CapNum, 3)
-            GCChange = CapArray(CapNum, 4)
-            LLChange = CapArray(CapNum, 5)
-            RRChange = CapArray(CapNum, 6)
+            LBChange = CapArray(CapNum, 3)
+            DBChange = CapArray(CapNum, 4)
+            GCChange = CapArray(CapNum, 5)
+            LLChange = CapArray(CapNum, 6)
+            RRChange = CapArray(CapNum, 7)
             If AddingCap = False Then
-                CapType = CapArray(CapNum, 7)
+                CapType = CapArray(CapNum, 8)
             End If
             CapNum += 1
 
@@ -312,7 +314,7 @@
         Do
             Call GetCapData()
             'exit the loop if read to the end of the array
-            If CapArray Is Nothing Then 'TODO - seems to hit this every time
+            If CapArray(CapNum, 1) Is Nothing Then 'TODO - seems to hit this every time
                 'Stop
                 Exit Do
             End If
@@ -392,7 +394,7 @@
                 splitline = Split(sortedline, "&")
                 arraynum = splitline(2)
                 For i = 0 To 6
-                    CapArray(v, i) = NewCapDetails(arraynum, i)
+                    CapArray(v, i + 1) = NewCapDetails(arraynum, i)
                 Next
             Next
         End If

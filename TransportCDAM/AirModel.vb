@@ -62,7 +62,7 @@ Module AirModel
     Dim AirpDomTripsLatent(28) As Double
     'this specifies whether a flow is constrained at the origin end or the destination end
     Dim AirfCapConst(223, 1) As Boolean
-    Dim AirEl(90, 6) As String
+    Dim AirEl(90, 8) As String
     Dim AirpIntFuel(28) As Double
     Dim AirfFuel(223) As Double
     Dim AirpAddedCap(28, 2) As Long
@@ -209,7 +209,7 @@ Module AirModel
         'get the elasticity values
         Call ReadData("AirNode", "Elasticity", AirEl, g_modelRunYear)
 
-        If TripRates = "SubStrategy" Then
+        If TripRates = True Then
             'read from the strategy file
             For r = 1 To 90
                 AirTripRates = stratarray(1, 96)
@@ -227,17 +227,18 @@ Module AirModel
 
         Do Until AirportCount > MaxAirNode
 
-            If g_modelRunYear = 1 Then
+            If g_modelRunYear = g_initialYear Then
                 'if it is initial year, read from the initial input
-                AirNodeID(AirportCount, 0) = NodeInputArray(AirportCount, 4)
+                AirNodeID(AirportCount, 0) = NodeInputArray(AirportCount, 1)
                 'loop through all elements of the input line, transferring the data to the airport base data array
-                For AirportField = 1 To 5
-                    AirportBaseData(AirportCount, AirportField) = NodeInputArray(AirportCount, AirportField + 4)
+                AirportBaseData(AirportCount, 1) = NodeInputArray(AirportCount, 3) + NodeInputArray(AirportCount, 4)
+                For AirportField = 2 To 5
+                    AirportBaseData(AirportCount, AirportField) = NodeInputArray(AirportCount, AirportField + 1)
                 Next
-                AirportBaseData(AirportCount, 6) = get_population_data_by_airportID(g_modelRunYear, AirNodeID(AirportCount, 0))
-                AirportBaseData(AirportCount, 7) = get_gva_data_by_airportID(g_modelRunYear, AirNodeID(AirportCount, 0))
+                AirportBaseData(AirportCount, 6) = get_population_data_by_airportID(g_modelRunYear - 1, AirNodeID(AirportCount, 0))
+                AirportBaseData(AirportCount, 7) = get_gva_data_by_airportID(g_modelRunYear - 1, AirNodeID(AirportCount, 0))
                 For AirportField = 8 To 13
-                    AirportBaseData(AirportCount, AirportField) = NodeInputArray(AirportCount, AirportField + 2)
+                    AirportBaseData(AirportCount, AirportField) = NodeInputArray(AirportCount, AirportField - 1)
                 Next
                 AirpTripsLatent(AirportCount) = 0
             Else
@@ -353,21 +354,21 @@ Module AirModel
                 OldX = AirportBaseData(aircount, 3)
                 'pop ratio
                 OldY = AirportBaseData(aircount, 6)
-                If TripRates = "SubStrategy" Then
+                If TripRates = True Then
                     NewY = AirportExtVar(aircount, 4) * AirTripRates
                 Else
                     NewY = AirportExtVar(aircount, 4)
                 End If
 
                 If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                    OldEl = AirEl(1, 4)
+                    OldEl = AirEl(1, 6)
                     Call VarElCalc()
                     AirpPopRat = VarRat
                 Else
-                    If TripRates = "SubStrategy" Then
-                        AirpPopRat = ((AirportExtVar(aircount, 4) * AirTripRates) / AirportBaseData(aircount, 6)) ^ AirEl(1, 4)
+                    If TripRates = True Then
+                        AirpPopRat = ((AirportExtVar(aircount, 4) * AirTripRates) / AirportBaseData(aircount, 6)) ^ AirEl(1, 6)
                     Else
-                        AirpPopRat = (AirportExtVar(aircount, 4) / AirportBaseData(aircount, 6)) ^ AirEl(1, 4)
+                        AirpPopRat = (AirportExtVar(aircount, 4) / AirportBaseData(aircount, 6)) ^ AirEl(1, 6)
                     End If
 
                 End If
@@ -375,35 +376,35 @@ Module AirModel
                 OldY = AirportBaseData(aircount, 7)
                 NewY = AirportExtVar(aircount, 5)
                 If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                    OldEl = AirEl(1, 5)
+                    OldEl = AirEl(1, 7)
                     Call VarElCalc()
                     AirpGvaRat = VarRat
                 Else
-                    AirpGvaRat = (AirportExtVar(aircount, 5) / AirportBaseData(aircount, 7)) ^ AirEl(1, 5)
+                    AirpGvaRat = (AirportExtVar(aircount, 5) / AirportBaseData(aircount, 7)) ^ AirEl(1, 7)
                 End If
                 'cost ratio
                 OldY = AirportBaseData(aircount, 8)
                 NewY = AirportExtVar(aircount, 6) + AirpCapU(aircount, 3)
                 If OldY > 0 Then
                     If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                        OldEl = AirEl(1, 6)
+                        OldEl = AirEl(1, 8)
                         Call VarElCalc()
                         AirpCostRat = VarRat
                     Else
-                        AirpCostRat = ((AirportExtVar(aircount, 6) + AirpCapU(aircount, 3)) / AirportBaseData(aircount, 8)) ^ AirEl(1, 6)
+                        AirpCostRat = ((AirportExtVar(aircount, 6) + AirpCapU(aircount, 3)) / AirportBaseData(aircount, 8)) ^ AirEl(1, 8)
                     End If
                 Else
                     AirpCostRat = 1
                 End If
 
             Else
-                If TripRates = "SubStrategy" Then
-                    AirpPopRat = ((AirportExtVar(aircount, 4) * AirTripRates) / AirportBaseData(aircount, 6)) ^ AirEl(1, 4)
+                If TripRates = True Then
+                    AirpPopRat = ((AirportExtVar(aircount, 4) * AirTripRates) / AirportBaseData(aircount, 6)) ^ AirEl(1, 6)
                 Else
-                    AirpPopRat = (AirportExtVar(aircount, 4) / AirportBaseData(aircount, 6)) ^ AirEl(1, 4)
+                    AirpPopRat = (AirportExtVar(aircount, 4) / AirportBaseData(aircount, 6)) ^ AirEl(1, 6)
                 End If
-                AirpGvaRat = (AirportExtVar(aircount, 5) / AirportBaseData(aircount, 7)) ^ AirEl(1, 5)
-                AirpCostRat = ((AirportExtVar(aircount, 6) + AirpCapU(aircount, 3)) / AirportBaseData(aircount, 8)) ^ AirEl(1, 6)
+                AirpGvaRat = (AirportExtVar(aircount, 5) / AirportBaseData(aircount, 7)) ^ AirEl(1, 7)
+                AirpCostRat = ((AirportExtVar(aircount, 6) + AirpCapU(aircount, 3)) / AirportBaseData(aircount, 8)) ^ AirEl(1, 8)
             End If
 
             AirpTripRat = AirpPopRat * AirpGvaRat * AirpCostRat
@@ -440,21 +441,21 @@ Module AirModel
         AirportCount = 1
 
         Do Until AirportCount > MaxAirFlow
-            If g_modelRunYear = 1 Then
+            If g_modelRunYear = g_initialYear Then
                 'if it is initial year, read from the initial input
-                AirFlowID(AirportCount, 0) = FlowInputArray(AirportCount, 4)
+                AirFlowID(AirportCount, 0) = FlowInputArray(AirportCount, 1)
                 'loop through all elements of the input line, transferring the data to the airport base data array
                 For AirportField = 1 To 3
-                    AirFlowBaseData(AirportCount, AirportField) = FlowInputArray(AirportCount, AirportField + 4)
+                    AirFlowBaseData(AirportCount, AirportField) = FlowInputArray(AirportCount, AirportField + 1)
                 Next
-                OZoneID = FlowInputArray(AirportCount, 10)
-                DZoneID = FlowInputArray(AirportCount, 11)
-                AirFlowBaseData(AirportCount, 4) = get_population_data_by_zoneID(g_modelRunYear, OZoneID, "OZ", "'air'")
-                AirFlowBaseData(AirportCount, 5) = get_population_data_by_zoneID(g_modelRunYear, DZoneID, "DZ", "'air'")
-                AirFlowBaseData(AirportCount, 6) = get_gva_data_by_zoneID(g_modelRunYear, OZoneID, "OZ", "'air'")
-                AirFlowBaseData(AirportCount, 7) = get_gva_data_by_zoneID(g_modelRunYear, DZoneID, "DZ", "'air'")
+                OZoneID = FlowInputArray(AirportCount, 7)
+                DZoneID = FlowInputArray(AirportCount, 8)
+                AirFlowBaseData(AirportCount, 4) = get_population_data_by_zoneID(g_modelRunYear - 1, OZoneID, "OZ", "'air'")
+                AirFlowBaseData(AirportCount, 5) = get_population_data_by_zoneID(g_modelRunYear - 1, DZoneID, "DZ", "'air'")
+                AirFlowBaseData(AirportCount, 6) = get_gva_data_by_zoneID(g_modelRunYear - 1, OZoneID, "OZ", "'air'")
+                AirFlowBaseData(AirportCount, 7) = get_gva_data_by_zoneID(g_modelRunYear - 1, DZoneID, "DZ", "'air'")
                 For AirportField = 8 To 9
-                    AirFlowBaseData(AirportCount, AirportField) = FlowInputArray(AirportCount, AirportField)
+                    AirFlowBaseData(AirportCount, AirportField) = FlowInputArray(AirportCount, AirportField - 3)
                 Next
 
                 AirfTripsLatent(AirportCount) = 0
@@ -535,57 +536,57 @@ Module AirModel
                 If OldX > 0 Then
                     'pop ratio
                     OldY = AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5)
-                    If TripRates = "SubStrategy" Then
+                    If TripRates = True Then
                         NewY = (CDbl(AirFlowExtVar(aircount, 4)) + CDbl(AirFlowExtVar(aircount, 5))) * AirTripRates
                     Else
                         NewY = AirFlowExtVar(aircount, 4) + AirFlowExtVar(aircount, 5)
                     End If
 
                     If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                        OldEl = AirEl(1, 1)
+                        OldEl = AirEl(1, 3)
                         Call VarElCalc()
                         AirfPopRat = VarRat
                     Else
-                        AirfPopRat = ((CDbl(AirFlowExtVar(aircount, 4)) + CDbl(AirFlowExtVar(aircount, 5))) / (AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5))) ^ AirEl(1, 1)
+                        AirfPopRat = ((CDbl(AirFlowExtVar(aircount, 4)) + CDbl(AirFlowExtVar(aircount, 5))) / (AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5))) ^ AirEl(1, 3)
                     End If
                     'gva ratio
                     OldY = AirFlowBaseData(aircount, 6) + AirFlowBaseData(aircount, 7)
                     NewY = CDbl(AirFlowExtVar(aircount, 6)) + CDbl(AirFlowExtVar(aircount, 7))
                     If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                        OldEl = AirEl(1, 2)
+                        OldEl = AirEl(1, 4)
                         Call VarElCalc()
                         AirfGvaRat = VarRat
                     Else
-                        AirfGvaRat = ((CDbl(AirFlowExtVar(aircount, 6)) + CDbl(AirFlowExtVar(aircount, 7))) / (AirFlowBaseData(aircount, 6) + AirFlowBaseData(aircount, 7))) ^ AirEl(1, 2)
+                        AirfGvaRat = ((CDbl(AirFlowExtVar(aircount, 6)) + CDbl(AirFlowExtVar(aircount, 7))) / (AirFlowBaseData(aircount, 6) + AirFlowBaseData(aircount, 7))) ^ AirEl(1, 4)
                     End If
 
                     'cost ratio
                     OldY = AirFlowBaseData(aircount, 8)
                     NewY = CDbl(AirFlowExtVar(aircount, 8)) + FlowCharge(aircount)
                     If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                        OldEl = AirEl(1, 3)
+                        OldEl = AirEl(1, 5)
                         Call VarElCalc()
                         AirfCostRat = VarRat
                     Else
-                        AirfCostRat = ((CDbl(AirFlowExtVar(aircount, 8)) + FlowCharge(aircount)) / AirFlowBaseData(aircount, 8)) ^ AirEl(1, 3)
+                        AirfCostRat = ((CDbl(AirFlowExtVar(aircount, 8)) + FlowCharge(aircount)) / AirFlowBaseData(aircount, 8)) ^ AirEl(1, 5)
                     End If
                 Else
-                    If TripRates = "SubStrategy" Then
-                        AirfPopRat = (((CDbl(AirFlowExtVar(aircount, 4)) + CDbl(AirFlowExtVar(aircount, 5))) * AirTripRates) / (AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5))) ^ AirEl(1, 1)
+                    If TripRates = True Then
+                        AirfPopRat = (((CDbl(AirFlowExtVar(aircount, 4)) + CDbl(AirFlowExtVar(aircount, 5))) * AirTripRates) / (AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5))) ^ AirEl(1, 3)
                     Else
-                        AirfPopRat = ((CDbl(AirFlowExtVar(aircount, 4)) + CDbl(AirFlowExtVar(aircount, 5))) / (AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5))) ^ AirEl(1, 1)
+                        AirfPopRat = ((CDbl(AirFlowExtVar(aircount, 4)) + CDbl(AirFlowExtVar(aircount, 5))) / (AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5))) ^ AirEl(1, 3)
                     End If
-                    AirfGvaRat = ((CDbl(AirFlowExtVar(aircount, 6)) + CDbl(AirFlowExtVar(aircount, 7))) / (AirFlowBaseData(aircount, 6) + AirFlowBaseData(aircount, 7))) ^ AirEl(1, 2)
-                    AirfCostRat = ((CDbl(AirFlowExtVar(aircount, 8)) + FlowCharge(aircount)) / AirFlowBaseData(aircount, 8)) ^ AirEl(1, 3)
+                    AirfGvaRat = ((CDbl(AirFlowExtVar(aircount, 6)) + CDbl(AirFlowExtVar(aircount, 7))) / (AirFlowBaseData(aircount, 6) + AirFlowBaseData(aircount, 7))) ^ AirEl(1, 4)
+                    AirfCostRat = ((CDbl(AirFlowExtVar(aircount, 8)) + FlowCharge(aircount)) / AirFlowBaseData(aircount, 8)) ^ AirEl(1, 5)
                 End If
             Else
-                If TripRates = "SubStrategy" Then
-                    AirfPopRat = (((CDbl(AirFlowExtVar(aircount, 4)) + CDbl(AirFlowExtVar(aircount, 5)))) * AirTripRates) / (AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5)) ^ AirEl(1, 1)
+                If TripRates = True Then
+                    AirfPopRat = (((CDbl(AirFlowExtVar(aircount, 4)) + CDbl(AirFlowExtVar(aircount, 5)))) * AirTripRates) / (AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5)) ^ AirEl(1, 3)
                 Else
-                    AirfPopRat = ((CDbl(AirFlowExtVar(aircount, 4)) + CDbl(AirFlowExtVar(aircount, 5))) / (AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5))) ^ AirEl(1, 1)
+                    AirfPopRat = ((CDbl(AirFlowExtVar(aircount, 4)) + CDbl(AirFlowExtVar(aircount, 5))) / (AirFlowBaseData(aircount, 4) + AirFlowBaseData(aircount, 5))) ^ AirEl(1, 3)
                 End If
-                AirfGvaRat = ((CDbl(AirFlowExtVar(aircount, 6)) + CDbl(AirFlowExtVar(aircount, 7))) / (AirFlowBaseData(aircount, 6) + AirFlowBaseData(aircount, 7))) ^ AirEl(1, 2)
-                AirfCostRat = ((CDbl(AirFlowExtVar(aircount, 8)) + FlowCharge(aircount)) / AirFlowBaseData(aircount, 8)) ^ AirEl(1, 3)
+                AirfGvaRat = ((CDbl(AirFlowExtVar(aircount, 6)) + CDbl(AirFlowExtVar(aircount, 7))) / (AirFlowBaseData(aircount, 6) + AirFlowBaseData(aircount, 7))) ^ AirEl(1, 4)
+                AirfCostRat = ((CDbl(AirFlowExtVar(aircount, 8)) + FlowCharge(aircount)) / AirFlowBaseData(aircount, 8)) ^ AirEl(1, 5)
             End If
 
             'use the ratios to estimate the new actual and latent level of trips on the flow

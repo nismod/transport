@@ -42,7 +42,7 @@ Module RailModel
     Dim CUNew(238, 0) As Double
     Dim MaxTDBase(238, 0) As Double
     Dim MaxTDNew As Double
-    Dim RlLinkEl(90, 5) As String
+    Dim RlLinkEl(90, 7) As String
     Dim FlowNum(238, 0) As Integer
     Dim AddedTracks(238, 0) As Integer
     Dim OldY, OldX, OldEl, NewY As Double
@@ -150,7 +150,7 @@ Module RailModel
         FuelString(1, 2) = FuelUsed(0)
         FuelString(1, 3) = FuelUsed(1)
 
-        Call WriteData("RailLink", "RlLinkFuelUsed", FuelString)
+        Call WriteData("RailLink", "FuelUsed", FuelString)
 
     End Sub
 
@@ -184,22 +184,22 @@ Module RailModel
 
         If g_modelRunYear = g_initialYear Then
             'assign values to variables in the order of the initial file
-            FlowNum(InputCount, 0) = InputArray(InputCount, 4)
-            Zone1ID = InputArray(InputCount, 5)
-            Zone2ID = InputArray(InputCount, 6)
-            OldTracks(InputCount, 0) = InputArray(InputCount, 7)
-            OldTrains(InputCount, 0) = InputArray(InputCount, 8)
+            FlowNum(InputCount, 0) = InputArray(InputCount, 1)
+            Zone1ID = InputArray(InputCount, 2)
+            Zone2ID = InputArray(InputCount, 3)
+            OldTracks(InputCount, 0) = InputArray(InputCount, 4)
+            OldTrains(InputCount, 0) = InputArray(InputCount, 5)
             'read previous years' value as base value
             PopZ1Base(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear - 1, Zone1ID, "OZ", "'rail'")
             PopZ2Base(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear - 1, Zone2ID, "DZ", "'rail'")
             GVAZ1Base(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear - 1, Zone1ID, "OZ", "'rail'")
             GVAZ2Base(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear - 1, Zone2ID, "DZ", "'rail'")
-            OldDelays(InputCount, 0) = InputArray(InputCount, 9)
-            RlLinkCost(InputCount, 0) = InputArray(InputCount, 10)
-            CarFuel(InputCount, 0) = InputArray(InputCount, 11)
-            MaxTDBase(InputCount, 0) = InputArray(InputCount, 12)
+            OldDelays(InputCount, 0) = InputArray(InputCount, 6)
+            RlLinkCost(InputCount, 0) = InputArray(InputCount, 7)
+            CarFuel(InputCount, 0) = InputArray(InputCount, 8)
+            MaxTDBase(InputCount, 0) = InputArray(InputCount, 9)
             If RailCUPeriod = "Hour" Then
-                BusyTrains(InputCount, 0) = InputArray(InputCount, 15)
+                BusyTrains(InputCount, 0) = InputArray(InputCount, 14)
                 If OldTrains(InputCount, 0) = 0 Then
                     BusyPer(InputCount, 0) = 0
                 Else
@@ -292,14 +292,14 @@ Module RailModel
                 OldY = OldDelays(InputCount, 0)
                 NewY = NewDelays(InputCount, 0)
                 If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                    OldEl = RlLinkEl(g_modelRunYear, 3)
+                    OldEl = RlLinkEl(g_modelRunYear - 2010, 5)
                     Call VarElCalc()
                     DelayRat = VarRat
                 Else
-                    DelayRat = (NewDelays(InputCount, 0) / OldDelays(InputCount, 0)) ^ RlLinkEl(g_modelRunYear, 3)
+                    DelayRat = (NewDelays(InputCount, 0) / OldDelays(InputCount, 0)) ^ RlLinkEl(g_modelRunYear - 2010, 5)
                 End If
             Else
-                DelayRat = (NewDelays(InputCount, 0) / OldDelays(InputCount, 0)) ^ RlLinkEl(g_modelRunYear, 3)
+                DelayRat = (NewDelays(InputCount, 0) / OldDelays(InputCount, 0)) ^ RlLinkEl(g_modelRunYear - 2010, 5)
             End If
         Else
             'recalculate growth subject to delay constraint
@@ -367,75 +367,75 @@ Module RailModel
             OldX = OldTrains(InputCount, 0)
             'pop ratio
             OldY = PopZ1Base(InputCount, 0) + PopZ2Base(InputCount, 0)
-            If TripRates = "SubStrategy" Then
+            If TripRates = True Then
                 NewY = (CDbl(RlLinkExtVars(InputCount, 5)) + RlLinkExtVars(InputCount, 6)) * RlTripRates
             Else
                 NewY = CDbl(RlLinkExtVars(InputCount, 6)) + RlLinkExtVars(InputCount, 6)
             End If
 
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                OldEl = RlLinkEl(g_modelRunYear, 1)
+                OldEl = RlLinkEl(g_modelRunYear - 2010, 3)
                 Call VarElCalc()
                 PopRat = VarRat
             Else
-                If TripRates = "SubStrategy" Then
-                    PopRat = (((CDbl(RlLinkExtVars(InputCount, 5)) + RlLinkExtVars(InputCount, 6)) * RlTripRates) / (PopZ1Base(InputCount, 0) + PopZ2Base(InputCount, 0))) ^ RlLinkEl(g_modelRunYear, 1)
+                If TripRates = True Then
+                    PopRat = (((CDbl(RlLinkExtVars(InputCount, 5)) + RlLinkExtVars(InputCount, 6)) * RlTripRates) / (PopZ1Base(InputCount, 0) + PopZ2Base(InputCount, 0))) ^ RlLinkEl(g_modelRunYear - 2010, 3)
                 Else
-                    PopRat = ((CDbl(RlLinkExtVars(InputCount, 5)) + RlLinkExtVars(InputCount, 6)) / (PopZ1Base(InputCount, 0) + PopZ2Base(InputCount, 0))) ^ RlLinkEl(g_modelRunYear, 1)
+                    PopRat = ((CDbl(RlLinkExtVars(InputCount, 5)) + RlLinkExtVars(InputCount, 6)) / (PopZ1Base(InputCount, 0) + PopZ2Base(InputCount, 0))) ^ RlLinkEl(g_modelRunYear - 2010, 3)
                 End If
             End If
             'gva ratio
             OldY = GVAZ1Base(InputCount, 0) + GVAZ2Base(InputCount, 0)
             NewY = CDbl(RlLinkExtVars(InputCount, 7)) + RlLinkExtVars(InputCount, 8)
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                OldEl = RlLinkEl(g_modelRunYear, 2)
+                OldEl = RlLinkEl(g_modelRunYear - 2010, 4)
                 Call VarElCalc()
                 GVARat = VarRat
             Else
-                GVARat = ((CDbl(RlLinkExtVars(InputCount, 7)) + RlLinkExtVars(InputCount, 8)) / (GVAZ1Base(InputCount, 0) + GVAZ2Base(InputCount, 0))) ^ RlLinkEl(g_modelRunYear, 2)
+                GVARat = ((CDbl(RlLinkExtVars(InputCount, 7)) + RlLinkExtVars(InputCount, 8)) / (GVAZ1Base(InputCount, 0) + GVAZ2Base(InputCount, 0))) ^ RlLinkEl(g_modelRunYear - 2010, 4)
             End If
             'delay ratio
             OldY = OldDelays(InputCount, 0)
             NewY = NewDelays(InputCount, 0)
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                OldEl = RlLinkEl(g_modelRunYear, 3)
+                OldEl = RlLinkEl(g_modelRunYear - 2010, 5)
                 Call VarElCalc()
                 DelayRat = VarRat
             Else
-                DelayRat = (NewDelays(InputCount, 0) / OldDelays(InputCount, 0)) ^ RlLinkEl(g_modelRunYear, 3)
+                DelayRat = (NewDelays(InputCount, 0) / OldDelays(InputCount, 0)) ^ RlLinkEl(g_modelRunYear - 2010, 5)
             End If
             'cost ratio
             OldY = RlLinkCost(InputCount, 0)
             NewY = newcost
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                OldEl = RlLinkEl(g_modelRunYear, 4)
+                OldEl = RlLinkEl(g_modelRunYear - 2010, 6)
                 Call VarElCalc()
                 CostRat = VarRat
             Else
-                CostRat = (Newcost / RlLinkCost(InputCount, 0)) ^ RlLinkEl(g_modelRunYear, 4)
+                CostRat = (Newcost / RlLinkCost(InputCount, 0)) ^ RlLinkEl(g_modelRunYear - 2010, 6)
             End If
 
             'car fuel ratio
             OldY = CarFuel(InputCount, 0)
             NewY = RlLinkExtVars(InputCount, 10)
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                OldEl = RlLinkEl(g_modelRunYear, 5)
+                OldEl = RlLinkEl(g_modelRunYear - 2010, 7)
                 Call VarElCalc()
                 CarFuelRat = VarRat
             Else
-                CarFuelRat = (RlLinkExtVars(InputCount, 10) / CarFuel(InputCount, 0)) ^ RlLinkEl(g_modelRunYear, 5)
+                CarFuelRat = (RlLinkExtVars(InputCount, 10) / CarFuel(InputCount, 0)) ^ RlLinkEl(g_modelRunYear - 2010, 7)
             End If
         Else
-            If TripRates = "SubStrategy" Then
-                PopRat = (((CDbl(RlLinkExtVars(InputCount, 5)) + RlLinkExtVars(InputCount, 6)) * RlTripRates) / (PopZ1Base(InputCount, 0) + PopZ2Base(InputCount, 0))) ^ RlLinkEl(g_modelRunYear, 1)
+            If TripRates = True Then
+                PopRat = (((CDbl(RlLinkExtVars(InputCount, 5)) + RlLinkExtVars(InputCount, 6)) * RlTripRates) / (PopZ1Base(InputCount, 0) + PopZ2Base(InputCount, 0))) ^ RlLinkEl(g_modelRunYear - 2010, 3)
             Else
-                PopRat = ((CDbl(RlLinkExtVars(InputCount, 5)) + RlLinkExtVars(InputCount, 6)) / (PopZ1Base(InputCount, 0) + PopZ2Base(InputCount, 0))) ^ RlLinkEl(g_modelRunYear, 1)
+                PopRat = ((CDbl(RlLinkExtVars(InputCount, 5)) + RlLinkExtVars(InputCount, 6)) / (PopZ1Base(InputCount, 0) + PopZ2Base(InputCount, 0))) ^ RlLinkEl(g_modelRunYear - 2010, 3)
             End If
 
-            GVARat = ((CDbl(RlLinkExtVars(InputCount, 7)) + RlLinkExtVars(InputCount, 8)) / (GVAZ1Base(InputCount, 0) + GVAZ2Base(InputCount, 0))) ^ RlLinkEl(g_modelRunYear, 2)
-            DelayRat = (NewDelays(InputCount, 0) / OldDelays(InputCount, 0)) ^ RlLinkEl(g_modelRunYear, 3)
-            CostRat = (Newcost / RlLinkCost(InputCount, 0)) ^ RlLinkEl(g_modelRunYear, 4)
-            CarFuelRat = (CDbl(RlLinkExtVars(InputCount, 10)) / CarFuel(InputCount, 0)) ^ RlLinkEl(g_modelRunYear, 5)
+            GVARat = ((CDbl(RlLinkExtVars(InputCount, 7)) + RlLinkExtVars(InputCount, 8)) / (GVAZ1Base(InputCount, 0) + GVAZ2Base(InputCount, 0))) ^ RlLinkEl(g_modelRunYear - 2010, 4)
+            DelayRat = (NewDelays(InputCount, 0) / OldDelays(InputCount, 0)) ^ RlLinkEl(g_modelRunYear - 2010, 5)
+            CostRat = (Newcost / RlLinkCost(InputCount, 0)) ^ RlLinkEl(g_modelRunYear - 2010, 6)
+            CarFuelRat = (CDbl(RlLinkExtVars(InputCount, 10)) / CarFuel(InputCount, 0)) ^ RlLinkEl(g_modelRunYear - 2010, 7)
         End If
         NewTrains = OldTrains(InputCount, 0) * PopRat * GVARat * DelayRat * CostRat * CarFuelRat
 
@@ -467,14 +467,14 @@ Module RailModel
             OldY = OldDelays(InputCount, 0)
             NewY = NewDelays(InputCount, 0)
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                OldEl = RlLinkEl(g_modelRunYear, 3)
+                OldEl = RlLinkEl(g_modelRunYear - 2010, 5)
                 Call VarElCalc()
                 DelayRat = VarRat
             Else
-                DelayRat = (NewDelays(InputCount, 0) / OldDelays(InputCount, 0)) ^ RlLinkEl(g_modelRunYear, 3)
+                DelayRat = (NewDelays(InputCount, 0) / OldDelays(InputCount, 0)) ^ RlLinkEl(g_modelRunYear - 2010, 5)
             End If
         Else
-            DelayRat = (NewDelays(InputCount, 0) / OldDelays(InputCount, 0)) ^ RlLinkEl(g_modelRunYear, 3)
+            DelayRat = (NewDelays(InputCount, 0) / OldDelays(InputCount, 0)) ^ RlLinkEl(g_modelRunYear - 2010, 5)
         End If
         '***TEST MOD
         OldDelays(InputCount, 0) = NewDelays(InputCount, 0)
@@ -492,7 +492,7 @@ Module RailModel
             OutputArray(InputCount, 2) = g_modelRunYear
             'TODO update newtrain every year, otherwise it will read the previous link value
             'now it forces the output to be the old output value, need to fix this
-            If g_modelRunYear = 6 Then
+            If g_modelRunYear = 2016 Then
                 If InputCount = 177 Then
                     NewTrains = 36
                 End If

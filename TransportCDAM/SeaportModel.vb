@@ -26,7 +26,7 @@
     Dim PortCostRat As Double
     Dim FreightRat As Double
     Dim NewFreight(47, 5) As Double
-    Dim SeaEl(90, 15) As String
+    Dim SeaEl(90, 17) As String
     Dim NewGasOil, NewFuelOil As Double
     Dim AddedCap(5) As Long
     Dim OldY, OldX, OldEl, NewY As Double
@@ -103,7 +103,7 @@
             End If
         End If
 
-        If TripRates = "SubStrategy" Then
+        If TripRates = True Then
             'get the strat values
             SeaTripRates = stratarray(1, 97)
         End If
@@ -117,21 +117,21 @@
 
         'read initial input file if year 1
         If g_modelRunYear = g_initialYear Then
-            PortID = InputArray(InputCount, 4)
-            BaseFreight(1) = InputArray(InputCount, 5)
-            BaseFreight(2) = InputArray(InputCount, 6)
-            BaseFreight(3) = InputArray(InputCount, 7)
-            BaseFreight(4) = InputArray(InputCount, 8)
-            BaseFreight(5) = InputArray(InputCount, 9)
-            BaseCap(1) = InputArray(InputCount, 10)
-            BaseCap(2) = InputArray(InputCount, 11)
-            BaseCap(3) = InputArray(InputCount, 12)
-            BaseCap(4) = InputArray(InputCount, 13)
-            BaseCap(5) = InputArray(InputCount, 14)
+            PortID = InputArray(InputCount, 1)
+            BaseFreight(1) = InputArray(InputCount, 3)
+            BaseFreight(2) = InputArray(InputCount, 4)
+            BaseFreight(3) = InputArray(InputCount, 5)
+            BaseFreight(4) = InputArray(InputCount, 6)
+            BaseFreight(5) = InputArray(InputCount, 7)
+            BaseCap(1) = InputArray(InputCount, 8)
+            BaseCap(2) = InputArray(InputCount, 9)
+            BaseCap(3) = InputArray(InputCount, 10)
+            BaseCap(4) = InputArray(InputCount, 11)
+            BaseCap(5) = InputArray(InputCount, 12)
             'read previous years' value as base value
-            PopBase = get_population_data_by_seaportID(g_modelRunYear, PortID)
-            GVABase = get_gva_data_by_seaportID(g_modelRunYear, PortID)
-            CostBase = InputArray(InputCount, 15)
+            PopBase = get_population_data_by_seaportID(g_modelRunYear - 1, PortID)
+            GVABase = get_gva_data_by_seaportID(g_modelRunYear - 1, PortID)
+            CostBase = InputArray(InputCount, 13)
             For x = 1 To 5
                 AddedCap(x) = 0
             Next
@@ -145,8 +145,8 @@
             BaseFreight(5) = InputArray(InputCount, 8)
 
             'read previous years' value as base value
-            PopBase = get_population_data_by_seaportID(g_modelRunYear, PortID)
-            GVABase = get_gva_data_by_seaportID(g_modelRunYear, PortID)
+            PopBase = get_population_data_by_seaportID(g_modelRunYear - 1, PortID)
+            GVABase = get_gva_data_by_seaportID(g_modelRunYear - 1, PortID)
             'get_single_data("TR_IO_SeaFreightExternalVariables", "port_id", "year", "cost", YearNum - 1, PortID)
             'Get the cost by PortID
             Call ReadData("Seaport", "ExtVar", PortExtVar, g_modelRunYear - 1, PortID)
@@ -194,50 +194,50 @@
                 OldX = BaseFreight(FreightType)
                 'pop ratio
                 OldY = PopBase
-                If TripRates = "SubStrategy" Then
+                If TripRates = True Then
                     NewY = PortExtVar(PortID, 9) * SeaTripRates
                 Else
                     NewY = PortExtVar(PortID, 9)
                 End If
                 If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                    OldEl = SeaEl(1, 1 + elindex)
+                    OldEl = SeaEl(1, 3 + elindex)
                     Call VarElCalc()
                     PortPopRat = VarRat
                 Else
-                    If TripRates = "SubStrategy" Then
-                        PortPopRat = ((PortExtVar(PortID, 9) * SeaTripRates) / PopBase) ^ SeaEl(1, 1 + elindex)
+                    If TripRates = True Then
+                        PortPopRat = ((PortExtVar(PortID, 9) * SeaTripRates) / PopBase) ^ SeaEl(1, 3 + elindex)
                     Else
-                        PortPopRat = (PortExtVar(PortID, 7) / PopBase) ^ SeaEl(1, 1 + elindex)
+                        PortPopRat = (PortExtVar(PortID, 7) / PopBase) ^ SeaEl(1, 3 + elindex)
                     End If
                 End If
                 'gva ratio
                 OldY = GVABase
                 NewY = PortExtVar(PortID, 10)
                 If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                    OldEl = SeaEl(1, 2 + elindex)
+                    OldEl = SeaEl(1, 4 + elindex)
                     Call VarElCalc()
                     PortGVARat = VarRat
                 Else
-                    PortGVARat = (PortExtVar(PortID, 10) / GVABase) ^ SeaEl(1, 2 + elindex)
+                    PortGVARat = (PortExtVar(PortID, 10) / GVABase) ^ SeaEl(1, 4 + elindex)
                 End If
                 'cost ratio
                 OldY = CostBase
                 NewY = PortExtVar(PortID, 11)
                 If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                    OldEl = SeaEl(1, 3 + elindex)
+                    OldEl = SeaEl(1, 5 + elindex)
                     Call VarElCalc()
                     PortCostRat = VarRat
                 Else
-                    PortCostRat = (PortExtVar(PortID, 11) / CostBase) ^ SeaEl(1, 3 + elindex)
+                    PortCostRat = (PortExtVar(PortID, 11) / CostBase) ^ SeaEl(1, 5 + elindex)
                 End If
             Else
-                If TripRates = "SubStrategy" Then
-                    PortPopRat = ((PortExtVar(PortID, 9) * SeaTripRates) / PopBase) ^ SeaEl(1, 1 + elindex)
+                If TripRates = True Then
+                    PortPopRat = ((PortExtVar(PortID, 9) * SeaTripRates) / PopBase) ^ SeaEl(1, 3 + elindex)
                 Else
-                    PortPopRat = (PortExtVar(PortID, 9) / PopBase) ^ SeaEl(1, 1 + elindex)
+                    PortPopRat = (PortExtVar(PortID, 9) / PopBase) ^ SeaEl(1, 3 + elindex)
                 End If
-                PortGVARat = (PortExtVar(PortID, 10) / GVABase) ^ SeaEl(1, 2 + elindex)
-                PortCostRat = (PortExtVar(PortID, 11) / CostBase) ^ SeaEl(1, 3 + elindex)
+                PortGVARat = (PortExtVar(PortID, 10) / GVABase) ^ SeaEl(1, 4 + elindex)
+                PortCostRat = (PortExtVar(PortID, 11) / CostBase) ^ SeaEl(1, 5 + elindex)
             End If
             FreightRat = PortPopRat * PortGVARat * PortCostRat
             If BaseFreight(FreightType) = 0 Then

@@ -48,8 +48,8 @@
     Dim NewTrains As Double
     Dim FuelEffOld(2) As Double
     Dim Elect As Boolean
-    Dim CapArray(455, 5) As String
-    Dim NewCapArray(238, 5) As String
+    Dim CapArray(455, 6) As String
+    Dim NewCapArray(238, 6) As String
     Dim CapNum As Integer
     Dim RlL_InArray(,) As String
     Dim RlLEV_InArray(,) As String
@@ -105,7 +105,9 @@
             Call CapChangeCalc()
 
             'write all lines from NewCapArray to intermediate capacity file
-            Call WriteData("RailLink", "NewCap", NewCapArray)
+            If Not NewCapArray Is Nothing Then
+                Call WriteData("RailLink", "NewCap", NewCapArray)
+            End If
         End If
 
         'read new capacity info
@@ -462,7 +464,7 @@ NextYear:
             'write to output file
             RlL_OutArray(InputCount, 0) = g_modelRunID
             RlL_OutArray(InputCount, 1) = FlowID(InputCount, 0)
-            RlL_OutArray(InputCount, 2) = Year
+            RlL_OutArray(InputCount, 2) = g_modelRunYear
             RlL_OutArray(InputCount, 3) = Tracks(InputCount, 0)
             RlL_OutArray(InputCount, 4) = Pop1New
             RlL_OutArray(InputCount, 5) = Pop2New
@@ -504,27 +506,27 @@ NextYear:
 
         If AddingCap = True Then
             For i = 0 To UBound(CapArray, 2)
-                CapArray(CapNum, i) = NewCapArray(CapNum, i)
+                CapArray(CapNum, i + 1) = NewCapArray(CapNum, i)
             Next
         End If
 
-        If CapArray(CapNum, 0) Is Nothing Then
+        If CapArray(CapNum, 1) Is Nothing Then
         Else
-            CapID = CapArray(CapNum, 0)
-            If CapArray(CapNum, 1) = "-1" Then
+            CapID = CapArray(CapNum, 1)
+            If CapArray(CapNum, 2) = "-1" Then
                 CapYear = -1
             Else
                 If AddingCap = False Then
-                    CapYear = CapArray(CapNum, 1)
+                    CapYear = CapArray(CapNum, 2)
                 Else
-                    CapYear = CapArray(CapNum, 1)
+                    CapYear = CapArray(CapNum, 2)
                 End If
             End If
-            TrackChange = CapArray(CapNum, 2)
-            MaxTDChange = CapArray(CapNum, 3)
-            TrainChange = CapArray(CapNum, 4)
+            TrackChange = CapArray(CapNum, 3)
+            MaxTDChange = CapArray(CapNum, 4)
+            TrainChange = CapArray(CapNum, 5)
             If AddingCap = False Then
-                CapType = CapArray(CapNum, 5)
+                CapType = CapArray(CapNum, 6)
             End If
             CapNum += 1
         End If
@@ -545,7 +547,7 @@ NextYear:
 
         Dim schemeoutputrow(28, 4) As String
         Dim elschemes(244, 3) As Double
-        Dim schemearray(245, 5) As String
+        Dim schemearray(245, 6) As String
         Dim rownum As Integer
         Dim elyear As Long
         Dim eltrackkm As Double
@@ -556,7 +558,7 @@ NextYear:
         Dim arraynum, schemecount As Long
         Dim schemetype As String
         Dim zoneoutputrow(33, 3) As String
-        Dim zonearray(336, 4) As String
+        Dim zonearray(336, 5) As String
         Dim schemecode As String
         Dim elzschemes(335, 4) As Long
         Dim znum As Integer
@@ -584,23 +586,23 @@ NextYear:
         If Not schemearray Is Nothing Then
             Do Until RlElNum > 244
                 'check the scheme type
-                schemetype = schemearray(RlElNum, 5)
+                schemetype = schemearray(RlElNum, 6)
                 If schemetype = "C" Then
                     'if it is a compulsory scheme then load values into array
                     For v = 0 To 3
-                        elschemes(rownum, v) = schemearray(RlElNum, v)
+                        elschemes(rownum, v) = schemearray(RlElNum, v + 1)
                     Next
-                    elyear = schemearray(RlElNum, 1)
+                    elyear = schemearray(RlElNum, 2)
                     schemecount += 1
                     'now check for relevant zone changes
-                    schemecode = schemearray(RlElNum, 4)
+                    schemecode = schemearray(RlElNum, 5)
                     Do While zonecheck = True
-                        If schemecode = zonearray(3, RzElNum) Then
-                            elzschemes(znum, 0) = zonearray(RzElNum, 0)
-                            elzschemes(znum, 1) = zonearray(RzElNum, 1)
-                            elzschemes(znum, 2) = zonearray(RzElNum, 2)
+                        If schemecode = zonearray(RzElNum, 4) Then
+                            elzschemes(znum, 0) = zonearray(RzElNum, 1)
+                            elzschemes(znum, 1) = zonearray(RzElNum, 2)
+                            elzschemes(znum, 2) = zonearray(RzElNum, 3)
                             RzElNum += 1
-                            If zonearray(RzElNum, 0) Is Nothing Then
+                            If zonearray(RzElNum, 1) Is Nothing Then
                                 zonecheck = False
                             Else
                                 znum += 1
@@ -614,27 +616,27 @@ NextYear:
                     'check if we are using optional electrification schemes
                     If RlElect = True Then
                         'check if a year is already assigned
-                        If schemearray(RlElNum, 1) = "" Then
+                        If schemearray(RlElNum, 2) = "" Then
                             'if it isn't then first get the length of track km for the scheme 
-                            eltrackkm = schemearray(RlElNum, 2) * schemearray(RlElNum, 3)
+                            eltrackkm = schemearray(RlElNum, 3) * schemearray(RlElNum, 4)
                             'then check if there are any spare electrification km in the pot
                             If kmtoelectrify >= eltrackkm Then
                                 'if there are enough, then assign this scheme to this year and load values into array
-                                elschemes(rownum, 0) = schemearray(RlElNum, 0)
+                                elschemes(rownum, 0) = schemearray(RlElNum, 1)
                                 elschemes(rownum, 1) = elyear
-                                elschemes(rownum, 2) = schemearray(RlElNum, 2)
-                                elschemes(rownum, 3) = schemearray(RlElNum, 3)
+                                elschemes(rownum, 2) = schemearray(RlElNum, 3)
+                                elschemes(rownum, 3) = schemearray(RlElNum, 4)
                                 'subtract the electrified km from the spare km
                                 kmtoelectrify = kmtoelectrify - eltrackkm
                                 schemecount += 1
-                                schemecode = schemearray(RlElNum, 4)
+                                schemecode = schemearray(RlElNum, 5)
                                 Do While zonecheck = True
-                                    If schemecode = zonearray(RzElNum, 3) Then
-                                        elzschemes(znum, 0) = zonearray(RzElNum, 0)
+                                    If schemecode = zonearray(RzElNum, 4) Then
+                                        elzschemes(znum, 0) = zonearray(RzElNum, 1)
                                         elzschemes(znum, 1) = elyear
-                                        elzschemes(znum, 2) = zonearray(RzElNum, 2)
+                                        elzschemes(znum, 2) = zonearray(RzElNum, 3)
                                         RzElNum += 1
-                                        If zonearray(RzElNum, 0) Is Nothing Then
+                                        If zonearray(RzElNum, 1) Is Nothing Then
                                             zonecheck = False
                                         Else
                                             znum += 1
@@ -657,21 +659,21 @@ NextYear:
                                 'check if enough track km - if there aren't then it means we have reached 2100 so exit do loop
                                 If kmtoelectrify >= eltrackkm Then
                                     'if there are enough, then assign this scheme to this year and load values into array
-                                    elschemes(rownum, 0) = schemearray(RlElNum, 0)
+                                    elschemes(rownum, 0) = schemearray(RlElNum, 1)
                                     elschemes(rownum, 1) = elyear
-                                    elschemes(rownum, 2) = schemearray(RlElNum, 2)
-                                    elschemes(rownum, 3) = schemearray(RlElNum, 3)
+                                    elschemes(rownum, 2) = schemearray(RlElNum, 3)
+                                    elschemes(rownum, 3) = schemearray(RlElNum, 4)
                                     'subtract the electrified km from the spare km
                                     kmtoelectrify = kmtoelectrify - eltrackkm
                                     schemecount += 1
-                                    schemecode = schemearray(RlElNum, 4)
+                                    schemecode = schemearray(RlElNum, 5)
                                     Do While zonecheck = True
-                                        If schemecode = zonearray(RzElNum, 3) Then
-                                            elzschemes(znum, 0) = zonearray(RzElNum, 0)
+                                        If schemecode = zonearray(RzElNum, 4) Then
+                                            elzschemes(znum, 0) = zonearray(RzElNum, 1)
                                             elzschemes(znum, 1) = elyear
-                                            elzschemes(znum, 2) = zonearray(RzElNum, 2)
+                                            elzschemes(znum, 2) = zonearray(RzElNum, 3)
                                             RzElNum += 1
-                                            If zonearray(RzElNum, 0) Is Nothing Then
+                                            If zonearray(RzElNum, 1) Is Nothing Then
                                                 zonecheck = False
                                             Else
                                                 znum += 1
@@ -688,18 +690,18 @@ NextYear:
                         Else
                             'if it is then load values into array
                             For v = 0 To 3
-                                elschemes(rownum, v) = schemearray(RlElNum, v)
+                                elschemes(rownum, v) = schemearray(RlElNum, v + 1)
                             Next
-                            elyear = schemearray(RlElNum, 1)
+                            elyear = schemearray(RlElNum, 2)
                             schemecount += 1
-                            schemecode = schemearray(RlElNum, 4)
+                            schemecode = schemearray(RlElNum, 5)
                             Do While zonecheck = True
-                                If schemecode = zonearray(RzElNum, 3) Then
-                                    elzschemes(znum, 0) = zonearray(RzElNum, 0)
-                                    elzschemes(znum, 1) = zonearray(RzElNum, 1)
-                                    elzschemes(znum, 2) = zonearray(RzElNum, 2)
+                                If schemecode = zonearray(RzElNum, 4) Then
+                                    elzschemes(znum, 0) = zonearray(RzElNum, 1)
+                                    elzschemes(znum, 1) = zonearray(RzElNum, 2)
+                                    elzschemes(znum, 2) = zonearray(RzElNum, 3)
                                     RzElNum += 1
-                                    If zonearray(RzElNum, 0) Is Nothing Then
+                                    If zonearray(RzElNum, 1) Is Nothing Then
                                         zonecheck = False
                                     Else
                                         znum += 1
@@ -791,73 +793,74 @@ NextYear:
     End Sub
 
     Sub CapChangeCalc()
-        Dim zzzz As Integer = 0
+
         'start from the first row of CapArray
         CapNum = 1
+
+        If CapArray Is Nothing Then Exit Sub
 
         'need initial file to be sorted by scheme type then by change year then by order of priority
         'first read all compulsory enhancements to intermediate array
         CapCount = 0
         AddingCap = False
         TracksToBuild = 0
-        If Not CapArray Is Nothing Then
-            Do Until zzzz = 1
-                Call GetCapData()
-                Select Case CapType
-                    Case "C"
-                        NewCapDetails(CapCount, 0) = CapID
-                        NewCapDetails(CapCount, 1) = CapYear
-                        NewCapDetails(CapCount, 2) = TrackChange
-                        NewCapDetails(CapCount, 3) = MaxTDChange
-                        NewCapDetails(CapCount, 4) = TrainChange
-                        CapNewYear = CapYear
-                    Case "O"
-                        'then if adding optional capacity read all optional dated enhancements to intermediate array
-                        If NewRlLCap = True Then
-                            If CapYear >= 0 Then
+        Do Until CapArray(CapNum, 1) Is Nothing
+            Call GetCapData()
+            Select Case CapType
+                Case "C"
+                    NewCapDetails(CapCount, 0) = CapID
+                    NewCapDetails(CapCount, 1) = CapYear
+                    NewCapDetails(CapCount, 2) = TrackChange
+                    NewCapDetails(CapCount, 3) = MaxTDChange
+                    NewCapDetails(CapCount, 4) = TrainChange
+                    CapNewYear = CapYear
+                Case "O"
+                    'then if adding optional capacity read all optional dated enhancements to intermediate array
+                    If NewRlLCap = True Then
+                        If CapYear >= 0 Then
+                            NewCapDetails(CapCount, 0) = CapID
+                            NewCapDetails(CapCount, 1) = CapYear
+                            NewCapDetails(CapCount, 2) = TrackChange
+                            NewCapDetails(CapCount, 3) = MaxTDChange
+                            NewCapDetails(CapCount, 4) = TrainChange
+                            CapNewYear = CapYear
+                        Else
+                            'finally add all other enhancements to intermediate array until we have run out of additional capacity
+                            If TracksToBuild >= TrackChange Then
                                 NewCapDetails(CapCount, 0) = CapID
-                                NewCapDetails(CapCount, 1) = CapYear
+                                NewCapDetails(CapCount, 1) = CapNewYear
                                 NewCapDetails(CapCount, 2) = TrackChange
                                 NewCapDetails(CapCount, 3) = MaxTDChange
                                 NewCapDetails(CapCount, 4) = TrainChange
-                                CapNewYear = CapYear
+                                TracksToBuild = TracksToBuild - TrackChange
                             Else
-                                'finally add all other enhancements to intermediate array until we have run out of additional capacity
-                                If TracksToBuild >= TrackChange Then
-                                    NewCapDetails(CapCount, 0) = CapID
-                                    NewCapDetails(CapCount, 1) = CapNewYear
-                                    NewCapDetails(CapCount, 2) = TrackChange
-                                    NewCapDetails(CapCount, 3) = MaxTDChange
-                                    NewCapDetails(CapCount, 4) = TrainChange
-                                    TracksToBuild = TracksToBuild - TrackChange
-                                Else
-                                    Do Until TracksToBuild >= TrackChange
-                                        CapNewYear += 1
-                                        If CapNewYear > 90 Then
-                                            Breakout = True
-                                            Exit Select
-                                        End If
-                                        TracksToBuild += NewRailTracks
-                                    Loop
-                                    NewCapDetails(CapCount, 0) = CapID
-                                    NewCapDetails(CapCount, 1) = CapNewYear
-                                    NewCapDetails(CapCount, 2) = TrackChange
-                                    NewCapDetails(CapCount, 3) = MaxTDChange
-                                    NewCapDetails(CapCount, 4) = TrainChange
-                                    TracksToBuild = TracksToBuild - TrackChange
-                                End If
+                                Do Until TracksToBuild >= TrackChange
+                                    CapNewYear += 1
+                                    If CapNewYear > 90 Then
+                                        Breakout = True
+                                        Exit Select
+                                    End If
+                                    TracksToBuild += NewRailTracks
+                                Loop
+                                NewCapDetails(CapCount, 0) = CapID
+                                NewCapDetails(CapCount, 1) = CapNewYear
+                                NewCapDetails(CapCount, 2) = TrackChange
+                                NewCapDetails(CapCount, 3) = MaxTDChange
+                                NewCapDetails(CapCount, 4) = TrainChange
+                                TracksToBuild = TracksToBuild - TrackChange
                             End If
-                        Else
-                            Exit Do
                         End If
-                End Select
-                'exit if year is greater than our range (90 years)
-                If Breakout = True Then
-                    Exit Do
-                End If
-                CapCount += 1
-            Loop
-        End If
+                    Else
+                        Exit Do
+                    End If
+            End Select
+            'exit if year is greater than our range (90 years)
+            If Breakout = True Then
+                Exit Do
+            End If
+            CapCount += 1
+        Loop
+
 
         'then sort the intermediate array by year, then by flow ID of implementation
         ReDim sortarray(CapCount - 1)

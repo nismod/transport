@@ -110,7 +110,9 @@
             Call CapChangeCalc()
 
             'write all lines from NewCapArray to intermediate capacity file
-            Call WriteData("RoadLink", "NewCap", NewCapArray)
+            If Not NewCapArray Is Nothing Then
+                Call WriteData("RoadLink", "NewCap", NewCapArray)
+            End If
 
         End If
 
@@ -376,15 +378,15 @@
                 DZone(InputCount, 1) = RdL_InArray(InputCount, 6)
                 Pop1Old(InputCount, 1) = get_population_data_by_zoneID(g_modelRunYear - 1, OZone(InputCount, 1), "OZ", "'road'")
                 Pop2Old(InputCount, 1) = get_population_data_by_zoneID(g_modelRunYear - 1, DZone(InputCount, 1), "DZ", "'road'")
-                GVA1Old(InputCount, 1) = get_gva_data_by_zoneID(g_modelRunYear - 1, FlowID(InputCount, 1), "OZ", "'road'")
-                GVA2Old(InputCount, 1) = get_gva_data_by_zoneID(g_modelRunYear - 1, FlowID(InputCount, 1), "DZ", "'road'")
+                GVA1Old(InputCount, 1) = get_gva_data_by_zoneID(g_modelRunYear - 1, OZone(InputCount, 1), "OZ", "'road'")
+                GVA2Old(InputCount, 1) = get_gva_data_by_zoneID(g_modelRunYear - 1, DZone(InputCount, 1), "DZ", "'road'")
 
-                PetOldArr(InputCount, 1) = enearray(g_modelRunYear, 1)
-                DieOldArr(InputCount, 1) = enearray(g_modelRunYear, 2)
-                EleOldArr(InputCount, 1) = enearray(g_modelRunYear, 3)
-                LPGOldArr(InputCount, 1) = enearray(g_modelRunYear, 4)
-                CNGOldArr(InputCount, 1) = enearray(g_modelRunYear, 5)
-                HydOldArr(InputCount, 1) = enearray(g_modelRunYear, 6)
+                PetOldArr(InputCount, 1) = enearray(g_modelRunYear - 2010, 1)
+                DieOldArr(InputCount, 1) = enearray(g_modelRunYear - 2010, 2)
+                EleOldArr(InputCount, 1) = enearray(g_modelRunYear - 2010, 3)
+                LPGOldArr(InputCount, 1) = enearray(g_modelRunYear - 2010, 4)
+                CNGOldArr(InputCount, 1) = enearray(g_modelRunYear - 2010, 5)
+                HydOldArr(InputCount, 1) = enearray(g_modelRunYear - 2010, 6)
 
                 For x = 0 To 19
                     CostsOld(InputCount, x) = RdLEV_InArray(InputCount, x + 14)
@@ -531,8 +533,8 @@
                 'now modified as gva data available up to 2100 - so should never need 'else'
                 'v1.9 now read by using database function
                 'database does not have gva forecasts after year 2050, and the calculation is only available before year 2050
-                GVA1New = get_gva_data_by_zoneID(g_modelRunYear, FlowID(InputCount, 1), "OZ", "'road'")
-                GVA2New = get_gva_data_by_zoneID(g_modelRunYear, FlowID(InputCount, 1), "DZ", "'road'")
+                GVA1New = get_gva_data_by_zoneID(g_modelRunYear, OZone(InputCount, 1), "OZ", "'road'")
+                GVA2New = get_gva_data_by_zoneID(g_modelRunYear, DZone(InputCount, 1), "DZ", "'road'")
             End If
             If RdLEneSource = "Constant" Then
                 For x = 0 To 19
@@ -541,12 +543,12 @@
             ElseIf RdLEneSource = "File" Then
                 'not set up for scaling files
             ElseIf RdLEneSource = "Database" Then
-                PetNew = enearray(g_modelRunYear + 1, 1)
-                DieNew = enearray(g_modelRunYear + 1, 2)
-                EleNew = enearray(g_modelRunYear + 1, 3)
-                LPGNew = enearray(g_modelRunYear + 1, 4)
-                CNGNew = enearray(g_modelRunYear + 1, 5)
-                HydNew = enearray(g_modelRunYear + 1, 6)
+                PetNew = enearray(g_modelRunYear - 2010 + 1, 1)
+                DieNew = enearray(g_modelRunYear - 2010 + 1, 2)
+                EleNew = enearray(g_modelRunYear - 2010 + 1, 3)
+                LPGNew = enearray(g_modelRunYear - 2010 + 1, 4)
+                CNGNew = enearray(g_modelRunYear - 2010 + 1, 5)
+                HydNew = enearray(g_modelRunYear - 2010 + 1, 6)
                 'calculate ratio for each fuel
                 PetRat = PetNew / PetOldArr(InputCount, 1)
                 DieRat = DieNew / DieOldArr(InputCount, 1)
@@ -1029,6 +1031,9 @@
         CapCount = 0
         AddingCap = False
         LanesToBuild = 0
+
+        If CapArray Is Nothing Then Exit Sub
+
         Do Until CapArray(CapNum, 0) Is Nothing
             Call GetCapData()
             Select Case CapType

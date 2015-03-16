@@ -37,7 +37,7 @@
     Dim RoadTypeFlowsNew As Double
     Dim sc As Integer
     Dim h As Integer
-    Dim FreeFlowSpeeds(1, 19) As String
+    Dim FreeFlowSpeeds(20, 2) As String
     Dim MaxCap(291, 2) As String
     Dim SpeedNew As Double
     Dim SpeedOld As Double
@@ -76,7 +76,7 @@
     Dim TotalLanesOld As Long
     Dim TotalLanesNew As Long
     Dim CapChangeNew(291, 1) As Boolean
-    Dim RoadEls(90, 9) As String
+    Dim RoadEls(90, 11) As String
     Dim FreeFlowCU As Double
     'v1.2 this is a new variable, storing latent demand
     Dim LatentHourlyFlows(291, 20, 24) As Double
@@ -105,7 +105,7 @@
     Dim OutputArray(292, 59) As String
     Dim TempArray(292, 3037) As String
     Dim TempAnArray(292, 34) As String
-    Dim TempHArray(7007, 86) As String
+    Dim TempHArray(7007, 87) As String
     Dim NewCapArray(291, 3) As String
     Dim NewCapNum As Integer
 
@@ -206,7 +206,7 @@
         Call ReadData("RoadLink", "Elasticity", RoadEls, g_modelRunYear)
 
         'if using variable trip rates then set up the trip rate variable
-        If TripRates = "SubStrategy" Then
+        If TripRates = True Then
             'get the strat values
             RdTripRates(0, 1) = stratarray(1, 93)
             RdTripRates(1, 1) = stratarray(1, 94)
@@ -225,7 +225,7 @@
         d = 1
 
         Do While d < 25
-            HourProportions(d) = TimeProfile(d, 2)
+            HourProportions(d - 1) = TimeProfile(d, 2)
             d += 1
         Loop
 
@@ -238,54 +238,54 @@
  
         If g_modelRunYear = g_initialYear Then
             'read base year (year 0) data
-            FlowID(link, 1) = InputArray(1, link)
-            Zone1(link, 1) = InputArray(2, link)
-            Zone2(link, 1) = InputArray(3, link)
-            RoadTypeLanes(link, 0) = InputArray(4, link)
-            RoadTypeLanes(link, 1) = InputArray(5, link)
-            RoadTypeLanes(link, 2) = InputArray(6, link)
+            FlowID(link, 1) = InputArray(link, 1)
+            Zone1(link, 1) = InputArray(link, 2)
+            Zone2(link, 1) = InputArray(link, 3)
+            RoadTypeLanes(link, 0) = InputArray(link, 4)
+            RoadTypeLanes(link, 1) = InputArray(link, 5)
+            RoadTypeLanes(link, 2) = InputArray(link, 6)
             'need the total lanes to start with as stable variable - this is because once there has been any capacity change will need to recalculate the base flows per lane each year
             TotalLanesOriginal(link, 1) = RoadTypeLanes(link, 0) + RoadTypeLanes(link, 1) + RoadTypeLanes(link, 2)
             'set road type lanes new equal to road type lanes to start with, otherwise it will assume a capacity change to start with
-            RoadTypeLanesNew(link, 0) = InputArray(4, link)
-            RoadTypeLanesNew(link, 1) = InputArray(5, link)
-            RoadTypeLanesNew(link, 2) = InputArray(6, link)
-            SpeedCatFlows(link, 0) = InputArray(8, link)
-            SpeedCatFlows(link, 1) = InputArray(9, link)
-            SpeedCatFlows(link, 2) = InputArray(10, link)
-            SpeedCatFlows(link, 3) = InputArray(11, link)
-            SpeedCatFlows(link, 4) = InputArray(12, link)
-            SpeedCatFlows(link, 5) = InputArray(13, link)
-            SpeedCatFlows(link, 6) = InputArray(14, link)
-            SpeedCatFlows(link, 7) = InputArray(15, link)
-            SpeedCatFlows(link, 8) = InputArray(16, link)
-            SpeedCatFlows(link, 9) = InputArray(17, link)
-            SpeedCatFlows(link, 10) = InputArray(18, link)
-            SpeedCatFlows(link, 11) = InputArray(19, link)
-            SpeedCatFlows(link, 12) = InputArray(20, link)
-            SpeedCatFlows(link, 13) = InputArray(21, link)
-            SpeedCatFlows(link, 14) = InputArray(22, link)
-            SpeedCatFlows(link, 15) = InputArray(23, link)
-            SpeedCatFlows(link, 16) = InputArray(24, link)
-            SpeedCatFlows(link, 17) = InputArray(25, link)
-            SpeedCatFlows(link, 18) = InputArray(26, link)
-            SpeedCatFlows(link, 19) = InputArray(27, link)
-            Z1Pop(link, 1) = get_population_data_by_zoneID(g_modelRunYear, Zone1(link, 1), "OZ", "'road'")
-            Z2Pop(link, 1) = get_population_data_by_zoneID(g_modelRunYear, Zone2(link, 1), "DZ", "'road'")
-            Z1GVA(link, 1) = get_gva_data_by_zoneID(g_modelRunYear, Zone1(link, 1), "OZ", "'road'")
-            Z2GVA(link, 1) = get_gva_data_by_zoneID(g_modelRunYear, Zone2(link, 1), "DZ", "'road'")
+            RoadTypeLanesNew(link, 0) = InputArray(link, 4)
+            RoadTypeLanesNew(link, 1) = InputArray(link, 5)
+            RoadTypeLanesNew(link, 2) = InputArray(link, 6)
+            SpeedCatFlows(link, 0) = InputArray(link, 8)
+            SpeedCatFlows(link, 1) = InputArray(link, 9)
+            SpeedCatFlows(link, 2) = InputArray(link, 10)
+            SpeedCatFlows(link, 3) = InputArray(link, 11)
+            SpeedCatFlows(link, 4) = InputArray(link, 12)
+            SpeedCatFlows(link, 5) = InputArray(link, 13)
+            SpeedCatFlows(link, 6) = InputArray(link, 14)
+            SpeedCatFlows(link, 7) = InputArray(link, 15)
+            SpeedCatFlows(link, 8) = InputArray(link, 16)
+            SpeedCatFlows(link, 9) = InputArray(link, 17)
+            SpeedCatFlows(link, 10) = InputArray(link, 18)
+            SpeedCatFlows(link, 11) = InputArray(link, 19)
+            SpeedCatFlows(link, 12) = InputArray(link, 20)
+            SpeedCatFlows(link, 13) = InputArray(link, 21)
+            SpeedCatFlows(link, 14) = InputArray(link, 22)
+            SpeedCatFlows(link, 15) = InputArray(link, 23)
+            SpeedCatFlows(link, 16) = InputArray(link, 24)
+            SpeedCatFlows(link, 17) = InputArray(link, 25)
+            SpeedCatFlows(link, 18) = InputArray(link, 26)
+            SpeedCatFlows(link, 19) = InputArray(link, 27)
+            Z1Pop(link, 1) = get_population_data_by_zoneID(g_modelRunYear - 1, Zone1(link, 1), "OZ", "'road'")
+            Z2Pop(link, 1) = get_population_data_by_zoneID(g_modelRunYear - 1, Zone2(link, 1), "DZ", "'road'")
+            Z1GVA(link, 1) = get_gva_data_by_zoneID(g_modelRunYear - 1, Zone1(link, 1), "OZ", "'road'")
+            Z2GVA(link, 1) = get_gva_data_by_zoneID(g_modelRunYear - 1, Zone2(link, 1), "DZ", "'road'")
             '24 hours for category 0
-            For c = 0 To 24
-                CostOld(link, 0, c) = InputArray(28, link)
+            For c = 0 To 23
+                CostOld(link, 0, c) = InputArray(link, 28)
             Next
-            MaxCap(link, 0) = InputArray(29, link)
-            MaxCap(link, 1) = InputArray(30, link)
-            MaxCap(link, 2) = InputArray(31, link)
+            MaxCap(link, 0) = InputArray(link, 29)
+            MaxCap(link, 1) = InputArray(link, 30)
+            MaxCap(link, 2) = InputArray(link, 31)
             varnum = 32
             '24 hours for category 1 - 19
             For x = 1 To 19
-                For c = 1 To 24
-                    CostOld(link, x, c) = InputArray(varnum, link)
+                For c = 0 To 23
+                    CostOld(link, x, c) = InputArray(link, varnum)
                 Next
                 varnum += 1
             Next
@@ -373,10 +373,10 @@
             'get zone1 ID and zone2 ID
             get_zone_by_flowid(FlowID(link, 1), Zone1(link, 1), Zone2(link, 1), "road")
             'Get Population and GVA data
-            Z1Pop(link, 1) = get_population_data_by_zoneID(g_modelRunYear, FlowID(link, 1), "OZ", "'road'", Zone1(link, 1))
-            Z2Pop(link, 1) = get_population_data_by_zoneID(g_modelRunYear, FlowID(link, 1), "DZ", "'road'", Zone2(link, 1))
-            Z1GVA(link, 1) = get_gva_data_by_zoneID(g_modelRunYear, FlowID(link, 1), "OZ", "'road'", Zone1(link, 1))
-            Z2GVA(link, 1) = get_gva_data_by_zoneID(g_modelRunYear, FlowID(link, 1), "DZ", "'road'", Zone2(link, 1))
+            Z1Pop(link, 1) = get_population_data_by_zoneID(g_modelRunYear - 1, FlowID(link, 1), "OZ", "'road'", Zone1(link, 1))
+            Z2Pop(link, 1) = get_population_data_by_zoneID(g_modelRunYear - 1, FlowID(link, 1), "DZ", "'road'", Zone2(link, 1))
+            Z1GVA(link, 1) = get_gva_data_by_zoneID(g_modelRunYear - 1, FlowID(link, 1), "OZ", "'road'", Zone1(link, 1))
+            Z2GVA(link, 1) = get_gva_data_by_zoneID(g_modelRunYear - 1, FlowID(link, 1), "DZ", "'road'", Zone2(link, 1))
 
 
 
@@ -484,19 +484,19 @@
 
 
             'for all 20 road link categories and 24 hours
-            sc = 1
+
             Do While sc < 20
                 Do While h < 24
                     RoadType = AssignRoadType(sc)
                     'if traffic less than free flow capacity then adopt free flow speed
                     If RoadTypeFlows(link, RoadType, h) < (FreeFlowCU * MaxCap(link, RoadType)) Then
-                        HourlySpeeds(link, sc, h) = FreeFlowSpeeds(sc, 2)
+                        HourlySpeeds(link, sc, h) = FreeFlowSpeeds(sc + 1, 2)
                     ElseIf RoadTypeFlows(link, RoadType, h) <= MaxCap(link, RoadType) Then
                         'otherwise if it is in between the free flow capacity and the maximum capacity then use the speed calculator
                         'because this is the first year set the old speed as the free flow speed
                         FlowOld = FreeFlowCU * MaxCap(link, RoadType)
                         FlowNew = RoadTypeFlows(link, RoadType, h)
-                        SpeedOld = FreeFlowSpeeds(sc, 2)
+                        SpeedOld = FreeFlowSpeeds(sc + 1, 2)
                         Call SpeedCalc()
                         HourlySpeeds(link, sc, h) = SpeedNew
                     Else
@@ -528,7 +528,7 @@
                     If RoadTypeFlows(link, 0, h) < (FreeFlowCU * MaxCap(link, 0)) Then
                         For t = 0 To 5
                             'if traffic less than free flow capacity then adopt free flow speed
-                            HourlySpeeds(link, t, h) = FreeFlowSpeeds(1, t)
+                            HourlySpeeds(link, t, h) = FreeFlowSpeeds(t + 1, 2)
                         Next
                     ElseIf RoadTypeFlows(link, 0, h) <= MaxCap(link, 0) Then
                         'otherwise if it is in between the free flow capacity and the maximum capacity then use the speed calculator
@@ -536,7 +536,7 @@
                         FlowOld = FreeFlowCU * MaxCap(link, 0)
                         FlowNew = RoadTypeFlows(link, 0, h)
                         For t = 0 To 5
-                            SpeedOld = FreeFlowSpeeds(1, t)
+                            SpeedOld = FreeFlowSpeeds(t + 1, 2)
                             sc = t
                             Call SpeedCalc()
                             HourlySpeeds(link, t, h) = SpeedNew
@@ -554,7 +554,7 @@
                         FlowOld = FreeFlowCU * MaxCap(link, 0)
                         FlowNew = RoadTypeFlows(link, 0, h)
                         For t = 0 To 5
-                            SpeedOld = FreeFlowSpeeds(1, t)
+                            SpeedOld = FreeFlowSpeeds(t + 1, 2)
                             sc = t
                             Call SpeedCalc()
                             HourlySpeeds(link, t, h) = SpeedNew
@@ -564,7 +564,7 @@
                     If RoadTypeFlows(link, 1, h) < (FreeFlowCU * MaxCap(link, 1)) Then
                         For t = 6 To 11
                             'if traffic less than free flow capacity then adopt free flow speed
-                            HourlySpeeds(link, t, h) = FreeFlowSpeeds(1, t)
+                            HourlySpeeds(link, t, h) = FreeFlowSpeeds(t + 1, 2)
                         Next
                     ElseIf RoadTypeFlows(link, 1, h) <= MaxCap(link, 1) Then
                         'otherwise if it is in between the free flow capacity and the maximum capacity then use the speed calculator
@@ -572,7 +572,7 @@
                         FlowOld = FreeFlowCU * MaxCap(link, 1)
                         FlowNew = RoadTypeFlows(link, 1, h)
                         For t = 6 To 11
-                            SpeedOld = FreeFlowSpeeds(1, t)
+                            SpeedOld = FreeFlowSpeeds(t + 1, 2)
                             sc = t
                             Call SpeedCalc()
                             HourlySpeeds(link, t, h) = SpeedNew
@@ -590,7 +590,7 @@
                         FlowOld = FreeFlowCU * MaxCap(link, 1)
                         FlowNew = RoadTypeFlows(link, 1, h)
                         For t = 6 To 11
-                            SpeedOld = FreeFlowSpeeds(1, t)
+                            SpeedOld = FreeFlowSpeeds(t + 1, 2)
                             sc = t
                             Call SpeedCalc()
                             HourlySpeeds(link, t, h) = SpeedNew
@@ -600,7 +600,7 @@
                     If RoadTypeFlows(link, 2, h) < (FreeFlowCU * MaxCap(link, 2)) Then
                         For t = 12 To 19
                             'if traffic less than free flow capacity then adopt free flow speed
-                            HourlySpeeds(link, t, h) = FreeFlowSpeeds(1, t)
+                            HourlySpeeds(link, t, h) = FreeFlowSpeeds(t + 1, 2)
                         Next
                     ElseIf RoadTypeFlows(link, 2, h) <= MaxCap(link, 2) Then
                         'otherwise if it is in between the free flow capacity and the maximum capacity then use the speed calculator
@@ -608,7 +608,7 @@
                         FlowOld = FreeFlowCU * MaxCap(link, 2)
                         FlowNew = RoadTypeFlows(link, 2, h)
                         For t = 12 To 19
-                            SpeedOld = FreeFlowSpeeds(1, t)
+                            SpeedOld = FreeFlowSpeeds(t + 1, 2)
                             sc = t
                             Call SpeedCalc()
                             HourlySpeeds(link, t, h) = SpeedNew
@@ -626,7 +626,7 @@
                         FlowOld = FreeFlowCU * MaxCap(link, 2)
                         FlowNew = RoadTypeFlows(link, 2, h)
                         For t = 12 To 19
-                            SpeedOld = FreeFlowSpeeds(1, t)
+                            SpeedOld = FreeFlowSpeeds(t + 1, 2)
                             sc = t
                             Call SpeedCalc()
                             HourlySpeeds(link, t, h) = SpeedNew
@@ -682,14 +682,14 @@
             OldY = FlowOld
             NewY = FlowNew
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                OldEl = RoadEls(1, 9)
+                OldEl = RoadEls(1, 11)
                 Call VarElCalc()
                 SpeedRatio = VarRat
             Else
-                SpeedRatio = (FlowNew / FlowOld) ^ RoadEls(1, 9)
+                SpeedRatio = (FlowNew / FlowOld) ^ RoadEls(1, 11)
             End If
         Else
-            SpeedRatio = (FlowNew / FlowOld) ^ RoadEls(1, 9)
+            SpeedRatio = (FlowNew / FlowOld) ^ RoadEls(1, 11)
         End If
         SpeedNew = SpeedOld * SpeedRatio
     End Sub
@@ -718,29 +718,29 @@
 
         'calculate the individual variable ratios for passenger traffic
         'v1.3 mod
-        If TripRates = "SubStrategy" Then
-            rat1 = (((CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)) * RdTripRates(0, 1)) / (Z1Pop(link, 1) + Z2Pop(link, 1))) ^ RoadEls(1, 1)
+        If TripRates = True Then
+            rat1 = (((CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)) * RdTripRates(0, 1)) / (Z1Pop(link, 1) + Z2Pop(link, 1))) ^ RoadEls(1, 3)
         Else
-            rat1 = ((CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)) / (Z1Pop(link, 1) + Z2Pop(link, 1))) ^ RoadEls(1, 1)
+            rat1 = ((CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)) / (Z1Pop(link, 1) + Z2Pop(link, 1))) ^ RoadEls(1, 3)
         End If
 
-        rat3 = ((CDbl(ExternalValues(link, 6)) + ExternalValues(link, 7)) / (Z1GVA(link, 1) + Z2GVA(link, 1))) ^ RoadEls(1, 2)
+        rat3 = ((CDbl(ExternalValues(link, 6)) + ExternalValues(link, 7)) / (Z1GVA(link, 1) + Z2GVA(link, 1))) ^ RoadEls(1, 4)
         'initially set speed new and speed old as equal to speed in previous year, so ratio = 1 - can be altered if desired as part of scenario
-        rat5 = 1 ^ RoadEls(1, 3)
+        rat5 = 1 ^ RoadEls(1, 5)
 
         'cost ratio now estimated in getflowratio sub
 
         'calculate the individual variable ratios for freight traffic
         'v1.3 mod
-        If TripRates = "SubStrategy" Then
-            ratf1 = (((CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)) * RdTripRates(1, 1)) / (Z1Pop(link, 1) + Z2Pop(link, 1))) ^ RoadEls(1, 5)
+        If TripRates = True Then
+            ratf1 = (((CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)) * RdTripRates(1, 1)) / (Z1Pop(link, 1) + Z2Pop(link, 1))) ^ RoadEls(1, 7)
         Else
-            ratf1 = ((CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)) / (Z1Pop(link, 1) + Z2Pop(link, 1))) ^ RoadEls(1, 5)
+            ratf1 = ((CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)) / (Z1Pop(link, 1) + Z2Pop(link, 1))) ^ RoadEls(1, 7)
         End If
 
-        ratf3 = ((CDbl(ExternalValues(link, 6)) + ExternalValues(link, 7)) / (Z1GVA(link, 1) + Z2GVA(link, 1))) ^ RoadEls(1, 6)
+        ratf3 = ((CDbl(ExternalValues(link, 6)) + ExternalValues(link, 7)) / (Z1GVA(link, 1) + Z2GVA(link, 1))) ^ RoadEls(1, 8)
         '***NOTE - if altering this elasticity will also need to alter the flow-speed iteration process as this used the rat5 variable only
-        ratf5 = 1 ^ RoadEls(1, 7)
+        ratf5 = 1 ^ RoadEls(1, 9)
         'cost ratio now estimated in getflowratio sub
 
         Do While h < 24
@@ -992,14 +992,14 @@
             OldX = OldHourlyFlows(link, sc, h)
             'pop ratio
             OldY = Z1Pop(link, 1) + Z2Pop(link, 1)
-            If TripRates = "SubStrategy" Then
+            If TripRates = True Then
                 NewY = (CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)) * RdTripRates(1, 1)
             Else
                 NewY = CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)
             End If
             NewY = CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                OldEl = RoadEls(1, 1)
+                OldEl = RoadEls(1, 3)
                 Call VarElCalc()
                 rat1 = VarRat
             End If
@@ -1007,7 +1007,7 @@
             OldY = Z1GVA(link, 1) + Z2GVA(link, 1)
             NewY = CDbl(ExternalValues(link, 6)) + ExternalValues(link, 7)
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                OldEl = RoadEls(1, 2)
+                OldEl = RoadEls(1, 4)
                 Call VarElCalc()
                 rat3 = VarRat
             End If
@@ -1021,17 +1021,17 @@
                 Call VarElCalc()
                 rat6(sc) = VarRat
             Else
-                rat6(sc) = (NewY / OldY) ^ RoadEls(1, 4)
+                rat6(sc) = (NewY / OldY) ^ RoadEls(1, 6)
             End If
             'freight pop ratio
             OldY = Z1Pop(link, 1) + Z2Pop(link, 1)
-            If TripRates = "SubStrategy" Then
+            If TripRates = True Then
                 NewY = (CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)) * RdTripRates(1, 1)
             Else
                 NewY = CDbl(ExternalValues(link, 4)) + ExternalValues(link, 5)
             End If
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                OldEl = RoadEls(1, 5)
+                OldEl = RoadEls(1, 7)
                 Call VarElCalc()
                 ratf1 = VarRat
             End If
@@ -1039,7 +1039,7 @@
             OldY = Z1GVA(link, 1) + Z2GVA(link, 1)
             NewY = CDbl(ExternalValues(link, 6)) + ExternalValues(link, 7)
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                OldEl = RoadEls(1, 6)
+                OldEl = RoadEls(1, 8)
                 Call VarElCalc()
                 ratf3 = VarRat
             End If
@@ -1048,24 +1048,24 @@
             OldY = CostOld(link, sc, h) + ChargeOld(link, sc, h)
             NewY = CostNew(sc, h) + ChargeNew(sc, h)
             If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                OldEl = RoadEls(1, 8)
+                OldEl = RoadEls(1, 10)
                 Call VarElCalc()
                 ratf6(sc) = VarRat
             Else
-                ratf6(sc) = (CostNew(sc, h) / CostOld(link, sc, h)) ^ RoadEls(1, 8)
+                ratf6(sc) = (CostNew(sc, h) / CostOld(link, sc, h)) ^ RoadEls(1, 10)
             End If
         Else
             'still need to recalculate ratio if using congestion charging and to calculate cost ratio if not (latter now moved from hourly flow calc sub
             If CongestionCharge = True Then
                 OldY = CostOld(link, sc, h) + ChargeOld(link, sc, h)
                 NewY = CostNew(sc, h) + ChargeNew(sc, h)
-                rat6(sc) = (NewY / OldY) ^ RoadEls(1, 4)
+                rat6(sc) = (NewY / OldY) ^ RoadEls(1, 6)
                 OldY = CostOld(link, sc, h) + ChargeOld(link, sc, h)
                 NewY = CostNew(sc, h) + ChargeNew(sc, h)
-                ratf6(sc) = (NewY / OldY) ^ RoadEls(1, 8)
+                ratf6(sc) = (NewY / OldY) ^ RoadEls(1, 10)
             Else
-                rat6(sc) = (CostNew(sc, h) / CostOld(link, sc, h)) ^ RoadEls(1, 4)
-                ratf6(sc) = (CostNew(sc, h) / CostOld(link, sc, h)) ^ RoadEls(1, 8)
+                rat6(sc) = (CostNew(sc, h) / CostOld(link, sc, h)) ^ RoadEls(1, 6)
+                ratf6(sc) = (CostNew(sc, h) / CostOld(link, sc, h)) ^ RoadEls(1, 10)
             End If
         End If
 

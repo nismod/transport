@@ -28,7 +28,7 @@
     Dim ZoneOutputRow As String
     Dim ZoneLaneKm(145, 4) As Double
     Dim ZoneSpdNew As Double
-    Dim RdZoneEl(90, 9) As String
+    Dim RdZoneEl(90, 11) As String
     Dim RoadCatProb(4) As Double
     Dim VClass As String
     Dim FuelSpeed As Double
@@ -165,8 +165,8 @@
             'read the input data for the zone
             Zone_ID(ZoneID, 1) = IZRd_InputArray(ZoneID, 1)
             BaseVkm(ZoneID, 1) = IZRd_InputArray(ZoneID, 2)
-            ZonePop(ZoneID, 1) = get_population_data_by_zoneID(g_modelRunYear, Zone_ID(ZoneID, 1), "Zone", "'road'")
-            ZoneGVA(ZoneID, 1) = get_gva_data_by_zoneID(g_modelRunYear, Zone_ID(ZoneID, 1), "Zone", "'road'")
+            ZonePop(ZoneID, 1) = get_population_data_by_zoneID(g_modelRunYear - 1, Zone_ID(ZoneID, 1), "Zone", "'road'")
+            ZoneGVA(ZoneID, 1) = get_gva_data_by_zoneID(g_modelRunYear - 1, Zone_ID(ZoneID, 1), "Zone", "'road'")
             ZoneSpeed(ZoneID, 1) = IZRd_InputArray(ZoneID, 3)
             ZoneCarCost(ZoneID, 1) = IZRd_InputArray(ZoneID, 4)
             ZoneLGVCost(ZoneID, 1) = IZRd_InputArray(ZoneID, 16)
@@ -247,8 +247,8 @@
         Else
             'read from temp file table
             Zone_ID(ZoneID, 1) = CDbl(IZRd_InputArray(ZoneID, 1))
-            ZonePop(ZoneID, 1) = get_population_data_by_zoneID(g_modelRunYear, Zone_ID(ZoneID, 1), "Zone", "'road'")
-            ZoneGVA(ZoneID, 1) = get_gva_data_by_zoneID(g_modelRunYear, Zone_ID(ZoneID, 1), "Zone", "'road'")
+            ZonePop(ZoneID, 1) = get_population_data_by_zoneID(g_modelRunYear - 1, Zone_ID(ZoneID, 1), "Zone", "'road'")
+            ZoneGVA(ZoneID, 1) = get_gva_data_by_zoneID(g_modelRunYear - 1, Zone_ID(ZoneID, 1), "Zone", "'road'")
             ZoneSpeed(ZoneID, 1) = CDbl(IZRd_InputArray(ZoneID, 4))
             BaseVkm(ZoneID, 1) = CDbl(IZRd_InputArray(ZoneID, 5))
 
@@ -338,7 +338,7 @@
         Dim starttraffic As Double
 
         'v1.4 mod get the trip rates
-        If TripRates = "SubStrategy" Then
+        If TripRates = True Then
             RdTripRates(0) = stratarray(1, 93)
             RdTripRates(1) = stratarray(1, 94)
         End If
@@ -346,36 +346,36 @@
         'now incorporates variable elasticities - only do this here if we are not using them - otherwise do it in a separate sub
         If VariableEl = False Then
             'Calculate the values of the various input ratios for the different types of road vehicle (speed assumed to be the same for all)
-            If TripRates = "SubStrategy" Then
-                PopRat(1) = ((ZoneExtVar(ZoneID, 4) * RdTripRates(0)) / ZonePop(ZoneID, 1)) ^ RdZoneEl(1, 1)
-                PopRat(2) = ((ZoneExtVar(ZoneID, 4) * RdTripRates(1)) / ZonePop(ZoneID, 1)) ^ RdZoneEl(1, 6)
-                PopRat(3) = ((ZoneExtVar(ZoneID, 4) * RdTripRates(1)) / ZonePop(ZoneID, 1)) ^ RdZoneEl(1, 6)
-                PopRat(4) = ((ZoneExtVar(ZoneID, 4) * RdTripRates(1)) / ZonePop(ZoneID, 1)) ^ RdZoneEl(1, 6)
-                PopRat(5) = ((ZoneExtVar(ZoneID, 4) * RdTripRates(0)) / ZonePop(ZoneID, 1)) ^ RdZoneEl(1, 1)
+            If TripRates = True Then
+                PopRat(1) = ((ZoneExtVar(ZoneID, 4) * RdTripRates(0)) / ZonePop(ZoneID, 1)) ^ RdZoneEl(1, 3)
+                PopRat(2) = ((ZoneExtVar(ZoneID, 4) * RdTripRates(1)) / ZonePop(ZoneID, 1)) ^ RdZoneEl(1, 8)
+                PopRat(3) = ((ZoneExtVar(ZoneID, 4) * RdTripRates(1)) / ZonePop(ZoneID, 1)) ^ RdZoneEl(1, 8)
+                PopRat(4) = ((ZoneExtVar(ZoneID, 4) * RdTripRates(1)) / ZonePop(ZoneID, 1)) ^ RdZoneEl(1, 8)
+                PopRat(5) = ((ZoneExtVar(ZoneID, 4) * RdTripRates(0)) / ZonePop(ZoneID, 1)) ^ RdZoneEl(1, 3)
             Else
-                PopRat(1) = (ZoneExtVar(ZoneID, 4) / ZonePop(ZoneID, 1)) ^ RdZoneEl(1, 1)
-                PopRat(2) = (ZoneExtVar(ZoneID, 4) / ZonePop(ZoneID, 1)) ^ RdZoneEl(1, 6)
-                PopRat(3) = (ZoneExtVar(ZoneID, 4) / ZonePop(ZoneID, 1)) ^ RdZoneEl(1, 6)
-                PopRat(4) = (ZoneExtVar(ZoneID, 4) / ZonePop(ZoneID, 1)) ^ RdZoneEl(1, 6)
-                PopRat(5) = (ZoneExtVar(ZoneID, 4) / ZonePop(ZoneID, 1)) ^ RdZoneEl(1, 1)
+                PopRat(1) = (ZoneExtVar(ZoneID, 4) / ZonePop(ZoneID, 1)) ^ RdZoneEl(1, 3)
+                PopRat(2) = (ZoneExtVar(ZoneID, 4) / ZonePop(ZoneID, 1)) ^ RdZoneEl(1, 8)
+                PopRat(3) = (ZoneExtVar(ZoneID, 4) / ZonePop(ZoneID, 1)) ^ RdZoneEl(1, 8)
+                PopRat(4) = (ZoneExtVar(ZoneID, 4) / ZonePop(ZoneID, 1)) ^ RdZoneEl(1, 8)
+                PopRat(5) = (ZoneExtVar(ZoneID, 4) / ZonePop(ZoneID, 1)) ^ RdZoneEl(1, 3)
             End If
-            PopRat(1) = (ZoneExtVar(ZoneID, 4) / ZonePop(ZoneID, 1)) ^ RdZoneEl(1, 1)
-            PopRat(2) = (ZoneExtVar(ZoneID, 4) / ZonePop(ZoneID, 1)) ^ RdZoneEl(1, 6)
-            PopRat(3) = (ZoneExtVar(ZoneID, 4) / ZonePop(ZoneID, 1)) ^ RdZoneEl(1, 6)
-            PopRat(4) = (ZoneExtVar(ZoneID, 4) / ZonePop(ZoneID, 1)) ^ RdZoneEl(1, 6)
-            PopRat(5) = (ZoneExtVar(ZoneID, 4) / ZonePop(ZoneID, 1)) ^ RdZoneEl(1, 1)
-            GVARat(1) = (ZoneExtVar(ZoneID, 5) / ZoneGVA(ZoneID, 1)) ^ RdZoneEl(1, 2)
-            GVARat(2) = (ZoneExtVar(ZoneID, 5) / ZoneGVA(ZoneID, 1)) ^ RdZoneEl(1, 7)
-            GVARat(3) = (ZoneExtVar(ZoneID, 5) / ZoneGVA(ZoneID, 1)) ^ RdZoneEl(1, 7)
-            GVARat(4) = (ZoneExtVar(ZoneID, 5) / ZoneGVA(ZoneID, 1)) ^ RdZoneEl(1, 7)
-            GVARat(5) = (ZoneExtVar(ZoneID, 5) / ZoneGVA(ZoneID, 1)) ^ RdZoneEl(1, 2)
-            SpdRat = (ZoneSpeed(ZoneID, 1) / ZoneSpeed(ZoneID, 1)) ^ RdZoneEl(1, 3)
+            PopRat(1) = (ZoneExtVar(ZoneID, 4) / ZonePop(ZoneID, 1)) ^ RdZoneEl(1, 3)
+            PopRat(2) = (ZoneExtVar(ZoneID, 4) / ZonePop(ZoneID, 1)) ^ RdZoneEl(1, 8)
+            PopRat(3) = (ZoneExtVar(ZoneID, 4) / ZonePop(ZoneID, 1)) ^ RdZoneEl(1, 8)
+            PopRat(4) = (ZoneExtVar(ZoneID, 4) / ZonePop(ZoneID, 1)) ^ RdZoneEl(1, 8)
+            PopRat(5) = (ZoneExtVar(ZoneID, 4) / ZonePop(ZoneID, 1)) ^ RdZoneEl(1, 3)
+            GVARat(1) = (ZoneExtVar(ZoneID, 5) / ZoneGVA(ZoneID, 1)) ^ RdZoneEl(1, 4)
+            GVARat(2) = (ZoneExtVar(ZoneID, 5) / ZoneGVA(ZoneID, 1)) ^ RdZoneEl(1, 9)
+            GVARat(3) = (ZoneExtVar(ZoneID, 5) / ZoneGVA(ZoneID, 1)) ^ RdZoneEl(1, 9)
+            GVARat(4) = (ZoneExtVar(ZoneID, 5) / ZoneGVA(ZoneID, 1)) ^ RdZoneEl(1, 9)
+            GVARat(5) = (ZoneExtVar(ZoneID, 5) / ZoneGVA(ZoneID, 1)) ^ RdZoneEl(1, 4)
+            SpdRat = (ZoneSpeed(ZoneID, 1) / ZoneSpeed(ZoneID, 1)) ^ RdZoneEl(1, 5)
             'calculate the ratio for different types of road vehicle
-            PetRat(1) = (ZoneExtVar(ZoneID, 6) / ZoneCarCost(ZoneID, 1)) ^ RdZoneEl(1, 4)
-            PetRat(2) = (ZoneExtVar(ZoneID, 44) / ZoneLGVCost(ZoneID, 1)) ^ RdZoneEl(1, 9)
-            PetRat(3) = (ZoneExtVar(ZoneID, 45) / ZoneHGV1Cost(ZoneID, 1)) ^ RdZoneEl(1, 9)
-            PetRat(4) = (ZoneExtVar(ZoneID, 46) / ZoneHGV2Cost(ZoneID, 1)) ^ RdZoneEl(1, 9)
-            PetRat(5) = (ZoneExtVar(ZoneID, 47) / ZonePSVCost(ZoneID, 1)) ^ RdZoneEl(1, 4)
+            PetRat(1) = (ZoneExtVar(ZoneID, 6) / ZoneCarCost(ZoneID, 1)) ^ RdZoneEl(1, 6)
+            PetRat(2) = (ZoneExtVar(ZoneID, 44) / ZoneLGVCost(ZoneID, 1)) ^ RdZoneEl(1, 11)
+            PetRat(3) = (ZoneExtVar(ZoneID, 45) / ZoneHGV1Cost(ZoneID, 1)) ^ RdZoneEl(1, 11)
+            PetRat(4) = (ZoneExtVar(ZoneID, 46) / ZoneHGV2Cost(ZoneID, 1)) ^ RdZoneEl(1, 11)
+            PetRat(5) = (ZoneExtVar(ZoneID, 47) / ZonePSVCost(ZoneID, 1)) ^ RdZoneEl(1, 6)
 
             'Combine these ratios to get the vkm ratios
             For x = 1 To 5
@@ -525,14 +525,14 @@
                         OldY = BaseCatSpeed(ZoneID, rdtype)
                         NewY = NewCatSpeed(ZoneID, rdtype)
                         If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-                            OldEl = RdZoneEl(1, 3)
+                            OldEl = RdZoneEl(1, 5)
                             Call VarElCalc()
                             SpdRat = VarRat
                         Else
-                            SpdRat = (NewCatSpeed(ZoneID, rdtype) / BaseCatSpeed(ZoneID, rdtype)) ^ RdZoneEl(1, 3)
+                            SpdRat = (NewCatSpeed(ZoneID, rdtype) / BaseCatSpeed(ZoneID, rdtype)) ^ RdZoneEl(1, 5)
                         End If
                     Else
-                        SpdRat = (NewCatSpeed(ZoneID, rdtype) / BaseCatSpeed(ZoneID, rdtype)) ^ RdZoneEl(1, 3)
+                        SpdRat = (NewCatSpeed(ZoneID, rdtype) / BaseCatSpeed(ZoneID, rdtype)) ^ RdZoneEl(1, 5)
                     End If
                     RoadCatTraffic(ZoneID, rdtype) = SpdRat * BaseRoadCatTraffic(ZoneID, rdtype)
                     'set the base speed to equal the previous new speed
@@ -722,175 +722,175 @@
 
         'pop1ratio
         OldY = ZonePop(ZoneID, 1)
-        If TripRates = "SubStrategy" Then
+        If TripRates = True Then
             NewY = ZoneExtVar(ZoneID, 4) * RdTripRates(0)
         Else
             NewY = ZoneExtVar(ZoneID, 4)
         End If
         If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-            OldEl = RdZoneEl(1, 1)
+            OldEl = RdZoneEl(1, 3)
             Call VarElCalc()
             PopRat(1) = VarRat
         Else
-            PopRat(1) = (NewY / OldY) ^ RdZoneEl(1, 1)
+            PopRat(1) = (NewY / OldY) ^ RdZoneEl(1, 3)
         End If
         'pop2ratio
         OldY = ZonePop(ZoneID, 1)
-        If TripRates = "SubStrategy" Then
+        If TripRates = True Then
             NewY = ZoneExtVar(ZoneID, 4) * RdTripRates(1)
         Else
             NewY = ZoneExtVar(ZoneID, 4)
         End If
         If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-            OldEl = RdZoneEl(1, 6)
+            OldEl = RdZoneEl(1, 8)
             Call VarElCalc()
             PopRat(2) = VarRat
         Else
-            PopRat(2) = (NewY / OldY) ^ RdZoneEl(1, 6)
+            PopRat(2) = (NewY / OldY) ^ RdZoneEl(1, 8)
         End If
         'pop3ratio
         OldY = ZonePop(ZoneID, 1)
-        If TripRates = "SubStrategy" Then
+        If TripRates = True Then
             NewY = ZoneExtVar(ZoneID, 4) * RdTripRates(1)
         Else
             NewY = ZoneExtVar(ZoneID, 4)
         End If
         If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-            OldEl = RdZoneEl(1, 6)
+            OldEl = RdZoneEl(1, 8)
             Call VarElCalc()
             PopRat(3) = VarRat
         Else
-            PopRat(3) = (NewY / OldY) ^ RdZoneEl(1, 6)
+            PopRat(3) = (NewY / OldY) ^ RdZoneEl(1, 8)
         End If
         'pop4ratio
         OldY = ZonePop(ZoneID, 1)
-        If TripRates = "SubStrategy" Then
+        If TripRates = True Then
             NewY = ZoneExtVar(ZoneID, 4) * RdTripRates(1)
         Else
             NewY = ZoneExtVar(ZoneID, 4)
         End If
         If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-            OldEl = RdZoneEl(1, 6)
+            OldEl = RdZoneEl(1, 8)
             Call VarElCalc()
             PopRat(4) = VarRat
         Else
-            PopRat(4) = (NewY / OldY) ^ RdZoneEl(1, 6)
+            PopRat(4) = (NewY / OldY) ^ RdZoneEl(1, 8)
         End If
         'pop5ratio
         OldY = ZonePop(ZoneID, 1)
-        If TripRates = "SubStrategy" Then
+        If TripRates = True Then
             NewY = ZoneExtVar(ZoneID, 4) * RdTripRates(0)
         Else
             NewY = ZoneExtVar(ZoneID, 4)
         End If
         If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-            OldEl = RdZoneEl(1, 1)
+            OldEl = RdZoneEl(1, 3)
             Call VarElCalc()
             PopRat(5) = VarRat
         Else
-            PopRat(5) = (NewY / OldY) ^ RdZoneEl(1, 1)
+            PopRat(5) = (NewY / OldY) ^ RdZoneEl(1, 3)
         End If
         'gva1ratio
         OldY = ZoneGVA(ZoneID, 1)
         NewY = ZoneExtVar(ZoneID, 5)
         If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-            OldEl = RdZoneEl(1, 2)
+            OldEl = RdZoneEl(1, 4)
             Call VarElCalc()
             GVARat(1) = VarRat
         Else
-            GVARat(1) = (ZoneExtVar(ZoneID, 5) / ZoneGVA(ZoneID, 1)) ^ RdZoneEl(1, 2)
+            GVARat(1) = (ZoneExtVar(ZoneID, 5) / ZoneGVA(ZoneID, 1)) ^ RdZoneEl(1, 4)
         End If
         'gva2ratio
         OldY = ZoneGVA(ZoneID, 1)
         NewY = ZoneExtVar(ZoneID, 5)
         If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-            OldEl = RdZoneEl(1, 7)
+            OldEl = RdZoneEl(1, 9)
             Call VarElCalc()
             GVARat(2) = VarRat
         Else
-            GVARat(2) = (ZoneExtVar(ZoneID, 5) / ZoneGVA(ZoneID, 1)) ^ RdZoneEl(1, 7)
+            GVARat(2) = (ZoneExtVar(ZoneID, 5) / ZoneGVA(ZoneID, 1)) ^ RdZoneEl(1, 9)
         End If
         'gva3ratio
         OldY = ZoneGVA(ZoneID, 1)
         NewY = ZoneExtVar(ZoneID, 5)
         If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-            OldEl = RdZoneEl(1, 7)
+            OldEl = RdZoneEl(1, 9)
             Call VarElCalc()
             GVARat(3) = VarRat
         Else
-            GVARat(3) = (ZoneExtVar(ZoneID, 5) / ZoneGVA(ZoneID, 1)) ^ RdZoneEl(1, 7)
+            GVARat(3) = (ZoneExtVar(ZoneID, 5) / ZoneGVA(ZoneID, 1)) ^ RdZoneEl(1, 9)
         End If
         'gva4ratio
         OldY = ZoneGVA(ZoneID, 1)
         NewY = ZoneExtVar(ZoneID, 5)
         If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-            OldEl = RdZoneEl(1, 7)
+            OldEl = RdZoneEl(1, 9)
             Call VarElCalc()
             GVARat(4) = VarRat
         Else
-            GVARat(4) = (ZoneExtVar(ZoneID, 5) / ZoneGVA(ZoneID, 1)) ^ RdZoneEl(1, 7)
+            GVARat(4) = (ZoneExtVar(ZoneID, 5) / ZoneGVA(ZoneID, 1)) ^ RdZoneEl(1, 9)
         End If
         'gva5ratio
         OldY = ZoneGVA(ZoneID, 1)
         NewY = ZoneExtVar(ZoneID, 5)
         If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-            OldEl = RdZoneEl(1, 7)
+            OldEl = RdZoneEl(1, 9)
             Call VarElCalc()
             GVARat(5) = VarRat
         Else
-            GVARat(5) = (ZoneExtVar(ZoneID, 5) / ZoneGVA(ZoneID, 1)) ^ RdZoneEl(1, 2)
+            GVARat(5) = (ZoneExtVar(ZoneID, 5) / ZoneGVA(ZoneID, 1)) ^ RdZoneEl(1, 4)
         End If
         'speed ratio - this is constant
-        SpdRat = (ZoneSpeed(ZoneID, 1) / ZoneSpeed(ZoneID, 1)) ^ RdZoneEl(1, 3)
+        SpdRat = (ZoneSpeed(ZoneID, 1) / ZoneSpeed(ZoneID, 1)) ^ RdZoneEl(1, 5)
         'cost1ratio
         OldY = ZoneCarCost(ZoneID, 1)
         NewY = ZoneExtVar(ZoneID, 6)
         If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-            OldEl = RdZoneEl(1, 4)
+            OldEl = RdZoneEl(1, 6)
             Call VarElCalc()
             PetRat(1) = VarRat
         Else
-            PetRat(1) = (ZoneExtVar(ZoneID, 6) / ZoneCarCost(ZoneID, 1)) ^ RdZoneEl(1, 4)
+            PetRat(1) = (ZoneExtVar(ZoneID, 6) / ZoneCarCost(ZoneID, 1)) ^ RdZoneEl(1, 6)
         End If
         'cost2ratio
         OldY = ZoneLGVCost(ZoneID, 1)
         NewY = ZoneExtVar(ZoneID, 44)
         If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-            OldEl = RdZoneEl(1, 9)
+            OldEl = RdZoneEl(1, 11)
             Call VarElCalc()
             PetRat(2) = VarRat
         Else
-            PetRat(2) = (ZoneExtVar(ZoneID, 44) / ZoneLGVCost(ZoneID, 1)) ^ RdZoneEl(1, 9)
+            PetRat(2) = (ZoneExtVar(ZoneID, 44) / ZoneLGVCost(ZoneID, 1)) ^ RdZoneEl(1, 11)
         End If
         'cost3ratio
         OldY = ZoneHGV1Cost(ZoneID, 1)
         NewY = ZoneExtVar(ZoneID, 45)
         If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-            OldEl = RdZoneEl(1, 9)
+            OldEl = RdZoneEl(1, 11)
             Call VarElCalc()
             PetRat(3) = VarRat
         Else
-            PetRat(3) = (ZoneExtVar(ZoneID, 45) / ZoneHGV1Cost(ZoneID, 1)) ^ RdZoneEl(1, 9)
+            PetRat(3) = (ZoneExtVar(ZoneID, 45) / ZoneHGV1Cost(ZoneID, 1)) ^ RdZoneEl(1, 11)
         End If
         'cost4ratio
         OldY = ZoneHGV2Cost(ZoneID, 1)
         NewY = ZoneExtVar(ZoneID, 46)
         If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-            OldEl = RdZoneEl(1, 9)
+            OldEl = RdZoneEl(1, 11)
             Call VarElCalc()
             PetRat(4) = VarRat
         Else
-            PetRat(4) = (ZoneExtVar(ZoneID, 46) / ZoneHGV2Cost(ZoneID, 1)) ^ RdZoneEl(1, 9)
+            PetRat(4) = (ZoneExtVar(ZoneID, 46) / ZoneHGV2Cost(ZoneID, 1)) ^ RdZoneEl(1, 11)
         End If
         'cost5ratio
         OldY = ZonePSVCost(ZoneID, 1)
         NewY = ZoneExtVar(ZoneID, 47)
         If Math.Abs((NewY / OldY) - 1) > ElCritValue Then
-            OldEl = RdZoneEl(1, 4)
+            OldEl = RdZoneEl(1, 6)
             Call VarElCalc()
             PetRat(5) = VarRat
         Else
-            PetRat(5) = (ZoneExtVar(ZoneID, 47) / ZonePSVCost(ZoneID, 1)) ^ RdZoneEl(1, 4)
+            PetRat(5) = (ZoneExtVar(ZoneID, 47) / ZonePSVCost(ZoneID, 1)) ^ RdZoneEl(1, 6)
         End If
         'Combine these ratios to get the vkm ratios
         For x = 1 To 5
@@ -1637,25 +1637,26 @@
         'write to output array
         IZRd_OutputArray(ZoneID, 0) = g_modelRunID
         IZRd_OutputArray(ZoneID, 1) = ZoneID
-        IZRd_OutputArray(ZoneID, 2) = g_modelRunYear
-        IZRd_OutputArray(ZoneID, 3) = NewVkm
-        IZRd_OutputArray(ZoneID, 4) = ZoneSpdNew
-        IZRd_OutputArray(ZoneID, 5) = PetrolUsed
-        IZRd_OutputArray(ZoneID, 6) = DieselUsed
-        IZRd_OutputArray(ZoneID, 7) = ElectricUsed
-        IZRd_OutputArray(ZoneID, 8) = LPGUsed
-        IZRd_OutputArray(ZoneID, 9) = CNGUsed
-        IZRd_OutputArray(ZoneID, 10) = HydrogenUsed
-        IZRd_OutputArray(ZoneID, 11) = RoadCatTraffic(ZoneID, 1)
-        IZRd_OutputArray(ZoneID, 12) = RoadCatTraffic(ZoneID, 2)
-        IZRd_OutputArray(ZoneID, 13) = RoadCatTraffic(ZoneID, 3)
-        IZRd_OutputArray(ZoneID, 14) = RoadCatTraffic(ZoneID, 4)
-        IZRd_OutputArray(ZoneID, 15) = NewCatSpeed(ZoneID, 1)
-        IZRd_OutputArray(ZoneID, 16) = NewCatSpeed(ZoneID, 2)
-        IZRd_OutputArray(ZoneID, 17) = NewCatSpeed(ZoneID, 3)
-        IZRd_OutputArray(ZoneID, 18) = NewCatSpeed(ZoneID, 4)
+        IZRd_OutputArray(ZoneID, 2) = 0 'TODO this should be country id
+        IZRd_OutputArray(ZoneID, 3) = g_modelRunYear
+        IZRd_OutputArray(ZoneID, 4) = NewVkm
+        IZRd_OutputArray(ZoneID, 5) = ZoneSpdNew
+        IZRd_OutputArray(ZoneID, 6) = PetrolUsed
+        IZRd_OutputArray(ZoneID, 7) = DieselUsed
+        IZRd_OutputArray(ZoneID, 8) = ElectricUsed
+        IZRd_OutputArray(ZoneID, 9) = LPGUsed
+        IZRd_OutputArray(ZoneID, 10) = CNGUsed
+        IZRd_OutputArray(ZoneID, 11) = HydrogenUsed
+        IZRd_OutputArray(ZoneID, 12) = RoadCatTraffic(ZoneID, 1)
+        IZRd_OutputArray(ZoneID, 13) = RoadCatTraffic(ZoneID, 2)
+        IZRd_OutputArray(ZoneID, 14) = RoadCatTraffic(ZoneID, 3)
+        IZRd_OutputArray(ZoneID, 15) = RoadCatTraffic(ZoneID, 4)
+        IZRd_OutputArray(ZoneID, 16) = NewCatSpeed(ZoneID, 1)
+        IZRd_OutputArray(ZoneID, 17) = NewCatSpeed(ZoneID, 2)
+        IZRd_OutputArray(ZoneID, 18) = NewCatSpeed(ZoneID, 3)
+        IZRd_OutputArray(ZoneID, 19) = NewCatSpeed(ZoneID, 4)
         For v = 1 To 10
-            IZRd_OutputArray(ZoneID, 18 + v) = VKmVType(v)
+            IZRd_OutputArray(ZoneID, 19 + v) = VKmVType(v)
         Next
 
         If BuildInfra = True Then

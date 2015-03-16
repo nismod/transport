@@ -32,7 +32,7 @@
     Dim enestring As String
     Dim InputCount As Long
     Dim capstring As String
-    Dim caparray(13670, 9) As String
+    Dim caparray(13670, 11) As String
     Dim capnum, zonecapcount As Long
     Dim zonecapdetails(13670, 8) As Double
     Dim sortarray(13670) As String
@@ -69,7 +69,7 @@
     Dim UrbRoadPer, WPPLTripPer As Double
     Dim CarbCharge(4, 9) As Double
     Dim newcapnum As Integer
-    Dim zonecaparray(,) As String
+    Dim zonecaparray(10, 8) As String
     Dim zonecapnum As Integer
     Dim RZEv_InArray(,) As String
     Dim RdZ_OutArray(145, 79) As String
@@ -120,7 +120,10 @@
             Call CapChangeCalc()
 
             'write all lines to intermediate capacity file
-            Call WriteData("RoadZone", "NewCap", zonecaparray)
+            If Not zonecaparray Is Nothing Then
+                'write data if exist
+                Call WriteData("RoadZone", "NewCap", zonecaparray)
+            End If
         End If
 
         'read all required new capacity for the current year
@@ -197,21 +200,21 @@
             'read from initial file table if it is year 2011
             If g_modelRunYear = g_initialYear Then
 
-                ZoneID(InputCount, 0) = RZEv_InArray(InputCount, 4)
+                ZoneID(InputCount, 0) = RZEv_InArray(InputCount, 1)
                 PopOld(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear, ZoneID(InputCount, 0), "Zone", "'road'")
                 GVAOld(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear, ZoneID(InputCount, 0), "Zone", "'road'")
-                CostOld(InputCount, 0) = RZEv_InArray(InputCount, 8)
-                LaneKm(InputCount, 0) = RZEv_InArray(InputCount, 9)
-                MLaneKm(InputCount, 0) = RZEv_InArray(InputCount, 10)
-                RurADLaneKm(InputCount, 0) = RZEv_InArray(InputCount, 11)
-                RurASLaneKm(InputCount, 0) = RZEv_InArray(InputCount, 12)
-                RurMinLaneKm(InputCount, 0) = RZEv_InArray(InputCount, 13)
-                UrbDLaneKm(InputCount, 0) = RZEv_InArray(InputCount, 14)
-                UrbSLaneKm(InputCount, 0) = RZEv_InArray(InputCount, 15)
-                CostOld(InputCount, 1) = RZEv_InArray(InputCount, 20)
-                CostOld(InputCount, 2) = RZEv_InArray(InputCount, 21)
-                CostOld(InputCount, 3) = RZEv_InArray(InputCount, 22)
-                CostOld(InputCount, 4) = RZEv_InArray(InputCount, 23)
+                CostOld(InputCount, 0) = RZEv_InArray(InputCount, 4)
+                LaneKm(InputCount, 0) = RZEv_InArray(InputCount, 5)
+                MLaneKm(InputCount, 0) = RZEv_InArray(InputCount, 6)
+                RurADLaneKm(InputCount, 0) = RZEv_InArray(InputCount, 7)
+                RurASLaneKm(InputCount, 0) = RZEv_InArray(InputCount, 8)
+                RurMinLaneKm(InputCount, 0) = RZEv_InArray(InputCount, 9)
+                UrbDLaneKm(InputCount, 0) = RZEv_InArray(InputCount, 10)
+                UrbSLaneKm(InputCount, 0) = RZEv_InArray(InputCount, 11)
+                CostOld(InputCount, 1) = RZEv_InArray(InputCount, 16)
+                CostOld(InputCount, 2) = RZEv_InArray(InputCount, 17)
+                CostOld(InputCount, 3) = RZEv_InArray(InputCount, 18)
+                CostOld(InputCount, 4) = RZEv_InArray(InputCount, 19)
 
                 'v1.4 change set fuel efficiency old values to one
                 For f = 0 To 34
@@ -221,53 +224,48 @@
                 If RdZEneSource = "Database" Then
 
                     'get the values of the base year
-                    ICount = 1
-                    Do While ICount < 145
-                        PetOld(ICount, 0) = enearray(1, 1)
-                        DieOld(ICount, 0) = enearray(1, 2)
-                        EleOld(ICount, 0) = enearray(1, 3)
-                        LPGOld(ICount, 0) = enearray(1, 4)
-                        CNGOld(ICount, 0) = enearray(1, 5)
-                        HydOld(ICount, 0) = enearray(1, 6)
-                        ICount += 1
-                    Loop
+                    PetOld(InputCount, 0) = enearray(1, 1)
+                    DieOld(InputCount, 0) = enearray(1, 2)
+                    EleOld(InputCount, 0) = enearray(1, 3)
+                    LPGOld(InputCount, 0) = enearray(1, 4)
+                    CNGOld(InputCount, 0) = enearray(1, 5)
+                    HydOld(InputCount, 0) = enearray(1, 6)
 
-                    ICount = 1
                     'calculate base fuel costs
-                    VehFuelCosts(ICount, 0, 0) = 0.2337 * 36.14
-                    VehFuelCosts(ICount, 0, 1) = 0.1911 * 36.873
-                    VehFuelCosts(ICount, 0, 2) = ((11.2 / 18.6) * 0.2337) / (0.7663 + ((11.2 / 18.6) * 0.2337)) * 36.14
-                    VehFuelCosts(ICount, 0, 3) = ((7.6 / 12.4) * 0.1911) / (0.8089 + ((7.6 / 12.4) * 0.1911)) * 36.873
+                    VehFuelCosts(InputCount, 0, 0) = 0.2337 * 36.14
+                    VehFuelCosts(InputCount, 0, 1) = 0.1911 * 36.873
+                    VehFuelCosts(InputCount, 0, 2) = ((11.2 / 18.6) * 0.2337) / (0.7663 + ((11.2 / 18.6) * 0.2337)) * 36.14
+                    VehFuelCosts(InputCount, 0, 3) = ((7.6 / 12.4) * 0.1911) / (0.8089 + ((7.6 / 12.4) * 0.1911)) * 36.873
                     'this and later plug-in hybrids is based on petrol/diesel being used for rural roads and electricity for urban roads
-                    VehFuelCosts(ICount, 0, 4) = ((((18.1 / 25.9) * (1 - RZEv_InArray(ICount, 31))) + ((EleOld(ICount, 0) / PetOld(ICount, 0)) * (46.7 / 25.9) * RZEv_InArray(ICount, 31))) * 0.2337) / (0.7663 + ((((18.1 / 25.9) * (1 - RZEv_InArray(ICount, 31))) + ((EleOld(ICount, 0) / PetOld(ICount, 0)) * (46.7 / 25.9) * RZEv_InArray(ICount, 31))) * 0.2337)) * 36.14
-                    PHPerOld(ICount, 0) = ((18.1 / 25.9) * (1 - RZEv_InArray(ICount, 31))) / ((((18.1 / 25.9) * (1 - RZEv_InArray(ICount, 31))) + ((EleOld(ICount, 0) / PetOld(ICount, 0)) * (46.7 / 25.9) * RZEv_InArray(ICount, 31))))
-                    VehFuelCosts(ICount, 0, 5) = ((EleOld(ICount, 0) / PetOld(ICount, 0)) * (16.5 / 7.3) * 0.2337) / (0.7663 + ((EleOld(ICount, 0) / PetOld(ICount, 0)) * (16.5 / 7.3) * 0.2337)) * 36.14
-                    VehFuelCosts(ICount, 0, 8) = ((HydOld(ICount, 0) / PetOld(ICount, 0)) * (43.8 / 10.3) * 0.2337) / (0.7663 + ((HydOld(ICount, 0) / PetOld(ICount, 0)) * (43.8 / 10.3) * 0.2337)) * 36.14
-                    VehFuelCosts(ICount, 0, 9) = ((HydOld(ICount, 0) / PetOld(ICount, 0)) * (53.3 / 25.9) * 0.2337) / (0.7663 + ((HydOld(ICount, 0) / PetOld(ICount, 0)) * (53.3 / 25.9) * 0.2337)) * 36.14
-                    VehFuelCosts(ICount, 1, 0) = 0.155 * 61.329
-                    VehFuelCosts(ICount, 1, 1) = 0.155 * 61.329
-                    VehFuelCosts(ICount, 1, 3) = ((4.4 / 7.9) * 0.155) / (0.845 + ((4.4 / 7.9) * 0.155)) * 61.329
-                    VehFuelCosts(ICount, 1, 4) = ((((5.8 / 7.9) * (1 - RZEv_InArray(ICount, 31))) + ((EleOld(ICount, 0) / DieOld(ICount, 0)) * (42.3 / 7.9) * RZEv_InArray(ICount, 31))) * 0.155) / (0.845 + ((((5.8 / 7.9) * (1 - RZEv_InArray(ICount, 31))) + ((EleOld(ICount, 0) / DieOld(ICount, 0)) * (42.3 / 7.9) * RZEv_InArray(ICount, 31))) * 0.155)) * 61.329
-                    PHPerOld(ICount, 1) = ((5.8 / 7.9) * (1 - RZEv_InArray(ICount, 31))) / ((((5.8 / 7.9) * (1 - RZEv_InArray(ICount, 31))) + ((EleOld(ICount, 0) / DieOld(ICount, 0)) * (42.3 / 7.9) * RZEv_InArray(ICount, 31))))
-                    VehFuelCosts(ICount, 1, 5) = ((EleOld(ICount, 0) / DieOld(ICount, 0)) * (56.2 / 7.9) * 0.155) / (0.845 + ((EleOld(ICount, 0) / DieOld(ICount, 0)) * (56.2 / 7.9) * 0.155)) * 61.329
-                    VehFuelCosts(ICount, 1, 6) = ((LPGOld(ICount, 0) / DieOld(ICount, 0)) * (11.8 / 7.9) * 0.155) / (0.845 + ((LPGOld(ICount, 0) / DieOld(ICount, 0)) * (11.8 / 7.9) * 0.155)) * 61.329
-                    VehFuelCosts(ICount, 1, 7) = ((CNGOld(ICount, 0) / DieOld(ICount, 0)) * (80.8 / 7.9) * 0.155) / (0.845 + ((CNGOld(ICount, 0) / DieOld(ICount, 0)) * (80.8 / 7.9) * 0.155)) * 61.329
-                    VehFuelCosts(ICount, 2, 1) = 0.2209 * 93.665
-                    VehFuelCosts(ICount, 2, 3) = ((22.1 / 37.6) * 0.2209) / (0.7791 + ((22.1 / 37.6) * 0.2209)) * 93.665
-                    VehFuelCosts(ICount, 2, 8) = ((HydOld(ICount, 0) / DieOld(ICount, 0)) * (139.8 / 37.6) * 0.2209) / (0.7791 + ((HydOld(ICount, 0) / DieOld(ICount, 0)) * (139.8 / 37.6) * 0.2209)) * 93.665
-                    VehFuelCosts(ICount, 2, 9) = ((HydOld(ICount, 0) / DieOld(ICount, 0)) * (112.3 / 37.6) * 0.2209) / (0.7791 + ((HydOld(ICount, 0) / DieOld(ICount, 0)) * (112.3 / 37.6) * 0.2209)) * 93.665
-                    VehFuelCosts(ICount, 3, 1) = 0.2935 * 109.948
-                    VehFuelCosts(ICount, 3, 3) = ((22.1 / 37.6) * 0.2935) / (0.7065 + ((22.1 / 37.6) * 0.2935)) * 109.948
-                    VehFuelCosts(ICount, 3, 8) = ((HydOld(ICount, 0) / DieOld(ICount, 0)) * (139.8 / 37.6) * 0.2935) / (0.7065 + ((HydOld(ICount, 0) / DieOld(ICount, 0)) * (139.8 / 37.6) * 0.2935)) * 109.948
-                    VehFuelCosts(ICount, 3, 9) = ((HydOld(ICount, 0) / DieOld(ICount, 0)) * (112.3 / 37.6) * 0.2935) / (0.7065 + ((HydOld(ICount, 0) / DieOld(ICount, 0)) * (112.3 / 37.6) * 0.2935)) * 109.948
-                    VehFuelCosts(ICount, 4, 1) = 0.1301 * 234.5
-                    VehFuelCosts(ICount, 4, 3) = ((30.4 / 37.2) * 0.1301) / (0.8699 + ((30.4 / 37.2) * 0.1301)) * 234.5
-                    VehFuelCosts(ICount, 4, 4) = ((((11.9 / 19.6) * (1 - RZEv_InArray(ICount, 31))) + ((EleOld(ICount, 0) / DieOld(ICount, 0)) * (103.7 / 19.6) * RZEv_InArray(ICount, 31))) * 0.1301) / (0.8699 + ((((11.9 / 19.6) * (1 - RZEv_InArray(ICount, 31))) + ((EleOld(ICount, 0) / DieOld(ICount, 0)) * (103.7 / 19.6) * RZEv_InArray(ICount, 31))) * 0.1301)) * 234.5
-                    PHPerOld(ICount, 4) = ((11.9 / 19.6) * (1 - RZEv_InArray(ICount, 31))) / ((((11.9 / 19.6) * (1 - RZEv_InArray(ICount, 31))) + ((EleOld(ICount, 0) / DieOld(ICount, 0)) * (103.7 / 19.6) * RZEv_InArray(ICount, 31))))
-                    VehFuelCosts(ICount, 4, 5) = ((EleOld(ICount, 0) / DieOld(ICount, 0)) * (425.4 / 37.2) * 0.1301) / (0.8699 + ((EleOld(ICount, 0) / DieOld(ICount, 0)) * (425.4 / 37.2) * 0.1301)) * 234.5
-                    VehFuelCosts(ICount, 4, 6) = ((LPGOld(ICount, 0) / DieOld(ICount, 0)) * (131.8 / 37.2) * 0.1301) / (0.8699 + ((LPGOld(ICount, 0) / DieOld(ICount, 0)) * (131.8 / 37.2) * 0.1301)) * 234.5
-                    VehFuelCosts(ICount, 4, 7) = ((CNGOld(ICount, 0) / DieOld(ICount, 0)) * (1003.2 / 37.2) * 0.1301) / (0.8699 + ((CNGOld(ICount, 0) / DieOld(ICount, 0)) * (1003.2 / 37.2) * 0.1301)) * 234.5
-                    VehFuelCosts(ICount, 4, 9) = ((HydOld(ICount, 0) / DieOld(ICount, 0)) * (109.2 / 37.2) * 0.1301) / (0.8699 + ((HydOld(ICount, 0) / DieOld(ICount, 0)) * (109.2 / 37.2) * 0.1301)) * 234.5
+                    VehFuelCosts(InputCount, 0, 4) = ((((18.1 / 25.9) * (1 - RZEv_InArray(InputCount, 15))) + ((EleOld(InputCount, 0) / PetOld(InputCount, 0)) * (46.7 / 25.9) * RZEv_InArray(InputCount, 15))) * 0.2337) / (0.7663 + ((((18.1 / 25.9) * (1 - RZEv_InArray(InputCount, 15))) + ((EleOld(InputCount, 0) / PetOld(InputCount, 0)) * (46.7 / 25.9) * RZEv_InArray(InputCount, 15))) * 0.2337)) * 36.14
+                    PHPerOld(InputCount, 0) = ((18.1 / 25.9) * (1 - RZEv_InArray(InputCount, 15))) / ((((18.1 / 25.9) * (1 - RZEv_InArray(InputCount, 15))) + ((EleOld(InputCount, 0) / PetOld(InputCount, 0)) * (46.7 / 25.9) * RZEv_InArray(InputCount, 15))))
+                    VehFuelCosts(InputCount, 0, 5) = ((EleOld(InputCount, 0) / PetOld(InputCount, 0)) * (16.5 / 7.3) * 0.2337) / (0.7663 + ((EleOld(InputCount, 0) / PetOld(InputCount, 0)) * (16.5 / 7.3) * 0.2337)) * 36.14
+                    VehFuelCosts(InputCount, 0, 8) = ((HydOld(InputCount, 0) / PetOld(InputCount, 0)) * (43.8 / 10.3) * 0.2337) / (0.7663 + ((HydOld(InputCount, 0) / PetOld(InputCount, 0)) * (43.8 / 10.3) * 0.2337)) * 36.14
+                    VehFuelCosts(InputCount, 0, 9) = ((HydOld(InputCount, 0) / PetOld(InputCount, 0)) * (53.3 / 25.9) * 0.2337) / (0.7663 + ((HydOld(InputCount, 0) / PetOld(InputCount, 0)) * (53.3 / 25.9) * 0.2337)) * 36.14
+                    VehFuelCosts(InputCount, 1, 0) = 0.155 * 61.329
+                    VehFuelCosts(InputCount, 1, 1) = 0.155 * 61.329
+                    VehFuelCosts(InputCount, 1, 3) = ((4.4 / 7.9) * 0.155) / (0.845 + ((4.4 / 7.9) * 0.155)) * 61.329
+                    VehFuelCosts(InputCount, 1, 4) = ((((5.8 / 7.9) * (1 - RZEv_InArray(InputCount, 15))) + ((EleOld(InputCount, 0) / DieOld(InputCount, 0)) * (42.3 / 7.9) * RZEv_InArray(InputCount, 15))) * 0.155) / (0.845 + ((((5.8 / 7.9) * (1 - RZEv_InArray(InputCount, 15))) + ((EleOld(InputCount, 0) / DieOld(InputCount, 0)) * (42.3 / 7.9) * RZEv_InArray(InputCount, 15))) * 0.155)) * 61.329
+                    PHPerOld(InputCount, 1) = ((5.8 / 7.9) * (1 - RZEv_InArray(InputCount, 15))) / ((((5.8 / 7.9) * (1 - RZEv_InArray(InputCount, 15))) + ((EleOld(InputCount, 0) / DieOld(InputCount, 0)) * (42.3 / 7.9) * RZEv_InArray(InputCount, 15))))
+                    VehFuelCosts(InputCount, 1, 5) = ((EleOld(InputCount, 0) / DieOld(InputCount, 0)) * (56.2 / 7.9) * 0.155) / (0.845 + ((EleOld(InputCount, 0) / DieOld(InputCount, 0)) * (56.2 / 7.9) * 0.155)) * 61.329
+                    VehFuelCosts(InputCount, 1, 6) = ((LPGOld(InputCount, 0) / DieOld(InputCount, 0)) * (11.8 / 7.9) * 0.155) / (0.845 + ((LPGOld(InputCount, 0) / DieOld(InputCount, 0)) * (11.8 / 7.9) * 0.155)) * 61.329
+                    VehFuelCosts(InputCount, 1, 7) = ((CNGOld(InputCount, 0) / DieOld(InputCount, 0)) * (80.8 / 7.9) * 0.155) / (0.845 + ((CNGOld(InputCount, 0) / DieOld(InputCount, 0)) * (80.8 / 7.9) * 0.155)) * 61.329
+                    VehFuelCosts(InputCount, 2, 1) = 0.2209 * 93.665
+                    VehFuelCosts(InputCount, 2, 3) = ((22.1 / 37.6) * 0.2209) / (0.7791 + ((22.1 / 37.6) * 0.2209)) * 93.665
+                    VehFuelCosts(InputCount, 2, 8) = ((HydOld(InputCount, 0) / DieOld(InputCount, 0)) * (139.8 / 37.6) * 0.2209) / (0.7791 + ((HydOld(InputCount, 0) / DieOld(InputCount, 0)) * (139.8 / 37.6) * 0.2209)) * 93.665
+                    VehFuelCosts(InputCount, 2, 9) = ((HydOld(InputCount, 0) / DieOld(InputCount, 0)) * (112.3 / 37.6) * 0.2209) / (0.7791 + ((HydOld(InputCount, 0) / DieOld(InputCount, 0)) * (112.3 / 37.6) * 0.2209)) * 93.665
+                    VehFuelCosts(InputCount, 3, 1) = 0.2935 * 109.948
+                    VehFuelCosts(InputCount, 3, 3) = ((22.1 / 37.6) * 0.2935) / (0.7065 + ((22.1 / 37.6) * 0.2935)) * 109.948
+                    VehFuelCosts(InputCount, 3, 8) = ((HydOld(InputCount, 0) / DieOld(InputCount, 0)) * (139.8 / 37.6) * 0.2935) / (0.7065 + ((HydOld(InputCount, 0) / DieOld(InputCount, 0)) * (139.8 / 37.6) * 0.2935)) * 109.948
+                    VehFuelCosts(InputCount, 3, 9) = ((HydOld(InputCount, 0) / DieOld(InputCount, 0)) * (112.3 / 37.6) * 0.2935) / (0.7065 + ((HydOld(InputCount, 0) / DieOld(InputCount, 0)) * (112.3 / 37.6) * 0.2935)) * 109.948
+                    VehFuelCosts(InputCount, 4, 1) = 0.1301 * 234.5
+                    VehFuelCosts(InputCount, 4, 3) = ((30.4 / 37.2) * 0.1301) / (0.8699 + ((30.4 / 37.2) * 0.1301)) * 234.5
+                    VehFuelCosts(InputCount, 4, 4) = ((((11.9 / 19.6) * (1 - RZEv_InArray(InputCount, 15))) + ((EleOld(InputCount, 0) / DieOld(InputCount, 0)) * (103.7 / 19.6) * RZEv_InArray(InputCount, 15))) * 0.1301) / (0.8699 + ((((11.9 / 19.6) * (1 - RZEv_InArray(InputCount, 15))) + ((EleOld(InputCount, 0) / DieOld(InputCount, 0)) * (103.7 / 19.6) * RZEv_InArray(InputCount, 15))) * 0.1301)) * 234.5
+                    PHPerOld(InputCount, 4) = ((11.9 / 19.6) * (1 - RZEv_InArray(InputCount, 15))) / ((((11.9 / 19.6) * (1 - RZEv_InArray(InputCount, 15))) + ((EleOld(InputCount, 0) / DieOld(InputCount, 0)) * (103.7 / 19.6) * RZEv_InArray(InputCount, 15))))
+                    VehFuelCosts(InputCount, 4, 5) = ((EleOld(InputCount, 0) / DieOld(InputCount, 0)) * (425.4 / 37.2) * 0.1301) / (0.8699 + ((EleOld(InputCount, 0) / DieOld(InputCount, 0)) * (425.4 / 37.2) * 0.1301)) * 234.5
+                    VehFuelCosts(InputCount, 4, 6) = ((LPGOld(InputCount, 0) / DieOld(InputCount, 0)) * (131.8 / 37.2) * 0.1301) / (0.8699 + ((LPGOld(InputCount, 0) / DieOld(InputCount, 0)) * (131.8 / 37.2) * 0.1301)) * 234.5
+                    VehFuelCosts(InputCount, 4, 7) = ((CNGOld(InputCount, 0) / DieOld(InputCount, 0)) * (1003.2 / 37.2) * 0.1301) / (0.8699 + ((CNGOld(InputCount, 0) / DieOld(InputCount, 0)) * (1003.2 / 37.2) * 0.1301)) * 234.5
+                    VehFuelCosts(InputCount, 4, 9) = ((HydOld(InputCount, 0) / DieOld(InputCount, 0)) * (109.2 / 37.2) * 0.1301) / (0.8699 + ((HydOld(InputCount, 0) / DieOld(InputCount, 0)) * (109.2 / 37.2) * 0.1301)) * 234.5
 
                 End If
             Else
@@ -539,7 +537,7 @@
             RdZ_OutArray(InputCount, 49) = VehFuelCosts(InputCount, 0, 2)
             RdZ_OutArray(InputCount, 50) = VehFuelCosts(InputCount, 0, 3)
             RdZ_OutArray(InputCount, 51) = VehFuelCosts(InputCount, 0, 4)
-            RdZ_OutArray(InputCount, 52) = CDbl(PHPerNew(0)) 'TODO - had to add CDbl() because these numbers were coming out as Nothing
+            RdZ_OutArray(InputCount, 52) = PHPerNew(0) 'TODO - had to add CDbl() because these numbers were coming out as Nothing
             RdZ_OutArray(InputCount, 53) = VehFuelCosts(InputCount, 0, 5)
             RdZ_OutArray(InputCount, 54) = VehFuelCosts(InputCount, 0, 8)
             RdZ_OutArray(InputCount, 55) = VehFuelCosts(InputCount, 0, 9)
@@ -547,7 +545,7 @@
             RdZ_OutArray(InputCount, 57) = VehFuelCosts(InputCount, 1, 1)
             RdZ_OutArray(InputCount, 58) = VehFuelCosts(InputCount, 1, 3)
             RdZ_OutArray(InputCount, 59) = VehFuelCosts(InputCount, 1, 4)
-            RdZ_OutArray(InputCount, 60) = CDbl(PHPerNew(1))
+            RdZ_OutArray(InputCount, 60) = PHPerNew(1)
             RdZ_OutArray(InputCount, 61) = VehFuelCosts(InputCount, 1, 5)
             RdZ_OutArray(InputCount, 62) = VehFuelCosts(InputCount, 1, 6)
             RdZ_OutArray(InputCount, 63) = VehFuelCosts(InputCount, 1, 7)
@@ -562,7 +560,7 @@
             RdZ_OutArray(InputCount, 72) = VehFuelCosts(InputCount, 4, 1)
             RdZ_OutArray(InputCount, 73) = VehFuelCosts(InputCount, 4, 3)
             RdZ_OutArray(InputCount, 74) = VehFuelCosts(InputCount, 4, 4)
-            RdZ_OutArray(InputCount, 75) = CDbl(PHPerNew(4))
+            RdZ_OutArray(InputCount, 75) = PHPerNew(4)
             RdZ_OutArray(InputCount, 76) = VehFuelCosts(InputCount, 4, 5)
             RdZ_OutArray(InputCount, 77) = VehFuelCosts(InputCount, 4, 6)
             RdZ_OutArray(InputCount, 78) = VehFuelCosts(InputCount, 4, 7)
@@ -578,14 +576,14 @@
         If zonecaparray Is Nothing Then
             'do nothing if reach the end
         Else
-            CapID = zonecaparray(zonecapnum, 0)
-            CapYear = zonecaparray(zonecapnum, 1)
-            MwayKmChange = zonecaparray(zonecapnum, 2)
-            RurADKmChange = zonecaparray(zonecapnum, 3)
-            RurASKmChange = zonecaparray(zonecapnum, 4)
-            RurMinKmChange = zonecaparray(zonecapnum, 5)
-            UrbDKmChange = zonecaparray(zonecapnum, 6)
-            UrbSKmChange = zonecaparray(zonecapnum, 7)
+            CapID = zonecaparray(zonecapnum, 2)
+            CapYear = zonecaparray(zonecapnum, 3)
+            MwayKmChange = zonecaparray(zonecapnum, 4)
+            RurADKmChange = zonecaparray(zonecapnum, 5)
+            RurASKmChange = zonecaparray(zonecapnum, 6)
+            RurMinKmChange = zonecaparray(zonecapnum, 7)
+            UrbDKmChange = zonecaparray(zonecapnum, 8)
+            UrbSKmChange = zonecaparray(zonecapnum, 9)
         End If
     End Sub
 
@@ -598,20 +596,23 @@
     End Sub
 
     Sub CapChangeCalc()
+
+        If caparray Is Nothing Then Exit Sub
+
         'TODO - I am not sure how this is meant to work as this array does not have any capacity numbers????
         newcapnum = 1
         'read first line
-        capnum = caparray(newcapnum, 0) 'TODO - what should this be??
+        capnum = caparray(newcapnum, 9) 'TODO - what should this be??
         zonecapcount = 0
         'transfer values to intermediate array
         Do Until capnum > RoadCapNum
             zonecapcount += 1
             For c = 0 To 8
-                zonecapdetails(zonecapcount, c) = caparray(newcapnum, c)
+                zonecapdetails(zonecapcount, c) = caparray(newcapnum, c + 1)
             Next
             zonecapdetails(zonecapcount, 1) = RLCapYear(capnum)
             newcapnum += 1
-            capnum = caparray(newcapnum, 8)
+            capnum = caparray(newcapnum, 9)
         Loop
         'then sort intermediate array by zone ID, then by year of implementation
         ReDim sortarray(zonecapcount - 1)

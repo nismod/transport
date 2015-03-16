@@ -39,8 +39,8 @@ Module DBaseInterface
     Public RlZEcoSource As String = "Database"
     Public AirEcoSource As String = "Database"
     Public SeaEcoSource As String = "Database"
-    Public RdLEneSource As String = "Constant" 'TODO Should this be Database?
-    Public RdZEneSource As String = "Constant" 'TODO This fails if it is Database?
+    Public RdLEneSource As String = "Database" 'TODO Should this be Database?
+    Public RdZEneSource As String = "Database" 'TODO This fails if it is Database?
     Public RlLEneSource As String = "Database"
     Public RlZEneSource As String = "Database"
     Public AirEneSource As String = "Database"
@@ -124,7 +124,7 @@ Module DBaseInterface
     'Global variables
     Public g_modelRunID As Integer
     Public g_modelRunYear As Integer
-    Public g_initialYear As Integer = 2010
+    Public g_initialYear As Integer = 2011
 
 
     Sub ConnectToDBase()
@@ -1344,7 +1344,7 @@ Module DBaseInterface
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadZoneNewCapacity" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " AND changeyear = " & Year
                     Case "CapChange"
                         TheFileName = FilePrefix & "RoadZoneCapChange.csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RoadZoneCapacityChange" & Chr(34) & " WHERE changeyear = " & Year
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RoadZoneCapacityChange" & Chr(34)
                     Case "Elasticity"
                         TheFileName = "Elasticity Files\TR" & SubStrategy & "\RoadZoneElasticities.csv"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_I_RoadZoneElasticities_Run" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year
@@ -1374,7 +1374,7 @@ Module DBaseInterface
                         End If
                     Case "CapChange"
                         TheFileName = CapFilePrefix & "RoadLinkCapChange.csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RoadLinkCapacityChange" & Chr(34) & " WHERE changeyear = " & Year
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RoadLinkCapacityChange" & Chr(34)
                     Case "NewCap"
                         TheFileName = EVFilePrefix & "RoadLinkNewCap.csv"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadLinkNewCapacity" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and changeyear = " & Year
@@ -1407,7 +1407,7 @@ Module DBaseInterface
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RailZoneExternalVariables" & Chr(34) & " WHERE year = " & Year & " AND modelrun_id=" & g_modelRunID & " ORDER BY zone_id"
                     Case "CapChange"
                         TheFileName = CapFilePrefix & "RailZoneCapChange.csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RailZoneCapacityChange" & Chr(34) & " WHERE changeyear = " & Year
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RailZoneCapacityChange" & Chr(34)
                     Case "Elasticity"
                         TheFileName = "Elasticity Files\TR" & SubStrategy & "\RailZoneElasticities.csv"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_I_RailZoneElasticities_Run" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year
@@ -1435,7 +1435,7 @@ Module DBaseInterface
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RailLinkExternalVariables" & Chr(34) & " WHERE year = " & Year & " AND modelrun_id=" & g_modelRunID & " ORDER BY flow_id"
                     Case "CapChange"
                         TheFileName = CapFilePrefix & "RailLinkCapChange.csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RailLinkCapacityChange" & Chr(34) & " WHERE changeyear = " & Year
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RailLinkCapacityChange" & Chr(34)
                     Case "NewCap"
                         TheFileName = EVFilePrefix & "RailLinkNewCap.csv"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RailLinkNewCapacity" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " AND changeyear = " & Year
@@ -1472,7 +1472,7 @@ Module DBaseInterface
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_SeaFreightExternalVariables" & Chr(34) & " WHERE year = " & Year & " AND modelrun_id=" & g_modelRunID
                     Case "CapChange"
                         TheFileName = CapFilePrefix & "SeaFreightCapChange.csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_SeaFreightCapacityChange" & Chr(34) & " WHERE changeyear = " & Year
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_SeaFreightCapacityChange" & Chr(34)
                     Case "NewCap"
                         TheFileName = EVFilePrefix & "SeaFreightNewCap.csv"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_SeaFreightNewCapacity" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and changeyear = " & Year
@@ -1494,10 +1494,10 @@ Module DBaseInterface
                         End If
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "AirNodeExtVar" & EVFileSuffix & ".csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_AirNodeExternalVariables" & Chr(34) & " AND modelrun_id=" & g_modelRunID & " WHERE year = " & Year
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_AirNodeExternalVariables" & Chr(34) & " WHERE modelrun_id=" & g_modelRunID & " AND year = " & Year
                     Case "CapChange"
                         TheFileName = CapFilePrefix & "AirNodeCapChange.csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_AirNodeCapacityChange" & Chr(34) & " WHERE changeyear = " & Year
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_AirNodeCapacityChange" & Chr(34)
                     Case "NewCap"
                         TheFileName = EVFilePrefix & "AirNodeNewCap.csv"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_AirNodeNewCapacity" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and changeyear = " & Year
@@ -1519,16 +1519,16 @@ Module DBaseInterface
                         End If
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "AirFlowExtVar.csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_AirFlowExternalVariables" & Chr(34) & " AND modelrun_id=" & g_modelRunID & " WHERE year = " & Year
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_AirFlowExternalVariables" & Chr(34) & " WHERE modelrun_id=" & g_modelRunID & " AND year = " & Year
                     Case Else
                         'for error handling
                 End Select
             Case "SubStrategy"
                 TheFileName = "CommonVariablesTR" & SubStrategy & ".csv"
-                theSQL = "SELECT * FROM " & Chr(34) & "TR_I_Strategy_Projections_Run" & Chr(34) & " WHERE modelrun_id=" & g_modelRunID & " AND year = " & Year
+                theSQL = "SELECT * FROM " & Chr(34) & "TR_I_Strategy_Projections_Run" & Chr(34) & " WHERE modelrun_id=" & g_modelRunID
             Case "Energy"
                 'TODO - Pull this data from the fuel database!!!
-                Connection = "C:\Users\cenv0384\Documents\Visual Studio 2013\Projects\ITRCWS1C3\Transport\TransportCDAM\Model Input and Output\Model Inputs\EnergyCosts\" 'DBaseEneFile
+                Connection = "D:\ITRC\ITRC Main\Model Inputs\EnergyCosts\" 'DBaseEneFile
                 TheFileName = "ScenarioEneFileCentralRevised.csv"
             Case Else
                 'for error handling
@@ -1741,7 +1741,7 @@ Module DBaseInterface
                     Case "ExtVar"
                         TableName = "TR_IO_AirFlowExternalVariables"
                         OutFileName = EVFilePrefix & "AirFlowExtVar.csv"
-                        header = "modelrun_id, year, flow_id, ozone_pop, dzone_pop, ozone_gva, cost, var_cost"
+                        header = "modelrun_id, year, flow_id, ozone_pop, dzone_pop, ozone_gva, dzone_gva, cost, var_cost"
                 End Select
             Case "AirNode"
                 Select Case SubType
@@ -1829,7 +1829,7 @@ Module DBaseInterface
                     Case "NewCap"
                         TableName = "TR_IO_RoadLinkNewCapacity"
                         OutFileName = EVFilePrefix & "RoadLinkNewCap.csv"
-                        header = "modelrun_id, flow_id, changeyear, mlane_change, dlane_change, slane_change"
+                        header = "modelrun_id, changeyear, flow_id, mlane_change, dlane_change, slane_change"
                     Case "NewCap_Added"
                         TableName = "TR_O_RoadLinkNewCapacity_Added"
                         OutFileName = FilePrefix & "RoadLinkNewCap.csv"
@@ -1858,15 +1858,15 @@ Module DBaseInterface
                     Case "Temp Hourly"
 
                         TableName = "TR_IO_RoadLink_Hourly"
-                        header = "modelrun_id, year, flow_id, hour_id, m_road_flows, d_road_flows, s_road_flows,"
+                        header = "modelrun_id, year, flow_id, hour_id, m_road_flows, d_road_flows, s_road_flows"
                         For x = 1 To 6
-                            header = header & ", m" & x & "hourly_flows" & "," & "m" & x & "_charge" & "," & "m" & x & "_latent_flows" & "," & "m" & x & "_new_hourly_speeds"
+                            header = header & ", m" & x & "_hourly_flows" & "," & "m" & x & "_charge" & "," & "m" & x & "_latent_flows" & "," & "m" & x & "_new_hourly_speeds"
                         Next
                         For x = 1 To 6
-                            header = header & ", d" & x & "hourly_flows" & "," & "d" & x & "_charge" & "," & "m" & x & "_latent_flows" & "," & "d" & x & "_new_hourly_speeds"
+                            header = header & ", d" & x & "_hourly_flows" & "," & "d" & x & "_charge" & "," & "d" & x & "_latent_flows" & "," & "d" & x & "_new_hourly_speeds"
                         Next
                         For x = 1 To 8
-                            header = header & ", s" & x & "hourly_flows" & "," & "s" & x & "_charge" & "," & "s" & x & "_latent_flows" & "," & "s" & x & "_new_hourly_speeds"
+                            header = header & ", s" & x & "_hourly_flows" & "," & "s" & x & "_charge" & "," & "s" & x & "_latent_flows" & "," & "s" & x & "_new_hourly_speeds"
                         Next
                     Case "Temp"
                         TempFileName = FilePrefix & "RoadLinkTemp.csv"
@@ -1929,11 +1929,11 @@ Module DBaseInterface
 
                         TableName = "TR_IO_SeaFreightNewCapacity"
                         OutFileName = EVFilePrefix & "SeaFreightNewCap.csv"
-                        header = "modelrun_id, portID, changeyear, new_lb_cap, new_db_cap, new_gc_cap, new_ll_cap, new_rr_cap"
+                        header = "modelrun_id, port_id, changeyear, new_lb_cap, new_db_cap, new_gc_cap, new_ll_cap, new_rr_cap"
                     Case "NewCap_Added"
                         TableName = "TR_O_SeaFreightNewCapacity_Added"
                         OutFileName = FilePrefix & "SeaNewCap.csv"
-                        header = "modelrun_id, portID, changeyear, lb_cap_added,db_cap_added,gc_cap_added,ll_cap_added,rr_cap_added"
+                        header = "modelrun_id, port_id, changeyear, lb_cap_added,db_cap_added,gc_cap_added,ll_cap_added,rr_cap_added"
                     Case "Output"
 
                         TableName = "TR_O_SeaFreightOutputData"
@@ -1943,7 +1943,7 @@ Module DBaseInterface
 
                         TableName = "TR_IO_SeaFreight"
                         OutFileName = FilePrefix & "SeaTemplate.csv"
-                        header = "modelrun_id, year, port_id, liq_blk, dry_blk, gc_rgo, lo_lo, ro_ro, added_cap_1, added_cap_2, added_cap_3, added_cap_4, added_cap_5"
+                        header = "modelrun_id, year, port_id, liq_blk, dry_blk, g_cargo, lo_lo, ro_ro, added_cap_1, added_cap_2, added_cap_3, added_cap_4, added_cap_5"
                     Case "ExtVar"
 
                         TableName = "TR_IO_SeaFreightExternalVariables"
