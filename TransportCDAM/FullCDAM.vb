@@ -1,12 +1,13 @@
 ﻿Public Class FullCDAM
     'this version incorporates EV input from the database.
 
-    Public Function runCDAM(ByVal ModelRun_ID As Integer, ByVal Model_Year As Integer) As Boolean
+    Public Function runCDAM(ByVal ModelRun_ID As Integer, ByVal Model_Year As Integer, ByVal Dbase As String) As Boolean
         'Try
 
         'Store global variables
         g_modelRunID = ModelRun_ID
         g_modelRunYear = Model_Year
+        g_dbase = Dbase
 
         'Get Model Run Details including 
         If getModelRunDetails() = False Then

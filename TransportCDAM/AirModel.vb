@@ -96,6 +96,8 @@ Module AirModel
         MaxAirFlow = 223
 
         If g_modelRunYear = 2010 Then
+            'create data for year 2010
+            Call Year2010()
 
             Exit Sub
         End If
@@ -1234,6 +1236,49 @@ Module AirModel
                 AirpNonFuelCost(x) = 0.29 * AirportBaseData(x, 8)
             Next
         End If
+    End Sub
+
+    Sub Year2010()
+        Dim aircount As Integer
+        Dim flownum As Long
+        Dim domflights As Long
+        Dim intflights As Long
+        Call ReadData("AirNode", "Input", NodeInputArray, g_modelRunYear)
+        Call ReadData("AirFlow", "Input", FlowInputArray, g_modelRunYear)
+
+        'read initial data and write to output table as the 2010 result
+        'write to output array for node and flow
+        aircount = 1
+        'loop through all airports writing values to the output files
+        Do While aircount < 29
+            'concatenate the output row for the node file
+            NodeOutputArray(aircount, 0) = g_modelRunID
+            NodeOutputArray(aircount, 1) = AirNodeID(aircount, 0)
+            NodeOutputArray(aircount, 2) = g_modelRunYear
+            NodeOutputArray(aircount, 3) = NodeInputArray(aircount, 3) + NodeInputArray(aircount, 4)
+            NodeOutputArray(aircount, 4) = NodeInputArray(aircount, 3)
+            NodeOutputArray(aircount, 5) = NodeInputArray(aircount, 4)
+            domflights = Math.Ceiling(NodeInputArray(aircount, 3) / (NodeInputArray(aircount, 8) * (NodeInputArray(aircount, 10) / 100)))
+            intflights = Math.Ceiling(NodeInputArray(aircount, 4) / (NodeInputArray(aircount, 9) * (NodeInputArray(aircount, 11) / 100)))
+            NodeOutputArray(aircount, 6) = domflights + intflights
+            'NodeOutputArray(aircount, 7) = AirpIntFuel(aircount)
+            aircount += 1
+        Loop
+        flownum = 1
+        'loop through all flows writing values to the output files
+        Do Until flownum > MaxAirFlow
+            'concatenate the output row for the flow file
+            FlowOutputArray(flownum, 0) = g_modelRunID
+            FlowOutputArray(flownum, 1) = AirFlowID(flownum, 0)
+            FlowOutputArray(flownum, 2) = g_modelRunYear
+            FlowOutputArray(flownum, 3) = FlowInputArray(flownum, 4)
+            'FlowOutputArray(flownum, 4) = AirfFuel(flownum)
+            flownum += 1
+        Loop
+
+        Call WriteData("AirNode", "Output", NodeOutputArray, , False)
+        Call WriteData("AirFlow", "Output", FlowOutputArray, , False)
+
     End Sub
 
 

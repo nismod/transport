@@ -1,9 +1,11 @@
 ﻿Public Class MainForm
     Dim FullCDAM As New FullCDAM
+    Dim DBase As String = "Driver={PostgreSQL ODBC Driver(ANSI)};DSN=PostgreSQL30;Server=localhost;Port=5432;Database=itrc_sos;UId=postgres;Password=P0stgr3s;"
+
 
     Private Sub Button1_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles Button1.Click
         DBaseMode = Me.cbxDBaseMode.Checked
-
+        
         RunModel = True
         'Check if file path has been selected - if not then use default.
         If DirPath = "" Then
@@ -23,7 +25,7 @@
         theYear = g_initialYear
         Do Until theYear = g_initialYear + Duration + 1
 
-            Call FullCDAM.runCDAM(2010, theYear)
+            Call FullCDAM.runCDAM(2010, theYear, DBase)
 
             theYear += 1
         Loop
@@ -240,7 +242,7 @@
         theYear = g_initialYear
         Do Until theYear = g_initialYear + Duration + 1
 
-            Call FullCDAM.runCDAM(2010, theYear)
+            Call FullCDAM.runCDAM(2010, theYear, DBase)
 
             theYear += 1
         Loop
@@ -264,7 +266,7 @@
         theYear = g_initialYear
         Do Until theYear = g_initialYear + Duration + 1
 
-            Call FullCDAM.runCDAM(2010, theYear)
+            Call FullCDAM.runCDAM(2010, theYear, DBase)
 
             theYear += 1
         Loop
@@ -408,7 +410,7 @@
         theYear = g_initialYear
         Do Until theYear = g_initialYear + Duration + 1
 
-            Call FullCDAM.runCDAM(2010, theYear)
+            Call FullCDAM.runCDAM(2010, theYear, DBase)
 
             theYear += 1
         Loop
@@ -431,7 +433,7 @@
         theYear = g_initialYear
         Do Until theYear = g_initialYear + Duration + 1
 
-            Call FullCDAM.runCDAM(2010, theYear)
+            Call FullCDAM.runCDAM(2010, theYear, DBase)
 
             theYear += 1
         Loop
@@ -2536,7 +2538,7 @@
             TextBox38.Enabled = False
             Label44.Enabled = False
         ElseIf ComboBox28.SelectedItem = "Busiest Hour" Then
-            RailCUPeriod = "Hour"
+            RailCUPeriod = "busy"
             TextBox38.Enabled = True
             Label44.Enabled = True
         End If
