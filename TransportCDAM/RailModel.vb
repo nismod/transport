@@ -583,7 +583,7 @@ Module RailModel
 
     Sub Year2010()
         Call ReadData("RailLink", "Input", InputArray, g_modelRunYear)
-        Call ReadData("RailLink", "ExtVar", RlLinkExtVars, g_modelRunYear)
+        Call ReadData("RailLink", "ExtVar", RlLinkExtVars, (g_modelRunYear + 1))
 
         InputCount = 1
 
@@ -607,7 +607,11 @@ Module RailModel
             Else
                 OutputArray(InputCount, 5) = (RlLinkExtVars(InputCount, 14) / RlLinkExtVars(InputCount, 4)) / RlLinkExtVars(InputCount, 11)
             End If
+
+            InputCount += 1
         Loop
+
+        Call WriteData("RailLink", "Output", OutputArray, , True)
     End Sub
 
 End Module
