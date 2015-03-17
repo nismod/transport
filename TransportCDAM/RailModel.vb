@@ -71,6 +71,8 @@ Module RailModel
     Public Sub RailLinkMain()
 
         If g_modelRunYear = 2010 Then
+            'create data for year 2010
+            Call Year2010()
 
             Exit Sub
         End If
@@ -577,6 +579,35 @@ Module RailModel
         End If
 
 
+    End Sub
+
+    Sub Year2010()
+        Call ReadData("RailLink", "Input", InputArray, g_modelRunYear)
+        Call ReadData("RailLink", "ExtVar", RlLinkExtVars, g_modelRunYear)
+
+        InputCount = 1
+
+        Do While InputCount < 239
+            OutputArray(InputCount, 0) = g_modelRunID
+            OutputArray(InputCount, 1) = InputArray(InputCount, 1)
+            OutputArray(InputCount, 2) = g_modelRunYear
+            OutputArray(InputCount, 3) = InputArray(InputCount, 5)
+            OutputArray(InputCount, 4) = InputArray(InputCount, 6)
+            If RailCUPeriod = "busy" Then
+                BusyTrains(InputCount, 0) = InputArray(InputCount, 14)
+                If OldTrains(InputCount, 0) = 0 Then
+                    BusyPer(InputCount, 0) = 0
+                Else
+                    BusyPer(InputCount, 0) = BusyTrains(InputCount, 0) / OldTrains(InputCount, 0)
+                End If
+                ModelPeakHeadway(InputCount, 0) = RlPeakHeadway
+            End If
+            If RailCUPeriod = "busy" Then
+                OutputArray(InputCount, 5) = ((RlLinkExtVars(InputCount, 14) * 0.08) / RlLinkExtVars(InputCount, 4)) / (60 / ModelPeakHeadway(InputCount, 0))
+            Else
+                OutputArray(InputCount, 5) = (RlLinkExtVars(InputCount, 14) / RlLinkExtVars(InputCount, 4)) / RlLinkExtVars(InputCount, 11)
+            End If
+        Loop
     End Sub
 
 End Module
