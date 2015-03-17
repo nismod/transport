@@ -1795,25 +1795,25 @@
             IZRd_OutputArray(ZoneID, 1) = ZoneID
             IZRd_OutputArray(ZoneID, 2) = 0 'TODO this should be country id
             IZRd_OutputArray(ZoneID, 3) = g_modelRunYear
-            IZRd_OutputArray(ZoneID, 4) = NewVkm
-            IZRd_OutputArray(ZoneID, 5) = ZoneSpdNew
-            IZRd_OutputArray(ZoneID, 6) = PetrolUsed
-            IZRd_OutputArray(ZoneID, 7) = DieselUsed
-            IZRd_OutputArray(ZoneID, 8) = ElectricUsed
-            IZRd_OutputArray(ZoneID, 9) = LPGUsed
-            IZRd_OutputArray(ZoneID, 10) = CNGUsed
-            IZRd_OutputArray(ZoneID, 11) = HydrogenUsed
-            IZRd_OutputArray(ZoneID, 12) = RoadCatTraffic(ZoneID, 1)
-            IZRd_OutputArray(ZoneID, 13) = RoadCatTraffic(ZoneID, 2)
-            IZRd_OutputArray(ZoneID, 14) = RoadCatTraffic(ZoneID, 3)
-            IZRd_OutputArray(ZoneID, 15) = RoadCatTraffic(ZoneID, 4)
-            IZRd_OutputArray(ZoneID, 16) = NewCatSpeed(ZoneID, 1)
-            IZRd_OutputArray(ZoneID, 17) = NewCatSpeed(ZoneID, 2)
-            IZRd_OutputArray(ZoneID, 18) = NewCatSpeed(ZoneID, 3)
-            IZRd_OutputArray(ZoneID, 19) = NewCatSpeed(ZoneID, 4)
-            For v = 1 To 10
-                IZRd_OutputArray(ZoneID, 19 + v) = VKmVType(v)
-            Next
+            IZRd_OutputArray(ZoneID, 4) = IZRd_InputArray(ZoneID, 2)
+            IZRd_OutputArray(ZoneID, 5) = IZRd_InputArray(ZoneID, 3)
+            'IZRd_OutputArray(ZoneID, 6) = PetrolUsed
+            'IZRd_OutputArray(ZoneID, 7) = DieselUsed
+            'IZRd_OutputArray(ZoneID, 8) = ElectricUsed
+            'IZRd_OutputArray(ZoneID, 9) = LPGUsed
+            'IZRd_OutputArray(ZoneID, 10) = CNGUsed
+            'IZRd_OutputArray(ZoneID, 11) = HydrogenUsed
+            IZRd_OutputArray(ZoneID, 12) = IZRd_InputArray(ZoneID, 20)
+            IZRd_OutputArray(ZoneID, 13) = IZRd_InputArray(ZoneID, 21)
+            IZRd_OutputArray(ZoneID, 14) = IZRd_InputArray(ZoneID, 22)
+            IZRd_OutputArray(ZoneID, 15) = IZRd_InputArray(ZoneID, 23)
+            IZRd_OutputArray(ZoneID, 16) = IZRd_InputArray(ZoneID, 24)
+            IZRd_OutputArray(ZoneID, 17) = IZRd_InputArray(ZoneID, 25)
+            IZRd_OutputArray(ZoneID, 18) = IZRd_InputArray(ZoneID, 26)
+            IZRd_OutputArray(ZoneID, 19) = IZRd_InputArray(ZoneID, 27)
+            'For v = 1 To 10
+            '    IZRd_OutputArray(ZoneID, 19 + v) = VKmVType(v)
+            'Next
 
             ZoneID += 1
         Loop
