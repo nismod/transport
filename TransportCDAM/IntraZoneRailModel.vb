@@ -43,6 +43,8 @@
     Public Sub RailZoneMain()
 
         If g_modelRunYear = 2010 Then
+            'create data for year 2010
+            Call Year2010()
 
             Exit Sub
         End If
@@ -297,6 +299,25 @@
 
     End Sub
 
+    Sub Year2010()
+        Call ReadData("RailZone", "Input", InputArray, g_modelRunYear)
+
+        InputCount = 1
+
+        Do Until InputCount > 144
+            OutputArray(InputCount, 0) = g_modelRunID
+            OutputArray(InputCount, 1) = g_modelRunYear
+            OutputArray(InputCount, 2) = InputArray(InputCount, 1)
+            OutputArray(InputCount, 3) = InputArray(InputCount, 3)
+            OutputArray(InputCount, 4) = InputArray(InputCount, 5)
+            OutputArray(InputCount, 5) = OutputArray(InputCount, 3) * OutputArray(InputCount, 4)
+
+            InputCount += 1
+        Loop
+
+        Call WriteData("RailZone", "Output", OutputArray, , True)
+
+    End Sub
 
 
 End Module
