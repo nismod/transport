@@ -135,6 +135,7 @@ Module DBaseInterface
                 m_sConnString = g_dbase '"Driver={PostgreSQL ODBC Driver(ANSI)};DSN=PostgreSQL30;Server=localhost;Port=5432;Database=itrc_sos;UId=postgres;Password=P0stgr3s;"
                 m_conn = New Odbc.OdbcConnection(m_sConnString)
                 m_conn.Open()
+                m_conn.ConnectionTimeout = 60
             End If
 
         Catch ex As Exception

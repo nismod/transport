@@ -167,7 +167,9 @@
 
             'calculate the base speeds
             Call BaseSpeeds()
-
+            If link = 291 Then
+                Stop
+            End If
             'calculate each of the hourly flows
             Call HourlyFlowCalc()
 
