@@ -96,6 +96,7 @@
         'loop through rows in input data file calculating the external variable files, until there are no rows left
         Call CalcRlZExtVars()
 
+        If yearIs2010 = True Then g_modelRunYear -= 1
 
     End Sub
 

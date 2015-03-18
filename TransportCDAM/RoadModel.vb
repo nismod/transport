@@ -198,6 +198,8 @@
         Erase TempAnArray
         Erase TempHArray
 
+        If yearIs2010 = True Then g_modelRunYear -= 1
+
     End Sub
 
     Sub SetFiles()

@@ -107,6 +107,8 @@
         'then loop through rest of rows in input data file
         Call CalcPortData()
 
+        If yearIs2010 = True Then g_modelRunYear -= 1
+
     End Sub
     Sub CalcPortData()
         Dim newcount As Integer

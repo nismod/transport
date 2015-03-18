@@ -142,6 +142,7 @@
         'v1.6 now calculate external variables and write output in annual timesteps
         Call CalcFlowData()
 
+        If yearIs2010 = True Then g_modelRunYear -= 1
 
     End Sub
 

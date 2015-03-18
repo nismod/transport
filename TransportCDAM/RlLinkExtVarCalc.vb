@@ -167,6 +167,7 @@
         'loop through rows in input data file calculating the external variable values
         Call CalcExtVars()
 
+        If yearIs2010 = True Then g_modelRunYear -= 1
 
     End Sub
 

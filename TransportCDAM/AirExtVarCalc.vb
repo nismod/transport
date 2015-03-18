@@ -138,6 +138,7 @@
             Call DBaseInterface.WriteData("AirFlow", "ExtVar", FlowOutputArray, , False)
         End If
 
+        If yearIs2010 = True Then g_modelRunYear -= 1
 
 
 

@@ -193,12 +193,16 @@
         Call CreateLog()
 
         'get strategy variables for this year from the database
-        Call DBaseInterface.ReadData("SubStrategy", "", stratarray, g_modelRunYear, g_modelRunID)
+        If g_modelRunYear = 2010 Then
+            Call DBaseInterface.ReadData("SubStrategy", "", stratarray, 2011, g_modelRunID)
+        Else
+            Call DBaseInterface.ReadData("SubStrategy", "", stratarray, g_modelRunYear, g_modelRunID)
+        End If
 
         'Get energy data
         Call DBaseInterface.ReadData("Energy", "", enearray)
         If RlZEneSource = "Database" Then
-            y = g_modelRunYear - g_initialYear + 1 'TODO - this needs fixing once we go to database for energy 
+            If g_modelRunYear = 2010 Then y = 1 Else y = g_modelRunYear - g_initialYear + 1 'TODO - this needs fixing once we go to database for energy 
             InDieselOldAll = enearray(y, 2)
             InElectricOldAll = enearray(y, 3)
             InDieselNewAll = enearray(y + 1, 2)

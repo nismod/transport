@@ -159,6 +159,7 @@
             Call WriteData("RoadZone", "ExtVar", RdZ_OutArray, , False)
         End If
 
+        If yearIs2010 = True Then g_modelRunYear -= 1
 
 
     End Sub

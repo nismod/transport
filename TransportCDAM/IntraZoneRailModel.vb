@@ -96,6 +96,7 @@
             Call WriteData("RailZone", "Temp", TempArray, , False)
         End If
 
+        If yearIs2010 = True Then g_modelRunYear -= 1
 
 
 
