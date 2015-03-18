@@ -42,11 +42,14 @@
 
     Public Sub RailZoneMain()
 
+        'for year 2010
+        Dim yearIs2010 As Boolean = False
         If g_modelRunYear = 2010 Then
             'create data for year 2010
-            Call Year2010()
-
-            Exit Sub
+            g_modelRunYear += 1
+            'Call Year2010()
+            yearIs2010 = True
+            'Exit Sub
         End If
 
         'read all related files
@@ -73,8 +76,12 @@
             'apply zone equation to adjust demand per station, and to get new total demand
             Call RailZoneTrips()
 
+            If yearIs2010 = True Then g_modelRunYear -= 1
+
             'write output line to outputarray and temp array
             Call RailZoneOutput()
+
+            If yearIs2010 = True Then g_modelRunYear += 1
 
             InputCount += 1
         Loop

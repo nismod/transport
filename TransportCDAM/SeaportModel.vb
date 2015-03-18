@@ -43,11 +43,14 @@
 
     Public Sub SeaMain()
 
+        'for year 2010
+        Dim yearIs2010 As Boolean = False
         If g_modelRunYear = 2010 Then
             'create data for year 2010
-            Call Year2010()
-
-            Exit Sub
+            g_modelRunYear += 1
+            'Call Year2010()
+            yearIs2010 = True
+            'Exit Sub
         End If
 
         'get input files and create output files
@@ -72,8 +75,11 @@
             Call NewSeaFreightCalc()
             'estimate fuel consumption
             Call SeaFuelConsumption()
+
+            If yearIs2010 = True Then g_modelRunYear -= 1
             'write to output file
             Call WritePortOutput()
+            If yearIs2010 = True Then g_modelRunYear += 1
 
             InputCount += 1
         Loop

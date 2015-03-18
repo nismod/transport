@@ -200,10 +200,10 @@
                 DZone(FlowCount) = FlowInputArray(FlowCount, 8)
                 FlowOldData(FlowCount, 5) = FlowInputArray(FlowCount, 5) * 0.29
                 airflowfixedcost(FlowCount) = FlowInputArray(FlowCount, 5) * 0.71
-                FlowOldData(FlowCount, 1) = get_population_data_by_zoneID(g_modelRunYear, OZone(FlowCount), "OZ", "'air'")
-                FlowOldData(FlowCount, 2) = get_population_data_by_zoneID(g_modelRunYear, DZone(FlowCount), "DZ", "'air'")
-                FlowOldData(FlowCount, 3) = get_gva_data_by_zoneID(g_modelRunYear, OZone(FlowCount), "OZ", "'air'")
-                FlowOldData(FlowCount, 4) = get_gva_data_by_zoneID(g_modelRunYear, DZone(FlowCount), "DZ", "'air'")
+                FlowOldData(FlowCount, 1) = get_population_data_by_zoneID(g_modelRunYear - 1, OZone(FlowCount), "OZ", "'air'")
+                FlowOldData(FlowCount, 2) = get_population_data_by_zoneID(g_modelRunYear - 1, DZone(FlowCount), "DZ", "'air'")
+                FlowOldData(FlowCount, 3) = get_gva_data_by_zoneID(g_modelRunYear - 1, OZone(FlowCount), "OZ", "'air'")
+                FlowOldData(FlowCount, 4) = get_gva_data_by_zoneID(g_modelRunYear - 1, DZone(FlowCount), "DZ", "'air'")
 
                 'add in the Flow ID number as some are missing from the input file
 
@@ -218,7 +218,7 @@
             'get airnode data from previous year
             NodeCount = 1
             Do While NodeCount < 29
-                NodeOldData(NodeCount, 0) = NodeInputArray(NodeCount, 4)
+                NodeOldData(NodeCount, 0) = NodeInputArray(NodeCount, 1)
                 NodeOldData(NodeCount, 1) = get_population_data_by_airportID(g_modelRunYear - 1, NodeOldData(NodeCount, 0))
                 NodeOldData(NodeCount, 2) = get_gva_data_by_airportID(g_modelRunYear - 1, NodeOldData(NodeCount, 0))
                 NodeOldData(NodeCount, 3) = NodeEVInputArray(NodeCount, 15) 'TODO - this code makes no sense, there are only 13 fields in TR_IO_AirNodeExternalVariables??
@@ -236,13 +236,13 @@
             'get airflow data from previous year
             FlowCount = 1
             Do While FlowCount < 224
-                FlowOldData(FlowCount, 0) = FlowInputArray(FlowCount, 4)
-                OZone(FlowCount) = FlowInputArray(FlowCount, 10)
-                DZone(FlowCount) = FlowInputArray(FlowCount, 11)
-                FlowOldData(FlowCount, 1) = get_population_data_by_zoneID(g_modelRunYear, OZone(FlowCount), "OZ", "'air'")
-                FlowOldData(FlowCount, 2) = get_population_data_by_zoneID(g_modelRunYear, DZone(FlowCount), "DZ", "'air'")
-                FlowOldData(FlowCount, 3) = get_gva_data_by_zoneID(g_modelRunYear, OZone(FlowCount), "OZ", "'air'")
-                FlowOldData(FlowCount, 4) = get_gva_data_by_zoneID(g_modelRunYear, DZone(FlowCount), "DZ", "'air'")
+                FlowOldData(FlowCount, 0) = FlowInputArray(FlowCount, 1)
+                OZone(FlowCount) = FlowInputArray(FlowCount, 7)
+                DZone(FlowCount) = FlowInputArray(FlowCount, 8)
+                FlowOldData(FlowCount, 1) = get_population_data_by_zoneID(g_modelRunYear - 1, OZone(FlowCount), "OZ", "'air'")
+                FlowOldData(FlowCount, 2) = get_population_data_by_zoneID(g_modelRunYear - 1, DZone(FlowCount), "DZ", "'air'")
+                FlowOldData(FlowCount, 3) = get_gva_data_by_zoneID(g_modelRunYear - 1, OZone(FlowCount), "OZ", "'air'")
+                FlowOldData(FlowCount, 4) = get_gva_data_by_zoneID(g_modelRunYear - 1, DZone(FlowCount), "DZ", "'air'")
                 FlowOldData(FlowCount, 5) = FlowEVInputArray(FlowCount, 9)
 
                 FlowCount += 1
@@ -446,20 +446,20 @@
         'read cap data from CapArray until all rows are read
         If CapArray Is Nothing Then Exit Sub 'TODO - this gets set off every time
         If CapArray(CapNum, 1) <> "" Then
-            CapID = CapArray(CapNum, 1)
-            If CapArray(CapNum, 2) = "-1" Then
+            CapID = CapArray(CapNum, 2)
+            If CapArray(CapNum, 3) = "-1" Then
                 CapYear = -1
             Else
                 If AddingCap = False Then
-                    CapYear = CapArray(CapNum, 2)
+                    CapYear = CapArray(CapNum, 3)
                 Else
-                    CapYear = CapArray(CapNum, 2)
+                    CapYear = CapArray(CapNum, 3)
                 End If
             End If
-            TermCapChange = CapArray(CapNum, 3)
-            ATMChange = CapArray(CapNum, 4)
+            TermCapChange = CapArray(CapNum, 4)
+            ATMChange = CapArray(CapNum, 5)
             If AddingCap = False Then
-                CapType = CapArray(CapNum, 5)
+                CapType = CapArray(CapNum, 6)
             End If
             CapNum += 1
         Else
@@ -488,7 +488,29 @@
         If CapArray Is Nothing Then Exit Sub
 
         Do
-            Call GetCapData()
+
+            If CapArray Is Nothing Then Exit Sub 'TODO - this gets set off every time
+            If CapArray(CapNum, 1) <> "" Then
+                CapID = CapArray(CapNum, 1)
+                If CapArray(CapNum, 2) = "-1" Then
+                    CapYear = -1
+                Else
+                    If AddingCap = False Then
+                        CapYear = CapArray(CapNum, 2)
+                    Else
+                        CapYear = CapArray(CapNum, 2)
+                    End If
+                End If
+                TermCapChange = CapArray(CapNum, 3)
+                ATMChange = CapArray(CapNum, 4)
+                If AddingCap = False Then
+                    CapType = CapArray(CapNum, 5)
+                End If
+                CapNum += 1
+            Else
+
+            End If
+
             If CapArray Is Nothing Then
                 Exit Do
             End If
@@ -589,6 +611,7 @@
             For i = 0 To 3
                 NewCapArray(v + 1, i + 1) = NewCapDetails(arraynum, i)
             Next
+            NewCapArray(v + vbDefaultButton1, 5) = CapType
         Next
 
 

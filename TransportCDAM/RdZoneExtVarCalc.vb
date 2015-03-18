@@ -205,8 +205,8 @@
             If g_modelRunYear = g_initialYear Then
 
                 ZoneID(InputCount, 0) = RZEv_InArray(InputCount, 1)
-                PopOld(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear, ZoneID(InputCount, 0), "Zone", "'road'")
-                GVAOld(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear, ZoneID(InputCount, 0), "Zone", "'road'")
+                PopOld(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear - 1, ZoneID(InputCount, 0), "Zone", "'road'")
+                GVAOld(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear - 1, ZoneID(InputCount, 0), "Zone", "'road'")
                 CostOld(InputCount, 0) = RZEv_InArray(InputCount, 4)
                 LaneKm(InputCount, 0) = RZEv_InArray(InputCount, 5)
                 MLaneKm(InputCount, 0) = RZEv_InArray(InputCount, 6)
@@ -280,8 +280,8 @@
                 Next
                 ZoneID(InputCount, 0) = RZEv_InArray(InputCount, 2)
                 'get previous pop and gva value
-                PopOld(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear, ZoneID(InputCount, 0), "Zone", "'road'")
-                GVAOld(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear, ZoneID(InputCount, 0), "Zone", "'road'")
+                PopOld(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear - 1, ZoneID(InputCount, 0), "Zone", "'road'")
+                GVAOld(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear - 1, ZoneID(InputCount, 0), "Zone", "'road'")
 
                 'get previous year's energy data
                 PetOld(InputCount, 0) = enearray(g_modelRunYear - 2010, 1)

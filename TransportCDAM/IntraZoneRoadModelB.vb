@@ -71,11 +71,14 @@
 
     Public Sub RoadZoneMainNew()
 
+        'for year 2010
+        Dim yearIs2010 As Boolean = False
         If g_modelRunYear = 2010 Then
             'create data for year 2010
-            Call Year2010()
-
-            Exit Sub
+            g_modelRunYear += 1
+            'Call Year2010()
+            yearIs2010 = True
+            'Exit Sub
         End If
 
         'read related files
@@ -104,11 +107,15 @@
             'apply zone equation to adjust demand
             Call RoadZoneKm()
 
+            If yearIs2010 = True Then g_modelRunYear -= 1
+
             'estimate fuel consumption
             Call RoadZoneFuelConsumption()
 
             'write output array and temp array
             Call WriteRoadZoneOutput()
+
+            If yearIs2010 = True Then g_modelRunYear += 1
 
             ZoneID += 1
         Loop
@@ -253,7 +260,7 @@
             Next
         Else
             'read from temp file table
-            Zone_ID(ZoneID, 1) = CDbl(IZRd_InputArray(ZoneID, 1))
+            Zone_ID(ZoneID, 1) = CDbl(IZRd_InputArray(ZoneID, 3))
             ZonePop(ZoneID, 1) = get_population_data_by_zoneID(g_modelRunYear - 1, Zone_ID(ZoneID, 1), "Zone", "'road'")
             ZoneGVA(ZoneID, 1) = get_gva_data_by_zoneID(g_modelRunYear - 1, Zone_ID(ZoneID, 1), "Zone", "'road'")
             ZoneSpeed(ZoneID, 1) = CDbl(IZRd_InputArray(ZoneID, 4))

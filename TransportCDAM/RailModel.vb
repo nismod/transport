@@ -26,6 +26,7 @@ Module RailModel
     Dim RlLinkCost(238, 0) As Double
     Dim CarFuel(238, 0) As Double
     Dim RlLinkExtVars(238, 14) As String
+    Dim RlLinkPreExtVars(238, 14) As String
     Dim TrainRat As Double
     Dim PopRat As Double
     Dim GVARat As Double
@@ -70,10 +71,11 @@ Module RailModel
 
     Public Sub RailLinkMain()
 
+        'for year 2010
         If g_modelRunYear = 2010 Then
             'create data for year 2010
+            'g_modelRunYear += 1
             Call Year2010()
-
             Exit Sub
         End If
 
@@ -85,6 +87,9 @@ Module RailModel
 
         'get external variables for this year
         Call ReadData("RailLink", "ExtVar", RlLinkExtVars, g_modelRunYear)
+
+        'get external variables from previous year as base data
+        Call ReadData("RailLink", "ExtVar", RlLinkPreExtVars, g_modelRunYear - 1)
 
         'read from initial file if year 1, otherwise update from temp table
         Call ReadData("RailLink", "Input", InputArray, g_modelRunYear)
@@ -235,9 +240,8 @@ Module RailModel
             OldDelays(InputCount, 0) = InputArray(InputCount, 4)
             RlLinkCost(InputCount, 0) = InputArray(InputCount, 5)
             'TODO This get_single_data should be replaced with a ReadData command
-            Dim thisIn(,) As String
             'CarFuel(InputCount, 0) = get_single_data("TR_O_RailLinkExternalVariables", "flow_id", "year", Chr(34) & "CarFuel" & Chr(34), g_modelRunYear - 1, FlowNum(InputCount, 0))
-            CarFuel(InputCount, 0) = ReadData("RailLink", "ExtVar", thisIn, g_modelRunYear - 1, FlowNum(InputCount, 0))
+            CarFuel(InputCount, 0) = RlLinkPreExtVars(InputCount, 10)
 
             OldTrains(InputCount, 0) = InputArray(InputCount, 6)
             OldTracks(InputCount, 0) = InputArray(InputCount, 7)
@@ -612,6 +616,15 @@ Module RailModel
         Loop
 
         Call WriteData("RailLink", "Output", OutputArray, , True)
+
+        'Write fuel consumption output file
+        FuelString(1, 0) = g_modelRunID
+        FuelString(1, 1) = g_modelRunYear
+        FuelString(1, 2) = 667488883.969476
+        FuelString(1, 3) = 3183754707.28527
+
+        Call WriteData("RailLink", "FuelUsed", FuelString)
+
     End Sub
 
 End Module

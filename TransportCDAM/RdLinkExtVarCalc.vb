@@ -143,7 +143,7 @@
 
 
         'read initial input data
-        Call ReadData("RoadLink", "Input", RdL_InArray, g_modelRunYear)
+        Call ReadData("RoadLink", "Input", RdL_InArray, 2011)
 
         If g_modelRunYear <> g_initialYear Then
             'read previous year's data
@@ -377,9 +377,9 @@
                 'if not initial year, read data from previous year's result
                 'set old values as previous year's values
                 'TODO - why are you reading it from the previous year?????
-                FlowID(InputCount, 1) = RdL_InArray(InputCount, 4)
-                OZone(InputCount, 1) = RdL_InArray(InputCount, 5)
-                DZone(InputCount, 1) = RdL_InArray(InputCount, 6)
+                FlowID(InputCount, 1) = RdL_InArray(InputCount, 1)
+                OZone(InputCount, 1) = RdL_InArray(InputCount, 2)
+                DZone(InputCount, 1) = RdL_InArray(InputCount, 3)
                 Pop1Old(InputCount, 1) = get_population_data_by_zoneID(g_modelRunYear - 1, OZone(InputCount, 1), "OZ", "'road'")
                 Pop2Old(InputCount, 1) = get_population_data_by_zoneID(g_modelRunYear - 1, DZone(InputCount, 1), "DZ", "'road'")
                 GVA1Old(InputCount, 1) = get_gva_data_by_zoneID(g_modelRunYear - 1, OZone(InputCount, 1), "OZ", "'road'")
@@ -998,7 +998,7 @@
 
         If Not CapArray Is Nothing Then
 
-            CapID = CapArray(CapNum, 1)
+            CapID = CapArray(CapNum, 3)
             If CapArray(CapNum, 2) = g_initialYear Then
                 CapYear = g_initialYear
             Else
@@ -1008,11 +1008,11 @@
                     CapYear = CapArray(CapNum, 2)
                 End If
             End If
-            MLaneChange = CapArray(CapNum, 3)
-            DLaneChange = CapArray(CapNum, 4)
-            SLaneChange = CapArray(CapNum, 5)
+            MLaneChange = CapArray(CapNum, 4)
+            DLaneChange = CapArray(CapNum, 5)
+            SLaneChange = CapArray(CapNum, 6)
             If AddingCap = False Then
-                CapType = CapArray(CapNum, 6)
+                CapType = CapArray(CapNum, 7)
             End If
 
             CapNum += 1
@@ -1039,7 +1039,29 @@
         If CapArray Is Nothing Then Exit Sub
 
         Do Until CapArray(CapNum, 0) Is Nothing
-            Call GetCapData()
+
+            If Not CapArray Is Nothing Then
+
+                CapID = CapArray(CapNum, 1)
+                If CapArray(CapNum, 2) = g_initialYear Then
+                    CapYear = g_initialYear
+                Else
+                    If AddingCap = False Then
+                        CapYear = CapArray(CapNum, 2) '- 2010 the data was in year index in the csv file, so the - 2010 was used to convert to year index. If using database, it should be in actual year
+                    Else
+                        CapYear = CapArray(CapNum, 2)
+                    End If
+                End If
+                MLaneChange = CapArray(CapNum, 3)
+                DLaneChange = CapArray(CapNum, 4)
+                SLaneChange = CapArray(CapNum, 5)
+                If AddingCap = False Then
+                    CapType = CapArray(CapNum, 6)
+                End If
+
+                CapNum += 1
+            End If
+
             Select Case CapType
                 Case "C"
                     NewCapDetails(CapCount, 0) = CapID
@@ -1117,6 +1139,7 @@
             NewCapArray(v + 1, 4) = NewCapDetails(arraynum, 3)
             NewCapArray(v + 1, 5) = NewCapDetails(arraynum, 4)
             RLCapYear(v) = NewCapDetails(arraynum, 1)
+            NewCapArray(v + 1, 6) = CapType
         Next
 
     End Sub

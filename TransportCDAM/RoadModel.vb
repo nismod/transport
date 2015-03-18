@@ -112,10 +112,14 @@
 
     Public Sub RoadLinkMain()
 
+        'for year 2010
+        Dim yearIs2010 As Boolean = False
         If g_modelRunYear = 2010 Then
             'create data for year 2010
-            Call Year2010()
-            Exit Sub
+            g_modelRunYear += 1
+            'Call Year2010()
+            yearIs2010 = True
+            'Exit Sub
         End If
 
         'read all related files
@@ -174,8 +178,10 @@
             'sum all the hourly flows to give an equivalent AADF figure
             Call TotalFlow()
 
+            If yearIs2010 = True Then g_modelRunYear -= 1
             'write the flows to the output file and temp file
             Call WriteOutputRow()
+            If yearIs2010 = True Then g_modelRunYear += 1
 
             link += 1
         Loop
@@ -379,10 +385,10 @@
             'get zone1 ID and zone2 ID
             get_zone_by_flowid(FlowID(link, 1), Zone1(link, 1), Zone2(link, 1), "road")
             'Get Population and GVA data
-            Z1Pop(link, 1) = get_population_data_by_zoneID(g_modelRunYear - 1, FlowID(link, 1), "OZ", "'road'", Zone1(link, 1))
-            Z2Pop(link, 1) = get_population_data_by_zoneID(g_modelRunYear - 1, FlowID(link, 1), "DZ", "'road'", Zone2(link, 1))
-            Z1GVA(link, 1) = get_gva_data_by_zoneID(g_modelRunYear - 1, FlowID(link, 1), "OZ", "'road'", Zone1(link, 1))
-            Z2GVA(link, 1) = get_gva_data_by_zoneID(g_modelRunYear - 1, FlowID(link, 1), "DZ", "'road'", Zone2(link, 1))
+            Z1Pop(link, 1) = get_population_data_by_zoneID(g_modelRunYear - 1, Zone1(link, 1), "OZ", "'road'")
+            Z2Pop(link, 1) = get_population_data_by_zoneID(g_modelRunYear - 1, Zone2(link, 1), "DZ", "'road'")
+            Z1GVA(link, 1) = get_gva_data_by_zoneID(g_modelRunYear - 1, Zone1(link, 1), "OZ", "'road'")
+            Z2GVA(link, 1) = get_gva_data_by_zoneID(g_modelRunYear - 1, Zone2(link, 1), "DZ", "'road'")
 
 
 
@@ -1537,13 +1543,17 @@
             OutputArray(link, 1) = InputArray(link, 1)
             OutputArray(link, 2) = g_modelRunYear
             OutputArray(link, 3) = InputArray(link, 7)
-            OutputArray(link, 4) = MeanSpeedNew
-            OutputArray(link, 5) = MwayFlowNew
-            OutputArray(link, 6) = DualFlowNew
-            OutputArray(link, 7) = SingFlowNew
-            OutputArray(link, 8) = MWaySpdNew
-            OutputArray(link, 9) = DualSpdNew
-            OutputArray(link, 10) = SingSpdNew
+            OutputArray(link, 4) = 50
+            OutputArray(link, 5) = 0
+            OutputArray(link, 6) = 0
+            OutputArray(link, 7) = 0
+            OutputArray(link, 8) = 0
+            OutputArray(link, 9) = 0
+            OutputArray(link, 10) = 0
+
+            For i = 0 To 19
+                OutputArray(link, 11 + i) = InputArray(link, 8 + i)
+            Next
 
             link += 1
         Loop

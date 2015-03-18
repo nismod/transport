@@ -95,11 +95,14 @@ Module AirModel
         MaxAirNode = 28
         MaxAirFlow = 223
 
+        'for year 2010
+        Dim yearIs2010 As Boolean = False
         If g_modelRunYear = 2010 Then
             'create data for year 2010
-            Call Year2010()
-
-            Exit Sub
+            g_modelRunYear += 1
+            'Call Year2010()
+            yearIs2010 = True
+            'Exit Sub
         End If
 
         'read all related files
@@ -166,6 +169,9 @@ Module AirModel
 
         'estimate fuel consumpion
         Call AirFuelConsumption()
+
+        'for year 2010 only
+        If yearIs2010 = True Then g_modelRunYear -= 1
 
         'write output values and temp array
         Call AirOutputValues()
@@ -481,9 +487,9 @@ Module AirModel
                 AirFlowBaseData(AirportCount, 6) = FlowPreExtVar(AirportCount, 6)
                 AirFlowBaseData(AirportCount, 7) = FlowPreExtVar(AirportCount, 7)
                 AirFlowBaseData(AirportCount, 8) = FlowPreExtVar(AirportCount, 8)
-                AirFlowBaseData(AirportCount, 9) = FlowInputArray(AirportCount, 5)
+                AirFlowBaseData(AirportCount, 9) = FlowInputArray(AirportCount, 8)
 
-                AirfTripsLatent(AirportCount) = FlowInputArray(AirportCount, 6)
+                AirfTripsLatent(AirportCount) = FlowInputArray(AirportCount, 5)
 
                 'set all the capacity constraint checks for the flow 
                 If FlowInputArray(AirportCount, 6) = 0 Then

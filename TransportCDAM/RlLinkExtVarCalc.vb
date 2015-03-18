@@ -92,8 +92,8 @@
             ElPGrowth = 0.025
         End If
 
-        'read initial input data
-        Call ReadData("RailLink", "Input", RlL_InArray, g_modelRunYear)
+        'read initial input data (year 2010)
+        Call ReadData("RailLink", "Input", RlL_InArray, 2011)
         If g_modelRunYear <> g_initialYear Then
             'read from previous year
             Call ReadData("RailLink", "ExtVar", RlLEV_InArray, g_modelRunYear)
@@ -254,22 +254,22 @@
 
             Else
                 'read from previous year's data
-                FlowID(InputCount, 0) = RlL_InArray(InputCount, 2)
-                OZone(InputCount, 0) = RlL_InArray(InputCount, 3)
-                DZone(InputCount, 0) = RlL_InArray(InputCount, 4)
+                FlowID(InputCount, 0) = RlL_InArray(InputCount, 1)
+                OZone(InputCount, 0) = RlL_InArray(InputCount, 2)
+                DZone(InputCount, 0) = RlL_InArray(InputCount, 3)
                 Tracks(InputCount, 0) = RlLEV_InArray(InputCount, 4)
-                Pop1Old(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear - 1, FlowID(InputCount, 0), "OZ", "'rail'", OZone(InputCount, 0))
-                Pop2Old(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear - 1, FlowID(InputCount, 0), "DZ", "'rail'", DZone(InputCount, 0))
-                GVA1Old(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear - 1, FlowID(InputCount, 0), "OZ", "'rail'", OZone(InputCount, 0))
-                GVA2Old(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear - 1, FlowID(InputCount, 0), "DZ", "'rail'", DZone(InputCount, 0))
+                Pop1Old(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear - 1, OZone(InputCount, 0), "OZ", "'rail'")
+                Pop2Old(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear - 1, DZone(InputCount, 0), "DZ", "'rail'")
+                GVA1Old(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear - 1, OZone(InputCount, 0), "OZ", "'rail'")
+                GVA2Old(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear - 1, DZone(InputCount, 0), "DZ", "'rail'")
 
                 CostOld(InputCount, 0) = RlLEV_InArray(InputCount, 9)
                 FuelOld(InputCount, 0) = RlLEV_InArray(InputCount, 10)
                 MaxTDOld(InputCount, 0) = RlLEV_InArray(InputCount, 11)
                 ElPOld(InputCount, 0) = RlLEV_InArray(InputCount, 12)
                 ElectTracksOld(InputCount, 0) = RlLEV_InArray(InputCount, 13)
-                OCountry(InputCount, 0) = RlL_InArray(InputCount, 14)
-                DCountry(InputCount, 0) = RlL_InArray(InputCount, 15)
+                OCountry(InputCount, 0) = RlL_InArray(InputCount, 13)
+                DCountry(InputCount, 0) = RlL_InArray(InputCount, 14)
 
                 DieselOld(InputCount, 0) = DieselNew = RlLEV_InArray(InputCount, 15)
                 ElectricOld(InputCount, 0) = ElectricNew = RlLEV_InArray(InputCount, 16)
@@ -324,8 +324,8 @@
                 'now modified as population data available up to 2100 - so should never need 'else'
                 'v1.9 now read by using database function
                 If g_modelRunYear < 91 Then
-                    Pop1New = get_population_data_by_zoneID(g_modelRunYear - 1, FlowID(InputCount, 0), "OZ", "'rail'", OZone(InputCount, 0))
-                    Pop2New = get_population_data_by_zoneID(g_modelRunYear - 1, FlowID(InputCount, 0), "DZ", "'rail'", DZone(InputCount, 0))
+                    Pop1New = get_population_data_by_zoneID(g_modelRunYear, OZone(InputCount, 0), "OZ", "'rail'")
+                    Pop2New = get_population_data_by_zoneID(g_modelRunYear, DZone(InputCount, 0), "DZ", "'rail'")
                 Else
                     Pop1New = Pop1Old(InputCount, 0)
                     Pop2New = Pop2Old(InputCount, 0)
@@ -345,8 +345,8 @@
                 'v1.9 now read by using database function
                 'database does not have gva forecasts after year 2050, and the calculation is only available before year 2050
                 If g_modelRunYear < 91 Then
-                    GVA1New = get_gva_data_by_zoneID(g_modelRunYear, FlowID(InputCount, 0), "OZ", "'rail'", OZone(InputCount, 0))
-                    GVA2New = get_gva_data_by_zoneID(g_modelRunYear, FlowID(InputCount, 0), "DZ", "'rail'", DZone(InputCount, 0))
+                    GVA1New = get_gva_data_by_zoneID(g_modelRunYear, OZone(InputCount, 0), "OZ", "'rail'")
+                    GVA2New = get_gva_data_by_zoneID(g_modelRunYear, DZone(InputCount, 0), "DZ", "'rail'")
                 Else
                     GVA1New = GVA1Old(InputCount, 0)
                     GVA2New = GVA2Old(InputCount, 0)

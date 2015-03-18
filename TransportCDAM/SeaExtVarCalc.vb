@@ -138,12 +138,7 @@
 
                 'get GORPop and GORGva by using database function
                 PortID = InputArray(PortCount, 1)
-                If g_modelRunYear = g_initialYear Then
-                    theYear = g_modelRunYear
-                Else
-                    theYear = g_modelRunYear - 1
-                End If
-                PortBaseData(PortCount, 11) = get_population_data_by_seaportID(theYear, PortCount)
+                PortBaseData(PortCount, 11) = get_population_data_by_seaportID(g_modelRunYear - 1, PortCount)
                 PortBaseData(PortCount, 12) = get_gva_data_by_seaportID(g_modelRunYear - 1, PortCount)
                 PortBaseData(PortCount, 13) = InputArray(PortCount, 13) 'cost
                 GORID(PortCount, 1) = InputArray(PortCount, 2)
@@ -154,7 +149,7 @@
                 Next
                 PortBaseData(PortCount, 11) = get_population_data_by_seaportID(g_modelRunYear - 1, PortCount)
                 PortBaseData(PortCount, 12) = get_gva_data_by_seaportID(g_modelRunYear - 1, PortCount)
-                PortBaseData(PortCount, 13) = InputArray(PortCount, 13) 'cost
+                PortBaseData(PortCount, 13) = InputArray(PortCount, 11) 'cost
             End If
 
 
@@ -272,25 +267,25 @@
             'do nothing
             Exit Sub
         End If
-        If CapArray(CapNum, 1) <> "" Then
-            CapID = CapArray(CapNum, 1)
-            If CapArray(CapNum, 2) = "" Then
+        If CapArray(CapNum, 2) <> "" Then
+            CapID = CapArray(CapNum, 2)
+            If CapArray(CapNum, 3) = "" Then
                 CapYear = -1
             Else
                 If AddingCap = False Then
-                    CapYear = CapArray(CapNum, 2)
+                    CapYear = CapArray(CapNum, 3)
                 Else
-                    CapYear = CapArray(CapNum, 2)
+                    CapYear = CapArray(CapNum, 3)
                 End If
             End If
 
-            LBChange = CapArray(CapNum, 3)
-            DBChange = CapArray(CapNum, 4)
-            GCChange = CapArray(CapNum, 5)
-            LLChange = CapArray(CapNum, 6)
-            RRChange = CapArray(CapNum, 7)
+            LBChange = CapArray(CapNum, 4)
+            DBChange = CapArray(CapNum, 5)
+            GCChange = CapArray(CapNum, 6)
+            LLChange = CapArray(CapNum, 7)
+            RRChange = CapArray(CapNum, 8)
             If AddingCap = False Then
-                CapType = CapArray(CapNum, 8)
+                CapType = CapArray(CapNum, 9)
             End If
             CapNum += 1
 
@@ -318,7 +313,38 @@
         'read from the first row
         CapNum = 1
         Do
-            Call GetCapData()
+            'read CapArray until reach the end
+            If CapArray Is Nothing Then 'TODO - it seems to hit this everytime??
+                'Stop
+                'do nothing
+                Exit Sub
+            End If
+            If CapArray(CapNum, 1) <> "" Then
+                CapID = CapArray(CapNum, 1)
+                If CapArray(CapNum, 2) = "" Then
+                    CapYear = -1
+                Else
+                    If AddingCap = False Then
+                        CapYear = CapArray(CapNum, 2)
+                    Else
+                        CapYear = CapArray(CapNum, 2)
+                    End If
+                End If
+
+                LBChange = CapArray(CapNum, 3)
+                DBChange = CapArray(CapNum, 4)
+                GCChange = CapArray(CapNum, 5)
+                LLChange = CapArray(CapNum, 6)
+                RRChange = CapArray(CapNum, 7)
+                If AddingCap = False Then
+                    CapType = CapArray(CapNum, 8)
+                End If
+                CapNum += 1
+
+            Else
+                'if empty, do nothing
+            End If
+
             'exit the loop if read to the end of the array
             If CapArray(CapNum, 1) Is Nothing Then 'TODO - seems to hit this every time
                 'Stop
@@ -399,9 +425,11 @@
                 sortedline = sortarray(v)
                 splitline = Split(sortedline, "&")
                 arraynum = splitline(2)
+                CapArray(v, 0) = g_modelRunID
                 For i = 0 To 6
                     CapArray(v, i + 1) = NewCapDetails(arraynum, i)
                 Next
+                CapArray(v, 8) = CapType
             Next
         End If
 

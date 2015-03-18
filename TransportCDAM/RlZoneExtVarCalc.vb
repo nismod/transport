@@ -97,7 +97,7 @@
 
 
         'read initial input of year 2010
-        Call ReadData("RailZone", "Input", RlZ_InArray, g_modelRunYear)
+        Call ReadData("RailZone", "Input", RlZ_InArray, 2011)
 
         If g_modelRunYear <> g_initialYear Then
             'read previous year's data
@@ -231,7 +231,7 @@
                 If RlZOthSource = "File" Then
                     GJTOld(InputCount, 0) = RlZEVRlZ_InArray(InputCount, 10)
                 End If
-                Country(InputCount, 0) = RlZ_InArray(InputCount, 12)
+                Country(InputCount, 0) = RlZ_InArray(InputCount, 8)
 
                 ElPOld(InputCount, 0) = RlZEVRlZ_InArray(InputCount, 11)
                 DieselOld(InputCount, 0) = RlZEVRlZ_InArray(InputCount, 12)
