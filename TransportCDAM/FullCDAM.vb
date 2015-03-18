@@ -31,7 +31,7 @@
     Private Function getModelRunDetails() As Boolean
         Dim mrdarray As String(,) = Nothing
 
-        Call ReadData("System", "ModelRunDetails", mrdarray)
+        Call DBaseInterface.ReadData("System", "ModelRunDetails", mrdarray)
 
         Return True
 
@@ -43,7 +43,7 @@
         Dim ParamName As String
 
         'get plan details from the database
-        ReadData("Inputs", "Parameters", ary)
+        DBaseInterface.ReadData("Inputs", "Parameters", ary)
 
         'TODO - Would be nice to replace this with some EXECUTE function that assigns these variables dynamically
         For i = 1 To UBound(ary, 1) - 1
@@ -193,10 +193,10 @@
         Call CreateLog()
 
         'get strategy variables for this year from the database
-        Call ReadData("SubStrategy", "", stratarray, g_modelRunYear, g_modelRunID)
+        Call DBaseInterface.ReadData("SubStrategy", "", stratarray, g_modelRunYear, g_modelRunID)
 
         'Get energy data
-        Call ReadData("Energy", "", enearray)
+        Call DBaseInterface.ReadData("Energy", "", enearray)
         If RlZEneSource = "Database" Then
             y = g_modelRunYear - g_initialYear + 1 'TODO - this needs fixing once we go to database for energy 
             InDieselOldAll = enearray(y, 2)

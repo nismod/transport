@@ -117,16 +117,16 @@ Module AirModel
 
 
         'read input data
-        Call ReadData("AirNode", "Input", NodeInputArray, g_modelRunYear)
-        Call ReadData("AirFlow", "Input", FlowInputArray, g_modelRunYear)
+        Call DBaseInterface.ReadData("AirNode", "Input", NodeInputArray, g_modelRunYear)
+        Call DBaseInterface.ReadData("AirFlow", "Input", FlowInputArray, g_modelRunYear)
 
         'get external variables for this year
-        Call ReadData("AirNode", "ExtVar", AirportExtVar, g_modelRunYear)
-        Call ReadData("AirFlow", "ExtVar", AirFlowExtVar, g_modelRunYear)
+        Call DBaseInterface.ReadData("AirNode", "ExtVar", AirportExtVar, g_modelRunYear)
+        Call DBaseInterface.ReadData("AirFlow", "ExtVar", AirFlowExtVar, g_modelRunYear)
 
         'read previous years external variable value as base values
-        Call ReadData("AirNode", "ExtVar", NodePreExtVar, g_modelRunYear - 1)
-        Call ReadData("AirFlow", "ExtVar", FlowPreExtVar, g_modelRunYear - 1)
+        Call DBaseInterface.ReadData("AirNode", "ExtVar", NodePreExtVar, g_modelRunYear - 1)
+        Call DBaseInterface.ReadData("AirFlow", "ExtVar", FlowPreExtVar, g_modelRunYear - 1)
 
 
         'run air node model
@@ -213,7 +213,7 @@ Module AirModel
         End If
 
         'get the elasticity values
-        Call ReadData("AirNode", "Elasticity", AirEl, g_modelRunYear)
+        Call DBaseInterface.ReadData("AirNode", "Elasticity", AirEl, g_modelRunYear)
 
         If TripRates = True Then
             'read from the strategy file
@@ -1243,8 +1243,8 @@ Module AirModel
         Dim flownum As Long
         Dim domflights As Long
         Dim intflights As Long
-        Call ReadData("AirNode", "Input", NodeInputArray, g_modelRunYear)
-        Call ReadData("AirFlow", "Input", FlowInputArray, g_modelRunYear)
+        Call DBaseInterface.ReadData("AirNode", "Input", NodeInputArray, g_modelRunYear)
+        Call DBaseInterface.ReadData("AirFlow", "Input", FlowInputArray, g_modelRunYear)
 
         'read initial data and write to output table as the 2010 result
         'write to output array for node and flow

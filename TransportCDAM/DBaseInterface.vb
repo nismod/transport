@@ -134,11 +134,12 @@ Module DBaseInterface
             If m_conn Is Nothing Then
                 m_sConnString = g_dbase '"Driver={PostgreSQL ODBC Driver(ANSI)};DSN=PostgreSQL30;Server=localhost;Port=5432;Database=itrc_sos;UId=postgres;Password=P0stgr3s;"
                 m_conn = New Odbc.OdbcConnection(m_sConnString)
-                m_conn.Open()
                 m_conn.ConnectionTimeout = 60
+                m_conn.Open()
             End If
 
         Catch ex As Exception
+            Stop
             MsgBox(ex.Message)
             Throw (ex)
         End Try
@@ -1530,7 +1531,8 @@ Module DBaseInterface
                 theSQL = "SELECT * FROM " & Chr(34) & "TR_I_Strategy_Projections_Run" & Chr(34) & " WHERE modelrun_id=" & g_modelRunID
             Case "Energy"
                 'TODO - Pull this data from the fuel database!!!
-                Connection = "D:\ITRC\ITRC Main\Model Inputs\EnergyCosts\" 'DBaseEneFile
+                Connection = "D:\Data\MI\ITRCWS1\Transport\"
+                'Connection = "D:\ITRC\ITRC Main\Model Inputs\EnergyCosts\" 'DBaseEneFile
                 TheFileName = "ScenarioEneFileCentralRevised.csv"
             Case Else
                 'for error handling
@@ -1973,7 +1975,7 @@ Module DBaseInterface
             Next
 
             DataColumns = aryFieldNames.Count
-            DataRows = UBound(OutputArray, 1) - 1 ' subtract 1 as the first row is always blank
+            DataRows = UBound(OutputArray, 1) ' don't subtract 1 even though the first row is always blank
             'If there is no data then just exit
             If DataRows = 0 Then
                 Return False
@@ -2143,7 +2145,7 @@ Module DBaseInterface
         logarray(logNum, 0) = "All results are indicative estimates, and the authors accept no liability for any actions arising from the use of these results"
         logNum += 1
 
-        Call WriteData("Logfile", "", logarray)
+        'Call WriteData("Logfile", "", logarray)
     End Sub
 
 End Module

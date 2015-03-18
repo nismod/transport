@@ -97,19 +97,19 @@
         'only do the cap change calculation for the intermediate cap change file if it is year 1
         If g_modelRunYear = g_initialYear Then
             'read capchange info
-            Call ReadData("AirNode", "CapChange", CapArray, g_modelRunYear)
+            Call DBaseInterface.ReadData("AirNode", "CapChange", CapArray, g_modelRunYear)
 
             'do capacity change requirement calculation
             Call CapChangeCalc()
 
             'write all lines to intermediate capacity file
             If Not NewCapArray Is Nothing Then
-                Call WriteData("AirNode", "NewCap", NewCapArray)
+                Call DBaseInterface.WriteData("AirNode", "NewCap", NewCapArray)
             End If
         End If
 
         'read capchange info for the current year
-        Call ReadData("AirNode", "NewCap", CapArray, g_modelRunYear)
+        Call DBaseInterface.ReadData("AirNode", "NewCap", CapArray, g_modelRunYear)
 
         AddingCap = True
         'reset Capnum to read the first line
@@ -125,11 +125,11 @@
         'create file if it is the first year
         'it is now writting to database, therefore no difference if it is year 1 or not
         If g_modelRunYear = g_initialYear Then
-            Call WriteData("AirNode", "ExtVar", NodeOutputArray, , True)
-            Call WriteData("AirFlow", "ExtVar", FlowOutputArray, , True)
+            Call DBaseInterface.WriteData("AirNode", "ExtVar", NodeOutputArray, , True)
+            Call DBaseInterface.WriteData("AirFlow", "ExtVar", FlowOutputArray, , True)
         Else
-            Call WriteData("AirNode", "ExtVar", NodeOutputArray, , False)
-            Call WriteData("AirFlow", "ExtVar", FlowOutputArray, , False)
+            Call DBaseInterface.WriteData("AirNode", "ExtVar", NodeOutputArray, , False)
+            Call DBaseInterface.WriteData("AirFlow", "ExtVar", FlowOutputArray, , False)
         End If
 
 
@@ -141,12 +141,12 @@
 
 
         'read initial year files
-        Call ReadData("AirNode", "Input", NodeInputArray, g_modelRunYear)
-        Call ReadData("AirFlow", "Input", FlowInputArray, g_modelRunYear)
+        Call DBaseInterface.ReadData("AirNode", "Input", NodeInputArray, g_modelRunYear)
+        Call DBaseInterface.ReadData("AirFlow", "Input", FlowInputArray, g_modelRunYear)
         If g_modelRunYear <> g_initialYear Then
             'read from previous year
-            Call ReadData("AirNode", "ExtVar", NodeEVInputArray, g_modelRunYear - 1)
-            Call ReadData("AirFlow", "ExtVar", FlowEVInputArray, g_modelRunYear - 1)
+            Call DBaseInterface.ReadData("AirNode", "ExtVar", NodeEVInputArray, g_modelRunYear - 1)
+            Call DBaseInterface.ReadData("AirFlow", "ExtVar", FlowEVInputArray, g_modelRunYear - 1)
         End If
 
     End Sub
