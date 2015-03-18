@@ -69,7 +69,7 @@
         'first read all compulsory enhancements to intermediate array
 
         'only do the cap change calculation for the intermediate cap change file if it is year 1
-        If g_modelRunYear = g_initialYear Then
+        If yearIs2010 = False And g_modelRunYear = g_initialYear Then
             'read capchange info
             Call ReadData("Seaport", "CapChange", CapArray, g_modelRunYear)
 
@@ -84,7 +84,7 @@
 
 
         'read input data from initial input if year 1, otherwise read from previous year's external variable data
-        If yearIs2010 = False And g_modelRunYear = g_initialYear Then
+        If g_modelRunYear = g_initialYear Then
             Call ReadData("Seaport", "Input", InputArray, g_modelRunYear)
         Else
             Call ReadData("Seaport", "ExtVar", InputArray, g_modelRunYear - 1)
