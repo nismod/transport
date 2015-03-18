@@ -58,14 +58,20 @@
     Dim EleNum As Integer
     Dim RlElNum As Integer
     Dim RzElNum As Integer
+    Dim yearIs2010 As Boolean = False
+
 
 
 
     Public Sub RailLinkEVMain()
 
+        'for year 2010
         If g_modelRunYear = 2010 Then
-
-            Exit Sub
+            'create data for year 2010
+            g_modelRunYear += 1
+            'Call Year2010()
+            yearIs2010 = True
+            'Exit Sub
         End If
 
         'check if there is any value assigned to RlLEVSource - if not then set to constant as default
@@ -101,7 +107,7 @@
 
 
         'only do the cap change calculation for the intermediate cap change file if it is year 1
-        If g_modelRunYear = g_initialYear Then
+        If yearIs2010 = False And g_modelRunYear = g_initialYear Then
             'read new capacity data
             Call ReadData("RailLink", "CapChange", CapArray, g_modelRunYear)
 
@@ -127,7 +133,7 @@
         'mod - now do this anyway as some schemes are non-discretionary
         'create intermediate file listing timings of scheme implementations
         'create list only if it is year 1
-        If g_modelRunYear = g_initialYear Then
+        If yearIs2010 = False And g_modelRunYear = g_initialYear Then
             Call CreateElectrificationList()
         End If
 
@@ -465,6 +471,9 @@ NextYear:
             End If
 
             MaxTDNew = MaxTD
+
+            If yearIs2010 = True Then g_modelRunYear -= 1
+
             'write to output file
             RlL_OutArray(InputCount, 0) = g_modelRunID
             RlL_OutArray(InputCount, 1) = FlowID(InputCount, 0)
@@ -486,6 +495,8 @@ NextYear:
                 RlL_OutArray(InputCount, 16) = InDieselNew
                 RlL_OutArray(InputCount, 17) = InElectricNew
             End If
+
+            If yearIs2010 = True Then g_modelRunYear += 1
 
             'next link
             InputCount += 1

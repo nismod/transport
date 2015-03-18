@@ -72,14 +72,20 @@
     Dim CapArray(,) As String
     Dim CapNum As Integer
     Dim NewCapArray(6835, 5) As String
+    Dim yearIs2010 As Boolean = False
+
 
 
 
     Public Sub RoadLinkEVMain()
 
+        'for year 2010
         If g_modelRunYear = 2010 Then
-
-            Exit Sub
+            'create data for year 2010
+            g_modelRunYear += 1
+            'Call Year2010()
+            yearIs2010 = True
+            'Exit Sub
         End If
 
         'get the input and output file names
@@ -106,7 +112,7 @@
         'if capacity is changing then get capacity change file
         'v1.3 do this anyway to include compulsory changes
         'now read from database
-        If g_modelRunYear = g_initialYear Then
+        If yearIs2010 = False And g_modelRunYear = g_initialYear Then
             'read capacity data
             Call ReadData("RoadLink", "CapChange", CapArray, g_modelRunYear)
 
@@ -526,7 +532,7 @@
                 Pop1New = get_population_data_by_zoneID(g_modelRunYear, OZone(InputCount, 1), "OZ", "'road'")
                 Pop2New = get_population_data_by_zoneID(g_modelRunYear, DZone(InputCount, 1), "DZ", "'road'")
             End If
-            'TODO - Why is this not pulling from the GVA functions???
+            'TODO - Why is this not pulling from the GVA functions??? -this is for the runs without database, can be deleted if in the database version
             If RdLEcoSource = "Constant" Then
                 GVA1New = GVA1Old(InputCount, 1) * GVAGrowth
                 GVA2New = GVA2Old(InputCount, 1) * GVAGrowth
@@ -858,6 +864,7 @@
             SCap(InputCount, 1) = stratarray(1, 83)
 
 
+            If yearIs2010 = True Then g_modelRunYear -= 1
 
             'write to output file
             RdL_OutArray(InputCount, 0) = g_modelRunID
@@ -986,6 +993,7 @@
             RdL_OutArray(InputCount, 138) = VehFuelCosts(InputCount, 19, 8)
             RdL_OutArray(InputCount, 139) = VehFuelCosts(InputCount, 19, 9)
 
+            If yearIs2010 = True Then g_modelRunYear += 1
 
             InputCount += 1
         Loop

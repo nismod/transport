@@ -73,13 +73,19 @@
     Dim zonecapnum As Integer
     Dim RZEv_InArray(,) As String
     Dim RdZ_OutArray(145, 79) As String
+    Dim yearIs2010 As Boolean = False
+
 
 
     Public Sub RoadZoneEVMain()
 
+        'for year 2010
         If g_modelRunYear = 2010 Then
-
-            Exit Sub
+            'create data for year 2010
+            g_modelRunYear += 1
+            'Call Year2010()
+            yearIs2010 = True
+            'Exit Sub
         End If
 
         'if using WPPL then check if the start year is a valid value
@@ -116,7 +122,7 @@
 
 
         'only do the cap change calculation for the intermediate cap change file if it is year 1
-        If g_modelRunYear = g_initialYear Then
+        If yearIs2010 = False And g_modelRunYear = g_initialYear Then
             'read new capacity data
             Call ReadData("RoadZone", "CapChange", caparray, g_modelRunYear)
 
@@ -509,6 +515,9 @@
             End If
             'define fuel split - this is now specified via the strategy common variables file
             'FuelString = "0.598,0.402,0,0.055,0.945,0,1,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"
+
+            If yearIs2010 = True Then g_modelRunYear -= 1
+
             'write to output file
             RdZ_OutArray(InputCount, 0) = g_modelRunID
             RdZ_OutArray(InputCount, 1) = ZoneID(InputCount, 0)
@@ -569,6 +578,8 @@
             RdZ_OutArray(InputCount, 77) = VehFuelCosts(InputCount, 4, 6)
             RdZ_OutArray(InputCount, 78) = VehFuelCosts(InputCount, 4, 7)
             RdZ_OutArray(InputCount, 79) = VehFuelCosts(InputCount, 4, 9)
+
+            If yearIs2010 = True Then g_modelRunYear += 1
 
             'next zone
         Next

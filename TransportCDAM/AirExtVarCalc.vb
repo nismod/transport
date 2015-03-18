@@ -55,14 +55,20 @@
     Dim NewCapArray(47, 6) As String
     Dim CapNum As Integer
     Dim y As Object
+    Dim yearIs2010 As Boolean = False
+
 
 
 
     Public Sub AirEVMain()
 
+        'for year 2010
         If g_modelRunYear = 2010 Then
-
-            Exit Sub
+            'create data for year 2010
+            g_modelRunYear += 1
+            'Call Year2010()
+            yearIs2010 = True
+            'Exit Sub
         End If
 
         'get all related files
@@ -95,7 +101,7 @@
         'first read all compulsory enhancements to intermediate array
 
         'only do the cap change calculation for the intermediate cap change file if it is year 1
-        If g_modelRunYear = g_initialYear Then
+        If yearIs2010 = False And g_modelRunYear = g_initialYear Then
             'read capchange info
             Call DBaseInterface.ReadData("AirNode", "CapChange", CapArray, g_modelRunYear)
 
@@ -333,6 +339,7 @@
                 carbch = 0
             End If
 
+            If yearIs2010 = True Then g_modelRunYear -= 1
             'write node output row
             NodeOutputArray(NodeCount, 0) = g_modelRunID
             NodeOutputArray(NodeCount, 1) = NodeCount
@@ -347,6 +354,7 @@
             Next
             NodeOutputArray(NodeCount, 14) = NodeNewData(NodeCount, 3)
 
+            If yearIs2010 = True Then g_modelRunYear += 1
 
             'OutVarCount = 1
             'Do Until OutVarCount > 11
@@ -418,6 +426,8 @@
                 carbch = 0
             End If
 
+            If yearIs2010 = True Then g_modelRunYear -= 1
+
             'write flow output row
             FlowOutputArray(FlowCount, 0) = g_modelRunID
             FlowOutputArray(FlowCount, 1) = g_modelRunYear
@@ -434,6 +444,8 @@
             '    OutputRow = OutputRow & FlowNewData(FlowCount, OutVarCount) & ","
             '    OutVarCount += 1
             'Loop
+
+            If yearIs2010 = True Then g_modelRunYear += 1
 
             FlowCount += 1
         Loop

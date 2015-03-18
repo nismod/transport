@@ -36,13 +36,19 @@
     Dim InputArray(,) As String
     Dim CapArray(,) As String
     Dim Se_OutputArray(48, 11) As String
+    Dim yearIs2010 As Boolean = False
+
 
 
     Sub SeaEVMain()
 
+        'for year 2010
         If g_modelRunYear = 2010 Then
-
-            Exit Sub
+            'create data for year 2010
+            g_modelRunYear += 1
+            'Call Year2010()
+            yearIs2010 = True
+            'Exit Sub
         End If
 
         'set scaling factors - as a default they are just set to be constant over time
@@ -78,7 +84,7 @@
 
 
         'read input data from initial input if year 1, otherwise read from previous year's external variable data
-        If g_modelRunYear = g_initialYear Then
+        If yearIs2010 = False And g_modelRunYear = g_initialYear Then
             Call ReadData("Seaport", "Input", InputArray, g_modelRunYear)
         Else
             Call ReadData("Seaport", "ExtVar", InputArray, g_modelRunYear - 1)
@@ -224,6 +230,8 @@
                 PortNewData(PortCount, 9) = 1
             End If
 
+            If yearIs2010 = True Then g_modelRunYear -= 1
+
             'write values to output array
             Se_OutputArray(PortCount, 0) = g_modelRunID
             Se_OutputArray(PortCount, 1) = PortID
@@ -233,6 +241,8 @@
                 Se_OutputArray(PortCount, 2 + newcount) = PortNewData(PortCount, newcount)
                 newcount += 1
             Loop
+
+            If yearIs2010 = True Then g_modelRunYear += 1
 
             ''set base values as previous new values
             'newcount = 1

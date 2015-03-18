@@ -39,14 +39,20 @@
     Dim RlZ_InArray(,) As String
     Dim RlZEVRlZ_InArray(,) As String
     Dim RlZ_OutArray(145, 15) As String
+    Dim yearIs2010 As Boolean = False
+
 
 
 
     Public Sub RlZoneEVMain()
 
+        'for year 2010
         If g_modelRunYear = 2010 Then
-
-            Exit Sub
+            'create data for year 2010
+            g_modelRunYear += 1
+            'Call Year2010()
+            yearIs2010 = True
+            'Exit Sub
         End If
 
         'read all related files
@@ -402,6 +408,8 @@ NextYear:
                 End If
             End If
 
+            If yearIs2010 = True Then g_modelRunYear -= 1
+
             'write to output file
             RlZ_OutArray(InputCount, 0) = g_modelRunID
             RlZ_OutArray(InputCount, 1) = ZoneID(InputCount, 0)
@@ -420,6 +428,7 @@ NextYear:
             RlZ_OutArray(InputCount, 14) = InElectricNew
             RlZ_OutArray(InputCount, 15) = ElStat(InputCount, 0)
 
+            If yearIs2010 = True Then g_modelRunYear += 1
 
             InputCount += 1
         Loop
