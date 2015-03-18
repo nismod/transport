@@ -57,9 +57,13 @@
         Call SeaInputFiles()
 
         'get external variables for this port this year
-        Call ReadData("Seaport", "ExtVar", PortExtVar, g_modelRunYear)
+        If yearIs2010 = True Then
+            Call ReadData("Seaport", "ExtVar", PortExtVar, g_modelRunYear - 1)
 
-        Call ReadData("Seaport", "Input", InputArray, g_modelRunYear)
+        Else
+            Call ReadData("Seaport", "ExtVar", PortExtVar, g_modelRunYear)
+
+        End If
 
         InputCount = 1
 

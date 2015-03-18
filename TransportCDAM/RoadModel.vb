@@ -133,7 +133,13 @@
 
 
         'load external variables
-        Call ReadData("RoadLink", "ExtVar", ExternalValues, g_modelRunYear)
+        If yearIs2010 = True Then
+            Call ReadData("RoadLink", "ExtVar", ExternalValues, g_modelRunYear - 1)
+
+        Else
+            Call ReadData("RoadLink", "ExtVar", ExternalValues, g_modelRunYear)
+
+        End If
 
         'read from initial file if year 1, otherwise update from temp file
         If g_modelRunYear = g_initialYear Then

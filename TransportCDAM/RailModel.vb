@@ -586,7 +586,7 @@ Module RailModel
     End Sub
 
     Sub Year2010()
-        Call ReadData("RailLink", "Input", InputArray, g_modelRunYear)
+        Call ReadData("RailLink", "Input", InputArray, g_modelRunYear + 1)
         Call ReadData("RailLink", "ExtVar", RlLinkExtVars, (g_modelRunYear + 1))
 
         InputCount = 1

@@ -1532,7 +1532,8 @@ Module DBaseInterface
                 theSQL = "SELECT * FROM " & Chr(34) & "TR_I_Strategy_Projections_Run" & Chr(34) & " WHERE modelrun_id=" & g_modelRunID
             Case "Energy"
                 'TODO - Pull this data from the fuel database!!!
-                Connection = "D:\Data\MI\ITRCWS1\Transport\"
+                Connection = "C:\Users\drives\Documents\Visual Studio 2013\Projects\ITRCWS3\Transport\"
+                'Connection = "D:\Data\MI\ITRCWS1\Transport\"
                 'Connection = "D:\ITRC\ITRC Main\Model Inputs\EnergyCosts\" 'DBaseEneFile
                 TheFileName = "ScenarioEneFileCentralRevised.csv"
             Case Else

@@ -89,7 +89,13 @@
         NewCapNum = 1
 
         'get external variable values
-        Call ReadData("RoadZone", "ExtVar", ZoneExtVar, g_modelRunYear)
+        If yearIs2010 = True Then
+            Call ReadData("RoadZone", "ExtVar", ZoneExtVar, g_modelRunYear - 1)
+
+        Else
+            Call ReadData("RoadZone", "ExtVar", ZoneExtVar, g_modelRunYear)
+
+        End If
 
         'get external variable values from previous year as base values
         Call ReadData("RoadZone", "ExtVar", ZonePreExtVar, g_modelRunYear)

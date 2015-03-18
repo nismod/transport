@@ -124,13 +124,21 @@ Module AirModel
         Call DBaseInterface.ReadData("AirFlow", "Input", FlowInputArray, g_modelRunYear)
 
         'get external variables for this year
-        Call DBaseInterface.ReadData("AirNode", "ExtVar", AirportExtVar, g_modelRunYear)
-        Call DBaseInterface.ReadData("AirFlow", "ExtVar", AirFlowExtVar, g_modelRunYear)
+        If yearIs2010 = True Then
+            Call DBaseInterface.ReadData("AirNode", "ExtVar", AirportExtVar, g_modelRunYear - 1)
+            Call DBaseInterface.ReadData("AirFlow", "ExtVar", AirFlowExtVar, g_modelRunYear - 1)
+
+        Else
+            Call DBaseInterface.ReadData("AirNode", "ExtVar", AirportExtVar, g_modelRunYear)
+            Call DBaseInterface.ReadData("AirFlow", "ExtVar", AirFlowExtVar, g_modelRunYear)
+
+        End If
 
         'read previous years external variable value as base values
-        Call DBaseInterface.ReadData("AirNode", "ExtVar", NodePreExtVar, g_modelRunYear - 1)
-        Call DBaseInterface.ReadData("AirFlow", "ExtVar", FlowPreExtVar, g_modelRunYear - 1)
-
+        If g_modelRunYear <> g_initialYear Then
+            Call DBaseInterface.ReadData("AirNode", "ExtVar", NodePreExtVar, g_modelRunYear - 1)
+            Call DBaseInterface.ReadData("AirFlow", "ExtVar", FlowPreExtVar, g_modelRunYear - 1)
+        End If
 
         'run air node model
 

@@ -57,7 +57,13 @@
 
 
         'get external variable values
-        Call ReadData("RailZone", "ExtVar", RlZExtVar, g_modelRunYear)
+        If yearIs2010 = True Then
+            Call ReadData("RailZone", "ExtVar", RlZExtVar, g_modelRunYear - 1)
+
+        Else
+            Call ReadData("RailZone", "ExtVar", RlZExtVar, g_modelRunYear)
+
+        End If
 
         'get previous year external variable values as base value
         Call ReadData("RailZone", "ExtVar", RlZPreExtVar, g_modelRunYear - 1)
