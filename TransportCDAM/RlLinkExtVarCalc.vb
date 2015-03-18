@@ -451,7 +451,7 @@ NextYear:
             'v1.4 changed to include compulsory capacity changes where construction has already begun
             'all this involves is removing the if newrllcap = true clause, because this was already accounted for when generating the intermediate file, and adding a lineread above getcapdata because this sub was amended
 
-            'TODO - how does this work with the years = 200+???
+            'TODO - how does this work with the years = 200+??? -DONE no data available to years = 200+
             'if there are any capacity changes on this flow, check if there are any capacity changes in this year
             If Year = CapYear Then
                 If FlowID(InputCount, 0) = CapID Then

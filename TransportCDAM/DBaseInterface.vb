@@ -39,8 +39,8 @@ Module DBaseInterface
     Public RlZEcoSource As String = "Database"
     Public AirEcoSource As String = "Database"
     Public SeaEcoSource As String = "Database"
-    Public RdLEneSource As String = "Database" 'TODO Should this be Database?
-    Public RdZEneSource As String = "Database" 'TODO This fails if it is Database?
+    Public RdLEneSource As String = "Database" 'TODO Should this be Database? -DONE yes
+    Public RdZEneSource As String = "Database" 'TODO This fails if it is Database? - DONE debugged
     Public RlLEneSource As String = "Database"
     Public RlZEneSource As String = "Database"
     Public AirEneSource As String = "Database"
@@ -202,7 +202,8 @@ Module DBaseInterface
         Dim GORYear As Long
         Dim rowtype As String
 
-        'TODO - This doesn't seem to be getting data from the dbase?
+        'TODO - This doesn't seem to be getting data from the dbase? -DONE it will not be called in the database version, this part can be deleted
+        'this is the calculation for the population, which can be pull from the database function
 
         badregioncount = 0
 
@@ -469,7 +470,7 @@ Module DBaseInterface
     End Sub
 
     Sub GetDBaseEne()
-        'TODO ***NEED TO DO***
+        'TODO ***NEED TO DO*** -DONE the data will be from database
     End Sub
 
     Sub CreateDistLookup()
@@ -1531,8 +1532,8 @@ Module DBaseInterface
                 theSQL = "SELECT * FROM " & Chr(34) & "TR_I_Strategy_Projections_Run" & Chr(34) & " WHERE modelrun_id=" & g_modelRunID
             Case "Energy"
                 'TODO - Pull this data from the fuel database!!!
-                Connection = "D:\Data\MI\ITRCWS1\Transport\"
-                'Connection = "D:\ITRC\ITRC Main\Model Inputs\EnergyCosts\" 'DBaseEneFile
+                'Connection = "D:\Data\MI\ITRCWS1\Transport\"
+                Connection = "D:\ITRC\ITRC Main\Model Inputs\EnergyCosts\" 'DBaseEneFile
                 TheFileName = "ScenarioEneFileCentralRevised.csv"
             Case Else
                 'for error handling
@@ -1615,7 +1616,7 @@ Module DBaseInterface
 
             DataRead.Close()
 
-            'TODO - stopped this delete for debugging
+            'TODO - stopped this delete for debugging -DONE it won't be necessary to delete things if we are using database
             If g_modelRunYear = g_initialYear Then
                 'delete the temp file to recreate for current year
                 'System.IO.File.Delete(Connection & TheFileName)
@@ -1752,7 +1753,7 @@ Module DBaseInterface
                     Case "NewCap"
                         TableName = "TR_O_AirNodeNewCapacity"
                         OutFileName = EVFilePrefix & "AirNodeNewCap.csv"
-                        header = "modelrun_id, airport_id, changeyear, new_term_capacity, new_atm_cap"
+                        header = "modelrun_id, airport_id, changeyear, new_term_capacity, new_atm_cap, captype"
                     Case "NewCap_Added"
                         TableName = "TR_O_AirNodeNewCapacity_Added"
                         OutFileName = FilePrefix & "AirNewCap.csv"
@@ -1833,7 +1834,7 @@ Module DBaseInterface
                     Case "NewCap"
                         TableName = "TR_IO_RoadLinkNewCapacity"
                         OutFileName = EVFilePrefix & "RoadLinkNewCap.csv"
-                        header = "modelrun_id, changeyear, flow_id, mlane_change, dlane_change, slane_change"
+                        header = "modelrun_id, changeyear, flow_id, mlane_change, dlane_change, slane_change, changetype"
                     Case "NewCap_Added"
                         TableName = "TR_O_RoadLinkNewCapacity_Added"
                         OutFileName = FilePrefix & "RoadLinkNewCap.csv"

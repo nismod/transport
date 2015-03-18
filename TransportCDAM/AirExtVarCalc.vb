@@ -221,7 +221,7 @@
                 NodeOldData(NodeCount, 0) = NodeInputArray(NodeCount, 1)
                 NodeOldData(NodeCount, 1) = get_population_data_by_airportID(g_modelRunYear - 1, NodeOldData(NodeCount, 0))
                 NodeOldData(NodeCount, 2) = get_gva_data_by_airportID(g_modelRunYear - 1, NodeOldData(NodeCount, 0))
-                NodeOldData(NodeCount, 3) = NodeEVInputArray(NodeCount, 15) 'TODO - this code makes no sense, there are only 13 fields in TR_IO_AirNodeExternalVariables??
+                NodeOldData(NodeCount, 3) = NodeEVInputArray(NodeCount, 15) 'TODO - this code makes no sense, there are only 13 fields in TR_IO_AirNodeExternalVariables?? -DONE extra field added
 
                 OutVarCount = 4
                 'v1.4 change, previously >10
@@ -444,7 +444,7 @@
     Sub GetCapData()
         'modified in v1.3
         'read cap data from CapArray until all rows are read
-        If CapArray Is Nothing Then Exit Sub 'TODO - this gets set off every time
+        If CapArray Is Nothing Then Exit Sub 'TODO - this gets set off every time 'DONE it is meant to be, if there is no cap change data for the current year 
         If CapArray(CapNum, 1) <> "" Then
             CapID = CapArray(CapNum, 2)
             If CapArray(CapNum, 3) = "-1" Then
@@ -489,7 +489,7 @@
 
         Do
 
-            If CapArray Is Nothing Then Exit Sub 'TODO - this gets set off every time
+            If CapArray Is Nothing Then Exit Sub 'TODO - this gets set off every time -DONE it is meant to be
             If CapArray(CapNum, 1) <> "" Then
                 CapID = CapArray(CapNum, 1)
                 If CapArray(CapNum, 2) = "-1" Then
