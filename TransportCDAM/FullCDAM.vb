@@ -192,7 +192,7 @@
         'creates the log file for the model
         Call CreateLog()
 
-        'get strategy variables for this year from the database
+        'get strategy variables for this year and for last year from the database
         If g_modelRunYear = 2010 Then
             Call DBaseInterface.ReadData("SubStrategy", "", stratarrayOLD, 2010, g_modelRunID)
             Call DBaseInterface.ReadData("SubStrategy", "", stratarray, 2011, g_modelRunID)

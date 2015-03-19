@@ -42,13 +42,15 @@
 
     Sub SeaEVMain()
 
-        'for year 2010
+        'for year 2010, calculate as it is year 2011 and write output as year 2010
         If g_modelRunYear = 2010 Then
             'create data for year 2010
             g_modelRunYear += 1
             'Call Year2010()
             yearIs2010 = True
             'Exit Sub
+        Else
+            yearIs2010 = False
         End If
 
         'set scaling factors - as a default they are just set to be constant over time
@@ -112,6 +114,7 @@
         'then loop through rest of rows in input data file
         Call CalcPortData()
 
+        'minus a year if it is year 2010, for the next module
         If yearIs2010 = True Then g_modelRunYear -= 1
 
     End Sub
@@ -236,7 +239,7 @@
             Else
                 PortNewData(PortCount, 9) = 1
             End If
-
+            'write data as 2010 if year is 2010
             If yearIs2010 = True Then g_modelRunYear -= 1
 
             'write values to output array
@@ -249,6 +252,7 @@
                 newcount += 1
             Loop
 
+            'add back a year for next zone/link
             If yearIs2010 = True Then g_modelRunYear += 1
 
             ''set base values as previous new values

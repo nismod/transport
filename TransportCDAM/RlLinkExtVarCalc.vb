@@ -65,7 +65,7 @@
 
     Public Sub RailLinkEVMain()
 
-        'for year 2010
+        'for year 2010, skip calculation
         If g_modelRunYear = 2010 Then
             'create data for year 2010
             'g_modelRunYear += 1
@@ -169,6 +169,7 @@
         'loop through rows in input data file calculating the external variable values
         Call CalcExtVars()
 
+        'minus a year if it is year 2010, for the next module
         If yearIs2010 = True Then g_modelRunYear -= 1
 
     End Sub
@@ -499,6 +500,7 @@ NextYear:
                 RlL_OutArray(InputCount, 17) = InElectricNew
             End If
 
+            'add back a year for next zone/link
             If yearIs2010 = True Then g_modelRunYear += 1
 
             'next link

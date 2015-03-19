@@ -1259,7 +1259,7 @@ Module DBaseInterface
             Case "air"
                 theSQL = "SELECT id, ozone_id, dzone_id FROM " & Chr(34) & "TR_LU_AirFlows" & Chr(34) & " WHERE id = " & FlowID
             Case "rail"
-                theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RailLinkFlows" & Chr(34) & " WHERE id = " & FlowID
+                theSQL = "SELECT id, zone1_id, zone2_id  FROM " & Chr(34) & "TR_LU_RailLinkFlows" & Chr(34) & " WHERE id = " & FlowID
             Case "road"
                 theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RoadInputFlows" & Chr(34) & " WHERE id = " & FlowID
         End Select

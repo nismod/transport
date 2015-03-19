@@ -79,13 +79,15 @@
 
     Public Sub RoadZoneEVMain()
 
-        'for year 2010
+        'for year 2010, calculate as it is year 2011 and write output as year 2010
         If g_modelRunYear = 2010 Then
             'create data for year 2010
             g_modelRunYear += 1
             'Call Year2010()
             yearIs2010 = True
             'Exit Sub
+        Else
+            yearIs2010 = False
         End If
 
         'if using WPPL then check if the start year is a valid value
@@ -159,6 +161,7 @@
             Call WriteData("RoadZone", "ExtVar", RdZ_OutArray, , False)
         End If
 
+        'minus a year if it is year 2010, for the next module
         If yearIs2010 = True Then g_modelRunYear -= 1
 
 
@@ -517,6 +520,7 @@
             'define fuel split - this is now specified via the strategy common variables file
             'FuelString = "0.598,0.402,0,0.055,0.945,0,1,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"
 
+            'minus a year and write data as 2010 if year is 2010
             If yearIs2010 = True Then g_modelRunYear -= 1
 
             'write to output file
@@ -580,6 +584,7 @@
             RdZ_OutArray(InputCount, 78) = VehFuelCosts(InputCount, 4, 7)
             RdZ_OutArray(InputCount, 79) = VehFuelCosts(InputCount, 4, 9)
 
+            'add back a year for next zone/link
             If yearIs2010 = True Then g_modelRunYear += 1
 
             'next zone

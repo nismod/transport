@@ -46,13 +46,15 @@
 
     Public Sub RlZoneEVMain()
 
-        'for year 2010
+        'for year 2010, calculate as it is year 2011 and write output as year 2010
         If g_modelRunYear = 2010 Then
             'create data for year 2010
             g_modelRunYear += 1
             'Call Year2010()
             yearIs2010 = True
             'Exit Sub
+        Else
+            yearIs2010 = False
         End If
 
         'read all related files
@@ -96,6 +98,7 @@
         'loop through rows in input data file calculating the external variable files, until there are no rows left
         Call CalcRlZExtVars()
 
+        'minus a year if it is year 2010, for the next module
         If yearIs2010 = True Then g_modelRunYear -= 1
 
     End Sub
@@ -413,7 +416,7 @@ NextYear:
                     End If
                 End If
             End If
-
+            'write data as 2010 if year is 2010
             If yearIs2010 = True Then g_modelRunYear -= 1
 
             'write to output file
@@ -434,6 +437,7 @@ NextYear:
             RlZ_OutArray(InputCount, 14) = InElectricNew
             RlZ_OutArray(InputCount, 15) = ElStat(InputCount, 0)
 
+            'add back a year for next zone/link
             If yearIs2010 = True Then g_modelRunYear += 1
 
             InputCount += 1

@@ -114,13 +114,15 @@
 
     Public Sub RoadLinkMain()
 
-        'for year 2010
+        'for year 2010, calculate as it is year 2011 and write output as year 2010
         If g_modelRunYear = 2010 Then
             'create data for year 2010
             g_modelRunYear += 1
             'Call Year2010()
             yearIs2010 = True
             'Exit Sub
+        Else
+            yearIs2010 = False
         End If
 
         'read all related files
@@ -184,10 +186,12 @@
 
             'sum all the hourly flows to give an equivalent AADF figure
             Call TotalFlow()
-
+            'write data as 2010 if year is 2010
             If yearIs2010 = True Then g_modelRunYear -= 1
             'write the flows to the output file and temp file
             Call WriteOutputRow()
+
+            'add back a year for next zone/link
             If yearIs2010 = True Then g_modelRunYear += 1
 
             link += 1
@@ -206,6 +210,7 @@
         Erase TempAnArray
         Erase TempHArray
 
+        'minus a year if it is year 2010, for the next module
         If yearIs2010 = True Then g_modelRunYear -= 1
 
     End Sub

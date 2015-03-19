@@ -62,13 +62,15 @@
 
     Public Sub AirEVMain()
 
-        'for year 2010
+        'for year 2010, calculate as it is year 2011 and write output as year 2010
         If g_modelRunYear = 2010 Then
             'create data for year 2010
             g_modelRunYear += 1
             'Call Year2010()
             yearIs2010 = True
             'Exit Sub
+        Else
+            yearIs2010 = False
         End If
 
         'get all related files
@@ -138,6 +140,7 @@
             Call DBaseInterface.WriteData("AirFlow", "ExtVar", FlowOutputArray, , False)
         End If
 
+        'minus a year if it is year 2010, for the next module
         If yearIs2010 = True Then g_modelRunYear -= 1
 
 
@@ -355,6 +358,7 @@
             Next
             NodeOutputArray(NodeCount, 14) = NodeNewData(NodeCount, 3)
 
+            'add back a year for next zone/link
             If yearIs2010 = True Then g_modelRunYear += 1
 
             'OutVarCount = 1

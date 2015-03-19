@@ -79,13 +79,15 @@
 
     Public Sub RoadLinkEVMain()
 
-        'for year 2010
+        'for year 2010, calculate as it is year 2011 and write output as year 2010
         If g_modelRunYear = 2010 Then
             'create data for year 2010
             g_modelRunYear += 1
             'Call Year2010()
             yearIs2010 = True
             'Exit Sub
+        Else
+            yearIs2010 = False
         End If
 
         'get the input and output file names
@@ -142,6 +144,7 @@
         'v1.6 now calculate external variables and write output in annual timesteps
         Call CalcFlowData()
 
+        'minus a year if it is year 2010, for the next module
         If yearIs2010 = True Then g_modelRunYear -= 1
 
     End Sub
@@ -864,7 +867,7 @@
             DCap(InputCount, 1) = stratarray(1, 82)
             SCap(InputCount, 1) = stratarray(1, 83)
 
-
+            'minus a year and write data as 2010 if year is 2010
             If yearIs2010 = True Then g_modelRunYear -= 1
 
             'write to output file
@@ -994,6 +997,7 @@
             RdL_OutArray(InputCount, 138) = VehFuelCosts(InputCount, 19, 8)
             RdL_OutArray(InputCount, 139) = VehFuelCosts(InputCount, 19, 9)
 
+            'add back a year for next zone/link
             If yearIs2010 = True Then g_modelRunYear += 1
 
             InputCount += 1
