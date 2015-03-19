@@ -101,8 +101,13 @@
         'v1.3
         'get fuel efficiency values from the strategy file
         'v1.4 set FuelEff(0) to 1
-        FuelEff(0) = 1
-        FuelEff(1) = stratarray(1, 73)
+        If g_modelRunYear = g_initialYear Then
+            FuelEff(0) = 1
+        Else
+            FuelEff(0) = stratarrayOLD(1, 71)
+
+        End If
+        FuelEff(1) = stratarray(1, 71)
 
         'then loop through rest of rows in input data file
         Call CalcPortData()

@@ -65,6 +65,8 @@
     Dim NewCapNum As Integer
     Dim FuelArray(145, 20) As String
     Dim NewCapArray(145, 5) As String
+    Dim yearIs2010 As Boolean = False
+
 
 
 
@@ -72,7 +74,6 @@
     Public Sub RoadZoneMainNew()
 
         'for year 2010
-        Dim yearIs2010 As Boolean = False
         If g_modelRunYear = 2010 Then
             'create data for year 2010
             g_modelRunYear += 1
@@ -942,6 +943,7 @@
         Dim RVFFuel(4, 5, 10) As Double
         Dim VCount As Integer
         Dim CatFuelTotal As Double
+
 
         'split the vehicle km by vehicle category data into fuel types, where fuel 1 is petrol, fuel 2 is diesel, fuel 3 is petrol hybrid, fuel 4 is diesel hybrid, fuel 5 is plug-in hybrid,
         'fuel 6 is battery electric, fuel 7 is LPG, fuel 8 is CNG, fuel 9 is hydrogen ICE and fuel 10 is hydrogen fuel cell

@@ -38,12 +38,13 @@
     Dim InputArray(144, 14) As String
     Dim OutputArray(145, 5) As String
     Dim TempArray(145, 4) As String
+    Dim yearIs2010 As Boolean = False
+
 
 
     Public Sub RailZoneMain()
 
         'for year 2010
-        Dim yearIs2010 As Boolean = False
         If g_modelRunYear = 2010 Then
             'create data for year 2010
             g_modelRunYear += 1
@@ -124,7 +125,7 @@
 
         'read in the strategy
         If TripRates = True Then
-            RlzTripRates = stratarray(1, 93)
+            RlzTripRates = stratarray(1, 95)
         End If
 
     End Sub

@@ -68,10 +68,10 @@
         'for year 2010
         If g_modelRunYear = 2010 Then
             'create data for year 2010
-            g_modelRunYear += 1
+            'g_modelRunYear += 1
             'Call Year2010()
-            yearIs2010 = True
-            'Exit Sub
+            'yearIs2010 = True
+            Exit Sub
         End If
 
         'check if there is any value assigned to RlLEVSource - if not then set to constant as default
@@ -148,8 +148,13 @@
         'v1.4
         'get fuel efficiency and other values from the strategy file
         'v1.5 set fuel efficiency old to 1
-        FuelEffOld(0) = 1
-        FuelEffOld(1) = 1
+        If g_modelRunYear = g_initialYear Then
+            FuelEffOld(0) = 1
+            FuelEffOld(1) = 1
+        Else
+            FuelEffOld(0) = stratarrayOLD(1, 68)
+            FuelEffOld(1) = stratarrayOLD(1, 69)
+        End If
         'v1.5 fuel efficiency change calculation corrected
         'read line from file
         FuelEff(0) = stratarray(1, 68) / FuelEffOld(0)
@@ -159,9 +164,6 @@
         CO2Price(0) = stratarray(1, 72)
         CO2Price(1) = stratarray(1, 73)
         MaxTD = stratarray(1, 80)
-        'v1.5 update FuelEffOld values
-        FuelEffOld(0) = stratarray(1, 68)
-        FuelEffOld(1) = stratarray(1, 69)
 
 
         'loop through rows in input data file calculating the external variable values

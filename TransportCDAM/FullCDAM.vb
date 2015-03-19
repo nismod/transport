@@ -194,8 +194,11 @@
 
         'get strategy variables for this year from the database
         If g_modelRunYear = 2010 Then
+            Call DBaseInterface.ReadData("SubStrategy", "", stratarrayOLD, 2010, g_modelRunID)
             Call DBaseInterface.ReadData("SubStrategy", "", stratarray, 2011, g_modelRunID)
+
         Else
+            Call DBaseInterface.ReadData("SubStrategy", "", stratarrayOLD, g_modelRunYear - 1, g_modelRunID)
             Call DBaseInterface.ReadData("SubStrategy", "", stratarray, g_modelRunYear, g_modelRunID)
         End If
 

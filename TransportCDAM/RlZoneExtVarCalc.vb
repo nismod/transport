@@ -128,8 +128,13 @@
         End If
 
         'v1.4 set fuel efficiency old to 1
-        FuelEffOld(0) = 1
-        FuelEffOld(1) = 1
+        If g_modelRunYear = g_initialYear Then
+            FuelEffOld(0) = 1
+            FuelEffOld(1) = 1
+        Else
+            FuelEffOld(0) = stratarrayOLD(1, 68)
+            FuelEffOld(1) = stratarrayOLD(1, 69)
+        End If
         'v1.4 fuel efficiency change calculation corrected
         'read line from strategy array
         FuelEff(0) = stratarray(1, 68) / FuelEffOld(0)

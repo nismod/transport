@@ -283,7 +283,7 @@
                 'if it is not the initial year, read from previous data
                 'v1.4 change
                 For f = 0 To 34
-                    FuelEffOld(InputCount, f) = stratarray(1 - 1, f + 31)
+                    FuelEffOld(InputCount, f) = stratarrayOLD(1, f + 33)
                 Next
                 ZoneID(InputCount, 0) = RZEv_InArray(InputCount, 2)
                 'get previous pop and gva value
@@ -385,7 +385,7 @@
                 HydRat = HydNew / HydOld(InputCount, 0)
                 'v1.4 change corrected fuel efficiency change calculation  - was previously just multiplying by figure straight from strategy array (which meant that fuel costs quickly declined to zero)
                 For f = 0 To 34
-                    FuelEffNew(f) = stratarray(1, f + 33)
+                    FuelEffNew(f) = stratarray(2, f + 33)
                     FuelEffChange(f) = FuelEffNew(f) / FuelEffOld(InputCount, f)
                 Next
                 'calculate cost for each vehicle type - 0 is car, 1 is LGV, 2 is small HGV, 3 is large HGV, 4 is PSV
@@ -537,7 +537,7 @@
             'build the fuel string from the strategy file row
             stratcount = 1
             Do While stratcount < 33
-                RdZ_OutArray(InputCount, 12 + stratcount) = stratarray(1, stratcount)
+                RdZ_OutArray(InputCount, 12 + stratcount) = stratarray(1, stratcount + 2)
                 stratcount += 1
             Loop
             RdZ_OutArray(InputCount, 43) = CostNew(1)

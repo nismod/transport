@@ -405,7 +405,7 @@
 
                 '030114 change
                 For f = 0 To 34
-                    FuelEffOld(InputCount, f) = stratarray(1, f + 33)
+                    FuelEffOld(InputCount, f) = stratarrayOLD(1, f + 33)
                 Next
 
                 'read all fuel cost for all speed categories

@@ -86,6 +86,8 @@ Module AirModel
     Dim AirFlowID(223, 0) As Integer
     Dim NodePreExtVar(28, 14) As String
     Dim FlowPreExtVar(223, 8) As String
+    Dim yearIs2010 As Boolean = False
+
 
 
 
@@ -96,7 +98,6 @@ Module AirModel
         MaxAirFlow = 223
 
         'for year 2010
-        Dim yearIs2010 As Boolean = False
         If g_modelRunYear = 2010 Then
             'create data for year 2010
             g_modelRunYear += 1
@@ -1191,19 +1192,19 @@ Module AirModel
             FlowTempArray(flownum, 1) = g_modelRunYear
             FlowTempArray(flownum, 2) = AirFlowID(flownum, 0)
             FlowTempArray(flownum, 3) = AirFlowBaseData(flownum, 3)
-            FlowTempArray(flownum, 4) = AirFlowBaseData(flownum, 9)
-            FlowTempArray(flownum, 5) = AirfTripsLatent(flownum)
+            FlowTempArray(flownum, 7) = AirFlowBaseData(flownum, 9)
+            FlowTempArray(flownum, 4) = AirfTripsLatent(flownum)
 
             'set all the capacity constraint checks for the flow 
             If AirfCapConst(flownum, 0) = False Then
-                FlowTempArray(flownum, 6) = 0
+                FlowTempArray(flownum, 5) = 0
             ElseIf AirfCapConst(flownum, 0) = True Then
-                FlowTempArray(flownum, 6) = 1
+                FlowTempArray(flownum, 5) = 1
             End If
             If AirfCapConst(flownum, 1) = False Then
-                FlowTempArray(flownum, 7) = 0
+                FlowTempArray(flownum, 6) = 0
             ElseIf AirfCapConst(flownum, 1) = True Then
-                FlowTempArray(flownum, 7) = 1
+                FlowTempArray(flownum, 6) = 1
             End If
             flownum += 1
         Loop

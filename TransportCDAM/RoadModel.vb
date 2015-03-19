@@ -108,12 +108,13 @@
     Dim TempHArray(7007, 87) As String
     Dim NewCapArray(291, 3) As String
     Dim NewCapNum As Integer
+    Dim yearIs2010 As Boolean = False
+
 
 
     Public Sub RoadLinkMain()
 
         'for year 2010
-        Dim yearIs2010 As Boolean = False
         If g_modelRunYear = 2010 Then
             'create data for year 2010
             g_modelRunYear += 1
@@ -201,6 +202,7 @@
         If BuildInfra = True Then
             Call WriteData("RoadLink", "NewCap_Added", NewCapArray, , False)
         End If
+
         Erase TempAnArray
         Erase TempHArray
 

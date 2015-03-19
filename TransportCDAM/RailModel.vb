@@ -185,8 +185,8 @@ Module RailModel
 
         'get fuel efficiency data from strategy file
         'also get trip rate info
-        RlFuelEff(0) = stratarray(1, 67)
-        RlFuelEff(1) = stratarray(1, 66)
+        RlFuelEff(0) = stratarray(1, 69)
+        RlFuelEff(1) = stratarray(1, 68)
         RlTripRates = stratarray(1, 93)
 
     End Sub
@@ -587,7 +587,7 @@ Module RailModel
 
     Sub Year2010()
         Call ReadData("RailLink", "Input", InputArray, g_modelRunYear + 1)
-        Call ReadData("RailLink", "ExtVar", RlLinkExtVars, (g_modelRunYear + 1))
+        'Call ReadData("RailLink", "ExtVar", RlLinkExtVars, (g_modelRunYear + 1))
 
         InputCount = 1
 
@@ -607,9 +607,11 @@ Module RailModel
                 ModelPeakHeadway(InputCount, 0) = RlPeakHeadway
             End If
             If RailCUPeriod = "busy" Then
-                OutputArray(InputCount, 5) = ((RlLinkExtVars(InputCount, 14) * 0.08) / RlLinkExtVars(InputCount, 4)) / (60 / ModelPeakHeadway(InputCount, 0))
+                'OutputArray(InputCount, 5) = ((RlLinkExtVars(InputCount, 14) * 0.08) / RlLinkExtVars(InputCount, 4)) / (60 / ModelPeakHeadway(InputCount, 0))
+                OutputArray(InputCount, 5) = 1
             Else
-                OutputArray(InputCount, 5) = (RlLinkExtVars(InputCount, 14) / RlLinkExtVars(InputCount, 4)) / RlLinkExtVars(InputCount, 11)
+                'OutputArray(InputCount, 5) = (RlLinkExtVars(InputCount, 14) / RlLinkExtVars(InputCount, 4)) / RlLinkExtVars(InputCount, 11)
+                OutputArray(InputCount, 5) = 1
             End If
 
             InputCount += 1

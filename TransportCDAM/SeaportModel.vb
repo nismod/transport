@@ -39,12 +39,13 @@
     Dim TempArray(48, 12) As String
     Dim NewCapNum As Integer
     Dim CostBase As Double
+    Dim yearIs2010 As Boolean = False
+
 
 
     Public Sub SeaMain()
 
         'for year 2010
-        Dim yearIs2010 As Boolean = False
         If g_modelRunYear = 2010 Then
             'create data for year 2010
             g_modelRunYear += 1
@@ -64,6 +65,8 @@
             Call ReadData("Seaport", "ExtVar", PortExtVar, g_modelRunYear)
 
         End If
+
+        Call ReadData("Seaport", "Input", InputArray, g_modelRunYear)
 
         InputCount = 1
 
