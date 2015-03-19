@@ -89,7 +89,9 @@ Module RailModel
         Call ReadData("RailLink", "ExtVar", RlLinkExtVars, g_modelRunYear)
 
         'get external variables from previous year as base data
-        Call ReadData("RailLink", "ExtVar", RlLinkPreExtVars, g_modelRunYear - 1)
+        If g_modelRunYear <> g_initialYear Then
+            Call ReadData("RailLink", "ExtVar", RlLinkPreExtVars, g_modelRunYear - 1)
+        End If
 
         'read from initial file if year 1, otherwise update from temp table
         Call ReadData("RailLink", "Input", InputArray, g_modelRunYear)

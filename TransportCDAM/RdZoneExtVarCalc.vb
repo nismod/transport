@@ -291,12 +291,12 @@
                 GVAOld(InputCount, 0) = get_gva_data_by_zoneID(g_modelRunYear - 1, ZoneID(InputCount, 0), "Zone", "'road'")
 
                 'get previous year's energy data
-                PetOld(InputCount, 0) = enearray(g_modelRunYear - 2010, 1)
-                DieOld(InputCount, 0) = enearray(g_modelRunYear - 2010, 2)
-                EleOld(InputCount, 0) = enearray(g_modelRunYear - 2010, 3)
-                LPGOld(InputCount, 0) = enearray(g_modelRunYear - 2010, 4)
-                CNGOld(InputCount, 0) = enearray(g_modelRunYear - 2010, 5)
-                HydOld(InputCount, 0) = enearray(g_modelRunYear - 2010, 6)
+                PetOld(InputCount, 0) = enearray(1, 1)
+                DieOld(InputCount, 0) = enearray(1, 2)
+                EleOld(InputCount, 0) = enearray(1, 3)
+                LPGOld(InputCount, 0) = enearray(1, 4)
+                CNGOld(InputCount, 0) = enearray(1, 5)
+                HydOld(InputCount, 0) = enearray(1, 6)
 
                 'get previous year's category cost data
                 CostOld(InputCount, 0) = RZEv_InArray(InputCount, 6)
@@ -370,12 +370,12 @@
             'now amended to include different costs for different fuel types
             If RdZEneSource = "Database" Then
 
-                PetNew = enearray(g_modelRunYear - 2010 + 1, 1)
-                DieNew = enearray(g_modelRunYear - 2010 + 1, 2)
-                EleNew = enearray(g_modelRunYear - 2010 + 1, 3)
-                LPGNew = enearray(g_modelRunYear - 2010 + 1, 4)
-                CNGNew = enearray(g_modelRunYear - 2010 + 1, 5)
-                HydNew = enearray(g_modelRunYear - 2010 + 1, 6)
+                PetNew = enearray(2, 1)
+                DieNew = enearray(2, 2)
+                EleNew = enearray(2, 3)
+                LPGNew = enearray(2, 4)
+                CNGNew = enearray(2, 5)
+                HydNew = enearray(2, 6)
                 'calculate ratio for each fuel
                 PetRat = PetNew / PetOld(InputCount, 0)
                 DieRat = DieNew / DieOld(InputCount, 0)
@@ -618,7 +618,7 @@
         'TODO - I am not sure how this is meant to work as this array does not have any capacity numbers????
         newcapnum = 1
         'read first line
-        capnum = caparray(newcapnum, 9) 'TODO - what should this be??
+        capnum = caparray(newcapnum, 9) 'TODO - what should this be?? -DONE cap chhange order
         zonecapcount = 0
         'transfer values to intermediate array
         Do Until capnum > RoadCapNum

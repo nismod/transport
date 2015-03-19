@@ -89,9 +89,9 @@
         'v1.3 altered so that scenario file is read directly as an input file
         If AirEneSource = "Database" Then
             'read data to energy array from the file
-            y = g_modelRunYear - g_initialYear + 1 'TODO - this needs fixing once we go to database for energy 
-            FuelCost(0) = enearray(y, 2) 'last year
-            FuelCost(1) = enearray(y + 1, 2) 'this year
+            'y = g_modelRunYear - g_initialYear + 1 'TODO - this needs fixing once we go to database for energy 
+            FuelCost(0) = enearray(1, 2) 'last year
+            FuelCost(1) = enearray(2, 2) 'this year
         End If
 
         'if including capacity changes then read first line of the capacity file and break it down into relevant sections
@@ -174,9 +174,9 @@
             Do While NodeCount < 29
                 NodeOldData(NodeCount, 0) = NodeInputArray(NodeCount, 1)
                 'pop
-                NodeOldData(NodeCount, 1) = get_population_data_by_airportID(g_modelRunYear, NodeOldData(NodeCount, 0))
+                NodeOldData(NodeCount, 1) = get_population_data_by_airportID(g_modelRunYear - 1, NodeOldData(NodeCount, 0))
                 'gva
-                NodeOldData(NodeCount, 2) = get_gva_data_by_airportID(g_modelRunYear, NodeOldData(NodeCount, 0))
+                NodeOldData(NodeCount, 2) = get_gva_data_by_airportID(g_modelRunYear - 1, NodeOldData(NodeCount, 0))
                 'cost
                 NodeOldData(NodeCount, 3) = NodeInputArray(NodeCount, 7) * 0.29
                 airnodefixedcost(NodeCount) = NodeInputArray(NodeCount, 7) * 0.71
@@ -243,7 +243,7 @@
             'get airflow data from previous year
             FlowCount = 1
             Do While FlowCount < 224
-                FlowOldData(FlowCount, 0) = FlowInputArray(FlowCount, 1)
+                FlowOldData(FlowCount, 0) = FlowInputArray(FlowCount, 3)
                 OZone(FlowCount) = FlowInputArray(FlowCount, 7)
                 DZone(FlowCount) = FlowInputArray(FlowCount, 8)
                 FlowOldData(FlowCount, 1) = get_population_data_by_zoneID(g_modelRunYear - 1, OZone(FlowCount), "OZ", "'air'")

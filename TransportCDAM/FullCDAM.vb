@@ -203,15 +203,15 @@
         End If
 
         'Get energy data
-        Call DBaseInterface.ReadData("Energy", "", enearray)
+        'Call DBaseInterface.ReadData("Energy", "", enearray)
+        'read fuel price for previous year (1,x) and current year (2,x)
+        Call get_fuelprice_by_modelrun_id(g_modelRunID, g_modelRunYear, 0)
         If RlZEneSource = "Database" Then
-            If g_modelRunYear = 2010 Then y = 1 Else y = g_modelRunYear - g_initialYear + 1 'TODO - this needs fixing once we go to database for energy 
-            InDieselOldAll = enearray(y, 2)
-            InElectricOldAll = enearray(y, 3)
-            InDieselNewAll = enearray(y + 1, 2)
-            InElectricNewAll = enearray(y + 1, 3)
-            InDieselOldAll = enearray(y, 2)
-            InElectricOldAll = enearray(y, 3)
+            'If g_modelRunYear = 2010 Then y = 1 Else y = g_modelRunYear - g_initialYear + 1 'TODO - this needs fixing once we go to database for energy 
+            InDieselOldAll = enearray(1, 2)
+            InElectricOldAll = enearray(1, 3)
+            InDieselNewAll = enearray(2, 2)
+            InElectricNewAll = enearray(2, 3)
         End If
 
         'check if creating external variable files
@@ -235,7 +235,7 @@
 
         'if RoadLink model is selected then run that model
         If RunRoadLink = True Then
-            Call RoadLinkMain()
+            'Call RoadLinkMain()
             logarray(logNum, 0) = "Road link model run completed"
             logNum += 1
         End If

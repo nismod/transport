@@ -108,7 +108,7 @@
 
         If g_modelRunYear <> g_initialYear Then
             'read previous year's data
-            Call ReadData("RailZone", "ExtVar", RlZEVRlZ_InArray, g_modelRunYear)
+            Call ReadData("RailZone", "ExtVar", RlZEVRlZ_InArray, (g_modelRunYear - 1))
         End If
 
         'if capacity is changing then get capacity change file

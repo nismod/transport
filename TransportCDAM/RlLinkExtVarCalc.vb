@@ -102,7 +102,7 @@
         Call ReadData("RailLink", "Input", RlL_InArray, 2011)
         If g_modelRunYear <> g_initialYear Then
             'read from previous year
-            Call ReadData("RailLink", "ExtVar", RlLEV_InArray, g_modelRunYear)
+            Call ReadData("RailLink", "ExtVar", RlLEV_InArray, (g_modelRunYear - 1))
         End If
 
 
@@ -280,12 +280,12 @@
                 OCountry(InputCount, 0) = RlL_InArray(InputCount, 13)
                 DCountry(InputCount, 0) = RlL_InArray(InputCount, 14)
 
-                DieselOld(InputCount, 0) = DieselNew = RlLEV_InArray(InputCount, 15)
-                ElectricOld(InputCount, 0) = ElectricNew = RlLEV_InArray(InputCount, 16)
+                DieselOld(InputCount, 0) = RlLEV_InArray(InputCount, 15)
+                ElectricOld(InputCount, 0) = RlLEV_InArray(InputCount, 16)
 
                 If RlLEneSource = "Database" Then
-                    InDieselOld(InputCount, 0) = InDieselNew = RlLEV_InArray(InputCount, 17)
-                    InElectricOld(InputCount, 0) = InElectricNew = RlLEV_InArray(InputCount, 18)
+                    InDieselOld(InputCount, 0) = RlLEV_InArray(InputCount, 17)
+                    InElectricOld(InputCount, 0) = RlLEV_InArray(InputCount, 18)
 
                     DMaintOld(InputCount, 0) = 37.282
                     EMaintOld(InputCount, 0) = 24.855
@@ -522,29 +522,23 @@ NextYear:
 
         If CapArray Is Nothing Then Exit Sub
 
-        If AddingCap = True Then
-            For i = 0 To UBound(CapArray, 2)
-                CapArray(CapNum, i + 1) = NewCapArray(CapNum, i)
-            Next
-        End If
-
         If CapArray(CapNum, 1) Is Nothing Then
         Else
-            CapID = CapArray(CapNum, 1)
-            If CapArray(CapNum, 2) = "-1" Then
+            CapID = CapArray(CapNum, 2)
+            If CapArray(CapNum, 3) = "-1" Then
                 CapYear = -1
             Else
                 If AddingCap = False Then
-                    CapYear = CapArray(CapNum, 2)
+                    CapYear = CapArray(CapNum, 3)
                 Else
-                    CapYear = CapArray(CapNum, 2)
+                    CapYear = CapArray(CapNum, 3)
                 End If
             End If
-            TrackChange = CapArray(CapNum, 3)
-            MaxTDChange = CapArray(CapNum, 4)
-            TrainChange = CapArray(CapNum, 5)
+            TrackChange = CapArray(CapNum, 4)
+            MaxTDChange = CapArray(CapNum, 5)
+            TrainChange = CapArray(CapNum, 6)
             If AddingCap = False Then
-                CapType = CapArray(CapNum, 6)
+                CapType = CapArray(CapNum, 7)
             End If
             CapNum += 1
         End If
@@ -823,7 +817,29 @@ NextYear:
         AddingCap = False
         TracksToBuild = 0
         Do Until CapArray(CapNum, 1) Is Nothing
-            Call GetCapData()
+
+            If CapArray(CapNum, 1) Is Nothing Then
+            Else
+                CapID = CapArray(CapNum, 1)
+                If CapArray(CapNum, 2) = "-1" Then
+                    CapYear = -1
+                Else
+                    If AddingCap = False Then
+                        CapYear = CapArray(CapNum, 2)
+                    Else
+                        CapYear = CapArray(CapNum, 2)
+                    End If
+                End If
+                TrackChange = CapArray(CapNum, 3)
+                MaxTDChange = CapArray(CapNum, 4)
+                TrainChange = CapArray(CapNum, 5)
+                If AddingCap = False Then
+                    CapType = CapArray(CapNum, 6)
+                End If
+                CapNum += 1
+            End If
+
+
             Select Case CapType
                 Case "C"
                     NewCapDetails(CapCount, 0) = CapID

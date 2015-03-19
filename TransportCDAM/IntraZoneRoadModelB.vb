@@ -99,7 +99,9 @@
         End If
 
         'get external variable values from previous year as base values
-        Call ReadData("RoadZone", "ExtVar", ZonePreExtVar, g_modelRunYear)
+        If g_modelRunYear <> g_initialYear Then
+            Call ReadData("RoadZone", "ExtVar", ZonePreExtVar, g_modelRunYear - 1)
+        End If
 
         'read input data
         Call ReadData("RoadZone", "Input", IZRd_InputArray, g_modelRunYear)
@@ -169,7 +171,7 @@
         '130514 note that at the moment this just reads a blank file - need to remove "fileprefix" from string, and then need to modify form1 and build procedure so that it picks up on additional capacity built (ie those tagged '-1' for year)
         Call ReadData("RoadZone", "CapChange", RoadCapArray, g_modelRunYear)
         CapNum = 1
-        If RoadCapArray(CapNum, 0) Is Nothing Then
+        If RoadCapArray(CapNum, 1) Is Nothing Then
             '130514 addition of line
             RoadCapArray(CapNum, 2) = 0
             RoadCapArray(CapNum, 3) = -1
@@ -407,12 +409,12 @@
 
         'v1.4 mod - check if there is any change in road capacity in this zone and year
         '130514 modified to take in both prespecified capacity and capacity built as part of TR1
-        If RoadCapArray(CapNum, 2) = ZoneID Then
+        If RoadCapArray(CapNum, 1) = ZoneID Then
             If RoadCapArray(CapNum, 3) = g_modelRunYear Then
-                AddedLaneKm(ZoneID, 1) += RoadCapArray(CapNum, 4)
-                AddedLaneKm(ZoneID, 2) += CDbl(RoadCapArray(CapNum, 5)) + RoadCapArray(CapNum, 6)
-                AddedLaneKm(ZoneID, 3) += RoadCapArray(CapNum, 7)
-                AddedLaneKm(ZoneID, 4) += CDbl(RoadCapArray(CapNum, 8)) + RoadCapArray(CapNum, 9)
+                AddedLaneKm(ZoneID, 1) += RoadCapArray(CapNum, 3)
+                AddedLaneKm(ZoneID, 2) += CDbl(RoadCapArray(CapNum, 4)) + RoadCapArray(CapNum, 5)
+                AddedLaneKm(ZoneID, 3) += RoadCapArray(CapNum, 6)
+                AddedLaneKm(ZoneID, 4) += CDbl(RoadCapArray(CapNum, 7)) + RoadCapArray(CapNum, 8)
                 CapNum += 1
             End If
         End If

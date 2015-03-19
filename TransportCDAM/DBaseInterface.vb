@@ -87,7 +87,7 @@ Module DBaseInterface
     Public theYear As Integer
     Public stratarray(,) As String
     Public stratarrayOLD(,) As String
-    Public enearray(,) As String
+    Public enearray(2, 6) As String
     Public InDieselOldAll, InElectricOldAll, InDieselNewAll, InElectricNewAll
     Public InDieselOld(238, 0), InElectricOld(238, 0), InDieselNew, InElectricNew As Double
 
@@ -1271,6 +1271,38 @@ Module DBaseInterface
 
     End Sub
 
+    Sub get_fuelprice_by_modelrun_id(ByVal modelrun_id As Integer, ByVal year As Integer, Optional ByVal fueltype As Integer = 0)
+        Dim theSQL As String = ""
+        Dim Energy(,) As String = Nothing
+
+        'get fuel price by modelrunID and year
+        theSQL = "SELECT year, wholesale_fuel_id, value FROM cdam_get_wholesale_fuel_price_by_model_run_id(" & g_modelRunID & "," & year - 1 & "," & 0 & ") "
+
+        If LoadSQLDataToArray(Energy, theSQL) = True Then
+            enearray(1, 1) = Energy(5, 2) 'petrol
+            enearray(1, 2) = Energy(6, 2) 'diesel
+            enearray(1, 3) = Energy(1, 2) 'electricity
+            enearray(1, 4) = Energy(9, 2) 'LPG
+            enearray(1, 5) = Energy(2, 2) 'CNG
+            enearray(1, 6) = 1 'hydrogen
+        End If
+
+        'get fuel price by modelrunID and year
+        theSQL = "SELECT year, wholesale_fuel_id, value FROM cdam_get_wholesale_fuel_price_by_model_run_id(" & g_modelRunID & "," & year & "," & 0 & ") "
+
+        If LoadSQLDataToArray(Energy, theSQL) = True Then
+            enearray(2, 1) = Energy(5, 2) 'petrol
+            enearray(2, 2) = Energy(6, 2) 'diesel
+            enearray(2, 3) = Energy(1, 2) 'electricity
+            enearray(2, 4) = Energy(9, 2) 'LPG
+            enearray(2, 5) = Energy(2, 2) 'CNG
+            enearray(2, 6) = 1 'hydrogen
+        End If
+
+
+    End Sub
+
+
 
 
 
@@ -1835,7 +1867,7 @@ Module DBaseInterface
                     Case "NewCap"
                         TableName = "TR_IO_RoadLinkNewCapacity"
                         OutFileName = EVFilePrefix & "RoadLinkNewCap.csv"
-                        header = "modelrun_id, changeyear, flow_id, mlane_change, dlane_change, slane_change, changetype"
+                        header = "modelrun_id, changeyear, flow_id, mlane_change, dlane_change, slane_change"
                     Case "NewCap_Added"
                         TableName = "TR_O_RoadLinkNewCapacity_Added"
                         OutFileName = FilePrefix & "RoadLinkNewCap.csv"
@@ -1900,7 +1932,7 @@ Module DBaseInterface
 
                         TableName = "TR_IO_RoadZoneNewCapacity"
                         OutFileName = FilePrefix & "RoadZoneNewCap.csv"
-                        header = "modelrun_id, zone_id,changeyear,mway_cap,rur_a_cap,rur_m_cap,urb_cap"
+                        header = "modelrun_id, zone_id, changeyear, mway_lane_kmch, rur_ad_lane_kmch, rur_as_lane_kmch, rur_m_lane_kmch, urb_d_lane_kmch, urb_s_lane_kmch"
                     Case "NewCap_Added"
 
                         TableName = "TR_O_RoadZoneNewCapacity_Added"
@@ -1920,7 +1952,7 @@ Module DBaseInterface
 
                         TableName = "TR_IO_RoadZone"
                         OutFileName = FilePrefix & "RoadZoneTemp.csv"
-                        header = "modelrun_id, year, zone_id, speed, vkm, vkm_mway, rv_cat_traf_1_1, rv_cat_traf_1_2, rv_cat_traf_1_3, rv_cat_traf_1_4,  rv_cat_traf_1_5, vkm_rur_a, rv_cat_traf_2_1, rv_cat_traf_2_2, rv_cat_traf_2_3, rv_cat_traf_2_4,  rv_cat_traf_2_5, vkm_rur_m, rv_cat_traf_3_1, rv_cat_traf_3_2, rv_cat_traf_3_3, rv_cat_traf_3_4,  rv_cat_traf_3_5, vkm_urb, rv_cat_traf_4_1, rv_cat_traf_4_2, rv_cat_traf_4_3, rv_cat_traf_4_4,  rv_cat_traf_4_5, supresd_traffic_1_1, supresd_traffic_1_2, supresd_traffic_1_3, supresd_traffic_1_4,  supresd_traffic_2_1, supresd_traffic_2_2, supresd_traffic_2_3, supresd_traffic_2_4, supresd_traffic_3_1, supresd_traffic_3_2, supresd_traffic_3_3, supresd_traffic_3_4,  supresd_traffic_4_1, supresd_traffic_4_2, supresd_traffic_4_3, supresd_traffic_4_4, spd_mway,  spd_rur_a, spd_rur_m, spd_urb" 'LatentVkm1, LatentVkm2, LatentVkm3, LatentVkm4, AddedLaneKm1, AddedLaneKm2, AddedLaneKm3, AddedLaneKm4, BuiltLaneKm1, BuiltLaneKm2, BuiltLaneKm3, BuiltLaneKm4"
+                        header = "modelrun_id, year, zone_id, speed, vkm, vkm_mway, rv_cat_traf_1_1, rv_cat_traf_1_2, rv_cat_traf_1_3, rv_cat_traf_1_4,  rv_cat_traf_1_5, vkm_rur_a, rv_cat_traf_2_1, rv_cat_traf_2_2, rv_cat_traf_2_3, rv_cat_traf_2_4,  rv_cat_traf_2_5, vkm_rur_m, rv_cat_traf_3_1, rv_cat_traf_3_2, rv_cat_traf_3_3, rv_cat_traf_3_4,  rv_cat_traf_3_5, vkm_urb, rv_cat_traf_4_1, rv_cat_traf_4_2, rv_cat_traf_4_3, rv_cat_traf_4_4,  rv_cat_traf_4_5, supresd_traffic_1_1, supresd_traffic_1_2, supresd_traffic_1_3, supresd_traffic_1_4,  supresd_traffic_2_1, supresd_traffic_2_2, supresd_traffic_2_3, supresd_traffic_2_4, supresd_traffic_3_1, supresd_traffic_3_2, supresd_traffic_3_3, supresd_traffic_3_4,  supresd_traffic_4_1, supresd_traffic_4_2, supresd_traffic_4_3, supresd_traffic_4_4, spd_mway,  spd_rur_a, spd_rur_m, spd_urb, latentvkm1, latentvkm2, latentvkm3, latentvkm4, addedlanekm1, addedlanekm2, addedlanekm3, addedlanekm4, builtlanekm1, builtlanekm2, builtlanekm3, builtlanekm4"
                     Case "ExtVar"
 
                         TableName = "TR_IO_RoadZoneExternalVariables"
@@ -1935,7 +1967,7 @@ Module DBaseInterface
 
                         TableName = "TR_IO_SeaFreightNewCapacity"
                         OutFileName = EVFilePrefix & "SeaFreightNewCap.csv"
-                        header = "modelrun_id, port_id, changeyear, new_lb_cap, new_db_cap, new_gc_cap, new_ll_cap, new_rr_cap, captype"
+                        header = "modelrun_id, port_id, changeyear, new_lb_cap, new_db_cap, new_gc_cap, new_ll_cap, new_rr_cap"
                     Case "NewCap_Added"
                         TableName = "TR_O_SeaFreightNewCapacity_Added"
                         OutFileName = FilePrefix & "SeaNewCap.csv"

@@ -126,9 +126,9 @@
 
         'read energy file
         If SeaEneSource = "Database" Then
-            y = g_modelRunYear - g_initialYear + 1 'TODO - this needs fixing once we go to database for energy 
-            DieselOld = enearray(y, 2) 'last year
-            DieselNew = enearray(y + 1, 2) 'this year
+            'y = g_modelRunYear - g_initialYear + 1 'TODO - this needs fixing once we go to database for energy 
+            DieselOld = enearray(1, 2) 'last year
+            DieselNew = enearray(2, 2) 'this year
         End If
 
         'calculate new values where needed
@@ -446,7 +446,7 @@
                 For i = 0 To 6
                     CapArray(v, i + 1) = NewCapDetails(arraynum, i)
                 Next
-                CapArray(v, 8) = CapType
+                'CapArray(v, 8) = CapType
             Next
         End If
 

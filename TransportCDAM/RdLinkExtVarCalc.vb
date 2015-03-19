@@ -392,12 +392,12 @@
                 GVA1Old(InputCount, 1) = get_gva_data_by_zoneID(g_modelRunYear - 1, OZone(InputCount, 1), "OZ", "'road'")
                 GVA2Old(InputCount, 1) = get_gva_data_by_zoneID(g_modelRunYear - 1, DZone(InputCount, 1), "DZ", "'road'")
 
-                PetOldArr(InputCount, 1) = enearray(g_modelRunYear - 2010, 1)
-                DieOldArr(InputCount, 1) = enearray(g_modelRunYear - 2010, 2)
-                EleOldArr(InputCount, 1) = enearray(g_modelRunYear - 2010, 3)
-                LPGOldArr(InputCount, 1) = enearray(g_modelRunYear - 2010, 4)
-                CNGOldArr(InputCount, 1) = enearray(g_modelRunYear - 2010, 5)
-                HydOldArr(InputCount, 1) = enearray(g_modelRunYear - 2010, 6)
+                PetOldArr(InputCount, 1) = enearray(1, 1)
+                DieOldArr(InputCount, 1) = enearray(1, 2)
+                EleOldArr(InputCount, 1) = enearray(1, 3)
+                LPGOldArr(InputCount, 1) = enearray(1, 4)
+                CNGOldArr(InputCount, 1) = enearray(1, 5)
+                HydOldArr(InputCount, 1) = enearray(1, 6)
 
                 For x = 0 To 19
                     CostsOld(InputCount, x) = RdLEV_InArray(InputCount, x + 14)
@@ -554,12 +554,12 @@
             ElseIf RdLEneSource = "File" Then
                 'not set up for scaling files
             ElseIf RdLEneSource = "Database" Then
-                PetNew = enearray(g_modelRunYear - 2010 + 1, 1)
-                DieNew = enearray(g_modelRunYear - 2010 + 1, 2)
-                EleNew = enearray(g_modelRunYear - 2010 + 1, 3)
-                LPGNew = enearray(g_modelRunYear - 2010 + 1, 4)
-                CNGNew = enearray(g_modelRunYear - 2010 + 1, 5)
-                HydNew = enearray(g_modelRunYear - 2010 + 1, 6)
+                PetNew = enearray(2, 1)
+                DieNew = enearray(2, 2)
+                EleNew = enearray(2, 3)
+                LPGNew = enearray(2, 4)
+                CNGNew = enearray(2, 5)
+                HydNew = enearray(2, 6)
                 'calculate ratio for each fuel
                 PetRat = PetNew / PetOldArr(InputCount, 1)
                 DieRat = DieNew / DieOldArr(InputCount, 1)
@@ -1148,7 +1148,7 @@
             NewCapArray(v + 1, 4) = NewCapDetails(arraynum, 3)
             NewCapArray(v + 1, 5) = NewCapDetails(arraynum, 4)
             RLCapYear(v) = NewCapDetails(arraynum, 1)
-            NewCapArray(v + 1, 6) = CapType
+            'NewCapArray(v + 1, 6) = CapType
         Next
 
     End Sub
