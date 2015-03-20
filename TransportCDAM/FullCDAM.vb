@@ -244,9 +244,9 @@
         If RunRoadZone = True Then
             'modification to allow use of old or new speed calculations
             If RdZSpdSource = "Elasticity" Then
-                Call RoadZoneMain()
+                'Call RoadZoneMain()
             Else
-                Call RoadZoneMainNew()
+                'Call RoadZoneMainNew()
             End If
             logarray(logNum, 0) = "Road zone model run completed"
             logNum += 1

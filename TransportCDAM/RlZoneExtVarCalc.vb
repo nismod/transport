@@ -243,7 +243,7 @@
                 CostOld(InputCount, 0) = RlZEVRlZ_InArray(InputCount, 6)
                 FuelOld(InputCount, 0) = RlZEVRlZ_InArray(InputCount, 8)
                 StationsOld(InputCount, 0) = RlZEVRlZ_InArray(InputCount, 7)
-                If RlZOthSource = "File" Then
+                If RlZOthSource = "File" Or RlZOthSource = "Database" Then
                     GJTOld(InputCount, 0) = RlZEVRlZ_InArray(InputCount, 10)
                 End If
                 Country(InputCount, 0) = RlZ_InArray(InputCount, 8)

@@ -111,8 +111,6 @@ Module AirModel
         'read all related files
         Call AirInputFiles()
 
-
-
         'Set capacity constraint checkers to false
         c = 0
         Do While c < 29

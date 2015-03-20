@@ -73,6 +73,11 @@
             yearIs2010 = False
         End If
 
+        'testmod
+        If g_modelRunYear = 2012 Then
+            g_modelRunYear = 2012
+        End If
+
         'get all related files
         Call GetFiles()
 
@@ -228,7 +233,7 @@
             'get airnode data from previous year
             NodeCount = 1
             Do While NodeCount < 29
-                NodeOldData(NodeCount, 0) = NodeInputArray(NodeCount, 1)
+                NodeOldData(NodeCount, 0) = NodeInputArray(NodeCount, 3)
                 NodeOldData(NodeCount, 1) = get_population_data_by_airportID(g_modelRunYear - 1, NodeOldData(NodeCount, 0))
                 NodeOldData(NodeCount, 2) = get_gva_data_by_airportID(g_modelRunYear - 1, NodeOldData(NodeCount, 0))
                 NodeOldData(NodeCount, 3) = NodeEVInputArray(NodeCount, 15) 'TODO - this code makes no sense, there are only 13 fields in TR_IO_AirNodeExternalVariables?? -DONE extra field added

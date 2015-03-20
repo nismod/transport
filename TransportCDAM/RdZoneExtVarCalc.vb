@@ -619,6 +619,7 @@
     Sub CapChangeCalc()
 
         If caparray Is Nothing Then Exit Sub
+        If zonecaparray Is Nothing Then Exit Sub
 
         'TODO - I am not sure how this is meant to work as this array does not have any capacity numbers????
         newcapnum = 1

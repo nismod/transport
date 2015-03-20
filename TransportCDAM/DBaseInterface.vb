@@ -132,7 +132,7 @@ Module DBaseInterface
         Try
             'If there is no connection to the database then establish one
             If m_conn Is Nothing Then
-                m_sConnString = "Driver={PostgreSQL ODBC Driver(ANSI)};DSN=PostgreSQL30;Server=localhost;Port=5432;Database=itrc_sos;UId=postgres;Password=P0stgr3s;" 'g_dbase 
+                m_sConnString = g_dbase '"Driver={PostgreSQL ODBC Driver(ANSI)};DSN=PostgreSQL30;Server=localhost;Port=5432;Database=itrc_sos;UId=postgres;Password=P0stgr3s;" 'g_dbase 
                 m_conn = New Odbc.OdbcConnection(m_sConnString)
                 m_conn.ConnectionTimeout = 60
                 m_conn.Open()
@@ -1035,7 +1035,7 @@ Module DBaseInterface
         theSQL &= Chr(34) & "AirportName" & Chr(34) & " varchar, port_id integer);"
 
         If LoadSQLDataToArray(airDemogArray, theSQL) = False Then
-            airDemogArray = Nothing
+            'airDemogArray = Nothing
             Return 0
         End If
         'End If
