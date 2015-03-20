@@ -475,13 +475,13 @@ NextYear:
         'read electrification array here
         If elearray Is Nothing Then 'TODO - had to add this as elearray IS NOTHING - is this wrong? 'A: it is correct
             Elect = False
-        ElseIf elearray(EleNum, 1) = "" Then
+        ElseIf elearray(EleNum, 2) = "" Then
             ElectricZone = 0
             Elect = False
         Else
-            ElectricZone = elearray(EleNum, 1)
-            ElectricYear = elearray(EleNum, 2)
-            ElectricStations = elearray(EleNum, 3)
+            ElectricZone = elearray(EleNum, 2)
+            ElectricYear = elearray(EleNum, 3)
+            ElectricStations = elearray(EleNum, 4)
             EleNum += 1
         End If
 
