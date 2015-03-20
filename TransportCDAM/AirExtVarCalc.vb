@@ -475,9 +475,9 @@
             End If
             TermCapChange = CapArray(CapNum, 4)
             ATMChange = CapArray(CapNum, 5)
-            If AddingCap = False Then
-                CapType = CapArray(CapNum, 6)
-            End If
+            'If AddingCap = False Then
+            '    CapType = CapArray(CapNum, 6)
+            'End If
             CapNum += 1
         Else
 
@@ -497,6 +497,7 @@
 
         'initialise to read and write capacity change values
         CapCount = 0
+        'addingcap is false when is reading from LU table
         AddingCap = False
         TermToBuild = 0
         RunToBuild = 0

@@ -329,6 +329,7 @@
 
         'read CapArray into the first row of NewCapDetails array
         CapCount = 0
+        'addingcap is false when is reading from LU table
         AddingCap = False
         tonnestobuild = 0
         'read from the first row

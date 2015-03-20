@@ -20,6 +20,7 @@
     Dim PopBase As Double
     Dim GVABase As Double
     Dim PortExtVar(47, 10) As String
+    Dim PortPreExtVar(47, 10) As String
     Dim LatentFreight(5) As Double 'latent freight demand in the same order
     Dim PortPopRat As Double
     Dim PortGVARat As Double
@@ -65,7 +66,7 @@
 
         Else
             Call ReadData("Seaport", "ExtVar", PortExtVar, g_modelRunYear)
-
+            If g_modelRunYear <> g_initialYear Then Call ReadData("Seaport", "ExtVar", PortPreExtVar, g_modelRunYear - 1)
         End If
 
         Call ReadData("Seaport", "Input", InputArray, g_modelRunYear)
@@ -176,8 +177,7 @@
             GVABase = get_gva_data_by_seaportID(g_modelRunYear - 1, PortID)
             'get_single_data("TR_IO_SeaFreightExternalVariables", "port_id", "year", "cost", YearNum - 1, PortID)
             'Get the cost by PortID
-            Call ReadData("Seaport", "ExtVar", PortExtVar, g_modelRunYear - 1, PortID)
-            CostBase = PortExtVar(1, 11)
+            CostBase = PortPreExtVar(InputCount, 11)
             For x = 1 To 5
                 AddedCap(x) = InputArray(InputCount, 8 + x)
             Next

@@ -1046,6 +1046,7 @@
         'start from the first row of CapArray
         CapNum = 1
         CapCount = 0
+        'addingcap is false when is reading from LU table
         AddingCap = False
         LanesToBuild = 0
 

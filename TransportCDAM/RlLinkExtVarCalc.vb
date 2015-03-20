@@ -816,6 +816,7 @@ NextYear:
         'need initial file to be sorted by scheme type then by change year then by order of priority
         'first read all compulsory enhancements to intermediate array
         CapCount = 0
+        'addingcap is false when is reading from LU table
         AddingCap = False
         TracksToBuild = 0
         Do Until CapArray(CapNum, 1) Is Nothing
