@@ -132,7 +132,7 @@ Module DBaseInterface
         Try
             'If there is no connection to the database then establish one
             If m_conn Is Nothing Then
-                m_sConnString = g_dbase '"Driver={PostgreSQL ODBC Driver(ANSI)};DSN=PostgreSQL30;Server=localhost;Port=5432;Database=itrc_sos;UId=postgres;Password=P0stgr3s;"
+                m_sConnString = "Driver={PostgreSQL ODBC Driver(ANSI)};DSN=PostgreSQL30;Server=localhost;Port=5432;Database=itrc_sos;UId=postgres;Password=P0stgr3s;" 'g_dbase 
                 m_conn = New Odbc.OdbcConnection(m_sConnString)
                 m_conn.ConnectionTimeout = 60
                 m_conn.Open()
@@ -1259,9 +1259,9 @@ Module DBaseInterface
             Case "air"
                 theSQL = "SELECT id, ozone_id, dzone_id FROM " & Chr(34) & "TR_LU_AirFlows" & Chr(34) & " WHERE id = " & FlowID
             Case "rail"
-                theSQL = "SELECT id, zone1_id, zone2_id  FROM " & Chr(34) & "TR_LU_RailLinkFlows" & Chr(34) & " WHERE id = " & FlowID
+                theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RailLinks" & Chr(34) & " WHERE id = " & FlowID
             Case "road"
-                theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RoadInputFlows" & Chr(34) & " WHERE id = " & FlowID
+                theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RoadFlows" & Chr(34) & " WHERE id = " & FlowID
         End Select
 
         If LoadSQLDataToArray(InputArray, theSQL) = True Then
