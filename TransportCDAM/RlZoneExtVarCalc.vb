@@ -407,12 +407,14 @@ NextYear:
             'if including capacity changes then check if there are any capacity changes on this flow
             If NewRlZCap = True Then
                 'if there are any capacity changes on this flow, check if there are any capacity changes in this year
-                If g_modelRunYear = CapYear Then
-                    If ZoneID(InputCount, 0) = CapID Then
-                        'if there are, then update the capacity variables, and read in the next row from the capacity file
-                        StationsNew(InputCount, 0) = StationsOld(InputCount, 0) + StationChange
-                        NewTrips = TripChange / StationChange
-                        Call GetCapData()
+                If Not CapArray Is Nothing Then
+                    If g_modelRunYear = CapYear Then
+                        If ZoneID(InputCount, 0) = CapID Then
+                            'if there are, then update the capacity variables, and read in the next row from the capacity file
+                            StationsNew(InputCount, 0) = StationsOld(InputCount, 0) + StationChange
+                            NewTrips = TripChange / StationChange
+                            Call GetCapData()
+                        End If
                     End If
                 End If
             End If

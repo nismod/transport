@@ -98,6 +98,7 @@
         'reset CapNum to read the first row
         AddingCap = True
         CapNum = 1
+        CapID = 0
         Call GetCapData()
 
         'v1.3

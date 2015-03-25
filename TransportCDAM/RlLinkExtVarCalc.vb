@@ -125,6 +125,7 @@
 
         'reset NewCapArray row to the begining
         CapNum = 1
+        CapID = 0
         'ReDim CapArray(238, 4)
         AddingCap = True
         Call GetCapData()
@@ -436,7 +437,7 @@ NextYear:
             'v1.4 if carbon charge is applied then calculate it
             If RlCaCharge = True Then
                 'check if it is a relevant year
-                If Year >= CarbChargeYear Then
+                If g_modelRunYear >= CarbChargeYear Then
                     'calculation is: (base fuel units per km * change in fuel efficiency from base year * CO2 per unit of fuel * CO2 price per kg in pence)
                     'as a base assuming that diesel trains use 1.873 litres/train km and electric trains use 12.611 kWh/train km
                     diecarch = 1.873 * FuelEff(1) * CO2Vol(1) * (CO2Price(1) / 10)
@@ -463,7 +464,7 @@ NextYear:
 
             'TODO - how does this work with the years = 200+??? -DONE no data available to years = 200+
             'if there are any capacity changes on this flow, check if there are any capacity changes in this year
-            If Year = CapYear Then
+            If g_modelRunYear = CapYear Then
                 If FlowID(InputCount, 0) = CapID Then
                     'if there are, then update the capacity variables, and read in the next row from the capacity file
                     Tracks(InputCount, 0) += TrackChange
@@ -473,7 +474,6 @@ NextYear:
                     Call GetCapData()
                 End If
             End If
-
             MaxTDNew = MaxTD
 
             If yearIs2010 = True Then g_modelRunYear -= 1

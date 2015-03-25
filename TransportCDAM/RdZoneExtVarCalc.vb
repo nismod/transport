@@ -143,6 +143,7 @@
 
         'restart new cap array lines
         zonecapnum = 1
+        CapID = 0
         Call GetCapData()
 
 
@@ -493,7 +494,6 @@
             End If
 
             'if including capacity changes, then check if there are any capacity changes for this zone
-
             If ZoneID(InputCount, 0) = CapID Then
                 'if there are any capacity changes for this zone, check if there are any capacity changes for this year
                 If g_modelRunYear = CapYear Then

@@ -127,6 +127,7 @@
         AddingCap = True
         'reset Capnum to read the first line
         CapNum = 1
+        CapID = 0
         Call GetCapData()
 
         'If NewAirCap = True Then

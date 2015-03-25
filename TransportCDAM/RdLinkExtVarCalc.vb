@@ -137,7 +137,7 @@
 
         'reset NewCapArray row to the begining
         CapNum = 1
-
+        CapID = 0
         AddingCap = True
         Call GetCapData()
 
@@ -861,7 +861,6 @@
                     Call GetCapData()
                 End If
             End If
-
             'v1.4 now updates maximum lane capacities from common variables file
             MCap(InputCount, 1) = stratarray(1, 81)
             DCap(InputCount, 1) = stratarray(1, 82)

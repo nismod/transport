@@ -1370,7 +1370,7 @@ Module DBaseInterface
                             theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RoadZone_InitialData" & Chr(34) & " ORDER BY zone_id"
                         Else
                             TheFileName = FilePrefix & "RoadZoneTemp.csv"
-                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadZone" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year - 1
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadZone" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year - 1 & " ORDER BY zone_id"
                         End If
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "RoadZoneExtVar" & EVFileSuffix & ".csv"
@@ -1392,15 +1392,15 @@ Module DBaseInterface
                     Case "Input"
                         If Year = g_initialYear Then
                             TheFileName = "RoadInputData2010.csv"
-                            theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RoadLink_InitialData" & Chr(34)
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RoadLink_InitialData" & Chr(34) & " ORDER BY flow_id"
                         Else
                             TheFileName = FilePrefix & "RoadLinkTemp.csv"
-                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RailLink" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year - 1
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RailLink" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year - 1 & " ORDER BY flow_id"
                         End If
                     Case "Temp Annual"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadLink_Annual" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year - 1
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadLink_Annual" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year - 1 & " ORDER BY flow_id"
                     Case "Temp Hourly"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadLink_Hourly" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year - 1
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadLink_Hourly" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year - 1 & " ORDER BY flow_id"
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "ExternalVariables" & EVFileSuffix & ".csv"
                         If whereID = 0 Then
@@ -1436,7 +1436,7 @@ Module DBaseInterface
                             theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RailZone_InitialData" & Chr(34) & " ORDER BY zone_id"
                         Else
                             TheFileName = FilePrefix & "RailZoneTemp.csv"
-                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RailZone" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year - 1
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RailZone" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year - 1 & " ORDER BY zone_id"
                         End If
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "RailZoneExtVar" & EVFileSuffix & ".csv"
@@ -1464,7 +1464,7 @@ Module DBaseInterface
                             theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RailLink_InitialData" & Chr(34) & " ORDER BY flow_id"
                         Else
                             TheFileName = FilePrefix & "RailLinkTemp.csv"
-                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RailLink" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year - 1
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RailLink" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year - 1 & " ORDER BY flow_id"
                         End If
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "RailLinkExtVar" & EVFileSuffix & ".csv"
@@ -1501,7 +1501,7 @@ Module DBaseInterface
                             theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_SeaFreight_InitialData" & Chr(34) & " ORDER BY port_id"
                         Else
                             TheFileName = FilePrefix & "SeaTemplate.csv"
-                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_SeaFreight" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year - 1
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_SeaFreight" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year - 1 & " ORDER BY port_id"
                         End If
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "SeaFreightExtVar" & EVFileSuffix & ".csv"
@@ -1526,7 +1526,7 @@ Module DBaseInterface
                             theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_AirNode_InitialData" & Chr(34) & " ORDER BY air_id"
                         Else
                             TheFileName = FilePrefix & "AirNodeTemp.csv"
-                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_AirNode" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year - 1
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_AirNode" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year - 1 & " ORDER BY airport_id"
                         End If
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "AirNodeExtVar" & EVFileSuffix & ".csv"
@@ -1551,7 +1551,7 @@ Module DBaseInterface
                             theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_AirFlow_InitialData" & Chr(34) & " ORDER BY flow_id"
                         Else
                             TheFileName = FilePrefix & "AirFlowTemp.csv"
-                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_AirFlow" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year - 1
+                            theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_AirFlow" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year - 1 & " ORDER BY flow_id"
                         End If
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "AirFlowExtVar.csv"
