@@ -235,7 +235,7 @@
 
         'if RoadLink model is selected then run that model
         If RunRoadLink = True Then
-            'Call RoadLinkMain()
+            Call RoadLinkMain()
             logarray(logNum, 0) = "Road link model run completed"
             logNum += 1
         End If
@@ -244,9 +244,9 @@
         If RunRoadZone = True Then
             'modification to allow use of old or new speed calculations
             If RdZSpdSource = "Elasticity" Then
-                'Call RoadZoneMain()
+                Call RoadZoneMain()
             Else
-                'Call RoadZoneMainNew()
+                Call RoadZoneMainNew()
             End If
             logarray(logNum, 0) = "Road zone model run completed"
             logNum += 1
