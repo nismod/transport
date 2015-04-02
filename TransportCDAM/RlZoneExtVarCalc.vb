@@ -126,7 +126,7 @@
         EleNum = 1
 
         'read file according to the setting
-        If RlZOthSource = "File" Then
+        If RlZOthSource = "Database" Then
             Call ReadData("RailZone", "EVScale", ScalingData, g_modelRunYear)
         End If
 
@@ -180,10 +180,6 @@
         Dim ElStat(238, 0) As Long
         Dim InputCount As Long
 
-
-        'initialize values
-        If RlZOthSource = "File" Then 'TODO - what is here?
-        End If
 
 
         InputCount = 1
@@ -257,8 +253,9 @@
                 End If
                 ElStat(InputCount, 0) = RlZEVRlZ_InArray(InputCount, 16)
 
+                'initialise new trips and new stations
                 NewTrips = 0
-
+                StationsNew(InputCount, 0) = StationsOld(InputCount, 0)
                 'also need to set a base value for the maintenance and lease costs for this zone
                 If RlZEneSource = "File" Then
                     'can assume that 26.62% of total costs (which in all cases are set to 1) are made up of maintenance and leasing, and that electric trains cost 75.8% of diesel trains
@@ -276,7 +273,7 @@
             End If
 
             'if using scaling factors then read in the scaling factors for this year
-            If RlZOthSource = "File" Then
+            If RlZOthSource = "Database" Then
                 'need to leave cost growth factor until we know the new proportion of electric/diesel trains
                 GJTGrowth = 1 + ScalingData(1, 8)
                 ElPGrowth = ScalingData(1, 9)
@@ -398,7 +395,7 @@ NextYear:
             CostNew = 121.381 + ((DieselNew + diecarch) * (1 - ElPNew)) + ((ElectricNew + elecarch) * ElPNew) + (EMaintOld(InputCount, 0) * ElPNew) + (DMaintOld(InputCount, 0) * (1 - ElPNew))
 
             FuelNew = FuelOld(InputCount, 0) * FuelGrowth
-            If RlZOthSource = "File" Then
+            If RlZOthSource = "Database" Then
                 GJTNew = GJTOld(InputCount, 0) * GJTGrowth
             Else
                 GJTNew = GJTOld(InputCount, 0) * GJTProp(1)
@@ -422,6 +419,7 @@ NextYear:
             If yearIs2010 = True Then g_modelRunYear -= 1
 
             'write to output file
+
             RlZ_OutArray(InputCount, 0) = g_modelRunID
             RlZ_OutArray(InputCount, 1) = ZoneID(InputCount, 0)
             RlZ_OutArray(InputCount, 2) = g_modelRunYear

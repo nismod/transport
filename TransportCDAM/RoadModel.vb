@@ -114,6 +114,9 @@
 
     Public Sub RoadLinkMain()
 
+        ReDim TempAnArray(292, 34)
+        ReDim TempHArray(7007, 87)
+
         'for year 2010, calculate as it is year 2011 and write output as year 2010
         If g_modelRunYear = 2010 Then
             'create data for year 2010

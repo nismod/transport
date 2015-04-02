@@ -157,8 +157,8 @@
 
 
         'read initial year files
-        Call DBaseInterface.ReadData("AirNode", "Input", NodeInputArray, g_modelRunYear)
-        Call DBaseInterface.ReadData("AirFlow", "Input", FlowInputArray, g_modelRunYear)
+        Call DBaseInterface.ReadData("AirNode", "Input", NodeInputArray, 2011)
+        Call DBaseInterface.ReadData("AirFlow", "Input", FlowInputArray, 2011)
         If g_modelRunYear <> g_initialYear Then
             'read from previous year
             Call DBaseInterface.ReadData("AirNode", "ExtVar", NodeEVInputArray, g_modelRunYear - 1)
@@ -234,7 +234,7 @@
             'get airnode data from previous year
             NodeCount = 1
             Do While NodeCount < 29
-                NodeOldData(NodeCount, 0) = NodeInputArray(NodeCount, 3)
+                NodeOldData(NodeCount, 0) = NodeInputArray(NodeCount, 1)
                 NodeOldData(NodeCount, 1) = get_population_data_by_airportID(g_modelRunYear - 1, NodeOldData(NodeCount, 0))
                 NodeOldData(NodeCount, 2) = get_gva_data_by_airportID(g_modelRunYear - 1, NodeOldData(NodeCount, 0))
                 NodeOldData(NodeCount, 3) = NodeEVInputArray(NodeCount, 15) 'TODO - this code makes no sense, there are only 13 fields in TR_IO_AirNodeExternalVariables?? -DONE extra field added
@@ -252,7 +252,7 @@
             'get airflow data from previous year
             FlowCount = 1
             Do While FlowCount < 224
-                FlowOldData(FlowCount, 0) = FlowInputArray(FlowCount, 3)
+                FlowOldData(FlowCount, 0) = FlowInputArray(FlowCount, 1)
                 OZone(FlowCount) = FlowInputArray(FlowCount, 7)
                 DZone(FlowCount) = FlowInputArray(FlowCount, 8)
                 FlowOldData(FlowCount, 1) = get_population_data_by_zoneID(g_modelRunYear - 1, OZone(FlowCount), "OZ", "'air'")

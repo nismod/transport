@@ -198,7 +198,7 @@
         Dim DieselOld(238, 0), DieselNew, ElectricOld(238, 0), ElectricNew As Double
         Dim DMaintOld(238, 0), EMaintOld(238, 0) As Double
         Dim ElPOld(238, 0), ElPNew As Double
-        Dim ScalingData(1, 8) As String
+        Dim ScalingData(1, 9) As String
         Dim OCountry(238, 0), DCountry(238, 0) As String
         Dim OZone(238, 0), DZone(238, 0) As Long
         Dim keylookup As String
@@ -209,7 +209,7 @@
         Dim y As Integer = 0
 
         'get scaling factor file if we are using one
-        If RlLOthSource = "File" Then
+        If RlLOthSource = "Database" Then
             Call ReadData("RailLink", "EVScale", ScalingData, g_modelRunYear)
         End If
 
@@ -309,24 +309,24 @@
                 Select Case OCountry(InputCount, 0)
                     'Case "E"
                     Case "1"
-                        OPopGrowth = 1 + ScalingData(1, 1)
+                        OPopGrowth = 1 + ScalingData(1, 2)
                         'Case "S"
                     Case "3"
-                        OPopGrowth = 1 + ScalingData(1, 2)
+                        OPopGrowth = 1 + ScalingData(1, 3)
                         'Case "w"
                     Case "2"
-                        OPopGrowth = 1 + ScalingData(1, 3)
+                        OPopGrowth = 1 + ScalingData(1, 4)
                 End Select
                 Select Case DCountry(InputCount, 0)
                     'Case "E"
                     Case "1"
-                        DPopGrowth = 1 + ScalingData(1, 1)
+                        DPopGrowth = 1 + ScalingData(1, 2)
                         'Case "S"
                     Case "3"
-                        DPopGrowth = 1 + ScalingData(1, 2)
+                        DPopGrowth = 1 + ScalingData(1, 3)
                         'Case "W"
                     Case "2"
-                        DPopGrowth = 1 + ScalingData(1, 3)
+                        DPopGrowth = 1 + ScalingData(1, 4)
                 End Select
                 Pop1New = Pop1Old(InputCount, 0) * OPopGrowth
                 Pop2New = Pop2Old(InputCount, 0) * DPopGrowth
@@ -346,8 +346,8 @@
                 GVA1New = GVA1Old(InputCount, 0) * OGVAGrowth
                 GVA2New = GVA2Old(InputCount, 0) * DGVAGrowth
             ElseIf RlLEcoSource = "File" Then
-                OGVAGrowth = 1 + ScalingData(1, 4)
-                DGVAGrowth = 1 + ScalingData(1, 4)
+                OGVAGrowth = 1 + ScalingData(1, 5)
+                DGVAGrowth = 1 + ScalingData(1, 5)
                 GVA1New = GVA1Old(InputCount, 0) * OGVAGrowth
                 GVA2New = GVA2Old(InputCount, 0) * DGVAGrowth
             ElseIf RlLEcoSource = "Database" Then
@@ -364,9 +364,9 @@
                 End If
             End If
             'need to leave cost growth factor until we know new proportion of electric/diesel trains
-            If RlLOthSource = "File" Then
+            If RlLOthSource = "Database" Then
                 'MaxTDGrowth = 1 + ScalingData(1,7)
-                ElPGrowth = ScalingData(1, 8)
+                ElPGrowth = ScalingData(1, 9)
             End If
 
             'check if using list of electrification schemes
@@ -419,10 +419,10 @@ NextYear:
             If RlLEneSource = "File" Then
                 'fuel forms 8.77% of costs, and in base year electric costs are set as being 0.553 times diesel costs - base prices set above
                 'scale both base prices
-                DieselNew = DieselOld(InputCount, 0) * (1 + ScalingData(1, 5)) * FuelEff(1)
-                ElectricNew = ElectricOld(InputCount, 0) * (1 + ScalingData(1, 6)) * FuelEff(0)
+                DieselNew = DieselOld(InputCount, 0) * (1 + ScalingData(1, 6)) * FuelEff(1)
+                ElectricNew = ElectricOld(InputCount, 0) * (1 + ScalingData(1, 7)) * FuelEff(0)
                 '*****this assumes car fuel costs are only based on oil prices - when really we need to integrate this with the road model to look at road fuel/split
-                FuelGrowth = 1 + ScalingData(1, 5)
+                FuelGrowth = 1 + ScalingData(1, 6)
             ElseIf RlLEneSource = "Constant" Then
                 DieselNew = DieselOld(InputCount, 0) * CostGrowth * FuelEff(1)
                 ElectricNew = ElectricOld(InputCount, 0) * CostGrowth * FuelEff(0)

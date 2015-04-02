@@ -1505,7 +1505,7 @@ Module DBaseInterface
                         End If
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "SeaFreightExtVar" & EVFileSuffix & ".csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_SeaFreightExternalVariables" & Chr(34) & " WHERE year = " & Year & " AND modelrun_id=" & g_modelRunID
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_SeaFreightExternalVariables" & Chr(34) & " WHERE year = " & Year & " AND modelrun_id=" & g_modelRunID & " ORDER BY port_id"
                     Case "CapChange"
                         TheFileName = CapFilePrefix & "SeaFreightCapChange.csv"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_SeaFreightCapacityChange" & Chr(34)
@@ -1530,7 +1530,7 @@ Module DBaseInterface
                         End If
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "AirNodeExtVar" & EVFileSuffix & ".csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_AirNodeExternalVariables" & Chr(34) & " WHERE modelrun_id=" & g_modelRunID & " AND year = " & Year
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_AirNodeExternalVariables" & Chr(34) & " WHERE modelrun_id=" & g_modelRunID & " AND year = " & Year & " ORDER BY airport_id"
                     Case "CapChange"
                         TheFileName = CapFilePrefix & "AirNodeCapChange.csv"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_AirNodeCapacityChange" & Chr(34)
@@ -1555,7 +1555,7 @@ Module DBaseInterface
                         End If
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "AirFlowExtVar.csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_AirFlowExternalVariables" & Chr(34) & " WHERE modelrun_id=" & g_modelRunID & " AND year = " & Year
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_AirFlowExternalVariables" & Chr(34) & " WHERE modelrun_id=" & g_modelRunID & " AND year = " & Year & " ORDER BY flow_id"
                     Case Else
                         'for error handling
                 End Select
