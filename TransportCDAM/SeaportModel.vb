@@ -41,6 +41,9 @@
     Dim NewCapNum As Integer
     Dim CostBase As Double
     Dim yearIs2010 As Boolean = False
+    Dim baseSeaFuelConsumpton(1, 5) As String
+    Dim SeaFuelOutputArray(1, 3) As String
+
 
 
 
@@ -57,6 +60,8 @@
             yearIs2010 = False
         End If
 
+        ReDim SeaFuelOutputArray(1, 4)
+
         'get input files and create output files
         Call SeaInputFiles()
 
@@ -66,7 +71,10 @@
 
         Else
             Call ReadData("Seaport", "ExtVar", PortExtVar, g_modelRunYear)
-            If g_modelRunYear <> g_initialYear Then Call ReadData("Seaport", "ExtVar", PortPreExtVar, g_modelRunYear - 1)
+            If g_modelRunYear <> g_initialYear Then
+                Call ReadData("Seaport", "ExtVar", PortPreExtVar, g_modelRunYear - 1)
+                Call ReadData("Seaport", "Fuel", baseSeaFuelConsumpton, 2011)
+            End If
         End If
 
         Call ReadData("Seaport", "Input", InputArray, g_modelRunYear)
@@ -97,10 +105,23 @@
             InputCount += 1
         Loop
 
+        'the emissions are simply calculated as an index based on changes in fuel consumption 
+        'base year 2011 emission is 9.65933831208691 million tonnes
+        If g_modelRunYear > 2011 Then
+            SeaFuelOutputArray(1, 3) = 9.65933831208691 * (SeaFuelOutputArray(1, 2) / baseSeaFuelConsumpton(1, 3))
+        Else
+            SeaFuelOutputArray(1, 3) = 9.65933831208691
+        End If
+        'write to crossSector output
+        crossSectorArray(1, 4) += CDbl(SeaFuelOutputArray(1, 3))
+
+
         'create file is true if it is the initial year and write to outputfile and temp file
         If g_modelRunYear = g_initialYear Then
             Call WriteData("Seaport", "Output", OutputArray, , True)
             Call WriteData("Seaport", "Temp", TempArray, , True)
+            Call WriteData("Seaport", "Fuel", SeaFuelOutputArray, , True)
+
             'if the model is building capacity then create new capacity file
             If BuildInfra = True Then
                 Call WriteData("Seaport", "NewCap_Added", NewCapArray, , True)
@@ -108,6 +129,8 @@
         Else
             Call WriteData("Seaport", "Output", OutputArray, , False)
             Call WriteData("Seaport", "Temp", TempArray, , False)
+            Call WriteData("Seaport", "Fuel", SeaFuelOutputArray, , False)
+
             If BuildInfra = True Then
                 Call WriteData("Seaport", "NewCap_Added", NewCapArray, , False)
             End If
@@ -332,6 +355,11 @@
         OutputArray(InputCount, 7) = NewFreight(PortID, 5)
         OutputArray(InputCount, 8) = NewGasOil
         OutputArray(InputCount, 9) = NewFuelOil
+
+        'fuel consumption output array
+        SeaFuelOutputArray(1, 0) = g_modelRunID
+        SeaFuelOutputArray(1, 1) = g_modelRunYear
+        SeaFuelOutputArray(1, 2) += (NewGasOil + NewFuelOil) 'total fuel consumption
 
         'update the variables
         Dim evindex As Integer

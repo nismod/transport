@@ -63,7 +63,7 @@
     Dim TempArray(145, 60) As String
     Dim CapNum As Integer
     Dim NewCapNum As Integer
-    Dim FuelArray(145, 20) As String
+    Dim FuelArray(145, 21) As String
     Dim NewCapArray(145, 5) As String
     Dim yearIs2010 As Boolean = False
 
@@ -131,6 +131,7 @@
 
             ZoneID += 1
         Loop
+
 
         'create file is true if it is the initial year and write to outputfile and temp file
         'v1.9 now write to database
@@ -1610,6 +1611,11 @@
         CatFuelTotal = RVFFuel(1, 5, 10) + RVFFuel(2, 5, 10) + RVFFuel(3, 5, 10) + RVFFuel(4, 5, 10)
         FuelArray(ZoneID, 20) = CatFuelTotal
 
+        'total emission
+        'Emissions = [(PetCary + PetLGVy) * CO2LPet] + [(DieCary + DieLGVy + DieHGV23y + DieHGV4y + DiePSVy) * CO2LDie] + [(EleCary + EleLGVy + ElePSVy) * CO2KEle] + [(LPGLGVy + LPGPSVy) * CO2LLPG] + [(PetCary + PetLGVy) * CO2LPet] + [(CNGLGVy + CNGPSVy) * CO2LCNG] + [(HydCary + HydHGV23y + HydHGV4y + HydPSVy) * CO2LHyd]
+        'divided by 1000 to make the unit million tonnes
+        FuelArray(ZoneID, 21) = (((CDbl(FuelArray(ZoneID, 3)) + FuelArray(ZoneID, 4)) * stratarray(1, 74)) + ((CDbl(FuelArray(ZoneID, 5)) + FuelArray(ZoneID, 6) + FuelArray(ZoneID, 7) + FuelArray(ZoneID, 8) + FuelArray(ZoneID, 9)) * stratarray(1, 75)) + ((CDbl(FuelArray(ZoneID, 10)) + FuelArray(ZoneID, 11) + FuelArray(ZoneID, 12)) * stratarray(1, 76)) + ((CDbl(FuelArray(ZoneID, 13)) + FuelArray(ZoneID, 14)) * stratarray(1, 77)) + ((CDbl(FuelArray(ZoneID, 15)) + FuelArray(ZoneID, 16)) * stratarray(1, 78)) + ((CDbl(FuelArray(ZoneID, 17)) + FuelArray(ZoneID, 18) + FuelArray(ZoneID, 19) + FuelArray(ZoneID, 20)) * stratarray(1, 79))) / 1000
+
     End Sub
 
     Sub VehicleFuelConsumption()
@@ -1755,6 +1761,12 @@
         LPGUsed = 0
         CNGUsed = 0
         HydrogenUsed = 0
+
+        'write to crossSector output
+        'emission
+        crossSectorArray(1, 4) += CDbl(FuelArray(ZoneID, 21))
+        'service delivery
+        crossSectorArray(1, 5) += NewVkm
 
         'write to temp array
         TempArray(ZoneID, 0) = g_modelRunID

@@ -87,6 +87,10 @@ Module AirModel
     Dim NodePreExtVar(28, 14) As String
     Dim FlowPreExtVar(223, 8) As String
     Dim yearIs2010 As Boolean = False
+    Dim baseAirFuelConsumpton(1, 5) As String
+    Dim AirFuelOutputArray(1, 4) As String
+    Dim totalCUPass As Double
+    Dim totalPass As Double
 
 
 
@@ -96,6 +100,11 @@ Module AirModel
         'define the maximum node and flowID
         MaxAirNode = 28
         MaxAirFlow = 223
+        ReDim AirFuelOutputArray(1, 4)
+
+        'reset capacity margin counter 
+        totalCUPass = 0
+        totalPass = 0
 
         'for year 2010, calculate as it is year 2011 and write output as year 2010
         If g_modelRunYear = 2010 Then
@@ -139,6 +148,7 @@ Module AirModel
         If g_modelRunYear <> g_initialYear Then
             Call DBaseInterface.ReadData("AirNode", "ExtVar", NodePreExtVar, g_modelRunYear - 1)
             Call DBaseInterface.ReadData("AirFlow", "ExtVar", FlowPreExtVar, g_modelRunYear - 1)
+            Call DBaseInterface.ReadData("AirFlow", "Fuel", baseAirFuelConsumpton, 2011)
         End If
 
         'run air node model
@@ -195,6 +205,7 @@ Module AirModel
             'write to IO tables
             Call WriteData("AirNode", "Temp", NodeTempArray, , True)
             Call WriteData("AirFlow", "Temp", FlowTempArray, , True)
+            Call WriteData("AirFlow", "Fuel", AirFuelOutputArray, , True)
 
             If BuildInfra = True Then
                 Call WriteData("AirNode", "NewCap_Added", NewCapArray, , True)
@@ -205,6 +216,7 @@ Module AirModel
             'write to IO tables
             Call WriteData("AirNode", "Temp", NodeTempArray, , False)
             Call WriteData("AirFlow", "Temp", FlowTempArray, , False)
+            Call WriteData("AirFlow", "Fuel", AirFuelOutputArray, , False)
 
             If BuildInfra = True Then
                 Call WriteData("AirNode", "NewCap_Added", NewCapArray, , False)
@@ -1086,6 +1098,20 @@ Module AirModel
             NodeOutputArray(aircount, 5) = AirpTripsNew(aircount)
             NodeOutputArray(aircount, 6) = AirpATM(aircount)
             NodeOutputArray(aircount, 7) = AirpIntFuel(aircount)
+            AirFuelOutputArray(1, 2) += AirpIntFuel(aircount)
+
+            'calculation of capacity margin
+            'CUa is whichever of (AllPassy/TermCapy) and (ATMy/MaxATMy) has the higher value.  If the former is higher this is ‘situation 1’, whereas if the latter is higher this is ‘situation 2’
+            If (AirpPass(aircount) / AirportExtVar(aircount, 7)) >= (AirpATM(aircount) / AirportExtVar(aircount, 8)) Then
+                'For any given airport CapPassy is given by AllPassy in situation 1
+                totalCUPass += (AirpPass(aircount) / AirportExtVar(aircount, 7)) * AirpPass(aircount)
+                totalPass += AirpPass(aircount)
+            Else
+                'In situation 2 ATMy needs to be converted into an equivalent number of passengers.  This involves the following calculation: Passengers = ATMy * PlaneSizeInty * LFInty
+                totalCUPass += (AirpATM(aircount) / AirportExtVar(aircount, 8)) * (AirpATM(aircount) * AirportExtVar(aircount, 10) * AirportExtVar(aircount, 12))
+                totalPass += (AirpATM(aircount) * AirportExtVar(aircount, 10) * AirportExtVar(aircount, 12))
+            End If
+
             aircount += 1
         Loop
         flownum = 1
@@ -1097,8 +1123,24 @@ Module AirModel
             FlowOutputArray(flownum, 2) = g_modelRunYear
             FlowOutputArray(flownum, 3) = AirfTripsNew(flownum)
             FlowOutputArray(flownum, 4) = AirfFuel(flownum)
+            AirFuelOutputArray(1, 2) += AirfFuel(flownum)
             flownum += 1
         Loop
+
+        'air fuel consumption array
+        AirFuelOutputArray(1, 0) = g_modelRunID
+        AirFuelOutputArray(1, 1) = g_modelRunYear
+        'the emissions are simply calculated as an index based on changes in fuel consumption 
+        'base year 2011 emission is 33.59404558 million tonnes
+        If g_modelRunYear > 2011 Then
+            AirFuelOutputArray(1, 3) = (AirFuelOutputArray(1, 2) / baseAirFuelConsumpton(1, 3)) * 33.59404558
+        Else
+            AirFuelOutputArray(1, 3) = 33.59404558
+        End If
+        'write to crossSector output
+        crossSectorArray(1, 4) += CDbl(AirFuelOutputArray(1, 3))
+        'adding the capacity margin of rail to the aggregate capacity margin
+        crossSectorArray(1, 2) += ((totalCUPass / totalPass) * 0.01)
 
         newcapnum = 1
         'update airport base data and write to temp file

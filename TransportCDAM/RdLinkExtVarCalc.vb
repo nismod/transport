@@ -73,6 +73,7 @@
     Dim CapNum As Integer
     Dim NewCapArray(6835, 5) As String
     Dim yearIs2010 As Boolean = False
+    Dim RdL_RouteLength(,) As String
 
 
 
@@ -154,6 +155,9 @@
 
         'read initial input data
         Call ReadData("RoadLink", "Input", RdL_InArray, 2011)
+
+        '
+        Call ReadData("RoadLink", "RouteLength", RdL_RouteLength)
 
         If g_modelRunYear <> g_initialYear Then
             'read previous year's data
@@ -857,6 +861,11 @@
                     MLanes(InputCount, 1) += MLaneChange
                     DLanes(InputCount, 1) += DLaneChange
                     SLanes(InputCount, 1) += SLaneChange
+                    'write to CrossSector output for investment cost
+                    'Motorways: £21.03 million per km (assumes 6 lanes)
+                    'Dual carriageways: £11.36 million per km (assumes 4 lanes)
+                    'Single carriageways: £7.43 million per km (assumes 2 lanes)
+                    crossSectorArray(1, 3) += 21.03 * MLaneChange * RdL_RouteLength(InputCount, 4) + 11.36 * DLaneChange * RdL_RouteLength(InputCount, 4) + 7.43 * SLaneChange * RdL_RouteLength(InputCount, 4)
 
                     Call GetCapData()
                 End If

@@ -319,6 +319,10 @@
                     'if there are, then update the capacity variables, and read in the next row from the capacity file
                     AddTermCap = TermCapChange
                     AddATMCap = ATMChange
+                    'write to CrossSector output for investment cost
+                    'Airport terminals: £4,000 million each
+                    'Airport runways: £8,000 million each
+                    crossSectorArray(1, 3) += 4000 * TermCapChange + 8000 * ATMChange
                     CapNum += 1
                     Call GetCapData()
                 End If

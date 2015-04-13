@@ -90,7 +90,7 @@ Module DBaseInterface
     Public enearray(2, 6) As String
     Public InDieselOldAll, InElectricOldAll, InDieselNewAll, InElectricNewAll
     Public InDieselOld(238, 0), InElectricOld(238, 0), InDieselNew, InElectricNew As Double
-
+    Public crossSectorArray(1, 5) As String
     Public OZone, DZone As Long
     Dim ModelType As String
     Dim Subtype As String
@@ -1425,6 +1425,8 @@ Module DBaseInterface
                         'A header has been added to the original file to keep in the same format
                         TheFileName = "DailyTripProfile.csv"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RoadLink_DailyProfile" & Chr(34)
+                    Case "RouteLength"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RoadFlows" & Chr(34) & " ORDER BY id"
                     Case Else
                         'for error handling
                 End Select
@@ -1490,6 +1492,8 @@ Module DBaseInterface
                     Case "OldRzEl"
                         TheFileName = "RailZoneElectrificationSchemes.csv"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RailZone_ElectrificationSchemes" & Chr(34)
+                    Case "TrackLength"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RailLinks" & Chr(34) & " ORDER BY id"
                     Case Else
                         'for error handling
                 End Select
@@ -1515,6 +1519,8 @@ Module DBaseInterface
                     Case "Elasticity"
                         TheFileName = "Elasticity Files\TR" & SubStrategy & "\SeaFreightElasticities.csv"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_I_SeaFreightElasticities_Run" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year
+                    Case "Fuel"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_SeaFuelConsumption" & Chr(34) & " WHERE modelrun_id=" & g_modelRunID & " AND year = " & Year
                     Case Else
                         'for error handling
                 End Select
@@ -1556,6 +1562,8 @@ Module DBaseInterface
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "AirFlowExtVar.csv"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_AirFlowExternalVariables" & Chr(34) & " WHERE modelrun_id=" & g_modelRunID & " AND year = " & Year & " ORDER BY flow_id"
+                    Case "Fuel"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_AirFuelConsumption" & Chr(34) & " WHERE modelrun_id=" & g_modelRunID & " AND year = " & Year
                     Case Else
                         'for error handling
                 End Select
@@ -1780,6 +1788,9 @@ Module DBaseInterface
                         TableName = "TR_IO_AirFlowExternalVariables"
                         OutFileName = EVFilePrefix & "AirFlowExtVar.csv"
                         header = "modelrun_id, year, flow_id, ozone_pop, dzone_pop, ozone_gva, dzone_gva, cost, var_cost"
+                    Case "Fuel"
+                        TableName = "TR_IO_AirFuelConsumption"
+                        header = "modelrun_id, year, tot_fuel, tot_emission"
                 End Select
             Case "AirNode"
                 Select Case SubType
@@ -1823,7 +1834,7 @@ Module DBaseInterface
 
                         TableName = "TR_O_RailLinkFuelConsumption"
                         OutFileName = FilePrefix & "RailLinkFuelConsumption.csv"
-                        header = "modelrun_id, year, diesel, electric"
+                        header = "modelrun_id, year, diesel, electric,tot_emission"
                     Case "Output"
 
                         TableName = "TR_O_RailLinkOutputData"
@@ -1942,7 +1953,7 @@ Module DBaseInterface
 
                         TableName = "TR_O_RoadZoneFuelConsumption"
                         OutFileName = FilePrefix & "RoadZoneFuelConsumption.csv"
-                        header = "modelrun_id,  zone_id, year, pet_car, pet_lgv, die_car, die_lgv, die_hgv23, die_hgv4, die_psv, ele_car, ele_lgv, ele_psv, lpg_lgv, lpg_psv, cng_lgv, cng_psv, hyd_car, hyd_hgv23, hyd_hgv4, hyd_psv"
+                        header = "modelrun_id,  zone_id, year, pet_car, pet_lgv, die_car, die_lgv, die_hgv23, die_hgv4, die_psv, ele_car, ele_lgv, ele_psv, lpg_lgv, lpg_psv, cng_lgv, cng_psv, hyd_car, hyd_hgv23, hyd_hgv4, hyd_psv, tot_emission"
                     Case "Output"
 
                         TableName = "TR_O_RoadZoneOutputData"
@@ -1987,10 +1998,16 @@ Module DBaseInterface
                         TableName = "TR_IO_SeaFreightExternalVariables"
                         OutFileName = EVFilePrefix & "SeaFreightExtVar.csv"
                         header = "modelrun_id, port_id, year, lb_cap, db_cap, gc_cap, ll_cap, rr_cap, gor_pop,gor_gva, cost, fuel_eff"
+                    Case "Fuel"
+                        TableName = "TR_IO_SeaFuelConsumption"
+                        header = "modelrun_id, year, tot_fuel, tot_emission"
                 End Select
             Case "Logfile"
                 OutFileName = FilePrefix & "TransportCDAMLog.txt"
                 header = "Transport CDAM Log File"
+            Case "CrossSector"
+                TableName = "TR_O_CrossSector"
+                header = "modelrun_id, year, capacity_margin, investment, emission, service_delivery"
         End Select
 
         'Check if prefix has been set - if not then use default

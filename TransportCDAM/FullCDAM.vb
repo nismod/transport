@@ -280,6 +280,14 @@
             logNum += 1
         End If
 
+        'write cross sector output
+        crossSectorArray(1, 0) = g_modelRunID
+        crossSectorArray(1, 1) = g_modelRunYear
+        For i = 2 To 5
+            If crossSectorArray(1, i) Is Nothing Then crossSectorArray(1, i) = 0
+        Next
+        Call WriteData("CrossSector", "", crossSectorArray)
+        ReDim crossSectorArray(1, 5)
 
         'Write closing lines of log file
         Call CloseLog()

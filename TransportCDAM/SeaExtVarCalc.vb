@@ -342,6 +342,12 @@
                 'do nothing
                 Exit Sub
             End If
+            'exit the loop if read to the end of the array
+            If CapArray(CapNum, 1) Is Nothing Then 'TODO - seems to hit this every time
+                'Stop
+                Exit Do
+            End If
+
             If CapArray(CapNum, 1) <> "" Then
                 CapID = CapArray(CapNum, 1)
                 If CapArray(CapNum, 2) = "" Then
@@ -368,11 +374,6 @@
                 'if empty, do nothing
             End If
 
-            'exit the loop if read to the end of the array
-            If CapArray(CapNum, 1) Is Nothing Then 'TODO - seems to hit this every time
-                'Stop
-                Exit Do
-            End If
             Select Case CapType
                 Case "C"
                     NewCapDetails(CapCount, 0) = CapID
@@ -434,6 +435,7 @@
             If Breakout = True Then
                 Exit Do
             End If
+
             CapCount += 1
         Loop
 
@@ -448,9 +450,9 @@
                 sortedline = sortarray(v)
                 splitline = Split(sortedline, "&")
                 arraynum = splitline(2)
-                CapArray(v, 0) = g_modelRunID
+                CapArray(v + 1, 0) = g_modelRunID
                 For i = 0 To 6
-                    CapArray(v, i + 1) = NewCapDetails(arraynum, i)
+                    CapArray(v + 1, i + 1) = NewCapDetails(arraynum, i)
                 Next
                 'CapArray(v, 8) = CapType
             Next

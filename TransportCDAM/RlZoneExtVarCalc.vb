@@ -410,6 +410,10 @@ NextYear:
                             'if there are, then update the capacity variables, and read in the next row from the capacity file
                             StationsNew(InputCount, 0) = StationsOld(InputCount, 0) + StationChange
                             NewTrips = TripChange / StationChange
+                            'write to CrossSector output for investment cost
+                            'Rail station: £5.00 million per station
+                            crossSectorArray(1, 3) += 5 * CDbl(StationChange)
+
                             Call GetCapData()
                         End If
                     End If

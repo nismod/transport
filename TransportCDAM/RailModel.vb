@@ -55,7 +55,7 @@ Module RailModel
     Dim ModelPeakHeadway(238, 0) As Double
     Dim FuelUsed(1) As Double
     Dim RlFuelEff(1) As Double
-    Dim FuelString(1, 3) As String
+    Dim FuelString(1, 4) As String
     Dim RlTripRates As Double
     Dim InputCount As Long
     Dim OutputRow As String
@@ -67,9 +67,13 @@ Module RailModel
     Dim TempArray(239, 13) As String
     Dim NewCapArray(238, 2) As String
     Dim NewCapNum As Integer
+    Dim totalTrain As Double
+    Dim totalCUTrain As Double
+
 
 
     Public Sub RailLinkMain()
+
 
         'for year 2010
         If g_modelRunYear = 2010 Then
@@ -84,6 +88,11 @@ Module RailModel
 
         'reset Cap number
         NewCapNum = 1
+
+        'reset capacity margin count for the year
+        'TotalCU=¡ÆCU*Trains/¡ÆTrains
+        totalTrain = 0
+        totalCUTrain = 0
 
         'get external variables for this year
         Call ReadData("RailLink", "ExtVar", RlLinkExtVars, g_modelRunYear)
@@ -158,12 +167,19 @@ Module RailModel
 
 
 
-
         'Write fuel consumption output file
         FuelString(1, 0) = g_modelRunID
         FuelString(1, 1) = g_modelRunYear
         FuelString(1, 2) = FuelUsed(0)
         FuelString(1, 3) = FuelUsed(1)
+        'total emission
+        'Emissions = ((Diesely * CO2LDie) + (Electricy * CO2KEle))/1000
+        FuelString(1, 4) = (CDbl(FuelString(1, 2)) * stratarray(1, 75) + CDbl(FuelString(1, 3)) * stratarray(1, 76)) / 1000
+
+        'write to crossSector output
+        crossSectorArray(1, 4) += CDbl(FuelString(1, 4))
+        'adding the capacity margin of rail to the aggregate capacity margin
+        crossSectorArray(1, 2) += ((totalCUTrain / totalTrain) * 0.08)
 
         Call WriteData("RailLink", "FuelUsed", FuelString)
 
@@ -500,17 +516,19 @@ Module RailModel
         FuelUsed(1) += (RlLinkExtVars(InputCount, 12) * NewTrains * 107421 * RlFuelEff(1))
 
         'write to outputarray
+
         If CalcCheck(InputCount, 0) = True Then
             OutputArray(InputCount, 0) = g_modelRunID
             OutputArray(InputCount, 1) = FlowNum(InputCount, 0)
             OutputArray(InputCount, 2) = g_modelRunYear
-            'TODO update newtrain every year, otherwise it will read the previous link value
-            'now it forces the output to be the old output value, need to fix this
-            If g_modelRunYear = 2016 Then
-                If InputCount = 177 Then
-                    NewTrains = 36
-                End If
-            End If
+            ''TODO update newtrain every year, otherwise it will read the previous link value
+            ''now it forces the output to be the old output value, need to fix this
+            'If g_modelRunYear = 2016 Then
+            '    If InputCount = 177 Then
+            '        NewTrains = 36
+            '    End If
+            'End If
+            If RlLinkPreExtVars(InputCount, 4) = 0 And Not RlLinkPreExtVars(InputCount, 4) Is Nothing Then NewTrains = RlLinkExtVars(InputCount, 14)
             OutputArray(InputCount, 3) = NewTrains
             OutputArray(InputCount, 4) = NewDelays(InputCount, 0)
             OutputArray(InputCount, 5) = CUNew(InputCount, 0)
@@ -524,6 +542,11 @@ Module RailModel
             NewTrains = RlLinkExtVars(InputCount, 14)
             NewDelays(InputCount, 0) = 1
         End If
+
+        'update capacity margin
+        'TotalCU=¡ÆCU*Trains/¡ÆTrains
+        totalCUTrain += CDbl(OutputArray(InputCount, 5)) * OutputArray(InputCount, 3)
+        totalTrain += OutputArray(InputCount, 3)
 
         'update variables
         OldDelays(InputCount, 0) = NewDelays(InputCount, 0)
@@ -626,6 +649,9 @@ Module RailModel
         FuelString(1, 1) = g_modelRunYear
         FuelString(1, 2) = 667488883.969476
         FuelString(1, 3) = 3183754707.28527
+        FuelString(1, 4) = (667488883.969476 * stratarray(1, 75) + 3183754707.28527 * stratarray(1, 76)) / 1000
+        'write to crossSector output
+        crossSectorArray(1, 4) += CDbl(FuelString(1, 4))
 
         Call WriteData("RailLink", "FuelUsed", FuelString)
 

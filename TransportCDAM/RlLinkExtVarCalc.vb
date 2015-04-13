@@ -29,7 +29,7 @@
     Dim TrackChange As Integer
     Dim MaxTDChange As Double
     Dim ErrorString As String
-    Dim ElectFlow, ElectYear, ElectTracks As Long
+    Dim ElectFlow, ElectYear, ElectTracks, ElectKm As Long
     Dim stratstring As String
     Dim FuelEff(1), CO2Vol(1), CO2Price(1), MaxTD As Double
     Dim OutString As String
@@ -59,6 +59,7 @@
     Dim RlElNum As Integer
     Dim RzElNum As Integer
     Dim yearIs2010 As Boolean = False
+    Dim RlL_TrackLength(,) As String
 
 
 
@@ -100,11 +101,14 @@
 
         'read initial input data (year 2010)
         Call ReadData("RailLink", "Input", RlL_InArray, 2011)
+
+        'read track length data in order to get the investment cost if there are tracks added in this year
+        Call ReadData("RailLink", "TrackLength", RlL_TrackLength)
+
         If g_modelRunYear <> g_initialYear Then
             'read from previous year
             Call ReadData("RailLink", "ExtVar", RlLEV_InArray, (g_modelRunYear - 1))
         End If
-
 
         'only do the cap change calculation for the intermediate cap change file if it is year 1
         If yearIs2010 = False And g_modelRunYear = g_initialYear Then
@@ -380,6 +384,12 @@ Elect:
                     'if so, then need to alter proportions of diesel and electric trains
                     ElPNew = ElPOld(InputCount, 0) + (0.9 * ((1 - ElPOld(InputCount, 0)) * (ElectTracks / (Tracks(InputCount, 0) - ElectTracksOld(InputCount, 0)))))
                     ElectTracksNew = ElectTracksOld(InputCount, 0) + ElectTracks
+
+                    'write to CrossSector output for investment cost
+                    'Rail electrification: £1.00 million per track km
+                    crossSectorArray(1, 3) += 1 * ElectTracks * ElectKm
+
+
                     'read next scheme from list
                     Call GetElectData()
 
@@ -471,6 +481,10 @@ NextYear:
                     'note that MaxTDChange now doesn't work - replaced by strategy common variables file
                     MaxTDOld(InputCount, 0) += MaxTDChange
                     NewTrains = TrainChange
+                    'write to CrossSector output for investment cost
+                    'Railways: £18.64 million per track km (not route km)
+                    crossSectorArray(1, 3) += 18.64 * TrackChange * RlL_TrackLength(InputCount + 1, 4) 'the inputcount must be +1, as the first row is for id = -1 in the table
+
                     Call GetCapData()
                 End If
             End If
@@ -802,6 +816,7 @@ NextYear:
             ElectFlow = elearray(EleNum, 2)
             ElectYear = elearray(EleNum, 3)
             ElectTracks = elearray(EleNum, 4)
+            ElectKm = elearray(EleNum, 5)
             EleNum += 1
         End If
     End Sub

@@ -74,6 +74,7 @@
     Dim RZEv_InArray(,) As String
     Dim RdZ_OutArray(145, 79) As String
     Dim yearIs2010 As Boolean = False
+    Dim RdZ_Base(,) As String
 
 
 
@@ -169,6 +170,8 @@
     End Sub
 
     Sub GetFiles()
+        'read base year data
+        Call ReadData("RoadZone", "Input", RdZ_Base, 2011)
 
         If g_modelRunYear = g_initialYear Then
             'read initial input data
@@ -504,6 +507,12 @@
                     RurMinLaneKm(InputCount, 0) += RurMinKmChange
                     UrbDLaneKm(InputCount, 0) += UrbDKmChange
                     UrbSLaneKm(InputCount, 0) += UrbSKmChange
+                    'write to CrossSector output for investment cost
+                    'Motorways: £21.03 million per km (assumes 6 lanes)
+                    'Dual carriageways: £11.36 million per km (assumes 4 lanes)
+                    'Single carriageways: £7.43 million per km (assumes 2 lanes)
+                    crossSectorArray(1, 3) += 21.03 * MwayKmChange * RdZ_Base(InputCount, 6) + 11.36 * (RurADKmChange * RdZ_Base(InputCount, 7) + UrbDKmChange * RdZ_Base(InputCount, 10)) + 7.43 * (RurASKmChange * RdZ_Base(InputCount, 8) + UrbSKmChange * RdZ_Base(InputCount, 11) + RurMinKmChange * RdZ_Base(InputCount, 9))
+
                     LaneKm(InputCount, 0) = MLaneKm(InputCount, 0) + RurADLaneKm(InputCount, 0) + RurASLaneKm(InputCount, 0) + RurMinLaneKm(InputCount, 0) + UrbDLaneKm(InputCount, 0) + UrbSLaneKm(InputCount, 0)
                     Call GetCapData()
                 End If
