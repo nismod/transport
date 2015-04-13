@@ -91,6 +91,7 @@ Module DBaseInterface
     Public InDieselOldAll, InElectricOldAll, InDieselNewAll, InElectricNewAll
     Public InDieselOld(238, 0), InElectricOld(238, 0), InDieselNew, InElectricNew As Double
     Public crossSectorArray(1, 5) As String
+    Public ErrorLogArray(,) As String
     Public OZone, DZone As Long
     Dim ModelType As String
     Dim Subtype As String
@@ -1715,6 +1716,7 @@ Module DBaseInterface
 
         Catch ex As Exception
             Stop
+            Call ErrorLog("Database Error", "Error occur when reading data from the database table " & theSQL, ex.StackTrace)
             'Throw ex
             Return False
         End Try
@@ -2002,9 +2004,9 @@ Module DBaseInterface
                         TableName = "TR_IO_SeaFuelConsumption"
                         header = "modelrun_id, year, tot_fuel, tot_emission"
                 End Select
-            Case "Logfile"
-                OutFileName = FilePrefix & "TransportCDAMLog.txt"
-                header = "Transport CDAM Log File"
+            Case "ErrorLog"
+                TableName = "ISL_ErrorLog"
+                header = "modelrun_id, sector_id, type, code, message, callstack"
             Case "CrossSector"
                 TableName = "TR_O_CrossSector"
                 header = "modelrun_id, year, capacity_margin, investment, emission, service_delivery"
@@ -2052,6 +2054,7 @@ Module DBaseInterface
                 'Insert data into table
                 If SaveArrayToSQLTable(aryFieldNames, aryFieldValues, TableName, "", True) = False Then
                     Stop
+                    Call ErrorLog("Database Error", "Error occurs when writting to " & TableName, "")
                     Return False 'TODO - Log this as its probably an error
                 End If
             Next
@@ -2199,4 +2202,16 @@ Module DBaseInterface
         'Call WriteData("Logfile", "", logarray)
     End Sub
 
+    Public Sub ErrorLog(ByVal type As String, ByVal message As String, ByVal stacktrace As String)
+
+        ErrorLogArray(1, 0) = g_modelRunID
+        ErrorLogArray(1, 1) = 1 '1 means transport sector
+        ErrorLogArray(1, 2) = type
+        ErrorLogArray(1, 3) = "TR" 'not very sure what this code is
+        ErrorLogArray(1, 4) = message
+        ErrorLogArray(1, 5) = stacktrace
+
+        Call WriteData("ErrorLog", "", ErrorLogArray)
+
+    End Sub
 End Module

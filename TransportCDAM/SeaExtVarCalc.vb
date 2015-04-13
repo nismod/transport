@@ -284,8 +284,7 @@
     Sub GetCapData()
 
         'read CapArray until reach the end
-        If CapArray Is Nothing Then 'TODO - it seems to hit this everytime??
-            'Stop
+        If CapArray Is Nothing Then
             'do nothing
             Exit Sub
         End If
@@ -337,14 +336,12 @@
         CapNum = 1
         Do
             'read CapArray until reach the end
-            If CapArray Is Nothing Then 'TODO - it seems to hit this everytime??
-                'Stop
+            If CapArray Is Nothing Then
                 'do nothing
                 Exit Sub
             End If
             'exit the loop if read to the end of the array
-            If CapArray(CapNum, 1) Is Nothing Then 'TODO - seems to hit this every time
-                'Stop
+            If CapArray(CapNum, 1) Is Nothing Then
                 Exit Do
             End If
 

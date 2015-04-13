@@ -1060,4 +1060,5 @@
         MsgBox("Model run failed.  Please consult the log file for details.")
         End
     End Sub
+
 End Class

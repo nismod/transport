@@ -109,6 +109,9 @@
     Dim NewCapArray(291, 3) As String
     Dim NewCapNum As Integer
     Dim yearIs2010 As Boolean = False
+    Dim totalTraffic As Double
+    Dim totalCUTraffic As Double
+
 
 
 
@@ -116,6 +119,11 @@
 
         ReDim TempAnArray(292, 34)
         ReDim TempHArray(7007, 87)
+
+        'reset capacity margin count for the year
+        totalTraffic = 0
+        totalCUTraffic = 0
+
 
         'for year 2010, calculate as it is year 2011 and write output as year 2010
         If g_modelRunYear = 2010 Then
@@ -212,6 +220,12 @@
 
         Erase TempAnArray
         Erase TempHArray
+
+        'write to crossSector output
+        'adding the capacity margin of rail to the aggregate capacity margin
+        crossSectorArray(1, 2) += ((totalCUTraffic / totalTraffic) * 0.91)
+
+
 
         'minus a year if it is year 2010, for the next module
         If yearIs2010 = True Then g_modelRunYear -= 1
@@ -532,9 +546,7 @@
                     Else
                         'TODO - Had to cut this out as it was crashing when the errors got over 48 in number - should replace this with database log
                         'this shouldn't happen in the base year, as we should already have reset the maximum capacity variable in the start flows sub, so write error to log file and exit model
-                        'logarray(logNum, 0) = "ERROR in interzonal road model - maximum capacity exceeded in base year for Flow " & FlowID(link, 1) & ", road type " & RoadType & ", hour " & h & ". Model run terminated."
-                        'logNum += 1
-                        'Call WriteData("Logfile", "", logarray) 'TODO - replace with a log file save
+                        Call ErrorLog("Calculation Error", "ERROR in interzonal road model - maximum capacity exceeded in base year for Flow " & FlowID(link, 1) & ", road type " & RoadType & ", hour " & h & "", "")
                         Stop
                     End If
                     h += 1
@@ -1166,8 +1178,8 @@
             'Debugger - checks if stuck in loop and writes to log
             z += 1
             If z > 1000 Then
-                logarray(logNum, 0) = "ERROR in Road Link Module: Flow" & FlowID(link, 1) & " Year" & g_modelRunYear & " Road Type " & RoadType & " speed and flow failed to converge after 1000 iterations"
-                logNum += 1
+                ErrorLogArray(1, 4) = "ERROR in Road Link Module: Flow" & FlowID(link, 1) & " Year" & g_modelRunYear & " Road Type " & RoadType & " speed and flow failed to converge after 1000 iterations"
+
                 Call WriteData("Logfile", "", logarray)
                 Exit Do
             Else
@@ -1529,6 +1541,42 @@
             h += 1
         Loop
 
+        'accumulate capacity margins for cross sector output 
+        'For motorways on link ‘n’ this is given by [CU,mway,h] = [PCU,hr,n] / ([MLanesy,n] * [MaxCapMy,n])
+        'If PCU, MLanes, or MaxCapM = 0, then CU = 0.
+        'check motorways
+        If RoadTypeLanesNew(link, 0) > 0 And MaxCap(link, 0) > 0 Then
+            h = 0
+            Do While h < 24
+                cu = RoadTypeFlows(link, 0, h) / (RoadTypeLanesNew(link, 0) * MaxCap(link, 0))
+
+                totalCUTraffic += cu * RoadTypeFlows(link, 0, h)
+                totalTraffic += RoadTypeFlows(link, 0, h)
+                h += 1
+            Loop
+        End If
+        'check dual carriageways
+        If RoadTypeLanesNew(link, 1) > 0 And MaxCap(link, 1) > 0 Then
+            h = 0
+            Do While h < 24
+                cu = RoadTypeFlows(link, 1, h) / (RoadTypeLanesNew(link, 1) * MaxCap(link, 1))
+
+                totalCUTraffic += cu * RoadTypeFlows(link, 1, h)
+                totalTraffic += RoadTypeFlows(link, 1, h)
+                h += 1
+            Loop
+        End If
+        'check single carriageways
+        If RoadTypeLanesNew(link, 2) > 0 And MaxCap(link, 2) > 0 Then
+            h = 0
+            Do While h < 24
+                cu = RoadTypeFlows(link, 2, h) / (RoadTypeLanesNew(link, 2) * MaxCap(link, 2))
+
+                totalCUTraffic += cu * RoadTypeFlows(link, 2, h)
+                totalTraffic += RoadTypeFlows(link, 2, h)
+                h += 1
+            Loop
+        End If
 
     End Sub
 
