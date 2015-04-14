@@ -362,7 +362,10 @@ Module RailModel
                     Exit Do
                 Else
                 End If
-                'this is the end of the section which could arguably be deleted
+                If Double.IsNaN(TrainRat) Then
+                    logarray(logNum, 0) = "Flow " & FlowNum(InputCount, 0) & " became Not A Number in Year " & g_modelRunYear & " of the rail link model."
+                    Exit Do
+                End If
             Loop
         End If
 

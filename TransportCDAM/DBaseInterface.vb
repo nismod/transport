@@ -2166,6 +2166,7 @@ Module DBaseInterface
             Return True
         Catch ex As Exception
             'Throw ex
+            logarray(logNum, 0) = "Error in SQL call: " & strSQL_All
             Return False
         End Try
     End Function
