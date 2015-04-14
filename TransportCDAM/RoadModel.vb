@@ -1178,9 +1178,8 @@
             'Debugger - checks if stuck in loop and writes to log
             z += 1
             If z > 1000 Then
-                ErrorLogArray(1, 4) = "ERROR in Road Link Module: Flow" & FlowID(link, 1) & " Year" & g_modelRunYear & " Road Type " & RoadType & " speed and flow failed to converge after 1000 iterations"
-
-                Call WriteData("Logfile", "", logarray)
+                Stop
+                Call ErrorLog("Calculation Error", "ERROR in Road Link Module: Flow" & FlowID(link, 1) & " Year" & g_modelRunYear & " Road Type " & RoadType & " speed and flow failed to converge after 1000 iterations", "")
                 Exit Do
             Else
             End If

@@ -2213,5 +2213,6 @@ Module DBaseInterface
 
         Call WriteData("ErrorLog", "", ErrorLogArray)
 
+        ReDim ErrorLogArray(1, 5)
     End Sub
 End Module

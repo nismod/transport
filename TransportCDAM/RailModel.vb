@@ -356,8 +356,9 @@ Module RailModel
                 ElseIf (RatCheck - CloseTrainRat) > 0.1 Then
                     NewTrains = BestTrains
                     NewDelays(InputCount, 0) = BestDelays
-                    logarray(logNum, 0) = "Flow " & FlowNum(InputCount, 0) & " failed to converge in Year " & g_modelRunYear & " in rail link model.  Best convergence ratio was " & CloseTrainRat & "."
-                    logNum += 1
+
+                    'write to log file
+                    Call ErrorLog("Calculation Error", "Flow " & FlowNum(InputCount, 0) & " failed to converge in Year " & g_modelRunYear & " in rail link model.  Best convergence ratio was " & CloseTrainRat & ".", "")
                     Exit Do
                 Else
                 End If

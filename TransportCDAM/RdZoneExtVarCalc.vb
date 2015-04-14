@@ -95,16 +95,14 @@
         'maybe we can move these warning to the setup stage rather than the run model stage? e.g. simply not allow users to enter years not between 2011 and 2100
         If WPPL = True Then
             If WPPLYear < 2011 Then
-                MsgBox("Invalid start year provided for WPPL.  Please rerun the model using a year between 2011 and 2100.")
-                logarray(logNum, 0) = "Invalid start year provided for WPPL.  Run terminated during intrazonal road model external variable file generation."
-                logNum += 1
-                Call CloseLog()
+
+                Call ErrorLog("Calculation Error", "Invalid start year provided for WPPL. Please rerun the model using a year between 2011 and 2100 Run terminated during intrazonal road model external variable file generation.", "")
+                Stop
                 End
             ElseIf WPPLYear > 2100 Then
-                MsgBox("Invalid start year provided for WPPL.  Please rerun the model using a year between 2011 and 2100.")
-                logarray(logNum, 0) = "Invalid start year provided for WPPL.  Run terminated during intrazonal road model external variable file generation."
-                logNum += 1
-                Call CloseLog()
+
+                Call ErrorLog("Calculation Error", "Invalid start year provided for WPPL. Please rerun the model using a year between 2011 and 2100. Run terminated during intrazonal road model external variable file generation.", "")
+                Stop
                 End
             End If
         End If
@@ -617,13 +615,7 @@
         End If
     End Sub
 
-    Sub DictionaryMissingVal()
-        logarray(logNum, 0) = "No " & ErrorString & " when updating input files.  Model run terminated."
-        logNum += 1
-        Call WriteData("Logfile", "", logarray)
-        MsgBox("Model run failed.  Please consult the log file for details.")
-        End
-    End Sub
+
 
     Sub CapChangeCalc()
 

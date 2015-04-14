@@ -1041,13 +1041,7 @@
 
     End Sub
 
-    Sub DictionaryMissingVal()
-        logarray(logNum, 0) = "No " & ErrorString & " when updating input files.  Model run terminated."
-        logNum += 1
-        Call WriteData("Logfile", "", logarray)
-        MsgBox("Model run failed.  Please consult the log file for details.")
-        End
-    End Sub
+
 
     Sub CapChangeCalc()
 
