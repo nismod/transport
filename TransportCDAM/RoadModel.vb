@@ -423,7 +423,6 @@
             Z2GVA(link, 1) = get_gva_data_by_zoneID(g_modelRunYear - 1, Zone2(link, 1), "DZ", "'road'")
 
 
-
         End If
     End Sub
 
@@ -544,10 +543,9 @@
                         Call SpeedCalc()
                         HourlySpeeds(link, sc, h) = SpeedNew
                     Else
-                        'TODO - Had to cut this out as it was crashing when the errors got over 48 in number - should replace this with database log
-                        'this shouldn't happen in the base year, as we should already have reset the maximum capacity variable in the start flows sub, so write error to log file and exit model
-                        Call ErrorLog("Calculation Error", "ERROR in interzonal road model - maximum capacity exceeded in base year for Flow " & FlowID(link, 1) & ", road type " & RoadType & ", hour " & h & "", "")
-                        Stop
+                        Dim msg As String = "ERROR in interzonal road model - maximum capacity exceeded in base year for Flow " & FlowID(link, 1) & ", road type " & RoadType & ", hour " & h
+                        Call ErrorLog(ErrorSeverity.FATAL, "Calculation Error", "RoadModel, BaseSpeeds", msg)
+                        Throw New System.Exception(msg)
                     End If
                     h += 1
                 Loop
@@ -1178,8 +1176,9 @@
             'Debugger - checks if stuck in loop and writes to log
             z += 1
             If z > 1000 Then
-                Stop
-                Call ErrorLog("Calculation Error", "ERROR in Road Link Module: Flow" & FlowID(link, 1) & " Year" & g_modelRunYear & " Road Type " & RoadType & " speed and flow failed to converge after 1000 iterations", "")
+                Dim msg As String = "ERROR in Road Link Module: Flow" & FlowID(link, 1) & " Year" & g_modelRunYear & " Road Type " & RoadType & " speed and flow failed to converge after 1000 iterations"
+                Call ErrorLog(ErrorSeverity.FATAL, "Calculation Error", "RoadModel, BaseSpeeds", msg)
+                Throw New System.Exception(msg)
                 Exit Do
             Else
             End If

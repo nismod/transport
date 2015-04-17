@@ -2,30 +2,35 @@
     'this version incorporates EV input from the database.
 
     Public Function runCDAM(ByVal ModelRun_ID As Integer, ByVal Model_Year As Integer, ByVal Dbase As String) As Boolean
-        'Try
+        Try
 
-        'Store global variables
-        g_modelRunID = ModelRun_ID
-        g_modelRunYear = Model_Year
-        g_dbase = Dbase
+            'Store global variables
+            g_modelRunID = ModelRun_ID
+            g_modelRunYear = Model_Year
+            g_dbase = Dbase
+            'Setup global LogFile variant types
+            g_LogVTypes(0) = VariantType.Integer : g_LogVTypes(1) = VariantType.Integer : g_LogVTypes(2) = VariantType.String
 
-        'Get Model Run Details including 
-        If getModelRunDetails() = False Then
-            Throw New System.Exception("Error getting Model Run details from database")
-        End If
+            'Get Model Run Details including 
+            If getModelRunDetails() = False Then
+                Throw New System.Exception("Error getting Model Run details from database")
+            End If
 
-        'Get Model run parameters
-        GetParameters()
+            'Get Model run parameters
+            GetParameters()
 
-        'Run Transport Model
-        FullMain()
+            'Run Transport Model
+            FullMain()
 
-        Return True
+            Return True
 
-        'Catch ex As Exception
-        'Throw ex
-        'Return False
-        'End Try
+        Catch ex As Exception
+            Dim msg As String = "Fatal Error in Code - Transport Model stopped"
+            logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = msg
+            Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
+            Throw New System.Exception(msg)
+            Return False
+        End Try
     End Function
 
     Private Function getModelRunDetails() As Boolean
@@ -227,7 +232,9 @@
         'check if running model, and if not then close log file and end
         If RunModel = False Then
             Call CloseLog()
-            End
+            Dim msg As String = "RunModel = False"
+            Call ErrorLog(ErrorSeverity.FATAL, "FullCDAM", "FullMain", msg)
+            Throw New System.Exception(msg)
         End If
 
         'add model elements to log file
@@ -236,8 +243,8 @@
         'if RoadLink model is selected then run that model
         If RunRoadLink = True Then
             Call RoadLinkMain()
-            logarray(logNum, 0) = "Road link model run completed"
-            logNum += 1
+            logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "Road link model run completed"
+            Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
         End If
 
         'if RoadZone model is selected then run that model
@@ -248,36 +255,36 @@
             Else
                 Call RoadZoneMainNew()
             End If
-            logarray(logNum, 0) = "Road zone model run completed"
-            logNum += 1
+            logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "Road zone model run completed"
+            Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
         End If
 
         'if RailLink model is selected then run that model
         If RunRailLink = True Then
             Call RailLinkMain()
-            logarray(logNum, 0) = "Rail link model run completed"
-            logNum += 1
+            logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "Rail link model run completed"
+            Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
         End If
 
         'if RailZone model is selected then run that model
         If RunRailZone = True Then
             Call RailZoneMain()
-            logarray(logNum, 0) = "Rail zone model run completed"
-            logNum += 1
+            logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "Rail zone model run completed"
+            Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
         End If
 
         'if Air model is selected then run that model
         If RunAir = True Then
             Call AirMain()
-            logarray(logNum, 0) = "Air model run completed"
-            logNum += 1
+            logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "Air model run completed"
+            Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
         End If
 
         'if Sea model is selected then run that model
         If RunSea = True Then
             Call SeaMain()
-            logarray(logNum, 0) = "Sea model run completed"
-            logNum += 1
+            logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "Sea model run completed"
+            Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
         End If
 
         'write cross sector output
@@ -296,9 +303,8 @@
 
     Sub CreateLog()
         'write header rows
-        logarray(1, 0) = "ITRC Transport CDAM"
-        logarray(2, 0) = "Model run commenced at " & System.DateTime.Now
-        logNum = 3
+        logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "ITRC Transport CDAM"
+        Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
     End Sub
 
     Sub ExtVarMain()
@@ -321,32 +327,32 @@
         Dim airnewcost As Double
 
         'write to log file first
-        logarray(logNum, 0) = "The following external variable files were generated:"
-        logNum += 1
+        logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "The following external variable files were generated:"
+        Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
         If NewRdLEV = True Then
-            logarray(logNum, 0) = "Road link external variables"
-            logNum += 1
+            logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "Road link external variables"
+            Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
         End If
         If NewRdZEV = True Then
-            logarray(logNum, 0) = "Road zone external variables"
-            logNum += 1
+            logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "Road zone external variables"
+            Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
         End If
         If NewRlLEV = True Then
-            logarray(logNum, 0) = "Rail link external variables"
-            logNum += 1
+            logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "Rail link external variables"
+            Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
         End If
         If NewRlZEV = True Then
-            logarray(logNum, 0) = "Rail zone external variables"
-            logNum += 1
+            logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "Rail zone external variables"
+            Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
         End If
         If NewAirEV = True Then
-            logarray(logNum, 0) = "Airport external variables"
-            logNum += 1
+            logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "Airport external variables"
+            Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
         End If
         If NewSeaEV = True Then
             'Call SeaEVMain()
-            logarray(logNum, 0) = "Seaport external variables"
-            logNum += 1
+            logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "Seaport external variables"
+            Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
         End If
 
         'if we are using database files then loop through transformed database file to start year (2010)
@@ -1025,40 +1031,40 @@
     End Sub
 
     Sub ModelElementLog()
-        logarray(logNum, 0) = "The following modules were run:"
-        logNum += 1
+        logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "The following modules were run:"
+        Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
         If RunRoadLink = True Then
-            logarray(logNum, 0) = "Road link"
-            logNum += 1
+            logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "Road link"
+            Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
         End If
         If RunRoadZone = True Then
-            logarray(logNum, 0) = "Road zone"
-            logNum += 1
+            logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "Road zone"
+            Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
         End If
         If RunRailLink = True Then
-            logarray(logNum, 0) = "Rail link"
-            logNum += 1
+            logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "Rail link"
+            Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
         End If
         If RunRailZone = True Then
-            logarray(logNum, 0) = "Rail zone"
-            logNum += 1
+            logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "Rail zone"
+            Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
         End If
         If RunAir = True Then
-            logarray(logNum, 0) = "Air"
-            logNum += 1
+            logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "Air"
+            Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
         End If
         If RunSea = True Then
-            logarray(logNum, 0) = "Sea"
-            logNum += 1
+            logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "Sea"
+            Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
         End If
     End Sub
 
     Sub MissingValueError(ByVal ErrDict As String)
-        logarray(logNum, 0) = "No " & ErrDict & " value found in lookup table for Zone " & OZone & " when updating input files.  Model run terminated."
-        logNum += 1
-        Call WriteData("Logfile", "", logarray)
-        MsgBox("Model run failed.  Please consult the log file for details.")
-        End
+        Dim msg As String = "No " & ErrDict & " value found in lookup table for Zone " & OZone & " when updating input files.  Model run terminated."
+        logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = msg
+        Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
+        ErrorLog(ErrorSeverity.FATAL, "Missing Value Error", ErrDict, msg)
+        Throw New System.Exception(msg)
     End Sub
 
 End Class

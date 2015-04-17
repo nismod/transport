@@ -357,13 +357,18 @@ Module RailModel
                     NewTrains = BestTrains
                     NewDelays(InputCount, 0) = BestDelays
 
-                    'write to log file
-                    Call ErrorLog("Calculation Error", "Flow " & FlowNum(InputCount, 0) & " failed to converge in Year " & g_modelRunYear & " in rail link model.  Best convergence ratio was " & CloseTrainRat & ".", "")
+                    'write to effort log
+                    Dim msg As String = "Flow " & FlowNum(InputCount, 0) & " failed to converge in Year " & g_modelRunYear & " in rail link model.  Best convergence ratio was " & CloseTrainRat & "."
+                    Call ErrorLog(ErrorSeverity.FATAL, "ConsTrainCalc", "RailModel", msg)
+                    Throw New System.Exception(msg)
                     Exit Do
-                Else
                 End If
+                'If TrainRat becomes Not A Number then error out
                 If Double.IsNaN(TrainRat) Then
-                    logarray(logNum, 0) = "Flow " & FlowNum(InputCount, 0) & " became Not A Number in Year " & g_modelRunYear & " of the rail link model."
+                    'write to effort log
+                    Dim msg As String = "Flow " & FlowNum(InputCount, 0) & " became Not A Number in Year " & g_modelRunYear & " of the rail link model."
+                    Call ErrorLog(ErrorSeverity.FATAL, "ConsTrainCalc", "RailModel", msg)
+                    Throw New System.Exception(msg)
                     Exit Do
                 End If
             Loop

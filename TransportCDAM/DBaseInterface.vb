@@ -77,7 +77,7 @@ Module DBaseInterface
     Public TripRates As String
     Public Duration As Integer
     Public logNum As Integer
-    Public logarray(47, 0) As String
+    Public logarray(1, 2) As String
     Public ScenarioID As Integer
     Public Scenario As Integer
     Public StrategyID As Integer
@@ -127,7 +127,12 @@ Module DBaseInterface
     Public g_modelRunYear As Integer
     Public g_initialYear As Integer = 2011
     Public g_dbase As String
+    Public g_LogVTypes(2) As VariantType
 
+    Public Enum ErrorSeverity
+        FATAL = 1
+        WARNING = 0
+    End Enum
 
     Sub ConnectToDBase()
         Try
@@ -238,8 +243,8 @@ Module DBaseInterface
             GORYear = GORArray(0)
         End If
         'write file name to log file
-        logarray(logNum, 0) = "Population data taken from file " & DBasePopFile
-        logNum += 1
+        logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "Population data taken from file " & DBasePopFile
+        Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
         'read input line, split it and get year
         PopLine = dp.ReadLine
         PopArray = Split(PopLine, ",")
@@ -421,8 +426,8 @@ Module DBaseInterface
         'read header row
         EcoLine = de.ReadLine
         'write file name to log file
-        logarray(logNum, 0) = "Economy data taken from file " & DBaseEcoFile
-        logNum += 1
+        logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "Economy data taken from file " & DBaseEcoFile
+        Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
         'read input line, split it and get year
         EcoLine = de.ReadLine
         EcoArray = Split(EcoLine, ",")
@@ -510,9 +515,8 @@ Module DBaseInterface
         If DistZoneLookup.TryGetValue(District, value) Then
             ZoneNum = value
         Else
-            logarray(logNum, 0) = "No ITRC Zone found in lookup table for District " & District & ".  Model run terminated."
-            logNum += 1
-            Call WriteData("Logfile", "", logarray)
+            logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "No ITRC Zone found in lookup table for District " & District & ".  Model run terminated."
+            Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
             zp.Close()
             End
         End If
@@ -615,9 +619,8 @@ Module DBaseInterface
                         badregioncount += 1
                     Else
                         MsgBox("More than 10 unrecognised regions included in input gva file.  Model run terminated.")
-                        logarray(logNum, 0) = "More than 10 unrecognised regions included in input gva file.  Model run terminated."
-                        logNum += 1
-                        Call WriteData("Logfile", "", logarray)
+                        logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "More than 10 unrecognised regions included in input gva file.  Model run terminated."
+                        Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
                         End
                     End If
                 End If
@@ -1354,15 +1357,17 @@ Module DBaseInterface
                     Case "Parameters"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_I_Parameters_Run" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID
                     Case Else
-                        'for error handling
+                        'Fatal Error - missing Case
+                        ErrorLog(ErrorSeverity.FATAL, "ReadData", SubType, "Missing Database SQL Case for Type " & Type & ", SubType " & SubType)
                 End Select
             Case "Inputs"
                 Select Case SubType
                     Case "Parameters"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_I_Parameters_Run" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID
-
+                    Case Else
+                        'Fatal Error - missing Case
+                        ErrorLog(ErrorSeverity.FATAL, "ReadData", SubType, "Missing Database SQL Case for Type " & Type & ", SubType " & SubType)
                 End Select
-
             Case "RoadZone"
                 Select Case SubType
                     Case "Input"
@@ -1386,7 +1391,8 @@ Module DBaseInterface
                         TheFileName = "Elasticity Files\TR" & SubStrategy & "\RoadZoneElasticities.csv"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_I_RoadZoneElasticities_Run" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year
                     Case Else
-                        'for error handling
+                        'Fatal Error - missing Case
+                        ErrorLog(ErrorSeverity.FATAL, "ReadData", SubType, "Missing Database SQL Case for Type " & Type & ", SubType " & SubType)
                 End Select
             Case "RoadLink"
                 Select Case SubType
@@ -1429,7 +1435,8 @@ Module DBaseInterface
                     Case "RouteLength"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RoadFlows" & Chr(34) & " ORDER BY id"
                     Case Else
-                        'for error handling
+                        'Fatal Error - missing Case
+                        ErrorLog(ErrorSeverity.FATAL, "ReadData", SubType, "Missing Database SQL Case for Type " & Type & ", SubType " & SubType)
                 End Select
             Case "RailZone"
                 Select Case SubType
@@ -1457,7 +1464,8 @@ Module DBaseInterface
                         TheFileName = "RailZoneEVScaling.csv"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RailZone_EVScaling" & Chr(34) & " WHERE year = " & Year
                     Case Else
-                        'for error handling
+                        'Fatal Error - missing Case
+                        ErrorLog(ErrorSeverity.FATAL, "ReadData", SubType, "Missing Database SQL Case for Type " & Type & ", SubType " & SubType)
                 End Select
             Case "RailLink"
                 Select Case SubType
@@ -1496,7 +1504,8 @@ Module DBaseInterface
                     Case "TrackLength"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RailLinks" & Chr(34) & " ORDER BY id"
                     Case Else
-                        'for error handling
+                        'Fatal Error - missing Case
+                        ErrorLog(ErrorSeverity.FATAL, "ReadData", SubType, "Missing Database SQL Case for Type " & Type & ", SubType " & SubType)
                 End Select
             Case "Seaport"
                 Select Case SubType
@@ -1523,7 +1532,8 @@ Module DBaseInterface
                     Case "Fuel"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_SeaFuelConsumption" & Chr(34) & " WHERE modelrun_id=" & g_modelRunID & " AND year = " & Year
                     Case Else
-                        'for error handling
+                        'Fatal Error - missing Case
+                        ErrorLog(ErrorSeverity.FATAL, "ReadData", SubType, "Missing Database SQL Case for Type " & Type & ", SubType " & SubType)
                 End Select
             Case "AirNode"
                 Select Case SubType
@@ -1548,7 +1558,8 @@ Module DBaseInterface
                         TheFileName = "Elasticity Files\TR" & SubStrategy & "\AirElasticities.csv"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_I_AirElasticities_Run" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year
                     Case Else
-                        'for error handling
+                        'Fatal Error - missing Case
+                        ErrorLog(ErrorSeverity.FATAL, "ReadData", SubType, "Missing Database SQL Case for Type " & Type & ", SubType " & SubType)
                 End Select
             Case "AirFlow"
                 Select Case SubType
@@ -1566,7 +1577,8 @@ Module DBaseInterface
                     Case "Fuel"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_AirFuelConsumption" & Chr(34) & " WHERE modelrun_id=" & g_modelRunID & " AND year = " & Year
                     Case Else
-                        'for error handling
+                        'Fatal Error - missing Case
+                        ErrorLog(ErrorSeverity.FATAL, "ReadData", SubType, "Missing Database SQL Case for Type " & Type & ", SubType " & SubType)
                 End Select
             Case "SubStrategy"
                 TheFileName = "CommonVariablesTR" & SubStrategy & ".csv"
@@ -1578,7 +1590,8 @@ Module DBaseInterface
                 'Connection = "D:\ITRC\ITRC Main\Model Inputs\EnergyCosts\" 'DBaseEneFile
                 TheFileName = "ScenarioEneFileCentralRevised.csv"
             Case Else
-                'for error handling
+                'Fatal Error - missing Case
+                ErrorLog(ErrorSeverity.FATAL, "ReadData", Type, "Missing Database SQL Case for Type " & Type & ", SubType " & SubType)
         End Select
 
 
@@ -1596,6 +1609,7 @@ Module DBaseInterface
             Try
                 DataFile = New FileStream(Connection & TheFileName, IO.FileMode.Open, IO.FileAccess.Read)
             Catch exIO As IOException
+                ErrorLog(ErrorSeverity.FATAL, "ReadData", Type, "An error was encountered trying to access the file " & Connection & TheFileName)
                 MsgBox("An error was encountered trying to access the file " & Connection & TheFileName)
             End Try
             DataRead = New IO.StreamReader(DataFile, System.Text.Encoding.Default)
@@ -1715,9 +1729,10 @@ Module DBaseInterface
             Return True
 
         Catch ex As Exception
-            Stop
-            Call ErrorLog("Database Error", "Error occur when reading data from the database table " & theSQL, ex.StackTrace)
+            Dim msg As String = "ERROR loading data from the database with SQL: " & theSQL
+            Call ErrorLog(ErrorSeverity.FATAL, "Database Error", "LoadSQLDataToArray", msg)
             'Throw ex
+            Throw New System.Exception(msg)
             Return False
         End Try
 
@@ -1742,7 +1757,7 @@ Module DBaseInterface
     Function WriteData(ByVal Type As String, ByVal SubType As String, ByRef OutputArray(,) As String,
                        Optional ByVal TempArray(,) As String = Nothing,
                        Optional ByVal IsNewFile_IsInsert As Boolean = True,
-                       Optional Connection As String = "") As Boolean
+                       Optional Connection As String = "", Optional VariantTypes() As VariantType = Nothing) As Boolean
 
         Dim OutFileName As String = "", TempFileName As String = ""
         Dim OutputFile As IO.FileStream
@@ -2006,7 +2021,10 @@ Module DBaseInterface
                 End Select
             Case "ErrorLog"
                 TableName = "ISL_ErrorLog"
-                header = "modelrun_id, sector_id, type, code, message, callstack"
+                header = "modelrun_id, sector_id, type, code, message, callstack, is_fatal"
+            Case "Logfile"
+                TableName = "ISL_MessageLog"
+                header = "modelrun_id, sector_id,  message"
             Case "CrossSector"
                 TableName = "TR_O_CrossSector"
                 header = "modelrun_id, year, capacity_margin, investment, emission, service_delivery"
@@ -2052,9 +2070,8 @@ Module DBaseInterface
                     aryFieldValues.Add(UnNull(OutputArray(iy, ix), VariantType.String))
                 Next
                 'Insert data into table
-                If SaveArrayToSQLTable(aryFieldNames, aryFieldValues, TableName, "", True) = False Then
-                    Stop
-                    Call ErrorLog("Database Error", "Error occurs when writting to " & TableName, "")
+                If SaveArrayToSQLTable(aryFieldNames, aryFieldValues, TableName, "", True, , VariantTypes) = False Then
+                    'Stop
                     Return False 'TODO - Log this as its probably an error
                 End If
             Next
@@ -2113,7 +2130,8 @@ Module DBaseInterface
 
     Public Function SaveArrayToSQLTable(ByRef aryFieldNames As ArrayList, ByRef aryFieldValues As ArrayList, _
                                  ByVal TableName As String, ByVal IDField As String, _
-                                 ByVal IsInsert As Boolean, Optional ByVal KeyID As Integer = 0) As Boolean
+                                 ByVal IsInsert As Boolean, Optional ByVal KeyID As Integer = 0, _
+                                 Optional VariantTypes As VariantType() = Nothing) As Boolean
 
         Dim strSQL_N As String = ""
         Dim strSQL_V As String = ""
@@ -2135,7 +2153,18 @@ Module DBaseInterface
 
                 'Get a list of Field Values
                 For i = 0 To aryFieldNames.Count - 1
-                    strSQL_V &= Trim(aryFieldValues.Item(i)) & ", "
+                    If VariantTypes Is Nothing Then
+                        strSQL_V &= Trim(aryFieldValues.Item(i)) & ", "
+                    Else
+                        Select Case VariantTypes(i).ToString
+                            Case "String"
+                                strSQL_V &= "E'" & Trim(aryFieldValues.Item(i)) & "'" & ", " 'Using the E'' syntax to make it a literal query
+                            Case "Date"
+                                strSQL_V &= "'#" & Trim(aryFieldValues.Item(i)) & "#'" & ", "
+                            Case Else
+                                strSQL_V &= Trim(aryFieldValues.Item(i)) & ", "
+                        End Select
+                    End If
                 Next
                 'Get rid of the last comma and space
                 strSQL_V = Left(strSQL_V, Len(strSQL_V) - 2)
@@ -2146,13 +2175,27 @@ Module DBaseInterface
                 strSQL_NV = ""
                 'Get a list of Field Names = Values
                 For i = 0 To aryFieldNames.Count - 1
-                    strSQL_NV &= aryFieldNames.Item(i) & " = " & aryFieldValues.Item(i) & ", "
+                    If VariantTypes Is Nothing Then
+                        strSQL_NV &= Chr(34) & aryFieldNames.Item(i) & Chr(34) & " = " & Trim(aryFieldValues.Item(i)) & ", "
+                    Else
+                        Select Case VariantTypes(i).ToString
+                            Case "String"
+                                strSQL_NV &= Chr(34) & aryFieldNames.Item(i) & Chr(34) & " = E'" & aryFieldValues.Item(i) & "', "
+                            Case "Date"
+                                strSQL_NV &= Chr(34) & aryFieldNames.Item(i) & Chr(34) & " = '#" & Trim(aryFieldValues.Item(i)) & "#', "
+                            Case Else
+                                strSQL_NV &= Chr(34) & aryFieldNames.Item(i) & Chr(34) & " = " & aryFieldValues.Item(i) & ", "
+                        End Select
+                    End If
                 Next
-                'Get rid of the last comma and space
+                 'Get rid of the last comma and space
                 strSQL_NV = Left(strSQL_NV, Len(strSQL_NV) - 2)
 
                 strSQL_All = "UPDATE " & Chr(34) & TableName & Chr(34) & " SET " & strSQL_NV
-                strSQL_All &= " WHERE " & IDField & " = " & KeyID
+                strSQL_All &= " WHERE " & IDField & " = " & KeyID & " AND modelrun_id = " & g_modelRunID
+                If Year > 0 Then
+                    strSQL_All &= " AND year = " & Year
+                End If
             End If
 
             ConnectToDBase()
@@ -2166,7 +2209,9 @@ Module DBaseInterface
             Return True
         Catch ex As Exception
             'Throw ex
-            logarray(logNum, 0) = "Error in SQL call: " & strSQL_All
+            Dim msg As String = "Error occured in SQL call: " & strSQL_All
+            ErrorLog(ErrorSeverity.FATAL, "Database Error", "SaveArrayToSQLTable", msg)
+            Throw New System.Exception(msg)
             Return False
         End Try
     End Function
@@ -2192,28 +2237,109 @@ Module DBaseInterface
         End If
     End Function
 
+
+    Public Function addQuotes(ByVal input As String)
+        input = UnNull(input, VariantType.String)
+
+        If input.ToUpper() <> "NULL" Then
+            If ((input.Substring(0, 1) = "'") And (input.Substring(input.Length - 1, 1) = "'")) Then
+                Return input
+            Else
+                Return "'" & input & "'"
+            End If
+        Else
+            Return "'" & input & "'"
+        End If
+    End Function
+
+    Public Function cleanString(ByVal input As String)
+        Dim clean As String
+
+        input = UnNull(input, VariantType.String)
+
+        ' Remove surrounding quotes if they exist, replace apostrophe's with the appropriate character
+        ' and trim white space from the input string.
+        clean = removeSurroundingQuotes(input)
+        'Replace quotes
+        clean = input.Replace("'", "")
+        'Replace carriage returns
+        clean = clean.Replace(vbLf, ", ")
+        clean = clean.Replace(vbCrLf, ", ")
+        clean = clean.Replace(vbCr, ", ")
+        clean = clean.Replace("\", "\\")
+        ' If it is empty change it's value to NULL.
+        If (clean.Length = 0) Then
+            clean = "NULL"
+        End If
+
+        Return clean
+    End Function
+
+    Public Function removeSurroundingQuotes(ByVal input As String) As String
+        Dim firstChar, lastChar As String
+        input = UnNull(input, VariantType.String)
+
+        'Only attempt to remove surrounding quotes if the string is at least 2 chars long.
+
+        If input.Length > 1 Then
+
+            firstChar = input.Substring(0, 1)
+            lastChar = input.Substring(input.Length - 1, 1)
+
+            'If they are both a quotation marks, remove.
+            If firstChar = "\""" And lastChar = "\""" Then
+                Return input.Substring(1, input.Length - 2)
+            Else
+                Return input
+            End If
+        Else
+            Return input
+        End If
+    End Function
+
     Public Sub CloseLog()
-        logarray(logNum, 0) = "Model run finished at " & System.DateTime.Now
-        logNum += 1
-        logarray(logNum, 0) = "Code written by Dr Simon Blainey, Transportation Research Group, University of Southampton"
-        logNum += 1
-        logarray(logNum, 0) = "All results are indicative estimates, and the authors accept no liability for any actions arising from the use of these results"
-        logNum += 1
-
-        'Call WriteData("Logfile", "", logarray)
+        logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "Model run finished at " & System.DateTime.Now
+        Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
+        logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "Code written by Dr Simon Blainey and Xucheng Li, Transportation Research Group, University of Southampton"
+        Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
+        logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "All results are indicative estimates, and the authors accept no liability for any actions arising from the use of these results"
+        Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
     End Sub
 
-    Public Sub ErrorLog(ByVal type As String, ByVal message As String, ByVal stacktrace As String)
+    Public Sub ErrorLog(ByVal severity As ErrorSeverity, ByVal type As String, ByVal modulename As String, ByVal message As String, Optional ByVal stacktrace As String = "")
+        Dim VTypes(6) As VariantType
+        ReDim ErrorLogArray(1, 6) 'clear the error log array
 
-        ErrorLogArray(1, 0) = g_modelRunID
-        ErrorLogArray(1, 1) = 1 '1 means transport sector
-        ErrorLogArray(1, 2) = type
-        ErrorLogArray(1, 3) = "TR" 'not very sure what this code is
-        ErrorLogArray(1, 4) = message
-        ErrorLogArray(1, 5) = stacktrace
+        Errorlogarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = g_modelRunID : VTypes(0) = VariantType.Integer
+        ErrorLogArray(1, 1) = 1 : VTypes(1) = VariantType.Integer '1 means transport sector
+        ErrorLogArray(1, 2) = type : VTypes(2) = VariantType.String
+        ErrorLogArray(1, 3) = modulename : VTypes(3) = VariantType.String
+        ErrorLogArray(1, 4) = cleanString(message) : VTypes(4) = VariantType.String
+        ErrorLogArray(1, 5) = cleanString(stacktrace) : VTypes(5) = VariantType.String
+        ErrorLogArray(1, 6) = severity 'is_fatal
 
-        Call WriteData("ErrorLog", "", ErrorLogArray)
+        'Save errors to database
+        Call WriteData("ErrorLog", "", ErrorLogArray, , , , VTypes)
 
-        ReDim ErrorLogArray(1, 5)
     End Sub
+
+
+    Public Sub ErrorLog(ByVal severity As ErrorSeverity, ByVal ex As Exception)
+        Dim VTypes(6) As VariantType
+        ReDim ErrorLogArray(1, 6) 'clear the error log array
+
+        Errorlogarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = g_modelRunID : VTypes(0) = VariantType.Integer
+        ErrorLogArray(1, 1) = 1 : VTypes(1) = VariantType.Integer '1 means transport sector
+        ErrorLogArray(1, 2) = ex.GetType.TypeHandle.ToString : VTypes(2) = VariantType.String
+        ErrorLogArray(1, 3) = ex.GetType.Name : VTypes(3) = VariantType.String
+        ErrorLogArray(1, 4) = cleanString(ex.Message) : VTypes(4) = VariantType.String
+        ErrorLogArray(1, 5) = cleanString(ex.StackTrace) : VTypes(5) = VariantType.String
+        ErrorLogArray(1, 6) = severity
+
+        'Save errors to database
+        Call WriteData("ErrorLog", "", ErrorLogArray, , , , VTypes)
+
+    End Sub
+
+
 End Module
