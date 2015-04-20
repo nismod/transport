@@ -106,7 +106,7 @@
     Dim TempArray(292, 3037) As String
     Dim TempAnArray(292, 34) As String
     Dim TempHArray(7007, 87) As String
-    Dim NewCapArray(291, 3) As String
+    Dim NewCapArray(20952, 4) As String
     Dim NewCapNum As Integer
     Dim yearIs2010 As Boolean = False
     Dim totalTraffic As Double
@@ -214,7 +214,7 @@
         Call WriteData("RoadLink", "Temp Annual", TempAnArray, , False)
         Call WriteData("RoadLink", "Temp Hourly", TempHArray, , False)
 
-        If BuildInfra = True Then
+        If BuildInfra = True And Not NewCapArray Is Nothing Then
             Call WriteData("RoadLink", "NewCap_Added", NewCapArray, , False)
         End If
 
@@ -1434,10 +1434,11 @@
                         RoadTypeLanesNew(link, 0) += 2
                         AddedLanes(link, 0) += 2
                         'write details to output file
-                        NewCapArray(NewCapNum, 0) = FlowID(link, 1)
-                        NewCapArray(NewCapNum, 1) = (g_modelRunYear + 1)
-                        NewCapArray(NewCapNum, 2) = 0
-                        NewCapArray(NewCapNum, 3) = 2
+                        NewCapArray(NewCapNum, 0) = g_modelRunID
+                        NewCapArray(NewCapNum, 1) = FlowID(link, 1)
+                        NewCapArray(NewCapNum, 2) = (g_modelRunYear + 1)
+                        NewCapArray(NewCapNum, 3) = 0
+                        NewCapArray(NewCapNum, 4) = 2
                         NewCapNum += 1
                         Exit Do
                     End If
@@ -1454,10 +1455,11 @@
                         RoadTypeLanesNew(link, 1) += 2
                         AddedLanes(link, 1) += 2
                         'write details to output file
-                        NewCapArray(NewCapNum, 0) = FlowID(link, 1)
-                        NewCapArray(NewCapNum, 1) = (g_modelRunYear + 1)
-                        NewCapArray(NewCapNum, 2) = 1
-                        NewCapArray(NewCapNum, 3) = 2
+                        NewCapArray(NewCapNum, 0) = g_modelRunID
+                        NewCapArray(NewCapNum, 1) = FlowID(link, 1)
+                        NewCapArray(NewCapNum, 2) = (g_modelRunYear + 1)
+                        NewCapArray(NewCapNum, 3) = 1
+                        NewCapArray(NewCapNum, 4) = 2
                         NewCapNum += 1
                         Exit Do
                     End If
@@ -1474,10 +1476,11 @@
                         RoadTypeLanesNew(link, 2) += 2
                         AddedLanes(link, 2) += 2
                         'write details to output file
-                        NewCapArray(NewCapNum, 0) = FlowID(link, 1)
-                        NewCapArray(NewCapNum, 1) = (g_modelRunYear + 1)
-                        NewCapArray(NewCapNum, 2) = 2
+                        NewCapArray(NewCapNum, 0) = g_modelRunID
+                        NewCapArray(NewCapNum, 1) = FlowID(link, 1)
+                        NewCapArray(NewCapNum, 2) = (g_modelRunYear + 1)
                         NewCapArray(NewCapNum, 3) = 2
+                        NewCapArray(NewCapNum, 4) = 2
                         NewCapNum += 1
                         Exit Do
                     End If

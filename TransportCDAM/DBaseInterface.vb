@@ -1826,7 +1826,7 @@ Module DBaseInterface
                     Case "Temp"
                         TableName = "TR_IO_AirNode"
                         OutFileName = FilePrefix & "AirNodeTemp.csv"
-                        header = "modelrun_id, year, airport_id, all_pass_total, dom_pass, int_pass, airport_trips_latent"
+                        header = "modelrun_id, year, airport_id, all_pass_total, dom_pass, int_pass, airport_trips_latent, term_cap, max_atm, term_cap_added, run_cap_added, termcap_checker, runcap_checker"
                     Case "ExtVar"
                         TableName = "TR_IO_AirNodeExternalVariables"
                         OutFileName = EVFilePrefix & "AirNodeExtVar.csv"
@@ -1861,7 +1861,7 @@ Module DBaseInterface
 
                         TableName = "TR_IO_RailLink"
                         OutFileName = FilePrefix & "RailLinkTemp.csv"
-                        header = "modelrun_id, year, flow_id, delays, cost, trains, tracks, max_td_base, cu_old, cu_new, busy_trains, busy_per, model_peak_headway, calculation_check"
+                        header = "modelrun_id, year, flow_id, delays, cost, trains, tracks, max_td_base, cu_old, cu_new, busy_trains, busy_per, model_peak_headway, calculation_check, tracks_added"
                     Case "ExtVar"
 
                         TableName = "TR_IO_RailLinkExternalVariables"
@@ -1965,7 +1965,7 @@ Module DBaseInterface
 
                         TableName = "TR_O_RoadZoneNewCapacity_Added"
                         OutFileName = EVFilePrefix & "RoadZoneCapChange.csv"
-                        header = "modelrun_id, zone_id, changeyear, mway_lane_kmch, rur_ad_lane_kmch, rur_as_lane_kmch, rur_m_lane_kmch, urb_d_lane_kmch, urb_s_lane_kmch"
+                        header = "modelrun_id, zone_id, changeyear, mway_cap, rur_a_cap, rur_min_cap, urb_cap"
                     Case "Fuel"
 
                         TableName = "TR_O_RoadZoneFuelConsumption"
@@ -2188,7 +2188,7 @@ Module DBaseInterface
                         End Select
                     End If
                 Next
-                 'Get rid of the last comma and space
+                'Get rid of the last comma and space
                 strSQL_NV = Left(strSQL_NV, Len(strSQL_NV) - 2)
 
                 strSQL_All = "UPDATE " & Chr(34) & TableName & Chr(34) & " SET " & strSQL_NV

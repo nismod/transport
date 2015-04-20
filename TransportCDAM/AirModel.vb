@@ -79,9 +79,9 @@ Module AirModel
     Dim FlowInputArray(223, 12) As String
     Dim NodeOutputArray(29, 7) As String
     Dim FlowOutputArray(224, 4) As String
-    Dim NodeTempArray(29, 6) As String
+    Dim NodeTempArray(29, 12) As String
     Dim FlowTempArray(224, 7) As String
-    Dim NewCapArray(56, 3) As String
+    Dim NewCapArray(56, 6) As String
     Dim AirNodeID(28, 0) As Integer
     Dim AirFlowID(223, 0) As Integer
     Dim NodePreExtVar(28, 14) As String
@@ -207,7 +207,7 @@ Module AirModel
             Call WriteData("AirFlow", "Temp", FlowTempArray, , True)
             Call WriteData("AirFlow", "Fuel", AirFuelOutputArray, , True)
 
-            If BuildInfra = True Then
+            If BuildInfra = True And Not NewCapArray Is Nothing Then
                 Call WriteData("AirNode", "NewCap_Added", NewCapArray, , True)
             End If
         Else
@@ -218,7 +218,7 @@ Module AirModel
             Call WriteData("AirFlow", "Temp", FlowTempArray, , False)
             Call WriteData("AirFlow", "Fuel", AirFuelOutputArray, , False)
 
-            If BuildInfra = True Then
+            If BuildInfra = True And Not NewCapArray Is Nothing Then
                 Call WriteData("AirNode", "NewCap_Added", NewCapArray, , False)
             End If
         End If
@@ -274,6 +274,7 @@ Module AirModel
                     AirportBaseData(AirportCount, AirportField) = NodeInputArray(AirportCount, AirportField - 1)
                 Next
                 AirpTripsLatent(AirportCount) = 0
+                ReDim AirpAddedCap(28, 2)
             Else
                 'if it is not initial year, read from the temp input format
                 AirNodeID(AirportCount, 0) = NodeInputArray(AirportCount, 3)
@@ -282,8 +283,8 @@ Module AirModel
                     AirportBaseData(AirportCount, AirportField) = NodeInputArray(AirportCount, AirportField + 3)
                 Next
                 AirpTripsLatent(AirportCount) = NodeInputArray(AirportCount, 7)
-                AirportBaseData(AirportCount, 4) = NodePreExtVar(AirportCount, 7)
-                AirportBaseData(AirportCount, 5) = NodePreExtVar(AirportCount, 8)
+                AirportBaseData(AirportCount, 4) = NodeInputArray(AirportCount, 8)
+                AirportBaseData(AirportCount, 5) = NodeInputArray(AirportCount, 9)
                 AirportBaseData(AirportCount, 6) = NodePreExtVar(AirportCount, 4)
                 AirportBaseData(AirportCount, 7) = NodePreExtVar(AirportCount, 5)
                 AirportBaseData(AirportCount, 8) = NodePreExtVar(AirportCount, 6)
@@ -292,6 +293,10 @@ Module AirModel
                 AirportBaseData(AirportCount, 11) = NodePreExtVar(AirportCount, 11)
                 AirportBaseData(AirportCount, 12) = NodePreExtVar(AirportCount, 12)
                 AirportBaseData(AirportCount, 13) = NodePreExtVar(AirportCount, 13)
+                AirpAddedCap(AirportCount, 0) = NodeInputArray(AirportCount, 10)
+                AirpAddedCap(AirportCount, 1) = NodeInputArray(AirportCount, 11)
+                AirpTermCapCheck(AirportCount) = NodeInputArray(AirportCount, 12)
+                AirpRunCapCheck(AirportCount) = NodeInputArray(AirportCount, 13)
             End If
 
             AirportCount += 1
@@ -1083,7 +1088,7 @@ Module AirModel
         Dim flownum As Long
         Dim cuval As Double
         Dim newcapnum As Integer
-
+        ReDim NewCapArray(56, 6)
 
         'write to output array for node and flow
         aircount = 1
@@ -1161,16 +1166,19 @@ Module AirModel
             AirportBaseData(aircount, 6) = AirportExtVar(aircount, 4)
             AirportBaseData(aircount, 7) = AirportExtVar(aircount, 5)
             AirportBaseData(aircount, 13) = AirportExtVar(aircount, 13)
+
+            'update infrastructure if additional capacity is required
             If BuildInfra = True Then
                 cuval = AirpPass(aircount) / AirportBaseData(aircount, 4)
                 If cuval >= CUCritValue Then
                     AirportBaseData(aircount, 4) += 20000000
                     AirpAddedCap(aircount, 0) += 20000000
                     'write details to output file
-                    NewCapArray(newcapnum, 0) = aircount
-                    NewCapArray(newcapnum, 1) = g_modelRunYear + 1
-                    NewCapArray(newcapnum, 2) = 20000000
-                    NewCapArray(newcapnum, 3) = 0
+                    NewCapArray(newcapnum, 0) = g_modelRunID
+                    NewCapArray(newcapnum, 1) = aircount
+                    NewCapArray(newcapnum, 2) = g_modelRunYear + 1
+                    NewCapArray(newcapnum, 3) = 20000000
+                    NewCapArray(newcapnum, 4) = 0
                     newcapnum += 1
                     '1009Change update capacity checkers
                     AirpOldConstraint(aircount) = False
@@ -1188,10 +1196,11 @@ Module AirModel
                     AirportBaseData(aircount, 5) += 200000
                     AirpAddedCap(aircount, 1) += 200000
                     'write details to output file
-                    NewCapArray(newcapnum, 0) = aircount
-                    NewCapArray(newcapnum, 1) = g_modelRunYear + 1
-                    NewCapArray(newcapnum, 2) = 0
-                    NewCapArray(newcapnum, 3) = 200000
+                    NewCapArray(newcapnum, 0) = g_modelRunID
+                    NewCapArray(newcapnum, 1) = aircount
+                    NewCapArray(newcapnum, 2) = g_modelRunYear + 1
+                    NewCapArray(newcapnum, 3) = 0
+                    NewCapArray(newcapnum, 4) = 200000
                     newcapnum += 1
                     '1009Change update capacity checkers
                     AirpOldConstraint(aircount) = False
@@ -1205,6 +1214,7 @@ Module AirModel
                     Next
                 End If
             End If
+
             'write to temp file
             NodeTempArray(aircount, 0) = g_modelRunID
             NodeTempArray(aircount, 1) = g_modelRunYear
@@ -1213,6 +1223,12 @@ Module AirModel
                 NodeTempArray(aircount, x + 2) = AirportBaseData(aircount, x)
             Next
             NodeTempArray(aircount, 6) = AirpTripsLatent(aircount)
+            NodeTempArray(aircount, 7) = AirportBaseData(aircount, 4)
+            NodeTempArray(aircount, 8) = AirportBaseData(aircount, 5)
+            NodeTempArray(aircount, 9) = AirpAddedCap(aircount, 0)
+            NodeTempArray(aircount, 10) = AirpAddedCap(aircount, 1)
+            NodeTempArray(aircount, 11) = AirpOldConstraint(aircount)
+            NodeTempArray(aircount, 12) = AirpRunCapCheck(aircount)
 
             aircount += 1
         Loop

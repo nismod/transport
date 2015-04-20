@@ -34,7 +34,7 @@
     Dim VarRat As Double
     Dim SeaTripRates As Double
     Dim InputCount As Integer
-    Dim NewCapArray(47, 8) As String
+    Dim NewCapArray(235, 8) As String
     Dim InputArray(47, 15) As String
     Dim OutputArray(48, 9) As String
     Dim TempArray(48, 12) As String
@@ -62,6 +62,10 @@
 
         ReDim SeaFuelOutputArray(1, 4)
 
+        'set the newcaparray to the first line to start with
+        NewCapNum = 1
+        ReDim NewCapArray(235, 8)
+
         'get input files and create output files
         Call SeaInputFiles()
 
@@ -83,8 +87,7 @@
 
         Do While InputCount < 48
 
-            'set the newcaparray to the first line to start with
-            NewCapNum = 1
+
             'update the input variables
             Call LoadPortInput()
             'set latent traffic levels to zero
@@ -123,7 +126,7 @@
             Call WriteData("Seaport", "Fuel", SeaFuelOutputArray, , True)
 
             'if the model is building capacity then create new capacity file
-            If BuildInfra = True Then
+            If BuildInfra = True And Not NewCapArray Is Nothing Then
                 Call WriteData("Seaport", "NewCap_Added", NewCapArray, , True)
             End If
         Else
@@ -131,7 +134,7 @@
             Call WriteData("Seaport", "Temp", TempArray, , False)
             Call WriteData("Seaport", "Fuel", SeaFuelOutputArray, , False)
 
-            If BuildInfra = True Then
+            If BuildInfra = True And Not NewCapArray Is Nothing Then
                 Call WriteData("Seaport", "NewCap_Added", NewCapArray, , False)
             End If
         End If
@@ -229,7 +232,7 @@
         If BuildInfra = True Then
             item = 4
             Do While item < 9
-                PortExtVar(PortID, item) += AddedCap(item - 1)
+                PortExtVar(PortID, item) += AddedCap(item - 3)
                 item += 1
             Loop
         End If
@@ -384,21 +387,22 @@
                         'write details to output file
                         Select Case FreightType
                             Case 1
-                                newcapstring = PortID & "," & g_modelRunYear - 1 & ",1000,0,0,0,0"
+                                newcapstring = PortID & "," & g_modelRunYear & ",1000,0,0,0,0"
                             Case 2
-                                newcapstring = PortID & "," & g_modelRunYear - 1 & ",0,1000,0,0,0"
+                                newcapstring = PortID & "," & g_modelRunYear & ",0,1000,0,0,0"
                             Case 3
-                                newcapstring = PortID & "," & g_modelRunYear - 1 & ",0,0,1000,0,0"
+                                newcapstring = PortID & "," & g_modelRunYear & ",0,0,1000,0,0"
                             Case 4
-                                newcapstring = PortID & "," & g_modelRunYear - 1 & ",0,0,0,1000,0"
+                                newcapstring = PortID & "," & g_modelRunYear & ",0,0,0,1000,0"
                             Case 5
-                                newcapstring = PortID & "," & g_modelRunYear - 1 & ",0,0,0,0,1000"
+                                newcapstring = PortID & "," & g_modelRunYear & ",0,0,0,0,1000"
                         End Select
                         'read newcapstring to array to writedata
                         Dim newcaps() As String
                         newcaps = Split(newcapstring, ",")
-                        For i = 0 To 7
-                            NewCapArray(NewCapNum, i) = newcaps(i)
+                        NewCapArray(NewCapNum, 0) = g_modelRunID
+                        For i = 0 To 6
+                            NewCapArray(NewCapNum, i + 1) = newcaps(i)
                         Next
                         NewCapNum += 1
                     End If

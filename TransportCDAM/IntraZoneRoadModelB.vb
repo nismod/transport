@@ -64,7 +64,7 @@
     Dim CapNum As Integer
     Dim NewCapNum As Integer
     Dim FuelArray(145, 21) As String
-    Dim NewCapArray(145, 5) As String
+    Dim NewCapArray(435, 6) As String
     Dim yearIs2010 As Boolean = False
 
 
@@ -90,6 +90,7 @@
 
         'initialize new cap num to write to the first line
         NewCapNum = 1
+        ReDim NewCapArray(435, 6)
 
         'get external variable values
         If yearIs2010 = True Then
@@ -140,7 +141,7 @@
             Call WriteData("RoadZone", "Temp", TempArray, , True)
 
             Call WriteData("RoadZone", "Fuel", FuelArray, , True)
-            If BuildInfra = True Then
+            If BuildInfra = True And Not NewCapArray Is Nothing Then
                 Call WriteData("RoadZone", "NewCap_Added", NewCapArray, , True)
             End If
         Else
@@ -148,7 +149,7 @@
             Call WriteData("RoadZone", "Temp", TempArray, , False)
 
             Call WriteData("RoadZone", "Fuel", FuelArray, , False)
-            If BuildInfra = True Then
+            If BuildInfra = True And Not NewCapArray Is Nothing Then
                 Call WriteData("RoadZone", "NewCap_Added", NewCapArray, , False)
             End If
         End If
@@ -1705,33 +1706,49 @@
             'check motorways
             If RoadCatTraffic(ZoneID, 1) > (0.9 * BaseCatC(ZoneID, 1)) Then
                 BuiltLaneKm(ZoneID, 1) = (NewLaneKm(1) * 0.1)
-                NewCapArray(NewCapNum, 0) = ZoneID
-                NewCapArray(NewCapNum, 1) = g_modelRunYear
-                NewCapArray(NewCapNum, 2) = BuiltLaneKm(ZoneID, 1)
+                NewCapArray(NewCapNum, 0) = g_modelRunID
+                NewCapArray(NewCapNum, 1) = ZoneID
+                NewCapArray(NewCapNum, 2) = g_modelRunYear
+                NewCapArray(NewCapNum, 3) = BuiltLaneKm(ZoneID, 1)
+                NewCapArray(NewCapNum, 4) = 0
+                NewCapArray(NewCapNum, 5) = 0
+                NewCapArray(NewCapNum, 6) = 0
                 NewCapNum += 1
             End If
             'check rural a roads
             If RoadCatTraffic(ZoneID, 2) > (0.9 * BaseCatC(ZoneID, 2)) Then
                 BuiltLaneKm(ZoneID, 2) = (NewLaneKm(2) * 0.1)
-                NewCapArray(NewCapNum, 0) = ZoneID
-                NewCapArray(NewCapNum, 1) = g_modelRunYear
-                NewCapArray(NewCapNum, 3) = BuiltLaneKm(ZoneID, 2)
+                NewCapArray(NewCapNum, 0) = g_modelRunID
+                NewCapArray(NewCapNum, 1) = ZoneID
+                NewCapArray(NewCapNum, 2) = g_modelRunYear
+                NewCapArray(NewCapNum, 3) = 0
+                NewCapArray(NewCapNum, 4) = BuiltLaneKm(ZoneID, 2)
+                NewCapArray(NewCapNum, 5) = 0
+                NewCapArray(NewCapNum, 6) = 0
                 NewCapNum += 1
             End If
             'check rural minor roads
             If RoadCatTraffic(ZoneID, 3) > (0.9 * BaseCatC(ZoneID, 3)) Then
                 BuiltLaneKm(ZoneID, 3) = (NewLaneKm(3) * 0.1)
-                NewCapArray(NewCapNum, 0) = ZoneID
-                NewCapArray(NewCapNum, 1) = g_modelRunYear
-                NewCapArray(NewCapNum, 4) = BuiltLaneKm(ZoneID, 3)
+                NewCapArray(NewCapNum, 0) = g_modelRunID
+                NewCapArray(NewCapNum, 1) = ZoneID
+                NewCapArray(NewCapNum, 2) = g_modelRunYear
+                NewCapArray(NewCapNum, 3) = 0
+                NewCapArray(NewCapNum, 4) = 0
+                NewCapArray(NewCapNum, 5) = BuiltLaneKm(ZoneID, 3)
+                NewCapArray(NewCapNum, 6) = 0
                 NewCapNum += 1
             End If
             'check urban roads
             If RoadCatTraffic(ZoneID, 4) > (0.9 * BaseCatC(ZoneID, 4)) Then
                 BuiltLaneKm(ZoneID, 4) = (NewLaneKm(4) * 0.1)
-                NewCapArray(NewCapNum, 0) = ZoneID
-                NewCapArray(NewCapNum, 1) = g_modelRunYear
-                NewCapArray(NewCapNum, 5) = BuiltLaneKm(ZoneID, 4)
+                NewCapArray(NewCapNum, 0) = g_modelRunID
+                NewCapArray(NewCapNum, 1) = ZoneID
+                NewCapArray(NewCapNum, 2) = g_modelRunYear
+                NewCapArray(NewCapNum, 3) = 0
+                NewCapArray(NewCapNum, 4) = 0
+                NewCapArray(NewCapNum, 5) = 0
+                NewCapArray(NewCapNum, 6) = BuiltLaneKm(ZoneID, 4)
                 NewCapNum += 1
             End If
         End If

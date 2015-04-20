@@ -49,7 +49,7 @@
     Dim FuelEffOld(2) As Double
     Dim Elect As Boolean
     Dim CapArray(455, 6) As String
-    Dim NewCapArray(238, 6) As String
+    Dim NewCapArray(455, 6) As String
     Dim CapNum As Integer
     Dim RlL_InArray(,) As String
     Dim RlLEV_InArray(,) As String
@@ -60,6 +60,7 @@
     Dim RzElNum As Integer
     Dim yearIs2010 As Boolean = False
     Dim RlL_TrackLength(,) As String
+
 
 
 
@@ -566,7 +567,7 @@ NextYear:
         'now modified to include some schemes as standard
         'now modified to include zones as well as links
 
-        Dim schemeoutputrow(28, 4) As String
+        Dim schemeoutputrow(244, 4) As String
         Dim elschemes(244, 3) As Double
         Dim schemearray(245, 6) As String
         Dim rownum As Integer
@@ -578,7 +579,7 @@ NextYear:
         Dim splitline() As String
         Dim arraynum, schemecount As Long
         Dim schemetype As String
-        Dim zoneoutputrow(33, 3) As String
+        Dim zoneoutputrow(335, 3) As String
         Dim zonearray(336, 5) As String
         Dim schemecode As String
         Dim elzschemes(335, 4) As Long

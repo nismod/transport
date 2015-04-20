@@ -64,8 +64,8 @@ Module RailModel
     Dim CalcCheck1 As Integer
     Dim InputArray(238, 17) As String
     Dim OutputArray(239, 5) As String
-    Dim TempArray(239, 13) As String
-    Dim NewCapArray(238, 2) As String
+    Dim TempArray(239, 14) As String
+    Dim NewCapArray(239, 3) As String
     Dim NewCapNum As Integer
     Dim totalTrain As Double
     Dim totalCUTrain As Double
@@ -88,6 +88,7 @@ Module RailModel
 
         'reset Cap number
         NewCapNum = 1
+        ReDim NewCapArray(239, 3)
 
         'reset capacity margin count for the year
         'TotalCU=¡ÆCU*Trains/¡ÆTrains
@@ -143,9 +144,6 @@ Module RailModel
                 Call WriteRlLinkOutput()
             End If
 
-            'reset the input values for the next year
-            Call ResetRailInputs()
-
             InputCount += 1
         Loop
 
@@ -154,13 +152,13 @@ Module RailModel
             Call WriteData("RailLink", "Output", OutputArray, , True)
             Call WriteData("RailLink", "Temp", TempArray, , True)
             'if the model is building capacity then create new capacity file
-            If BuildInfra = True Then
+            If BuildInfra = True And Not NewCapArray Is Nothing Then
                 Call WriteData("RailLink", "NewCap_Added", NewCapArray, , True)
             End If
         Else
             Call WriteData("RailLink", "Output", OutputArray, , False)
             Call WriteData("RailLink", "Temp", TempArray, , False)
-            If BuildInfra = True Then
+            If BuildInfra = True And Not NewCapArray Is Nothing Then
                 Call WriteData("RailLink", "NewCap_Added", NewCapArray, , False)
             End If
         End If
@@ -281,6 +279,7 @@ Module RailModel
                 CalcCheck(InputCount, 0) = False
             End If
 
+            AddedTracks(InputCount, 0) = InputArray(InputCount, 15)
         End If
 
     End Sub
@@ -570,6 +569,9 @@ Module RailModel
             CalcCheck1 = 0
         End If
 
+        'reset the input values for the next year
+        Call ResetRailInputs()
+
         'write to temparray
         TempArray(InputCount, 0) = g_modelRunID
         TempArray(InputCount, 1) = g_modelRunYear
@@ -587,6 +589,7 @@ Module RailModel
         TempArray(InputCount, 11) = BusyPer(InputCount, 0)
         TempArray(InputCount, 12) = ModelPeakHeadway(InputCount, 0)
         TempArray(InputCount, 13) = CalcCheck1
+        TempArray(InputCount, 14) = AddedTracks(InputCount, 0)
 
     End Sub
 
@@ -609,9 +612,10 @@ Module RailModel
                     newtrackcount = 2
                 End If
                 'write details to output file
-                NewCapArray(NewCapNum, 0) = g_modelRunYear + 1
+                NewCapArray(NewCapNum, 0) = g_modelRunID
                 NewCapArray(NewCapNum, 1) = FlowNum(InputCount, 0)
-                NewCapArray(NewCapNum, 2) = newtrackcount
+                NewCapArray(NewCapNum, 2) = g_modelRunYear + 1
+                NewCapArray(NewCapNum, 3) = newtrackcount
                 NewCapNum += 1
             End If
         End If
