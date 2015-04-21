@@ -77,7 +77,7 @@ Module DBaseInterface
     Public TripRates As String
     Public Duration As Integer
     Public logNum As Integer
-    Public logarray(1, 2) As String
+    Public logarray(100, 2) As String
     Public ScenarioID As Integer
     Public Scenario As Integer
     Public StrategyID As Integer
@@ -2298,11 +2298,11 @@ Module DBaseInterface
     End Function
 
     Public Sub CloseLog()
-        logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "Model run finished at " & System.DateTime.Now
+        logarray(1, 0) = g_modelRunID : logarray(1, 1) = 1 : logarray(1, 2) = "Model run finished at " & System.DateTime.Now
         Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
-        logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "Code written by Dr Simon Blainey and Xucheng Li, Transportation Research Group, University of Southampton"
+        logarray(1, 0) = g_modelRunID : logarray(1, 1) = 1 : logarray(1, 2) = "Code written by Dr Simon Blainey and Xucheng Li, Transportation Research Group, University of Southampton"
         Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
-        logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "All results are indicative estimates, and the authors accept no liability for any actions arising from the use of these results"
+        logarray(1, 0) = g_modelRunID : logarray(1, 1) = 1 : logarray(1, 2) = "All results are indicative estimates, and the authors accept no liability for any actions arising from the use of these results"
         Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
     End Sub
 

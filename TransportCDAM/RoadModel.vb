@@ -1549,7 +1549,7 @@
         If RoadTypeLanesNew(link, 0) > 0 And MaxCap(link, 0) > 0 Then
             h = 0
             Do While h < 24
-                cu = RoadTypeFlows(link, 0, h) / (RoadTypeLanesNew(link, 0) * MaxCap(link, 0))
+                cu = RoadTypeFlows(link, 0, h) / MaxCap(link, 0)
 
                 totalCUTraffic += cu * RoadTypeFlows(link, 0, h)
                 totalTraffic += RoadTypeFlows(link, 0, h)
@@ -1560,7 +1560,7 @@
         If RoadTypeLanesNew(link, 1) > 0 And MaxCap(link, 1) > 0 Then
             h = 0
             Do While h < 24
-                cu = RoadTypeFlows(link, 1, h) / (RoadTypeLanesNew(link, 1) * MaxCap(link, 1))
+                cu = RoadTypeFlows(link, 1, h) / MaxCap(link, 1)
 
                 totalCUTraffic += cu * RoadTypeFlows(link, 1, h)
                 totalTraffic += RoadTypeFlows(link, 1, h)
@@ -1571,7 +1571,7 @@
         If RoadTypeLanesNew(link, 2) > 0 And MaxCap(link, 2) > 0 Then
             h = 0
             Do While h < 24
-                cu = RoadTypeFlows(link, 2, h) / (RoadTypeLanesNew(link, 2) * MaxCap(link, 2))
+                cu = RoadTypeFlows(link, 2, h) / MaxCap(link, 2)
 
                 totalCUTraffic += cu * RoadTypeFlows(link, 2, h)
                 totalTraffic += RoadTypeFlows(link, 2, h)

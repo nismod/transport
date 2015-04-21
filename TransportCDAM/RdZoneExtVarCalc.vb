@@ -94,10 +94,21 @@
         'if using WPPL then check if the start year is a valid value
         'maybe we can move these warning to the setup stage rather than the run model stage? e.g. simply not allow users to enter years not between 2011 and 2100
         If WPPL = True Then
-            If WPPLYear < 2011 Or WPPLYear > 2100 Then
+            If WPPLYear < 2011 Then
+
+                'write to effort log
                 Dim msg As String = "Invalid start year provided for WPPL. Please rerun the model using a year between 2011 and 2100 Run terminated during intrazonal road model external variable file generation."
-                Call ErrorLog(ErrorSeverity.FATAL, "RoadZoneEVMain", "RdZoneExtVarCalc", msg)
+                Call ErrorLog(ErrorSeverity.FATAL, "RoadZoneEVMain()", "RoadZoneModel, WPPLYear", msg)
                 Throw New System.Exception(msg)
+
+                End
+            ElseIf WPPLYear > 2100 Then
+
+                'write to effort log
+                Dim msg As String = "Invalid start year provided for WPPL. Please rerun the model using a year between 2011 and 2100 Run terminated during intrazonal road model external variable file generation."
+                Call ErrorLog(ErrorSeverity.FATAL, "RoadZoneEVMain()", "RoadZoneModel, WPPLYear", msg)
+                Throw New System.Exception(msg)
+                End
             End If
         End If
 
