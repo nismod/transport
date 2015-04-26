@@ -214,9 +214,9 @@
                 'otherwise stop the model and write an error to the log file
                 Dim msg As String
                 msg = "ERROR in intrazonal road model Sub GetZoneExtVar - year counter does not correspond to year value in input data for Zone " & ZoneID & " in year " & g_modelRunYear
-                logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = msg
+                logarray(1, 0) = g_modelRunID : logarray(1, 1) = 1 : logarray(1, 2) = msg
                 Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
-                logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "Model run prematurely terminated at" & System.DateTime.Now
+                logarray(1, 0) = g_modelRunID : logarray(1, 1) = 1 : logarray(1, 2) = "Model run prematurely terminated at" & System.DateTime.Now
                 Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
                 ErrorLog(ErrorSeverity.FATAL, "Mathematical", "GetZoneExtVar", msg)
                 Throw New System.Exception(msg)

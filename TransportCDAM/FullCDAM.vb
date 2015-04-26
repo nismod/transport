@@ -73,13 +73,13 @@
                 Case "VariableEl"
                     VariableEl = CBool(ary(i, 5))
                 Case "ElCritValue"
-                    ElCritValue = CDbl(ary(i, 5))
+                    ElCritValue = CDbl(ary(i, 5)) / 100
                 Case "CongestionCharge"
                     CongestionCharge = CBool(ary(i, 5))
                 Case "ConChargeYear"
                     ConChargeYear = CInt(ary(i, 5))
                 Case "ConChargePer"
-                    ConChargePer = CInt(ary(i, 5))
+                    ConChargePer = CInt(ary(i, 5)) / 100
                 Case "CarbonCharge"
                     CarbonCharge = CBool(ary(i, 5))
                 Case "CarbChargeYear"
@@ -89,13 +89,13 @@
                 Case "WPPLYear"
                     WPPLYear = CInt(ary(i, 5))
                 Case "WPPLPer"
-                    WPPLPer = CInt(ary(i, 5))
+                    WPPLPer = CInt(ary(i, 5)) / 100
                 Case "RailCCharge"
                     RailCCharge = CBool(ary(i, 5))
                 Case "RlCChargeYear"
                     RlCChargeYear = CInt(ary(i, 5))
                 Case "RailChargePer"
-                    RailChargePer = CInt(ary(i, 5))
+                    RailChargePer = CInt(ary(i, 5)) / 100
                 Case "RlCaCharge"
                     RlCaCharge = CBool(ary(i, 5))
                 Case "RlCaChYear"
@@ -105,7 +105,7 @@
                 Case "AirChargeYear"
                     AirChargeYear = CInt(ary(i, 5))
                 Case "AirChargePer"
-                    AirChargePer = CInt(ary(i, 5))
+                    AirChargePer = CInt(ary(i, 5)) / 100
                 Case "AirCaCharge"
                     AirCaCharge = CBool(ary(i, 5))
                 Case "AirCaChYear"
@@ -115,7 +115,7 @@
                 Case "SmartIntro"
                     SmartIntro = CInt(ary(i, 5))
                 Case "SmartPer"
-                    SmartPer = CInt(ary(i, 5))
+                    SmartPer = CInt(ary(i, 5)) / 100
                 Case "SmartYears"
                     SmartYears = CInt(ary(i, 5))
                 Case "SmartFrt"
@@ -123,7 +123,7 @@
                 Case "SmFrtIntro"
                     SmFrtIntro = CInt(ary(i, 5))
                 Case "SmFrtPer"
-                    SmFrtPer = CInt(ary(i, 5))
+                    SmFrtPer = CInt(ary(i, 5)) / 100
                 Case "SmFrtYears"
                     SmFrtYears = CInt(ary(i, 5))
                 Case "UrbanFrt"
@@ -131,7 +131,7 @@
                 Case "UrbFrtIntro"
                     UrbFrtIntro = CInt(ary(i, 5))
                 Case "UrbFrtPer"
-                    UrbFrtPer = CInt(ary(i, 5))
+                    UrbFrtPer = CInt(ary(i, 5)) / 100
                 Case "UrbFrtYears"
                     UrbFrtYears = CInt(ary(i, 5))
                 Case "NewRdLEV"

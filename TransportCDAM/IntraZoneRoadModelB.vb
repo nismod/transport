@@ -476,21 +476,21 @@
 
                 'v1.3 mod - if using smarter choices, smart logistics or urban freight innovations we only set the vehicle type splits in the first year, to avoid car traffic share declining away to nothing
                 If SmarterChoices = True Then
-                    If g_modelRunYear = 1 Then
+                    If g_modelRunYear = 2011 Then
                         'set the vehicle type splits
                         For x = 1 To 5
                             VehTypeSplit(ZoneID, rdtype, x) = RVCatTraf(rdtype, x) / RoadCatTraffic(ZoneID, rdtype)
                         Next
                     End If
                 ElseIf UrbanFrt = True Then
-                    If g_modelRunYear = 1 Then
+                    If g_modelRunYear = 2011 Then
                         'set the vehicle type splits
                         For x = 1 To 5
                             VehTypeSplit(ZoneID, rdtype, x) = RVCatTraf(rdtype, x) / RoadCatTraffic(ZoneID, rdtype)
                         Next
                     End If
                 ElseIf SmartFrt = True Then
-                    If g_modelRunYear = 1 Then
+                    If g_modelRunYear = 2011 Then
                         'set the vehicle type splits
                         For x = 1 To 5
                             VehTypeSplit(ZoneID, rdtype, x) = RVCatTraf(rdtype, x) / RoadCatTraffic(ZoneID, rdtype)
