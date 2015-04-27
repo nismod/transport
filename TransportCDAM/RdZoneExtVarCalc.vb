@@ -395,7 +395,7 @@
                 HydRat = HydNew / HydOld(InputCount, 0)
                 'v1.4 change corrected fuel efficiency change calculation  - was previously just multiplying by figure straight from strategy array (which meant that fuel costs quickly declined to zero)
                 For f = 0 To 34
-                    FuelEffNew(f) = stratarray(2, f + 33)
+                    FuelEffNew(f) = stratarray(1, f + 33)
                     FuelEffChange(f) = FuelEffNew(f) / FuelEffOld(InputCount, f)
                 Next
                 'calculate cost for each vehicle type - 0 is car, 1 is LGV, 2 is small HGV, 3 is large HGV, 4 is PSV

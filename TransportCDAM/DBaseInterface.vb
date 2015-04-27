@@ -1427,11 +1427,11 @@ Module DBaseInterface
                     Case "FreeFlowSpeeds"
                         'A header has been added to the original file to keep in the same format
                         TheFileName = "FreeFlowSpeedsv0.7.csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RoadLink_FreeFlowSpeeds" & Chr(34)
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RoadLink_FreeFlowSpeeds" & Chr(34) & " ORDER BY id"
                     Case "DailyProfile"
                         'A header has been added to the original file to keep in the same format
                         TheFileName = "DailyTripProfile.csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RoadLink_DailyProfile" & Chr(34)
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RoadLink_DailyProfile" & Chr(34) & " ORDER BY hour"
                     Case "RouteLength"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RoadFlows" & Chr(34) & " ORDER BY id"
                     Case Else
@@ -1582,7 +1582,7 @@ Module DBaseInterface
                 End Select
             Case "SubStrategy"
                 TheFileName = "CommonVariablesTR" & SubStrategy & ".csv"
-                theSQL = "SELECT * FROM " & Chr(34) & "TR_I_Strategy_Projections_Run" & Chr(34) & " WHERE modelrun_id=" & g_modelRunID
+                theSQL = "SELECT * FROM " & Chr(34) & "TR_I_Strategy_Projections_Run" & Chr(34) & " WHERE modelrun_id=" & g_modelRunID & " AND year = " & Year
             Case "Energy"
                 'TODO - Pull this data from the fuel database!!!
                 Connection = "C:\Users\drives\Documents\Visual Studio 2013\Projects\ITRCWS3\Transport\"
