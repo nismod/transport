@@ -156,7 +156,7 @@
         'read initial input data
         Call ReadData("RoadLink", "Input", RdL_InArray, 2011)
 
-        '
+        'read the length between different zones
         Call ReadData("RoadLink", "RouteLength", RdL_RouteLength)
 
         If g_modelRunYear <> g_initialYear Then

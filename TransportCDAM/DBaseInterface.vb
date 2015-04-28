@@ -1278,16 +1278,28 @@ Module DBaseInterface
     Sub get_fuelprice_by_modelrun_id(ByVal modelrun_id As Integer, ByVal year As Integer, Optional ByVal fueltype As Integer = 0)
         Dim theSQL As String = ""
         Dim Energy(,) As String = Nothing
+        Dim baseEnergy(,) As String = Nothing
+
+        'now getting the fuel price as an index, where the year 2010 = 1
+        theSQL = "SELECT year, wholesale_fuel_id, value FROM cdam_get_wholesale_fuel_price_by_model_run_id(" & g_modelRunID & "," & 2010 & "," & 0 & ") "
+        If LoadSQLDataToArray(baseEnergy, theSQL) = True Then
+            enearray(0, 1) = baseEnergy(5, 2) 'petrol
+            enearray(0, 2) = baseEnergy(6, 2) 'diesel
+            enearray(0, 3) = baseEnergy(1, 2) 'electricity
+            enearray(0, 4) = baseEnergy(9, 2) 'LPG
+            enearray(0, 5) = baseEnergy(2, 2) 'CNG
+            enearray(0, 6) = 1 'hydrogen
+        End If
 
         'get fuel price by modelrunID and year
         theSQL = "SELECT year, wholesale_fuel_id, value FROM cdam_get_wholesale_fuel_price_by_model_run_id(" & g_modelRunID & "," & year - 1 & "," & 0 & ") "
 
         If LoadSQLDataToArray(Energy, theSQL) = True Then
-            enearray(1, 1) = Energy(5, 2) 'petrol
-            enearray(1, 2) = Energy(6, 2) 'diesel
-            enearray(1, 3) = Energy(1, 2) 'electricity
-            enearray(1, 4) = Energy(9, 2) 'LPG
-            enearray(1, 5) = Energy(2, 2) 'CNG
+            enearray(1, 1) = CDbl(Energy(5, 2)) / enearray(0, 1) 'petrol
+            enearray(1, 2) = CDbl(Energy(6, 2)) / enearray(0, 2) 'diesel
+            enearray(1, 3) = CDbl(Energy(1, 2)) / enearray(0, 3) 'electricity
+            enearray(1, 4) = CDbl(Energy(9, 2)) / enearray(0, 4) 'LPG
+            enearray(1, 5) = CDbl(Energy(2, 2)) / enearray(0, 5) 'CNG
             enearray(1, 6) = 1 'hydrogen
         End If
 
@@ -1295,11 +1307,11 @@ Module DBaseInterface
         theSQL = "SELECT year, wholesale_fuel_id, value FROM cdam_get_wholesale_fuel_price_by_model_run_id(" & g_modelRunID & "," & year & "," & 0 & ") "
 
         If LoadSQLDataToArray(Energy, theSQL) = True Then
-            enearray(2, 1) = Energy(5, 2) 'petrol
-            enearray(2, 2) = Energy(6, 2) 'diesel
-            enearray(2, 3) = Energy(1, 2) 'electricity
-            enearray(2, 4) = Energy(9, 2) 'LPG
-            enearray(2, 5) = Energy(2, 2) 'CNG
+            enearray(2, 1) = CDbl(Energy(5, 2)) / enearray(0, 1) 'petrol
+            enearray(2, 2) = CDbl(Energy(6, 2)) / enearray(0, 2) 'diesel
+            enearray(2, 3) = CDbl(Energy(1, 2)) / enearray(0, 3) 'electricity
+            enearray(2, 4) = CDbl(Energy(9, 2)) / enearray(0, 4) 'LPG
+            enearray(2, 5) = CDbl(Energy(2, 2)) / enearray(0, 5) 'CNG
             enearray(2, 6) = 1 'hydrogen
         End If
 

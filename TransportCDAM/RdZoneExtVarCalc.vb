@@ -514,7 +514,7 @@
                     'Motorways: £21.03 million per km (assumes 6 lanes)
                     'Dual carriageways: £11.36 million per km (assumes 4 lanes)
                     'Single carriageways: £7.43 million per km (assumes 2 lanes)
-                    crossSectorArray(1, 3) += 21.03 * MwayKmChange * RdZ_Base(InputCount, 6) + 11.36 * (RurADKmChange * RdZ_Base(InputCount, 7) + UrbDKmChange * RdZ_Base(InputCount, 10)) + 7.43 * (RurASKmChange * RdZ_Base(InputCount, 8) + UrbSKmChange * RdZ_Base(InputCount, 11) + RurMinKmChange * RdZ_Base(InputCount, 9))
+                    crossSectorArray(1, 3) += 21.03 * MwayKmChange + 11.36 * (RurADKmChange + UrbDKmChange) + 7.43 * (RurASKmChange + UrbSKmChange + RurMinKmChange)
 
                     LaneKm(InputCount, 0) = MLaneKm(InputCount, 0) + RurADLaneKm(InputCount, 0) + RurASLaneKm(InputCount, 0) + RurMinLaneKm(InputCount, 0) + UrbDLaneKm(InputCount, 0) + UrbSLaneKm(InputCount, 0)
                     Call GetCapData()

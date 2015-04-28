@@ -77,6 +77,8 @@ Module AirModel
     Dim MaxAirFlow As Long
     Dim NodeInputArray(28, 16) As String
     Dim FlowInputArray(223, 12) As String
+    Dim NodeInputArrayOld(28, 16) As String
+    Dim FlowInputArrayOld(223, 12) As String
     Dim NodeOutputArray(29, 7) As String
     Dim FlowOutputArray(224, 4) As String
     Dim NodeTempArray(29, 12) As String
@@ -133,6 +135,7 @@ Module AirModel
         Call DBaseInterface.ReadData("AirNode", "Input", NodeInputArray, g_modelRunYear)
         Call DBaseInterface.ReadData("AirFlow", "Input", FlowInputArray, g_modelRunYear)
 
+
         'get external variables for this year
         If yearIs2010 = True Then
             Call DBaseInterface.ReadData("AirNode", "ExtVar", AirportExtVar, g_modelRunYear - 1)
@@ -149,6 +152,11 @@ Module AirModel
             Call DBaseInterface.ReadData("AirNode", "ExtVar", NodePreExtVar, g_modelRunYear - 1)
             Call DBaseInterface.ReadData("AirFlow", "ExtVar", FlowPreExtVar, g_modelRunYear - 1)
             Call DBaseInterface.ReadData("AirFlow", "Fuel", baseAirFuelConsumpton, 2011)
+            If BuildInfra = True Then
+                'get previous year's input value
+                Call DBaseInterface.ReadData("AirNode", "Input", NodeInputArrayOld, g_modelRunYear - 1)
+                Call DBaseInterface.ReadData("AirFlow", "Input", FlowInputArrayOld, g_modelRunYear - 1)
+            End If
         End If
 
         'run air node model
@@ -297,6 +305,15 @@ Module AirModel
                 AirpAddedCap(AirportCount, 1) = NodeInputArray(AirportCount, 11)
                 AirpTermCapCheck(AirportCount) = NodeInputArray(AirportCount, 12)
                 AirpRunCapCheck(AirportCount) = NodeInputArray(AirportCount, 13)
+                'add the cost for the required capacity
+                If BuildInfra = True Then
+                    'if it is year 2012, there is no capacity added in the previous year as it was the initial year
+                    If g_modelRunYear = 2012 Then
+                        crossSectorArray(1, 3) += 4000 * AirpAddedCap(AirportCount, 0) / 20000000 + 8000 * AirpAddedCap(AirportCount, 1) / 200000
+                    ElseIf g_modelRunYear > 2012 Then
+                        crossSectorArray(1, 3) += 4000 * (CDbl(AirpAddedCap(AirportCount, 0)) - NodeInputArrayOld(AirportCount, 10)) / 20000000 + 8000 * (CDbl(AirpAddedCap(AirportCount, 1)) - NodeInputArrayOld(AirportCount, 11)) / 200000
+                    End If
+                End If
             End If
 
             AirportCount += 1

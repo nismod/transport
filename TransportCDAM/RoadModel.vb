@@ -105,12 +105,14 @@
     Dim OutputArray(292, 59) As String
     Dim TempArray(292, 3037) As String
     Dim TempAnArray(292, 34) As String
+    Dim TempAnArrayOld(292, 34) As String
     Dim TempHArray(7007, 87) As String
     Dim NewCapArray(20952, 4) As String
     Dim NewCapNum As Integer
     Dim yearIs2010 As Boolean = False
     Dim totalTraffic As Double
     Dim totalCUTraffic As Double
+    Dim RdL_RouteLength(,) As String
 
 
 
@@ -124,6 +126,8 @@
         totalTraffic = 0
         totalCUTraffic = 0
 
+        'set the new cap array to the first line to start with
+        NewCapNum = 1
 
         'for year 2010, calculate as it is year 2011 and write output as year 2010
         If g_modelRunYear = 2010 Then
@@ -161,6 +165,9 @@
         Else
             Call ReadData("RoadLink", "Temp Annual", TempAnArray, g_modelRunYear)
             Call ReadData("RoadLink", "Temp Hourly", TempHArray, g_modelRunYear)
+            If BuildInfra = True Then
+                Call ReadData("RoadLink", "Temp Annual", TempAnArrayOld, g_modelRunYear - 1)
+            End If
         End If
 
         link = 1
@@ -170,9 +177,6 @@
 
             'modification v1.2 - input file replaced by internally specified values - because these have to be altered for some links
             'further modification - these are now specified in the input file (and therefore any alterations where base usage exceeds the theoretical maximum have to be made in the input file)
-
-            'set the new cap array to the first line to start with
-            NewCapNum = 1
 
             'read from input array
             Call LoadInputRow()
@@ -236,6 +240,9 @@
 
         'load the time profiles from database
         Call ReadData("RoadLink", "FreeFlowSpeeds", FreeFlowSpeeds, g_modelRunYear)
+
+        'read the length between different zones
+        Call ReadData("RoadLink", "RouteLength", RdL_RouteLength)
 
         If UpdateExtVars = True Then
             If NewRdLCap = True Then
@@ -422,6 +429,14 @@
             Z1GVA(link, 1) = get_gva_data_by_zoneID(g_modelRunYear - 1, Zone1(link, 1), "OZ", "'road'")
             Z2GVA(link, 1) = get_gva_data_by_zoneID(g_modelRunYear - 1, Zone2(link, 1), "DZ", "'road'")
 
+            'add the cost of the infrastructure built
+            If BuildInfra = True Then
+                If g_modelRunYear = 2012 Then
+                    crossSectorArray(1, 3) += 21.03 * AddedLanes(link, 0) * RdL_RouteLength(link, 4) + 11.36 * AddedLanes(link, 1) * RdL_RouteLength(link, 4) + 7.43 * AddedLanes(link, 2) * RdL_RouteLength(link, 4)
+                ElseIf g_modelRunYear > 2012 Then
+                    crossSectorArray(1, 3) += 21.03 * (CDbl(AddedLanes(link, 0)) - TempAnArrayOld(link, 33)) * RdL_RouteLength(link, 4) + 11.36 * (CDbl(AddedLanes(link, 1)) - TempAnArrayOld(link, 34)) * RdL_RouteLength(link, 4) + 7.43 * (CDbl(AddedLanes(link, 2)) - TempAnArrayOld(link, 35)) * RdL_RouteLength(link, 4)
+                End If
+            End If
 
         End If
     End Sub

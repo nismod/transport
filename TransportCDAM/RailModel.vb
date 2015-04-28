@@ -63,12 +63,15 @@ Module RailModel
     Dim RlLinkArray() As String
     Dim CalcCheck1 As Integer
     Dim InputArray(238, 17) As String
+    Dim InputArrayOld(238, 17) As String
     Dim OutputArray(239, 5) As String
     Dim TempArray(239, 14) As String
     Dim NewCapArray(239, 3) As String
     Dim NewCapNum As Integer
     Dim totalTrain As Double
     Dim totalCUTrain As Double
+    Dim RlL_TrackLength(,) As String
+
 
 
 
@@ -89,22 +92,31 @@ Module RailModel
         'reset Cap number
         NewCapNum = 1
         ReDim NewCapArray(239, 3)
+        ReDim FuelUsed(1)
 
         'reset capacity margin count for the year
         'TotalCU=¡ÆCU*Trains/¡ÆTrains
         totalTrain = 0
         totalCUTrain = 0
 
+        'read from initial file if year 1, otherwise update from temp table
+        Call ReadData("RailLink", "Input", InputArray, g_modelRunYear)
+
         'get external variables for this year
         Call ReadData("RailLink", "ExtVar", RlLinkExtVars, g_modelRunYear)
+
 
         'get external variables from previous year as base data
         If g_modelRunYear <> g_initialYear Then
             Call ReadData("RailLink", "ExtVar", RlLinkPreExtVars, g_modelRunYear - 1)
+            If BuildInfra = True Then
+                'read the previous year's input to calculate the capacity added this year for TR1
+                Call ReadData("RailLink", "Input", InputArrayOld, g_modelRunYear - 1)
+                'read track length data in order to get the investment cost if there are tracks added in this year
+                Call ReadData("RailLink", "TrackLength", RlL_TrackLength)
+            End If
         End If
 
-        'read from initial file if year 1, otherwise update from temp table
-        Call ReadData("RailLink", "Input", InputArray, g_modelRunYear)
 
         InputCount = 1
 
@@ -168,8 +180,8 @@ Module RailModel
         'Write fuel consumption output file
         FuelString(1, 0) = g_modelRunID
         FuelString(1, 1) = g_modelRunYear
-        FuelString(1, 2) = FuelUsed(0)
-        FuelString(1, 3) = FuelUsed(1)
+        FuelString(1, 2) = FuelUsed(0) / 1000000
+        FuelString(1, 3) = FuelUsed(1) / 1000000
         'total emission
         'Emissions = ((Diesely * CO2LDie) + (Electricy * CO2KEle))/1000
         FuelString(1, 4) = (CDbl(FuelString(1, 2)) * stratarray(1, 75) + CDbl(FuelString(1, 3)) * stratarray(1, 76)) / 1000
@@ -280,6 +292,16 @@ Module RailModel
             End If
 
             AddedTracks(InputCount, 0) = InputArray(InputCount, 15)
+
+            'add the cost of the infrastructure built
+            If BuildInfra = True Then
+                If g_modelRunYear = 2012 Then
+                    crossSectorArray(1, 3) += 18.64 * AddedTracks(InputCount, 0) * RlL_TrackLength(InputCount + 1, 4) 'the inputcount must be +1, as the first row is for id = -1 in the table
+                ElseIf g_modelRunYear > 2012 Then
+                    crossSectorArray(1, 3) += 18.64 * (CDbl(AddedTracks(InputCount, 0)) - InputArrayOld(InputCount, 15)) * RlL_TrackLength(InputCount + 1, 4) 'the inputcount must be +1, as the first row is for id = -1 in the table
+                End If
+            End If
+
         End If
 
     End Sub
@@ -660,9 +682,9 @@ Module RailModel
         'Write fuel consumption output file
         FuelString(1, 0) = g_modelRunID
         FuelString(1, 1) = g_modelRunYear
-        FuelString(1, 2) = 667488883.969476
-        FuelString(1, 3) = 3183754707.28527
-        FuelString(1, 4) = (667488883.969476 * stratarray(1, 75) + 3183754707.28527 * stratarray(1, 76)) / 1000
+        FuelString(1, 2) = 667488883.969476 / 1000000
+        FuelString(1, 3) = 3183754707.28527 / 1000000
+        FuelString(1, 4) = (667488883.969476 / 1000000 * stratarray(1, 75) + 3183754707.28527 / 1000000 * stratarray(1, 76)) / (1000)
         'write to crossSector output
         crossSectorArray(1, 4) += CDbl(FuelString(1, 4))
 

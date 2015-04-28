@@ -356,6 +356,11 @@
                 BuiltLaneKm(ZoneID, x) = IZRd_InputArray(ZoneID, 57 + x)
             Next
 
+            'add the cost of the infrastructure built
+            If BuildInfra = True Then
+                crossSectorArray(1, 3) += 21.03 * BuiltLaneKm(ZoneID, 1) + 11.36 * BuiltLaneKm(ZoneID, 2) + 7.43 * (BuiltLaneKm(ZoneID, 3) + BuiltLaneKm(ZoneID, 4))
+            End If
+
         End If
 
     End Sub
