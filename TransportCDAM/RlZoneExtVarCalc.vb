@@ -126,7 +126,7 @@
         EleNum = 1
 
         'read file according to the setting
-        If RlZOthSource = "Database" Then
+        If RlZOthSource = True Then
             Call ReadData("RailZone", "EVScale", ScalingData, g_modelRunYear)
         End If
 
@@ -239,9 +239,7 @@
                 CostOld(InputCount, 0) = RlZEVRlZ_InArray(InputCount, 6)
                 FuelOld(InputCount, 0) = RlZEVRlZ_InArray(InputCount, 8)
                 StationsOld(InputCount, 0) = RlZEVRlZ_InArray(InputCount, 7)
-                If RlZOthSource = "File" Or RlZOthSource = "Database" Then
-                    GJTOld(InputCount, 0) = RlZEVRlZ_InArray(InputCount, 10)
-                End If
+                GJTOld(InputCount, 0) = RlZEVRlZ_InArray(InputCount, 10)
                 Country(InputCount, 0) = RlZ_InArray(InputCount, 8)
 
                 ElPOld(InputCount, 0) = RlZEVRlZ_InArray(InputCount, 11)
@@ -273,7 +271,7 @@
             End If
 
             'if using scaling factors then read in the scaling factors for this year
-            If RlZOthSource = "Database" Then
+            If RlZOthSource = True Then
                 'need to leave cost growth factor until we know the new proportion of electric/diesel trains
                 GJTGrowth = 1 + ScalingData(1, 8)
                 ElPGrowth = ScalingData(1, 9)
@@ -325,7 +323,7 @@ NextYear:
                 'if year is after 2093 then no population forecasts are available so assume population remains constant
                 'now modified as population data available up to 2100 - so should never need 'else'
                 'v1.9 now read pop by using database function
-                If g_modelRunYear < 91 Then
+                If g_modelRunYear < 2101 Then
                     PopNew = get_population_data_by_zoneID(g_modelRunYear, ZoneID(InputCount, 0), "Zone", "'rail'")
                 Else
                     PopNew = PopOld(InputCount, 0)
@@ -340,7 +338,7 @@ NextYear:
                 'if year is after 2050 then no gva forecasts are available so assume gva remains constant
                 'now modified as gva data available up to 2100 - so should never need 'else'
                 'v1.9 now read gva by using database function
-                If g_modelRunYear < 91 Then
+                If g_modelRunYear < 2101 Then
                     GVANew = get_gva_data_by_zoneID(g_modelRunYear, ZoneID(InputCount, 0), "Zone", "'rail'")
                 Else
                     GVANew = GVAOld(InputCount, 0)
@@ -395,7 +393,7 @@ NextYear:
             CostNew = 121.381 + ((DieselNew + diecarch) * (1 - ElPNew)) + ((ElectricNew + elecarch) * ElPNew) + (EMaintOld(InputCount, 0) * ElPNew) + (DMaintOld(InputCount, 0) * (1 - ElPNew))
 
             FuelNew = FuelOld(InputCount, 0) * FuelGrowth
-            If RlZOthSource = "Database" Then
+            If RlZOthSource = True Then
                 GJTNew = GJTOld(InputCount, 0) * GJTGrowth
             Else
                 GJTNew = GJTOld(InputCount, 0) * GJTProp(1)

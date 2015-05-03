@@ -116,7 +116,7 @@
             SeaFuelOutputArray(1, 3) = 9.65933831208691
         End If
         'write to crossSector output
-        crossSectorArray(1, 4) += CDbl(SeaFuelOutputArray(1, 3))
+        'crossSectorArray(1, 4) += CDbl(SeaFuelOutputArray(1, 3))
 
 
         'create file is true if it is the initial year and write to outputfile and temp file

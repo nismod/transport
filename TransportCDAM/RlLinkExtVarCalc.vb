@@ -214,7 +214,7 @@
         Dim y As Integer = 0
 
         'get scaling factor file if we are using one
-        If RlLOthSource = "Database" Then
+        If RlLOthSource = True Then
             Call ReadData("RailLink", "EVScale", ScalingData, g_modelRunYear)
         End If
 
@@ -339,7 +339,7 @@
                 'if year is after 2093 then no population forecasts are available so assume population remains constant
                 'now modified as population data available up to 2100 - so should never need 'else'
                 'v1.9 now read by using database function
-                If g_modelRunYear < 91 Then
+                If g_modelRunYear < 2101 Then
                     Pop1New = get_population_data_by_zoneID(g_modelRunYear, OZone(InputCount, 0), "OZ", "'rail'")
                     Pop2New = get_population_data_by_zoneID(g_modelRunYear, DZone(InputCount, 0), "DZ", "'rail'")
                 Else
@@ -360,7 +360,7 @@
                 'now modified as GVA data available up to 2100 - so should never need 'else'
                 'v1.9 now read by using database function
                 'database does not have gva forecasts after year 2050, and the calculation is only available before year 2050
-                If g_modelRunYear < 91 Then
+                If g_modelRunYear < 2101 Then
                     GVA1New = get_gva_data_by_zoneID(g_modelRunYear, OZone(InputCount, 0), "OZ", "'rail'")
                     GVA2New = get_gva_data_by_zoneID(g_modelRunYear, DZone(InputCount, 0), "DZ", "'rail'")
                 Else
@@ -369,7 +369,7 @@
                 End If
             End If
             'need to leave cost growth factor until we know new proportion of electric/diesel trains
-            If RlLOthSource = "Database" Then
+            If RlLOthSource = True Then
                 'MaxTDGrowth = 1 + ScalingData(1,7)
                 ElPGrowth = ScalingData(1, 9)
             End If

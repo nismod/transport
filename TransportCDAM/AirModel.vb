@@ -81,7 +81,7 @@ Module AirModel
     Dim FlowInputArrayOld(223, 12) As String
     Dim NodeOutputArray(29, 7) As String
     Dim FlowOutputArray(224, 4) As String
-    Dim NodeTempArray(29, 12) As String
+    Dim NodeTempArray(29, 13) As String
     Dim FlowTempArray(224, 7) As String
     Dim NewCapArray(56, 6) As String
     Dim AirNodeID(28, 0) As Integer
@@ -127,6 +127,7 @@ Module AirModel
         Do While c < 29
             AirpTermCapCheck(c) = False
             AirpRunCapCheck(c) = False
+            AirpOldConstraint(c) = False
             c += 1
         Loop
 
@@ -272,7 +273,7 @@ Module AirModel
                 'if it is initial year, read from the initial input
                 AirNodeID(AirportCount, 0) = NodeInputArray(AirportCount, 1)
                 'loop through all elements of the input line, transferring the data to the airport base data array
-                AirportBaseData(AirportCount, 1) = NodeInputArray(AirportCount, 3) + NodeInputArray(AirportCount, 4)
+                AirportBaseData(AirportCount, 1) = CDbl(NodeInputArray(AirportCount, 3)) + NodeInputArray(AirportCount, 4)
                 For AirportField = 2 To 5
                     AirportBaseData(AirportCount, AirportField) = NodeInputArray(AirportCount, AirportField + 1)
                 Next
@@ -305,6 +306,7 @@ Module AirModel
                 AirpAddedCap(AirportCount, 1) = NodeInputArray(AirportCount, 11)
                 AirpTermCapCheck(AirportCount) = NodeInputArray(AirportCount, 12)
                 AirpRunCapCheck(AirportCount) = NodeInputArray(AirportCount, 13)
+                AirpOldConstraint(AirportCount) = NodeInputArray(AirportCount, 14)
                 'add the cost for the required capacity
                 If BuildInfra = True Then
                     'if it is year 2012, there is no capacity added in the previous year as it was the initial year
@@ -1160,7 +1162,7 @@ Module AirModel
             AirFuelOutputArray(1, 3) = 33.59404558
         End If
         'write to crossSector output
-        crossSectorArray(1, 4) += CDbl(AirFuelOutputArray(1, 3))
+        'crossSectorArray(1, 4) += CDbl(AirFuelOutputArray(1, 3))
         'adding the capacity margin of rail to the aggregate capacity margin
         crossSectorArray(1, 2) += ((totalCUPass / totalPass) * 0.01)
 
@@ -1244,9 +1246,9 @@ Module AirModel
             NodeTempArray(aircount, 8) = AirportBaseData(aircount, 5)
             NodeTempArray(aircount, 9) = AirpAddedCap(aircount, 0)
             NodeTempArray(aircount, 10) = AirpAddedCap(aircount, 1)
-            NodeTempArray(aircount, 11) = AirpOldConstraint(aircount)
+            NodeTempArray(aircount, 11) = AirpTermCapCheck(aircount)
             NodeTempArray(aircount, 12) = AirpRunCapCheck(aircount)
-
+            NodeTempArray(aircount, 13) = AirpOldConstraint(aircount)
             aircount += 1
         Loop
 

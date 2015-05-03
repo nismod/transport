@@ -180,6 +180,10 @@
                     RdZSpdSource = CStr(ary(i, 5))
                 Case "TripRates"
                     TripRates = CBool(ary(i, 5))
+                Case "RlZOthSource"
+                    RlZOthSource = CBool(ary(i, 5))
+                Case "RlLOthSource"
+                    RlLOthSource = CBool(ary(i, 5))
                 Case Else
                     Stop
                     '....
@@ -208,9 +212,23 @@
         End If
 
         'Get energy data
-        'Call DBaseInterface.ReadData("Energy", "", enearray)
+        Call DBaseInterface.ReadData("Energy", "", enearray)
+        If g_modelRunYear <> 2010 Then
+            enearray(1, 1) = enearray(g_modelRunYear - 2010, 1) 'petrol
+            enearray(1, 2) = enearray(g_modelRunYear - 2010, 2) 'diesel
+            enearray(1, 3) = enearray(g_modelRunYear - 2010, 3) 'electricity
+            enearray(1, 4) = 1 'LPG
+            enearray(1, 5) = 1 'CNG
+            enearray(1, 6) = 1 'hydrogen
+            enearray(2, 1) = enearray(g_modelRunYear - 2009, 1) 'petrol
+            enearray(2, 2) = enearray(g_modelRunYear - 2009, 2) 'diesel
+            enearray(2, 3) = enearray(g_modelRunYear - 2009, 3) 'electricity
+            enearray(2, 4) = 1 'LPG
+            enearray(2, 5) = 1 'CNG
+            enearray(2, 6) = 1 'hydrogen
+        End If
         'read fuel price for previous year (1,x) and current year (2,x)
-        Call get_fuelprice_by_modelrun_id(g_modelRunID, g_modelRunYear, 0)
+        'Call get_fuelprice_by_modelrun_id(g_modelRunID, g_modelRunYear, 0)
         If RlZEneSource = "Database" Then
             'If g_modelRunYear = 2010 Then y = 1 Else y = g_modelRunYear - g_initialYear + 1 'TODO - this needs fixing once we go to database for energy 
             InDieselOldAll = enearray(1, 2)
@@ -243,7 +261,7 @@
         'if RoadLink model is selected then run that model
         If RunRoadLink = True Then
             Call RoadLinkMain()
-            logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "Road link model run completed"
+            logarray(1, 0) = g_modelRunID : logarray(1, 1) = 1 : logarray(1, 2) = "Road link model run completed"
             Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
         End If
 
@@ -255,46 +273,40 @@
             Else
                 Call RoadZoneMainNew()
             End If
-            logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "Road zone model run completed"
+            logarray(1, 0) = g_modelRunID : logarray(1, 1) = 1 : logarray(1, 2) = "Road zone model run completed"
             Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
         End If
 
         'if RailLink model is selected then run that model
         If RunRailLink = True Then
             Call RailLinkMain()
-            logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "Rail link model run completed"
+            logarray(1, 0) = g_modelRunID : logarray(1, 1) = 1 : logarray(1, 2) = "Rail link model run completed"
             Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
         End If
 
         'if RailZone model is selected then run that model
         If RunRailZone = True Then
             Call RailZoneMain()
-            logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "Rail zone model run completed"
+            logarray(1, 0) = g_modelRunID : logarray(1, 1) = 1 : logarray(1, 2) = "Rail zone model run completed"
             Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
         End If
 
         'if Air model is selected then run that model
         If RunAir = True Then
             Call AirMain()
-            logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "Air model run completed"
+            logarray(1, 0) = g_modelRunID : logarray(1, 1) = 1 : logarray(1, 2) = "Air model run completed"
             Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
         End If
 
         'if Sea model is selected then run that model
         If RunSea = True Then
             Call SeaMain()
-            logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = "Sea model run completed"
+            logarray(1, 0) = g_modelRunID : logarray(1, 1) = 1 : logarray(1, 2) = "Sea model run completed"
             Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
         End If
 
-        'write cross sector output
-        crossSectorArray(1, 0) = g_modelRunID
-        crossSectorArray(1, 1) = g_modelRunYear
-        For i = 2 To 5
-            If crossSectorArray(1, i) Is Nothing Then crossSectorArray(1, i) = 0
-        Next
-        Call WriteData("CrossSector", "", crossSectorArray)
-        ReDim crossSectorArray(1, 5)
+        'write to cross sector output
+        Call WriteCrossSectorOutput()
 
         'Write closing lines of log file
         Call CloseLog()
@@ -1067,4 +1079,26 @@
         Throw New System.Exception(msg)
     End Sub
 
+    Sub WriteCrossSectorOutput()
+        Dim cmd As New Odbc.OdbcCommand
+        Dim m_conn As Odbc.OdbcConnection
+        Dim theSQL As String = ""
+
+        'write cross sector output
+        crossSectorArray(1, 0) = g_modelRunID
+        crossSectorArray(1, 1) = g_modelRunYear
+        For i = 2 To 5
+            If crossSectorArray(1, i) Is Nothing Then crossSectorArray(1, i) = 0
+        Next
+        Call WriteData("CrossSector", "", crossSectorArray)
+        ReDim crossSectorArray(1, 5)
+
+        'update accumulated investment
+        theSQL = "UPDATE " & Chr(34) & "TR_O_CrossSector" & Chr(34) & "SET accumulated_investment = accumulated_investment_data.accumulated_investment FROM (SELECT modelrun_id, year, investment, sum(investment) OVER (PARTITION BY modelrun_id ORDER BY year) as accumulated_investment FROM " & Chr(34) & "TR_O_CrossSector" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & ") as accumulated_investment_data WHERE " & Chr(34) & "TR_O_CrossSector" & Chr(34) & ".modelrun_id = accumulated_investment_data.modelrun_id AND " & Chr(34) & "TR_O_CrossSector" & Chr(34) & ".year = accumulated_investment_data.year"
+        ConnectToDBase()
+        cmd.Connection = m_conn
+        cmd.CommandText = theSQL
+        'cmd.ExecuteNonQuery()
+
+    End Sub
 End Class

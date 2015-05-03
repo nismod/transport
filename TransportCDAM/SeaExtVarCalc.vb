@@ -161,8 +161,8 @@
                 GORID(PortCount, 1) = InputArray(PortCount, 2)
             Else
                 PortID = InputArray(PortCount, 2)
-                For i = 6 To 10
-                    PortBaseData(PortCount, i) = InputArray(PortCount, i - 2)
+                For i = 5 To 9
+                    PortBaseData(PortCount, i) = InputArray(PortCount, i - 1)
                 Next
                 PortBaseData(PortCount, 11) = get_population_data_by_seaportID(g_modelRunYear - 1, PortCount)
                 PortBaseData(PortCount, 12) = get_gva_data_by_seaportID(g_modelRunYear - 1, PortCount)
@@ -175,16 +175,16 @@
 
                 If g_modelRunYear = CapYear Then
                     'if there are, then update the capacity variables, and read in the next row from the capacity file
-                    PortNewData(PortCount, 1) = PortBaseData(PortCount, 6) + LBChange
-                    PortNewData(PortCount, 2) = PortBaseData(PortCount, 7) + DBChange
-                    PortNewData(PortCount, 3) = PortBaseData(PortCount, 8) + GCChange
-                    PortNewData(PortCount, 4) = PortBaseData(PortCount, 9) + LLChange
-                    PortNewData(PortCount, 5) = PortBaseData(PortCount, 10) + RRChange
+                    PortNewData(PortCount, 1) = PortBaseData(PortCount, 5) + LBChange
+                    PortNewData(PortCount, 2) = PortBaseData(PortCount, 6) + DBChange
+                    PortNewData(PortCount, 3) = PortBaseData(PortCount, 7) + GCChange
+                    PortNewData(PortCount, 4) = PortBaseData(PortCount, 8) + LLChange
+                    PortNewData(PortCount, 5) = PortBaseData(PortCount, 9) + RRChange
                     CapChanged = True
                     Call GetCapData()
                 ElseIf CapChanged = False Then
                     newcount = 1
-                    basecount = 6
+                    basecount = 5
                     Do Until newcount = 6
                         PortNewData(PortCount, newcount) = PortBaseData(PortCount, basecount)
                         newcount += 1
@@ -193,7 +193,7 @@
                 End If
             Else
                 newcount = 1
-                basecount = 6
+                basecount = 5
                 Do Until newcount = 6
                     PortNewData(PortCount, newcount) = PortBaseData(PortCount, basecount)
                     newcount += 1

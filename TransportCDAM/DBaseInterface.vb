@@ -45,8 +45,8 @@ Module DBaseInterface
     Public RlZEneSource As String = "Database"
     Public AirEneSource As String = "Database"
     Public SeaEneSource As String = "Database"
-    Public RlLOthSource As String = "Database"
-    Public RlZOthSource As String = "Database"
+    Public RlLOthSource As Boolean = False
+    Public RlZOthSource As Boolean = False
     Public DBasePop, DBaseEco, DBaseEne, DBasePopG, DBaseCheck As Boolean
     Public DBasePopFile, DBaseEcoFile, DBaseEneFile, DBasePopGFile As String
     Public ZonePopFile, ZoneEcoFile, ZoneEneFile As IO.FileStream
@@ -1061,25 +1061,25 @@ Module DBaseInterface
     Function get_population_data_by_seaportID(ByVal year As Integer, ByVal PortID As Integer) As Double
         Dim theSQL As String = ""
 
-        If PortID = 1 Then
-            'reset seaGVAArray value to read from database
-            seaDemogArray = Nothing
-        End If
+        'If PortID = 1 Then
+        '    'reset seaGVAArray value to read from database
+        '    seaDemogArray = Nothing
+        'End If
 
 
         'If the Demographic data has not been loaded then load it for each zone or port.
-        If seaDemogArray Is Nothing Then
+        'If seaDemogArray Is Nothing Then
 
-            theSQL = "SELECT * FROM CDAM_tr_gor_get_pop_by_model_run_id(" & g_modelRunID & "," & year & ",'sea'," & PortID & ") "
-            theSQL &= " AS (scenario_id varchar, year integer, gender varchar, category varchar, value double precision, " & Chr(34) & "GORName" & Chr(34)
-            theSQL &= " varchar, gor_id integer, tr_cdam_gor_id integer, "
-            theSQL &= Chr(34) & "PortName" & Chr(34) & " varchar, port_id integer);"
+        theSQL = "SELECT * FROM CDAM_tr_gor_get_pop_by_model_run_id(" & g_modelRunID & "," & year & ",'sea'," & PortID & ") "
+        theSQL &= " AS (scenario_id varchar, year integer, gender varchar, category varchar, value double precision, " & Chr(34) & "GORName" & Chr(34)
+        theSQL &= " varchar, gor_id integer, tr_cdam_gor_id integer, "
+        theSQL &= Chr(34) & "PortName" & Chr(34) & " varchar, port_id integer);"
 
-            If LoadSQLDataToArray(seaDemogArray, theSQL) = False Then
-                seaDemogArray = Nothing
-                Return 0
-            End If
+        If LoadSQLDataToArray(seaDemogArray, theSQL) = False Then
+            seaDemogArray = Nothing
+            Return 0
         End If
+        'End If
 
         Return CDbl((seaDemogArray(1, 4)) / 1000)
 
@@ -1597,7 +1597,7 @@ Module DBaseInterface
                 theSQL = "SELECT * FROM " & Chr(34) & "TR_I_Strategy_Projections_Run" & Chr(34) & " WHERE modelrun_id=" & g_modelRunID & " AND year = " & Year
             Case "Energy"
                 'TODO - Pull this data from the fuel database!!!
-                Connection = "C:\Users\drives\Documents\Visual Studio 2013\Projects\ITRCWS3\Transport\"
+                Connection = "F:\Files for Xucheng Li\ITRC\Energy Data\"
                 'Connection = "D:\Data\MI\ITRCWS1\Transport\"
                 'Connection = "D:\ITRC\ITRC Main\Model Inputs\EnergyCosts\" 'DBaseEneFile
                 TheFileName = "ScenarioEneFileCentralRevised.csv"
@@ -1838,7 +1838,7 @@ Module DBaseInterface
                     Case "Temp"
                         TableName = "TR_IO_AirNode"
                         OutFileName = FilePrefix & "AirNodeTemp.csv"
-                        header = "modelrun_id, year, airport_id, all_pass_total, dom_pass, int_pass, airport_trips_latent, term_cap, max_atm, term_cap_added, run_cap_added, termcap_checker, runcap_checker"
+                        header = "modelrun_id, year, airport_id, all_pass_total, dom_pass, int_pass, airport_trips_latent, term_cap, max_atm, term_cap_added, run_cap_added, termcap_checker, runcap_checker, capconstraint_checker"
                     Case "ExtVar"
                         TableName = "TR_IO_AirNodeExternalVariables"
                         OutFileName = EVFilePrefix & "AirNodeExtVar.csv"
