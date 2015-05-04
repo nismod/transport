@@ -1090,6 +1090,8 @@
         For i = 2 To 5
             If crossSectorArray(1, i) Is Nothing Then crossSectorArray(1, i) = 0
         Next
+        'get the free capacity as the capacity margin of the year
+        crossSectorArray(1, 2) = 1 - crossSectorArray(1, 2)
         Call WriteData("CrossSector", "", crossSectorArray)
         ReDim crossSectorArray(1, 5)
 
