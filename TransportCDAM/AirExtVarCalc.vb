@@ -265,7 +265,7 @@
             Loop
 
 
-            FuelEffOld = stratarrayOLD(1, 68)
+            FuelEffOld = stratarrayOLD(1, 70)
 
         End If
 
