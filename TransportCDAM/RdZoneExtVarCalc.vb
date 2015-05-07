@@ -69,7 +69,7 @@
     Dim UrbRoadPer, WPPLTripPer As Double
     Dim CarbCharge(4, 9) As Double
     Dim newcapnum As Integer
-    Dim zonecaparray(10, 8) As String
+    Dim NewCapArray(10, 8) As String
     Dim zonecapnum As Integer
     Dim RZEv_InArray(,) As String
     Dim RdZ_OutArray(145, 79) As String
@@ -136,14 +136,14 @@
             Call CapChangeCalc()
 
             'write all lines to intermediate capacity file
-            If Not zonecaparray Is Nothing Then
+            If Not NewCapArray Is Nothing Then
                 'write data if exist
-                Call WriteData("RoadZone", "NewCap", zonecaparray)
+                Call WriteData("RoadZone", "NewCap", NewCapArray)
             End If
         End If
 
         'read all required new capacity for the current year
-        Call ReadData("RoadZone", "NewCap", zonecaparray, g_modelRunYear)
+        Call ReadData("RoadZone", "NewCap", caparray, g_modelRunYear)
 
         'restart new cap array lines
         zonecapnum = 1
@@ -606,17 +606,17 @@
 
     Sub GetCapData()
 
-        If zonecaparray Is Nothing Then
+        If caparray Is Nothing Then
             'do nothing if reach the end
         Else
-            CapID = zonecaparray(zonecapnum, 2)
-            CapYear = zonecaparray(zonecapnum, 3)
-            MwayKmChange = zonecaparray(zonecapnum, 4)
-            RurADKmChange = zonecaparray(zonecapnum, 5)
-            RurASKmChange = zonecaparray(zonecapnum, 6)
-            RurMinKmChange = zonecaparray(zonecapnum, 7)
-            UrbDKmChange = zonecaparray(zonecapnum, 8)
-            UrbSKmChange = zonecaparray(zonecapnum, 9)
+            CapID = caparray(zonecapnum, 2)
+            CapYear = caparray(zonecapnum, 3)
+            MwayKmChange = caparray(zonecapnum, 4)
+            RurADKmChange = caparray(zonecapnum, 5)
+            RurASKmChange = caparray(zonecapnum, 6)
+            RurMinKmChange = caparray(zonecapnum, 7)
+            UrbDKmChange = caparray(zonecapnum, 8)
+            UrbSKmChange = caparray(zonecapnum, 9)
         End If
     End Sub
 
@@ -625,7 +625,6 @@
     Sub CapChangeCalc()
 
         If caparray Is Nothing Then Exit Sub
-        If zonecaparray Is Nothing Then Exit Sub
 
         'TODO - I am not sure how this is meant to work as this array does not have any capacity numbers????
         newcapnum = 1
@@ -657,9 +656,9 @@
             sortedline = sortarray(v)
             splitline = Split(sortedline, "&")
             arraynum = splitline(2)
-            zonecaparray(zonecapnum, 0) = g_modelRunID
+            NewCapArray(zonecapnum, 0) = g_modelRunID
             For c = 0 To 7
-                zonecaparray(zonecapnum, c + 1) = zonecapdetails(arraynum, c)
+                NewCapArray(zonecapnum, c + 1) = zonecapdetails(arraynum, c)
             Next
             zonecapnum += 1
         Next

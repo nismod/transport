@@ -227,7 +227,7 @@
 
         'write to crossSector output
         'adding the capacity margin of rail to the aggregate capacity margin
-        'crossSectorArray(1, 2) += ((totalCUTraffic / totalTraffic) * 0.91)
+        crossSectorArray(1, 2) += ((totalCUTraffic / totalTraffic) * 0.91)
 
 
 

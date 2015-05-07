@@ -215,7 +215,7 @@ Module RailModel
         'also get trip rate info
         RlFuelEff(0) = stratarray(1, 69)
         RlFuelEff(1) = stratarray(1, 68)
-        RlTripRates = stratarray(1, 93)
+        RlTripRates = stratarray(1, 95)
 
     End Sub
 
@@ -230,6 +230,7 @@ Module RailModel
             Zone2ID = InputArray(InputCount, 3)
             OldTracks(InputCount, 0) = InputArray(InputCount, 4)
             OldTrains(InputCount, 0) = InputArray(InputCount, 5)
+            NewTrains = OldTrains(InputCount, 0)
             'read previous years' value as base value
             PopZ1Base(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear - 1, Zone1ID, "OZ", "'rail'")
             PopZ2Base(InputCount, 0) = get_population_data_by_zoneID(g_modelRunYear - 1, Zone2ID, "DZ", "'rail'")
@@ -272,6 +273,7 @@ Module RailModel
             CarFuel(InputCount, 0) = RlLinkPreExtVars(InputCount, 10)
 
             OldTrains(InputCount, 0) = InputArray(InputCount, 6)
+            NewTrains = OldTrains(InputCount, 0)
             OldTracks(InputCount, 0) = InputArray(InputCount, 7)
             MaxTDBase(InputCount, 0) = InputArray(InputCount, 8)
 
