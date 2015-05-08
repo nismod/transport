@@ -1398,7 +1398,7 @@ Module DBaseInterface
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadZoneNewCapacity" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " AND changeyear = " & Year
                     Case "CapChange"
                         TheFileName = FilePrefix & "RoadZoneCapChange.csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RoadZoneCapacityChange" & Chr(34)
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RoadZoneCapacityChange" & Chr(34) & " ORDER BY id"
                     Case "Elasticity"
                         TheFileName = "Elasticity Files\TR" & SubStrategy & "\RoadZoneElasticities.csv"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_I_RoadZoneElasticities_Run" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year
@@ -1429,7 +1429,7 @@ Module DBaseInterface
                         End If
                     Case "CapChange"
                         TheFileName = CapFilePrefix & "RoadLinkCapChange.csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RoadLinkCapacityChange" & Chr(34)
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RoadLinkCapacityChange" & Chr(34) & " ORDER BY id"
                     Case "NewCap"
                         TheFileName = EVFilePrefix & "RoadLinkNewCap.csv"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadLinkNewCapacity" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and changeyear = " & Year
@@ -1465,7 +1465,7 @@ Module DBaseInterface
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RailZoneExternalVariables" & Chr(34) & " WHERE year = " & Year & " AND modelrun_id=" & g_modelRunID & " ORDER BY zone_id"
                     Case "CapChange"
                         TheFileName = CapFilePrefix & "RailZoneCapChange.csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RailZoneCapacityChange" & Chr(34)
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RailZoneCapacityChange" & Chr(34) & " ORDER BY id"
                     Case "Elasticity"
                         TheFileName = "Elasticity Files\TR" & SubStrategy & "\RailZoneElasticities.csv"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_I_RailZoneElasticities_Run" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year
@@ -1494,7 +1494,7 @@ Module DBaseInterface
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RailLinkExternalVariables" & Chr(34) & " WHERE year = " & Year & " AND modelrun_id=" & g_modelRunID & " ORDER BY flow_id"
                     Case "CapChange"
                         TheFileName = CapFilePrefix & "RailLinkCapChange.csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RailLinkCapacityChange" & Chr(34)
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RailLinkCapacityChange" & Chr(34) & " ORDER BY id"
                     Case "NewCap"
                         TheFileName = EVFilePrefix & "RailLinkNewCap.csv"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RailLinkNewCapacity" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " AND changeyear = " & Year
@@ -1534,7 +1534,7 @@ Module DBaseInterface
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_SeaFreightExternalVariables" & Chr(34) & " WHERE year = " & Year & " AND modelrun_id=" & g_modelRunID & " ORDER BY port_id"
                     Case "CapChange"
                         TheFileName = CapFilePrefix & "SeaFreightCapChange.csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_SeaFreightCapacityChange" & Chr(34)
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_SeaFreightCapacityChange" & Chr(34) & " ORDER BY id"
                     Case "NewCap"
                         TheFileName = EVFilePrefix & "SeaFreightNewCap.csv"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_SeaFreightNewCapacity" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and changeyear = " & Year
@@ -1562,7 +1562,7 @@ Module DBaseInterface
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_AirNodeExternalVariables" & Chr(34) & " WHERE modelrun_id=" & g_modelRunID & " AND year = " & Year & " ORDER BY airport_id"
                     Case "CapChange"
                         TheFileName = CapFilePrefix & "AirNodeCapChange.csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_AirNodeCapacityChange" & Chr(34)
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_AirNodeCapacityChange" & Chr(34) & " ORDER BY id"
                     Case "NewCap"
                         TheFileName = EVFilePrefix & "AirNodeNewCap.csv"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_AirNodeNewCapacity" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and changeyear = " & Year
@@ -1597,7 +1597,7 @@ Module DBaseInterface
                 theSQL = "SELECT * FROM " & Chr(34) & "TR_I_Strategy_Projections_Run" & Chr(34) & " WHERE modelrun_id=" & g_modelRunID & " AND year = " & Year
             Case "Energy"
                 'TODO - Pull this data from the fuel database!!!
-                Connection = "F:\Files for Xucheng Li\ITRC\Energy Data\"
+                Connection = "H:\ITRC\Transport\"
                 'Connection = "D:\Data\MI\ITRCWS1\Transport\"
                 'Connection = "D:\ITRC\ITRC Main\Model Inputs\EnergyCosts\" 'DBaseEneFile
                 TheFileName = "ScenarioEneFileCentralRevised.csv"

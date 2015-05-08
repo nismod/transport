@@ -567,7 +567,7 @@
                                 Else
                                     Do Until TermToBuild >= TermCapChange
                                         CapNewYear += 1
-                                        If CapNewYear > 90 Then
+                                        If CapNewYear > 2100 Then
                                             Breakout = True
                                             Exit Select
                                         End If
@@ -590,7 +590,7 @@
                                 Else
                                     Do Until RunToBuild >= ATMChange
                                         CapNewYear += 1
-                                        If CapNewYear > 90 Then
+                                        If CapNewYear > 2100 Then
                                             Breakout = True
                                             Exit Select
                                         End If

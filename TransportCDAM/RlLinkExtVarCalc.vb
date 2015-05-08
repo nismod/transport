@@ -882,7 +882,7 @@ NextYear:
                             Else
                                 Do Until TracksToBuild >= TrackChange
                                     CapNewYear += 1
-                                    If CapNewYear > 90 Then
+                                    If CapNewYear > 2100 Then
                                         Breakout = True
                                         Exit Select
                                     End If
