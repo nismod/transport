@@ -52,7 +52,7 @@
     Dim NodeOutputArray(29, 14) As String
     Dim FlowOutputArray(224, 8) As String
     Dim CapArray(47, 6) As String
-    Dim NewCapArray(47, 6) As String
+    Dim NewCapArray(47, 5) As String
     Dim CapNum As Integer
     Dim y As Object
     Dim yearIs2010 As Boolean = False
@@ -505,6 +505,7 @@
         AddingCap = False
         TermToBuild = 0
         RunToBuild = 0
+        CapNewYear = 2010
         CapNum = 1
 
         If CapArray Is Nothing Then Exit Sub
@@ -633,7 +634,7 @@
             For i = 0 To 3
                 NewCapArray(v + 1, i + 1) = NewCapDetails(arraynum, i)
             Next
-            NewCapArray(v + vbDefaultButton1, 5) = CapType
+            'NewCapArray(v + 1, 5) = "C"
         Next
 
 

@@ -863,7 +863,7 @@ NextYear:
                 Case "O"
                     'then if adding optional capacity read all optional dated enhancements to intermediate array
                     If NewRlLCap = True Then
-                        If CapYear >= 0 Then
+                        If CapYear >= 3000 Then
                             NewCapDetails(CapCount, 0) = CapID
                             NewCapDetails(CapCount, 1) = CapYear
                             NewCapDetails(CapCount, 2) = TrackChange

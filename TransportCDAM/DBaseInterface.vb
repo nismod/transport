@@ -1824,9 +1824,9 @@ Module DBaseInterface
             Case "AirNode"
                 Select Case SubType
                     Case "NewCap"
-                        TableName = "TR_O_AirNodeNewCapacity"
+                        TableName = "TR_IO_AirNodeNewCapacity"
                         OutFileName = EVFilePrefix & "AirNodeNewCap.csv"
-                        header = "modelrun_id, airport_id, changeyear, new_term_capacity, new_atm_cap, captype"
+                        header = "modelrun_id, airport_id, changeyear, new_term_capacity, new_atm_cap"
                     Case "NewCap_Added"
                         TableName = "TR_O_AirNodeNewCapacity_Added"
                         OutFileName = FilePrefix & "AirNewCap.csv"

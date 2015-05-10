@@ -69,7 +69,7 @@
     Dim UrbRoadPer, WPPLTripPer As Double
     Dim CarbCharge(4, 9) As Double
     Dim newcapnum As Integer
-    Dim NewCapArray(10, 8) As String
+    Dim NewCapArray(200, 8) As String
     Dim zonecapnum As Integer
     Dim RZEv_InArray(,) As String
     Dim RdZ_OutArray(145, 79) As String

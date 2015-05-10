@@ -79,7 +79,7 @@
                 Case "ConChargeYear"
                     ConChargeYear = CInt(ary(i, 5))
                 Case "ConChargePer"
-                    ConChargePer = CInt(ary(i, 5)) / 100
+                    ConChargePer = CDbl(ary(i, 5)) / 100
                 Case "CarbonCharge"
                     CarbonCharge = CBool(ary(i, 5))
                 Case "CarbChargeYear"
@@ -89,23 +89,23 @@
                 Case "WPPLYear"
                     WPPLYear = CInt(ary(i, 5))
                 Case "WPPLPer"
-                    WPPLPer = CInt(ary(i, 5)) / 100
+                    WPPLPer = CDbl(ary(i, 5)) / 100
                 Case "RailCCharge"
                     RailCCharge = CBool(ary(i, 5))
                 Case "RlCChargeYear"
                     RlCChargeYear = CInt(ary(i, 5))
                 Case "RailChargePer"
-                    RailChargePer = CInt(ary(i, 5)) / 100
+                    RailChargePer = CDbl(ary(i, 5)) / 100
                 Case "RlCaCharge"
                     RlCaCharge = CBool(ary(i, 5))
                 Case "RlCaChYear"
-                    RlCaChYear = CInt(ary(i, 5))
+                    RlCaChYear = CDbl(ary(i, 5))
                 Case "AirCCharge"
                     AirCCharge = CBool(ary(i, 5))
                 Case "AirChargeYear"
                     AirChargeYear = CInt(ary(i, 5))
                 Case "AirChargePer"
-                    AirChargePer = CInt(ary(i, 5)) / 100
+                    AirChargePer = CDbl(ary(i, 5)) / 100
                 Case "AirCaCharge"
                     AirCaCharge = CBool(ary(i, 5))
                 Case "AirCaChYear"
@@ -115,7 +115,7 @@
                 Case "SmartIntro"
                     SmartIntro = CInt(ary(i, 5))
                 Case "SmartPer"
-                    SmartPer = CInt(ary(i, 5)) / 100
+                    SmartPer = CDbl(ary(i, 5)) / 100
                 Case "SmartYears"
                     SmartYears = CInt(ary(i, 5))
                 Case "SmartFrt"
@@ -123,7 +123,7 @@
                 Case "SmFrtIntro"
                     SmFrtIntro = CInt(ary(i, 5))
                 Case "SmFrtPer"
-                    SmFrtPer = CInt(ary(i, 5)) / 100
+                    SmFrtPer = CDbl(ary(i, 5)) / 100
                 Case "SmFrtYears"
                     SmFrtYears = CInt(ary(i, 5))
                 Case "UrbanFrt"
@@ -131,7 +131,7 @@
                 Case "UrbFrtIntro"
                     UrbFrtIntro = CInt(ary(i, 5))
                 Case "UrbFrtPer"
-                    UrbFrtPer = CInt(ary(i, 5)) / 100
+                    UrbFrtPer = CDbl(ary(i, 5)) / 100
                 Case "UrbFrtYears"
                     UrbFrtYears = CInt(ary(i, 5))
                 Case "NewRdLEV"
@@ -147,23 +147,23 @@
                 Case "NewSeaEV"
                     NewSeaEV = CBool(ary(i, 5))
                 Case "NewRoadLanes"
-                    NewRoadLanes = CInt(ary(i, 5))
+                    NewRoadLanes = CDbl(ary(i, 5))
                 Case "NewRailTracks"
-                    NewRailTracks = CInt(ary(i, 5))
+                    NewRailTracks = CDbl(ary(i, 5))
                 Case "NewRlZCap"
                     NewRlZCap = CBool(ary(i, 5))
                 Case "NewAirRun"
-                    NewAirRun = CInt(ary(i, 5))
+                    NewAirRun = CDbl(ary(i, 5))
                 Case "NewAirTerm"
-                    NewAirTerm = CInt(ary(i, 5))
+                    NewAirTerm = CDbl(ary(i, 5))
                 Case "NewSeaCap"
                     NewSeaCap = CBool(ary(i, 5))
                 Case "NewSeaTonnes"
-                    NewSeaTonnes = CInt(ary(i, 5))
+                    NewSeaTonnes = CDbl(ary(i, 5))
                 Case "RlElect"
                     RlElect = CBool(ary(i, 5))
                 Case "ElectKmPerYear"
-                    ElectKmPerYear = CInt(ary(i, 5))
+                    ElectKmPerYear = CDbl(ary(i, 5))
                 Case "NewRdLCap"
                     NewRdLCap = CBool(ary(i, 5))
                 Case "NewRdZCap"
@@ -175,7 +175,7 @@
                 Case "RailCUPeriod"
                     RailCUPeriod = CStr(ary(i, 5))
                 Case "RlPeakHeadway"
-                    RlPeakHeadway = CInt(ary(i, 5))
+                    RlPeakHeadway = CDbl(ary(i, 5))
                 Case "RdZSpdSource"
                     RdZSpdSource = CStr(ary(i, 5))
                 Case "TripRates"
