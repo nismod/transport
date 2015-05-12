@@ -212,23 +212,23 @@
         End If
 
         'Get energy data
-        Call DBaseInterface.ReadData("Energy", "", enearray)
-        If g_modelRunYear <> 2010 Then
-            enearray(1, 1) = enearray(g_modelRunYear - 2010, 1) 'petrol
-            enearray(1, 2) = enearray(g_modelRunYear - 2010, 2) 'diesel
-            enearray(1, 3) = enearray(g_modelRunYear - 2010, 3) 'electricity
-            enearray(1, 4) = 1 'LPG
-            enearray(1, 5) = 1 'CNG
-            enearray(1, 6) = 1 'hydrogen
-            enearray(2, 1) = enearray(g_modelRunYear - 2009, 1) 'petrol
-            enearray(2, 2) = enearray(g_modelRunYear - 2009, 2) 'diesel
-            enearray(2, 3) = enearray(g_modelRunYear - 2009, 3) 'electricity
-            enearray(2, 4) = 1 'LPG
-            enearray(2, 5) = 1 'CNG
-            enearray(2, 6) = 1 'hydrogen
-        End If
+        'Call DBaseInterface.ReadData("Energy", "", enearray)
+        'If g_modelRunYear <> 2010 Then
+        '    enearray(1, 1) = enearray(g_modelRunYear - 2010, 1) 'petrol
+        '    enearray(1, 2) = enearray(g_modelRunYear - 2010, 2) 'diesel
+        '    enearray(1, 3) = enearray(g_modelRunYear - 2010, 3) 'electricity
+        '    enearray(1, 4) = 1 'LPG
+        '    enearray(1, 5) = 1 'CNG
+        '    enearray(1, 6) = 1 'hydrogen
+        '    enearray(2, 1) = enearray(g_modelRunYear - 2009, 1) 'petrol
+        '    enearray(2, 2) = enearray(g_modelRunYear - 2009, 2) 'diesel
+        '    enearray(2, 3) = enearray(g_modelRunYear - 2009, 3) 'electricity
+        '    enearray(2, 4) = 1 'LPG
+        '    enearray(2, 5) = 1 'CNG
+        '    enearray(2, 6) = 1 'hydrogen
+        'End If
         'read fuel price for previous year (1,x) and current year (2,x)
-        'Call get_fuelprice_by_modelrun_id(g_modelRunID, g_modelRunYear, 0)
+        Call get_fuelprice_by_modelrun_id(g_modelRunID, g_modelRunYear, 0)
         If RlZEneSource = "Database" Then
             'If g_modelRunYear = 2010 Then y = 1 Else y = g_modelRunYear - g_initialYear + 1 'TODO - this needs fixing once we go to database for energy 
             InDieselOldAll = enearray(1, 2)

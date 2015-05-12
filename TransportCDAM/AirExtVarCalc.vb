@@ -323,7 +323,6 @@
                     'Airport terminals: £4,000 million each
                     'Airport runways: £8,000 million each
                     crossSectorArray(1, 3) += 4000 * TermCapChange / 20000000 + 8000 * ATMChange / 200000
-                    CapNum += 1
                     Call GetCapData()
                 End If
             End If
@@ -614,7 +613,7 @@
             If Breakout = True Then
                 Exit Do
             End If
-            CapNum += 1
+
             CapCount += 1
         Loop
         'then sort the intermediate array by year of implementation then by flow ID
