@@ -293,6 +293,9 @@ Module RailModel
                 CalcCheck(InputCount, 0) = False
             End If
 
+            If InputArray(InputCount, 15) = "" Then
+                InputArray(InputCount, 15) = 0
+            End If
             AddedTracks(InputCount, 0) = InputArray(InputCount, 15)
 
             'add the cost of the infrastructure built

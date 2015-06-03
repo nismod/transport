@@ -130,8 +130,8 @@ Module DBaseInterface
     Public g_LogVTypes(2) As VariantType
 
     Public Enum ErrorSeverity
-        FATAL = 1
-        WARNING = 0
+        FATAL = True
+        WARNING = False
     End Enum
 
     Sub ConnectToDBase()
