@@ -318,7 +318,8 @@
     End Sub
 
     Sub CapChangeCalc()
-
+        Dim CapGroupNum As Integer
+        Dim Cap As Integer = 0
         'read CapArray into the first row of NewCapDetails array
         CapCount = 0
         'addingcap is false when is reading from LU table
@@ -363,72 +364,102 @@
                 'if empty, do nothing
             End If
 
-            Select Case CapType
-                Case "C"
-                    NewCapDetails(CapCount, 0) = CapID
-                    NewCapDetails(CapCount, 1) = CapYear
-                    NewCapDetails(CapCount, 2) = LBChange
-                    NewCapDetails(CapCount, 3) = DBChange
-                    NewCapDetails(CapCount, 4) = GCChange
-                    NewCapDetails(CapCount, 5) = LLChange
-                    NewCapDetails(CapCount, 6) = RRChange
-                    CapNewYear = CapYear
-                Case "O"
-                    'then if adding optional capacity read all optional dated enhancements to intermediate array
-                    If NewSeaCap = True Then
-                        If CapYear >= 0 Then
-                            NewCapDetails(CapCount, 0) = CapID
-                            NewCapDetails(CapCount, 1) = CapYear
-                            NewCapDetails(CapCount, 2) = LBChange
-                            NewCapDetails(CapCount, 3) = DBChange
-                            NewCapDetails(CapCount, 4) = GCChange
-                            NewCapDetails(CapCount, 5) = LLChange
-                            NewCapDetails(CapCount, 6) = RRChange
-                            CapNewYear = CapYear
-                        Else
-                            'finally add all other enhancements to intermediate array until we have run out of additional capacity
-                            captonnes = LBChange & DBChange & GCChange & LLChange & RRChange
-                            If tonnestobuild >= captonnes Then
+            'if the capacity group combination include the compulsory and optional type projects
+            If capChangeArray(1, 2) = True Then
+                Select Case CapType
+                    Case "C"
+                        NewCapDetails(CapCount, 0) = CapID
+                        NewCapDetails(CapCount, 1) = CapYear
+                        NewCapDetails(CapCount, 2) = LBChange
+                        NewCapDetails(CapCount, 3) = DBChange
+                        NewCapDetails(CapCount, 4) = GCChange
+                        NewCapDetails(CapCount, 5) = LLChange
+                        NewCapDetails(CapCount, 6) = RRChange
+                        CapNewYear = CapYear
+
+                        CapCount += 1
+                    Case "O"
+                        'then if adding optional capacity read all optional dated enhancements to intermediate array
+                        If NewSeaCap = True Then
+                            If CapYear >= 0 Then
                                 NewCapDetails(CapCount, 0) = CapID
-                                NewCapDetails(CapCount, 1) = CapNewYear
+                                NewCapDetails(CapCount, 1) = CapYear
                                 NewCapDetails(CapCount, 2) = LBChange
                                 NewCapDetails(CapCount, 3) = DBChange
                                 NewCapDetails(CapCount, 4) = GCChange
                                 NewCapDetails(CapCount, 5) = LLChange
                                 NewCapDetails(CapCount, 6) = RRChange
-                                tonnestobuild = tonnestobuild - captonnes
+                                CapNewYear = CapYear
                             Else
-                                Do Until tonnestobuild >= captonnes
-                                    CapNewYear += 1
-                                    If CapNewYear > 2100 Then
-                                        Breakout = True
-                                        Exit Select
-                                    End If
-                                    tonnestobuild += NewSeaTonnes
-                                Loop
-                                NewCapDetails(CapCount, 0) = CapID
-                                NewCapDetails(CapCount, 1) = CapNewYear
-                                NewCapDetails(CapCount, 2) = LBChange
-                                NewCapDetails(CapCount, 3) = DBChange
-                                NewCapDetails(CapCount, 4) = GCChange
-                                NewCapDetails(CapCount, 5) = LLChange
-                                NewCapDetails(CapCount, 6) = RRChange
-                                tonnestobuild = tonnestobuild - captonnes
+                                'finally add all other enhancements to intermediate array until we have run out of additional capacity
+                                captonnes = LBChange & DBChange & GCChange & LLChange & RRChange
+                                If tonnestobuild >= captonnes Then
+                                    NewCapDetails(CapCount, 0) = CapID
+                                    NewCapDetails(CapCount, 1) = CapNewYear
+                                    NewCapDetails(CapCount, 2) = LBChange
+                                    NewCapDetails(CapCount, 3) = DBChange
+                                    NewCapDetails(CapCount, 4) = GCChange
+                                    NewCapDetails(CapCount, 5) = LLChange
+                                    NewCapDetails(CapCount, 6) = RRChange
+                                    tonnestobuild = tonnestobuild - captonnes
+                                Else
+                                    Do Until tonnestobuild >= captonnes
+                                        CapNewYear += 1
+                                        If CapNewYear > 2100 Then
+                                            Breakout = True
+                                            Exit Select
+                                        End If
+                                        tonnestobuild += NewSeaTonnes
+                                    Loop
+                                    NewCapDetails(CapCount, 0) = CapID
+                                    NewCapDetails(CapCount, 1) = CapNewYear
+                                    NewCapDetails(CapCount, 2) = LBChange
+                                    NewCapDetails(CapCount, 3) = DBChange
+                                    NewCapDetails(CapCount, 4) = GCChange
+                                    NewCapDetails(CapCount, 5) = LLChange
+                                    NewCapDetails(CapCount, 6) = RRChange
+                                    tonnestobuild = tonnestobuild - captonnes
+                                End If
                             End If
+                            CapCount += 1
+                        Else
+                            'Exit Do
                         End If
-                    Else
-                        Exit Do
-                    End If
-            End Select
+
+                        CapCount += 1
+                End Select
+            End If
+
+            'if the captype is the relevant capacity group, then read from the array
+            CapGroupNum = 0
+            Do
+                CapGroupNum += 1
+
+                'if the capacity group array is empty (no additional capacity) then exit
+                If capGroupArray(CapGroupNum) Is Nothing Then Exit Do
+
+                If CapType = capGroupArray(CapGroupNum) Then
+                    NewCapDetails(CapCount + Cap, 0) = CapID
+                    NewCapDetails(CapCount + Cap, 1) = CapYear
+                    NewCapDetails(CapCount + Cap, 2) = LBChange
+                    NewCapDetails(CapCount + Cap, 3) = DBChange
+                    NewCapDetails(CapCount + Cap, 4) = GCChange
+                    NewCapDetails(CapCount + Cap, 5) = LLChange
+                    NewCapDetails(CapCount + Cap, 6) = RRChange
+                    Cap += 1
+                End If
+            Loop
+
+
             'if the cap year over our range of 90 year, then exit
             If Breakout = True Then
                 Exit Do
             End If
 
-            CapCount += 1
+
         Loop
 
-        If CapCount > 0 Then 'Had to add this line for when CapCount = 0
+        If CapCount + Cap > 0 Then 'Had to add this line for when CapCount = 0
             'then sort the intermediate array by PortID, then by year of implementation
             For v = 0 To 0
                 sortarray(v) = NewCapDetails(v, 0) & "&" & NewCapDetails(v, 1) & "&" & v

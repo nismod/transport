@@ -816,6 +816,8 @@ NextYear:
     End Sub
 
     Sub CapChangeCalc()
+        Dim CapGroupNum As Integer
+        Dim Cap As Integer = 0
 
         'start from the first row of CapArray
         CapNum = 1
@@ -851,66 +853,94 @@ NextYear:
                 CapNum += 1
             End If
 
+            'if the capacity group combination include the compulsory and optional type projects
+            If capChangeArray(1, 2) = True Then
+                Select Case CapType
+                    Case "C"
+                        NewCapDetails(CapCount, 0) = CapID
+                        NewCapDetails(CapCount, 1) = CapYear
+                        NewCapDetails(CapCount, 2) = TrackChange
+                        NewCapDetails(CapCount, 3) = MaxTDChange
+                        NewCapDetails(CapCount, 4) = TrainChange
+                        CapNewYear = CapYear
 
-            Select Case CapType
-                Case "C"
-                    NewCapDetails(CapCount, 0) = CapID
-                    NewCapDetails(CapCount, 1) = CapYear
-                    NewCapDetails(CapCount, 2) = TrackChange
-                    NewCapDetails(CapCount, 3) = MaxTDChange
-                    NewCapDetails(CapCount, 4) = TrainChange
-                    CapNewYear = CapYear
-                Case "O"
-                    'then if adding optional capacity read all optional dated enhancements to intermediate array
-                    If NewRlLCap = True Then
-                        If CapYear >= 3000 Then
-                            NewCapDetails(CapCount, 0) = CapID
-                            NewCapDetails(CapCount, 1) = CapYear
-                            NewCapDetails(CapCount, 2) = TrackChange
-                            NewCapDetails(CapCount, 3) = MaxTDChange
-                            NewCapDetails(CapCount, 4) = TrainChange
-                            CapNewYear = CapYear
-                        Else
-                            'finally add all other enhancements to intermediate array until we have run out of additional capacity
-                            If TracksToBuild >= TrackChange Then
+                        CapCount += 1
+                    Case "O"
+                        'then if adding optional capacity read all optional dated enhancements to intermediate array
+                        If NewRlLCap = True Then
+                            If CapYear >= 3000 Then
                                 NewCapDetails(CapCount, 0) = CapID
-                                NewCapDetails(CapCount, 1) = CapNewYear
+                                NewCapDetails(CapCount, 1) = CapYear
                                 NewCapDetails(CapCount, 2) = TrackChange
                                 NewCapDetails(CapCount, 3) = MaxTDChange
                                 NewCapDetails(CapCount, 4) = TrainChange
-                                TracksToBuild = TracksToBuild - TrackChange
+                                CapNewYear = CapYear
                             Else
-                                Do Until TracksToBuild >= TrackChange
-                                    CapNewYear += 1
-                                    If CapNewYear > 2100 Then
-                                        Breakout = True
-                                        Exit Select
-                                    End If
-                                    TracksToBuild += NewRailTracks
-                                Loop
-                                NewCapDetails(CapCount, 0) = CapID
-                                NewCapDetails(CapCount, 1) = CapNewYear
-                                NewCapDetails(CapCount, 2) = TrackChange
-                                NewCapDetails(CapCount, 3) = MaxTDChange
-                                NewCapDetails(CapCount, 4) = TrainChange
-                                TracksToBuild = TracksToBuild - TrackChange
+                                'finally add all other enhancements to intermediate array until we have run out of additional capacity
+                                If TracksToBuild >= TrackChange Then
+                                    NewCapDetails(CapCount, 0) = CapID
+                                    NewCapDetails(CapCount, 1) = CapNewYear
+                                    NewCapDetails(CapCount, 2) = TrackChange
+                                    NewCapDetails(CapCount, 3) = MaxTDChange
+                                    NewCapDetails(CapCount, 4) = TrainChange
+                                    TracksToBuild = TracksToBuild - TrackChange
+                                Else
+                                    Do Until TracksToBuild >= TrackChange
+                                        CapNewYear += 1
+                                        If CapNewYear > 2100 Then
+                                            Breakout = True
+                                            Exit Select
+                                        End If
+                                        TracksToBuild += NewRailTracks
+                                    Loop
+                                    NewCapDetails(CapCount, 0) = CapID
+                                    NewCapDetails(CapCount, 1) = CapNewYear
+                                    NewCapDetails(CapCount, 2) = TrackChange
+                                    NewCapDetails(CapCount, 3) = MaxTDChange
+                                    NewCapDetails(CapCount, 4) = TrainChange
+                                    TracksToBuild = TracksToBuild - TrackChange
+                                End If
                             End If
+                            CapCount += 1
+                        Else
+                            'Exit Do
                         End If
-                    Else
-                        Exit Do
-                    End If
-            End Select
+
+
+                End Select
+            End If
+
+            'if the captype is the relevant capacity group, then read from the array
+            CapGroupNum = 0
+            Do
+                CapGroupNum += 1
+
+                If capGroupArray(CapGroupNum) Is Nothing Then Exit Do
+
+                If CapType = capGroupArray(CapGroupNum) Then
+
+                    NewCapDetails(CapCount + Cap, 0) = CapID
+                    NewCapDetails(CapCount + Cap, 1) = CapYear
+                    NewCapDetails(CapCount + Cap, 2) = TrackChange
+                    NewCapDetails(CapCount + Cap, 3) = MaxTDChange
+                    NewCapDetails(CapCount + Cap, 4) = TrainChange
+                    Cap += 1
+                End If
+            Loop
+
+
+
             'exit if year is greater than our range (90 years)
             If Breakout = True Then
                 Exit Do
             End If
-            CapCount += 1
+
         Loop
 
 
         'then sort the intermediate array by year, then by flow ID of implementation
-        ReDim sortarray(CapCount - 1)
-        For v = 0 To (CapCount - 1)
+        ReDim sortarray(CapCount - 1 + Cap)
+        For v = 0 To (CapCount - 1 + Cap)
             padflow = String.Format("{0:000}", NewCapDetails(v, 0))
             padyear = String.Format("{0:00}", NewCapDetails(v, 1))
             sortarray(v) = padyear & "&" & padflow & "&" & v
@@ -918,7 +948,7 @@ NextYear:
         Array.Sort(sortarray)
 
         'write all lines to NewCapArray
-        For v = 0 To (CapCount - 1)
+        For v = 0 To (CapCount - 1 + Cap)
             sortedline = sortarray(v)
             splitline = Split(sortedline, "&")
             arraynum = splitline(2)

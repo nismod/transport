@@ -13,7 +13,7 @@
     'now all file related functions are using databaseinterface
     '1.9 now the module can run with database connection and read/write from/to database
 
-    Dim RoadCapArray(145, 7) As String
+    Dim RoadCapArray(145, 9) As String
     Dim ZoneInput As String
     Dim ZoneDetails() As String
     Dim ZoneID As Long
@@ -175,14 +175,9 @@
         Call ReadData("RoadZone", "Elasticity", RdZoneEl, g_modelRunYear)
 
         '130514 note that at the moment this just reads a blank file - need to remove "fileprefix" from string, and then need to modify form1 and build procedure so that it picks up on additional capacity built (ie those tagged '-1' for year)
-        Call ReadData("RoadZone", "CapChange", RoadCapArray, g_modelRunYear)
+        Call ReadData("RoadZone", "NewCap", RoadCapArray, g_modelRunYear)
         CapNum = 1
-        If RoadCapArray(CapNum, 1) Is Nothing Then
-            '130514 addition of line
-            RoadCapArray(CapNum, 2) = 0
-            RoadCapArray(CapNum, 3) = -1
-            RoadCapArray(CapNum, 4) = ""
-        End If
+
 
     End Sub
 
@@ -420,13 +415,15 @@
 
         'v1.4 mod - check if there is any change in road capacity in this zone and year
         '130514 modified to take in both prespecified capacity and capacity built as part of TR1
-        If RoadCapArray(CapNum, 1) = ZoneID Then
-            If RoadCapArray(CapNum, 3) = g_modelRunYear Then
-                AddedLaneKm(ZoneID, 1) += RoadCapArray(CapNum, 3)
-                AddedLaneKm(ZoneID, 2) += CDbl(RoadCapArray(CapNum, 4)) + RoadCapArray(CapNum, 5)
-                AddedLaneKm(ZoneID, 3) += RoadCapArray(CapNum, 6)
-                AddedLaneKm(ZoneID, 4) += CDbl(RoadCapArray(CapNum, 7)) + RoadCapArray(CapNum, 8)
-                CapNum += 1
+        If Not RoadCapArray Is Nothing Then
+            If RoadCapArray(CapNum, 1) = ZoneID Then
+                If RoadCapArray(CapNum, 3) = g_modelRunYear Then
+                    AddedLaneKm(ZoneID, 1) += RoadCapArray(CapNum, 3)
+                    AddedLaneKm(ZoneID, 2) += CDbl(RoadCapArray(CapNum, 4)) + RoadCapArray(CapNum, 5)
+                    AddedLaneKm(ZoneID, 3) += RoadCapArray(CapNum, 6)
+                    AddedLaneKm(ZoneID, 4) += CDbl(RoadCapArray(CapNum, 7)) + RoadCapArray(CapNum, 8)
+                    CapNum += 1
+                End If
             End If
         End If
         If BuildInfra = True Then

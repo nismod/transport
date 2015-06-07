@@ -21,6 +21,7 @@ Module DBaseInterface
     Public NewRlZEV As Boolean
     Public NewAirEV As Boolean
     Public NewSeaEV As Boolean
+    Public CapChangeID As Integer
     Public EVFilePrefix As String
     Public RunModel As Boolean = True
     Public NewRdLCap, NewRdZCap, NewRlLCap, NewRlZCap, NewAirCap, NewSeaCap As Boolean
@@ -88,6 +89,8 @@ Module DBaseInterface
     Public stratarray(,) As String
     Public stratarrayOLD(,) As String
     Public enearray(2, 6) As String
+    Public capChangeArray(,) As String
+    Public capGroupArray() As String
     Public InDieselOldAll, InElectricOldAll, InDieselNewAll, InElectricNewAll
     Public InDieselOld(238, 0), InElectricOld(238, 0), InDieselNew, InElectricNew As Double
     Public crossSectorArray(1, 5) As String
@@ -1375,7 +1378,7 @@ Module DBaseInterface
             Case "Inputs"
                 Select Case SubType
                     Case "Parameters"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_I_Parameters_Run" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_I_Parameters_Run" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " ORDER BY param_id"
                     Case Else
                         'Fatal Error - missing Case
                         ErrorLog(ErrorSeverity.FATAL, "ReadData", SubType, "Missing Database SQL Case for Type " & Type & ", SubType " & SubType)
@@ -1597,10 +1600,12 @@ Module DBaseInterface
                 theSQL = "SELECT * FROM " & Chr(34) & "TR_I_Strategy_Projections_Run" & Chr(34) & " WHERE modelrun_id=" & g_modelRunID & " AND year = " & Year
             Case "Energy"
                 'TODO - Pull this data from the fuel database!!!
-                Connection = "H:\ITRC\Transport\"
+                Connection = "F:\Files for Xucheng Li\ITRC\Energy Data\"
                 'Connection = "D:\Data\MI\ITRCWS1\Transport\"
                 'Connection = "D:\ITRC\ITRC Main\Model Inputs\EnergyCosts\" 'DBaseEneFile
                 TheFileName = "ScenarioEneFileCentralRevised.csv"
+            Case "CapChangeID"
+                theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_CapacityChange" & Chr(34) & " WHERE capacitychange_id =" & whereID
             Case Else
                 'Fatal Error - missing Case
                 ErrorLog(ErrorSeverity.FATAL, "ReadData", Type, "Missing Database SQL Case for Type " & Type & ", SubType " & SubType)

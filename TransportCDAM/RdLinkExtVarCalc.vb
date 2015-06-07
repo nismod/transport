@@ -25,7 +25,7 @@
     Dim AddingCap As Boolean
     Dim LanesToBuild, CapLanes As Double
     Dim CapType, CapRow As String
-    Dim NewCapDetails(6834, 5) As Double
+    Dim NewCapDetails(6837, 5) As Double
     Dim Breakout As Boolean
     Dim sortarray(6834) As String
     Dim sortedline As String
@@ -861,6 +861,18 @@
                     MLanes(InputCount, 1) += MLaneChange
                     DLanes(InputCount, 1) += DLaneChange
                     SLanes(InputCount, 1) += SLaneChange
+
+                    'avoid negative values due to the update of the roads and hence a negative investment cost 
+                    If MLaneChange < 0 Then
+                        MLaneChange = 0
+                    End If
+                    If DLaneChange < 0 Then
+                        DLaneChange = 0
+                    End If
+                    If SLaneChange < 0 Then
+                        SLaneChange = 0
+                    End If
+
                     'write to CrossSector output for investment cost
                     'Motorways: £21.03 million per km (assumes 6 lanes)
                     'Dual carriageways: £11.36 million per km (assumes 4 lanes)
@@ -1044,6 +1056,8 @@
 
 
     Sub CapChangeCalc()
+        Dim CapGroupNum As Integer
+        Dim Cap As Integer = 0
 
         'start from the first row of CapArray
         CapNum = 1
@@ -1078,73 +1092,101 @@
                 CapNum += 1
             End If
 
-            Select Case CapType
-                Case "C"
-                    NewCapDetails(CapCount, 0) = CapID
-                    NewCapDetails(CapCount, 1) = CapYear
-                    NewCapDetails(CapCount, 2) = MLaneChange
-                    NewCapDetails(CapCount, 3) = DLaneChange
-                    NewCapDetails(CapCount, 4) = SLaneChange
-                    CapNewYear = CapYear
-                Case "O"
-                    'then if adding optional capacity read all optional dated enhancements to intermediate array
-                    If NewRdLCap = True Then
-                        If CapYear > g_initialYear Then
-                            NewCapDetails(CapCount, 0) = CapID
-                            NewCapDetails(CapCount, 1) = CapYear
-                            NewCapDetails(CapCount, 2) = MLaneChange
-                            NewCapDetails(CapCount, 3) = DLaneChange
-                            NewCapDetails(CapCount, 4) = SLaneChange
-                            CapNewYear = CapYear
-                        Else
-                            'finally add all other enhancements to intermediate array until we have run out of additional capacity
-                            CapLanes = MLaneChange + DLaneChange + SLaneChange
-                            If LanesToBuild >= CapLanes Then
+            'if the capacity group combination include the compulsory and optional type projects
+            If capChangeArray(1, 2) = True Then
+                Select Case CapType
+                    Case "C"
+                        NewCapDetails(CapCount, 0) = CapID
+                        NewCapDetails(CapCount, 1) = CapYear
+                        NewCapDetails(CapCount, 2) = MLaneChange
+                        NewCapDetails(CapCount, 3) = DLaneChange
+                        NewCapDetails(CapCount, 4) = SLaneChange
+                        CapNewYear = CapYear
+
+                        CapCount += 1
+                    Case "O"
+                        'then if adding optional capacity read all optional dated enhancements to intermediate array
+                        If NewRdLCap = True Then
+                            If CapYear > g_initialYear Then
                                 NewCapDetails(CapCount, 0) = CapID
-                                NewCapDetails(CapCount, 1) = CapNewYear
+                                NewCapDetails(CapCount, 1) = CapYear
                                 NewCapDetails(CapCount, 2) = MLaneChange
                                 NewCapDetails(CapCount, 3) = DLaneChange
                                 NewCapDetails(CapCount, 4) = SLaneChange
-                                LanesToBuild = LanesToBuild - CapLanes
+                                CapNewYear = CapYear
                             Else
-                                Do Until LanesToBuild >= CapLanes
-                                    CapNewYear += 1
-                                    If CapNewYear > 2100 Then
-                                        Breakout = True
-                                        Exit Select
-                                    End If
-                                    LanesToBuild += NewRoadLanes
-                                Loop
-                                NewCapDetails(CapCount, 0) = CapID
-                                NewCapDetails(CapCount, 1) = CapNewYear
-                                NewCapDetails(CapCount, 2) = MLaneChange
-                                NewCapDetails(CapCount, 3) = DLaneChange
-                                NewCapDetails(CapCount, 4) = SLaneChange
-                                LanesToBuild = LanesToBuild - CapLanes
+                                'finally add all other enhancements to intermediate array until we have run out of additional capacity
+                                CapLanes = MLaneChange + DLaneChange + SLaneChange
+                                If LanesToBuild >= CapLanes Then
+                                    NewCapDetails(CapCount, 0) = CapID
+                                    NewCapDetails(CapCount, 1) = CapNewYear
+                                    NewCapDetails(CapCount, 2) = MLaneChange
+                                    NewCapDetails(CapCount, 3) = DLaneChange
+                                    NewCapDetails(CapCount, 4) = SLaneChange
+                                    LanesToBuild = LanesToBuild - CapLanes
+                                Else
+                                    Do Until LanesToBuild >= CapLanes
+                                        CapNewYear += 1
+                                        If CapNewYear > 2100 Then
+                                            Breakout = True
+                                            Exit Select
+                                        End If
+                                        LanesToBuild += NewRoadLanes
+                                    Loop
+                                    NewCapDetails(CapCount, 0) = CapID
+                                    NewCapDetails(CapCount, 1) = CapNewYear
+                                    NewCapDetails(CapCount, 2) = MLaneChange
+                                    NewCapDetails(CapCount, 3) = DLaneChange
+                                    NewCapDetails(CapCount, 4) = SLaneChange
+                                    LanesToBuild = LanesToBuild - CapLanes
+                                End If
                             End If
+                            CapCount += 1
+                        Else
+                            'Exit Do
                         End If
-                    Else
-                        Exit Do
-                    End If
-            End Select
+
+
+                End Select
+            End If
+
+            'if the captype is the relevant capacity group, then read from the array
+            CapGroupNum = 0
+            Do
+                CapGroupNum += 1
+
+                If capGroupArray(CapGroupNum) Is Nothing Then Exit Do
+
+                If CapType = capGroupArray(CapGroupNum) Then
+                    NewCapDetails(CapCount + Cap, 0) = CapID
+                    NewCapDetails(CapCount + Cap, 1) = CapYear
+                    NewCapDetails(CapCount + Cap, 2) = MLaneChange
+                    NewCapDetails(CapCount + Cap, 3) = DLaneChange
+                    NewCapDetails(CapCount + Cap, 4) = SLaneChange
+
+                    Cap += 1
+                End If
+            Loop
+
+
             If Breakout = True Then
                 Exit Do
             End If
 
-            CapCount += 1
+
         Loop
 
         'then sort the intermediate array by flow ID, then by year of implementation
-        ReDim sortarray(CapCount - 1)
-        For v = 0 To (CapCount - 1)
+        ReDim sortarray(CapCount - 1 + Cap)
+        For v = 0 To (CapCount - 1 + Cap)
             padflow = String.Format("{0:000}", NewCapDetails(v, 0))
             padyear = String.Format("{0:00}", NewCapDetails(v, 1))
-            sortarray(v) = padflow & "&" & padyear & "&" & v
+            sortarray(v) = padyear & "&" & padflow & "&" & v
         Next
         Array.Sort(sortarray)
-        ReDim RLCapYear(CapCount)
+        ReDim RLCapYear(CapCount + Cap)
         'write all lines to intermediate capacity file
-        For v = 0 To (CapCount - 1)
+        For v = 0 To (CapCount - 1 + Cap)
             sortedline = sortarray(v)
             splitline = Split(sortedline, "&")
             arraynum = splitline(2)

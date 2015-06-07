@@ -26,7 +26,7 @@
 
         Catch ex As Exception
             Dim msg As String = "Fatal Error in Code - Transport Model stopped"
-            logarray(1, 0) = g_modelrunID : logarray(1, 1) = 1 : logarray(1, 2) = msg
+            logarray(1, 0) = g_modelRunID : logarray(1, 1) = 1 : logarray(1, 2) = msg
             Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
             Throw New System.Exception(msg)
             Return False
@@ -184,6 +184,8 @@
                     RlZOthSource = CBool(ary(i, 5))
                 Case "RlLOthSource"
                     RlLOthSource = CBool(ary(i, 5))
+                Case "CapacityChangeID"
+                    CapChangeID = CInt(ary(i, 5))
                 Case Else
                     Stop
                     '....
@@ -236,6 +238,9 @@
             InDieselNewAll = enearray(2, 2)
             InElectricNewAll = enearray(2, 3)
         End If
+
+        'lookup the combination of the capacity change
+        Call CapChangeComb()
 
         'check if creating external variable files
         If CreateExtVars = True Then
@@ -1083,6 +1088,7 @@
         Dim cmd As New Odbc.OdbcCommand
         Dim m_conn As Odbc.OdbcConnection
         Dim theSQL As String = ""
+        Dim m_sConnString As String
 
         'write cross sector output
         crossSectorArray(1, 0) = g_modelRunID
@@ -1096,11 +1102,48 @@
         ReDim crossSectorArray(1, 5)
 
         'update accumulated investment
-        theSQL = "UPDATE " & Chr(34) & "TR_O_CrossSector" & Chr(34) & "SET accumulated_investment = accumulated_investment_data.accumulated_investment FROM (SELECT modelrun_id, year, investment, sum(investment) OVER (PARTITION BY modelrun_id ORDER BY year) as accumulated_investment FROM " & Chr(34) & "TR_O_CrossSector" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & ") as accumulated_investment_data WHERE " & Chr(34) & "TR_O_CrossSector" & Chr(34) & ".modelrun_id = accumulated_investment_data.modelrun_id AND " & Chr(34) & "TR_O_CrossSector" & Chr(34) & ".year = accumulated_investment_data.year"
-        ConnectToDBase()
+        theSQL = "UPDATE " & Chr(34) & "TR_O_CrossSector" & Chr(34) & " SET accumulated_investment = accumulated_investment_data.accumulated_investment FROM (SELECT modelrun_id, year, investment, sum(investment) OVER (PARTITION BY modelrun_id ORDER BY year) as accumulated_investment FROM " & Chr(34) & "TR_O_CrossSector" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & ") as accumulated_investment_data WHERE " & Chr(34) & "TR_O_CrossSector" & Chr(34) & ".modelrun_id = accumulated_investment_data.modelrun_id AND " & Chr(34) & "TR_O_CrossSector" & Chr(34) & ".year = accumulated_investment_data.year"
+        'theSQL = "UPDATE " & Chr(34) & "TR_O_CrossSector" & Chr(34) & " SET accumulated_investment = accumulated_investment_data.accumulated_investment FROM (SELECT modelrun_id, year, investment, sum(investment) OVER (PARTITION BY modelrun_id ORDER BY year) as accumulated_investment FROM " & Chr(34) & "TR_O_CrossSector" & Chr(34) & " WHERE modelrun_id = 285) as accumulated_investment_data WHERE " & Chr(34) & "TR_O_CrossSector" & Chr(34) & ".modelrun_id = accumulated_investment_data.modelrun_id AND " & Chr(34) & "TR_O_CrossSector" & Chr(34) & ".year = accumulated_investment_data.year"
+
+        'If there is no connection to the database then establish one
+        If m_conn Is Nothing Then
+            m_sConnString = g_dbase '"Driver={PostgreSQL ODBC Driver(ANSI)};DSN=PostgreSQL30;Server=localhost;Port=5432;Database=itrc_sos;UId=postgres;Password=P0stgr3s;" 'g_dbase 
+            m_conn = New Odbc.OdbcConnection(m_sConnString)
+            m_conn.ConnectionTimeout = 60
+            m_conn.Open()
+        End If
+
         cmd.Connection = m_conn
         cmd.CommandText = theSQL
-        'cmd.ExecuteNonQuery()
+        cmd.ExecuteNonQuery()
+    End Sub
+    Sub CapChangeComb()
+        Dim i As Integer
+        Dim capNo As Integer = 1
+        Dim capGroup() As String
+        'read from capacity change combination lookup table
+        'the capChangeArray is: 0 - id, 1 - CapChangeID, 2 - 11 - capacity_group1 to capacity_group10
+        Call ReadData("CapChangeID", "", capChangeArray, , CapChangeID)
+
+        'split the capacity group numbers
+        capGroup = Split(capChangeArray(1, 3), ",")
+        Array.Sort(capGroup)
+
+        'if no additional cap group then exit
+        If capGroup(0) < 1 Then Exit Sub
+
+        'read the capacity group that should be considered by the model into the array
+        For i = 1 To capGroup.Max
+            If i = capGroup(capNo - 1) Then
+                ReDim Preserve capGroupArray(capNo)
+
+                capGroupArray(capNo) = i
+                capNo += 1
+            End If
+        Next
+
+        ReDim Preserve capGroupArray(capNo)
+
 
     End Sub
 End Class

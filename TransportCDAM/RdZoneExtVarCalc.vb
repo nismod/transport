@@ -514,6 +514,27 @@
                     'Motorways: £21.03 million per km (assumes 6 lanes)
                     'Dual carriageways: £11.36 million per km (assumes 4 lanes)
                     'Single carriageways: £7.43 million per km (assumes 2 lanes)
+
+                    'avoid negative values due to the update of the roads and hence a negative investment cost 
+                    If MwayKmChange < 0 Then
+                        MwayKmChange = 0
+                    End If
+                    If RurADKmChange < 0 Then
+                        RurADKmChange = 0
+                    End If
+                    If UrbDKmChange < 0 Then
+                        UrbDKmChange = 0
+                    End If
+                    If RurASKmChange < 0 Then
+                        RurASKmChange = 0
+                    End If
+                    If UrbSKmChange < 0 Then
+                        UrbSKmChange = 0
+                    End If
+                    If RurMinKmChange < 0 Then
+                        RurMinKmChange = 0
+                    End If
+
                     crossSectorArray(1, 3) += 21.03 * MwayKmChange + 11.36 * (RurADKmChange + UrbDKmChange) + 7.43 * (RurASKmChange + UrbSKmChange + RurMinKmChange)
 
                     LaneKm(InputCount, 0) = MLaneKm(InputCount, 0) + RurADLaneKm(InputCount, 0) + RurASLaneKm(InputCount, 0) + RurMinLaneKm(InputCount, 0) + UrbDLaneKm(InputCount, 0) + UrbSLaneKm(InputCount, 0)
@@ -623,6 +644,8 @@
 
 
     Sub CapChangeCalc()
+        Dim CapGroupNum As Integer
+        Dim Cap As Integer = 1
 
         If caparray Is Nothing Then Exit Sub
 
@@ -641,18 +664,42 @@
             newcapnum += 1
             capnum = caparray(newcapnum, 9)
         Loop
+
+        'add the values for additional capacity to the intermediate array
+        'if the captype is the relevant capacity group, then read from the array
+        Do Until caparray(newcapnum, 0) Is Nothing
+            CapGroupNum = 0
+            Do
+                CapGroupNum += 1
+
+                'if the capacity group array is empty (no additional capacity) then exit
+                If capGroupArray(CapGroupNum) Is Nothing Then Exit Do
+
+                If caparray(newcapnum, 11) = capGroupArray(CapGroupNum) Then
+                    For c = 0 To 8
+                        zonecapdetails(zonecapcount + Cap, c) = caparray(newcapnum, c + 1)
+                    Next
+                    Cap += 1
+                End If
+
+            Loop
+            newcapnum += 1
+        Loop
+
+
+
         'then sort intermediate array by zone ID, then by year of implementation
-        ReDim sortarray(zonecapcount - 1)
-        For v = 0 To (zonecapcount - 1)
+        ReDim sortarray(zonecapcount - 1 + Cap)
+        For v = 0 To (zonecapcount - 1 + Cap)
             padzone = String.Format("{0:000}", zonecapdetails(v, 0))
             padyear = String.Format("{0:00}", zonecapdetails(v, 1))
-            sortarray(v) = padzone & "&" & padyear & "&" & v
+            sortarray(v) = padyear & "&" & padzone & "&" & v
         Next
         Array.Sort(sortarray)
 
         'reset the zonecaparray to the begining row
         zonecapnum = 1
-        For v = 1 To (zonecapcount - 1)
+        For v = 1 To (zonecapcount - 1 + Cap)
             sortedline = sortarray(v)
             splitline = Split(sortedline, "&")
             arraynum = splitline(2)

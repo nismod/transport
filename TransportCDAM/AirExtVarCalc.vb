@@ -497,7 +497,8 @@
 
 
     Sub CapChangeCalc()
-
+        Dim CapGroupNum As Integer = 0
+        Dim Cap As Integer = 0
         'initialise to read and write capacity change values
         CapCount = 0
         'addingcap is false when is reading from LU table
@@ -539,93 +540,118 @@
             If CapArray(CapNum, 1) = 0 Then
                 Exit Do
             End If
-            Select Case CapType
-                Case "C"
-                    NewCapDetails(CapCount, 0) = CapID
-                    NewCapDetails(CapCount, 1) = CapYear
-                    NewCapDetails(CapCount, 2) = TermCapChange
-                    NewCapDetails(CapCount, 3) = ATMChange
-                    CapNewYear = CapYear
-                Case "O"
-                    'then if adding optional capacity read all optional dated enhancements to intermediate array
-                    If NewAirCap = True Then
-                        If CapYear >= 0 Then
-                            NewCapDetails(CapCount, 0) = CapID
-                            NewCapDetails(CapCount, 1) = CapYear
-                            NewCapDetails(CapCount, 2) = TermCapChange
-                            NewCapDetails(CapCount, 3) = ATMChange
-                            CapNewYear = CapYear
-                        Else
-                            'finally add all other enhancements to intermediate array until we have run out of additional capacity
-                            If TermCapChange > 0 Then
-                                If TermToBuild >= TermCapChange Then
-                                    NewCapDetails(CapCount, 0) = CapID
-                                    NewCapDetails(CapCount, 1) = CapNewYear
-                                    NewCapDetails(CapCount, 2) = TermCapChange
-                                    NewCapDetails(CapCount, 3) = ATMChange
-                                    TermToBuild = TermToBuild - TermCapChange
-                                Else
-                                    Do Until TermToBuild >= TermCapChange
-                                        CapNewYear += 1
-                                        If CapNewYear > 2100 Then
-                                            Breakout = True
-                                            Exit Select
-                                        End If
-                                        TermToBuild += (NewAirTerm * 20000000)
-                                        RunToBuild += (NewAirRun * 200000)
-                                    Loop
-                                    NewCapDetails(CapCount, 0) = CapID
-                                    NewCapDetails(CapCount, 1) = CapNewYear
-                                    NewCapDetails(CapCount, 2) = TermCapChange
-                                    NewCapDetails(CapCount, 3) = ATMChange
-                                    TermToBuild = TermToBuild - TermCapChange
-                                End If
+
+            'if the capacity group combination include the compulsory and optional type projects
+            If capChangeArray(1, 2) = True Then
+            Select CapType
+                    Case "C"
+                        NewCapDetails(CapCount, 0) = CapID
+                        NewCapDetails(CapCount, 1) = CapYear
+                        NewCapDetails(CapCount, 2) = TermCapChange
+                        NewCapDetails(CapCount, 3) = ATMChange
+                        CapNewYear = CapYear
+                        CapCount += 1
+                    Case "O"
+                        'then if adding optional capacity read all optional dated enhancements to intermediate array
+                        If NewAirCap = True Then
+                            If CapYear >= 0 Then
+                                NewCapDetails(CapCount, 0) = CapID
+                                NewCapDetails(CapCount, 1) = CapYear
+                                NewCapDetails(CapCount, 2) = TermCapChange
+                                NewCapDetails(CapCount, 3) = ATMChange
+                                CapNewYear = CapYear
                             Else
-                                If RunToBuild >= ATMChange Then
-                                    NewCapDetails(CapCount, 0) = CapID
-                                    NewCapDetails(CapCount, 1) = CapNewYear
-                                    NewCapDetails(CapCount, 2) = TermCapChange
-                                    NewCapDetails(CapCount, 3) = ATMChange
-                                    RunToBuild = RunToBuild - ATMChange
+                                'finally add all other enhancements to intermediate array until we have run out of additional capacity
+                                If TermCapChange > 0 Then
+                                    If TermToBuild >= TermCapChange Then
+                                        NewCapDetails(CapCount, 0) = CapID
+                                        NewCapDetails(CapCount, 1) = CapNewYear
+                                        NewCapDetails(CapCount, 2) = TermCapChange
+                                        NewCapDetails(CapCount, 3) = ATMChange
+                                        TermToBuild = TermToBuild - TermCapChange
+                                    Else
+                                        Do Until TermToBuild >= TermCapChange
+                                            CapNewYear += 1
+                                            If CapNewYear > 2100 Then
+                                                Breakout = True
+                                                Exit Select
+                                            End If
+                                            TermToBuild += (NewAirTerm * 20000000)
+                                            RunToBuild += (NewAirRun * 200000)
+                                        Loop
+                                        NewCapDetails(CapCount, 0) = CapID
+                                        NewCapDetails(CapCount, 1) = CapNewYear
+                                        NewCapDetails(CapCount, 2) = TermCapChange
+                                        NewCapDetails(CapCount, 3) = ATMChange
+                                        TermToBuild = TermToBuild - TermCapChange
+                                    End If
                                 Else
-                                    Do Until RunToBuild >= ATMChange
-                                        CapNewYear += 1
-                                        If CapNewYear > 2100 Then
-                                            Breakout = True
-                                            Exit Select
-                                        End If
-                                        TermToBuild += (NewAirTerm * 20000000)
-                                        RunToBuild += (NewAirRun * 200000)
-                                    Loop
-                                    NewCapDetails(CapCount, 0) = CapID
-                                    NewCapDetails(CapCount, 1) = CapNewYear
-                                    NewCapDetails(CapCount, 2) = TermCapChange
-                                    NewCapDetails(CapCount, 3) = ATMChange
-                                    RunToBuild = RunToBuild - ATMChange
+                                    If RunToBuild >= ATMChange Then
+                                        NewCapDetails(CapCount, 0) = CapID
+                                        NewCapDetails(CapCount, 1) = CapNewYear
+                                        NewCapDetails(CapCount, 2) = TermCapChange
+                                        NewCapDetails(CapCount, 3) = ATMChange
+                                        RunToBuild = RunToBuild - ATMChange
+                                    Else
+                                        Do Until RunToBuild >= ATMChange
+                                            CapNewYear += 1
+                                            If CapNewYear > 2100 Then
+                                                Breakout = True
+                                                Exit Select
+                                            End If
+                                            TermToBuild += (NewAirTerm * 20000000)
+                                            RunToBuild += (NewAirRun * 200000)
+                                        Loop
+                                        NewCapDetails(CapCount, 0) = CapID
+                                        NewCapDetails(CapCount, 1) = CapNewYear
+                                        NewCapDetails(CapCount, 2) = TermCapChange
+                                        NewCapDetails(CapCount, 3) = ATMChange
+                                        RunToBuild = RunToBuild - ATMChange
+                                    End If
                                 End If
                             End If
+                            CapCount += 1
+                        Else
+                            'Exit Do
                         End If
-                    Else
-                        Exit Do
-                    End If
-            End Select
+
+                End Select
+            End If
+
+            'if the captype is the relevant capacity group, then read from the array
+            CapGroupNum = 0
+            Do
+                CapGroupNum += 1
+
+                If capGroupArray(CapGroupNum) Is Nothing Then Exit Do
+
+                If CapType = capGroupArray(CapGroupNum) Then
+                    NewCapDetails(CapCount + Cap, 0) = CapID
+                    NewCapDetails(CapCount + Cap, 1) = CapNewYear
+                    NewCapDetails(CapCount + Cap, 2) = TermCapChange
+                    NewCapDetails(CapCount + Cap, 3) = ATMChange
+
+                    Cap += 1
+                End If
+            Loop
+
             'exit if year is greater than 2100
             If Breakout = True Then
                 Exit Do
             End If
 
-            CapCount += 1
+
         Loop
         'then sort the intermediate array by year of implementation then by flow ID
-        ReDim sortarray(CapCount - 1)
-        For v = 0 To (CapCount - 1)
+        ReDim sortarray(CapCount - 1 + Cap)
+        For v = 0 To (CapCount - 1 + Cap)
             padflow = String.Format("{0:000}", NewCapDetails(v, 0))
             padyear = String.Format("{0:00}", NewCapDetails(v, 1))
             sortarray(v) = padyear & "&" & padflow & "&" & v
         Next
         Array.Sort(sortarray)
         'write all lines to intermediate capacity file
-        For v = 0 To (CapCount - 1)
+        For v = 0 To (CapCount - 1 + Cap)
             sortedline = sortarray(v)
             splitline = Split(sortedline, "&")
             arraynum = splitline(2)
