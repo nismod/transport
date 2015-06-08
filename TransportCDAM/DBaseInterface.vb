@@ -133,8 +133,8 @@ Module DBaseInterface
     Public g_LogVTypes(2) As VariantType
 
     Public Enum ErrorSeverity
-        FATAL = True
-        WARNING = False
+        FATAL = 1
+        WARNING = 0
     End Enum
 
     Sub ConnectToDBase()
@@ -2178,6 +2178,8 @@ Module DBaseInterface
                                 strSQL_V &= "E'" & Trim(aryFieldValues.Item(i)) & "'" & ", " 'Using the E'' syntax to make it a literal query
                             Case "Date"
                                 strSQL_V &= "'#" & Trim(aryFieldValues.Item(i)) & "#'" & ", "
+                            Case "Boolean"
+                                strSQL_V &= CBool(aryFieldValues.Item(i)) & ", "
                             Case Else
                                 strSQL_V &= Trim(aryFieldValues.Item(i)) & ", "
                         End Select
@@ -2200,6 +2202,8 @@ Module DBaseInterface
                                 strSQL_NV &= Chr(34) & aryFieldNames.Item(i) & Chr(34) & " = E'" & aryFieldValues.Item(i) & "', "
                             Case "Date"
                                 strSQL_NV &= Chr(34) & aryFieldNames.Item(i) & Chr(34) & " = '#" & Trim(aryFieldValues.Item(i)) & "#', "
+                            Case "Boolean"
+                                strSQL_NV &= Chr(34) & aryFieldNames.Item(i) & Chr(34) & " = " & CBool(aryFieldValues.Item(i)) & ", "
                             Case Else
                                 strSQL_NV &= Chr(34) & aryFieldNames.Item(i) & Chr(34) & " = " & aryFieldValues.Item(i) & ", "
                         End Select
@@ -2333,7 +2337,7 @@ Module DBaseInterface
         ErrorLogArray(1, 3) = modulename : VTypes(3) = VariantType.String
         ErrorLogArray(1, 4) = cleanString(message) : VTypes(4) = VariantType.String
         ErrorLogArray(1, 5) = cleanString(stacktrace) : VTypes(5) = VariantType.String
-        ErrorLogArray(1, 6) = severity 'is_fatal
+        ErrorLogArray(1, 6) = severity : VTypes(6) = VariantType.Boolean 'is_fatal
 
         'Save errors to database
         Call WriteData("ErrorLog", "", ErrorLogArray, , , , VTypes)
@@ -2351,7 +2355,7 @@ Module DBaseInterface
         ErrorLogArray(1, 3) = ex.GetType.Name : VTypes(3) = VariantType.String
         ErrorLogArray(1, 4) = cleanString(ex.Message) : VTypes(4) = VariantType.String
         ErrorLogArray(1, 5) = cleanString(ex.StackTrace) : VTypes(5) = VariantType.String
-        ErrorLogArray(1, 6) = severity
+        ErrorLogArray(1, 6) = severity : VTypes(6) = VariantType.Boolean 'is_fatal
 
         'Save errors to database
         Call WriteData("ErrorLog", "", ErrorLogArray, , , , VTypes)

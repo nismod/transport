@@ -187,7 +187,10 @@
                 Case "CapacityChangeID"
                     CapChangeID = CInt(ary(i, 5))
                 Case Else
-                    Stop
+                    Dim msg As String
+                    msg = "The following parameter was found in the Parameters table but was not handled by the code: " & ParamName
+                    Call ErrorLog(ErrorSeverity.WARNING, "FullCDAM", "FullMain", msg)
+                    'Stop
                     '....
             End Select
         Next
