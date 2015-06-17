@@ -26,6 +26,7 @@
 
         Catch ex As Exception
             Dim msg As String = "Fatal Error in Code - Transport Model stopped"
+            If ex.Message <> "" Then msg = ex.Message
             logarray(1, 0) = g_modelRunID : logarray(1, 1) = 1 : logarray(1, 2) = msg
             Call WriteData("Logfile", "", logarray, , , , g_LogVTypes)
             Throw New System.Exception(msg)
@@ -184,7 +185,7 @@
                     RlZOthSource = CBool(ary(i, 5))
                 Case "RlLOthSource"
                     RlLOthSource = CBool(ary(i, 5))
-                Case "CapacityChangeID"
+                Case "CapChangeID"
                     CapChangeID = CInt(ary(i, 5))
                 Case Else
                     Dim msg As String
@@ -1138,14 +1139,14 @@
         'read the capacity group that should be considered by the model into the array
         For i = 1 To capGroup.Max
             If i = capGroup(capNo - 1) Then
-                ReDim Preserve capGroupArray(capNo)
+                ReDim Preserve capGroupArray(capNo - 1)
 
-                capGroupArray(capNo) = i
+                capGroupArray(capNo - 1) = i
                 capNo += 1
             End If
         Next
 
-        ReDim Preserve capGroupArray(capNo)
+        'ReDim Preserve capGroupArray(capNo)
 
 
     End Sub

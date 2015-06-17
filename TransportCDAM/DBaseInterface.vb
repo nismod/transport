@@ -1605,7 +1605,7 @@ Module DBaseInterface
                 'Connection = "D:\ITRC\ITRC Main\Model Inputs\EnergyCosts\" 'DBaseEneFile
                 TheFileName = "ScenarioEneFileCentralRevised.csv"
             Case "CapChangeID"
-                theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_CapacityChange" & Chr(34) & " WHERE capacitychange_id =" & whereID
+                theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_CapacityChange" & Chr(34) & " WHERE capacity_change_id =" & whereID
             Case Else
                 'Fatal Error - missing Case
                 ErrorLog(ErrorSeverity.FATAL, "ReadData", Type, "Missing Database SQL Case for Type " & Type & ", SubType " & SubType)

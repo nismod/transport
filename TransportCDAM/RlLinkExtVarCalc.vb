@@ -912,10 +912,12 @@ NextYear:
 
             'if the captype is the relevant capacity group, then read from the array
             CapGroupNum = 0
-            Do
-                CapGroupNum += 1
+            Do Until CapGroupNum = capGroupArray.Length
 
+                'if the capacity group array is empty (no additional capacity) then exit
                 If capGroupArray(CapGroupNum) Is Nothing Then Exit Do
+
+                If capGroupArray Is Nothing Then Exit Do
 
                 If CapType = capGroupArray(CapGroupNum) Then
 
@@ -926,6 +928,8 @@ NextYear:
                     NewCapDetails(CapCount + Cap, 4) = TrainChange
                     Cap += 1
                 End If
+
+                CapGroupNum += 1
             Loop
 
 

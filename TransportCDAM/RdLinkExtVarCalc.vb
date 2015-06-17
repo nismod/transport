@@ -1152,8 +1152,7 @@
 
             'if the captype is the relevant capacity group, then read from the array
             CapGroupNum = 0
-            Do
-                CapGroupNum += 1
+            Do Until CapGroupNum = capGroupArray.Length
 
                 If capGroupArray(CapGroupNum) Is Nothing Then Exit Do
 
@@ -1166,6 +1165,8 @@
 
                     Cap += 1
                 End If
+                CapGroupNum += 1
+
             Loop
 
 
