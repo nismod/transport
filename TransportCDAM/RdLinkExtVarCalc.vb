@@ -1152,23 +1152,24 @@
 
             'if the captype is the relevant capacity group, then read from the array
             CapGroupNum = 0
-            Do Until CapGroupNum = capGroupArray.Length
+            If Not capGroupArray Is Nothing Then
+                Do Until CapGroupNum = capGroupArray.Length
 
-                If capGroupArray(CapGroupNum) Is Nothing Then Exit Do
+                    If capGroupArray(CapGroupNum) Is Nothing Then Exit Do
 
-                If CapType = capGroupArray(CapGroupNum) Then
-                    NewCapDetails(CapCount + Cap, 0) = CapID
-                    NewCapDetails(CapCount + Cap, 1) = CapYear
-                    NewCapDetails(CapCount + Cap, 2) = MLaneChange
-                    NewCapDetails(CapCount + Cap, 3) = DLaneChange
-                    NewCapDetails(CapCount + Cap, 4) = SLaneChange
+                    If CapType = capGroupArray(CapGroupNum) Then
+                        NewCapDetails(CapCount + Cap, 0) = CapID
+                        NewCapDetails(CapCount + Cap, 1) = CapYear
+                        NewCapDetails(CapCount + Cap, 2) = MLaneChange
+                        NewCapDetails(CapCount + Cap, 3) = DLaneChange
+                        NewCapDetails(CapCount + Cap, 4) = SLaneChange
 
-                    Cap += 1
-                End If
-                CapGroupNum += 1
+                        Cap += 1
+                    End If
+                    CapGroupNum += 1
 
-            Loop
-
+                Loop
+            End If
 
             If Breakout = True Then
                 Exit Do

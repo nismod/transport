@@ -432,24 +432,25 @@
 
             'if the captype is the relevant capacity group, then read from the array
             CapGroupNum = 0
-            Do Until CapGroupNum = capGroupArray.Length
+            If Not capGroupArray Is Nothing Then
+                Do Until CapGroupNum = capGroupArray.Length
 
-                'if the capacity group array is empty (no additional capacity) then exit
-                If capGroupArray(CapGroupNum) Is Nothing Then Exit Do
+                    'if the capacity group array is empty (no additional capacity) then exit
+                    If capGroupArray(CapGroupNum) Is Nothing Then Exit Do
 
-                If CapType = capGroupArray(CapGroupNum) Then
-                    NewCapDetails(CapCount + Cap, 0) = CapID
-                    NewCapDetails(CapCount + Cap, 1) = CapYear
-                    NewCapDetails(CapCount + Cap, 2) = LBChange
-                    NewCapDetails(CapCount + Cap, 3) = DBChange
-                    NewCapDetails(CapCount + Cap, 4) = GCChange
-                    NewCapDetails(CapCount + Cap, 5) = LLChange
-                    NewCapDetails(CapCount + Cap, 6) = RRChange
-                    Cap += 1
-                End If
-                CapGroupNum += 1
-            Loop
-
+                    If CapType = capGroupArray(CapGroupNum) Then
+                        NewCapDetails(CapCount + Cap, 0) = CapID
+                        NewCapDetails(CapCount + Cap, 1) = CapYear
+                        NewCapDetails(CapCount + Cap, 2) = LBChange
+                        NewCapDetails(CapCount + Cap, 3) = DBChange
+                        NewCapDetails(CapCount + Cap, 4) = GCChange
+                        NewCapDetails(CapCount + Cap, 5) = LLChange
+                        NewCapDetails(CapCount + Cap, 6) = RRChange
+                        Cap += 1
+                    End If
+                    CapGroupNum += 1
+                Loop
+            End If
 
             'if the cap year over our range of 90 year, then exit
             If Breakout = True Then

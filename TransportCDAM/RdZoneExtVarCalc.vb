@@ -667,24 +667,26 @@
 
         'add the values for additional capacity to the intermediate array
         'if the captype is the relevant capacity group, then read from the array
-        Do Until caparray(newcapnum, 0) Is Nothing
-            CapGroupNum = 0
-            Do Until CapGroupNum = capGroupArray.Length
+        If Not capGroupArray Is Nothing Then
+            Do Until caparray(newcapnum, 0) Is Nothing
+                CapGroupNum = 0
+                Do Until CapGroupNum = capGroupArray.Length
 
-                'if the capacity group array is empty (no additional capacity) then exit
-                If capGroupArray(CapGroupNum) Is Nothing Then Exit Do
+                    'if the capacity group array is empty (no additional capacity) then exit
+                    If capGroupArray(CapGroupNum) Is Nothing Then Exit Do
 
-                If caparray(newcapnum, 11) = capGroupArray(CapGroupNum) Then
-                    For c = 0 To 8
-                        zonecapdetails(zonecapcount + Cap, c) = caparray(newcapnum, c + 1)
-                    Next
-                    Cap += 1
-                End If
+                    If caparray(newcapnum, 11) = capGroupArray(CapGroupNum) Then
+                        For c = 0 To 8
+                            zonecapdetails(zonecapcount + Cap, c) = caparray(newcapnum, c + 1)
+                        Next
+                        Cap += 1
+                    End If
 
-                CapGroupNum += 1
+                    CapGroupNum += 1
+                Loop
+                newcapnum += 1
             Loop
-            newcapnum += 1
-        Loop
+        End If
 
 
 

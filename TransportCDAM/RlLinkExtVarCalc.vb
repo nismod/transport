@@ -912,27 +912,28 @@ NextYear:
 
             'if the captype is the relevant capacity group, then read from the array
             CapGroupNum = 0
-            Do Until CapGroupNum = capGroupArray.Length
+            If Not capGroupArray Is Nothing Then
 
-                'if the capacity group array is empty (no additional capacity) then exit
-                If capGroupArray(CapGroupNum) Is Nothing Then Exit Do
+                Do Until CapGroupNum = capGroupArray.Length
 
-                If capGroupArray Is Nothing Then Exit Do
+                    'if the capacity group array is empty (no additional capacity) then exit
+                    If capGroupArray(CapGroupNum) Is Nothing Then Exit Do
 
-                If CapType = capGroupArray(CapGroupNum) Then
+                    If capGroupArray Is Nothing Then Exit Do
 
-                    NewCapDetails(CapCount + Cap, 0) = CapID
-                    NewCapDetails(CapCount + Cap, 1) = CapYear
-                    NewCapDetails(CapCount + Cap, 2) = TrackChange
-                    NewCapDetails(CapCount + Cap, 3) = MaxTDChange
-                    NewCapDetails(CapCount + Cap, 4) = TrainChange
-                    Cap += 1
-                End If
+                    If CapType = capGroupArray(CapGroupNum) Then
 
-                CapGroupNum += 1
-            Loop
+                        NewCapDetails(CapCount + Cap, 0) = CapID
+                        NewCapDetails(CapCount + Cap, 1) = CapYear
+                        NewCapDetails(CapCount + Cap, 2) = TrackChange
+                        NewCapDetails(CapCount + Cap, 3) = MaxTDChange
+                        NewCapDetails(CapCount + Cap, 4) = TrainChange
+                        Cap += 1
+                    End If
 
-
+                    CapGroupNum += 1
+                Loop
+            End If
 
             'exit if year is greater than our range (90 years)
             If Breakout = True Then

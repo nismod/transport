@@ -620,22 +620,24 @@
 
             'if the captype is the relevant capacity group, then read from the array
             CapGroupNum = 0
-            Do Until CapGroupNum = capGroupArray.Length
+            If Not capGroupArray Is Nothing Then
+                Do Until CapGroupNum = capGroupArray.Length
 
-                'if the capacity group array is empty (no additional capacity) then exit
-                If capGroupArray(CapGroupNum) Is Nothing Then Exit Do
+                    'if the capacity group array is empty (no additional capacity) then exit
+                    If capGroupArray(CapGroupNum) Is Nothing Then Exit Do
 
-                If CapType = capGroupArray(CapGroupNum) Then
-                    NewCapDetails(CapCount + Cap, 0) = CapID
-                    NewCapDetails(CapCount + Cap, 1) = CapNewYear
-                    NewCapDetails(CapCount + Cap, 2) = TermCapChange
-                    NewCapDetails(CapCount + Cap, 3) = ATMChange
+                    If CapType = capGroupArray(CapGroupNum) Then
+                        NewCapDetails(CapCount + Cap, 0) = CapID
+                        NewCapDetails(CapCount + Cap, 1) = CapNewYear
+                        NewCapDetails(CapCount + Cap, 2) = TermCapChange
+                        NewCapDetails(CapCount + Cap, 3) = ATMChange
 
-                    Cap += 1
-                End If
+                        Cap += 1
+                    End If
 
-                CapGroupNum += 1
-            Loop
+                    CapGroupNum += 1
+                Loop
+            End If
 
             'exit if year is greater than 2100
             If Breakout = True Then
