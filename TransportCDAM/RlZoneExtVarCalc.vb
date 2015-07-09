@@ -410,7 +410,11 @@ NextYear:
                             NewTrips = TripChange / StationChange
                             'write to CrossSector output for investment cost
                             'Rail station: £5.00 million per station
-                            crossSectorArray(1, 3) += 5 * CDbl(StationChange)
+
+                            'if not negative, then calculate the investment cost
+                            If StationChange > 0 Then
+                                crossSectorArray(1, 3) += 5 * CDbl(StationChange)
+                            End If
 
                             Call GetCapData()
                         End If

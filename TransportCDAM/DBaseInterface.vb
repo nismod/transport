@@ -1395,16 +1395,16 @@ Module DBaseInterface
                         End If
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "RoadZoneExtVar" & EVFileSuffix & ".csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadZoneExternalVariables" & Chr(34) & " WHERE year = " & Year & " AND modelrun_id = " & g_modelRunID & " ORDER BY zone_id "
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadZoneExternalVariables" & Chr(34) & " WHERE year = " & Year & " AND modelrun_id = " & g_modelRunID & " ORDER BY zone_id"
                     Case "NewCap"
                         TheFileName = CapFilePrefix & "RoadZoneCapChange.csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadZoneNewCapacity" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " AND changeyear = " & Year
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadZoneNewCapacity" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " AND changeyear = " & Year & " ORDER BY zone_id"
                     Case "CapChange"
                         TheFileName = FilePrefix & "RoadZoneCapChange.csv"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RoadZoneCapacityChange" & Chr(34) & " ORDER BY id"
                     Case "Elasticity"
                         TheFileName = "Elasticity Files\TR" & SubStrategy & "\RoadZoneElasticities.csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_I_RoadZoneElasticities_Run" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_I_RoadZoneElasticities_Run" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year & " ORDER BY year"
                     Case Else
                         'Fatal Error - missing Case
                         ErrorLog(ErrorSeverity.FATAL, "ReadData", SubType, "Missing Database SQL Case for Type " & Type & ", SubType " & SubType)
@@ -1422,7 +1422,7 @@ Module DBaseInterface
                     Case "Temp Annual"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadLink_Annual" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year - 1 & " ORDER BY flow_id"
                     Case "Temp Hourly"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadLink_Hourly" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year - 1 & " ORDER BY flow_id"
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadLink_Hourly" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year - 1 & " ORDER BY flow_id, hour_id "
                     Case "ExtVar"
                         TheFileName = EVFilePrefix & "ExternalVariables" & EVFileSuffix & ".csv"
                         If whereID = 0 Then
@@ -1435,10 +1435,10 @@ Module DBaseInterface
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RoadLinkCapacityChange" & Chr(34) & " ORDER BY id"
                     Case "NewCap"
                         TheFileName = EVFilePrefix & "RoadLinkNewCap.csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadLinkNewCapacity" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and changeyear = " & Year
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RoadLinkNewCapacity" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and changeyear = " & Year & " ORDER BY flow_id"
                     Case "Elasticity"
                         TheFileName = "Elasticity Files\TR" & SubStrategy & "\RoadLinkElasticities.csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_I_RoadLinkElasticities_Run" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_I_RoadLinkElasticities_Run" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year & " ORDER BY year"
                     Case "FreeFlowSpeeds"
                         'A header has been added to the original file to keep in the same format
                         TheFileName = "FreeFlowSpeedsv0.7.csv"
@@ -1471,13 +1471,13 @@ Module DBaseInterface
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RailZoneCapacityChange" & Chr(34) & " ORDER BY id"
                     Case "Elasticity"
                         TheFileName = "Elasticity Files\TR" & SubStrategy & "\RailZoneElasticities.csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_I_RailZoneElasticities_Run" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_I_RailZoneElasticities_Run" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year & " ORDER BY year"
                     Case "ElSchemes"
                         TheFileName = EVFilePrefix & "RailZoneElectrificationDates.csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RailZoneElectrificationDates" & Chr(34) & " WHERE electric_year = " & Year & " AND modelrun_id=" & g_modelRunID
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RailZoneElectrificationDates" & Chr(34) & " WHERE electric_year = " & Year & " AND modelrun_id=" & g_modelRunID & " ORDER BY zone_id"
                     Case "EVScale"
                         TheFileName = "RailZoneEVScaling.csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RailZone_EVScaling" & Chr(34) & " WHERE year = " & Year
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RailZone_EVScaling" & Chr(34) & " WHERE year = " & Year & " ORDER BY year"
                     Case Else
                         'Fatal Error - missing Case
                         ErrorLog(ErrorSeverity.FATAL, "ReadData", SubType, "Missing Database SQL Case for Type " & Type & ", SubType " & SubType)
@@ -1500,22 +1500,22 @@ Module DBaseInterface
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RailLinkCapacityChange" & Chr(34) & " ORDER BY id"
                     Case "NewCap"
                         TheFileName = EVFilePrefix & "RailLinkNewCap.csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RailLinkNewCapacity" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " AND changeyear = " & Year
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RailLinkNewCapacity" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " AND changeyear = " & Year & " ORDER BY flow_id"
                     Case "Elasticity"
                         TheFileName = "Elasticity Files\TR" & SubStrategy & "\RailLinkElasticities.csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_I_RailLinkElasticities_Run" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_I_RailLinkElasticities_Run" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year & " ORDER BY year"
                     Case "ElSchemes"
                         TheFileName = EVFilePrefix & "RailLinkElectrificationDates.csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RailLinkElectrificationDates" & Chr(34) & " WHERE electric_year = " & Year & " AND modelrun_id=" & g_modelRunID
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_RailLinkElectrificationDates" & Chr(34) & " WHERE electric_year = " & Year & " AND modelrun_id=" & g_modelRunID & " ORDER BY flow_id "
                     Case "EVScale"
                         TheFileName = "RailLinkEVScaling.csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RailLink_EVScaling" & Chr(34) & " WHERE year = " & Year
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RailLink_EVScaling" & Chr(34) & " WHERE year = " & Year & " ORDER BY year"
                     Case "OldRlEl"
                         TheFileName = "RailElectrificationSchemes.csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RailLink_ElectrificationSchemes" & Chr(34)
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RailLink_ElectrificationSchemes" & Chr(34) & " ORDER BY id"
                     Case "OldRzEl"
                         TheFileName = "RailZoneElectrificationSchemes.csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RailZone_ElectrificationSchemes" & Chr(34)
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RailZone_ElectrificationSchemes" & Chr(34) & " ORDER BY id"
                     Case "TrackLength"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_RailLinks" & Chr(34) & " ORDER BY id"
                     Case Else
@@ -1540,12 +1540,12 @@ Module DBaseInterface
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_SeaFreightCapacityChange" & Chr(34) & " ORDER BY id"
                     Case "NewCap"
                         TheFileName = EVFilePrefix & "SeaFreightNewCap.csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_SeaFreightNewCapacity" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and changeyear = " & Year
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_SeaFreightNewCapacity" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and changeyear = " & Year & " ORDER BY port_id"
                     Case "Elasticity"
                         TheFileName = "Elasticity Files\TR" & SubStrategy & "\SeaFreightElasticities.csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_I_SeaFreightElasticities_Run" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_I_SeaFreightElasticities_Run" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year & " ORDER BY year"
                     Case "Fuel"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_SeaFuelConsumption" & Chr(34) & " WHERE modelrun_id=" & g_modelRunID & " AND year = " & Year
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_SeaFuelConsumption" & Chr(34) & " WHERE modelrun_id=" & g_modelRunID & " AND year = " & Year & " ORDER BY year"
                     Case Else
                         'Fatal Error - missing Case
                         ErrorLog(ErrorSeverity.FATAL, "ReadData", SubType, "Missing Database SQL Case for Type " & Type & ", SubType " & SubType)
@@ -1568,10 +1568,10 @@ Module DBaseInterface
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_LU_AirNodeCapacityChange" & Chr(34) & " ORDER BY id"
                     Case "NewCap"
                         TheFileName = EVFilePrefix & "AirNodeNewCap.csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_AirNodeNewCapacity" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and changeyear = " & Year
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_AirNodeNewCapacity" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and changeyear = " & Year & " ORDER BY airport_id"
                     Case "Elasticity"
                         TheFileName = "Elasticity Files\TR" & SubStrategy & "\AirElasticities.csv"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_I_AirElasticities_Run" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_I_AirElasticities_Run" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & " and year = " & Year & " ORDER BY year"
                     Case Else
                         'Fatal Error - missing Case
                         ErrorLog(ErrorSeverity.FATAL, "ReadData", SubType, "Missing Database SQL Case for Type " & Type & ", SubType " & SubType)
@@ -1590,7 +1590,7 @@ Module DBaseInterface
                         TheFileName = EVFilePrefix & "AirFlowExtVar.csv"
                         theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_AirFlowExternalVariables" & Chr(34) & " WHERE modelrun_id=" & g_modelRunID & " AND year = " & Year & " ORDER BY flow_id"
                     Case "Fuel"
-                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_AirFuelConsumption" & Chr(34) & " WHERE modelrun_id=" & g_modelRunID & " AND year = " & Year
+                        theSQL = "SELECT * FROM " & Chr(34) & "TR_IO_AirFuelConsumption" & Chr(34) & " WHERE modelrun_id=" & g_modelRunID & " AND year = " & Year & " ORDER BY year"
                     Case Else
                         'Fatal Error - missing Case
                         ErrorLog(ErrorSeverity.FATAL, "ReadData", SubType, "Missing Database SQL Case for Type " & Type & ", SubType " & SubType)

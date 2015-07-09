@@ -388,7 +388,11 @@ Elect:
 
                     'write to CrossSector output for investment cost
                     'Rail electrification: £1.00 million per track km
-                    crossSectorArray(1, 3) += 1 * ElectTracks * ElectKm
+
+                    'if not negative then calculate the investment cost
+                    If ElectTracks > 0 And ElectKm > 0 Then
+                        crossSectorArray(1, 3) += 1 * ElectTracks * ElectKm
+                    End If
 
 
                     'read next scheme from list
@@ -403,10 +407,10 @@ Elect:
                     ElPNew = ElPOld(InputCount, 0)
                     ElectTracksNew = ElectTracksOld(InputCount, 0)
                 End If
-            Else
-                ElPNew = ElPOld(InputCount, 0)
-                ElectTracksNew = ElectTracksOld(InputCount, 0)
-            End If
+                Else
+                    ElPNew = ElPOld(InputCount, 0)
+                    ElectTracksNew = ElectTracksOld(InputCount, 0)
+                End If
 
             If FlowID(InputCount, 0) = ElectFlow Then
                 If g_modelRunYear = ElectYear Then
@@ -484,6 +488,11 @@ NextYear:
                     NewTrains = TrainChange
                     'write to CrossSector output for investment cost
                     'Railways: £18.64 million per track km (not route km)
+
+                    'set to zero to avoid negative investment
+                    If TrackChange < 0 Then
+                        TrackChange = 0
+                    End If
                     crossSectorArray(1, 3) += 18.64 * TrackChange * RlL_TrackLength(InputCount + 1, 4) 'the inputcount must be +1, as the first row is for id = -1 in the table
 
                     Call GetCapData()

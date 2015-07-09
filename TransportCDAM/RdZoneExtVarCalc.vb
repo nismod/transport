@@ -500,7 +500,8 @@
             End If
 
             'if including capacity changes, then check if there are any capacity changes for this zone
-            If ZoneID(InputCount, 0) = CapID Then
+            Do Until ZoneID(InputCount, 0) <> CapID
+
                 'if there are any capacity changes for this zone, check if there are any capacity changes for this year
                 If g_modelRunYear = CapYear Then
                     'if there are, then update the capacity variables, and read in the next row from the capacity file
@@ -540,7 +541,7 @@
                     LaneKm(InputCount, 0) = MLaneKm(InputCount, 0) + RurADLaneKm(InputCount, 0) + RurASLaneKm(InputCount, 0) + RurMinLaneKm(InputCount, 0) + UrbDLaneKm(InputCount, 0) + UrbSLaneKm(InputCount, 0)
                     Call GetCapData()
                 End If
-            End If
+            Loop
             'add in workplace parking levy if necessary
             If WPPL = True Then
                 If g_modelRunYear >= WPPLStart Then
@@ -638,6 +639,7 @@
             RurMinKmChange = caparray(zonecapnum, 7)
             UrbDKmChange = caparray(zonecapnum, 8)
             UrbSKmChange = caparray(zonecapnum, 9)
+            zonecapnum += 1
         End If
     End Sub
 

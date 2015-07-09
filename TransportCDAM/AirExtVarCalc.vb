@@ -322,6 +322,15 @@
                     'write to CrossSector output for investment cost
                     'Airport terminals: £4,000 million each
                     'Airport runways: £8,000 million each
+
+                    'set to zero to avoid negative investment
+                    If TermCapChange < 0 Then
+                        TermCapChange = 0
+                    End If
+                    If ATMChange < 0 Then
+                        ATMChange = 0
+                    End If
+
                     crossSectorArray(1, 3) += 4000 * TermCapChange / 20000000 + 8000 * ATMChange / 200000
                     Call GetCapData()
                 End If
