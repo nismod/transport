@@ -1366,6 +1366,7 @@
         'Dim newcapstring As String
         Dim i As Integer
         Dim hrow As Integer
+        ReDim NewCapArray(20952, 4)
 
         'write to output array
         OutputArray(link, 0) = g_modelRunID

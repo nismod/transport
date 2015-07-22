@@ -19,12 +19,13 @@
     Dim CapID As Long
     Dim CapYear, CapNewYear As Integer
     Dim LBChange, DBChange, GCChange, LLChange, RRChange As Double
+    Dim InvCost As Double
     Dim CapType, CapRow As String
     Dim CapChanged, Breakout As Boolean
     Dim ErrorString As String
     Dim stratstring As String
     Dim FuelEff(1) As Double
-    Dim NewCapDetails(1, 6) As Double
+    Dim NewCapDetails(1, 7) As Double
     Dim CapCount As Long
     Dim tonnestobuild, captonnes As Double
     Dim sortarray(0) As String
@@ -308,6 +309,7 @@
             If AddingCap = False Then
                 CapType = CapArray(CapNum, 9)
             End If
+            InvCost = CapArray(CapNum, 9)
             CapNum += 1
 
         Else
@@ -358,6 +360,7 @@
                 If AddingCap = False Then
                     CapType = CapArray(CapNum, 8)
                 End If
+                InvCost = CapArray(CapNum, 10)
                 CapNum += 1
 
             Else
@@ -375,6 +378,7 @@
                         NewCapDetails(CapCount, 4) = GCChange
                         NewCapDetails(CapCount, 5) = LLChange
                         NewCapDetails(CapCount, 6) = RRChange
+                        NewCapDetails(CapCount, 7) = InvCost
                         CapNewYear = CapYear
 
                         CapCount += 1
@@ -389,6 +393,7 @@
                                 NewCapDetails(CapCount, 4) = GCChange
                                 NewCapDetails(CapCount, 5) = LLChange
                                 NewCapDetails(CapCount, 6) = RRChange
+                                NewCapDetails(CapCount, 7) = InvCost
                                 CapNewYear = CapYear
                             Else
                                 'finally add all other enhancements to intermediate array until we have run out of additional capacity
@@ -401,6 +406,7 @@
                                     NewCapDetails(CapCount, 4) = GCChange
                                     NewCapDetails(CapCount, 5) = LLChange
                                     NewCapDetails(CapCount, 6) = RRChange
+                                    NewCapDetails(CapCount, 7) = InvCost
                                     tonnestobuild = tonnestobuild - captonnes
                                 Else
                                     Do Until tonnestobuild >= captonnes
@@ -418,6 +424,7 @@
                                     NewCapDetails(CapCount, 4) = GCChange
                                     NewCapDetails(CapCount, 5) = LLChange
                                     NewCapDetails(CapCount, 6) = RRChange
+                                    NewCapDetails(CapCount, 7) = InvCost
                                     tonnestobuild = tonnestobuild - captonnes
                                 End If
                             End If
@@ -446,6 +453,7 @@
                         NewCapDetails(CapCount + Cap, 4) = GCChange
                         NewCapDetails(CapCount + Cap, 5) = LLChange
                         NewCapDetails(CapCount + Cap, 6) = RRChange
+                        NewCapDetails(CapCount + Cap, 7) = InvCost
                         Cap += 1
                     End If
                     CapGroupNum += 1
@@ -475,6 +483,7 @@
                 For i = 0 To 6
                     CapArray(v + 1, i + 1) = NewCapDetails(arraynum, i)
                 Next
+                CapArray(v + 1, 8) = NewCapDetails(arraynum, 7)
                 'CapArray(v, 8) = CapType
             Next
         End If

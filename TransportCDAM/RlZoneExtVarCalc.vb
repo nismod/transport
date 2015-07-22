@@ -24,6 +24,7 @@
     Dim InputData() As String
     Dim StationChange As Integer
     Dim TripChange As Double
+    Dim InvCost As Double
     Dim ErrorString As String
     Dim stratstring As String
     Dim FuelEff(1), CO2Vol(1), CO2Price(1), GJTProp(1) As Double
@@ -409,18 +410,24 @@ NextYear:
                             StationsNew(InputCount, 0) = StationsOld(InputCount, 0) + StationChange
                             NewTrips = TripChange / StationChange
                             'write to CrossSector output for investment cost
-                            'Rail station: £5.00 million per station
+                            'if investment cost is -1, then calculate by using the assumptions as follow
+                            'otherwise use the given cost
+                            If InvCost = -1 Then
+                                'Rail station: £5.00 million per station
+                                'set to zero to avoid negative investment
+                                If StationChange > 0 Then
 
-                            'if not negative, then calculate the investment cost
-                            If StationChange > 0 Then
-                                crossSectorArray(1, 3) += 5 * CDbl(StationChange)
+                                End If
+                            Else
+                                crossSectorArray(1, 3) += InvCost
                             End If
-
-                            Call GetCapData()
                         End If
+
+                        Call GetCapData()
                     End If
                 End If
             End If
+                End If
             'write data as 2010 if year is 2010
             If yearIs2010 = True Then g_modelRunYear -= 1
 
@@ -473,6 +480,7 @@ NextYear:
             CapYear = CapArray(CapNum, 2)
             StationChange = CapArray(CapNum, 3)
             TripChange = CapArray(CapNum, 4)
+            InvCost = CapArray(CapNum, 7)
             CapNum += 1
         End If
     End Sub

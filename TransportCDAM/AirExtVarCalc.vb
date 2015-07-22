@@ -24,6 +24,7 @@
     Dim CapYear, CapNewYear As Integer
     Dim ATMChange As Long
     Dim TermCapChange As Long
+    Dim InvCost As Double
     Dim ErrorString As String
     Dim OZone(223), DZone(223) As Long
     Dim GORID(28) As Long
@@ -37,7 +38,7 @@
     Dim AddingCap As Boolean
     Dim CapType, CapRow As String
     Dim RunToBuild, TermToBuild As Double
-    Dim NewCapDetails(836, 3) As Double
+    Dim NewCapDetails(836, 4) As Double
     Dim Breakout As Boolean
     Dim sortarray(836) As String
     Dim sortedline As String
@@ -51,8 +52,8 @@
     Dim FlowEVInputArray(223, 11) As String
     Dim NodeOutputArray(29, 14) As String
     Dim FlowOutputArray(224, 8) As String
-    Dim CapArray(47, 6) As String
-    Dim NewCapArray(47, 5) As String
+    Dim CapArray(47, 7) As String
+    Dim NewCapArray(47, 6) As String
     Dim CapNum As Integer
     Dim y As Object
     Dim yearIs2010 As Boolean = False
@@ -320,18 +321,23 @@
                     AddTermCap = TermCapChange
                     AddATMCap = ATMChange
                     'write to CrossSector output for investment cost
-                    'Airport terminals: £4,000 million each
-                    'Airport runways: £8,000 million each
-
-                    'set to zero to avoid negative investment
-                    If TermCapChange < 0 Then
-                        TermCapChange = 0
+                    'if investment cost is -1, then calculate by using the assumptions as follow
+                    'otherwise use the given cost
+                    If InvCost = -1 Then
+                        'Airport terminals: £4,000 million each
+                        'Airport runways: £8,000 million each
+                        'set to zero to avoid negative investment
+                        If TermCapChange < 0 Then
+                            TermCapChange = 0
+                        End If
+                        If ATMChange < 0 Then
+                            ATMChange = 0
+                        End If
+                        crossSectorArray(1, 3) += 4000 * TermCapChange / 20000000 + 8000 * ATMChange / 200000
+                    Else
+                        crossSectorArray(1, 3) += InvCost
                     End If
-                    If ATMChange < 0 Then
-                        ATMChange = 0
-                    End If
 
-                    crossSectorArray(1, 3) += 4000 * TermCapChange / 20000000 + 8000 * ATMChange / 200000
                     Call GetCapData()
                 End If
             End If
@@ -496,6 +502,7 @@
             'If AddingCap = False Then
             '    CapType = CapArray(CapNum, 6)
             'End If
+            InvCost = CapArray(CapNum, 6)
             CapNum += 1
         Else
 
@@ -538,6 +545,7 @@
                 If AddingCap = False Then
                     CapType = CapArray(CapNum, 5)
                 End If
+                InvCost = CapArray(CapNum, 7)
                 CapNum += 1
             Else
 
@@ -552,12 +560,13 @@
 
             'if the capacity group combination include the compulsory and optional type projects
             If capChangeArray(1, 2) = True Then
-            Select CapType
+                Select Case CapType
                     Case "C"
                         NewCapDetails(CapCount, 0) = CapID
                         NewCapDetails(CapCount, 1) = CapYear
                         NewCapDetails(CapCount, 2) = TermCapChange
                         NewCapDetails(CapCount, 3) = ATMChange
+                        NewCapDetails(CapCount, 4) = InvCost
                         CapNewYear = CapYear
                         CapCount += 1
                     Case "O"
@@ -568,6 +577,7 @@
                                 NewCapDetails(CapCount, 1) = CapYear
                                 NewCapDetails(CapCount, 2) = TermCapChange
                                 NewCapDetails(CapCount, 3) = ATMChange
+                                NewCapDetails(CapCount, 4) = InvCost
                                 CapNewYear = CapYear
                             Else
                                 'finally add all other enhancements to intermediate array until we have run out of additional capacity
@@ -577,6 +587,7 @@
                                         NewCapDetails(CapCount, 1) = CapNewYear
                                         NewCapDetails(CapCount, 2) = TermCapChange
                                         NewCapDetails(CapCount, 3) = ATMChange
+                                        NewCapDetails(CapCount, 4) = InvCost
                                         TermToBuild = TermToBuild - TermCapChange
                                     Else
                                         Do Until TermToBuild >= TermCapChange
@@ -592,6 +603,7 @@
                                         NewCapDetails(CapCount, 1) = CapNewYear
                                         NewCapDetails(CapCount, 2) = TermCapChange
                                         NewCapDetails(CapCount, 3) = ATMChange
+                                        NewCapDetails(CapCount, 4) = InvCost
                                         TermToBuild = TermToBuild - TermCapChange
                                     End If
                                 Else
@@ -600,6 +612,7 @@
                                         NewCapDetails(CapCount, 1) = CapNewYear
                                         NewCapDetails(CapCount, 2) = TermCapChange
                                         NewCapDetails(CapCount, 3) = ATMChange
+                                        NewCapDetails(CapCount, 4) = InvCost
                                         RunToBuild = RunToBuild - ATMChange
                                     Else
                                         Do Until RunToBuild >= ATMChange
@@ -615,6 +628,7 @@
                                         NewCapDetails(CapCount, 1) = CapNewYear
                                         NewCapDetails(CapCount, 2) = TermCapChange
                                         NewCapDetails(CapCount, 3) = ATMChange
+                                        NewCapDetails(CapCount, 4) = InvCost
                                         RunToBuild = RunToBuild - ATMChange
                                     End If
                                 End If
@@ -640,7 +654,7 @@
                         NewCapDetails(CapCount + Cap, 1) = CapNewYear
                         NewCapDetails(CapCount + Cap, 2) = TermCapChange
                         NewCapDetails(CapCount + Cap, 3) = ATMChange
-
+                        NewCapDetails(CapCount + Cap, 4) = InvCost
                         Cap += 1
                     End If
 
@@ -669,7 +683,7 @@
             splitline = Split(sortedline, "&")
             arraynum = splitline(2)
             NewCapArray(v + 1, 0) = g_modelRunID
-            For i = 0 To 3
+            For i = 0 To 4
                 NewCapArray(v + 1, i + 1) = NewCapDetails(arraynum, i)
             Next
             'NewCapArray(v + 1, 5) = "C"

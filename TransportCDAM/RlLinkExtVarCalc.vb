@@ -38,7 +38,10 @@
     Dim TracksToBuild, CapLanes As Double
     Dim CapType, CapRow As String
     Dim TrainChange As Double
-    Dim NewCapDetails(455, 4) As Double
+    Dim SpeedChange As Double
+    Dim InvCost As Double
+    Dim TrainRpl As Double
+    Dim NewCapDetails(455, 7) As Double
     Dim Breakout As Boolean
     Dim sortarray(11) As String
     Dim sortedline As String
@@ -46,20 +49,24 @@
     Dim arraynum As Long
     Dim padflow, padyear As String
     Dim NewTrains As Double
+    Dim ReplaceTrains As Double
+    Dim NewSpd As Double
+    Dim ReplaceSpd As Double
     Dim FuelEffOld(2) As Double
     Dim Elect As Boolean
-    Dim CapArray(455, 6) As String
-    Dim NewCapArray(455, 6) As String
+    Dim CapArray(455, 9) As String
+    Dim NewCapArray(455, 8) As String
     Dim CapNum As Integer
     Dim RlL_InArray(,) As String
     Dim RlLEV_InArray(,) As String
-    Dim RlL_OutArray(239, 17) As String
+    Dim RlL_OutArray(239, 20) As String
     Dim elearray(,) As String
     Dim EleNum As Integer
     Dim RlElNum As Integer
     Dim RzElNum As Integer
     Dim yearIs2010 As Boolean = False
     Dim RlL_TrackLength(,) As String
+
 
 
 
@@ -241,6 +248,9 @@
                 DCountry(InputCount, 0) = RlL_InArray(InputCount, 13)
                 ElectTracksOld(InputCount, 0) = RlL_InArray(InputCount, 11)
                 NewTrains = 0
+                ReplaceTrains = 0
+                NewSpd = 0
+                ReplaceSpd = 0
 
                 If RlLEneSource = "Database" Then
                     InDieselOld(InputCount, 0) = InDieselOldAll
@@ -304,6 +314,9 @@
                 End If
 
                 NewTrains = 0
+                ReplaceTrains = 0
+                NewSpd = 0
+                ReplaceSpd = 0
 
             End If
 
@@ -407,10 +420,10 @@ Elect:
                     ElPNew = ElPOld(InputCount, 0)
                     ElectTracksNew = ElectTracksOld(InputCount, 0)
                 End If
-                Else
-                    ElPNew = ElPOld(InputCount, 0)
-                    ElectTracksNew = ElectTracksOld(InputCount, 0)
-                End If
+            Else
+                ElPNew = ElPOld(InputCount, 0)
+                ElectTracksNew = ElectTracksOld(InputCount, 0)
+            End If
 
             If FlowID(InputCount, 0) = ElectFlow Then
                 If g_modelRunYear = ElectYear Then
@@ -486,14 +499,31 @@ NextYear:
                     'note that MaxTDChange now doesn't work - replaced by strategy common variables file
                     MaxTDOld(InputCount, 0) += MaxTDChange
                     NewTrains = TrainChange
-                    'write to CrossSector output for investment cost
-                    'Railways: £18.64 million per track km (not route km)
+                    ReplaceTrains = TrainRpl
 
-                    'set to zero to avoid negative investment
-                    If TrackChange < 0 Then
-                        TrackChange = 0
+                    'if ReplaceTrains = 0, it means the capacity change is not high speed train
+                    'if not, then the capacity change is high speed train, and the number of trains will be replaced instead of being added
+                    If ReplaceTrains = 0 Then
+                        NewSpd = SpeedChange
+                        ReplaceSpd = 0
+                    Else
+                        NewSpd = 0
+                        ReplaceSpd = SpeedChange
                     End If
-                    crossSectorArray(1, 3) += 18.64 * TrackChange * RlL_TrackLength(InputCount + 1, 4) 'the inputcount must be +1, as the first row is for id = -1 in the table
+
+                    'write to CrossSector output for investment cost
+                    'if investment cost is -1, then calculate by using the assumptions as follow
+                    'otherwise use the given cost
+                    If InvCost = -1 Then
+                        'Railways: £18.64 million per track km (not route km)
+                        'set to zero to avoid negative investment
+                        If TrackChange < 0 Then
+                            TrackChange = 0
+                        End If
+                        crossSectorArray(1, 3) += 18.64 * TrackChange * RlL_TrackLength(InputCount + 1, 4) 'the inputcount must be +1, as the first row is for id = -1 in the table
+                    Else
+                        crossSectorArray(1, 3) += InvCost
+                    End If
 
                     Call GetCapData()
                 End If
@@ -523,7 +553,9 @@ NextYear:
                 RlL_OutArray(InputCount, 16) = InDieselNew
                 RlL_OutArray(InputCount, 17) = InElectricNew
             End If
-
+            RlL_OutArray(InputCount, 18) = ReplaceTrains
+            RlL_OutArray(InputCount, 19) = NewSpd
+            RlL_OutArray(InputCount, 20) = ReplaceSpd
             'add back a year for next zone/link
             If yearIs2010 = True Then g_modelRunYear += 1
 
@@ -563,9 +595,12 @@ NextYear:
             TrackChange = CapArray(CapNum, 4)
             MaxTDChange = CapArray(CapNum, 5)
             TrainChange = CapArray(CapNum, 6)
-            If AddingCap = False Then
-                CapType = CapArray(CapNum, 7)
-            End If
+            'If AddingCap = False Then
+            '    CapType = CapArray(CapNum, 7)
+            'End If
+            SpeedChange = CapArray(CapNum, 7)
+            TrainRpl = CapArray(CapNum, 8)
+            InvCost = CapArray(CapNum, 9)
             CapNum += 1
         End If
 
@@ -859,6 +894,8 @@ NextYear:
                 If AddingCap = False Then
                     CapType = CapArray(CapNum, 6)
                 End If
+                SpeedChange = CapArray(CapNum, 8)
+                InvCost = CapArray(CapNum, 9)
                 CapNum += 1
             End If
 
@@ -871,6 +908,9 @@ NextYear:
                         NewCapDetails(CapCount, 2) = TrackChange
                         NewCapDetails(CapCount, 3) = MaxTDChange
                         NewCapDetails(CapCount, 4) = TrainChange
+                        NewCapDetails(CapCount, 5) = SpeedChange
+                        NewCapDetails(CapCount, 6) = 0
+                        NewCapDetails(CapCount, 7) = InvCost
                         CapNewYear = CapYear
 
                         CapCount += 1
@@ -883,6 +923,9 @@ NextYear:
                                 NewCapDetails(CapCount, 2) = TrackChange
                                 NewCapDetails(CapCount, 3) = MaxTDChange
                                 NewCapDetails(CapCount, 4) = TrainChange
+                                NewCapDetails(CapCount, 5) = SpeedChange
+                                NewCapDetails(CapCount, 6) = 0
+                                NewCapDetails(CapCount, 7) = InvCost
                                 CapNewYear = CapYear
                             Else
                                 'finally add all other enhancements to intermediate array until we have run out of additional capacity
@@ -892,6 +935,9 @@ NextYear:
                                     NewCapDetails(CapCount, 2) = TrackChange
                                     NewCapDetails(CapCount, 3) = MaxTDChange
                                     NewCapDetails(CapCount, 4) = TrainChange
+                                    NewCapDetails(CapCount, 5) = SpeedChange
+                                    NewCapDetails(CapCount, 6) = 0
+                                    NewCapDetails(CapCount, 7) = InvCost
                                     TracksToBuild = TracksToBuild - TrackChange
                                 Else
                                     Do Until TracksToBuild >= TrackChange
@@ -907,6 +953,9 @@ NextYear:
                                     NewCapDetails(CapCount, 2) = TrackChange
                                     NewCapDetails(CapCount, 3) = MaxTDChange
                                     NewCapDetails(CapCount, 4) = TrainChange
+                                    NewCapDetails(CapCount, 5) = SpeedChange
+                                    NewCapDetails(CapCount, 6) = 0
+                                    NewCapDetails(CapCount, 7) = InvCost
                                     TracksToBuild = TracksToBuild - TrackChange
                                 End If
                             End If
@@ -937,6 +986,14 @@ NextYear:
                         NewCapDetails(CapCount + Cap, 2) = TrackChange
                         NewCapDetails(CapCount + Cap, 3) = MaxTDChange
                         NewCapDetails(CapCount + Cap, 4) = TrainChange
+                        NewCapDetails(CapCount + Cap, 5) = SpeedChange
+                        NewCapDetails(CapCount + Cap, 6) = 0
+                        'if it is replaced by high speed train, then the number of trains are the trains being replaced not being added
+                        If CapType = 2 Then
+                            NewCapDetails(CapCount + Cap, 4) = 0
+                            NewCapDetails(CapCount + Cap, 6) = TrainChange
+                        End If
+                        NewCapDetails(CapCount + Cap, 7) = InvCost
                         Cap += 1
                     End If
 
@@ -972,6 +1029,9 @@ NextYear:
             NewCapArray(v + 1, 3) = NewCapDetails(arraynum, 2)
             NewCapArray(v + 1, 4) = NewCapDetails(arraynum, 3)
             NewCapArray(v + 1, 5) = NewCapDetails(arraynum, 4)
+            NewCapArray(v + 1, 6) = NewCapDetails(arraynum, 5)
+            NewCapArray(v + 1, 7) = NewCapDetails(arraynum, 6)
+            NewCapArray(v + 1, 8) = NewCapDetails(arraynum, 7)
         Next
 
     End Sub

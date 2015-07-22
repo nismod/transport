@@ -19,13 +19,14 @@
     Dim MLaneChange As Integer
     Dim DLaneChange As Integer
     Dim SLaneChange As Integer
+    Dim InvCost As Double
     Dim ErrorString As String
     Dim OutString As String
     Dim CapCount As Double
     Dim AddingCap As Boolean
     Dim LanesToBuild, CapLanes As Double
     Dim CapType, CapRow As String
-    Dim NewCapDetails(6837, 5) As Double
+    Dim NewCapDetails(6837, 6) As Double
     Dim Breakout As Boolean
     Dim sortarray(6834) As String
     Dim sortedline As String
@@ -71,7 +72,7 @@
     Dim RdL_OutArray(292, 139) As String
     Dim CapArray(,) As String
     Dim CapNum As Integer
-    Dim NewCapArray(6835, 5) As String
+    Dim NewCapArray(6835, 6) As String
     Dim yearIs2010 As Boolean = False
     Dim RdL_RouteLength(,) As String
 
@@ -862,22 +863,27 @@
                     DLanes(InputCount, 1) += DLaneChange
                     SLanes(InputCount, 1) += SLaneChange
 
-                    'avoid negative values due to the update of the roads and hence a negative investment cost 
-                    If MLaneChange < 0 Then
-                        MLaneChange = 0
-                    End If
-                    If DLaneChange < 0 Then
-                        DLaneChange = 0
-                    End If
-                    If SLaneChange < 0 Then
-                        SLaneChange = 0
-                    End If
-
                     'write to CrossSector output for investment cost
-                    'Motorways: £21.03 million per km (assumes 6 lanes)
-                    'Dual carriageways: £11.36 million per km (assumes 4 lanes)
-                    'Single carriageways: £7.43 million per km (assumes 2 lanes)
-                    crossSectorArray(1, 3) += 21.03 * MLaneChange * RdL_RouteLength(InputCount, 4) + 11.36 * DLaneChange * RdL_RouteLength(InputCount, 4) + 7.43 * SLaneChange * RdL_RouteLength(InputCount, 4)
+                    'if investment cost is -1, then calculate by using the assumptions as follow
+                    'otherwise use the given cost
+                    If InvCost = -1 Then
+                        'Motorways: £21.03 million per km (assumes 6 lanes)
+                        'Dual carriageways: £11.36 million per km (assumes 4 lanes)
+                        'Single carriageways: £7.43 million per km (assumes 2 lanes)
+                        'avoid negative values due to the update of the roads and hence a negative investment cost 
+                        If MLaneChange < 0 Then
+                            MLaneChange = 0
+                        End If
+                        If DLaneChange < 0 Then
+                            DLaneChange = 0
+                        End If
+                        If SLaneChange < 0 Then
+                            SLaneChange = 0
+                        End If
+                        crossSectorArray(1, 3) += 21.03 * MLaneChange * RdL_RouteLength(InputCount, 4) + 11.36 * DLaneChange * RdL_RouteLength(InputCount, 4) + 7.43 * SLaneChange * RdL_RouteLength(InputCount, 4)
+                    Else
+                        crossSectorArray(1, 3) += InvCost
+                    End If
 
                     Call GetCapData()
                 End If
@@ -1047,7 +1053,7 @@
             If AddingCap = False Then
                 CapType = CapArray(CapNum, 7)
             End If
-
+            InvCost = CapArray(CapNum, 7)
             CapNum += 1
         End If
 
@@ -1088,7 +1094,7 @@
                 If AddingCap = False Then
                     CapType = CapArray(CapNum, 6)
                 End If
-
+                InvCost = CapArray(CapNum, 8)
                 CapNum += 1
             End If
 
@@ -1101,6 +1107,7 @@
                         NewCapDetails(CapCount, 2) = MLaneChange
                         NewCapDetails(CapCount, 3) = DLaneChange
                         NewCapDetails(CapCount, 4) = SLaneChange
+                        NewCapDetails(CapCount, 5) = InvCost
                         CapNewYear = CapYear
 
                         CapCount += 1
@@ -1113,6 +1120,7 @@
                                 NewCapDetails(CapCount, 2) = MLaneChange
                                 NewCapDetails(CapCount, 3) = DLaneChange
                                 NewCapDetails(CapCount, 4) = SLaneChange
+                                NewCapDetails(CapCount, 5) = InvCost
                                 CapNewYear = CapYear
                             Else
                                 'finally add all other enhancements to intermediate array until we have run out of additional capacity
@@ -1123,6 +1131,7 @@
                                     NewCapDetails(CapCount, 2) = MLaneChange
                                     NewCapDetails(CapCount, 3) = DLaneChange
                                     NewCapDetails(CapCount, 4) = SLaneChange
+                                    NewCapDetails(CapCount, 5) = InvCost
                                     LanesToBuild = LanesToBuild - CapLanes
                                 Else
                                     Do Until LanesToBuild >= CapLanes
@@ -1138,6 +1147,7 @@
                                     NewCapDetails(CapCount, 2) = MLaneChange
                                     NewCapDetails(CapCount, 3) = DLaneChange
                                     NewCapDetails(CapCount, 4) = SLaneChange
+                                    NewCapDetails(CapCount, 5) = InvCost
                                     LanesToBuild = LanesToBuild - CapLanes
                                 End If
                             End If
@@ -1163,7 +1173,7 @@
                         NewCapDetails(CapCount + Cap, 2) = MLaneChange
                         NewCapDetails(CapCount + Cap, 3) = DLaneChange
                         NewCapDetails(CapCount + Cap, 4) = SLaneChange
-
+                        NewCapDetails(CapCount + Cap, 5) = InvCost
                         Cap += 1
                     End If
                     CapGroupNum += 1
@@ -1198,6 +1208,7 @@
             NewCapArray(v + 1, 3) = NewCapDetails(arraynum, 2)
             NewCapArray(v + 1, 4) = NewCapDetails(arraynum, 3)
             NewCapArray(v + 1, 5) = NewCapDetails(arraynum, 4)
+            NewCapArray(v + 1, 6) = NewCapDetails(arraynum, 5)
             RLCapYear(v) = NewCapDetails(arraynum, 1)
             'NewCapArray(v + 1, 6) = CapType
         Next

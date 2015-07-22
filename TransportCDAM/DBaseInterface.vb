@@ -1831,7 +1831,7 @@ Module DBaseInterface
                     Case "NewCap"
                         TableName = "TR_IO_AirNodeNewCapacity"
                         OutFileName = EVFilePrefix & "AirNodeNewCap.csv"
-                        header = "modelrun_id, airport_id, changeyear, new_term_capacity, new_atm_cap"
+                        header = "modelrun_id, airport_id, changeyear, new_term_capacity, new_atm_cap, inv_cost"
                     Case "NewCap_Added"
                         TableName = "TR_O_AirNodeNewCapacity_Added"
                         OutFileName = FilePrefix & "AirNewCap.csv"
@@ -1855,7 +1855,7 @@ Module DBaseInterface
 
                         TableName = "TR_IO_RailLinkNewCapacity"
                         OutFileName = EVFilePrefix & "RailLinkNewCap.csv"
-                        header = "modelrun_id, flow_id, changeyear, track_change, max_td_change, train_change"
+                        header = "modelrun_id, flow_id, changeyear, track_change, max_td_change, train_change, spd_new, trains_replaced, inv_cost"
                     Case "NewCap_Added"
                         TableName = "TR_O_RailLinkNewCapacity_Added"
                         OutFileName = FilePrefix & "RailLinkNewCapacity.csv"
@@ -1878,12 +1878,12 @@ Module DBaseInterface
 
                         TableName = "TR_IO_RailLink"
                         OutFileName = FilePrefix & "RailLinkTemp.csv"
-                        header = "modelrun_id, year, flow_id, delays, cost, trains, tracks, max_td_base, cu_old, cu_new, busy_trains, busy_per, model_peak_headway, calculation_check, tracks_added"
+                        header = "modelrun_id, year, flow_id, delays, cost, trains, tracks, max_td_base, cu_old, cu_new, busy_trains, busy_per, model_peak_headway, calculation_check, tracks_added, ave_spd"
                     Case "ExtVar"
 
                         TableName = "TR_IO_RailLinkExternalVariables"
                         OutFileName = EVFilePrefix & "RailLinkExtVar.csv"
-                        header = "modelrun_id, flow_id, year, tracks, pop_z1, pop_z2, gva_z1, gva_z2, cost, car_fuel, max_td, el_p, el_tracks, add_trains, diesel_old, electric_old, indiesel_old, inelectric_old"
+                        header = "modelrun_id, flow_id, year, tracks, pop_z1, pop_z2, gva_z1, gva_z2, cost, car_fuel, max_td, el_p, el_tracks, add_trains, diesel_old, electric_old, indiesel_old, inelectric_old, replace_trains, ave_spd_add, ave_spd_replace"
                 End Select
             Case "RailZone"
                 Select Case SubType
@@ -1912,7 +1912,7 @@ Module DBaseInterface
                     Case "NewCap"
                         TableName = "TR_IO_RoadLinkNewCapacity"
                         OutFileName = EVFilePrefix & "RoadLinkNewCap.csv"
-                        header = "modelrun_id, changeyear, flow_id, mlane_change, dlane_change, slane_change"
+                        header = "modelrun_id, changeyear, flow_id, mlane_change, dlane_change, slane_change, inv_cost"
                     Case "NewCap_Added"
                         TableName = "TR_O_RoadLinkNewCapacity_Added"
                         OutFileName = FilePrefix & "RoadLinkNewCap.csv"
@@ -1977,7 +1977,7 @@ Module DBaseInterface
 
                         TableName = "TR_IO_RoadZoneNewCapacity"
                         OutFileName = FilePrefix & "RoadZoneNewCap.csv"
-                        header = "modelrun_id, zone_id, changeyear, mway_lane_kmch, rur_ad_lane_kmch, rur_as_lane_kmch, rur_m_lane_kmch, urb_d_lane_kmch, urb_s_lane_kmch"
+                        header = "modelrun_id, zone_id, changeyear, mway_lane_kmch, rur_ad_lane_kmch, rur_as_lane_kmch, rur_m_lane_kmch, urb_d_lane_kmch, urb_s_lane_kmch, inv_cost"
                     Case "NewCap_Added"
 
                         TableName = "TR_O_RoadZoneNewCapacity_Added"
@@ -2012,7 +2012,7 @@ Module DBaseInterface
 
                         TableName = "TR_IO_SeaFreightNewCapacity"
                         OutFileName = EVFilePrefix & "SeaFreightNewCap.csv"
-                        header = "modelrun_id, port_id, changeyear, new_lb_cap, new_db_cap, new_gc_cap, new_ll_cap, new_rr_cap"
+                        header = "modelrun_id, port_id, changeyear, new_lb_cap, new_db_cap, new_gc_cap, new_ll_cap, new_rr_cap, inv_cost"
                     Case "NewCap_Added"
                         TableName = "TR_O_SeaFreightNewCapacity_Added"
                         OutFileName = FilePrefix & "SeaNewCap.csv"

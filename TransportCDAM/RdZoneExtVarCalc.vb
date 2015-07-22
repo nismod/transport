@@ -26,15 +26,16 @@
     Dim RurMinKmChange As Double
     Dim UrbDKmChange As Double
     Dim UrbSKmChange As Double
+    Dim InvCost As Double
     Dim ErrorString As String
     Dim FuelEffOld(144, 34), FuelEffNew(34), FuelEffChange(34) As Double
     Dim Year, WPPLStart As Long
     Dim enestring As String
     Dim InputCount As Long
     Dim capstring As String
-    Dim caparray(13670, 11) As String
+    Dim caparray(13670, 12) As String
     Dim capnum, zonecapcount As Long
-    Dim zonecapdetails(13670, 8) As Double
+    Dim zonecapdetails(13670, 9) As Double
     Dim sortarray(13670) As String
     Dim padzone, padyear As String
     Dim sortedline As String
@@ -69,7 +70,7 @@
     Dim UrbRoadPer, WPPLTripPer As Double
     Dim CarbCharge(4, 9) As Double
     Dim newcapnum As Integer
-    Dim NewCapArray(200, 8) As String
+    Dim NewCapArray(200, 9) As String
     Dim zonecapnum As Integer
     Dim RZEv_InArray(,) As String
     Dim RdZ_OutArray(145, 79) As String
@@ -512,31 +513,37 @@
                     UrbDLaneKm(InputCount, 0) += UrbDKmChange
                     UrbSLaneKm(InputCount, 0) += UrbSKmChange
                     'write to CrossSector output for investment cost
-                    'Motorways: £21.03 million per km (assumes 6 lanes)
-                    'Dual carriageways: £11.36 million per km (assumes 4 lanes)
-                    'Single carriageways: £7.43 million per km (assumes 2 lanes)
+                    'if investment cost is -1, then calculate by using the assumptions as follow
+                    'otherwise use the given cost
+                    If InvCost = -1 Then
+                        'Motorways: £21.03 million per km (assumes 6 lanes)
+                        'Dual carriageways: £11.36 million per km (assumes 4 lanes)
+                        'Single carriageways: £7.43 million per km (assumes 2 lanes)
 
-                    'avoid negative values due to the update of the roads and hence a negative investment cost 
-                    If MwayKmChange < 0 Then
-                        MwayKmChange = 0
-                    End If
-                    If RurADKmChange < 0 Then
-                        RurADKmChange = 0
-                    End If
-                    If UrbDKmChange < 0 Then
-                        UrbDKmChange = 0
-                    End If
-                    If RurASKmChange < 0 Then
-                        RurASKmChange = 0
-                    End If
-                    If UrbSKmChange < 0 Then
-                        UrbSKmChange = 0
-                    End If
-                    If RurMinKmChange < 0 Then
-                        RurMinKmChange = 0
-                    End If
+                        'avoid negative values due to the update of the roads and hence a negative investment cost 
+                        If MwayKmChange < 0 Then
+                            MwayKmChange = 0
+                        End If
+                        If RurADKmChange < 0 Then
+                            RurADKmChange = 0
+                        End If
+                        If UrbDKmChange < 0 Then
+                            UrbDKmChange = 0
+                        End If
+                        If RurASKmChange < 0 Then
+                            RurASKmChange = 0
+                        End If
+                        If UrbSKmChange < 0 Then
+                            UrbSKmChange = 0
+                        End If
+                        If RurMinKmChange < 0 Then
+                            RurMinKmChange = 0
+                        End If
 
-                    crossSectorArray(1, 3) += 21.03 * MwayKmChange + 11.36 * (RurADKmChange + UrbDKmChange) + 7.43 * (RurASKmChange + UrbSKmChange + RurMinKmChange)
+                        crossSectorArray(1, 3) += 21.03 * MwayKmChange + 11.36 * (RurADKmChange + UrbDKmChange) + 7.43 * (RurASKmChange + UrbSKmChange + RurMinKmChange)
+                    Else
+                        crossSectorArray(1, 3) += InvCost
+                    End If
 
                     LaneKm(InputCount, 0) = MLaneKm(InputCount, 0) + RurADLaneKm(InputCount, 0) + RurASLaneKm(InputCount, 0) + RurMinLaneKm(InputCount, 0) + UrbDLaneKm(InputCount, 0) + UrbSLaneKm(InputCount, 0)
                     Call GetCapData()
@@ -639,6 +646,7 @@
             RurMinKmChange = caparray(zonecapnum, 7)
             UrbDKmChange = caparray(zonecapnum, 8)
             UrbSKmChange = caparray(zonecapnum, 9)
+            InvCost = caparray(zonecapnum, 10)
             zonecapnum += 1
         End If
     End Sub
@@ -663,6 +671,9 @@
                 zonecapdetails(zonecapcount, c) = caparray(newcapnum, c + 1)
             Next
             zonecapdetails(zonecapcount, 1) = RLCapYear(capnum)
+            'investment cost
+            zonecapdetails(zonecapcount, 9) = caparray(newcapnum, 12)
+
             newcapnum += 1
             capnum = caparray(newcapnum, 9)
         Loop
@@ -681,6 +692,7 @@
                         For c = 0 To 8
                             zonecapdetails(zonecapcount + Cap, c) = caparray(newcapnum, c + 1)
                         Next
+                        zonecapdetails(zonecapcount + Cap, 9) = caparray(newcapnum, 12)
                         Cap += 1
                     End If
 
@@ -711,6 +723,8 @@
             For c = 0 To 7
                 NewCapArray(zonecapnum, c + 1) = zonecapdetails(arraynum, c)
             Next
+            'investment cost
+            NewCapArray(zonecapnum, 9) = zonecapdetails(arraynum, 9)
             zonecapnum += 1
         Next
 

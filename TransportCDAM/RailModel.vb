@@ -1,4 +1,4 @@
-Module RailModel
+ï»¿Module RailModel
     'now allows variable elasticities over time, specified via input file
     'now also has the option to build additional infrastructure if capacity exceeds a certain level
     'now also has the option to include a congestion-type charge
@@ -25,14 +25,15 @@ Module RailModel
     Dim Delays As Double
     Dim RlLinkCost(238, 0) As Double
     Dim CarFuel(238, 0) As Double
-    Dim RlLinkExtVars(238, 14) As String
-    Dim RlLinkPreExtVars(238, 14) As String
+    Dim RlLinkExtVars(238, 21) As String
+    Dim RlLinkPreExtVars(238, 21) As String
     Dim TrainRat As Double
     Dim PopRat As Double
     Dim GVARat As Double
     Dim DelayRat As Double
     Dim CostRat As Double
     Dim CarFuelRat As Double
+    Dim SpdRat As Double
     Dim OldDelays(238, 0) As Double
     Dim NewDelays(238, 0) As Double
     Dim OldTrains(238, 0) As Double
@@ -65,12 +66,14 @@ Module RailModel
     Dim InputArray(238, 17) As String
     Dim InputArrayOld(238, 17) As String
     Dim OutputArray(239, 5) As String
-    Dim TempArray(239, 14) As String
+    Dim TempArray(239, 15) As String
     Dim NewCapArray(239, 3) As String
     Dim NewCapNum As Integer
     Dim totalTrain As Double
     Dim totalCUTrain As Double
     Dim RlL_TrackLength(,) As String
+    Dim OldSpd As Double
+    Dim NewSpd As Double
 
 
 
@@ -95,7 +98,7 @@ Module RailModel
         ReDim FuelUsed(1)
 
         'reset capacity margin count for the year
-        'TotalCU=¡ÆCU*Trains/¡ÆTrains
+        'TotalCU=âˆ‘CU*Trains/âˆ‘Trains
         totalTrain = 0
         totalCUTrain = 0
 
@@ -254,6 +257,7 @@ Module RailModel
             CalcCheck(InputCount, 0) = True
             'set new delays value to equal base delay value to start with
             NewDelays(InputCount, 0) = OldDelays(InputCount, 0)
+            OldSpd = InputArray(InputCount, 15)
         Else
             'assign values to variables in the order of the temp file
             FlowNum(InputCount, 0) = InputArray(InputCount, 3)
@@ -297,6 +301,8 @@ Module RailModel
                 InputArray(InputCount, 15) = 0
             End If
             AddedTracks(InputCount, 0) = InputArray(InputCount, 15)
+
+            OldSpd = InputArray(InputCount, 16)
 
             'add the cost of the infrastructure built
             If BuildInfra = True Then
@@ -502,7 +508,14 @@ Module RailModel
             CostRat = (Newcost / RlLinkCost(InputCount, 0)) ^ RlLinkEl(1, 6)
             CarFuelRat = (CDbl(RlLinkExtVars(InputCount, 10)) / CarFuel(InputCount, 0)) ^ RlLinkEl(1, 7)
         End If
-        NewTrains = OldTrains(InputCount, 0) * PopRat * GVARat * DelayRat * CostRat * CarFuelRat
+
+        'speed ratio
+        NewSpd = (CDbl(RlLinkExtVars(InputCount, 19)) / OldTrains(InputCount, 0)) * RlLinkExtVars(InputCount, 21) + ((OldTrains(InputCount, 0) - CDbl(RlLinkExtVars(InputCount, 19))) / OldTrains(InputCount, 0)) * OldSpd
+
+        SpdRat = (NewSpd / OldSpd) ^ 1.2
+
+
+        NewTrains = OldTrains(InputCount, 0) * PopRat * GVARat * DelayRat * CostRat * CarFuelRat * SpdRat
 
     End Sub
 
@@ -579,7 +592,7 @@ Module RailModel
         End If
 
         'update capacity margin
-        'TotalCU=¡ÆCU*Trains/¡ÆTrains
+        'TotalCU=âˆ‘CU*Trains/âˆ‘Trains
         totalCUTrain += CDbl(OutputArray(InputCount, 5)) * OutputArray(InputCount, 3)
         totalTrain += OutputArray(InputCount, 3)
 
@@ -617,7 +630,7 @@ Module RailModel
         TempArray(InputCount, 12) = ModelPeakHeadway(InputCount, 0)
         TempArray(InputCount, 13) = CalcCheck1
         TempArray(InputCount, 14) = AddedTracks(InputCount, 0)
-
+        TempArray(InputCount, 15) = NewSpd
     End Sub
 
     Sub ResetRailInputs()
