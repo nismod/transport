@@ -427,7 +427,7 @@ NextYear:
                     End If
                 End If
             End If
-                End If
+
             'write data as 2010 if year is 2010
             If yearIs2010 = True Then g_modelRunYear -= 1
 
