@@ -1163,8 +1163,8 @@ Module AirModel
         End If
         'write to crossSector output
         'crossSectorArray(1, 4) += CDbl(AirFuelOutputArray(1, 3))
-        'adding the capacity margin of rail to the aggregate capacity margin
-        crossSectorArray(1, 2) += ((totalCUPass / totalPass) * 0.01)
+        'adding the cu of air to the capacity margin
+        capacityMargin(1, 4) += ((totalCUPass / totalPass))
 
         newcapnum = 1
         'update airport base data and write to temp file

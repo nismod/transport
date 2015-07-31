@@ -94,6 +94,7 @@ Module DBaseInterface
     Public InDieselOldAll, InElectricOldAll, InDieselNewAll, InElectricNewAll
     Public InDieselOld(238, 0), InElectricOld(238, 0), InDieselNew, InElectricNew As Double
     Public crossSectorArray(1, 5) As String
+    Public capacityMargin(1, 5) As String
     Public ErrorLogArray(,) As String
     Public OZone, DZone As Long
     Dim ModelType As String
@@ -2043,10 +2044,15 @@ Module DBaseInterface
                 TableName = "ISL_MessageLog"
                 header = "modelrun_id, sector_id,  message"
             Case "CrossSector"
-                TableName = "TR_O_CrossSector"
-                header = "modelrun_id, year, capacity_margin, investment, emission, service_delivery"
+                Select Case SubType
+                    Case "CrossSector"
+                        TableName = "TR_O_CrossSector"
+                        header = "modelrun_id, year, capacity_margin, investment, emission, service_delivery"
+                    Case "CapacityMargin"
+                        TableName = "TR_O_CapacityMargin"
+                        header = "modelrun_id, year, roadlink_cu, raillink_cu, air_cu, capacity_margin"
+                End Select
         End Select
-
         'Check if prefix has been set - if not then use default
         'Error may occur in readdata function, as temp file name could be different at different time
         'If FilePrefix = "" Then

@@ -1094,6 +1094,17 @@
         Dim theSQL As String = ""
         Dim m_sConnString As String
 
+        'write separate capacity margin
+        capacityMargin(1, 0) = g_modelRunID
+        capacityMargin(1, 1) = g_modelRunYear
+        For i = 2 To 4
+            If capacityMargin(1, i) Is Nothing Then capacityMargin(1, i) = 0
+        Next
+        'Total Capacity Margin = 1 - (0.91 * Road Link CU + 0.08 * Rail Link CU + 0.01 * Air CU)
+        capacityMargin(1, 5) = 1 - (0.91 * capacityMargin(1, 2) + 0.08 * capacityMargin(1, 3) + 0.01 * capacityMargin(1, 4))
+        Call WriteData("CrossSector", "CapacityMargin", capacityMargin)
+
+
         'write cross sector output
         crossSectorArray(1, 0) = g_modelRunID
         crossSectorArray(1, 1) = g_modelRunYear
@@ -1101,9 +1112,12 @@
             If crossSectorArray(1, i) Is Nothing Then crossSectorArray(1, i) = 0
         Next
         'get the free capacity as the capacity margin of the year
-        crossSectorArray(1, 2) = 1 - crossSectorArray(1, 2)
-        Call WriteData("CrossSector", "", crossSectorArray)
+        crossSectorArray(1, 2) = capacityMargin(1, 5)
+        Call WriteData("CrossSector", "CrossSector", crossSectorArray)
+
+
         ReDim crossSectorArray(1, 5)
+        ReDim capacityMargin(1, 5)
 
         'update accumulated investment
         theSQL = "UPDATE " & Chr(34) & "TR_O_CrossSector" & Chr(34) & " SET accumulated_investment = accumulated_investment_data.accumulated_investment FROM (SELECT modelrun_id, year, investment, sum(investment) OVER (PARTITION BY modelrun_id ORDER BY year) as accumulated_investment FROM " & Chr(34) & "TR_O_CrossSector" & Chr(34) & " WHERE modelrun_id = " & g_modelRunID & ") as accumulated_investment_data WHERE " & Chr(34) & "TR_O_CrossSector" & Chr(34) & ".modelrun_id = accumulated_investment_data.modelrun_id AND " & Chr(34) & "TR_O_CrossSector" & Chr(34) & ".year = accumulated_investment_data.year"

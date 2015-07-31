@@ -191,8 +191,8 @@
 
         'write to crossSector output
         crossSectorArray(1, 4) += CDbl(FuelString(1, 4))
-        'adding the capacity margin of rail to the aggregate capacity margin
-        crossSectorArray(1, 2) += ((totalCUTrain / totalTrain) * 0.08)
+        'adding the cu of rail to the aggregate capacity margin
+        capacityMargin(1, 3) += ((totalCUTrain / totalTrain))
 
         Call WriteData("RailLink", "FuelUsed", FuelString)
 
