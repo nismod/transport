@@ -2231,6 +2231,7 @@ Module DBaseInterface
 
             Dim da As Odbc.OdbcDataAdapter = New Odbc.OdbcDataAdapter(cmd)
             Dim ds As New DataSet
+
             da.Fill(ds, "Data")
 
             Return True

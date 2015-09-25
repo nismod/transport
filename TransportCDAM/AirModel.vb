@@ -103,6 +103,7 @@ Module AirModel
         MaxAirNode = 28
         MaxAirFlow = 223
         ReDim AirFuelOutputArray(1, 4)
+        ReDim NewCapArray(56, 6)
 
         'reset capacity margin counter 
         totalCUPass = 0
@@ -1107,7 +1108,6 @@ Module AirModel
         Dim flownum As Long
         Dim cuval As Double
         Dim newcapnum As Integer
-        ReDim NewCapArray(56, 6)
 
         'write to output array for node and flow
         aircount = 1
