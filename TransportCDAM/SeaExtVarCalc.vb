@@ -36,6 +36,7 @@
     Dim CapNum As Integer
     Dim InputArray(,) As String
     Dim CapArray(,) As String
+    Dim NewCapArray(,) As String
     Dim Se_OutputArray(48, 11) As String
     Dim yearIs2010 As Boolean = False
 
@@ -80,8 +81,8 @@
             Call CapChangeCalc()
 
             'write all lines to intermediate capacity file
-            If Not CapArray Is Nothing Then
-                Call WriteData("Seaport", "NewCap", CapArray)
+            If Not NewCapArray Is Nothing Then
+                Call WriteData("Seaport", "NewCap", NewCapArray)
             End If
         End If
 
@@ -479,11 +480,11 @@
                 sortedline = sortarray(v)
                 splitline = Split(sortedline, "&")
                 arraynum = splitline(2)
-                CapArray(v + 1, 0) = g_modelRunID
+                NewCapArray(v + 1, 0) = g_modelRunID
                 For i = 0 To 6
-                    CapArray(v + 1, i + 1) = NewCapDetails(arraynum, i)
+                    NewCapArray(v + 1, i + 1) = NewCapDetails(arraynum, i)
                 Next
-                CapArray(v + 1, 8) = NewCapDetails(arraynum, 7)
+                NewCapArray(v + 1, 8) = NewCapDetails(arraynum, 7)
                 'CapArray(v, 8) = CapType
             Next
         End If

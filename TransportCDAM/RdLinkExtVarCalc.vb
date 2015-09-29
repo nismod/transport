@@ -71,8 +71,8 @@
     Dim RdLEV_InArray(,) As String
     Dim RdL_OutArray(292, 139) As String
     Dim CapArray(,) As String
-    Dim CapNum As Integer
     Dim NewCapArray(6835, 6) As String
+    Dim CapNum As Integer
     Dim yearIs2010 As Boolean = False
     Dim RdL_RouteLength(,) As String
 

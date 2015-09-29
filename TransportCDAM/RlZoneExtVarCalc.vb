@@ -33,6 +33,7 @@
     Dim enestring As String
     Dim Elect As Boolean
     Dim CapArray(,) As String
+    Dim NewCapArray(,) As String
     Dim CapNum As Integer
     Dim elearray(,) As String
     Dim EleNum As Integer
