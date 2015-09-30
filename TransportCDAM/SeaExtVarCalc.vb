@@ -475,6 +475,7 @@
                 sortarray(v) = NewCapDetails(v, 0) & "&" & NewCapDetails(v, 1) & "&" & v
             Next
             Array.Sort(sortarray)
+            ReDim Preserve NewCapArray(CapNum, 10)
 
             For v = 0 To 0
                 sortedline = sortarray(v)
