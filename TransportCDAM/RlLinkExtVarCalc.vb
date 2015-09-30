@@ -657,78 +657,42 @@ NextYear:
 
         If Not schemearray Is Nothing Then
             Do Until schemearray(RlElNum, 1) Is Nothing
-                'check the scheme type
-                schemetype = schemearray(RlElNum, 6)
-                If schemetype = "C" Then
-                    'if it is a compulsory scheme then load values into array
-                    For v = 0 To 3
-                        elschemes(rownum, v) = schemearray(RlElNum, v + 1)
-                    Next
-                    elyear = schemearray(RlElNum, 2)
-                    schemecount += 1
-                    'now check for relevant zone changes
-                    schemecode = schemearray(RlElNum, 5)
-                    Do While zonecheck = True
-                        If schemecode = zonearray(RzElNum, 4) Then
-                            elzschemes(znum, 0) = zonearray(RzElNum, 1)
-                            elzschemes(znum, 1) = zonearray(RzElNum, 2)
-                            elzschemes(znum, 2) = zonearray(RzElNum, 3)
-                            RzElNum += 1
-                            If zonearray(RzElNum, 1) Is Nothing Then
-                                zonecheck = False
-                            Else
-                                znum += 1
-                                zonecheck = True
-                            End If
-                        Else
-                            zonecheck = False
-                        End If
-                    Loop
-                    rownum += 1
-                    'check if we are using optional electrification schemes
-                ElseIf RlElect = True And schemetype = "O" Then
-                    'check if a year is already assigned
-                    If schemearray(RlElNum, 2) = "" Then
-                        'if it isn't then first get the length of track km for the scheme 
-                        eltrackkm = schemearray(RlElNum, 3) * schemearray(RlElNum, 4)
-                        'then check if there are any spare electrification km in the pot
-                        If kmtoelectrify >= eltrackkm Then
-                            'if there are enough, then assign this scheme to this year and load values into array
-                            elschemes(rownum, 0) = schemearray(RlElNum, 1)
-                            elschemes(rownum, 1) = elyear
-                            elschemes(rownum, 2) = schemearray(RlElNum, 3)
-                            elschemes(rownum, 3) = schemearray(RlElNum, 4)
-                            'subtract the electrified km from the spare km
-                            kmtoelectrify = kmtoelectrify - eltrackkm
-                            schemecount += 1
-                            schemecode = schemearray(RlElNum, 5)
-                            Do While zonecheck = True
-                                If schemecode = zonearray(RzElNum, 4) Then
-                                    elzschemes(znum, 0) = zonearray(RzElNum, 1)
-                                    elzschemes(znum, 1) = elyear
-                                    elzschemes(znum, 2) = zonearray(RzElNum, 3)
-                                    RzElNum += 1
-                                    If zonearray(RzElNum, 1) Is Nothing Then
-                                        zonecheck = False
-                                    Else
-                                        znum += 1
-                                        zonecheck = True
-                                    End If
-                                Else
+                If capChangeArray(1, 2) = True Then
+                    'check the scheme type
+                    schemetype = schemearray(RlElNum, 6)
+                    If schemetype = "C" Then
+                        'if it is a compulsory scheme then load values into array
+                        For v = 0 To 3
+                            elschemes(rownum, v) = schemearray(RlElNum, v + 1)
+                        Next
+                        elyear = schemearray(RlElNum, 2)
+                        schemecount += 1
+                        'now check for relevant zone changes
+                        schemecode = schemearray(RlElNum, 5)
+                        Do While zonecheck = True
+                            If schemecode = zonearray(RzElNum, 4) Then
+                                elzschemes(znum, 0) = zonearray(RzElNum, 1)
+                                elzschemes(znum, 1) = zonearray(RzElNum, 2)
+                                elzschemes(znum, 2) = zonearray(RzElNum, 3)
+                                RzElNum += 1
+                                If zonearray(RzElNum, 1) Is Nothing Then
                                     zonecheck = False
+                                Else
+                                    znum += 1
+                                    zonecheck = True
                                 End If
-                            Loop
-                        Else
-                            'if there aren't, then move on to next year and add in a further allocation of track km
-                            'loop until there are enough km in the pot to electrify the scheme
-                            Do Until kmtoelectrify >= eltrackkm
-                                elyear += 1
-                                If elyear > 2100 Then
-                                    Exit Do
-                                End If
-                                kmtoelectrify += ElectKmPerYear
-                            Loop
-                            'check if enough track km - if there aren't then it means we have reached 2100 so exit do loop
+                            Else
+                                zonecheck = False
+                            End If
+                        Loop
+                        rownum += 1
+                        'check if we are using optional electrification schemes
+                    ElseIf RlElect = True And schemetype = "O" Then
+                        'check if a year is already assigned
+                        If schemearray(RlElNum, 2) = "" Then
+                            'if it isn't then first get the length of track km for the scheme 
+                            eltrackkm = schemearray(RlElNum, 3) * schemearray(RlElNum, 4)
+                            'then check if there are any spare electrification km in the pot
                             If kmtoelectrify >= eltrackkm Then
                                 'if there are enough, then assign this scheme to this year and load values into array
                                 elschemes(rownum, 0) = schemearray(RlElNum, 1)
@@ -756,80 +720,118 @@ NextYear:
                                     End If
                                 Loop
                             Else
-                                Exit Do
-                            End If
-                        End If
-                    Else
-                        'if it is then load values into array
-                        For v = 0 To 3
-                            elschemes(rownum, v) = schemearray(RlElNum, v + 1)
-                        Next
-                        elyear = schemearray(RlElNum, 2)
-                        schemecount += 1
-                        schemecode = schemearray(RlElNum, 5)
-                        Do While zonecheck = True
-                            If schemecode = zonearray(RzElNum, 4) Then
-                                elzschemes(znum, 0) = zonearray(RzElNum, 1)
-                                elzschemes(znum, 1) = zonearray(RzElNum, 2)
-                                elzschemes(znum, 2) = zonearray(RzElNum, 3)
-                                RzElNum += 1
-                                If zonearray(RzElNum, 1) Is Nothing Then
-                                    zonecheck = False
-                                Else
-                                    znum += 1
-                                    zonecheck = True
-                                End If
-                            Else
-                                zonecheck = False
-                            End If
-                        Loop
-                    End If
-                    rownum += 1
-                Else
-                    'if the captype is the relevant capacity group, then read from the array
-                    CapGroupNum = 0
-                    If Not capGroupArray Is Nothing Then
-
-                        Do Until CapGroupNum = capGroupArray.Length
-
-                            'if the capacity group array is empty (no additional capacity) then exit
-                            If capGroupArray(CapGroupNum) Is Nothing Then Exit Do
-
-                            If capGroupArray Is Nothing Then Exit Do
-
-                            If schemetype = capGroupArray(CapGroupNum) Then
-
-                                For v = 0 To 3
-                                    elschemes(rownum, v) = schemearray(RlElNum, v + 1)
-                                Next
-                                elyear = schemearray(RlElNum, 2)
-                                schemecount += 1
-                                'now check for relevant zone changes
-                                schemecode = schemearray(RlElNum, 5)
-                                Do While zonecheck = True
-                                    If schemecode = zonearray(RzElNum, 4) Then
-                                        elzschemes(znum, 0) = zonearray(RzElNum, 1)
-                                        elzschemes(znum, 1) = zonearray(RzElNum, 2)
-                                        elzschemes(znum, 2) = zonearray(RzElNum, 3)
-                                        RzElNum += 1
-                                        If zonearray(RzElNum, 1) Is Nothing Then
-                                            zonecheck = False
-                                        Else
-                                            znum += 1
-                                            zonecheck = True
-                                        End If
-                                    Else
-                                        zonecheck = False
+                                'if there aren't, then move on to next year and add in a further allocation of track km
+                                'loop until there are enough km in the pot to electrify the scheme
+                                Do Until kmtoelectrify >= eltrackkm
+                                    elyear += 1
+                                    If elyear > 2100 Then
+                                        Exit Do
                                     End If
+                                    kmtoelectrify += ElectKmPerYear
                                 Loop
-
-                                rownum += 1
+                                'check if enough track km - if there aren't then it means we have reached 2100 so exit do loop
+                                If kmtoelectrify >= eltrackkm Then
+                                    'if there are enough, then assign this scheme to this year and load values into array
+                                    elschemes(rownum, 0) = schemearray(RlElNum, 1)
+                                    elschemes(rownum, 1) = elyear
+                                    elschemes(rownum, 2) = schemearray(RlElNum, 3)
+                                    elschemes(rownum, 3) = schemearray(RlElNum, 4)
+                                    'subtract the electrified km from the spare km
+                                    kmtoelectrify = kmtoelectrify - eltrackkm
+                                    schemecount += 1
+                                    schemecode = schemearray(RlElNum, 5)
+                                    Do While zonecheck = True
+                                        If schemecode = zonearray(RzElNum, 4) Then
+                                            elzschemes(znum, 0) = zonearray(RzElNum, 1)
+                                            elzschemes(znum, 1) = elyear
+                                            elzschemes(znum, 2) = zonearray(RzElNum, 3)
+                                            RzElNum += 1
+                                            If zonearray(RzElNum, 1) Is Nothing Then
+                                                zonecheck = False
+                                            Else
+                                                znum += 1
+                                                zonecheck = True
+                                            End If
+                                        Else
+                                            zonecheck = False
+                                        End If
+                                    Loop
+                                Else
+                                    Exit Do
+                                End If
                             End If
+                        Else
+                            'if it is then load values into array
+                            For v = 0 To 3
+                                elschemes(rownum, v) = schemearray(RlElNum, v + 1)
+                            Next
+                            elyear = schemearray(RlElNum, 2)
+                            schemecount += 1
+                            schemecode = schemearray(RlElNum, 5)
+                            Do While zonecheck = True
+                                If schemecode = zonearray(RzElNum, 4) Then
+                                    elzschemes(znum, 0) = zonearray(RzElNum, 1)
+                                    elzschemes(znum, 1) = zonearray(RzElNum, 2)
+                                    elzschemes(znum, 2) = zonearray(RzElNum, 3)
+                                    RzElNum += 1
+                                    If zonearray(RzElNum, 1) Is Nothing Then
+                                        zonecheck = False
+                                    Else
+                                        znum += 1
+                                        zonecheck = True
+                                    End If
+                                Else
+                                    zonecheck = False
+                                End If
+                            Loop
+                        End If
+                        rownum += 1
+                    Else
+                        'if the captype is the relevant capacity group, then read from the array
+                        CapGroupNum = 0
+                        If Not capGroupArray Is Nothing Then
 
-                            CapGroupNum += 1
-                        Loop
+                            Do Until CapGroupNum = capGroupArray.Length
+
+                                'if the capacity group array is empty (no additional capacity) then exit
+                                If capGroupArray(CapGroupNum) Is Nothing Then Exit Do
+
+                                If capGroupArray Is Nothing Then Exit Do
+
+                                If schemetype = capGroupArray(CapGroupNum) Then
+
+                                    For v = 0 To 3
+                                        elschemes(rownum, v) = schemearray(RlElNum, v + 1)
+                                    Next
+                                    elyear = schemearray(RlElNum, 2)
+                                    schemecount += 1
+                                    'now check for relevant zone changes
+                                    schemecode = schemearray(RlElNum, 5)
+                                    Do While zonecheck = True
+                                        If schemecode = zonearray(RzElNum, 4) Then
+                                            elzschemes(znum, 0) = zonearray(RzElNum, 1)
+                                            elzschemes(znum, 1) = zonearray(RzElNum, 2)
+                                            elzschemes(znum, 2) = zonearray(RzElNum, 3)
+                                            RzElNum += 1
+                                            If zonearray(RzElNum, 1) Is Nothing Then
+                                                zonecheck = False
+                                            Else
+                                                znum += 1
+                                                zonecheck = True
+                                            End If
+                                        Else
+                                            zonecheck = False
+                                        End If
+                                    Loop
+
+                                    rownum += 1
+                                End If
+
+                                CapGroupNum += 1
+                            Loop
+                        End If
+
                     End If
-
                 End If
 
                 'read next line from input file
