@@ -1,5 +1,5 @@
 ﻿Public Class MainForm
-    Dim FullCDAM As New FullCDAM
+    Dim FullCDAM As New FullCDAM()
     Dim DBase As String = "Driver={PostgreSQL ODBC Driver(ANSI)};DSN=PostgreSQL30;Server=localhost;Port=5432;Database=itrc_sos;UId=postgres;Password=P0stgr3s;"
 
 

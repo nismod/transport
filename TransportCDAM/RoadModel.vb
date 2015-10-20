@@ -114,13 +114,12 @@
     Dim totalCUTraffic As Double
     Dim RdL_RouteLength(,) As String
 
-
-
-
     Public Sub RoadLinkMain()
 
+        'Need to be ReDimmed as they are erased at the end of this function 
         ReDim TempAnArray(292, 34)
         ReDim TempHArray(7007, 87)
+        ReDim LatentHourlyFlows(291, 20, 24)
 
         'reset capacity margin count for the year
         totalTraffic = 0
@@ -223,17 +222,18 @@
             Call WriteData("RoadLink", "NewCap_Added", NewCapArray, , False)
         End If
 
-        Erase TempAnArray
-        Erase TempHArray
-
         'write to crossSector output
         'adding the cu of road to the aggregate capacity margin
         capacityMargin(1, 2) += ((totalCUTraffic / totalTraffic))
 
-
-
         'minus a year if it is year 2010, for the next module
         If yearIs2010 = True Then g_modelRunYear -= 1
+
+        'Delete these arrays in case the garbage collector hasn't collected them
+        '(a legacy of everything in this model being in a module instead of class objects)
+        Erase TempAnArray
+        Erase TempHArray
+        Erase LatentHourlyFlows
 
     End Sub
 
