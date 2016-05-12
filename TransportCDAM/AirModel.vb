@@ -1241,6 +1241,8 @@ Module AirModel
             For x = 1 To 3
                 NodeTempArray(aircount, x + 2) = AirportBaseData(aircount, x)
             Next
+            'TEMP FIX for AirpTripsLatent getting NULL values
+            UnNull(AirpTripsLatent(aircount), VariantType.Double)
             NodeTempArray(aircount, 6) = AirpTripsLatent(aircount)
             NodeTempArray(aircount, 7) = AirportBaseData(aircount, 4)
             NodeTempArray(aircount, 8) = AirportBaseData(aircount, 5)
