@@ -103,7 +103,7 @@ Module AirModel
         MaxAirNode = 28
         MaxAirFlow = 223
         ReDim AirFuelOutputArray(1, 4)
-        ReDim NewCapArray(56, 6)
+        'ReDim NewCapArray(56, 6)
 
         'reset capacity margin counter 
         totalCUPass = 0

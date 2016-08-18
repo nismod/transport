@@ -127,7 +127,7 @@
 
         'set the new cap array to the first line to start with
         NewCapNum = 1
-        ReDim NewCapArray(20952, 4)
+        'ReDim NewCapArray(20952, 4)
 
         'for year 2010, calculate as it is year 2011 and write output as year 2010
         If g_modelRunYear = 2010 Then

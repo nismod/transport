@@ -64,7 +64,7 @@
 
         'set the newcaparray to the first line to start with
         NewCapNum = 1
-        ReDim NewCapArray(235, 8)
+        'ReDim NewCapArray(235, 8)
 
         'get input files and create output files
         Call SeaInputFiles()

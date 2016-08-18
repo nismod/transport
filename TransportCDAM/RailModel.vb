@@ -94,7 +94,7 @@
 
         'reset Cap number
         NewCapNum = 1
-        ReDim NewCapArray(239, 3)
+        'ReDim NewCapArray(239, 3)
         ReDim FuelUsed(1)
 
         'reset capacity margin count for the year

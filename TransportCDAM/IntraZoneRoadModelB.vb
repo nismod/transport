@@ -90,7 +90,7 @@
 
         'initialize new cap num to write to the first line
         NewCapNum = 1
-        ReDim NewCapArray(435, 6)
+        'ReDim NewCapArray(435, 6)
 
         'get external variable values
         If yearIs2010 = True Then
