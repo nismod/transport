@@ -5,21 +5,9 @@ VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "TransportCDAM", "TransportCDAM\TransportCDAM.vbproj", "{5ED25002-4779-40BB-BCB1-C756D93230B5}"
 EndProject
-Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "SoS_GUI", "..\ISL Layer\SoS_GUI\SoS_GUI\SoS_GUI.vbproj", "{53802E79-0799-4738-BBC9-0F98AEC9D320}"
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "SoS_GUI", "..\logic_layer\SoS_GUI\SoS_GUI\SoS_GUI.vbproj", "{53802E79-0799-4738-BBC9-0F98AEC9D320}"
 EndProject
 Global
-	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 3
-		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
-		SccTeamFoundationServer = https://itrc.visualstudio.com/defaultcollection
-		SccLocalPath0 = .
-		SccProjectUniqueName1 = TransportCDAM\\TransportCDAM.vbproj
-		SccProjectName1 = TransportCDAM
-		SccLocalPath1 = TransportCDAM
-		SccProjectUniqueName2 = ..\\ISL\u0020Layer\\SoS_GUI\\SoS_GUI\\SoS_GUI.vbproj
-		SccProjectName2 = ../ISL\u0020Layer/SoS_GUI/SoS_GUI
-		SccLocalPath2 = ..\\ISL\u0020Layer\\SoS_GUI\\SoS_GUI
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Debug|x86 = Debug|x86
