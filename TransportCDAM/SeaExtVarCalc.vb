@@ -126,9 +126,8 @@
         Dim basecount As Integer
         Dim GORID(47, 1) As Long
         Dim DieselOld, DieselNew As Double
-        Dim i, y As Integer
+        Dim i As Integer
         Dim PortID As Integer
-        Dim theYear As Integer
 
         'read energy file
         If SeaEneSource = "Database" Then

@@ -202,8 +202,6 @@ Public Class FullCDAM : Implements IDisposable
     End Sub
 
     Sub FullMain()
-        Dim y As Integer
-
         'get directory path for files - **now unnecessary as set by user
         'DirPath = "\\soton.ac.uk\ude\PersonalFiles\Users\spb1g09\mydocuments\Southampton Work\ITRC\Transport CDAM\Model Inputs\"
 
@@ -333,7 +331,8 @@ Public Class FullCDAM : Implements IDisposable
 
     Sub ExtVarMain()
         Dim dbline As String
-        Dim dbpoparray(), dbecoarray() As String
+        Dim dbpoparray() As String = {}
+        Dim dbecoarray() As String = {}
         Dim zoneval As Long
         Dim popval, ecoval As Double
         Dim RdLInputFile, RdZInputFile, RlLInputFile, RlZInputFile, AirFInputFile, AirNInputFile, SeaInputFile As IO.FileStream
@@ -1127,12 +1126,10 @@ Public Class FullCDAM : Implements IDisposable
         'theSQL = "UPDATE " & Chr(34) & "TR_O_CrossSector" & Chr(34) & " SET accumulated_investment = accumulated_investment_data.accumulated_investment FROM (SELECT modelrun_id, year, investment, sum(investment) OVER (PARTITION BY modelrun_id ORDER BY year) as accumulated_investment FROM " & Chr(34) & "TR_O_CrossSector" & Chr(34) & " WHERE modelrun_id = 285) as accumulated_investment_data WHERE " & Chr(34) & "TR_O_CrossSector" & Chr(34) & ".modelrun_id = accumulated_investment_data.modelrun_id AND " & Chr(34) & "TR_O_CrossSector" & Chr(34) & ".year = accumulated_investment_data.year"
 
         'If there is no connection to the database then establish one
-        If m_conn Is Nothing Then
-            m_sConnString = g_dbase
-            m_conn = New Odbc.OdbcConnection(m_sConnString)
-            m_conn.ConnectionTimeout = 60
-            m_conn.Open()
-        End If
+        m_sConnString = g_dbase
+        m_conn = New Odbc.OdbcConnection(m_sConnString)
+        m_conn.ConnectionTimeout = 60
+        m_conn.Open()
 
         cmd.Connection = m_conn
         cmd.CommandText = theSQL

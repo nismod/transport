@@ -192,7 +192,6 @@
     Sub CalcExtVars()
 
         Dim FlowID(238, 0) As Integer
-        Dim Year As Integer
         Dim Tracks(238, 0) As Integer
         Dim Pop1Old(238, 0) As Double
         Dim Pop2Old(238, 0) As Double
@@ -213,11 +212,8 @@
         Dim ScalingData(1, 9) As String
         Dim OCountry(238, 0), DCountry(238, 0) As String
         Dim OZone(238, 0), DZone(238, 0) As Long
-        Dim keylookup As String
-        Dim newval As Double
         Dim ElectTracksOld(238, 0), ElectTracksNew As Double
         Dim diecarch, elecarch As Double
-        Dim Zone1ID As Integer, Zone2ID As Integer
         Dim y As Integer = 0
 
         'get scaling factor file if we are using one
@@ -613,7 +609,7 @@ NextYear:
 
         Dim schemeoutputrow(244, 4) As String
         Dim elschemes(244, 3) As Double
-        Dim schemearray(,) As String
+        Dim schemearray(,) As String = {}
         Dim rownum As Integer
         Dim elyear As Long
         Dim eltrackkm As Double
@@ -624,7 +620,7 @@ NextYear:
         Dim arraynum, schemecount As Long
         Dim schemetype As String
         Dim zoneoutputrow(335, 3) As String
-        Dim zonearray(,) As String
+        Dim zonearray(,) As String = {}
         Dim schemecode As String
         Dim elzschemes(335, 4) As Long
         Dim znum As Integer

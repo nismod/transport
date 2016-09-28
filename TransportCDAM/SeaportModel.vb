@@ -396,6 +396,8 @@
                                 newcapstring = PortID & "," & g_modelRunYear & ",0,0,0,1000,0"
                             Case 5
                                 newcapstring = PortID & "," & g_modelRunYear & ",0,0,0,0,1000"
+                            Case Else
+                                newcapstring = PortID & "," & g_modelRunYear & ",1000,0,0,0,0"
                         End Select
                         'read newcapstring to array to writedata
                         Dim newcaps() As String

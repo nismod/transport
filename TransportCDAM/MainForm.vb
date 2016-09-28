@@ -2,7 +2,7 @@
 
 Public Class MainForm
     Dim FullCDAM As New FullCDAM()
-    Dim DBase As String;
+    Dim DBase As String
 
     Public Sub New()
         ' This call is required by the designer.
@@ -11,8 +11,8 @@ Public Class MainForm
 
         ' Pull environment variables from a file in the current working
         ' directory or a parent directory
-        d.load()
         Dim d = New Dotenv.Dotenv()
+        d.load()
         Dim host As String = d.getVar("APP_PG_HOST")
         Dim database As String = d.getVar("APP_PG_DATABASE")
         Dim user As String = d.getVar("APP_PG_USER")

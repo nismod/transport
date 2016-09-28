@@ -220,15 +220,15 @@ Module DBaseInterface
         'set up input file
         ScenarioPopFile = New FileStream(DBasePopFile, FileMode.Open, FileAccess.Read)
         dp = New StreamReader(ScenarioPopFile, System.Text.Encoding.Default)
-        'also GOR pop file as these are needed for air node model
-        If DBasePopG = True Then
-            GORPopFile = New FileStream(DBasePopGFile, FileMode.Open, FileAccess.Read)
-            gp = New StreamReader(GORPopFile, System.Text.Encoding.Default)
-        End If
 
         'set up output file
         ZonePopFile = New FileStream(DirPath & "ZoneScenarioPopFile.csv", FileMode.Create, FileAccess.Write)
         zp = New StreamWriter(ZonePopFile, System.Text.Encoding.Default)
+
+        'read GOR pop file as these are needed for air node model
+        GORPopFile = New FileStream(DBasePopGFile, FileMode.Open, FileAccess.Read)
+        gp = New StreamReader(GORPopFile, System.Text.Encoding.Default)
+
         'write header row
         ZonePopRow = "Year,ITRCZone,Pop"
         zp.WriteLine(ZonePopRow)
@@ -1178,7 +1178,6 @@ Module DBaseInterface
 
     Function get_gva_data_by_airportID(ByVal year As Integer, ByVal PortID As Integer)
         Dim theSQL As String = ""
-        Dim i As Integer
 
         'If PortID = 1 Then
         'reset airGVAArray value to read from database
@@ -1205,6 +1204,7 @@ Module DBaseInterface
         Return CDbl((airGVAArray(1, 3)) / 1000000)
 
         'Get the population for the specified zone
+        'Dim i As Integer
         'For i = 1 To UBound(airGVAArray, 1)
         'If CInt(airGVAArray(i, 6)) = PortID Then
         'Return CDbl((airGVAArray(i, 3)) / 1000000)
@@ -1218,7 +1218,6 @@ Module DBaseInterface
 
     Function get_gva_data_by_seaportID(ByVal year As Integer, ByVal PortID As Integer)
         Dim theSQL As String = ""
-        Dim i As Integer
 
         'If PortID = 1 Then
         'reset seaGVAArray value to read from database
@@ -1245,6 +1244,7 @@ Module DBaseInterface
         Return CDbl((seaGVAArray(1, 3)) / 1000000)
 
         'Get the population for the specified zone
+        'Dim i As Integer
         'For i = 1 To UBound(seaGVAArray, 1)
         'If CInt(seaGVAArray(i, 6)) = PortID Then
         'Return CDbl((seaGVAArray(i, 3)) / 1000000)
@@ -1626,75 +1626,76 @@ Module DBaseInterface
             'Else get the data from the file and parse it into an array
             Try
                 DataFile = New FileStream(Connection & TheFileName, IO.FileMode.Open, IO.FileAccess.Read)
+                DataRead = New IO.StreamReader(DataFile, System.Text.Encoding.Default)
+
+                'read header row
+                dbheadings = DataRead.ReadLine
+                dbarray = Split(dbheadings, ",")
+                'Get a line of data from file
+                dbline = DataRead.ReadLine
+                dbarray = Split(dbline, ",")
+
+                'read to the correct line
+                If SubType = "ExtVar" Then
+                    Do
+                        'if it is the current year line then stop
+                        If dbarray(0) = Year Then
+                            Exit Do
+                        End If
+                        'if not, continue to read line
+                        dbline = DataRead.ReadLine
+                        dbarray = Split(dbline, ",")
+                    Loop
+
+                End If
+
+
+
+                'reDim the input array by getting the count of rows
+                DataColumns = dbarray.Count
+                DataRows = 0
+                Do Until DataRead.EndOfStream
+                    If dbline Is Nothing Then
+                        Exit Do
+                    End If
+                    dbline = DataRead.ReadLine
+                    DataRows += 1
+                Loop
+
+                ReDim InputArray(DataRows + 1, DataColumns - 1)
+
+                'Read data again
+                DataRead.Close()
+                DataFile = New FileStream(Connection & TheFileName, IO.FileMode.Open, IO.FileAccess.Read)
+                DataRead = New IO.StreamReader(DataFile, System.Text.Encoding.Default)
+
+                iR = 0
+                'loop through row to get data
+                Do Until iR = 1000
+                    dbline = DataRead.ReadLine
+                    dbarray = Split(dbline, ",")
+                    If dbline Is Nothing Then
+                        Exit Do
+                    End If
+                    For iC = 0 To DataColumns - 1
+                        InputArray(iR, iC) = UnNull(dbarray(iC).ToString, VariantType.Char)
+                        'InputArray(iR, iC) = dbarray(iC)
+                    Next
+                    iR += 1
+                Loop
+
+                DataRead.Close()
+
+                'TODO - stopped this delete for debugging -DONE it won't be necessary to delete things if we are using database
+                If g_modelRunYear = g_initialYear Then
+                    'delete the temp file to recreate for current year
+                    'System.IO.File.Delete(Connection & TheFileName)
+                End If
+
             Catch exIO As IOException
                 ErrorLog(ErrorSeverity.FATAL, "ReadData", Type, "An error was encountered trying to access the file " & Connection & TheFileName)
                 MsgBox("An error was encountered trying to access the file " & Connection & TheFileName)
             End Try
-            DataRead = New IO.StreamReader(DataFile, System.Text.Encoding.Default)
-
-            'read header row
-            dbheadings = DataRead.ReadLine
-            dbarray = Split(dbheadings, ",")
-            'Get a line of data from file
-            dbline = DataRead.ReadLine
-            dbarray = Split(dbline, ",")
-
-            'read to the correct line
-            If SubType = "ExtVar" Then
-                Do
-                    'if it is the current year line then stop
-                    If dbarray(0) = Year Then
-                        Exit Do
-                    End If
-                    'if not, continue to read line
-                    dbline = DataRead.ReadLine
-                    dbarray = Split(dbline, ",")
-                Loop
-
-            End If
-
-
-
-            'reDim the input array by getting the count of rows
-            DataColumns = dbarray.Count
-            DataRows = 0
-            Do Until DataRead.EndOfStream
-                If dbline Is Nothing Then
-                    Exit Do
-                End If
-                dbline = DataRead.ReadLine
-                DataRows += 1
-            Loop
-
-            ReDim InputArray(DataRows + 1, DataColumns - 1)
-
-            'Read data again
-            DataRead.Close()
-            DataFile = New FileStream(Connection & TheFileName, IO.FileMode.Open, IO.FileAccess.Read)
-            DataRead = New IO.StreamReader(DataFile, System.Text.Encoding.Default)
-
-            iR = 0
-            'loop through row to get data
-            Do Until iR = 1000
-                dbline = DataRead.ReadLine
-                dbarray = Split(dbline, ",")
-                If dbline Is Nothing Then
-                    Exit Do
-                End If
-                For iC = 0 To DataColumns - 1
-                    InputArray(iR, iC) = UnNull(dbarray(iC).ToString, VariantType.Char)
-                    'InputArray(iR, iC) = dbarray(iC)
-                Next
-                iR += 1
-            Loop
-
-            DataRead.Close()
-
-            'TODO - stopped this delete for debugging -DONE it won't be necessary to delete things if we are using database
-            If g_modelRunYear = g_initialYear Then
-                'delete the temp file to recreate for current year
-                'System.IO.File.Delete(Connection & TheFileName)
-            End If
 
 
         End If
@@ -1783,7 +1784,7 @@ Module DBaseInterface
         Dim OutputRead As StreamReader
         Dim Line As String = ""
         Dim ix As Integer, iy As Integer
-        Dim header As String
+        Dim header As String = ""
         Dim aryFieldNames As New ArrayList
         Dim aryFieldValues As New ArrayList
         Dim ToSQL As Boolean = False
@@ -2107,7 +2108,7 @@ Module DBaseInterface
                 OutputWrite = New IO.StreamWriter(OutputFile, System.Text.Encoding.Default)
                 'write header row
                 OutputWrite.WriteLine(header)
-            ElseIf IsNewFile_IsInsert = False Then
+            Else
                 OutputFile = New FileStream(Connection & OutFileName, IO.FileMode.Open, IO.FileAccess.ReadWrite)
                 OutputRead = New IO.StreamReader(OutputFile, System.Text.Encoding.Default)
                 OutputWrite = New IO.StreamWriter(OutputFile, System.Text.Encoding.Default)

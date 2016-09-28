@@ -191,7 +191,6 @@
     ' unable to check if the code works for capyear, because the zone capacity does not changed during all 90 years
 
     Sub CalcZoneData()
-        Dim ICount As Integer
         Dim InputCount As Integer
 
         'set base levels of fixed costs, and fuel costs will be set in the year 1 calculation of Sub CalcZoneData()

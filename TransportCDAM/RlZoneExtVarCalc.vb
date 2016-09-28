@@ -176,7 +176,6 @@
         Dim DieselOld(238, 0), DieselNew, ElectricOld(238, 0), ElectricNew As Double
         Dim DMaintOld(238, 0), EMaintOld(238, 0) As Double
         Dim Country(238, 0) As String
-        Dim y As Integer
 
         Dim diecarch, elecarch As Double
         Dim ElStat(238, 0) As Long
