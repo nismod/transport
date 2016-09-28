@@ -13,7 +13,7 @@ Public Class FullCDAM : Implements IDisposable
             'Setup global LogFile variant types
             g_LogVTypes(0) = VariantType.Integer : g_LogVTypes(1) = VariantType.Integer : g_LogVTypes(2) = VariantType.String
 
-            'Get Model Run Details including 
+            'Get Model Run Details including
             If getModelRunDetails() = False Then
                 Throw New System.Exception("Error getting Model Run details from database")
             End If
@@ -55,7 +55,6 @@ Public Class FullCDAM : Implements IDisposable
         'get plan details from the database
         DBaseInterface.ReadData("Inputs", "Parameters", ary)
 
-        'TODO - Would be nice to replace this with some EXECUTE function that assigns these variables dynamically
         For i = 1 To UBound(ary, 1) - 1
             ParamName = CStr(ary(i, 3))
             Select Case ParamName
@@ -240,7 +239,7 @@ Public Class FullCDAM : Implements IDisposable
         'read fuel price for previous year (1,x) and current year (2,x)
         Call get_fuelprice_by_modelrun_id(g_modelRunID, g_modelRunYear, 0)
         If RlZEneSource = "Database" Then
-            'If g_modelRunYear = 2010 Then y = 1 Else y = g_modelRunYear - g_initialYear + 1 'TODO - this needs fixing once we go to database for energy 
+            'If g_modelRunYear = 2010 Then y = 1 Else y = g_modelRunYear - g_initialYear + 1 'TODO - this needs fixing once we go to database for energy
             InDieselOldAll = enearray(1, 2)
             InElectricOldAll = enearray(1, 3)
             InDieselNewAll = enearray(2, 2)
@@ -255,7 +254,7 @@ Public Class FullCDAM : Implements IDisposable
             Call ExtVarMain()
         End If
 
-        'check if adding capacity 
+        'check if adding capacity
         If UpdateExtVars = True Then
             Call UpdateExtVarFiles()
         End If
@@ -993,7 +992,7 @@ Public Class FullCDAM : Implements IDisposable
         If DBasePop = True Then
             'clear existing pop lookup array
             PopLookup.Clear()
-            'loop through 
+            'loop through
             '***note that at present population forecasts are only produced up to 2093
             Do
                 dictyear = dbpoparray(0) - 2010
@@ -1129,7 +1128,7 @@ Public Class FullCDAM : Implements IDisposable
 
         'If there is no connection to the database then establish one
         If m_conn Is Nothing Then
-            m_sConnString = g_dbase '"Driver={PostgreSQL ODBC Driver(ANSI)};DSN=PostgreSQL30;Server=localhost;Port=5432;Database=itrc_sos;UId=postgres;Password=P0stgr3s;" 'g_dbase 
+            m_sConnString = g_dbase
             m_conn = New Odbc.OdbcConnection(m_sConnString)
             m_conn.ConnectionTimeout = 60
             m_conn.Open()

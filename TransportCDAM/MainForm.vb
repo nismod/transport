@@ -1,7 +1,25 @@
-﻿Public Class MainForm
-    Dim FullCDAM As New FullCDAM()
-    Dim DBase As String = "Driver={PostgreSQL ODBC Driver(ANSI)};DSN=PostgreSQL30;Server=localhost;Port=5432;Database=itrc_sos;UId=postgres;Password=P0stgr3s;"
+﻿Imports Dotenv
 
+Public Class MainForm
+    Dim FullCDAM As New FullCDAM()
+    Dim DBase As String;
+
+    Public Sub New()
+        ' This call is required by the designer.
+        InitializeComponent()
+        ' Add any initialization after the InitializeComponent() call.
+
+        ' Pull environment variables from a file in the current working
+        ' directory or a parent directory
+        d.load()
+        Dim d = New Dotenv.Dotenv()
+        Dim host As String = d.getVar("APP_PG_HOST")
+        Dim database As String = d.getVar("APP_PG_DATABASE")
+        Dim user As String = d.getVar("APP_PG_USER")
+        Dim password As String = d.getVar("APP_PG_PASSWORD")
+        Dim port As String = d.getVar("APP_PG_PORT")
+        DBase = "Driver={PostgreSQL Unicode};Server=" & host & ";Port=" & port & ";Database=" & database & ";UserName=" & user & ";Password=" & password & ";"
+    End Sub
 
     Private Sub Button1_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles Button1.Click
         DBaseMode = Me.cbxDBaseMode.Checked

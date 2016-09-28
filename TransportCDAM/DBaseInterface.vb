@@ -142,7 +142,7 @@ Module DBaseInterface
         Try
             'If there is no connection to the database then establish one
             If m_conn Is Nothing Then
-                m_sConnString = g_dbase '"Driver={PostgreSQL ODBC Driver(ANSI)};DSN=PostgreSQL30;Server=localhost;Port=5432;Database=itrc_sos;UId=postgres;Password=P0stgr3s;" 'g_dbase 
+                m_sConnString = g_dbase
                 m_conn = New Odbc.OdbcConnection(m_sConnString)
                 m_conn.ConnectionTimeout = 60
                 m_conn.Open()
@@ -635,7 +635,7 @@ Module DBaseInterface
     Sub AssignZoneGVA()
 
         Select Case ZoneID
-            'GOR0 = Scotland, 1 = Wales, 2 = North East, 3 = North West, 4 = West Midlands, 5 = Yorkshire, 6 = South West, 7 = E Midlands, 8 = South East, 9 = E England, 10 = London, 11 = NI 
+            'GOR0 = Scotland, 1 = Wales, 2 = North East, 3 = North West, 4 = West Midlands, 5 = Yorkshire, 6 = South West, 7 = E Midlands, 8 = South East, 9 = E England, 10 = London, 11 = NI
             Case 1
                 ZoneGVA = GorGVA(0) * 0.060455631
             Case 2
@@ -972,7 +972,7 @@ Module DBaseInterface
     Function get_population_data_by_zoneID(ByVal year As Integer, ByVal ZoneID As Integer, ByVal zoneType As String, ByVal type As String, Optional ByVal ODZoneID As Integer = 0)
         Dim theSQL As String = ""
 
-        'NOT USED FOR DATABASE ANYMORE 
+        'NOT USED FOR DATABASE ANYMORE
 
         Select Case zoneType
             Case "Zone"
@@ -1125,7 +1125,7 @@ Module DBaseInterface
     Function get_gva_data_by_zoneID(ByVal year As Integer, ByVal ZoneID As Integer, ByVal zoneType As String, ByVal type As String, Optional ByVal ODZoneID As Integer = 0)
         Dim theSQL As String = ""
 
-        'NOT USED FOR DATABASE ANYMORE 
+        'NOT USED FOR DATABASE ANYMORE
 
         'call different SQL function for zone and for link
         If zoneType = "Zone" Then
@@ -1327,10 +1327,10 @@ Module DBaseInterface
 
 
     '****************************************************************************************
-    ' Function: ReadData 
+    ' Function: ReadData
     '
     ' Purpose: Get an array of data from a csv file - to be replaced with database calls
-    ' 
+    '
     ' Parameters:   Type - type of data (e.g. Road, Rail)
     '               SubType - subtype of data
     '               Inputrray - array of data to be output
@@ -1757,15 +1757,15 @@ Module DBaseInterface
     End Function
 
     '****************************************************************************************
-    ' Function: WriteData 
+    ' Function: WriteData
     '
     ' Purpose: Output an array to a csv file - to be replaced with database calls
-    ' 
+    '
     ' Parameters:   Type - type of data (e.g. Road, Rail)
     '               SubType - subtype of data
     '               OutputArray - array of data to be output
     '               TemoArray - array of temp data to be output
-    '               IsNewFile_IsInsert - TRUE - create a new file OR insert data to table, 
+    '               IsNewFile_IsInsert - TRUE - create a new file OR insert data to table,
     '                                    FALSE - update and existing file OR update data to table
     '               Connection - file path - to be replaced with database connection string
     '****************************************************************************************
@@ -2105,7 +2105,7 @@ Module DBaseInterface
             If IsNewFile_IsInsert = True Then
                 OutputFile = New FileStream(Connection & OutFileName, IO.FileMode.CreateNew, IO.FileAccess.ReadWrite)
                 OutputWrite = New IO.StreamWriter(OutputFile, System.Text.Encoding.Default)
-                'write header row 
+                'write header row
                 OutputWrite.WriteLine(header)
             ElseIf IsNewFile_IsInsert = False Then
                 OutputFile = New FileStream(Connection & OutFileName, IO.FileMode.Open, IO.FileAccess.ReadWrite)
