@@ -18,7 +18,7 @@ Public Class MainForm
         Dim user As String = d.getVar("APP_PG_USER")
         Dim password As String = d.getVar("APP_PG_PASSWORD")
         Dim port As String = d.getVar("APP_PG_PORT")
-        DBase = "Driver={PostgreSQL Unicode};Server=" & host & ";Port=" & port & ";Database=" & database & ";UserName=" & user & ";Password=" & password & ";"
+        DBase = "Driver={PostgreSQL Unicode};Server=" & host & ";Port=" & port & ";Database=" & database & ";UId=" & user & ";Password=" & password & ";"
     End Sub
 
     Private Sub Button1_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles Button1.Click
