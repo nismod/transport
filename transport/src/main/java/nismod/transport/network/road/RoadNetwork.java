@@ -20,6 +20,9 @@ import org.geotools.graph.structure.DirectedNode;
 import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Graph;
 import org.geotools.graph.structure.Node;
+import org.geotools.graph.traverse.standard.AStarIterator;
+import org.geotools.graph.traverse.standard.DijkstraIterator;
+import org.geotools.graph.traverse.standard.DijkstraIterator.EdgeWeighter;
 import org.geotools.map.FeatureLayer;
 import org.geotools.map.MapContent;
 import org.geotools.styling.PolygonSymbolizer;
@@ -45,6 +48,7 @@ public class RoadNetwork {
 	private ShapefileDataStore networkShapefile;
 	private ShapefileDataStore nodesShapefile;
 	private ShapefileDataStore AADFshapefile;
+	private DijkstraIterator.EdgeWeighter dijkstraWeighter;
 
 	/**
 	 * @param zonesUrl Url for the shapefile with zone polygons
@@ -62,6 +66,16 @@ public class RoadNetwork {
 
 		//build the graph
 		this.build();
+		
+		//weight the edges of the graph using the physical distance of each road segment		
+		dijkstraWeighter = new EdgeWeighter() {
+			@Override
+			public double getWeight(org.geotools.graph.structure.Edge edge) {
+				SimpleFeature sf = (SimpleFeature) edge.getObject(); 
+				double length = (double) sf.getAttribute("LenNet");
+				return length;
+			}
+		};
 	}
 
 	/**
@@ -119,6 +133,54 @@ public class RoadNetwork {
 		return network;
 	}
 	
+	
+	/**
+	 * Getter method for the Dijkstra edge weighter.
+	 * @return Dijkstra edge weighter.
+	 */
+	public DijkstraIterator.EdgeWeighter getDijkstraWeighter() {
+
+		return dijkstraWeighter;
+	}
+	
+	/** Getter method for the AStar functions (edge cost and heuristic function).
+	 * @param to Destination node.
+	 * @return AStar functions.
+	 */
+	public AStarIterator.AStarFunctions getAstarFunctions(Node destinationNode) {
+
+		AStarIterator.AStarFunctions aStarFunctions = new  AStarIterator.AStarFunctions(destinationNode){
+
+			@Override
+			public double cost(AStarIterator.AStarNode aStarNode1, AStarIterator.AStarNode aStarNode2) {
+
+				//Edge edge = aStarNode1.getNode().getEdge(aStarNode2.getNode()); // does not work, a directed version must be used!
+				Edge edge = ((DirectedNode) aStarNode1.getNode()).getOutEdge((DirectedNode) aStarNode2.getNode());
+				if (edge == null) {
+					//no edge found in that direction (set maximum weight)
+					return Double.MAX_VALUE;
+				}
+				SimpleFeature feature = (SimpleFeature)edge.getObject();
+				double cost = (double) feature.getAttribute("LenNet");  //use actual physical length
+				return cost;
+			}
+
+			@Override
+			public double h(Node node) {
+
+				//estimates the cheapest cost from the node 'node' to the node 'destinationNode'
+				SimpleFeature feature = (SimpleFeature)node.getObject();
+				Point point = (Point)feature.getDefaultGeometry();
+				SimpleFeature feature2 = (SimpleFeature)destinationNode.getObject();
+				Point point2 = (Point)feature2.getDefaultGeometry();
+				double distance = point.distance(point2) / 1000.0; //straight line distance (from metres to kilometres)!
+				return distance;
+			}
+		};
+
+		return aStarFunctions;
+	}
+
 	/**
 	 * Builds a directed graph representation of the road network
 	 * @throws IOException 
