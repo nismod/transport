@@ -5,6 +5,7 @@ package nismod.transport.network.road;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.URL;
@@ -41,10 +42,10 @@ public class RoadNetworkTest {
 
 		//create a road network
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl);
-		
+
 		//visualise the shapefiles
 		roadNetwork.visualise("Mini Test Area");
-		
+
 		final URL zonesUrl2 = new URL("file://src/test/resources/testdata/zones.shp");
 		final URL networkUrl2 = new URL("file://src/test/resources/testdata/network.shp");
 		final URL nodesUrl2 = new URL("file://src/test/resources/testdata/nodes.shp");
@@ -58,7 +59,7 @@ public class RoadNetworkTest {
 	}
 
 	@Test
-	public void test() throws IOException {
+	public void miniTest() throws IOException {
 
 		final URL zonesUrl = new URL("file://src/test/resources/minitestdata/zones.shp");
 		final URL networkUrl = new URL("file://src/test/resources/minitestdata/network.shp");
@@ -251,7 +252,7 @@ public class RoadNetworkTest {
 
 		//TEST SHORTEST PATH ALGORITHMS
 		System.out.println("\n\n*** Testing the shortest path algorithms ***");
-		
+
 		System.out.println("\n*** Dijkstra ***");
 		//set source and destination node
 		iter = rn.getNodes().iterator();
@@ -329,7 +330,7 @@ public class RoadNetworkTest {
 		assertEquals("The shortest path length is correct", 2.1, pathFinder.getCost(from), EPSILON);
 
 		System.out.println("\n*** AStar ***");
-		
+
 		//find the shortest path using AStar algorithm
 		try {
 			AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctions(to));
@@ -401,5 +402,192 @@ public class RoadNetworkTest {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	@Test
+	public void test() throws IOException {
+
+		final URL zonesUrl = new URL("file://src/test/resources/testdata/zones.shp");
+		final URL networkUrl = new URL("file://src/test/resources/testdata/network.shp");
+		final URL nodesUrl = new URL("file://src/test/resources/testdata/nodes.shp");
+		final URL AADFurl = new URL("file://src/test/resources/testdata/AADFdirected.shp");
+
+		//create a road network
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl);
+		DirectedGraph rn = roadNetwork.getNetwork();
+
+		//TEST NODE AND EDGE CREATION
+		System.out.println("\n\n*** Testing edge creation for duplicate edges ***");
+
+		Iterator iter = rn.getNodes().iterator();
+		DirectedNode nodeA=null, nodeB=null;
+		while (iter.hasNext() && (nodeA == null || nodeB == null)) {
+			DirectedNode node = (DirectedNode) iter.next();
+			if (node.getID() == 89) nodeA = node;
+			if (node.getID() == 39) nodeB = node;
+		}
+		System.out.println(nodeA);
+		System.out.println(nodeB);
+		assertEquals("Node ID is correct", 89, nodeA.getID());
+		assertEquals("Node ID is correct", 39, nodeB.getID());
+
+		//total edges between nodes 89 and 39
+		List listOfEdges = nodeA.getEdges(nodeB);
+		System.out.printf("The number of edges between node %d and node %d is %d (both directions).\n", nodeB.getID(), nodeA.getID(), listOfEdges.size());
+		System.out.println("Edges: " + listOfEdges.toString());
+		assertEquals("The number of edges is correct", 4, listOfEdges.size());
+
+		//directed edges from node 89 to node 39
+		listOfEdges = nodeA.getOutEdges(nodeB);
+		System.out.printf("The number of directed edges from node %d to node %d is %d.\n", nodeA.getID(), nodeB.getID(), listOfEdges.size());
+		System.out.println("Edges: " + listOfEdges.toString());
+		assertEquals("The link is double", 2, listOfEdges.size());
+		DirectedEdge e1 = (DirectedEdge) listOfEdges.get(0);
+		DirectedEdge e2 = (DirectedEdge) listOfEdges.get(1);
+		System.out.println(e1);
+		System.out.println(e2);
+		SimpleFeature sf1 = (SimpleFeature) e1.getObject();
+		SimpleFeature sf2 = (SimpleFeature) e2.getObject();
+		System.out.println(sf1.getAttribute("CP"));
+		System.out.println(sf1.getAttribute("iDir"));
+		System.out.println(sf1.getAttribute("LenNet"));
+		assertEquals("Edge CP is correct", 70107L, sf1.getAttribute("CP"));
+		assertEquals("Edge direction is correct", "C", sf1.getAttribute("iDir"));
+		assertEquals("Edge length is correct", 0.4, sf1.getAttribute("LenNet"));
+		System.out.println(sf2.getAttribute("CP"));
+		System.out.println(sf2.getAttribute("iDir"));
+		System.out.println(sf2.getAttribute("LenNet"));
+		assertEquals("Edge CP is correct", 74474L, sf2.getAttribute("CP"));
+		assertEquals("Edge direction is correct", "C", sf2.getAttribute("iDir"));
+		assertEquals("Edge length is correct", 0.4, sf2.getAttribute("LenNet"));
+
+		//directed edges from node 39 to node 89
+		listOfEdges = nodeB.getOutEdges(nodeA);
+		System.out.printf("The number of directed edges from node %d to node %d is %d.\n", nodeB.getID(), nodeA.getID(), listOfEdges.size());
+		System.out.println("Edges: " + listOfEdges.toString());
+		assertEquals("The edge is double", 2, listOfEdges.size());
+		e1 = (DirectedEdge) listOfEdges.get(0);
+		e2 = (DirectedEdge) listOfEdges.get(1);
+		System.out.println(e1);
+		System.out.println(e2);
+		sf1 = (SimpleFeature) e1.getObject();
+		sf2 = (SimpleFeature) e2.getObject();
+		System.out.println(sf1.getAttribute("CP"));
+		System.out.println(sf1.getAttribute("iDir"));
+		System.out.println(sf1.getAttribute("LenNet"));
+		assertEquals("Edge CP is correct", 70107L, sf1.getAttribute("CP"));
+		assertEquals("Edge direction is correct", "C", sf1.getAttribute("iDir"));
+		assertEquals("Edge length is correct", 0.4, sf1.getAttribute("LenNet"));
+		System.out.println(sf2.getAttribute("CP"));
+		System.out.println(sf2.getAttribute("iDir"));
+		System.out.println(sf2.getAttribute("LenNet"));
+		assertEquals("Edge CP is correct", 74474L, sf2.getAttribute("CP"));
+		assertEquals("Edge direction is correct", "C", sf2.getAttribute("iDir"));
+		assertEquals("Edge length is correct", 0.4, sf2.getAttribute("LenNet"));
+
+		iter = rn.getNodes().iterator();
+		nodeA=null; nodeB=null;
+		while (iter.hasNext() && (nodeA == null || nodeB == null)) {
+			DirectedNode node = (DirectedNode) iter.next();
+			if (node.getID() == 106) nodeA = node;
+			if (node.getID() == 84) nodeB = node;
+		}
+		System.out.println(nodeA);
+		System.out.println(nodeB);
+		assertEquals("Node ID is correct", 106, nodeA.getID());
+		assertEquals("Node ID is correct", 84, nodeB.getID());
+
+		//total edges between nodes 106 and 84
+		listOfEdges = nodeA.getEdges(nodeB);
+		System.out.printf("The number of edges between node %d and node %d is %d (both directions).\n", nodeB.getID(), nodeA.getID(), listOfEdges.size());
+		System.out.println("Edges: " + listOfEdges.toString());
+		assertEquals("The number of edges is correct", 3, listOfEdges.size());
+
+		//directed edges from node 106 to node 84
+		listOfEdges = nodeA.getOutEdges(nodeB);
+		System.out.printf("The number of directed edges from node %d to node %d is %d.\n", nodeA.getID(), nodeB.getID(), listOfEdges.size());
+		System.out.println("Edges: " + listOfEdges.toString());
+		assertEquals("The edge is double", 2, listOfEdges.size());
+		e1 = (DirectedEdge) listOfEdges.get(0);
+		e2 = (DirectedEdge) listOfEdges.get(1);
+		System.out.println(e1);
+		System.out.println(e2);
+		sf1 = (SimpleFeature) e1.getObject();
+		sf2 = (SimpleFeature) e2.getObject();
+		System.out.println(sf1.getAttribute("CP"));
+		System.out.println(sf1.getAttribute("iDir"));
+		System.out.println(sf1.getAttribute("LenNet"));
+		assertEquals("Edge CP is correct", 70084L, sf1.getAttribute("CP"));
+		assertEquals("Edge direction is correct", "C", sf1.getAttribute("iDir"));
+		assertEquals("Edge length is correct", 0.5, sf1.getAttribute("LenNet"));
+		System.out.println(sf2.getAttribute("CP"));
+		System.out.println(sf2.getAttribute("iDir"));
+		System.out.println(sf2.getAttribute("LenNet"));
+		assertEquals("Edge CP is correct", 70083L, sf2.getAttribute("CP"));
+		assertEquals("Edge direction is correct", "N", sf2.getAttribute("iDir"));
+		assertEquals("Edge length is correct", 0.5, sf2.getAttribute("LenNet"));
+
+		//just one edge from node 84 to node 106
+		listOfEdges = nodeB.getOutEdges(nodeA);
+		System.out.printf("The number of directed edges from node %d to node %d is %d.\n", nodeB.getID(), nodeA.getID(), listOfEdges.size());
+		System.out.println("Edges: " + listOfEdges.toString());
+		assertEquals("The edge is single", 1, listOfEdges.size());
+		e1 = (DirectedEdge) listOfEdges.get(0);
+		System.out.println(e1);
+		sf1 = (SimpleFeature) e1.getObject();
+		System.out.println(sf1.getAttribute("CP"));
+		System.out.println(sf1.getAttribute("iDir"));
+		System.out.println(sf1.getAttribute("LenNet"));
+		assertEquals("Edge CP is correct", 70084L, sf1.getAttribute("CP"));
+		assertEquals("Edge direction is correct", "C", sf1.getAttribute("iDir"));
+		assertEquals("Edge length is correct", 0.5, sf1.getAttribute("LenNet"));
+
+		iter = rn.getNodes().iterator();
+		nodeA=null; nodeB=null;
+		while (iter.hasNext() && (nodeA == null || nodeB == null)) {
+			DirectedNode node = (DirectedNode) iter.next();
+			if (node.getID() == 84) nodeA = node;
+			if (node.getID() == 85) nodeB = node;
+		}
+		System.out.println(nodeA);
+		System.out.println(nodeB);
+		assertEquals("Node ID is correct", 84, nodeA.getID());
+		assertEquals("Node ID is correct", 85, nodeB.getID());
+
+		//total edges between nodes 84 and 85
+		listOfEdges = nodeA.getEdges(nodeB);
+		System.out.printf("The number of edges between node %d and node %d is %d (both directions).\n", nodeB.getID(), nodeA.getID(), listOfEdges.size());
+		System.out.println("Edges: " + listOfEdges.toString());
+		assertEquals("The number of edges is correct", 2, listOfEdges.size());
+
+		//just one edge from node 84 to node 85
+		listOfEdges = nodeA.getOutEdges(nodeB);
+		System.out.printf("The number of directed edges from node %d to node %d is %d.\n", nodeA.getID(), nodeB.getID(), listOfEdges.size());
+		System.out.println("Edges: " + listOfEdges.toString());
+		assertEquals("The edge is single", 1, listOfEdges.size());
+		e1 = (DirectedEdge) listOfEdges.get(0);
+		System.out.println(e1);
+		sf1 = (SimpleFeature) e1.getObject();
+		System.out.println(sf1.getAttribute("CP"));
+		System.out.println(sf1.getAttribute("iDir"));
+		System.out.println(sf1.getAttribute("LenNet"));
+		assertEquals("Edge CP is correct", 38210L, sf1.getAttribute("CP"));
+		assertEquals("Edge direction is correct", "N", sf1.getAttribute("iDir"));
+		assertEquals("Edge length is correct", 0.5, sf1.getAttribute("LenNet"));
+
+		//just one edge from node 85 to node 84
+		listOfEdges = nodeB.getOutEdges(nodeA);
+		System.out.printf("The number of directed edges from node %d to node %d is %d.\n", nodeB.getID(), nodeA.getID(), listOfEdges.size());
+		System.out.println("Edges: " + listOfEdges.toString());
+		assertEquals("The edge is single", 1, listOfEdges.size());
+		e1 = (DirectedEdge) listOfEdges.get(0);
+		System.out.println(e1);
+		sf1 = (SimpleFeature) e1.getObject();
+		System.out.println(sf1.getAttribute("CP"));
+		System.out.println(sf1.getAttribute("iDir"));
+		System.out.println(sf1.getAttribute("LenNet"));
+		assertEquals("Edge CP is correct", 70085L, sf1.getAttribute("CP"));
+		assertEquals("Edge direction is correct", "S", sf1.getAttribute("iDir"));
+		assertEquals("Edge length is correct", 0.5, sf1.getAttribute("LenNet"));
 	}
 }
