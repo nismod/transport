@@ -82,12 +82,12 @@ public class RoadNetwork {
 	 * Visualises the road network as loaded from shapefiles.
 	 * @throws IOException
 	 */
-	public void visualise() throws IOException {
+	public void visualise(String mapTitle) throws IOException {
 
 		//create a map
 		MapContent map = new MapContent();
 		//set windows title
-		map.setTitle("Test Area");
+		map.setTitle(mapTitle);
 
 		//create style for zones
 		StyleBuilder styleBuilder = new StyleBuilder();
@@ -362,7 +362,10 @@ public class RoadNetwork {
 				iterator.close();
 			}
 			
-			if (directedEdge == null) System.err.println("No count point data found for this edge.");
+			if (directedEdge == null) {
+				System.err.printf("No count point data found for this edge (RoadNumber = '%s', ferry = %d).\n", 
+						edgeFeature.getAttribute("RoadNumber"), edgeFeature.getAttribute("ferry"));
+			}
 		} //while edges
 	}
 }

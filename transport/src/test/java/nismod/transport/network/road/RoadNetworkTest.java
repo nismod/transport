@@ -41,10 +41,20 @@ public class RoadNetworkTest {
 
 		//create a road network
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl);
-		DirectedGraph rn = roadNetwork.getNetwork();
+		
+		//visualise the shapefiles
+		roadNetwork.visualise("Mini Test Area");
+		
+		final URL zonesUrl2 = new URL("file://src/test/resources/testdata/zones.shp");
+		final URL networkUrl2 = new URL("file://src/test/resources/testdata/network.shp");
+		final URL nodesUrl2 = new URL("file://src/test/resources/testdata/nodes.shp");
+		final URL AADFurl2 = new URL("file://src/test/resources/testdata/AADFdirected.shp");
+
+		//create a road network
+		RoadNetwork roadNetwork2 = new RoadNetwork(zonesUrl2, networkUrl2, nodesUrl2, AADFurl2);
 
 		//visualise the shapefiles
-		roadNetwork.visualise();
+		roadNetwork2.visualise("Test Area");
 	}
 
 	@Test
