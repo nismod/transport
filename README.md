@@ -17,3 +17,8 @@ example or two of how to run the model
 ## Seaports
 
 Contains information about main UK container seaports
+
+## Contact information (Seaports and freight)
+
+Manuel Buitrago
+mbm1d15@soton.ac.uk
