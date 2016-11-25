@@ -10,8 +10,6 @@ brief description
 
 lovric.milan@gmail.com / M.Lovric@soton.ac.uk
 
-j.a.pritchard@soton.ac.uk
-
 ## How to run the model
 
 example or two of how to run the model
