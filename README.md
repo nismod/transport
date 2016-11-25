@@ -8,7 +8,7 @@ brief description
 
 ## Contact information
 
-up-to-date contact information
+lovric.milan@gmail.com / M.Lovric@soton.ac.uk
 
 ## How to run the model
 
