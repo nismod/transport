@@ -8,10 +8,10 @@ brief description
 
 ## Contact information
 
-Milan Lovric lovric.milan@gmail.com / M.Lovric@soton.ac.uk (Modelling and development)
-Manuel Buitrago mbm1d15@soton.ac.uk (Seaports and freight)
-James Pritchard j.a.pritchard@soton.ac.uk (Environmental emissions)
-Simon Blainey S.P.Blainey@soton.ac.uk (MISTRAL Co-Lead)
+* Milan Lovric lovric.milan@gmail.com / M.Lovric@soton.ac.uk (Modelling and development)
+* Manuel Buitrago mbm1d15@soton.ac.uk (Seaports and freight)
+* James Pritchard j.a.pritchard@soton.ac.uk (Environmental emissions)
+* Simon Blainey S.P.Blainey@soton.ac.uk (MISTRAL Co-Lead)
 
 ## How to run the model
 
