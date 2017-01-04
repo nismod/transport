@@ -4,13 +4,28 @@
 package nismod.transport.network.road;
 
 import java.awt.Color;
+import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
+import org.geotools.data.collection.ListFeatureCollection;
+import org.geotools.data.DefaultTransaction;
+import org.geotools.data.Transaction;
 import org.geotools.data.shapefile.ShapefileDataStore;
+import org.geotools.data.shapefile.ShapefileDataStoreFactory;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
+import org.geotools.data.simple.SimpleFeatureSource;
+import org.geotools.data.simple.SimpleFeatureStore;
+import org.geotools.feature.simple.SimpleFeatureBuilder;
+import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
+import org.geotools.geometry.jts.JTSFactoryFinder;
 import org.geotools.graph.build.feature.FeatureGraphGenerator;
 import org.geotools.graph.build.line.BasicDirectedLineGraphBuilder;
 import org.geotools.graph.build.line.DirectedLineStringGraphGenerator;
@@ -25,14 +40,22 @@ import org.geotools.graph.traverse.standard.DijkstraIterator;
 import org.geotools.graph.traverse.standard.DijkstraIterator.EdgeWeighter;
 import org.geotools.map.FeatureLayer;
 import org.geotools.map.MapContent;
+import org.geotools.referencing.CRS;
 import org.geotools.styling.PolygonSymbolizer;
 import org.geotools.styling.SLD;
 import org.geotools.styling.Style;
 import org.geotools.styling.StyleBuilder;
 import org.geotools.swing.JMapFrame;
+import org.geotools.swing.data.JFileDataStoreChooser;
 import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.simple.SimpleFeatureType;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.NoSuchAuthorityCodeException;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.MultiLineString;
 import com.vividsolutions.jts.geom.Point;
 
@@ -66,7 +89,7 @@ public class RoadNetwork {
 
 		//build the graph
 		this.build();
-		
+
 		//weight the edges of the graph using the physical distance of each road segment		
 		dijkstraWeighter = new EdgeWeighter() {
 			@Override
@@ -80,6 +103,7 @@ public class RoadNetwork {
 
 	/**
 	 * Visualises the road network as loaded from shapefiles.
+	 * @param mapTitle Map title for the window.
 	 * @throws IOException
 	 */
 	public void visualise(String mapTitle) throws IOException {
@@ -125,15 +149,146 @@ public class RoadNetwork {
 	}
 
 	/**
+	 * Exports a directed multigraph representation of the network as a shapefile.
+	 * @param fileName The name of the output shapefile.
+	 * @throws IOException
+	 */
+	public void exportToShapefile(String fileName) throws IOException {
+
+		if (network == null) {
+			System.err.println("The network is empty.");
+			return;
+		}
+
+		//get an output file name and create the new shapefile
+		File newFile = getNewShapeFile(fileName);
+
+		ShapefileDataStoreFactory dataStoreFactory = new ShapefileDataStoreFactory();
+		Map<String, Serializable> params = new HashMap<>();
+		params.put("url", newFile.toURI().toURL());
+		params.put("create spatial index", Boolean.TRUE);
+		ShapefileDataStore newDataStore = (ShapefileDataStore) dataStoreFactory.createNewDataStore(params);
+
+		//dynamically creates a feature type to describe the shapefile contents
+		SimpleFeatureType type = createFeatureType();
+
+		//List<SimpleFeatureType> features = new ArrayList<>();
+		List features = new ArrayList<>();
+
+		//GeometryFactory will be used to create the geometry attribute of each feature,
+		//using a LineString object for the road link
+		GeometryFactory geometryFactory = JTSFactoryFinder.getGeometryFactory();
+		SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(type);
+
+		Iterator<DirectedEdge> iter = (Iterator<DirectedEdge>) network.getEdges().iterator();
+		while (iter.hasNext()) {
+
+			featureBuilder.reset();
+
+			//create LineString geometry
+			DirectedEdge edge = (DirectedEdge) iter.next();
+			SimpleFeature featA = (SimpleFeature) edge.getNodeA().getObject();
+			SimpleFeature featB = (SimpleFeature) edge.getNodeB().getObject();
+			Point pointA = (Point) featA.getDefaultGeometry();
+			Point pointB = (Point) featB.getDefaultGeometry();
+			Coordinate coordA = pointA.getCoordinate(); 
+			Coordinate coordB = pointB.getCoordinate();
+			Coordinate[] coordinates = {coordA, coordB};
+			LineString roadLink = geometryFactory.createLineString(coordinates);
+
+			//build feature
+			List<Object> objList = new ArrayList();
+			objList.add(roadLink);
+			objList.add(edge.getID());
+			objList.add(edge.getNodeA().getID());
+			objList.add(edge.getNodeB().getID());
+			SimpleFeature feat = (SimpleFeature) edge.getObject();
+			if (feat != null) { //has a count point
+				objList.add(feat.getAttribute("CP"));
+				objList.add(feat.getAttribute("iDir"));
+				objList.add(feat.getAttribute("S Ref E"));
+				objList.add(feat.getAttribute("S Ref N"));
+				objList.add(feat.getAttribute("LenNet"));
+				String roadNumber = (String) feat.getAttribute("Road");
+				if (roadNumber.charAt(0) == 'M') {//motorway
+					final Double SPEED_LIMIT = 112.65; //70mph = 31.29mps = 112.65kph
+					objList.add(SPEED_LIMIT);
+					Double freeFlowTime = (double)feat.getAttribute("LenNet")/SPEED_LIMIT*60; //in minutes
+					objList.add(freeFlowTime);
+				} else { //A road
+					final Double SPEED_LIMIT = 96.56; //60mph = 26.82mps = 96.56kph
+					objList.add(SPEED_LIMIT); //speedlimit
+					Double freeFlowTime = (double)feat.getAttribute("LenNet")/SPEED_LIMIT*60; //in minutes
+					objList.add(freeFlowTime);
+				}
+				objList.add(false); //not a ferry
+			} else { //no count point, assume it is ferry (TODO could be link with no count point)
+				objList.add(0); //null
+				objList.add(0); //null
+				objList.add(0); //null
+				objList.add(0); //null
+				objList.add(10);
+				final Double SPEED_LIMIT = 30.0; //30 kph
+				Double freeFlowTime = 20.0; //TODO actual ferry travel time needed
+				objList.add(freeFlowTime);
+				objList.add(true); //is a ferry
+			}
+			SimpleFeature feature = featureBuilder.build(type, objList, Integer.toString(edge.getID()));
+			//System.out.println(feature.toString());
+			features.add(feature);
+		}
+
+		newDataStore.createSchema(type);
+
+		//Write the features to the shapefile using a Transaction
+		Transaction transaction = new DefaultTransaction("create");
+
+		String typeName = newDataStore.getTypeNames()[0];
+		SimpleFeatureSource featureSource = newDataStore.getFeatureSource(typeName);
+		SimpleFeatureType SHAPE_TYPE = featureSource.getSchema();
+		/*
+		 * The Shapefile format has a couple limitations:
+		 * - "the_geom" is always first, and used for the geometry attribute name
+		 * - "the_geom" must be of type Point, MultiPoint, MuiltiLineString, MultiPolygon
+		 * - Attribute names are limited in length 
+		 * - Not all data types are supported (example Timestamp represented as Date)
+		 * 
+		 * Each data store has different limitations so check the resulting SimpleFeatureType.
+		 */
+		System.out.println("SHAPE:"+SHAPE_TYPE);
+
+		if (featureSource instanceof SimpleFeatureStore) {
+			SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;
+			/*
+			 * SimpleFeatureStore has a method to add features from a
+			 * SimpleFeatureCollection object, so the ListFeatureCollection
+			 * class is used to wrap the list of features.
+			 */
+			SimpleFeatureCollection collection = new ListFeatureCollection(type, features);
+			featureStore.setTransaction(transaction);
+			try {
+				featureStore.addFeatures(collection);
+				transaction.commit();
+			} catch (Exception problem) {
+				problem.printStackTrace();
+				transaction.rollback();
+			} finally {
+				transaction.close();
+			}
+		} else {
+			System.err.println(typeName + " does not support read/write access");
+		}
+	}
+
+	/**
 	 * Getter method for the road network.
 	 * @return Directed graph representation of the road network.
 	 */
 	public DirectedGraph getNetwork() {
-		
+
 		return network;
 	}
-	
-	
+
 	/**
 	 * Getter method for the Dijkstra edge weighter.
 	 * @return Dijkstra edge weighter.
@@ -142,7 +297,7 @@ public class RoadNetwork {
 
 		return dijkstraWeighter;
 	}
-	
+
 	/** Getter method for the AStar functions (edge cost and heuristic function).
 	 * @param to Destination node.
 	 * @return AStar functions.
@@ -197,7 +352,7 @@ public class RoadNetwork {
 
 		//graph builder to build a directed graph
 		BasicDirectedLineGraphBuilder graphBuilder = new BasicDirectedLineGraphBuilder();
-		
+
 		//create nodes of the directed graph directly from the nodes shapefile
 		addNodesToGraph(graphBuilder, nodesFeatureCollection);
 
@@ -311,7 +466,7 @@ public class RoadNetwork {
 					SimpleFeature countFeature = iterator.next();
 					long cp =  (long) countFeature.getAttribute("CP");
 					double cn = (double) edgeFeature.getAttribute("CP_Number");
-					
+
 					//if count point matches the edge
 					if (cp == cn) {
 						//get the coordinates of the nodes
@@ -361,11 +516,87 @@ public class RoadNetwork {
 			finally {
 				iterator.close();
 			}
-			
+
 			if (directedEdge == null) {
 				System.err.printf("No count point data found for this edge (RoadNumber = '%s', ferry = %d).\n", 
 						edgeFeature.getAttribute("RoadNumber"), edgeFeature.getAttribute("ferry"));
+
+				//still need to create to edges for the ferry line
+				directedEdge = (DirectedEdge) graphBuilder.buildEdge(nodeA, nodeB);
+				//		directedEdge.setObject(edge.getObject()); // put the edge from the source graph as the object
+				graphBuilder.addEdge(directedEdge);
+				directedEdge2 = (DirectedEdge) graphBuilder.buildEdge(nodeB, nodeA);
+				//		directedEdge2.setObject(edge.getObject()); // add the same edge with all the attributes to the other direction (not really a nice solution)
+				graphBuilder.addEdge(directedEdge2);
+
+
 			}
 		} //while edges
+	}
+
+	/**
+	 * Prompts the user for the name and path to use for the output shapefile.
+	 * @param fileName Name of the shapefile.
+	 * @return Name and path for the shapefile as a new File object.
+	 */
+	private static File getNewShapeFile(String fileName) {
+
+		//String defaultPath = "./output.shp";
+		String defaultPath = "./" + fileName + ".shp";
+		JFileDataStoreChooser chooser = new JFileDataStoreChooser("shp");
+		chooser.setDialogTitle("Save shapefile");
+		chooser.setSelectedFile(new File(defaultPath));
+
+		int returnVal = chooser.showSaveDialog(null);
+		if (returnVal != JFileDataStoreChooser.APPROVE_OPTION) {
+			// the user cancelled the dialog
+			System.exit(0);
+		}
+
+		File newFile = chooser.getSelectedFile();
+		return newFile;
+	}
+
+	/**
+	 * Creates the schema for the shapefile.
+	 * @return SimpleFeature type.
+	 */
+	private static SimpleFeatureType createFeatureType() {
+
+		SimpleFeatureTypeBuilder builder = new SimpleFeatureTypeBuilder();
+
+		CoordinateReferenceSystem crs;
+		try {
+			//British National Grid
+			crs = CRS.decode("EPSG:27700", false);
+			//builder.setCRS(DefaultGeographicCRS.WGS84);
+			builder.setCRS(crs);
+		} catch (NoSuchAuthorityCodeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (FactoryException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		builder.setName("Location");
+
+		//add attributes in order
+		builder.add("the_geom", LineString.class);
+		builder.add("EdgeID",Integer.class);
+		builder.add("Anode",Integer.class);
+		builder.add("Bnode",Integer.class);
+		builder.add("CountPoint", Integer.class);
+		builder.length(1).add("iDir", String.class);
+		builder.add("SRefE", Integer.class);
+		builder.add("SRefN", Integer.class);
+		builder.add("Distance", Double.class);
+		builder.add("FFspeed", Double.class);
+		builder.add("FFtime", Double.class);
+		builder.add("IsFerry", Boolean.class);
+
+		//build the type
+		final SimpleFeatureType SIMPLE_FEATURE_TYPE = builder.buildFeatureType();
+		//return the type
+		return SIMPLE_FEATURE_TYPE;
 	}
 }

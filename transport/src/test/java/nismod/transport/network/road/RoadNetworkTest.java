@@ -45,6 +45,9 @@ public class RoadNetworkTest {
 
 		//visualise the shapefiles
 		roadNetwork.visualise("Mini Test Area");
+		
+		//export to shapefile
+		roadNetwork.exportToShapefile("miniOutputNetwork");
 
 		final URL zonesUrl2 = new URL("file://src/test/resources/testdata/zones.shp");
 		final URL networkUrl2 = new URL("file://src/test/resources/testdata/network.shp");
@@ -56,6 +59,9 @@ public class RoadNetworkTest {
 
 		//visualise the shapefiles
 		roadNetwork2.visualise("Test Area");
+		
+		//export to shapefile
+		roadNetwork2.exportToShapefile("outputNetwork");
 	}
 
 	@Test
