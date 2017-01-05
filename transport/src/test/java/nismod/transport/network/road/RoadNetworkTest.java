@@ -258,6 +258,8 @@ public class RoadNetworkTest {
 
 		//TEST SHORTEST PATH ALGORITHMS
 		System.out.println("\n\n*** Testing the shortest path algorithms ***");
+		
+		System.out.println("The whole network: " + roadNetwork.toString());
 
 		System.out.println("\n*** Dijkstra ***");
 		//set source and destination node
@@ -293,12 +295,12 @@ public class RoadNetworkTest {
 			sum += length;
 		}
 		System.out.printf("Sum of edge lengths: %.3f\n\n", sum);
-
+		
 		//compare with expected values
-		int[] expectedNodeList = new int[] {86, 87, 105, 95, 48, 19};
-		int[] expectedEdgeList = new int[] {81, 61, 67, 74, 77};
+		int[] expectedNodeList = new int[] {86, 87, 105, 95, 48, 19}; //node IDs are persistent
+		int[] expectedEdgeList = new int[] {81, 61, 67, 74, 77}; //cannot check as edge IDs are not persistent
 		assertEquals("The list of nodes in the shortest path is correct", Arrays.toString(expectedNodeList), path.toString());
-		assertEquals("The list of edges in the shortest path is correct", Arrays.toString(expectedEdgeList), listOfEdges.toString());
+		//assertEquals("The list of edges in the shortest path is correct", Arrays.toString(expectedEdgeList), listOfEdges.toString());
 		assertEquals("The shortest path length equals the sum of edge lengths", sum, pathFinder.getCost(to), EPSILON);
 		assertEquals("The shortest path length is correct", 2.1, pathFinder.getCost(to), EPSILON);
 
@@ -328,10 +330,10 @@ public class RoadNetworkTest {
 		System.out.printf("Sum of edge lengths: %.3f\n\n", sum);
 
 		//compare with expected values
-		expectedNodeList = new int[] {19, 48, 82, 95, 105, 87, 86};
-		expectedEdgeList = new int[] {78, 60, 69, 68, 62, 82};
+		expectedNodeList = new int[] {19, 48, 82, 95, 105, 87, 86}; //node IDs are persistent
+		expectedEdgeList = new int[] {78, 60, 69, 68, 62, 82}; //cannot check as edge IDs are not persistent
 		assertEquals("The list of nodes in the shortest path is correct", Arrays.toString(expectedNodeList), path.toString());
-		assertEquals("The list of edges in the shortest path is correct", Arrays.toString(expectedEdgeList), listOfEdges.toString());
+		//assertEquals("The list of edges in the shortest path is correct", Arrays.toString(expectedEdgeList), listOfEdges.toString());
 		assertEquals("The shortest path length equals the sum of edge lengths", sum, pathFinder.getCost(from), EPSILON);
 		assertEquals("The shortest path length is correct", 2.1, pathFinder.getCost(from), EPSILON);
 
@@ -363,10 +365,10 @@ public class RoadNetworkTest {
 			System.out.printf("Sum of edge lengths: %.3f\n\n", sum);
 
 			//compare with expected values
-			expectedNodeList = new int[] {86, 87, 105, 95, 48, 19};
-			expectedEdgeList = new int[] {81, 61, 67, 74, 77};
+			expectedNodeList = new int[] {86, 87, 105, 95, 48, 19}; //node IDs are persistent
+			expectedEdgeList = new int[] {81, 61, 67, 74, 77}; //cannot check as edge IDs are not persistent
 			assertEquals("The list of nodes in the shortest path is correct", Arrays.toString(expectedNodeList), aStarPath.toString());
-			assertEquals("The list of edges in the shortest path is correct", Arrays.toString(expectedEdgeList), listOfEdges.toString());
+			//assertEquals("The list of edges in the shortest path is correct", Arrays.toString(expectedEdgeList), listOfEdges.toString());
 			assertEquals("The shortest path length is correct", 2.1, sum, EPSILON);
 
 		} catch (Exception e) {
@@ -399,10 +401,10 @@ public class RoadNetworkTest {
 			System.out.printf("Sum of edge lengths: %.3f\n\n", sum);
 
 			//compare with expected values
-			expectedNodeList = new int[] {19, 48, 82, 95, 105, 87, 86};
-			expectedEdgeList = new int[] {78, 60, 69, 68, 62, 82};
+			expectedNodeList = new int[] {19, 48, 82, 95, 105, 87, 86}; //persistent
+			expectedEdgeList = new int[] {78, 60, 69, 68, 62, 82}; //not persistent
 			assertEquals("The list of nodes in the shortest path is correct", Arrays.toString(expectedNodeList), aStarPath.toString());
-			assertEquals("The list of edges in the shortest path is correct", Arrays.toString(expectedEdgeList), listOfEdges.toString());
+			//assertEquals("The list of edges in the shortest path is correct", Arrays.toString(expectedEdgeList), listOfEdges.toString());
 			assertEquals("The shortest path length is correct", 2.1, sum, EPSILON);
 
 		} catch (Exception e) {
@@ -447,7 +449,7 @@ public class RoadNetworkTest {
 		listOfEdges = nodeA.getOutEdges(nodeB);
 		System.out.printf("The number of directed edges from node %d to node %d is %d.\n", nodeA.getID(), nodeB.getID(), listOfEdges.size());
 		System.out.println("Edges: " + listOfEdges.toString());
-		assertEquals("The link is double", 2, listOfEdges.size());
+		assertEquals("The link is double", 2, listOfEdges.size()); //order is not persistent!
 		DirectedEdge e1 = (DirectedEdge) listOfEdges.get(0);
 		DirectedEdge e2 = (DirectedEdge) listOfEdges.get(1);
 		System.out.println(e1);
@@ -457,13 +459,15 @@ public class RoadNetworkTest {
 		System.out.println(sf1.getAttribute("CP"));
 		System.out.println(sf1.getAttribute("iDir"));
 		System.out.println(sf1.getAttribute("LenNet"));
-		assertEquals("Edge CP is correct", 70107L, sf1.getAttribute("CP"));
+		//assertEquals("Edge CP is correct", 70107L, sf1.getAttribute("CP")); //cannot guarantee order
+		assertTrue("Edge CP is correct", sf1.getAttribute("CP").equals(70107L) || sf1.getAttribute("CP").equals(74474L));
 		assertEquals("Edge direction is correct", "C", sf1.getAttribute("iDir"));
 		assertEquals("Edge length is correct", 0.4, sf1.getAttribute("LenNet"));
 		System.out.println(sf2.getAttribute("CP"));
 		System.out.println(sf2.getAttribute("iDir"));
 		System.out.println(sf2.getAttribute("LenNet"));
-		assertEquals("Edge CP is correct", 74474L, sf2.getAttribute("CP"));
+		//assertEquals("Edge CP is correct", 74474L, sf2.getAttribute("CP")); //cannot guarantee order
+		assertTrue("Edge CP is correct", sf2.getAttribute("CP").equals(70107L) || sf2.getAttribute("CP").equals(74474L));
 		assertEquals("Edge direction is correct", "C", sf2.getAttribute("iDir"));
 		assertEquals("Edge length is correct", 0.4, sf2.getAttribute("LenNet"));
 
@@ -471,7 +475,7 @@ public class RoadNetworkTest {
 		listOfEdges = nodeB.getOutEdges(nodeA);
 		System.out.printf("The number of directed edges from node %d to node %d is %d.\n", nodeB.getID(), nodeA.getID(), listOfEdges.size());
 		System.out.println("Edges: " + listOfEdges.toString());
-		assertEquals("The edge is double", 2, listOfEdges.size());
+		assertEquals("The edge is double", 2, listOfEdges.size()); //order is not persistent!
 		e1 = (DirectedEdge) listOfEdges.get(0);
 		e2 = (DirectedEdge) listOfEdges.get(1);
 		System.out.println(e1);
@@ -481,13 +485,15 @@ public class RoadNetworkTest {
 		System.out.println(sf1.getAttribute("CP"));
 		System.out.println(sf1.getAttribute("iDir"));
 		System.out.println(sf1.getAttribute("LenNet"));
-		assertEquals("Edge CP is correct", 70107L, sf1.getAttribute("CP"));
+		//assertEquals("Edge CP is correct", 70107L, sf1.getAttribute("CP")); //order is not persistent!
+		assertTrue("Edge CP is correct", sf1.getAttribute("CP").equals(70107L) || sf1.getAttribute("CP").equals(74474L));
 		assertEquals("Edge direction is correct", "C", sf1.getAttribute("iDir"));
 		assertEquals("Edge length is correct", 0.4, sf1.getAttribute("LenNet"));
 		System.out.println(sf2.getAttribute("CP"));
 		System.out.println(sf2.getAttribute("iDir"));
 		System.out.println(sf2.getAttribute("LenNet"));
-		assertEquals("Edge CP is correct", 74474L, sf2.getAttribute("CP"));
+		//assertEquals("Edge CP is correct", 74474L, sf2.getAttribute("CP")); //order is not persistent!
+		assertTrue("Edge CP is correct", sf2.getAttribute("CP").equals(70107L) || sf2.getAttribute("CP").equals(74474L));
 		assertEquals("Edge direction is correct", "C", sf2.getAttribute("iDir"));
 		assertEquals("Edge length is correct", 0.4, sf2.getAttribute("LenNet"));
 
@@ -523,14 +529,18 @@ public class RoadNetworkTest {
 		System.out.println(sf1.getAttribute("CP"));
 		System.out.println(sf1.getAttribute("iDir"));
 		System.out.println(sf1.getAttribute("LenNet"));
-		assertEquals("Edge CP is correct", 70084L, sf1.getAttribute("CP"));
-		assertEquals("Edge direction is correct", "C", sf1.getAttribute("iDir"));
+		//assertEquals("Edge CP is correct", 70084L, sf1.getAttribute("CP"));
+		//assertEquals("Edge direction is correct", "C", sf1.getAttribute("iDir"));
+		assertTrue("Edge CP and direction are correct", sf1.getAttribute("CP").equals(70084L) && sf1.getAttribute("iDir").equals("C") ||
+														sf1.getAttribute("CP").equals(70083L) && sf1.getAttribute("iDir").equals("N"));
 		assertEquals("Edge length is correct", 0.5, sf1.getAttribute("LenNet"));
 		System.out.println(sf2.getAttribute("CP"));
 		System.out.println(sf2.getAttribute("iDir"));
 		System.out.println(sf2.getAttribute("LenNet"));
-		assertEquals("Edge CP is correct", 70083L, sf2.getAttribute("CP"));
-		assertEquals("Edge direction is correct", "N", sf2.getAttribute("iDir"));
+		//assertEquals("Edge CP is correct", 70083L, sf2.getAttribute("CP"));
+		//assertEquals("Edge direction is correct", "N", sf2.getAttribute("iDir"));
+		assertTrue("Edge CP and direction are correct", sf2.getAttribute("CP").equals(70084L) && sf2.getAttribute("iDir").equals("C") ||
+														sf2.getAttribute("CP").equals(70083L) && sf2.getAttribute("iDir").equals("N"));
 		assertEquals("Edge length is correct", 0.5, sf2.getAttribute("LenNet"));
 
 		//just one edge from node 84 to node 106
