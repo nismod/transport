@@ -335,6 +335,30 @@ public class RoadNetwork {
 
 		return aStarFunctions;
 	}
+	
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+	
+		Iterator edgesIterator = network.getEdges().iterator();
+		StringBuilder builder = new StringBuilder("E=[");
+		while (edgesIterator.hasNext()) {
+			DirectedEdge edge = (DirectedEdge) edgesIterator.next();
+			builder.append(edge.getID());
+			builder.append('(');
+			builder.append(edge.getNodeA().getID());
+			builder.append("->");
+			builder.append(edge.getNodeB().getID());
+			builder.append("), ");
+		}
+		builder.delete(builder.length()-3, builder.length()-1);
+		builder.append(']');
+
+		return builder.toString();
+	}
 
 	/**
 	 * Builds a directed graph representation of the road network
