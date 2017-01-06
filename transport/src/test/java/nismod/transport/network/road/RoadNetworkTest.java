@@ -347,7 +347,7 @@ public class RoadNetworkTest {
 			aStarPath = aStarPathFinder.getPath();
 			aStarPath.reverse();
 			System.out.println(aStarPath);
-			System.out.println("The path as a list of nodes nodes: " + aStarPath);
+			System.out.println("The path as a list of nodes: " + aStarPath);
 			listOfEdges = aStarPath.getEdges();
 			System.out.println("The path as a list of edges: " + listOfEdges);
 			System.out.println("Path size in the number of nodes: " + aStarPath.size());
