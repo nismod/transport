@@ -17,18 +17,35 @@ import nismod.transport.demand.ODMatrix;
  */
 public class RoadNetworkAssignment {
 	
-	public static final double  SPEED_LIMIT_M_ROAD = 112.65; //70mph = 31.29mps = 112.65kph
+	public static final double SPEED_LIMIT_M_ROAD = 112.65; //70mph = 31.29mps = 112.65kph
 	public static final double SPEED_LIMIT_A_ROAD = 96.56; //60mph = 26.82mps = 96.56kph
 	
 	private RoadNetwork roadNetwork;
-	private HashMap<String, Double> linkVolumes;
-	private HashMap<String, HashMap<String, Double>> linkVolumesPerVehicleType;
-	private HashMap<String, Double> linkTravelTime;
+	private HashMap<Integer, Double> linkVolumes;
+	private HashMap<Integer, HashMap<String, Double>> linkVolumesPerVehicleType;
+	private HashMap<Integer, Double> linkTravelTime;
 	
+	/**
+	 * @param roadNetwork
+	 */
+	public RoadNetworkAssignment(RoadNetwork roadNetwork) {
+		
+		this.roadNetwork = roadNetwork;
+		this.linkVolumes = new HashMap<Integer, Double>();
+		this.linkVolumesPerVehicleType = new HashMap<Integer, HashMap<String, Double>>();
+		this.linkTravelTime = new HashMap<Integer, Double>();
+	}
+	
+	/**
+	 * @param passengerODM
+	 */
 	public void assignPassengerFlows(ODMatrix passengerODM) {
 		
 	}
 	
+	/**
+	 * @param freightODM
+	 */
 	public void assignFreightFlows(ODMatrix freightODM) {
 		
 	}

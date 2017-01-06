@@ -24,9 +24,9 @@ public class ODMatrix {
 	 * @param destinationZone Destination zone.
 	 * @return Origin-destination flow.
 	 */
-	public Double getFlow(int originZone, int destinationZone) {
+	public int getFlow(int originZone, int destinationZone) {
 		
-		return (Double) matrix.get(originZone, destinationZone);
+		return (int) matrix.get(originZone, destinationZone);
 	}
 	
 	/**
@@ -34,8 +34,14 @@ public class ODMatrix {
 	 * @param destinationZone Destination zone.
 	 * @param flow Origin-destination flow.
 	 */
-	public void setFlow(int originZone, int destinationZone, double flow) {
+	public void setFlow(int originZone, int destinationZone, int flow) {
 		
 		matrix.put(originZone, destinationZone, flow);
+	}
+	
+	public void printMatrix() {
+		
+		System.out.println(matrix.toString());
+		
 	}
 }
