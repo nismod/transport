@@ -72,6 +72,7 @@ public class RoadNetwork {
 	private ShapefileDataStore nodesShapefile;
 	private ShapefileDataStore AADFshapefile;
 	private DijkstraIterator.EdgeWeighter dijkstraWeighter;
+	private DijkstraIterator.EdgeWeighter dijkstraTimeWeighter;
 
 	/**
 	 * @param zonesUrl Url for the shapefile with zone polygons
@@ -211,14 +212,12 @@ public class RoadNetwork {
 				objList.add(feat.getAttribute("LenNet"));
 				String roadNumber = (String) feat.getAttribute("Road");
 				if (roadNumber.charAt(0) == 'M') {//motorway
-					final Double SPEED_LIMIT = 112.65; //70mph = 31.29mps = 112.65kph
-					objList.add(SPEED_LIMIT);
-					Double freeFlowTime = (double)feat.getAttribute("LenNet")/SPEED_LIMIT*60; //in minutes
+					objList.add(RoadNetworkAssignment.SPEED_LIMIT_M_ROAD);
+					Double freeFlowTime = (double)feat.getAttribute("LenNet") / RoadNetworkAssignment.SPEED_LIMIT_M_ROAD * 60; //in minutes
 					objList.add(freeFlowTime);
 				} else { //A road
-					final Double SPEED_LIMIT = 96.56; //60mph = 26.82mps = 96.56kph
-					objList.add(SPEED_LIMIT); //speedlimit
-					Double freeFlowTime = (double)feat.getAttribute("LenNet")/SPEED_LIMIT*60; //in minutes
+					objList.add(RoadNetworkAssignment.SPEED_LIMIT_A_ROAD);
+					Double freeFlowTime = (double)feat.getAttribute("LenNet") / RoadNetworkAssignment.SPEED_LIMIT_A_ROAD * 60; //in minutes
 					objList.add(freeFlowTime);
 				}
 				objList.add(false); //not a ferry
@@ -298,7 +297,7 @@ public class RoadNetwork {
 		return dijkstraWeighter;
 	}
 
-	/** Getter method for the AStar functions (edge cost and heuristic function).
+	/** Getter method for the AStar functions (edge cost and heuristic function) based on distance.
 	 * @param to Destination node.
 	 * @return AStar functions.
 	 */
@@ -336,6 +335,53 @@ public class RoadNetwork {
 		return aStarFunctions;
 	}
 	
+	/** Getter method for the AStar functions (edge cost and heuristic function) based on travel time.
+	 * @param to Destination node.
+	 * @param linkTravelTime Link travel times.
+	 * @return AStar functions.
+	 */
+	public AStarIterator.AStarFunctions getAstarFunctionsTime(Node destinationNode, HashMap<Integer, Double> linkTravelTime) {
+
+		AStarIterator.AStarFunctions aStarFunctions = new  AStarIterator.AStarFunctions(destinationNode){
+
+			@Override
+			public double cost(AStarIterator.AStarNode aStarNode1, AStarIterator.AStarNode aStarNode2) {
+
+				//Edge edge = aStarNode1.getNode().getEdge(aStarNode2.getNode()); // does not work, a directed version must be used!
+				Edge edge = ((DirectedNode) aStarNode1.getNode()).getOutEdge((DirectedNode) aStarNode2.getNode());
+				if (edge == null) {
+					//no edge found in that direction (set maximum weight)
+					return Double.MAX_VALUE;
+				}
+				double cost;
+				if (linkTravelTime == null) { //use default link travel time
+					SimpleFeature feature = (SimpleFeature)edge.getObject();
+					String roadNumber = (String) feature.getAttribute("Road");
+					if (roadNumber.charAt(0) == 'M') //motorway
+						cost = (double) feature.getAttribute("LenNet") / RoadNetworkAssignment.SPEED_LIMIT_M_ROAD * 60;  //travel time in minutes
+					else //A road
+						cost = (double) feature.getAttribute("LenNet") / RoadNetworkAssignment.SPEED_LIMIT_A_ROAD * 60;  //travel time in minutes
+					
+				} else //use provided travel time
+						cost = linkTravelTime.get(edge.getID()); 
+				return cost;
+			}
+
+			@Override
+			public double h(Node node) {
+
+				//estimates the cheapest cost from the node 'node' to the node 'destinationNode'
+				SimpleFeature feature = (SimpleFeature)node.getObject();
+				Point point = (Point)feature.getDefaultGeometry();
+				SimpleFeature feature2 = (SimpleFeature)destinationNode.getObject();
+				Point point2 = (Point)feature2.getDefaultGeometry();
+				double distance = point.distance(point2) / 1000.0; //straight line distance (from metres to kilometres)!
+				return (distance / RoadNetworkAssignment.SPEED_LIMIT_M_ROAD * 60); //travel time in minutes
+			}
+		};
+
+		return aStarFunctions;
+	}
 
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
