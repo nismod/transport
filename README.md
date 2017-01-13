@@ -12,7 +12,7 @@ The transport sector has various links with other sectors:
 * Water Supply: floods causing road and rail disruptions.
 * Solid Waste: waste transport (e.g. waste exports through seaports).
 
-![Cross-sectoral interdependencies](https://cloud.githubusercontent.com/assets/7933541/21935019/abdd2b2c-d9a3-11e6-9b81-1a5acb8419bb.jpg)
+![Cross-sectoral interdependencies](https://cloud.githubusercontent.com/assets/7933541/21935019/abdd2b2c-d9a3-11e6-9b81-1a5acb8419bb.jpg =500x)
 
 The model is currently focusing on interdependencies with the energy sector:
 *	The fuel price from the energy sector is used in the traffic flow prediction.
