@@ -4,7 +4,17 @@ This is the home of the transport model code for NISMOD v2.0.0.
 
 ## Description
 
-brief description
+The new transport model forecasts the impact of endogenous and exogenous factors on transport demand and capacity utilisation, following an elasticity-based simulation methodology similar to the original ITRC transport model. The new model is explicitly network-based, which means that the demand is assigned to the network to obtain more accurate predictions of travel times and capacity utilisation.
+
+The transport sector has various links with other sectors:
+* Energy: energy consumption, fuel price, electrification of vehicles, fuel transport, power outage (rail and air disruption).
+* Digital Communications: supporting smart mobility (e.g. mobility as a service, autonomous mobility on demand), coverage and service disruptions.
+* Water Supply: floods causing road and rail disruptions.
+* Solid Waste: waste transport (e.g. waste exports through seaports).
+
+The model is currently focusing on interdependencies with the energy sector:
+*	The fuel price from the energy sector is used in the traffic flow prediction.
+*	The transport model provides information about fuel consumption to the energy sector.
 
 ## Contact information
 
@@ -17,5 +27,5 @@ brief description
 
 1. Install *Eclipse IDE for Java Developers*: https://eclipse.org/downloads/.
 2. Run Eclipse and choose the workspace folder.
-3. Import the existing Maven project from the local git folder where the code has been cloned. In Eclipse: *File -> Import -> Maven -> Existing Maven Projects.* Wait until all Maven dependencies are downloaded.
-4. The classes containing the *main* method can be run as a Java application. The classes containing the methods annotated with *@Test* can be run as JUnit tests.
+3. Import the existing Maven project from the local git folder where the code has been cloned. In Eclipse: *File -> Import -> Maven -> Existing Maven Projects.* Wait until all Maven dependencies (specified in the *pom.xml* file) are downloaded.
+4. The classes containing the *main* method can be run as a Java application. The classes containing the methods annotated with *@Test* can be run as *JUnit* tests.
