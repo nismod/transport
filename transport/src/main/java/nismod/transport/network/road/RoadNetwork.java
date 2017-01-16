@@ -57,6 +57,7 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.MultiLineString;
+import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Point;
 
 /**
@@ -73,6 +74,8 @@ public class RoadNetwork {
 	private ShapefileDataStore AADFshapefile;
 	private DijkstraIterator.EdgeWeighter dijkstraWeighter;
 	private DijkstraIterator.EdgeWeighter dijkstraTimeWeighter;
+	private HashMap<Integer, String> nodeToZone;
+	private HashMap<String, List<Integer>> zoneToNodes;
 
 	/**
 	 * @param zonesUrl Url for the shapefile with zone polygons
@@ -382,6 +385,24 @@ public class RoadNetwork {
 
 		return aStarFunctions;
 	}
+	
+	/**
+	 * Getter method for the node to zone mapping.
+	 * @return Node to zone mapping.
+	 */
+	public HashMap<Integer, String> getNodeToZone() {
+
+		return this.nodeToZone;
+	}
+	
+	/**
+	 * Getter method for the zone to nodes mapping.
+	 * @return Zone to nodes mapping.
+	 */
+	public HashMap<String, List<Integer>> getZoneToNodes() {
+
+		return this.zoneToNodes;
+	}
 
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
@@ -416,6 +437,7 @@ public class RoadNetwork {
 		SimpleFeatureCollection networkFeatureCollection = networkShapefile.getFeatureSource().getFeatures();
 		SimpleFeatureCollection nodesFeatureCollection = nodesShapefile.getFeatureSource().getFeatures();
 		SimpleFeatureCollection AADFfeatureCollection = AADFshapefile.getFeatureSource().getFeatures();
+		SimpleFeatureCollection zonesFeatureCollection = zonesShapefile.getFeatureSource().getFeatures();
 
 		//create undirected graph with features from the network shapefile
 		Graph undirectedGraph = createUndirectedGraph(networkFeatureCollection);
@@ -429,10 +451,13 @@ public class RoadNetwork {
 		//for each edge from the undirected graph create (usually) two directed edges in the directed graph
 		//and assign the data from the count points
 		addEdgesToGraph(graphBuilder, undirectedGraph, AADFfeatureCollection);
-
+		
 		//set the instance field with the generated directed graph
 		this.network = (DirectedGraph) graphBuilder.getGraph();
 
+		//map the nodes to zones
+		mapNodesToZones(zonesFeatureCollection);
+		
 		System.out.println("Undirected graph representation of the road network:");
 		System.out.println(undirectedGraph);
 		System.out.println("Directed graph representation of the road network:");
@@ -603,7 +628,49 @@ public class RoadNetwork {
 			}
 		} //while edges
 	}
+	
+	/**
+	 * Maps the nodes of the graph to the zone codes.
+	 * @param zonesFeatureCollection Feature collection with the zones.
+	 */
+	private void mapNodesToZones(SimpleFeatureCollection zonesFeatureCollection) {
 
+		this.nodeToZone = new HashMap<Integer, String>();
+		this.zoneToNodes = new HashMap<String, List<Integer>>();
+		
+		//iterate through the zones and through the nodes
+		SimpleFeatureIterator iter = zonesFeatureCollection.features();
+		try {
+			while (iter.hasNext()) {
+				SimpleFeature sf = iter.next();
+				MultiPolygon polygon = (MultiPolygon) sf.getDefaultGeometry();
+				
+				Iterator nodeIter = (Iterator) network.getNodes().iterator();
+				while (nodeIter.hasNext()) {
+				
+						Node node = (Node) nodeIter.next();
+						SimpleFeature sfn = (SimpleFeature) node.getObject();
+						Point point = (Point) sfn.getDefaultGeometry();
+						//if the polygon contains the node, put that relationship into the maps
+						if (polygon.contains(point)) {
+							
+							nodeToZone.put(node.getID(), (String) sf.getAttribute("CODE"));
+							
+							List<Integer> listOfNodes = zoneToNodes.get((String) sf.getAttribute("CODE"));
+							if (listOfNodes == null) {
+								listOfNodes = new ArrayList<Integer>();
+								zoneToNodes.put((String) sf.getAttribute("CODE"), listOfNodes);
+							}
+							listOfNodes.add(node.getID());
+						}
+				}
+			} 
+		} finally {
+			//feature iterator is a live connection that must be closed
+			iter.close();
+		}
+	}
+	
 	/**
 	 * Prompts the user for the name and path to use for the output shapefile.
 	 * @param fileName Name of the shapefile.

@@ -10,6 +10,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
@@ -25,7 +26,7 @@ import org.junit.Test;
 import org.opengis.feature.simple.SimpleFeature;
 
 /**
- * Tests for the RoadNetwork class
+ * Tests for the RoadNetworkAssignment class
  * @author Milan Lovric
  *
  */
@@ -375,7 +376,6 @@ public class RoadNetworkTest {
 			e.printStackTrace();
 		}
 
-
 		//reverse path
 		try {
 			AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, to, from, roadNetwork.getAstarFunctions(to));
@@ -605,5 +605,50 @@ public class RoadNetworkTest {
 		assertEquals("Edge CP is correct", 70085L, sf1.getAttribute("CP"));
 		assertEquals("Edge direction is correct", "S", sf1.getAttribute("iDir"));
 		assertEquals("Edge length is correct", 0.5, sf1.getAttribute("LenNet"));
+
+		//TEST NODE TO ZONE MAPPING
+		System.out.println("\n\n*** Testing node to zone mapping ***");
+
+		System.out.println("Nodes " + roadNetwork.getNetwork().getNodes());
+		int nodeNumber = roadNetwork.getNetwork().getNodes().size();
+		System.out.println("Nodes to zones mapping: " + roadNetwork.getNodeToZone());
+		assertEquals("All nodes except node 76 are mapped", nodeNumber-1, roadNetwork.getNodeToZone().size());
+
+		HashMap<String, List<Integer>> zoneToNodes = roadNetwork.getZoneToNodes();
+		System.out.println("Zone to nodes mapping: " + zoneToNodes);
+		System.out.println("The number of nodes in each zone:");
+		for (String key: zoneToNodes.keySet()) {
+			System.out.println(key + ": " + zoneToNodes.get(key).size());
+		}
+		boolean condition = 
+				zoneToNodes.get("E07000091").size() == 38 &&
+				zoneToNodes.get("E06000045").size() == 34 &&
+				zoneToNodes.get("E06000046").size() == 31 &&
+				zoneToNodes.get("E07000086").size() == 18;
+		assertTrue("The number of nodes in each zone is correct", condition);
+
+		Integer[] array = (Integer[]) zoneToNodes.get("E07000091").toArray(new Integer[0]);
+		Integer[] expectedArray1 = {3, 4, 5, 6,	13,	14, 15,	16,	20,	21,	22,	23,	39,	41,	42,	43,	44,	56,	57,	62,	63,	64,	73,	77,	78,	79,	88,	89,	90,	91,	92,	97,	110, 111, 112, 117, 120, 122};
+		Arrays.sort(array);
+		Arrays.sort(expectedArray1);
+		assertTrue("Nodes are correctly mapped to zone E07000091", Arrays.equals(expectedArray1, array));
+
+		array = (Integer[]) zoneToNodes.get("E06000045").toArray(new Integer[0]);
+		Integer[] expectedArray2 = {1, 2, 7, 8,	9, 10, 11, 12, 19, 26, 27, 30, 31, 37, 40, 45, 46, 47, 48, 55, 58, 59, 60, 61, 68, 82, 83, 86, 87, 95, 96, 102, 105, 109};
+		Arrays.sort(array);
+		Arrays.sort(expectedArray2);
+		assertTrue("Nodes are correctly mapped to zone E06000045", Arrays.equals(expectedArray2, array));
+
+		array = (Integer[]) zoneToNodes.get("E06000046").toArray(new Integer[0]);
+		Integer[] expectedArray3 = {24, 25,	28,	29,	49, 50,	51,	52,	53,	54,	65,	66,	67,	71,	72,	80,	81,	84,	85,	93,	99,	100, 101, 103, 106,	113, 114, 115, 116, 118, 119};
+		Arrays.sort(array);
+		Arrays.sort(expectedArray3);
+		assertTrue("Nodes are correctly mapped to zone E06000046", Arrays.equals(expectedArray3, array));
+
+		array = (Integer[]) zoneToNodes.get("E07000086").toArray(new Integer[0]);
+		Integer[] expectedArray4 = {17,	18,	32,	33,	34, 35,	36,	38,	69, 70,	74,	75, 94,	98,	104, 107, 108, 121};
+		Arrays.sort(array);
+		Arrays.sort(expectedArray4);
+		assertTrue("Nodes are correctly mapped to zone E07000086", Arrays.equals(expectedArray4, array));
 	}
 }
