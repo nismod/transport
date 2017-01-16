@@ -18,6 +18,9 @@ The model is currently focusing on interdependencies with the energy sector:
 *	The fuel price from the energy sector is used in the traffic flow prediction.
 *	The transport model provides information about fuel consumption to the energy sector.
 
+The implementation uses an open source library *GeoTools* for geospatial processing:
+http://www.geotools.org/about.html
+
 ## Contact information
 
 * Milan Lovric lovric.milan@gmail.com / M.Lovric@soton.ac.uk (Modelling and development)
