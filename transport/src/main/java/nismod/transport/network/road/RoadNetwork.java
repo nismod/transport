@@ -618,13 +618,11 @@ public class RoadNetwork {
 
 				//still need to create to edges for the ferry line
 				directedEdge = (DirectedEdge) graphBuilder.buildEdge(nodeA, nodeB);
-				//		directedEdge.setObject(edge.getObject()); // put the edge from the source graph as the object
+				directedEdge.setObject(edge.getObject()); // put the edge from the source graph as the object (contains a distance attribute LenNet used ofr routing)
 				graphBuilder.addEdge(directedEdge);
 				directedEdge2 = (DirectedEdge) graphBuilder.buildEdge(nodeB, nodeA);
-				//		directedEdge2.setObject(edge.getObject()); // add the same edge with all the attributes to the other direction (not really a nice solution)
+				directedEdge2.setObject(edge.getObject()); // add the same edge with all the attributes to the other direction (not really a nice solution)
 				graphBuilder.addEdge(directedEdge2);
-
-
 			}
 		} //while edges
 	}
