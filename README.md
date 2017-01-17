@@ -1,4 +1,5 @@
 # Transport
+[![Build Status](https://travis-ci.com/nismod/transport.svg?token=zHcMSQsYgUFq9yhr52P7&branch=master)](https://travis-ci.com/nismod/transport)
 
 This is the home of the transport model code for NISMOD v2.0.0.
 
