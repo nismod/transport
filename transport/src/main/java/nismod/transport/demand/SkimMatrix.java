@@ -3,6 +3,7 @@
  */
 package nismod.transport.demand;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -15,26 +16,26 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
 /**
- * Origin-destination matrix
+ * Skim matrix
  * @author Milan Lovric
  *
  */
-public class ODMatrix {
+public class SkimMatrix {
 	
 	private MultiKeyMap matrix;
-	
-	public ODMatrix() {
+		
+	public SkimMatrix() {
 		
 		matrix = new MultiKeyMap();
 	}
 	
 	/**
-	 * Constructor that reads OD matrix from an input csv file
+	 * Constructor that reads skim matrix from an input csv file
 	 * @param filePath Path to the input file
 	 * @throws IOException 
 	 * @throws FileNotFoundException 
 	 */
-	public ODMatrix(String fileName) throws FileNotFoundException, IOException {
+	public SkimMatrix(String fileName) throws FileNotFoundException, IOException {
 		
 		matrix = new MultiKeyMap();
 		CSVParser parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
@@ -42,43 +43,42 @@ public class ODMatrix {
 		Set<String> keySet = parser.getHeaderMap().keySet();
 		keySet.remove("origin");
 		//System.out.println("keySet = " + keySet);
-		int flow;
+		double cost;
 		for (CSVRecord record : parser) { 
 			System.out.println(record);
 			//System.out.println("Origin zone = " + record.get(0));
 			for (String destination: keySet) {
 				//System.out.println("Destination zone = " + destination);
-				flow = Integer.parseInt(record.get(destination));
-				matrix.put(record.get(0), destination, flow);			
+				cost = Integer.parseInt(record.get(destination));
+				matrix.put(record.get(0), destination, cost);			
 			}
 		} parser.close(); 
 	}
 	
 	/**
-	 * Gets the flow for a given origin-destination pair.
+	 * Gets cost for a given origin-destination pair.
 	 * @param originZone Origin zone.
 	 * @param destinationZone Destination zone.
-	 * @return Origin-destination flow.
+	 * @return Origin-destination cost.
 	 */
-	public int getFlow(String originZone, String destinationZone) {
+	public int getCost(String originZone, String destinationZone) {
 		
 		return (int) matrix.get(originZone, destinationZone);
 	}
 	
 	/**
-	 * Sets the flow for a given origin-destination pair.
+	 * Sets cost for a given origin-destination pair.
 	 * @param originZone Origin zone.
 	 * @param destinationZone Destination zone.
-	 * @param flow Origin-destination flow.
+	 * @param cost Origin-destination cost.
 	 */
-	public void setFlow(String originZone, String destinationZone, int flow) {
+	public void setCost(String originZone, String destinationZone, double cost) {
 		
-		matrix.put(originZone, destinationZone, flow);
+		matrix.put(originZone, destinationZone, cost);
 	}
 	
-	
 	/**
-	 * Prints the full matrix.
+	 * Prints the matrix.
 	 */
 	public void printMatrix() {
 		
@@ -87,7 +87,7 @@ public class ODMatrix {
 	
 	/**
 	 * Gets the keyset of the multimap.
-	 * @return Key set.
+	 * @return
 	 */
 	public Set<MultiKey> getKeySet() {
 		
