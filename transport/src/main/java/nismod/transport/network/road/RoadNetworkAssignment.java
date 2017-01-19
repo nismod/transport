@@ -12,6 +12,7 @@ import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.map.MultiKeyMap;
 import org.geotools.graph.path.AStarShortestPathFinder;
 import org.geotools.graph.path.Path;
+import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedGraph;
 import org.geotools.graph.structure.DirectedNode;
 import org.geotools.graph.structure.Edge;
@@ -30,11 +31,22 @@ public class RoadNetworkAssignment {
 
 	public static final double SPEED_LIMIT_M_ROAD = 112.65; //70mph = 31.29mps = 112.65kph
 	public static final double SPEED_LIMIT_A_ROAD = 96.56; //60mph = 26.82mps = 96.56kph
+	public static final double AVERAGE_SPEED_FERRY = 30.0; //30.0kph
+	public static final double PEAK_HOUR_PERCENTAGE = 0.10322;
+	
+	public double petrolCost = 1.17; //[GBP per litre]
+	public double dieselCost = 1.20; //[GBP per litre]
+	public double petrolConsumption = 5.4; //[litres per 100 km]
+	public double dieselConsumption = 4.6; //[litres per 100 km]
+	public double petrolFraction = 0.5;
+	public double dieselFraction = 0.5;
+	
 
 	private RoadNetwork roadNetwork;
 
 	private HashMap<Integer, Integer> linkVolumes;
-	private HashMap<Integer, HashMap<String, Double>> linkVolumesPerVehicleType;
+	//private HashMap<Integer, HashMap<String, Double>> linkVolumesPerVehicleType;
+	private HashMap<Integer, Double> linkFreeFlowTravelTime;
 	private HashMap<Integer, Double> linkTravelTime;
 
 	//inter-zonal path storage - for every OD pair stores a list of paths
@@ -47,9 +59,26 @@ public class RoadNetworkAssignment {
 
 		this.roadNetwork = roadNetwork;
 		this.linkVolumes = new HashMap<Integer, Integer>();
-		this.linkVolumesPerVehicleType = new HashMap<Integer, HashMap<String, Double>>();
+		//this.linkVolumesPerVehicleType = new HashMap<Integer, HashMap<String, Double>>();
+		this.linkFreeFlowTravelTime = new HashMap<Integer, Double>();
 		this.linkTravelTime = new HashMap<Integer, Double>();
 		this.pathStorage = new MultiKeyMap<String, List<Path>>();
+		
+		//calculate free-flow travel time
+		Iterator edgesIterator = roadNetwork.getNetwork().getEdges().iterator();
+		while (edgesIterator.hasNext()) {
+			DirectedEdge edge = (DirectedEdge) edgesIterator.next();
+			SimpleFeature feature = (SimpleFeature)edge.getObject();
+			String roadNumber = (String) feature.getAttribute("RoadNumber");
+			double travelTime = 0;
+			if (roadNumber.charAt(0) == 'M') //motorway
+				travelTime = (double) feature.getAttribute("LenNet") / RoadNetworkAssignment.SPEED_LIMIT_M_ROAD * 60;  //travel time in minutes
+			else if (roadNumber.charAt(0) == 'A') //A road
+				travelTime = (double) feature.getAttribute("LenNet") / RoadNetworkAssignment.SPEED_LIMIT_A_ROAD * 60;  //travel time in minutes
+			else //ferry
+				travelTime = (double) feature.getAttribute("LenNet") / RoadNetworkAssignment.AVERAGE_SPEED_FERRY * 60;  //travel time in minutes
+			linkFreeFlowTravelTime.put(edge.getID(), travelTime);
+		}			
 	}
 
 	/** 
@@ -96,7 +125,8 @@ public class RoadNetworkAssignment {
 					if (node.getID() == destinationNode) to = node;
 				}
 				try {
-					AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctions(to));
+					//AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctions(to));
+					AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctionsTime(to, this.linkFreeFlowTravelTime));
 					aStarPathFinder.calculate();
 					Path aStarPath;
 					aStarPath = aStarPathFinder.getPath();
@@ -121,8 +151,8 @@ public class RoadNetworkAssignment {
 						//increase volume count for that edge
 						Integer volume = linkVolumes.get(e.getID());
 						if (volume == null) volume = 0;
-						//volume++;
-						volume = volume + passengerODM.getFlow((String)mk.getKey(0), (String)mk.getKey(1));
+						volume++;
+						//volume = volume + passengerODM.getFlow((String)mk.getKey(0), (String)mk.getKey(1));
 						linkVolumes.put(e.getID(), volume);
 					}
 					//System.out.printf("Sum of edge lengths: %.3f\n\n", sum);
@@ -155,6 +185,20 @@ public class RoadNetworkAssignment {
 	 */
 	public void updateLinkTravelTimes() {
 
+		double congestedTravelTime;
+		
+		//iterate through all the edges in the graph
+		Iterator iter = roadNetwork.getNetwork().getEdges().iterator();
+		while(iter.hasNext()) {
+			
+			Edge edge = (Edge) iter.next();
+			SimpleFeature sf = (SimpleFeature) edge.getObject(); 
+			double linkVol;
+			if (linkVolumes.get(edge.getID()) == null) linkVol = 0.0;
+			else linkVol = linkVolumes.get(edge.getID());
+			congestedTravelTime = linkFreeFlowTravelTime.get(edge.getID())*(1 + 0.15 * Math.pow(this.PEAK_HOUR_PERCENTAGE * linkVol / 1000.0, 4));
+			linkTravelTime.put(edge.getID(), congestedTravelTime);
+		}
 	}
 
 	/**
@@ -162,7 +206,31 @@ public class RoadNetworkAssignment {
 	 * @param timeSkimMatrix Inter-zonal skim matrix (time)
 	 */
 	public void updateTimeSkimMatrix(SkimMatrix timeSkimMatrix) {
-
+		
+		//for each OD pair
+		for (MultiKey mk: pathStorage.keySet()) {
+			System.out.println(mk);
+			String originZone = (String) mk.getKey(0);
+			String destinationZone = (String) mk.getKey(1);
+			
+			List<Path> pathList = pathStorage.get(originZone, destinationZone);
+			double totalODtravelTime = 0.0;
+			//for each path in the path list calculate total travel time
+			for (Path path: pathList) {
+				
+				double pathTravelTime = 0.0;
+				for (Object o: path.getEdges()) {
+					Edge e = (Edge)o;
+					pathTravelTime += linkTravelTime.get(e.getID());					
+				}
+				//System.out.printf("Path travel time: %.3f\n\n", pathTravelTime);
+				totalODtravelTime += pathTravelTime;
+			}
+			double averageODtravelTime = totalODtravelTime / pathList.size();
+			System.out.printf("Average OD travel time: %.3f min\n", averageODtravelTime);
+			//update time skim matrix
+			timeSkimMatrix.setCost((String)mk.getKey(0), (String)mk.getKey(1), averageODtravelTime);
+		}
 	}
 
 	/**
@@ -171,6 +239,34 @@ public class RoadNetworkAssignment {
 	 */
 	public void updateCostSkimMatrix(SkimMatrix costSkimMatrix) {
 
+		//for each OD pair
+		for (MultiKey mk: pathStorage.keySet()) {
+			System.out.println(mk);
+			String originZone = (String) mk.getKey(0);
+			String destinationZone = (String) mk.getKey(1);
+			
+			List<Path> pathList = pathStorage.get(originZone, destinationZone);
+			double totalODdistance = 0.0;
+			//for each path in the path list calculate total distance
+			for (Path path: pathList) {
+				
+				double pathLength = 0.0;
+				for (Object o: path.getEdges()) {
+					Edge e = (Edge)o;
+					SimpleFeature sf = (SimpleFeature) e.getObject();
+					double length = (double) sf.getAttribute("LenNet");
+					pathLength += length;					
+				}
+				//System.out.printf("Path length: %.3f\n\n", pathLength);
+				totalODdistance += pathLength;
+			}
+			double averageODdistance = totalODdistance / pathList.size();
+			double fuelCost = averageODdistance / 100 * (this.dieselFraction * this.dieselConsumption * this.dieselCost + 
+														 this.petrolFraction * this.petrolConsumption * this.petrolCost);
+			System.out.printf("Average OD distance: %.3f km\t Fuel cost: %.2f GBP\n", averageODdistance, fuelCost);
+			//update time skim matrix
+			costSkimMatrix.setCost(originZone, destinationZone, fuelCost);
+		}
 	}
 
 	/**
@@ -187,6 +283,15 @@ public class RoadNetworkAssignment {
 	public HashMap<Integer, Integer> getLinkVolumes() {
 
 		return this.linkVolumes;
+	}
+
+	/**
+	 * Getter method for the link travel times.
+	 * @return Link volumes
+	 */
+	public HashMap<Integer, Double> getLinkTravelTimes() {
+
+		return this.linkTravelTime;
 	}
 
 	/**

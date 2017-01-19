@@ -213,7 +213,7 @@ public class RoadNetwork {
 				objList.add(feat.getAttribute("S Ref E"));
 				objList.add(feat.getAttribute("S Ref N"));
 				objList.add(feat.getAttribute("LenNet"));
-				String roadNumber = (String) feat.getAttribute("Road");
+				String roadNumber = (String) feat.getAttribute("RoadNumber");
 				if (roadNumber.charAt(0) == 'M') {//motorway
 					objList.add(RoadNetworkAssignment.SPEED_LIMIT_M_ROAD);
 					Double freeFlowTime = (double)feat.getAttribute("LenNet") / RoadNetworkAssignment.SPEED_LIMIT_M_ROAD * 60; //in minutes
@@ -357,16 +357,17 @@ public class RoadNetwork {
 					return Double.MAX_VALUE;
 				}
 				double cost;
-				if (linkTravelTime == null) { //use default link travel time
+				if (linkTravelTime.get(edge.getID()) == null) { //use default link travel time
 					SimpleFeature feature = (SimpleFeature)edge.getObject();
-					String roadNumber = (String) feature.getAttribute("Road");
+					String roadNumber = (String) feature.getAttribute("RoadNumber");
 					if (roadNumber.charAt(0) == 'M') //motorway
 						cost = (double) feature.getAttribute("LenNet") / RoadNetworkAssignment.SPEED_LIMIT_M_ROAD * 60;  //travel time in minutes
-					else //A road
+					else if (roadNumber.charAt(0) == 'A') //A road
 						cost = (double) feature.getAttribute("LenNet") / RoadNetworkAssignment.SPEED_LIMIT_A_ROAD * 60;  //travel time in minutes
-					
+					else //ferry
+						cost = (double) feature.getAttribute("LenNet") / RoadNetworkAssignment.AVERAGE_SPEED_FERRY * 60;  //travel time in minutes
 				} else //use provided travel time
-						cost = linkTravelTime.get(edge.getID()); 
+					cost = linkTravelTime.get(edge.getID()); 
 				return cost;
 			}
 
@@ -618,7 +619,7 @@ public class RoadNetwork {
 
 				//still need to create to edges for the ferry line
 				directedEdge = (DirectedEdge) graphBuilder.buildEdge(nodeA, nodeB);
-				directedEdge.setObject(edge.getObject()); // put the edge from the source graph as the object (contains a distance attribute LenNet used ofr routing)
+				directedEdge.setObject(edge.getObject()); // put the edge from the source graph as the object (contains a distance attribute LenNet used for routing)
 				graphBuilder.addEdge(directedEdge);
 				directedEdge2 = (DirectedEdge) graphBuilder.buildEdge(nodeB, nodeA);
 				directedEdge2.setObject(edge.getObject()); // add the same edge with all the attributes to the other direction (not really a nice solution)
