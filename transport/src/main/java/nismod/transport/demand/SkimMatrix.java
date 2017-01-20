@@ -49,7 +49,7 @@ public class SkimMatrix {
 			//System.out.println("Origin zone = " + record.get(0));
 			for (String destination: keySet) {
 				//System.out.println("Destination zone = " + destination);
-				cost = Integer.parseInt(record.get(destination));
+				cost = Double.parseDouble(record.get(destination));
 				matrix.put(record.get(0), destination, cost);			
 			}
 		} parser.close(); 
@@ -61,9 +61,9 @@ public class SkimMatrix {
 	 * @param destinationZone Destination zone.
 	 * @return Origin-destination cost.
 	 */
-	public int getCost(String originZone, String destinationZone) {
+	public double getCost(String originZone, String destinationZone) {
 		
-		return (int) matrix.get(originZone, destinationZone);
+		return (double) matrix.get(originZone, destinationZone);
 	}
 	
 	/**
