@@ -36,10 +36,16 @@ public class RoadNetworkAssignment {
 	
 	public double petrolCost = 1.17; //[GBP per litre]
 	public double dieselCost = 1.20; //[GBP per litre]
+	public double LPGCost = 0.6; //[GBP per litre]
+	public double electricCost = 0.10; //[GBP per kWh] 
 	public double petrolConsumption = 5.4; //[litres per 100 km]
 	public double dieselConsumption = 4.6; //[litres per 100 km]
-	public double petrolFraction = 0.5;
-	public double dieselFraction = 0.5;
+	public double LPGConsumption = 6.75;   //[litres per 100 km]
+	public double eletricConsumption = 20.0; //[kWh per 100 km] 
+	public double petrolFraction = 0.25;
+	public double dieselFraction = 0.25;
+	public double LPGFraction = 0.25;
+	public double electricFraction = 0.25;
 	
 
 	private RoadNetwork roadNetwork;
@@ -55,7 +61,7 @@ public class RoadNetworkAssignment {
 	/**
 	 * @param roadNetwork
 	 */
-	public RoadNetworkAssignment(RoadNetwork roadNetwork) {
+	public RoadNetworkAssignment(RoadNetwork roadNetwork, HashMap<Integer, Double> defaultLinkTravelTime) {
 
 		this.roadNetwork = roadNetwork;
 		this.linkVolumes = new HashMap<Integer, Integer>();
@@ -64,10 +70,11 @@ public class RoadNetworkAssignment {
 		this.linkTravelTime = new HashMap<Integer, Double>();
 		this.pathStorage = new MultiKeyMap<String, List<Path>>();
 		
-		//calculate free-flow travel time
+		//calculate link travel time
 		Iterator edgesIterator = roadNetwork.getNetwork().getEdges().iterator();
 		while (edgesIterator.hasNext()) {
 			DirectedEdge edge = (DirectedEdge) edgesIterator.next();
+			//calculate free-flow travel time
 			SimpleFeature feature = (SimpleFeature)edge.getObject();
 			String roadNumber = (String) feature.getAttribute("RoadNumber");
 			double travelTime = 0;
@@ -78,7 +85,14 @@ public class RoadNetworkAssignment {
 			else //ferry
 				travelTime = (double) feature.getAttribute("LenNet") / RoadNetworkAssignment.AVERAGE_SPEED_FERRY * 60;  //travel time in minutes
 			linkFreeFlowTravelTime.put(edge.getID(), travelTime);
-		}			
+			
+			//if no default link travel time, use free flow travel time as default
+			if (defaultLinkTravelTime != null)	
+				this.linkTravelTime.put(edge.getID(), defaultLinkTravelTime.get(edge.getID()));
+			else
+				this.linkTravelTime.put(edge.getID(), linkFreeFlowTravelTime.get(edge.getID()));
+			
+		}
 	}
 
 	/** 
@@ -126,7 +140,8 @@ public class RoadNetworkAssignment {
 				}
 				try {
 					//AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctions(to));
-					AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctionsTime(to, this.linkFreeFlowTravelTime));
+					//AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctionsTime(to, this.linkFreeFlowTravelTime));
+					AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctionsTime(to, this.linkTravelTime));
 					aStarPathFinder.calculate();
 					Path aStarPath;
 					aStarPath = aStarPathFinder.getPath();
@@ -262,7 +277,9 @@ public class RoadNetworkAssignment {
 			}
 			double averageODdistance = totalODdistance / pathList.size();
 			double fuelCost = averageODdistance / 100 * (this.dieselFraction * this.dieselConsumption * this.dieselCost + 
-														 this.petrolFraction * this.petrolConsumption * this.petrolCost);
+														 this.petrolFraction * this.petrolConsumption * this.petrolCost +
+														 this.LPGFraction * this.LPGConsumption * this.LPGCost +
+														 this.electricFraction * this.eletricConsumption * this.electricCost);
 			System.out.printf("Average OD distance: %.3f km\t Fuel cost: %.2f GBP\n", averageODdistance, fuelCost);
 			//update time skim matrix
 			costSkimMatrix.setCost(originZone, destinationZone, fuelCost);
