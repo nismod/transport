@@ -45,7 +45,7 @@ public class SkimMatrix {
 		//System.out.println("keySet = " + keySet);
 		double cost;
 		for (CSVRecord record : parser) { 
-			System.out.println(record);
+			//System.out.println(record);
 			//System.out.println("Origin zone = " + record.get(0));
 			for (String destination: keySet) {
 				//System.out.println("Destination zone = " + destination);

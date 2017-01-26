@@ -40,9 +40,11 @@ public class RoadNetworkTest {
 		final URL networkUrl = new URL("file://src/test/resources/minitestdata/network.shp");
 		final URL nodesUrl = new URL("file://src/test/resources/minitestdata/nodes.shp");
 		final URL AADFurl = new URL("file://src/test/resources/minitestdata/AADFdirected.shp");
+		final String areaCodeFileName = "./src/test/resources/testdata/nomisPopulation.csv";
+		final String areaCodeNearestNodeFile = "./src/test/resources/testdata/areaCodeToNearestNode.csv";
 
 		//create a road network
-		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl);
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile);
 
 		//visualise the shapefiles
 		roadNetwork.visualise("Mini Test Area");
@@ -56,7 +58,7 @@ public class RoadNetworkTest {
 		final URL AADFurl2 = new URL("file://src/test/resources/testdata/AADFdirected.shp");
 
 		//create a road network
-		RoadNetwork roadNetwork2 = new RoadNetwork(zonesUrl2, networkUrl2, nodesUrl2, AADFurl2);
+		RoadNetwork roadNetwork2 = new RoadNetwork(zonesUrl2, networkUrl2, nodesUrl2, AADFurl2, areaCodeFileName, areaCodeNearestNodeFile);
 
 		//visualise the shapefiles
 		roadNetwork2.visualise("Test Area");
@@ -72,8 +74,10 @@ public class RoadNetworkTest {
 		final URL networkUrl = new URL("file://src/test/resources/minitestdata/network.shp");
 		final URL nodesUrl = new URL("file://src/test/resources/minitestdata/nodes.shp");
 		final URL AADFurl = new URL("file://src/test/resources/minitestdata/AADFdirected.shp");
+		final String areaCodeFileName = "./src/test/resources/testdata/nomisPopulation.csv";
+		final String areaCodeNearestNodeFile = "./src/test/resources/testdata/areaCodeToNearestNode.csv";
 
-		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl);
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl,  areaCodeFileName, areaCodeNearestNodeFile);
 		DirectedGraph rn = roadNetwork.getNetwork();
 
 		//TEST NODE AND EDGE CREATION
@@ -419,9 +423,11 @@ public class RoadNetworkTest {
 		final URL networkUrl = new URL("file://src/test/resources/testdata/network.shp");
 		final URL nodesUrl = new URL("file://src/test/resources/testdata/nodes.shp");
 		final URL AADFurl = new URL("file://src/test/resources/testdata/AADFdirected.shp");
+		final String areaCodeFileName = "./src/test/resources/testdata/nomisPopulation.csv";
+		final String areaCodeNearestNodeFile = "./src/test/resources/testdata/areaCodeToNearestNode.csv";
 
 		//create a road network
-		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl);
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile);
 		DirectedGraph rn = roadNetwork.getNetwork();
 
 		//TEST NODE AND EDGE CREATION
