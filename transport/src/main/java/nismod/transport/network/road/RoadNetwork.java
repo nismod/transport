@@ -5,6 +5,7 @@ package nismod.transport.network.road;
 
 import java.awt.Color;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URL;
@@ -13,8 +14,12 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.geotools.data.collection.ListFeatureCollection;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.geotools.data.DefaultTransaction;
 import org.geotools.data.Transaction;
 import org.geotools.data.shapefile.ShapefileDataStore;
@@ -76,6 +81,9 @@ public class RoadNetwork {
 	private DijkstraIterator.EdgeWeighter dijkstraTimeWeighter;
 	private HashMap<Integer, String> nodeToZone;
 	private HashMap<String, List<Integer>> zoneToNodes;
+	private HashMap<String, List<String>> zoneToAreaCodes;
+	private HashMap<String, Integer> areaCodeToNearestNode;
+	private HashMap<String, Integer> areaCodeToPopulation;
 
 	/**
 	 * @param zonesUrl Url for the shapefile with zone polygons
@@ -84,7 +92,7 @@ public class RoadNetwork {
 	 * @param AADFurl Url for the shapefile with AADF counts
 	 * @throws IOException 
 	 */
-	public RoadNetwork(URL zonesUrl, URL networkUrl, URL nodesUrl, URL AADFurl) throws IOException {
+	public RoadNetwork(URL zonesUrl, URL networkUrl, URL nodesUrl, URL AADFurl, String areaCodeFileName, String areaCodeNearestNodeFile) throws IOException {
 
 		zonesShapefile = new ShapefileDataStore(zonesUrl);
 		networkShapefile = new ShapefileDataStore(networkUrl);
@@ -103,6 +111,13 @@ public class RoadNetwork {
 				return length;
 			}
 		};
+		
+		this.loadAreaCodePopulationData(areaCodeFileName);
+		this.loadAreaCodeNearestNode(areaCodeNearestNodeFile);
+		
+		//System.out.println(this.zoneToAreaCodes);
+		//System.out.println(this.areaCodeToPopulation);
+		//System.out.println(this.areaCodeToNearestNode);
 	}
 
 	/**
@@ -404,6 +419,33 @@ public class RoadNetwork {
 
 		return this.zoneToNodes;
 	}
+	
+	/**
+	 * Getter method for the zone to area codes mapping.
+	 * @return Zone to area codes mapping.
+	 */
+	public HashMap<String, List<String>> getZoneToAreaCodes() {
+
+		return this.zoneToAreaCodes;
+	}
+	
+	/**
+	 * Getter method for the area code to population mapping.
+	 * @return Area code to population mapping.
+	 */
+	public HashMap<String, Integer> getAreaCodeToPopulation() {
+
+		return this.areaCodeToPopulation;
+	}
+	
+	/**
+	 * Getter method for the area code to the nearest node mapping.
+	 * @return Area code to the nearest node mapping.
+	 */
+	public HashMap<String, Integer> getAreaCodeToNearestNode() {
+
+		return this.areaCodeToNearestNode;
+	}
 
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
@@ -668,6 +710,60 @@ public class RoadNetwork {
 			//feature iterator is a live connection that must be closed
 			iter.close();
 		}
+	}
+	
+	/**
+	 * Loads code area population data.
+	 * @param areaCodeFileName File with area code population data.
+	 * @throws IOException 
+	 */
+	private void loadAreaCodePopulationData(String areaCodeFileName) throws IOException {
+
+		this.zoneToAreaCodes = new HashMap<String, List<String>>();
+		this.areaCodeToPopulation = new HashMap<String, Integer>();
+		
+		CSVParser parser = new CSVParser(new FileReader(areaCodeFileName), CSVFormat.DEFAULT.withHeader());
+		//System.out.println(parser.getHeaderMap().toString());
+		Set<String> keySet = parser.getHeaderMap().keySet();
+		//System.out.println("keySet = " + keySet);
+		for (CSVRecord record : parser) {
+			//System.out.println(record);
+			String areaCode = record.get("area_code");
+			String zoneCode = record.get("zone_code");
+			int population = Integer.parseInt(record.get("population"));
+			
+			List<String> areaCodesList = zoneToAreaCodes.get(zoneCode);
+			if (areaCodesList == null) {
+				areaCodesList = new ArrayList<String>();
+				zoneToAreaCodes.put(zoneCode, areaCodesList);
+			}
+			areaCodesList.add(areaCode);
+			
+			areaCodeToPopulation.put(areaCode, population);
+		} 
+		parser.close(); 
+	}
+	
+	/**
+	 * Loads code area to nearest node mapping.
+	 * @param areaCodeNearestNodeFile File with area code nearest neighbour.
+	 * @throws IOException 
+	 */
+	private void loadAreaCodeNearestNode(String areaCodeNearestNodeFile) throws IOException {
+
+		this.areaCodeToNearestNode = new HashMap<String, Integer>();
+		
+		CSVParser parser = new CSVParser(new FileReader(areaCodeNearestNodeFile), CSVFormat.DEFAULT.withHeader());
+		//System.out.println(parser.getHeaderMap().toString());
+		Set<String> keySet = parser.getHeaderMap().keySet();
+		//System.out.println("keySet = " + keySet);
+		for (CSVRecord record : parser) {
+			//System.out.println(record);
+			String areaCode = record.get("area_code");
+			int nodeID = Integer.parseInt(record.get("nodeID"));
+			areaCodeToNearestNode.put(areaCode, nodeID);
+		} 
+		parser.close(); 
 	}
 	
 	/**

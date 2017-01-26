@@ -7,33 +7,27 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
-import org.apache.commons.collections4.map.MultiKeyMap;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import org.geotools.graph.path.Path;
-import org.geotools.graph.structure.Edge;
-
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
 
 /**
  * Demand prediction model.
  * @author Milan Lovric
- *
- */
+  */
 public class DemandModel {
 
 	public final static int BASE_YEAR = 2015;
-	public final static double ELASTICITY_POPULATION = 1.0;
-	public final static double ELASTICITY_GVA = 0.63;
-	public final static double ELASTICITY_TIME = -0.41;
-	public final static double ELASTICITY_COST = -0.215;
+	public static enum ElasticityTypes {
+		POPULATION, GVA, TIME, COST
+	}
 
+	private HashMap<ElasticityTypes, Double> elasticities;
 	private HashMap<Integer, ODMatrix> yearToPassengerODMatrix; //passenger demand
 	//	private HashMap<Integer, ODMatrix> yearToFreightODMatrix; //freight demand
 	private HashMap<Integer, SkimMatrix> yearToTimeSkimMatrix;
@@ -41,8 +35,7 @@ public class DemandModel {
 	private HashMap<Integer, HashMap<String, Integer>> yearToZoneToPopulation;
 	private HashMap<Integer, HashMap<String, Double>> yearToZoneToGVA;
 	private HashMap<Integer, RoadNetworkAssignment> yearToRoadNetworkAssignment;
-
-	private SkimMatrix baseYearTimeSkimMatrix,	baseYearCostSkimMatrix;
+	//private SkimMatrix baseYearTimeSkimMatrix,	baseYearCostSkimMatrix;
 	private RoadNetwork roadNetwork;
 
 	/**
@@ -51,7 +44,8 @@ public class DemandModel {
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
-	public DemandModel(RoadNetwork roadNetwork) throws FileNotFoundException, IOException {
+	public DemandModel(RoadNetwork roadNetwork, String baseYearODMatrixFile, String baseYearTimeSkimMatrixFile,
+						String baseYearCostSkimMatrixFile, String populationFile, String GVAFile) throws FileNotFoundException, IOException {
 
 		yearToPassengerODMatrix = new HashMap<Integer, ODMatrix>();
 		yearToTimeSkimMatrix = new HashMap<Integer, SkimMatrix>();
@@ -63,23 +57,30 @@ public class DemandModel {
 		this.roadNetwork = roadNetwork;
 
 		//read base-year passenger matrix
-		ODMatrix passengerODMatrix = new ODMatrix("./src/test/resources/testdata/passengerODM.csv");
+		ODMatrix passengerODMatrix = new ODMatrix(baseYearODMatrixFile);
 		passengerODMatrix.printMatrix();
-		yearToPassengerODMatrix.put(this.BASE_YEAR, passengerODMatrix);
+		yearToPassengerODMatrix.put(DemandModel.BASE_YEAR, passengerODMatrix);
 
 		//read base-year time skim matrix
-		SkimMatrix baseYearTimeSkimMatrix = new SkimMatrix("./src/test/resources/testdata/timeSkimMatrix.csv");
-		yearToTimeSkimMatrix.put(this.BASE_YEAR, baseYearTimeSkimMatrix);
+		SkimMatrix baseYearTimeSkimMatrix = new SkimMatrix(baseYearTimeSkimMatrixFile);
+		yearToTimeSkimMatrix.put(DemandModel.BASE_YEAR, baseYearTimeSkimMatrix);
 
 		//read base-year cost skim matrix
-		SkimMatrix baseYearCostSkimMatrix = new SkimMatrix("./src/test/resources/testdata/costSkimMatrix.csv");
-		yearToCostSkimMatrix.put(this.BASE_YEAR, baseYearCostSkimMatrix);
+		SkimMatrix baseYearCostSkimMatrix = new SkimMatrix(baseYearCostSkimMatrixFile);
+		yearToCostSkimMatrix.put(DemandModel.BASE_YEAR, baseYearCostSkimMatrix);
 
 		//read all year population predictions
-		yearToZoneToPopulation = readPopulationFile("./src/test/resources/testdata/population.csv");
+		yearToZoneToPopulation = readPopulationFile(populationFile);
 
 		//read all year GVA predictions
-		yearToZoneToGVA = readGVAFile("./src/test/resources/testdata/GVA.csv");
+		yearToZoneToGVA = readGVAFile(GVAFile);
+		
+		//default elasticity values
+		elasticities = new HashMap<ElasticityTypes, Double>();
+		elasticities.put(ElasticityTypes.POPULATION, 1.0);
+		elasticities.put(ElasticityTypes.GVA, 0.63);
+		elasticities.put(ElasticityTypes.TIME, -0.41);
+		elasticities.put(ElasticityTypes.COST, -0.215);
 	}
 
 	/**
@@ -98,22 +99,22 @@ public class DemandModel {
 		} else {
 
 			//check if the demand for fromYear has already been assigned.
-			RoadNetworkAssignment rda = yearToRoadNetworkAssignment.get(fromYear);
-			if (rda == null) {
+			RoadNetworkAssignment rna = yearToRoadNetworkAssignment.get(fromYear);
+			if (rna == null) {
 				//create a network assignment and assign the demand
-				rda = new RoadNetworkAssignment(this.roadNetwork, null);
-				rda.assignPassengerFlows(this.yearToPassengerODMatrix.get(fromYear));
-				rda.updateLinkTravelTimes();
+				rna = new RoadNetworkAssignment(this.roadNetwork, null, null);
+				rna.assignPassengerFlows(this.yearToPassengerODMatrix.get(fromYear));
+				rna.updateLinkTravelTimes();
 			}	
 
 			//update skim matrices, and use those for the predicted year
 			SkimMatrix tsm = new SkimMatrix();
 			SkimMatrix csm = new SkimMatrix();
-			rda.updateTimeSkimMatrix(tsm);
-			rda.updateCostSkimMatrix(csm);
+			rna.updateTimeSkimMatrix(tsm);
+			rna.updateCostSkimMatrix(csm);
 			yearToTimeSkimMatrix.put(predictedYear, tsm);
 			yearToCostSkimMatrix.put(predictedYear,  csm);
-			yearToRoadNetworkAssignment.put(fromYear, rda);
+			yearToRoadNetworkAssignment.put(fromYear, rna);
 		}
 
 		//predict the demand	
@@ -137,18 +138,32 @@ public class DemandModel {
 			double oldODTravelCost = this.yearToCostSkimMatrix.get(fromYear).getCost(originZone, destinationZone);
 			double newODTravelCost = this.yearToCostSkimMatrix.get(predictedYear).getCost(originZone, destinationZone);
 
-			double predictedflow = oldFlow * Math.pow(newPopulationOriginZone / oldPopulationOriginZone, ELASTICITY_POPULATION) *
-					Math.pow(newGVAOriginZone / oldGVAOriginZone, ELASTICITY_GVA) *
-					Math.pow(newPopulationDestinationZone / oldPopulationDestinationZone, ELASTICITY_POPULATION) *
-					Math.pow(newGVADestinationZone / oldGVADestinationZone, ELASTICITY_GVA) *
-					Math.pow(newODTravelTime / oldODTravelTime, ELASTICITY_TIME) *
-					Math.pow(newODTravelCost / oldODTravelCost, ELASTICITY_COST);
+			double predictedflow = oldFlow * Math.pow(newPopulationOriginZone / oldPopulationOriginZone, elasticities.get(ElasticityTypes.POPULATION)) *
+					Math.pow(newGVAOriginZone / oldGVAOriginZone, elasticities.get(ElasticityTypes.GVA)) *
+					Math.pow(newPopulationDestinationZone / oldPopulationDestinationZone, elasticities.get(ElasticityTypes.POPULATION)) *
+					Math.pow(newGVADestinationZone / oldGVADestinationZone, elasticities.get(ElasticityTypes.GVA)) *
+					Math.pow(newODTravelTime / oldODTravelTime, elasticities.get(ElasticityTypes.TIME)) *
+					Math.pow(newODTravelCost / oldODTravelCost, elasticities.get(ElasticityTypes.COST));
 
 			predictedPassengerODMatrix.setFlow(originZone, destinationZone, (int) Math.round(predictedflow));
 		}
 		
 		//put predicted OD matrix in the map
 		this.yearToPassengerODMatrix.put(predictedYear, predictedPassengerODMatrix);
+		
+		//assign predicted year
+		RoadNetworkAssignment predictedRna = new RoadNetworkAssignment(this.roadNetwork, null, null);
+		predictedRna.assignPassengerFlows(predictedPassengerODMatrix);
+		predictedRna.updateLinkTravelTimes();
+		
+		//update skim matrices for predicted year after the assignment
+		SkimMatrix tsm = new SkimMatrix();
+		SkimMatrix csm = new SkimMatrix();
+		predictedRna.updateTimeSkimMatrix(tsm);
+		predictedRna.updateCostSkimMatrix(csm);
+		yearToTimeSkimMatrix.put(predictedYear, tsm);
+		yearToCostSkimMatrix.put(predictedYear, csm);
+		yearToRoadNetworkAssignment.put(predictedYear, predictedRna);
 	}                                                                                                                                               
 
 	
@@ -160,8 +175,38 @@ public class DemandModel {
 	public ODMatrix getPassengerDemand (int year) {
 		
 		return yearToPassengerODMatrix.get(year);
-	}	
-
+	}
+	
+	/**
+	 * Getter method for the road network assignment in a given year.
+	 * @param year Year for which the road network assignment is requested.
+	 * @return Road network assignment.
+	 */
+	public RoadNetworkAssignment getRoadNetworkAssignment (int year) {
+		
+		return 	yearToRoadNetworkAssignment.get(year);
+	}
+	
+	/**
+	 * Getter method for time skim matrix in a given year.
+	 * @param year Year for which the the skim matrix is requested.
+	 * @return Time skim matrix.
+	 */
+	public SkimMatrix getTimeSkimMatrix (int year) {
+		
+		return 	yearToTimeSkimMatrix.get(year);
+	}
+	
+	/**
+	 * Getter method for cost skim matrix in a given year.
+	 * @param year Year for which the the skim matrix is requested.
+	 * @return Cost skim matrix.
+	 */
+	public SkimMatrix getCostSkimMatrix (int year) {
+		
+		return 	yearToCostSkimMatrix.get(year);
+	}
+	
 	/**
 	 * @param fileName
 	 * @return
@@ -174,16 +219,12 @@ public class DemandModel {
 		CSVParser parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
 		//System.out.println(parser.getHeaderMap().toString());
 		Set<String> keySet = parser.getHeaderMap().keySet();
-		//keySet.remove("year");
-		System.out.println("keySet = " + keySet);
+		//System.out.println("keySet = " + keySet);
 		int population;
 		for (CSVRecord record : parser) {
-			System.out.println(record);
-			//System.out.println("Origin zone = " + record.get(0));
+			//System.out.println(record);
 			int year = Integer.parseInt(record.get(0));
-
 			HashMap<String, Integer> zoneToPopulation = new HashMap<String, Integer>();
-
 			for (String zone: keySet) {
 				//System.out.println("Destination zone = " + destination);
 				population = Integer.parseInt(record.get(zone));
@@ -211,12 +252,9 @@ public class DemandModel {
 		//System.out.println("keySet = " + keySet);
 		double GVA;
 		for (CSVRecord record : parser) {
-			System.out.println(record);
-			//System.out.println("Origin zone = " + record.get(0));
+			//System.out.println(record);
 			int year = Integer.parseInt(record.get(0));
-
 			HashMap<String, Double> zoneToGVA = new HashMap<String, Double>();
-
 			for (String zone: keySet) {
 				//System.out.println("Destination zone = " + destination);
 				GVA = Double.parseDouble(record.get(zone));
