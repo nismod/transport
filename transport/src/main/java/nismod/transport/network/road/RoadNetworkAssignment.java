@@ -41,6 +41,8 @@ public class RoadNetworkAssignment {
 	public static final double BETA_M_ROAD = 5.55;
 	public static final double BETA_A_ROAD = 4;
 	
+	private static Random rng = new Random(1234);
+	
 	public static enum EngineType {
 	    PETROL, DIESEL, LPG, ELECTRICITY 
 	}
@@ -185,7 +187,7 @@ public class RoadNetworkAssignment {
 				//choose origin census output area
 				double cumulativeProbability = 0.0;
 				String originAreaCode = null;
-				double random = Math.random();
+				double random = rng.nextDouble();
 				for (String areaCode: listOfOriginAreaCodes) {
 					cumulativeProbability += areaCodeProbabilities.get(areaCode);
 					if (Double.compare(cumulativeProbability, random) > 0) {
@@ -198,7 +200,7 @@ public class RoadNetworkAssignment {
 				//choose destination census output area
 				cumulativeProbability = 0.0;
 				String destinationAreaCode = null;
-				random = Math.random();
+				random = rng.nextDouble();
 				for (String areaCode: listOfDestinationAreaCodes) {
 					cumulativeProbability += areaCodeProbabilities.get(areaCode);
 					if (Double.compare(cumulativeProbability, random) > 0) {
