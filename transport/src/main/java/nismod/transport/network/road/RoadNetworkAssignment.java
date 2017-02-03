@@ -11,6 +11,7 @@ import java.util.Random;
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.map.MultiKeyMap;
 import org.geotools.graph.path.AStarShortestPathFinder;
+import org.geotools.graph.path.DijkstraShortestPathFinder;
 import org.geotools.graph.path.Path;
 import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedGraph;
@@ -58,8 +59,8 @@ public class RoadNetworkAssignment {
 //	private double dieselFraction = 0.25;
 //	private double LPGFraction = 0.25;
 //	private double electricFraction = 0.25;
-	private HashMap<EngineType, Double> energyUnitCost;
-	private HashMap<EngineType, Double> energyConsumptionPer100km;
+	private HashMap<EngineType, Double> energyUnitCosts;
+	private HashMap<EngineType, Double> energyConsumptionsPer100km;
 	private HashMap<EngineType, Double> engineTypeFractions;
 		
 	private RoadNetwork roadNetwork;
@@ -76,7 +77,9 @@ public class RoadNetworkAssignment {
 	private HashMap<String, Double> areaCodeProbabilities;
 	
 	/**
-	 * @param roadNetwork
+	 * @param roadNetwork Road network.
+	 * @param defaultLinkTravelTime Default link travel times.
+	 * @param areCodeProbabilities Probabilities of trips starting/ending in each census output area.
 	 */
 	public RoadNetworkAssignment(RoadNetwork roadNetwork, HashMap<Integer, Double> defaultLinkTravelTime, HashMap<String, Double> areaCodeProbabilities) {
 
@@ -128,16 +131,16 @@ public class RoadNetworkAssignment {
 		//System.out.println(this.areaCodeProbabilities);
 		
 		//set default values for energy consumption of different car engine types
-		energyUnitCost = new HashMap<EngineType, Double>();
-		energyUnitCost.put(EngineType.PETROL, 1.17);
-		energyUnitCost.put(EngineType.DIESEL, 1.20);
-		energyUnitCost.put(EngineType.LPG, 0.6);
-		energyUnitCost.put(EngineType.ELECTRICITY, 0.1);
-		energyConsumptionPer100km = new HashMap<EngineType, Double>();
-		energyConsumptionPer100km.put(EngineType.PETROL, 5.4);
-		energyConsumptionPer100km.put(EngineType.DIESEL, 4.6);
-		energyConsumptionPer100km.put(EngineType.LPG, 6.75);
-		energyConsumptionPer100km.put(EngineType.ELECTRICITY, 20.0);
+		energyUnitCosts = new HashMap<EngineType, Double>();
+		energyUnitCosts.put(EngineType.PETROL, 1.17);
+		energyUnitCosts.put(EngineType.DIESEL, 1.20);
+		energyUnitCosts.put(EngineType.LPG, 0.6);
+		energyUnitCosts.put(EngineType.ELECTRICITY, 0.1);
+		energyConsumptionsPer100km = new HashMap<EngineType, Double>();
+		energyConsumptionsPer100km.put(EngineType.PETROL, 5.4);
+		energyConsumptionsPer100km.put(EngineType.DIESEL, 4.6);
+		energyConsumptionsPer100km.put(EngineType.LPG, 6.75);
+		energyConsumptionsPer100km.put(EngineType.ELECTRICITY, 20.0);
 		engineTypeFractions = new HashMap<EngineType, Double>();
 		engineTypeFractions.put(EngineType.PETROL, 0.25);
 		engineTypeFractions.put(EngineType.DIESEL, 0.25);
@@ -225,7 +228,9 @@ public class RoadNetworkAssignment {
 					if (node.getID() == destinationNode) to = node;
 				}
 				try {
+					
 					AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctionsTime(to, this.linkTravelTime));
+					//AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctions(to));
 					aStarPathFinder.calculate();
 					Path aStarPath;
 					aStarPath = aStarPathFinder.getPath();
@@ -236,6 +241,15 @@ public class RoadNetworkAssignment {
 					//System.out.println("The path as a list of edges: " + listOfEdges);
 					//System.out.println("Path size in the number of nodes: " + aStarPath.size());
 					//System.out.println("Path size in the number of edges: " + listOfEdges.size());
+					
+					/*
+					DijkstraShortestPathFinder pathFinder = new DijkstraShortestPathFinder(rn, from, roadNetwork.getDijkstraTimeWeighter());
+					pathFinder.calculate();
+					Path path = pathFinder.getPath(to);
+					path.reverse();
+					List listOfEdges = path.getEdges();
+					*/
+										
 					double sum = 0;
 					List<Path> list;
 					for (Object o: listOfEdges) {
@@ -263,7 +277,7 @@ public class RoadNetworkAssignment {
 						list = new ArrayList<Path>();
 						pathStorage.put((String)mk.getKey(0), (String)mk.getKey(1), list);
 					}
-					list.add(aStarPath);
+					list.add(aStarPath); //list.add(path);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -371,7 +385,7 @@ public class RoadNetworkAssignment {
 			double energyCost = 0.0;
 			//iterate over engine types
 			for (EngineType engine: EngineType.values())
-				energyCost += averageODdistance / 100 * engineTypeFractions.get(engine) * energyConsumptionPer100km.get(engine) * energyUnitCost.get(engine);
+				energyCost += averageODdistance / 100 * engineTypeFractions.get(engine) * energyConsumptionsPer100km.get(engine) * energyUnitCosts.get(engine);
 						
 			//System.out.printf("Average OD distance: %.3f km\t Fuel cost: %.2f GBP\n", averageODdistance, energyCost);
 			//update time skim matrix
@@ -401,7 +415,7 @@ public class RoadNetworkAssignment {
 
 		HashMap<EngineType, Double> consumptions = new HashMap<EngineType, Double>();
 		for (EngineType engine: EngineType.values()) {
-			double consumption = totalDistance / 100 * engineTypeFractions.get(engine) * energyConsumptionPer100km.get(engine);
+			double consumption = totalDistance / 100 * engineTypeFractions.get(engine) * energyConsumptionsPer100km.get(engine);
 			consumptions.put(engine, consumption);
 		}
 		return consumptions;
@@ -473,7 +487,34 @@ public class RoadNetworkAssignment {
 	public void saveAssignmentResults() {
 
 	}
+	
+	/**
+	 * Getter method for energy unit costs.
+	 * @return Energy unit costs.
+	 */   
+	public HashMap<EngineType, Double> getEnergyUnitCosts() {
 
+		return this.energyUnitCosts;
+	}
+	
+	/**
+	 * Getter method for energy consumptions per 100 km.
+	 * @return Energy consumptions per 100 km.
+	 */   
+	public HashMap<EngineType, Double> getEnergyConsumptionsPer100km() {
+
+		return this.energyConsumptionsPer100km;
+	}
+	
+	/**
+	 * Getter method for engine type fractions.
+	 * @return Engine type fractions.
+	 */   
+	public HashMap<EngineType, Double> getEngineTypeFractions() {
+
+		return this.engineTypeFractions;
+	}
+	
 	/**
 	 * Getter method for daily link volumes.
 	 * @return Link volumes
@@ -491,14 +532,32 @@ public class RoadNetworkAssignment {
 
 		return this.linkTravelTime;
 	}
+	
+	/**
+	 * Getter method for the link free-flow travel times.
+	 * @return Link volumes
+	 */
+	public HashMap<Integer, Double> getLinkFreeFlowTravelTimes() {
+
+		return this.linkFreeFlowTravelTime;
+	}
 
 	/**
 	 * Getter method for the path storage.
 	 * @return Path storage
 	 */
-	public MultiKeyMap getPathStorage() {
+	public MultiKeyMap<String, List<Path>> getPathStorage() {
 
 		return this.pathStorage;
+	}
+	
+	/**
+	 * Getter method for output area probabilities.
+	 * @return Output area probabilities.
+	 */
+	public HashMap<String, Double> getAreaCodeProbabilities() {
+
+		return this.areaCodeProbabilities;
 	}
 	
 	/**
@@ -507,6 +566,36 @@ public class RoadNetworkAssignment {
 	 */
 	public void setElectricityUnitCost (double electricityUnitCost) {
 		
-		energyUnitCost.put(EngineType.ELECTRICITY, electricityUnitCost);
+		energyUnitCosts.put(EngineType.ELECTRICITY, electricityUnitCost);
+	}
+	
+	 /**
+	  * Setter method for the energy unit cost.
+	  * @param engineType The type of a car engine.
+	  * @param energyUnitCost The cost of 1 L (of fuel) or 1 kWh (of electricity) in £.
+	  */
+	public void setEnergyUnitCost (EngineType engineType, double energyUnitCost) {
+		
+		this.energyUnitCosts.put(engineType, energyUnitCost);
+	}
+	
+	 /**
+	  * Setter method for the energy consumption per 100 km.
+	  * @param engineType The type of a car engine.
+	  * @param energyConsumptionPer100km Energy consumption per 100 km (in L for fuel and kWh for electricity).
+	  */
+	public void setEnergyConsumptionPer100km (EngineType engineType, double energyConsumptionPer100km) {
+		
+		this.energyConsumptionsPer100km.put(engineType, energyConsumptionPer100km);
+	}
+	
+	 /**
+	  * Setter method for the energy type fractions.
+	  * @param engineType The type of a car engine.
+	  * @param engineTypeFractions Engine type fractions.
+	  */
+	public void setEngineTypeFractions (EngineType engineType, double engineTypeFraction) {
+		
+		this.engineTypeFractions.put(engineType, engineTypeFraction);
 	}
 }

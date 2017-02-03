@@ -107,7 +107,7 @@ public class DemandModel {
 				rna.updateLinkTravelTimes();
 			}	
 
-			//update skim matrices, and use those for the predicted year
+			//update skim matrices, and use those for the predicted year - should be also used for the from year!
 			SkimMatrix tsm = new SkimMatrix();
 			SkimMatrix csm = new SkimMatrix();
 			rna.updateTimeSkimMatrix(tsm);
