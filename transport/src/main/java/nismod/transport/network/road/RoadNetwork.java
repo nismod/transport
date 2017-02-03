@@ -112,6 +112,24 @@ public class RoadNetwork {
 			}
 		};
 		
+		//weight the edges of the graph using the free-flow travel time		
+		dijkstraTimeWeighter = new EdgeWeighter() {
+			@Override
+			public double getWeight(org.geotools.graph.structure.Edge edge) {
+				SimpleFeature feature = (SimpleFeature) edge.getObject(); 
+				double length = (double) feature.getAttribute("LenNet");
+				double cost;
+				String roadNumber = (String) feature.getAttribute("RoadNumber");
+					if (roadNumber.charAt(0) == 'M') //motorway
+						cost = length / RoadNetworkAssignment.SPEED_LIMIT_M_ROAD * 60;  //travel time in minutes
+					else if (roadNumber.charAt(0) == 'A') //A road
+						cost = length / RoadNetworkAssignment.SPEED_LIMIT_A_ROAD * 60;  //travel time in minutes
+					else //ferry
+						cost = length / RoadNetworkAssignment.AVERAGE_SPEED_FERRY * 60;  //travel time in minutes
+				return cost;
+			}
+		};
+		
 		this.loadAreaCodePopulationData(areaCodeFileName);
 		this.loadAreaCodeNearestNode(areaCodeNearestNodeFile);
 		
@@ -313,6 +331,15 @@ public class RoadNetwork {
 	public DijkstraIterator.EdgeWeighter getDijkstraWeighter() {
 
 		return dijkstraWeighter;
+	}
+	
+	/**
+	 * Getter method for the Dijkstra edge weighter with time.
+	 * @return Dijkstra edge weighter with time.
+	 */
+	public DijkstraIterator.EdgeWeighter getDijkstraTimeWeighter() {
+
+		return dijkstraTimeWeighter;
 	}
 
 	/** Getter method for the AStar functions (edge cost and heuristic function) based on distance.
