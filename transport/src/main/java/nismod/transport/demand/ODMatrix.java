@@ -131,4 +131,21 @@ public class ODMatrix {
 		
 		return matrix.keySet();
 	}
+	
+	/**
+	 * Gets sum of absolute differences between elements of two matrices.
+	 * @param other The other matrix.
+	 * @return Sum of absolute differences.
+	 */
+	public double getAbsoluteDifference(ODMatrix other) {
+		
+		double difference = 0.0;
+		for (MultiKey mk: other.getKeySet()) {
+			String origin = (String) mk.getKey(0);
+			String destination = (String) mk.getKey(1);
+			difference += Math.abs(this.getFlow(origin, destination) - other.getFlow(origin, destination));
+		}
+	
+		return difference;
+	}
 }

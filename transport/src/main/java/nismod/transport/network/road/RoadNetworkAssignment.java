@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Random;
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.map.MultiKeyMap;
 import org.geotools.graph.path.AStarShortestPathFinder;
@@ -22,6 +21,7 @@ import org.opengis.feature.simple.SimpleFeature;
 
 import nismod.transport.demand.ODMatrix;
 import nismod.transport.demand.SkimMatrix;
+import nismod.transport.utility.RandomSingleton;
 
 /**
  * Network assignment of origin-destination flows
@@ -42,7 +42,7 @@ public class RoadNetworkAssignment {
 	public static final double BETA_M_ROAD = 5.55;
 	public static final double BETA_A_ROAD = 4;
 	
-	private static Random rng = new Random(1234);
+	private static RandomSingleton rng = RandomSingleton.getInstance();
 	
 	public static enum EngineType {
 	    PETROL, DIESEL, LPG, ELECTRICITY 
@@ -149,12 +149,13 @@ public class RoadNetworkAssignment {
 	}
 
 	/** 
-	 * Assigns passenger origin-destination matrix to the road network
-	 * @param passengerODM Passenger origin-destination matrix
+	 * Assigns passenger origin-destination matrix to the road network.
+	 * Uses the fastest path based on the current values in the linkTravelTime field.
+	 * @param passengerODM Passenger origin-destination matrix.
 	 */
 	public void assignPassengerFlows(ODMatrix passengerODM) {
 
-		System.out.println("Assigning the passenger flows from the passenger matrix...");
+	//	System.out.println("Assigning the passenger flows from the passenger matrix...");
 
 		//for each OD pair from the passengerODM		
 		for (MultiKey mk: passengerODM.getKeySet()) {
@@ -321,7 +322,69 @@ public class RoadNetworkAssignment {
 			linkTravelTime.put(edge.getID(), congestedTravelTime);
 		}
 	}
+	
+	/**
+	 * Updates link travel times using weighted averaging with older values.
+	 * @param weight Parameter for weighted averaging.
+	 */
+	public void updateLinkTravelTimes(double weight) {
 
+		double congestedTravelTime;
+		
+		//iterate through all the edges in the graph
+		Iterator iter = roadNetwork.getNetwork().getEdges().iterator();
+		while(iter.hasNext()) {
+			
+			Edge edge = (Edge) iter.next();
+			SimpleFeature sf = (SimpleFeature) edge.getObject();
+			
+			double linkVol;
+			if (linkVolumes.get(edge.getID()) == null) linkVol = 0.0;
+			else linkVol = linkVolumes.get(edge.getID());
+			
+			String roadNumber = (String) sf.getAttribute("RoadNumber");
+			if (roadNumber.charAt(0) == 'M') //motorway
+				congestedTravelTime = linkFreeFlowTravelTime.get(edge.getID())*(1 + ALPHA * Math.pow(PEAK_HOUR_PERCENTAGE * linkVol / NUMBER_OF_LANES_M_ROAD / MAXIMUM_CAPACITY_M_ROAD, BETA_M_ROAD));
+			else if (roadNumber.charAt(0) == 'A') //A-road
+				congestedTravelTime = linkFreeFlowTravelTime.get(edge.getID())*(1 + ALPHA * Math.pow(PEAK_HOUR_PERCENTAGE * linkVol / NUMBER_OF_LANES_A_ROAD / MAXIMUM_CAPACITY_A_ROAD, BETA_A_ROAD));
+			else //ferry
+				congestedTravelTime = linkFreeFlowTravelTime.get(edge.getID());
+			
+			//average with the old value (currently stored in the linkTravelTime field)
+			congestedTravelTime = weight * congestedTravelTime + (1 - weight) * linkTravelTime.get(edge.getID());
+			
+			linkTravelTime.put(edge.getID(), congestedTravelTime);
+		}
+	}
+
+	
+	/** 
+	 * Assigns passenger origin-destination matrix to the road network.
+	 * Uses the fastest path based on the current values in the linkTravelTime field.
+	 * Then update link travel times using weighted averaging.
+	 * @param passengerODM Passenger origin-destination matrix.
+	 * @param weight Weighting parameter.
+	 */
+	public void assignFlowsAndUpdateLinkTravelTimes(ODMatrix passengerODM, double weight) {
+		
+		this.assignPassengerFlows(passengerODM);
+		this.updateLinkTravelTimes(weight);
+	}
+	
+	/** 
+	 * Iterates assignment and travel time update a fixed number of times.
+	 * @param passengerODM Passenger origin-destination matrix.
+	 * @param weight Weighting parameter.
+	 * @param iterations Number of iterations.
+	 */
+	public void assignFlowsAndUpdateLinkTravelTimesIterated(ODMatrix passengerODM, double weight, int iterations) {
+		
+		for (int i=0; i<iterations; i++) {
+			this.resetLinkVolumes(); //link volumes must be reset or they would compound across all iterations
+			this.assignFlowsAndUpdateLinkTravelTimes(passengerODM, weight);
+		}
+	}
+	
 	/**
 	 * Updates travel time skim matrix (zone-to-zone travel times).
 	 * @param timeSkimMatrix Inter-zonal skim matrix (time)
@@ -354,6 +417,42 @@ public class RoadNetworkAssignment {
 		}
 	}
 
+	/**
+	 * Calculated travel time skim matrix (zone-to-zone travel times).
+	 * @return Inter-zonal skim matrix (time).
+	 */
+	public SkimMatrix calculateTimeSkimMatrix() {
+		
+		SkimMatrix timeSkimMatrix = new SkimMatrix();
+		
+		//for each OD pair
+		for (MultiKey mk: pathStorage.keySet()) {
+			//System.out.println(mk);
+			String originZone = (String) mk.getKey(0);
+			String destinationZone = (String) mk.getKey(1);
+			
+			List<Path> pathList = pathStorage.get(originZone, destinationZone);
+			double totalODtravelTime = 0.0;
+			//for each path in the path list calculate total travel time
+			for (Path path: pathList) {
+				
+				double pathTravelTime = 0.0;
+				for (Object o: path.getEdges()) {
+					Edge e = (Edge)o;
+					pathTravelTime += linkTravelTime.get(e.getID());					
+				}
+				//System.out.printf("Path travel time: %.3f\n\n", pathTravelTime);
+				totalODtravelTime += pathTravelTime;
+			}
+			double averageODtravelTime = totalODtravelTime / pathList.size();
+			//System.out.printf("Average OD travel time: %.3f min\n", averageODtravelTime);
+			//update time skim matrix
+			timeSkimMatrix.setCost((String)mk.getKey(0), (String)mk.getKey(1), averageODtravelTime);
+		}
+		
+		return timeSkimMatrix;
+	}
+	
 	/**
 	 * Updates cost skim matrix (zone-to-zone financial costs).
 	 * @param costSkimMatrix Inter-zonal skim matrix (cost)
@@ -391,6 +490,49 @@ public class RoadNetworkAssignment {
 			//update time skim matrix
 			costSkimMatrix.setCost(originZone, destinationZone, energyCost);
 		}
+	}
+	
+	/**
+	 * Calculates cost skim matrix (zone-to-zone financial costs).
+	 * @return Inter-zonal skim matrix (cost)
+	 */
+	public SkimMatrix calculateCostSkimMatrix() {
+		
+		SkimMatrix costSkimMatrix = new SkimMatrix();
+
+		//for each OD pair
+		for (MultiKey mk: pathStorage.keySet()) {
+			//System.out.println(mk);
+			String originZone = (String) mk.getKey(0);
+			String destinationZone = (String) mk.getKey(1);
+			
+			List<Path> pathList = pathStorage.get(originZone, destinationZone);
+			double totalODdistance = 0.0;
+			//for each path in the path list calculate total distance
+			for (Path path: pathList) {
+				
+				double pathLength = 0.0;
+				for (Object o: path.getEdges()) {
+					Edge e = (Edge)o;
+					SimpleFeature sf = (SimpleFeature) e.getObject();
+					double length = (double) sf.getAttribute("LenNet");
+					pathLength += length;					
+				}
+				//System.out.printf("Path length: %.3f\n\n", pathLength);
+				totalODdistance += pathLength;
+			}
+			double averageODdistance = totalODdistance / pathList.size();
+			double energyCost = 0.0;
+			//iterate over engine types
+			for (EngineType engine: EngineType.values())
+				energyCost += averageODdistance / 100 * engineTypeFractions.get(engine) * energyConsumptionsPer100km.get(engine) * energyUnitCosts.get(engine);
+						
+			//System.out.printf("Average OD distance: %.3f km\t Fuel cost: %.2f GBP\n", averageODdistance, energyCost);
+			//update time skim matrix
+			costSkimMatrix.setCost(originZone, destinationZone, energyCost);
+		}
+		
+		return costSkimMatrix;
 	}
 	
 	/**
@@ -479,6 +621,43 @@ public class RoadNetworkAssignment {
 			linkDensities.put(edge.getID(), density);
 		}
 		return linkDensities;
+	}
+	
+	/**
+	 * @return The sum of all link travel times in the network.
+	 */
+	public double getTotalLinkTravelTimes() {
+		
+		double totalTravelTime = 0.0;
+		for (Integer key: this.linkTravelTime.keySet()) totalTravelTime += linkTravelTime.get(key);
+		
+		return totalTravelTime;
+	}
+	
+	/**
+	 * @return The copy of all link travel times.
+	 */
+	public HashMap<Integer, Double> getCopyOfLinkTravelTimes() {
+		
+		HashMap<Integer, Double> linkTravelTimes = new HashMap<Integer, Double>();
+		for (Integer key: this.linkTravelTime.keySet()) linkTravelTimes.put(key, this.linkTravelTime.get(key));
+		
+		return linkTravelTimes;
+	}
+	
+	
+	/**
+	 * Calculates the sum of absolute differences in link travel times.
+	 * @param other Link travel times to compare with.
+	 * @return Sum of absolute differences in link travel times.
+	 */
+	public double getAbsoluteDifferenceInLinkTravelTimes(HashMap<Integer, Double> other) {
+		
+		double difference = 0.0;
+		for (Integer key: this.linkTravelTime.keySet())
+			difference += Math.abs(this.linkTravelTime.get(key) - other.get(key));
+		
+		return difference;
 	}
 	
 	/**
@@ -597,5 +776,13 @@ public class RoadNetworkAssignment {
 	public void setEngineTypeFractions (EngineType engineType, double engineTypeFraction) {
 		
 		this.engineTypeFractions.put(engineType, engineTypeFraction);
+	}
+	
+	/**
+	 * Resets link volumes to zero.
+	 */
+	public void resetLinkVolumes () {
+		
+		for (Integer key: this.linkVolumes.keySet()) this.linkVolumes.put(key, 0);
 	}
 }
