@@ -23,6 +23,9 @@ import nismod.transport.network.road.RoadNetworkAssignment;
 public class DemandModel {
 
 	public final static int BASE_YEAR = 2015;
+	public final static double LINK_TRAVEL_TIME_AVERAGING_WEIGHT = 0.9;
+	public final static int ASSIGNMENT_ITERATIONS = 2;
+	public final static int PREDICTION_ITERATIONS = 1;
 	public static enum ElasticityTypes {
 		POPULATION, GVA, TIME, COST
 	}
@@ -62,12 +65,12 @@ public class DemandModel {
 		yearToPassengerODMatrix.put(DemandModel.BASE_YEAR, passengerODMatrix);
 
 		//read base-year time skim matrix
-		SkimMatrix baseYearTimeSkimMatrix = new SkimMatrix(baseYearTimeSkimMatrixFile);
-		yearToTimeSkimMatrix.put(DemandModel.BASE_YEAR, baseYearTimeSkimMatrix);
+		//SkimMatrix baseYearTimeSkimMatrix = new SkimMatrix(baseYearTimeSkimMatrixFile);
+		//yearToTimeSkimMatrix.put(DemandModel.BASE_YEAR, baseYearTimeSkimMatrix);
 
 		//read base-year cost skim matrix
-		SkimMatrix baseYearCostSkimMatrix = new SkimMatrix(baseYearCostSkimMatrixFile);
-		yearToCostSkimMatrix.put(DemandModel.BASE_YEAR, baseYearCostSkimMatrix);
+		//SkimMatrix baseYearCostSkimMatrix = new SkimMatrix(baseYearCostSkimMatrixFile);
+		//yearToCostSkimMatrix.put(DemandModel.BASE_YEAR, baseYearCostSkimMatrix);
 
 		//read all year population predictions
 		yearToZoneToPopulation = readPopulationFile(populationFile);
@@ -90,123 +93,176 @@ public class DemandModel {
 	 */
 	public void predictPassengerDemand(int predictedYear, int fromYear) {
 
+		System.out.printf("Predicting %d demand from %d demand\n", predictedYear, fromYear);
+		
+		if (predictedYear <= fromYear) {
+			System.err.println("predictedYear should be greater than fromYear!");
+			return;
 		//check if the demand from year fromYear exists
-		if (!this.yearToPassengerODMatrix.containsKey(fromYear)) {
-
+		} else if (!this.yearToPassengerODMatrix.containsKey(fromYear)) { 
 			System.err.printf("Passenger demand from year %d does not exist!\n", fromYear);
 			return;
-
 		} else {
-
-			//check if the demand for fromYear has already been assigned.
+			//check if the demand for fromYear has already been assigned, if not assign it
 			RoadNetworkAssignment rna = yearToRoadNetworkAssignment.get(fromYear);
 			if (rna == null) {
+				System.out.printf("%d year has not been assigned to the network, so assigning it now.\n", fromYear);
+				
 				//create a network assignment and assign the demand
 				rna = new RoadNetworkAssignment(this.roadNetwork, null, null);
-				rna.assignPassengerFlows(this.yearToPassengerODMatrix.get(fromYear));
-				rna.updateLinkTravelTimes();
-			}	
+				rna.assignFlowsAndUpdateLinkTravelTimesIterated(this.yearToPassengerODMatrix.get(fromYear), LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);
+				yearToRoadNetworkAssignment.put(fromYear, rna);
+	
+				//calculate skim matrices
+				SkimMatrix tsm = rna.calculateTimeSkimMatrix();
+				SkimMatrix csm = rna.calculateCostSkimMatrix();
+				yearToTimeSkimMatrix.put(fromYear, tsm);
+				yearToCostSkimMatrix.put(fromYear, csm);
+			}
+			
+			//copy skim matrices from fromYear into predictedYear
+			yearToTimeSkimMatrix.put(predictedYear, yearToTimeSkimMatrix.get(fromYear));
+			yearToCostSkimMatrix.put(predictedYear, yearToCostSkimMatrix.get(fromYear));
 
-			//update skim matrices, and use those for the predicted year - should be also used for the from year!
-			SkimMatrix tsm = new SkimMatrix();
-			SkimMatrix csm = new SkimMatrix();
-			rna.updateTimeSkimMatrix(tsm);
-			rna.updateCostSkimMatrix(csm);
+			//predicted demand	
+			ODMatrix predictedPassengerODMatrix = new ODMatrix();
+			
+			//for each OD pair first predict the change in flow from the changes in population and GVA
+			for (MultiKey mk: this.yearToPassengerODMatrix.get(fromYear).getKeySet()) {
+				String originZone = (String) mk.getKey(0);
+				String destinationZone = (String) mk.getKey(1);
+
+				double oldFlow = this.yearToPassengerODMatrix.get(fromYear).getFlow(originZone, destinationZone);
+				
+				double oldPopulationOriginZone = this.yearToZoneToPopulation.get(fromYear).get(originZone);
+				double oldPopulationDestinationZone = this.yearToZoneToPopulation.get(fromYear).get(destinationZone);
+				double newPopulationOriginZone = this.yearToZoneToPopulation.get(predictedYear).get(originZone);
+				double newPopulationDestinationZone = this.yearToZoneToPopulation.get(predictedYear).get(destinationZone);
+				double oldGVAOriginZone = this.yearToZoneToGVA.get(fromYear).get(originZone);
+				double oldGVADestinationZone = this.yearToZoneToGVA.get(fromYear).get(destinationZone);
+				double newGVAOriginZone = this.yearToZoneToGVA.get(predictedYear).get(originZone);
+				double newGVADestinationZone = this.yearToZoneToGVA.get(predictedYear).get(destinationZone);
+
+				double predictedflow = oldFlow * Math.pow(newPopulationOriginZone / oldPopulationOriginZone, elasticities.get(ElasticityTypes.POPULATION)) *
+						Math.pow(newGVAOriginZone / oldGVAOriginZone, elasticities.get(ElasticityTypes.GVA)) *
+						Math.pow(newPopulationDestinationZone / oldPopulationDestinationZone, elasticities.get(ElasticityTypes.POPULATION)) *
+						Math.pow(newGVADestinationZone / oldGVADestinationZone, elasticities.get(ElasticityTypes.GVA));
+
+				predictedPassengerODMatrix.setFlow(originZone, destinationZone, (int) Math.round(predictedflow));
+			}
+			
+			System.out.println("First stage prediction matrix (from population and GVA):");
+			predictedPassengerODMatrix.printMatrixFormatted();
+			
+			SkimMatrix tsm = null, csm = null;
+			RoadNetworkAssignment predictedRna = null;
+			for (int i=0; i<PREDICTION_ITERATIONS; i++) {
+
+				if (predictedRna == null)
+					//assign predicted year - using link travel times from fromYear
+					predictedRna = new RoadNetworkAssignment(this.roadNetwork, rna.getLinkTravelTimes(), rna.getAreaCodeProbabilities());
+				else
+					//using latest link travel times
+					predictedRna = new RoadNetworkAssignment(this.roadNetwork, predictedRna.getLinkTravelTimes(), predictedRna.getAreaCodeProbabilities());
+
+				predictedRna.assignFlowsAndUpdateLinkTravelTimesIterated(predictedPassengerODMatrix, LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);
+				
+				//update skim matrices for predicted year after the assignment
+				tsm = predictedRna.calculateTimeSkimMatrix();
+				csm = predictedRna.calculateCostSkimMatrix();
+
+				//for each OD pair predict the change in flow from the change in skim matrices
+				for (MultiKey mk: this.yearToPassengerODMatrix.get(fromYear).getKeySet()) {
+					String originZone = (String) mk.getKey(0);
+					String destinationZone = (String) mk.getKey(1);
+
+					double oldFlow = predictedPassengerODMatrix.getFlow(originZone, destinationZone);
+
+					double oldODTravelTime = this.yearToTimeSkimMatrix.get(predictedYear).getCost(originZone, destinationZone);
+					double newODTravelTime = tsm.getCost(originZone, destinationZone);
+					double oldODTravelCost = this.yearToCostSkimMatrix.get(predictedYear).getCost(originZone, destinationZone);
+					double newODTravelCost = csm.getCost(originZone, destinationZone);
+
+					double predictedflow = oldFlow * Math.pow(newODTravelTime / oldODTravelTime, elasticities.get(ElasticityTypes.TIME)) *
+							Math.pow(newODTravelCost / oldODTravelCost, elasticities.get(ElasticityTypes.COST));
+
+					predictedPassengerODMatrix.setFlow(originZone, destinationZone, (int) Math.round(predictedflow));
+				}
+
+				System.out.println("Second stage prediction matrix (from changes in skim matrices):");
+				predictedPassengerODMatrix.printMatrixFormatted();
+
+				//assign predicted year again using latest link travel times
+				predictedRna = new RoadNetworkAssignment(this.roadNetwork, predictedRna.getLinkTravelTimes(), predictedRna.getAreaCodeProbabilities());
+				//predictedRna.resetLinkVolumes();
+				//predictedRna.assignPassengerFlows(predictedPassengerODMatrix);
+				//predictedRna.updateLinkTravelTimes(ALPHA_LINK_TRAVEL_TIME_AVERAGING);
+				predictedRna.assignFlowsAndUpdateLinkTravelTimesIterated(predictedPassengerODMatrix, LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);				
+				
+				//store skim matrices into hashmaps
+				yearToTimeSkimMatrix.put(predictedYear, tsm);
+				yearToCostSkimMatrix.put(predictedYear, csm);
+								
+				//update skim matrices for predicted year after the assignment
+				tsm = predictedRna.calculateTimeSkimMatrix();
+				csm = predictedRna.calculateCostSkimMatrix();
+
+				System.out.println("Difference in consecutive time skim matrices: " + tsm.getAbsoluteDifference(yearToTimeSkimMatrix.get(predictedYear)));
+				System.out.println("Difference in consecutive cost skim matrix: " + csm.getAbsoluteDifference(yearToCostSkimMatrix.get(predictedYear)));
+				
+				//store road network assignment
+				yearToRoadNetworkAssignment.put(predictedYear, predictedRna);
+
+				//store predicted OD matrix in the map
+				this.yearToPassengerODMatrix.put(predictedYear, predictedPassengerODMatrix);
+			}//for loop
+			
+			//store latest skim matrices
 			yearToTimeSkimMatrix.put(predictedYear, tsm);
-			yearToCostSkimMatrix.put(predictedYear,  csm);
-			yearToRoadNetworkAssignment.put(fromYear, rna);
+			yearToCostSkimMatrix.put(predictedYear, csm);
 		}
-
-		//predict the demand	
-		ODMatrix predictedPassengerODMatrix = new ODMatrix();
-		//for each OD pair
-		for (MultiKey mk: this.yearToPassengerODMatrix.get(fromYear).getKeySet()) {
-			String originZone = (String) mk.getKey(0);
-			String destinationZone = (String) mk.getKey(1);
-
-			double oldFlow = this.yearToPassengerODMatrix.get(fromYear).getFlow(originZone, destinationZone);
-			double oldPopulationOriginZone = this.yearToZoneToPopulation.get(fromYear).get(originZone);
-			double oldPopulationDestinationZone = this.yearToZoneToPopulation.get(fromYear).get(destinationZone);
-			double newPopulationOriginZone = this.yearToZoneToPopulation.get(predictedYear).get(originZone);
-			double newPopulationDestinationZone = this.yearToZoneToPopulation.get(predictedYear).get(destinationZone);
-			double oldGVAOriginZone = this.yearToZoneToGVA.get(fromYear).get(originZone);
-			double oldGVADestinationZone = this.yearToZoneToGVA.get(fromYear).get(destinationZone);
-			double newGVAOriginZone = this.yearToZoneToGVA.get(predictedYear).get(originZone);
-			double newGVADestinationZone = this.yearToZoneToGVA.get(predictedYear).get(destinationZone);
-			double oldODTravelTime = this.yearToTimeSkimMatrix.get(fromYear).getCost(originZone, destinationZone);
-			double newODTravelTime = this.yearToTimeSkimMatrix.get(predictedYear).getCost(originZone, destinationZone);
-			double oldODTravelCost = this.yearToCostSkimMatrix.get(fromYear).getCost(originZone, destinationZone);
-			double newODTravelCost = this.yearToCostSkimMatrix.get(predictedYear).getCost(originZone, destinationZone);
-
-			double predictedflow = oldFlow * Math.pow(newPopulationOriginZone / oldPopulationOriginZone, elasticities.get(ElasticityTypes.POPULATION)) *
-					Math.pow(newGVAOriginZone / oldGVAOriginZone, elasticities.get(ElasticityTypes.GVA)) *
-					Math.pow(newPopulationDestinationZone / oldPopulationDestinationZone, elasticities.get(ElasticityTypes.POPULATION)) *
-					Math.pow(newGVADestinationZone / oldGVADestinationZone, elasticities.get(ElasticityTypes.GVA)) *
-					Math.pow(newODTravelTime / oldODTravelTime, elasticities.get(ElasticityTypes.TIME)) *
-					Math.pow(newODTravelCost / oldODTravelCost, elasticities.get(ElasticityTypes.COST));
-
-			predictedPassengerODMatrix.setFlow(originZone, destinationZone, (int) Math.round(predictedflow));
-		}
-		
-		//put predicted OD matrix in the map
-		this.yearToPassengerODMatrix.put(predictedYear, predictedPassengerODMatrix);
-		
-		//assign predicted year
-		RoadNetworkAssignment predictedRna = new RoadNetworkAssignment(this.roadNetwork, null, null);
-		predictedRna.assignPassengerFlows(predictedPassengerODMatrix);
-		predictedRna.updateLinkTravelTimes();
-		
-		//update skim matrices for predicted year after the assignment
-		SkimMatrix tsm = new SkimMatrix();
-		SkimMatrix csm = new SkimMatrix();
-		predictedRna.updateTimeSkimMatrix(tsm);
-		predictedRna.updateCostSkimMatrix(csm);
-		yearToTimeSkimMatrix.put(predictedYear, tsm);
-		yearToCostSkimMatrix.put(predictedYear, csm);
-		yearToRoadNetworkAssignment.put(predictedYear, predictedRna);
 	}                                                                                                                                               
 
-	
 	/**
 	 * Getter method for the passenger demand in a given year.
 	 * @param year Year for which the demand is requested.
 	 * @return Origin-destination matrix with passenger flows.
 	 */
 	public ODMatrix getPassengerDemand (int year) {
-		
+
 		return yearToPassengerODMatrix.get(year);
 	}
-	
+
 	/**
 	 * Getter method for the road network assignment in a given year.
 	 * @param year Year for which the road network assignment is requested.
 	 * @return Road network assignment.
 	 */
 	public RoadNetworkAssignment getRoadNetworkAssignment (int year) {
-		
+
 		return 	yearToRoadNetworkAssignment.get(year);
 	}
-	
+
 	/**
 	 * Getter method for time skim matrix in a given year.
 	 * @param year Year for which the the skim matrix is requested.
 	 * @return Time skim matrix.
 	 */
 	public SkimMatrix getTimeSkimMatrix (int year) {
-		
+
 		return 	yearToTimeSkimMatrix.get(year);
 	}
-	
+
 	/**
 	 * Getter method for cost skim matrix in a given year.
 	 * @param year Year for which the the skim matrix is requested.
 	 * @return Cost skim matrix.
 	 */
 	public SkimMatrix getCostSkimMatrix (int year) {
-		
+
 		return 	yearToCostSkimMatrix.get(year);
 	}
-	
+
 	/**
 	 * @param fileName
 	 * @return

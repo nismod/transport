@@ -164,4 +164,21 @@ public class SkimMatrix {
 		
 		return averageCost;
 	}
+	
+	/**
+	 * Gets sum of absolute differences between elements of two matrices.
+	 * @param other The other matrix.
+	 * @return Sum of absolute differences.
+	 */
+	public double getAbsoluteDifference(SkimMatrix other) {
+		
+		double difference = 0.0;
+		for (MultiKey mk: other.getKeySet()) {
+			String origin = (String) mk.getKey(0);
+			String destination = (String) mk.getKey(1);
+			difference += Math.abs(this.getCost(origin, destination) - other.getCost(origin, destination));
+		}
+	
+		return difference;
+	}
 }

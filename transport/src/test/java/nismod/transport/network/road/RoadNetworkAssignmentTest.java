@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
@@ -63,9 +64,15 @@ public class RoadNetworkAssignmentTest {
 		RoadNetworkAssignment roadNetworkAssignment = new RoadNetworkAssignment(roadNetwork2, null, null);
 		ODMatrix passengerODM = new ODMatrix("./src/test/resources/testdata/passengerODM.csv");
 		passengerODM.printMatrix(); 
-		roadNetworkAssignment.assignPassengerFlows(passengerODM);
-		roadNetworkAssignment.updateLinkTravelTimes();
 		
+		for (int i = 0; i < 5; i++) {
+			roadNetworkAssignment.resetLinkVolumes();
+			roadNetworkAssignment.assignPassengerFlows(passengerODM);
+			HashMap<Integer, Double> oldTravelTimes = roadNetworkAssignment.getCopyOfLinkTravelTimes();
+			roadNetworkAssignment.updateLinkTravelTimes(0.9);
+			System.out.println("Difference in link travel times: " + roadNetworkAssignment.getAbsoluteDifferenceInLinkTravelTimes(oldTravelTimes));
+		}		
+
 		System.out.println("Nodes:");
 		System.out.println(roadNetwork2.getNetwork().getNodes());
 		System.out.println("Node to zone mapping: ");
@@ -84,18 +91,21 @@ public class RoadNetworkAssignmentTest {
 		}
 		System.out.println("Link volumes: ");
 		System.out.println(roadNetworkAssignment.getLinkVolumes());	
+		
+		System.out.println("Free-flow travel times: ");
+		System.out.println(roadNetworkAssignment.getLinkFreeFlowTravelTimes());	
+		
 		System.out.println("Travel times: ");
 		System.out.println(roadNetworkAssignment.getLinkTravelTimes());	
 		
+		System.out.println("Time skim matrix:");
 		SkimMatrix timeSkimMatrix = new SkimMatrix();
-		SkimMatrix costSkimMatrix = new SkimMatrix();
-		
 		roadNetworkAssignment.updateTimeSkimMatrix(timeSkimMatrix);
-		roadNetworkAssignment.updateCostSkimMatrix(costSkimMatrix);
+		timeSkimMatrix.printMatrixFormatted();
 		
-		timeSkimMatrix.printMatrix();
-		costSkimMatrix.printMatrix();
-		
+		System.out.println("Cost skim matrix:");
+		roadNetworkAssignment.calculateCostSkimMatrix().printMatrixFormatted();
+				
 		System.out.println("Total energy consumptions:");
 		System.out.println(roadNetworkAssignment.calculateEnergyConsumptions());
 		
@@ -269,8 +279,15 @@ public class RoadNetworkAssignmentTest {
 		System.out.println(rna.getLinkTravelTimes());
 		assertTrue(rna.getLinkFreeFlowTravelTimes().equals(rna.getLinkTravelTimes()));
 
-		//after assignment the link travel times should be greater or equal than the free flow travel times.
+		//check weighted averaging for travel times
+		rna.updateLinkTravelTimes(0.9);
+		double freeFlow = rna.getLinkFreeFlowTravelTimes().get(512);
+		double averaged = rna.getLinkTravelTimes().get(512);
 		rna.updateLinkTravelTimes();
+		double updated = rna.getLinkTravelTimes().get(512);
+		assertEquals("Averaged travel time should be correct", 0.9*updated + 0.1*freeFlow, averaged, EPSILON);
+		
+		//after assignment the link travel times should be greater or equal than the free flow travel times.
 		System.out.println(rna.getLinkFreeFlowTravelTimes());
 		System.out.println(rna.getLinkTravelTimes());
 		for (int key: rna.getLinkTravelTimes().keySet()) 			
