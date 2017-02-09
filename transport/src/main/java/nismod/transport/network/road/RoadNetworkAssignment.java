@@ -324,7 +324,8 @@ public class RoadNetworkAssignment {
 	}
 	
 	/**
-	 * Updates link travel times using weighted averaging with older values.
+	 * Updates link travel times using weighted averaging between new values (calculated from link volumes) 
+	 * and older values (stored in the instance field).
 	 * @param weight Parameter for weighted averaging.
 	 */
 	public void updateLinkTravelTimes(double weight) {

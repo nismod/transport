@@ -281,13 +281,16 @@ public class RoadNetworkAssignmentTest {
 
 		//check weighted averaging for travel times
 		rna.updateLinkTravelTimes(0.9);
-		double freeFlow = rna.getLinkFreeFlowTravelTimes().get(512);
-		double averaged = rna.getLinkTravelTimes().get(512);
+		HashMap<Integer, Double> averagedTravelTimes = rna.getCopyOfLinkTravelTimes();
 		rna.updateLinkTravelTimes();
-		double updated = rna.getLinkTravelTimes().get(512);
-		assertEquals("Averaged travel time should be correct", 0.9*updated + 0.1*freeFlow, averaged, EPSILON);
+		for (int key: averagedTravelTimes.keySet()) {
+			double freeFlow = rna.getLinkFreeFlowTravelTimes().get(key);
+			double updated = rna.getLinkTravelTimes().get(key);
+			double averaged = averagedTravelTimes.get(key);
+			assertEquals("Averaged travel time should be correct", 0.9*updated + 0.1*freeFlow, averaged, EPSILON);
+		}
 		
-		//after assignment the link travel times should be greater or equal than the free flow travel times.
+		//after assignment and update the link travel times should be greater or equal than the free flow travel times.
 		System.out.println(rna.getLinkFreeFlowTravelTimes());
 		System.out.println(rna.getLinkTravelTimes());
 		for (int key: rna.getLinkTravelTimes().keySet()) 			
