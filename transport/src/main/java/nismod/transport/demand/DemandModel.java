@@ -23,8 +23,8 @@ import nismod.transport.network.road.RoadNetworkAssignment;
 public class DemandModel {
 
 	public final static int BASE_YEAR = 2015;
-	public final static double LINK_TRAVEL_TIME_AVERAGING_WEIGHT = 0.9;
-	public final static int ASSIGNMENT_ITERATIONS = 2;
+	public final static double LINK_TRAVEL_TIME_AVERAGING_WEIGHT = 1.0;
+	public final static int ASSIGNMENT_ITERATIONS = 1;
 	public final static int PREDICTION_ITERATIONS = 1;
 	public static enum ElasticityTypes {
 		POPULATION, GVA, TIME, COST
