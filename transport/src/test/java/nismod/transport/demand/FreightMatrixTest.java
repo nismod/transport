@@ -60,7 +60,7 @@ public class FreightMatrixTest {
 	
 		assertTrue("All matrix elements are correct", condition);
 		
-		FreightMatrix freightMatrix2 = new FreightMatrix("./src/test/resources/testdata/freightMatrix.csv");
+		FreightMatrix freightMatrix2 = new FreightMatrix("./src/test/resources/testdata/FreightMatrix.csv");
 			
 		System.out.println(freightMatrix2.getKeySet());
 		for (MultiKey mk: freightMatrix2.getKeySet()) {
