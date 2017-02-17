@@ -84,6 +84,8 @@ public class RoadNetwork {
 	private HashMap<String, List<String>> zoneToAreaCodes;
 	private HashMap<String, Integer> areaCodeToNearestNode;
 	private HashMap<String, Integer> areaCodeToPopulation;
+	private HashMap<Integer, Integer> freightZoneToNearestNode;
+	private HashMap<Integer, String> freightZoneToLAD;
 
 	/**
 	 * @param zonesUrl Url for the shapefile with zone polygons
@@ -133,6 +135,15 @@ public class RoadNetwork {
 		this.loadAreaCodePopulationData(areaCodeFileName);
 		this.loadAreaCodeNearestNode(areaCodeNearestNodeFile);
 		
+		this.freightZoneToLAD = new HashMap<Integer, String>();
+		this.freightZoneToLAD.put(855, "E06000045");
+		this.freightZoneToLAD.put(854, "E07000086");
+		this.freightZoneToLAD.put(866, "E07000091");
+		this.freightZoneToLAD.put(867, "E06000046");
+		this.freightZoneToNearestNode = new HashMap<Integer, Integer>();
+		this.freightZoneToNearestNode.put(1312, 86);
+		this.freightZoneToNearestNode.put(1313, 115);
+			
 		//System.out.println(this.zoneToAreaCodes);
 		//System.out.println(this.areaCodeToPopulation);
 		//System.out.println(this.areaCodeToNearestNode);
@@ -472,6 +483,24 @@ public class RoadNetwork {
 	public HashMap<String, Integer> getAreaCodeToNearestNode() {
 
 		return this.areaCodeToNearestNode;
+	}
+	
+	/**
+	 * Getter method for the freight zone to LAD mapping.
+	 * @return Area code to the nearest node mapping.
+	 */
+	public HashMap<Integer, String> getFreightZoneToLAD() {
+
+		return this.freightZoneToLAD;
+	}
+	
+	/**
+	 * Getter method for the freight zone to the nearest node mapping.
+	 * @return Area code to the nearest node mapping.
+	 */
+	public HashMap<Integer, Integer> getFreightZoneToNearestNode() {
+
+		return this.freightZoneToNearestNode;
 	}
 
 	/* (non-Javadoc)

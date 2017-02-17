@@ -18,6 +18,7 @@ import org.geotools.graph.structure.Edge;
 import org.junit.Test;
 import org.opengis.feature.simple.SimpleFeature;
 
+import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.ODMatrix;
 import nismod.transport.demand.SkimMatrix;
 
@@ -66,7 +67,7 @@ public class RoadNetworkAssignmentTest {
 		passengerODM.printMatrix(); 
 		
 		for (int i = 0; i < 5; i++) {
-			roadNetworkAssignment.resetLinkVolumes();
+			roadNetworkAssignment.resetLinkVolumesInPCU();
 			roadNetworkAssignment.assignPassengerFlows(passengerODM);
 			HashMap<Integer, Double> oldTravelTimes = roadNetworkAssignment.getCopyOfLinkTravelTimes();
 			roadNetworkAssignment.updateLinkTravelTimes(0.9);
@@ -89,8 +90,8 @@ public class RoadNetworkAssignmentTest {
 			List list = (List) roadNetworkAssignment.getPathStorage().get((String)((MultiKey)mk).getKey(0), (String)((MultiKey)mk).getKey(1));
 			System.out.println("number of paths = " + list.size());
 		}
-		System.out.println("Link volumes: ");
-		System.out.println(roadNetworkAssignment.getLinkVolumes());	
+		System.out.println("Link volumes in PCU: ");
+		System.out.println(roadNetworkAssignment.getLinkVolumesInPCU());	
 		
 		System.out.println("Free-flow travel times: ");
 		System.out.println(roadNetworkAssignment.getLinkFreeFlowTravelTimes());	
@@ -271,6 +272,101 @@ public class RoadNetworkAssignmentTest {
 		}
 		System.out.println("Total distance = " + totalDistance);
 
+		//TEST LINK TRAVEL TIMES
+		System.out.println("\n\n*** Testing link travel times ***");
+
+		//before assignment link travel times should be equal to free flow travel times
+		System.out.println(rna.getLinkFreeFlowTravelTimes());
+		System.out.println(rna.getLinkTravelTimes());
+		assertTrue(rna.getLinkFreeFlowTravelTimes().equals(rna.getLinkTravelTimes()));
+
+		//check weighted averaging for travel times
+		rna.updateLinkTravelTimes(0.9);
+		HashMap<Integer, Double> averagedTravelTimes = rna.getCopyOfLinkTravelTimes();
+		rna.updateLinkTravelTimes();
+		for (int key: averagedTravelTimes.keySet()) {
+			double freeFlow = rna.getLinkFreeFlowTravelTimes().get(key);
+			double updated = rna.getLinkTravelTimes().get(key);
+			double averaged = averagedTravelTimes.get(key);
+			assertEquals("Averaged travel time should be correct", 0.9*updated + 0.1*freeFlow, averaged, EPSILON);
+		}
+		
+		//after assignment and update the link travel times should be greater or equal than the free flow travel times.
+		System.out.println(rna.getLinkFreeFlowTravelTimes());
+		System.out.println(rna.getLinkTravelTimes());
+		for (int key: rna.getLinkTravelTimes().keySet()) 			
+			assertTrue(rna.getLinkTravelTimes().get(key) >= rna.getLinkFreeFlowTravelTimes().get(key));	
+	}
+	
+	@Test
+	public void testFreight() throws IOException {
+
+		final URL zonesUrl = new URL("file://src/test/resources/testdata/zones.shp");
+		final URL networkUrl = new URL("file://src/test/resources/testdata/network.shp");
+		final URL nodesUrl = new URL("file://src/test/resources/testdata/nodes.shp");
+		final URL AADFurl = new URL("file://src/test/resources/testdata/AADFdirected.shp");
+		final String areaCodeFileName = "./src/test/resources/testdata/nomisPopulation.csv";
+		final String areaCodeNearestNodeFile = "./src/test/resources/testdata/areaCodeToNearestNode.csv";
+		final String baseYearODMatrixFile = "./src/test/resources/testdata/passengerODM.csv";
+		final String freightMatrixFile = "./src/test/resources/testdata/FreightMatrix.csv";
+
+		//create a road network
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile);
+
+		//create a road network assignment
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null);
+
+		//assign passenger flows
+		//ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
+		//rna.assignPassengerFlows(odm);
+		
+		//assign freight flows
+		FreightMatrix fm = new FreightMatrix(freightMatrixFile);
+		rna.assignFreightFlows(fm);
+		
+		//TEST OUTPUT AREA PROBABILITIES
+		System.out.println("\n\n*** Testing output area probabilities ***");
+		
+		final double EPSILON = 1e-11; //may fail for higher accuracy
+		
+		//test the probability of one output area from each LAD
+		assertEquals("The probability of the output area E00116864 is correct", (double)299/176462, rna.getAreaCodeProbabilities().get("E00116864"), EPSILON);
+		assertEquals("The probability of the output area E00086552 is correct", (double)430/236882, rna.getAreaCodeProbabilities().get("E00086552"), EPSILON);
+		assertEquals("The probability of the output area E00115160 is correct", (double)370/125199, rna.getAreaCodeProbabilities().get("E00115160"), EPSILON);
+		assertEquals("The probability of the output area E00172724 is correct", (double)666/138265, rna.getAreaCodeProbabilities().get("E00172724"), EPSILON);
+
+		//test that the sum of probabilities of output areas in each LAD zone is 1.0
+		for (String zone: roadNetwork.getZoneToAreaCodes().keySet()) {
+
+			double probabilitySum = 0.0;
+			for(Iterator<String> iter = roadNetwork.getZoneToAreaCodes().get(zone).iterator(); iter.hasNext(); ) {
+				String areaCode = iter.next();
+				probabilitySum += rna.getAreaCodeProbabilities().get(areaCode);
+			}
+			System.out.printf("The sum of probabilites for zone %s is: %.12f.\n", zone, probabilitySum);
+			assertEquals("The sum of probabilities for zone " + zone + " is 1.0", 1.0, probabilitySum, EPSILON);
+		}
+		
+		//TEST PATH STORAGE FOR FREIGHT
+		System.out.println("\n\n*** Testing path storage for freight ***");
+		
+		//check that the number of paths for a given OD equals the flow (the number of trips in the OD matrix).
+		rna.getPathStorageFreight();
+		//for each OD
+		for (MultiKey mk: fm.getKeySet()) {
+					//System.out.println(mk);
+					int originFreightZone = (int) mk.getKey(0);
+					int destinationFreightZone = (int) mk.getKey(1);
+					List<Path> pathList = rna.getPathStorageFreight().get(originFreightZone, destinationFreightZone);
+					
+					int flow = 0;
+					//sum flows for each vehicle type
+					for (RoadNetworkAssignment.VehicleType vehType: RoadNetworkAssignment.VehicleType.values())
+						flow += fm.getFlow(originFreightZone, destinationFreightZone, vehType.ordinal());
+	
+					assertEquals("The number of paths equals the flow", flow, pathList.size());
+		}
+	
 		//TEST LINK TRAVEL TIMES
 		System.out.println("\n\n*** Testing link travel times ***");
 

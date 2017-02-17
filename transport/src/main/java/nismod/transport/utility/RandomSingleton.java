@@ -30,4 +30,9 @@ public class RandomSingleton {
 	
 		return generator.nextDouble(); 
 	} 
+	
+	public int nextInt(int bound) { 
+		
+		return generator.nextInt(bound); 
+	} 
 }
