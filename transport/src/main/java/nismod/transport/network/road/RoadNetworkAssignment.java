@@ -75,12 +75,15 @@ public class RoadNetworkAssignment {
 	//the probability of trip starting/ending in the census output area
 	private HashMap<String, Double> areaCodeProbabilities;
 	
+	//the probability of trip starting/ending in the workplace zone
+	private HashMap<String, Double> workplaceZoneProbabilities;
+	
 	/**
 	 * @param roadNetwork Road network.
 	 * @param defaultLinkTravelTime Default link travel times.
 	 * @param areCodeProbabilities Probabilities of trips starting/ending in each census output area.
 	 */
-	public RoadNetworkAssignment(RoadNetwork roadNetwork, HashMap<Integer, Double> defaultLinkTravelTime, HashMap<String, Double> areaCodeProbabilities) {
+	public RoadNetworkAssignment(RoadNetwork roadNetwork, HashMap<Integer, Double> defaultLinkTravelTime, HashMap<String, Double> areaCodeProbabilities, HashMap<String, Double> workplaceZoneProbabilities) {
 
 		this.roadNetwork = roadNetwork;
 		this.linkVolumesInPCU = new HashMap<Integer, Double>();
@@ -129,6 +132,23 @@ public class RoadNetworkAssignment {
 		}
 		//System.out.println("Probabilities for area codes:");
 		//System.out.println(this.areaCodeProbabilities);
+		
+		//calculate workplace zone choice probability
+		if (workplaceZoneProbabilities != null)	this.workplaceZoneProbabilities = workplaceZoneProbabilities;
+		else {
+			this.workplaceZoneProbabilities = new HashMap<String, Double>();
+			//for each LAD zone
+			for (String zone: roadNetwork.getZoneToWorkplaceCodes().keySet()) {
+				int totalPopulationInZone = 0;
+				List<String> listOfWorkplaceCodes = roadNetwork.getZoneToWorkplaceCodes().get(zone);
+				for (String workplaceCode: listOfWorkplaceCodes)
+					totalPopulationInZone += roadNetwork.getWorkplaceCodeToPopulation().get(workplaceCode);
+				for (String workplaceCode: listOfWorkplaceCodes)
+					this.workplaceZoneProbabilities.put(workplaceCode, (double) roadNetwork.getWorkplaceCodeToPopulation().get(workplaceCode) / totalPopulationInZone);
+			}
+		}
+		System.out.println("Probabilities for workplace zones:");
+		System.out.println(this.workplaceZoneProbabilities);
 		
 		//set default values for vehicle type to PCU conversion
 		vehicleTypeToPCU = new HashMap<VehicleType, Double>();
@@ -323,7 +343,9 @@ public class RoadNetworkAssignment {
 				
 				int originNode, destinationNode;
 
-				if ((int)mk.getKey(0) <= 1032) { //origin freight zone is an LAD
+				/*
+				//choose random start and end nodes
+				if ((int)mk.getKey(0) <= 1032) { //origin freight zone is a LAD
 					//choose random trip start node within the origin zone
 					String originZone = roadNetwork.getFreightZoneToLAD().get((int)mk.getKey(0)); 
 					List listOfOriginNodes = roadNetwork.getZoneToNodes().get(originZone);
@@ -334,8 +356,7 @@ public class RoadNetworkAssignment {
 					originNode = roadNetwork.getFreightZoneToNearestNode().get((int)mk.getKey(0));
 				}
 
-
-				if ((int)mk.getKey(1) <= 1032) { //destination freight zone is an LAD
+				if ((int)mk.getKey(1) <= 1032) { //destination freight zone is a LAD
 					//choose random trip end node within the destination zone
 					String destinationZone = roadNetwork.getFreightZoneToLAD().get((int)mk.getKey(1)); 
 					List listOfDestinationNodes = roadNetwork.getZoneToNodes().get(destinationZone);
@@ -345,42 +366,58 @@ public class RoadNetworkAssignment {
 				} else {// freight zone is a point (port, airport or distribution centre)
 					destinationNode = roadNetwork.getFreightZoneToNearestNode().get((int)mk.getKey(1));
 				}
-					
-				/*	
-				List<String> listOfOriginAreaCodes = roadNetwork.getZoneToAreaCodes().get(mk.getKey(0));
-				List<String> listOfDestinationAreaCodes = roadNetwork.getZoneToAreaCodes().get(mk.getKey(1));
-				
-				//choose origin census output area
-				double cumulativeProbability = 0.0;
-				String originAreaCode = null;
-				double random = rng.nextDouble();
-				for (String areaCode: listOfOriginAreaCodes) {
-					cumulativeProbability += areaCodeProbabilities.get(areaCode);
-					if (Double.compare(cumulativeProbability, random) > 0) {
-						originAreaCode = areaCode;
-						break;
-					}
-				}
-				if (originAreaCode == null) System.err.println("Origin output area was not selected.");
-				
-				//choose destination census output area
-				cumulativeProbability = 0.0;
-				String destinationAreaCode = null;
-				random = rng.nextDouble();
-				for (String areaCode: listOfDestinationAreaCodes) {
-					cumulativeProbability += areaCodeProbabilities.get(areaCode);
-					if (Double.compare(cumulativeProbability, random) > 0) {
-						destinationAreaCode = areaCode;
-						break;
-					}
-				}
-				if (destinationAreaCode == null) System.err.println("Destination otuput area was not selected.");
-				
-				//take the nearest node on the network
-				originNode = roadNetwork.getAreaCodeToNearestNode().get(originAreaCode);
-				destinationNode = roadNetwork.getAreaCodeToNearestNode().get(destinationAreaCode);
 				*/
 					
+				//chose origin node based on the population in workplace zones
+				if ((int)mk.getKey(0) <= 1032) { //origin freight zone is a LAD
+					
+					//choose origin workplace zone within the LAD
+					String originZone = roadNetwork.getFreightZoneToLAD().get((int)mk.getKey(0)); 
+					List<String> listOfOriginWorkplaceCodes = roadNetwork.getZoneToWorkplaceCodes().get(originZone);
+					double cumulativeProbability = 0.0;
+					String originWorkplaceCode = null;
+					double random = rng.nextDouble();
+					for (String workplaceCode: listOfOriginWorkplaceCodes) {
+						cumulativeProbability += workplaceZoneProbabilities.get(workplaceCode);
+						if (Double.compare(cumulativeProbability, random) > 0) {
+							originWorkplaceCode = workplaceCode;
+							break;
+						}
+					}
+					if (originWorkplaceCode == null) System.err.println("Origin output area was not selected.");
+					
+					//use the network node nearest to the workplace zone (population-weighted) centroid
+					originNode = roadNetwork.getWorkplaceZoneToNearestNode().get(originWorkplaceCode);
+					
+				} else {// freight zone is a point (port, airport or distribution centre)
+					originNode = roadNetwork.getFreightZoneToNearestNode().get((int)mk.getKey(0));
+				}
+				
+				//choose destination node based on the population in workplace zones
+				if ((int)mk.getKey(1) <= 1032) { //destination freight zone is a LAD
+					
+					//choose destination workplace zone within the LAD
+					String destinationZone = roadNetwork.getFreightZoneToLAD().get((int)mk.getKey(1)); 
+					List<String> listOfDestinationWorkplaceCodes = roadNetwork.getZoneToWorkplaceCodes().get(destinationZone);
+					double cumulativeProbability = 0.0;
+					String destinationWorkplaceCode = null;
+					double random = rng.nextDouble();
+					for (String workplaceCode: listOfDestinationWorkplaceCodes) {
+						cumulativeProbability += workplaceZoneProbabilities.get(workplaceCode);
+						if (Double.compare(cumulativeProbability, random) > 0) {
+							destinationWorkplaceCode = workplaceCode;
+							break;
+						}
+					}
+					if (destinationWorkplaceCode == null) System.err.println("Destination output area was not selected.");
+					
+					//use the network node nearest to the workplace zone (population-weighted) centroid
+					destinationNode = roadNetwork.getWorkplaceZoneToNearestNode().get(destinationWorkplaceCode);
+					
+				} else {// freight zone is a point (port, airport or distribution centre)
+					destinationNode = roadNetwork.getFreightZoneToNearestNode().get((int)mk.getKey(1));
+				}
+				
 				//get the shortest path from the origin node to the destination node using AStar algorithm
 				DirectedGraph rn = roadNetwork.getNetwork();
 				//set source and destination node
@@ -900,6 +937,15 @@ public class RoadNetworkAssignment {
 	public HashMap<String, Double> getAreaCodeProbabilities() {
 
 		return this.areaCodeProbabilities;
+	}
+	
+	/**
+	 * Getter method for workplace zones probabilities.
+	 * @return Workplace zones probabilities.
+	 */
+	public HashMap<String, Double> getWorkplaceZoneProbabilities() {
+
+		return this.workplaceZoneProbabilities;
 	}
 	
 	/**

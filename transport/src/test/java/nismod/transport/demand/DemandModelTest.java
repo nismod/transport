@@ -25,6 +25,8 @@ public class DemandModelTest {
 
 		final String areaCodeFileName = "./src/test/resources/testdata/nomisPopulation.csv";
 		final String areaCodeNearestNodeFile = "./src/test/resources/testdata/areaCodeToNearestNode.csv";
+		final String workplaceZoneFileName = "./src/test/resources/testdata/workplacePopulation.csv";
+		final String workplaceZoneNearestNodeFile = "./src/test/resources/testdata/workplaceZoneToNearestNode.csv";
 
 		final URL zonesUrl2 = new URL("file://src/test/resources/testdata/zones.shp");
 		final URL networkUrl2 = new URL("file://src/test/resources/testdata/network.shp");
@@ -38,7 +40,7 @@ public class DemandModelTest {
 		final String GVAFile = "./src/test/resources/testdata/GVA.csv";
 
 		//create a road network
-		RoadNetwork roadNetwork2 = new RoadNetwork(zonesUrl2, networkUrl2, nodesUrl2, AADFurl2, areaCodeFileName, areaCodeNearestNodeFile);
+		RoadNetwork roadNetwork2 = new RoadNetwork(zonesUrl2, networkUrl2, nodesUrl2, AADFurl2, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile);
 		
 		//visualise the shapefiles
 		//roadNetwork2.visualise("Test Area");

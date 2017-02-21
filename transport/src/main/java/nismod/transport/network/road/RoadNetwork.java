@@ -86,6 +86,10 @@ public class RoadNetwork {
 	private HashMap<String, Integer> areaCodeToPopulation;
 	private HashMap<Integer, Integer> freightZoneToNearestNode;
 	private HashMap<Integer, String> freightZoneToLAD;
+	private HashMap<String, Integer> workplaceZoneToNearestNode;
+	private HashMap<String, List<String>> zoneToWorkplaceCodes;
+	private HashMap<String, Integer> workplaceCodeToPopulation;
+
 
 	/**
 	 * @param zonesUrl Url for the shapefile with zone polygons
@@ -94,7 +98,7 @@ public class RoadNetwork {
 	 * @param AADFurl Url for the shapefile with AADF counts
 	 * @throws IOException 
 	 */
-	public RoadNetwork(URL zonesUrl, URL networkUrl, URL nodesUrl, URL AADFurl, String areaCodeFileName, String areaCodeNearestNodeFile) throws IOException {
+	public RoadNetwork(URL zonesUrl, URL networkUrl, URL nodesUrl, URL AADFurl, String areaCodeFileName, String areaCodeNearestNodeFile, String workplaceZoneFileName, String workplaceZoneNearestNodeFile) throws IOException {
 
 		zonesShapefile = new ShapefileDataStore(zonesUrl);
 		networkShapefile = new ShapefileDataStore(networkUrl);
@@ -134,6 +138,8 @@ public class RoadNetwork {
 		
 		this.loadAreaCodePopulationData(areaCodeFileName);
 		this.loadAreaCodeNearestNode(areaCodeNearestNodeFile);
+		this.loadWorkplaceZonePopulationData(workplaceZoneFileName);
+		this.loadWorkplaceZoneNearestNode(workplaceZoneNearestNodeFile);
 		
 		this.freightZoneToLAD = new HashMap<Integer, String>();
 		this.freightZoneToLAD.put(855, "E06000045");
@@ -503,6 +509,33 @@ public class RoadNetwork {
 		return this.freightZoneToNearestNode;
 	}
 
+	/**
+	 * Getter method for the LAD zone to workplace zones mapping.
+	 * @return Zone to workplace code mapping.
+	 */
+	public HashMap<String, List<String>> getZoneToWorkplaceCodes() {
+
+		return this.zoneToWorkplaceCodes;
+	}
+	
+	/**
+	 * Getter method for the workplace code to the nearest node mapping.
+	 * @return Workplace code to the nearest node mapping.
+	 */
+	public HashMap<String, Integer> getWorkplaceZoneToNearestNode() {
+
+		return this.workplaceZoneToNearestNode;
+	}
+	
+	/**
+	 * Getter method for the workplace zone to population mapping.
+	 * @return Workplace zone to population mapping.
+	 */
+	public HashMap<String, Integer> getWorkplaceCodeToPopulation() {
+
+		return this.workplaceCodeToPopulation;
+	}
+	
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */
@@ -801,6 +834,38 @@ public class RoadNetwork {
 	}
 	
 	/**
+	 * Loads workplace zone population data.
+	 * @param workplaceZoneFileName File with workplace zone population data.
+	 * @throws IOException 
+	 */
+	private void loadWorkplaceZonePopulationData(String workplaceZoneFileName) throws IOException {
+
+		this.zoneToWorkplaceCodes = new HashMap<String, List<String>>();
+		this.workplaceCodeToPopulation = new HashMap<String, Integer>();
+		
+		CSVParser parser = new CSVParser(new FileReader(workplaceZoneFileName), CSVFormat.DEFAULT.withHeader());
+		//System.out.println(parser.getHeaderMap().toString());
+		Set<String> keySet = parser.getHeaderMap().keySet();
+		//System.out.println("keySet = " + keySet);
+		for (CSVRecord record : parser) {
+			//System.out.println(record);
+			String workplaceCode = record.get("workplace_code");
+			String zoneCode = record.get("lad_code");
+			int population = Integer.parseInt(record.get("population"));
+			
+			List<String> workplaceCodesList = zoneToWorkplaceCodes.get(zoneCode);
+			if (workplaceCodesList == null) {
+				workplaceCodesList = new ArrayList<String>();
+				zoneToWorkplaceCodes.put(zoneCode, workplaceCodesList);
+			}
+			workplaceCodesList.add(workplaceCode);
+			
+			workplaceCodeToPopulation.put(workplaceCode, population);
+		} 
+		parser.close(); 
+	}
+	
+	/**
 	 * Loads code area to nearest node mapping.
 	 * @param areaCodeNearestNodeFile File with area code nearest neighbour.
 	 * @throws IOException 
@@ -818,6 +883,28 @@ public class RoadNetwork {
 			String areaCode = record.get("area_code");
 			int nodeID = Integer.parseInt(record.get("nodeID"));
 			areaCodeToNearestNode.put(areaCode, nodeID);
+		} 
+		parser.close(); 
+	}
+	
+	/**
+	 * Loads workplace zone to nearest node mapping.
+	 * @param workplaceZoneNearestNodeFile File with workplace zone nearest neighbours.
+	 * @throws IOException 
+	 */
+	private void loadWorkplaceZoneNearestNode(String workplaceZoneNearestNodeFile) throws IOException {
+
+		this.workplaceZoneToNearestNode = new HashMap<String, Integer>();
+		
+		CSVParser parser = new CSVParser(new FileReader(workplaceZoneNearestNodeFile), CSVFormat.DEFAULT.withHeader());
+		//System.out.println(parser.getHeaderMap().toString());
+		Set<String> keySet = parser.getHeaderMap().keySet();
+		//System.out.println("keySet = " + keySet);
+		for (CSVRecord record : parser) {
+			//System.out.println(record);
+			String workplaceCode = record.get("workplace_code");
+			int nodeID = Integer.parseInt(record.get("nodeID"));
+			workplaceZoneToNearestNode.put(workplaceCode, nodeID);
 		} 
 		parser.close(); 
 	}

@@ -37,8 +37,10 @@ public class RoadNetworkAssignmentTest {
 		final URL AADFurl = new URL("file://src/test/resources/minitestdata/AADFdirected.shp");
 		final String areaCodeFileName = "./src/test/resources/minitestdata/nomisPopulation.csv";
 		final String areaCodeNearestNodeFile = "./src/test/resources/minitestdata/areaCodeToNearestNode.csv";
+		final String workplaceZoneFileName = "./src/test/resources/minitestdata/workplacePopulation.csv";
+		final String workplaceZoneNearestNodeFile = "./src/test/resources/minitestdata/workplaceZoneToNearestNode.csv";
 		
-		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile);
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile);
 
 		//visualise the shapefiles
 		//roadNetwork.visualise("Mini Test Area");
@@ -52,9 +54,11 @@ public class RoadNetworkAssignmentTest {
 		final URL AADFurl2 = new URL("file://src/test/resources/testdata/AADFdirected.shp");
 		final String areaCodeFileName2 = "./src/test/resources/testdata/nomisPopulation.csv";
 		final String areaCodeNearestNodeFile2 = "./src/test/resources/testdata/areaCodeToNearestNode.csv";
+		final String workplaceZoneFileName2 = "./src/test/resources/testdata/workplacePopulation.csv";
+		final String workplaceZoneNearestNodeFile2 = "./src/test/resources/testdata/workplaceZoneToNearestNode.csv";
 
 		//create a road network
-		RoadNetwork roadNetwork2 = new RoadNetwork(zonesUrl2, networkUrl2, nodesUrl2, AADFurl2, areaCodeFileName2, areaCodeNearestNodeFile2);
+		RoadNetwork roadNetwork2 = new RoadNetwork(zonesUrl2, networkUrl2, nodesUrl2, AADFurl2, areaCodeFileName2, areaCodeNearestNodeFile2, workplaceZoneFileName2, workplaceZoneNearestNodeFile2);
 		
 		//visualise the shapefiles
 		//roadNetwork2.visualise("Test Area");
@@ -62,7 +66,7 @@ public class RoadNetworkAssignmentTest {
 		//export to shapefile
 		//roadNetwork2.exportToShapefile("outputNetwork");
 		
-		RoadNetworkAssignment roadNetworkAssignment = new RoadNetworkAssignment(roadNetwork2, null, null);
+		RoadNetworkAssignment roadNetworkAssignment = new RoadNetworkAssignment(roadNetwork2, null, null, null);
 		ODMatrix passengerODM = new ODMatrix("./src/test/resources/testdata/passengerODM.csv");
 		passengerODM.printMatrix(); 
 		
@@ -126,13 +130,15 @@ public class RoadNetworkAssignmentTest {
 		final URL AADFurl = new URL("file://src/test/resources/minitestdata/AADFdirected.shp");
 		final String areaCodeFileName = "./src/test/resources/minitestdata/nomisPopulation.csv";
 		final String areaCodeNearestNodeFile = "./src/test/resources/minitestdata/areaCodeToNearestNode.csv";
+		final String workplaceZoneFileName = "./src/test/resources/testdata/workplacePopulation.csv";
+		final String workplaceZoneNearestNodeFile = "./src/test/resources/testdata/workplaceZoneToNearestNode.csv";
 		final String baseYearODMatrixFile = "./src/test/resources/minitestdata/passengerODM.csv";
 		
 		//create a road network
-		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile);
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile);
 			
 		//create a road network assignment
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null);
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null);
 		
 		//assign passenger flows
 		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
@@ -205,13 +211,15 @@ public class RoadNetworkAssignmentTest {
 		final URL AADFurl = new URL("file://src/test/resources/testdata/AADFdirected.shp");
 		final String areaCodeFileName = "./src/test/resources/testdata/nomisPopulation.csv";
 		final String areaCodeNearestNodeFile = "./src/test/resources/testdata/areaCodeToNearestNode.csv";
+		final String workplaceZoneFileName = "./src/test/resources/testdata/workplacePopulation.csv";
+		final String workplaceZoneNearestNodeFile = "./src/test/resources/testdata/workplaceZoneToNearestNode.csv";
 		final String baseYearODMatrixFile = "./src/test/resources/testdata/passengerODM.csv";
 
 		//create a road network
-		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile);
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile);
 
 		//create a road network assignment
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null);
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null);
 
 		//assign passenger flows
 		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
@@ -307,18 +315,20 @@ public class RoadNetworkAssignmentTest {
 		final URL AADFurl = new URL("file://src/test/resources/testdata/AADFdirected.shp");
 		final String areaCodeFileName = "./src/test/resources/testdata/nomisPopulation.csv";
 		final String areaCodeNearestNodeFile = "./src/test/resources/testdata/areaCodeToNearestNode.csv";
+		final String workplaceZoneFileName = "./src/test/resources/testdata/workplacePopulation.csv";
+		final String workplaceZoneNearestNodeFile = "./src/test/resources/testdata/workplaceZoneToNearestNode.csv";
 		final String baseYearODMatrixFile = "./src/test/resources/testdata/passengerODM.csv";
 		final String freightMatrixFile = "./src/test/resources/testdata/FreightMatrix.csv";
 
 		//create a road network
-		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile);
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile);
 
 		//create a road network assignment
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null);
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null);
 
 		//assign passenger flows
-		//ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
-		//rna.assignPassengerFlows(odm);
+		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
+		rna.assignPassengerFlows(odm);
 		
 		//assign freight flows
 		FreightMatrix fm = new FreightMatrix(freightMatrixFile);
@@ -330,18 +340,18 @@ public class RoadNetworkAssignmentTest {
 		final double EPSILON = 1e-11; //may fail for higher accuracy
 		
 		//test the probability of one output area from each LAD
-		assertEquals("The probability of the output area E00116864 is correct", (double)299/176462, rna.getAreaCodeProbabilities().get("E00116864"), EPSILON);
-		assertEquals("The probability of the output area E00086552 is correct", (double)430/236882, rna.getAreaCodeProbabilities().get("E00086552"), EPSILON);
-		assertEquals("The probability of the output area E00115160 is correct", (double)370/125199, rna.getAreaCodeProbabilities().get("E00115160"), EPSILON);
-		assertEquals("The probability of the output area E00172724 is correct", (double)666/138265, rna.getAreaCodeProbabilities().get("E00172724"), EPSILON);
+		assertEquals("The probability of the workplace zone E33040972 is correct", (double)372/112852, rna.getWorkplaceZoneProbabilities().get("E33040972"), EPSILON);
+		assertEquals("The probability of the workplace zone E33037947 is correct", (double)215/64219, rna.getWorkplaceZoneProbabilities().get("E33037947"), EPSILON);
+		assertEquals("The probability of the workplace zone E33038064 is correct", (double)390/75620, rna.getWorkplaceZoneProbabilities().get("E33038064"), EPSILON);
+		assertEquals("The probability of the workplace zone E33041117 is correct", (double)449/56591, rna.getWorkplaceZoneProbabilities().get("E33041117"), EPSILON);
 
 		//test that the sum of probabilities of output areas in each LAD zone is 1.0
-		for (String zone: roadNetwork.getZoneToAreaCodes().keySet()) {
+		for (String zone: roadNetwork.getZoneToWorkplaceCodes().keySet()) {
 
 			double probabilitySum = 0.0;
-			for(Iterator<String> iter = roadNetwork.getZoneToAreaCodes().get(zone).iterator(); iter.hasNext(); ) {
+			for(Iterator<String> iter = roadNetwork.getZoneToWorkplaceCodes().get(zone).iterator(); iter.hasNext(); ) {
 				String areaCode = iter.next();
-				probabilitySum += rna.getAreaCodeProbabilities().get(areaCode);
+				probabilitySum += rna.getWorkplaceZoneProbabilities().get(areaCode);
 			}
 			System.out.printf("The sum of probabilites for zone %s is: %.12f.\n", zone, probabilitySum);
 			assertEquals("The sum of probabilities for zone " + zone + " is 1.0", 1.0, probabilitySum, EPSILON);

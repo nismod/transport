@@ -109,7 +109,7 @@ public class DemandModel {
 				System.out.printf("%d year has not been assigned to the network, so assigning it now.\n", fromYear);
 				
 				//create a network assignment and assign the demand
-				rna = new RoadNetworkAssignment(this.roadNetwork, null, null);
+				rna = new RoadNetworkAssignment(this.roadNetwork, null, null, null);
 				rna.assignFlowsAndUpdateLinkTravelTimesIterated(this.yearToPassengerODMatrix.get(fromYear), LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);
 				yearToRoadNetworkAssignment.put(fromYear, rna);
 	
@@ -160,10 +160,10 @@ public class DemandModel {
 
 				if (predictedRna == null)
 					//assign predicted year - using link travel times from fromYear
-					predictedRna = new RoadNetworkAssignment(this.roadNetwork, rna.getLinkTravelTimes(), rna.getAreaCodeProbabilities());
+					predictedRna = new RoadNetworkAssignment(this.roadNetwork, rna.getLinkTravelTimes(), rna.getAreaCodeProbabilities(), rna.getWorkplaceZoneProbabilities());
 				else
 					//using latest link travel times
-					predictedRna = new RoadNetworkAssignment(this.roadNetwork, predictedRna.getLinkTravelTimes(), predictedRna.getAreaCodeProbabilities());
+					predictedRna = new RoadNetworkAssignment(this.roadNetwork, predictedRna.getLinkTravelTimes(), predictedRna.getAreaCodeProbabilities(), predictedRna.getWorkplaceZoneProbabilities());
 
 				predictedRna.assignFlowsAndUpdateLinkTravelTimesIterated(predictedPassengerODMatrix, LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);
 				
@@ -193,7 +193,7 @@ public class DemandModel {
 				predictedPassengerODMatrix.printMatrixFormatted();
 
 				//assign predicted year again using latest link travel times
-				predictedRna = new RoadNetworkAssignment(this.roadNetwork, predictedRna.getLinkTravelTimes(), predictedRna.getAreaCodeProbabilities());
+				predictedRna = new RoadNetworkAssignment(this.roadNetwork, predictedRna.getLinkTravelTimes(), predictedRna.getAreaCodeProbabilities(), predictedRna.getWorkplaceZoneProbabilities());
 				//predictedRna.resetLinkVolumes();
 				//predictedRna.assignPassengerFlows(predictedPassengerODMatrix);
 				//predictedRna.updateLinkTravelTimes(ALPHA_LINK_TRAVEL_TIME_AVERAGING);
