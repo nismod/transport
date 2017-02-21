@@ -70,7 +70,8 @@ public class RoadNetworkAssignment {
 
 	//inter-zonal path storage - for every OD pair stores a list of paths
 	private MultiKeyMap<String, List<Path>> pathStorage;
-	private MultiKeyMap<Integer, List<Path>> pathStorageFreight;
+	//private MultiKeyMap<Integer, List<Path>> pathStorageFreight;
+	private HashMap<VehicleType, MultiKeyMap<Integer, List<Path>>> pathStorageFreight;
 	
 	//the probability of trip starting/ending in the census output area
 	private HashMap<String, Double> areaCodeProbabilities;
@@ -91,7 +92,12 @@ public class RoadNetworkAssignment {
 		this.linkFreeFlowTravelTime = new HashMap<Integer, Double>();
 		this.linkTravelTime = new HashMap<Integer, Double>();
 		this.pathStorage = new MultiKeyMap<String, List<Path>>();
-		this.pathStorageFreight = new MultiKeyMap<Integer, List<Path>>();
+		//this.pathStorageFreight = new MultiKeyMap<Integer, List<Path>>();
+		this.pathStorageFreight = new HashMap<VehicleType, MultiKeyMap<Integer, List<Path>>>();
+		for (VehicleType vht: VehicleType.values()) {
+			MultiKeyMap<Integer, List<Path>> map = new MultiKeyMap<Integer, List<Path>>();
+			pathStorageFreight.put(vht, map);
+		}
 		
 		//calculate link travel time
 		Iterator edgesIterator = roadNetwork.getNetwork().getEdges().iterator();
@@ -469,14 +475,25 @@ public class RoadNetworkAssignment {
 					}
 					//System.out.printf("Sum of edge lengths: %.3f\n\n", sum);
 
+//					//store path in path storage
+//					if (pathStorageFreight.containsKey(mk.getKey(0), mk.getKey(1))) 
+//						list = (List<Path>) pathStorageFreight.get(mk.getKey(0), mk.getKey(1));
+//					else {
+//						list = new ArrayList<Path>();
+//						pathStorageFreight.put((int)mk.getKey(0), (int)mk.getKey(1), list);
+//					}
+//					list.add(aStarPath); //list.add(path);
+					
 					//store path in path storage
-					if (pathStorageFreight.containsKey(mk.getKey(0), mk.getKey(1))) 
-						list = (List<Path>) pathStorageFreight.get(mk.getKey(0), mk.getKey(1));
+					VehicleType vht = VehicleType.values()[(int)mk.getKey(2)];
+					if (pathStorageFreight.get(vht).containsKey(mk.getKey(0), mk.getKey(1))) 
+						list = (List<Path>) pathStorageFreight.get(vht).get(mk.getKey(0), mk.getKey(1));
 					else {
 						list = new ArrayList<Path>();
-						pathStorageFreight.put((int)mk.getKey(0), (int)mk.getKey(1), list);
+						pathStorageFreight.get(vht).put((int)mk.getKey(0), (int)mk.getKey(1), list);
 					}
 					list.add(aStarPath); //list.add(path);
+					
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -925,7 +942,7 @@ public class RoadNetworkAssignment {
 	 * Getter method for the path storage for freight.
 	 * @return Path storage for freight
 	 */
-	public MultiKeyMap<Integer, List<Path>> getPathStorageFreight() {
+	public HashMap<VehicleType, MultiKeyMap<Integer, List<Path>>> getPathStorageFreight() {
 
 		return this.pathStorageFreight;
 	}

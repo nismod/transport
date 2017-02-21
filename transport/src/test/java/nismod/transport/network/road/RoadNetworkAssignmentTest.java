@@ -21,6 +21,7 @@ import org.opengis.feature.simple.SimpleFeature;
 import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.ODMatrix;
 import nismod.transport.demand.SkimMatrix;
+import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 
 /**
  * Tests for the RoadNetworkAssignment class
@@ -367,12 +368,15 @@ public class RoadNetworkAssignmentTest {
 					//System.out.println(mk);
 					int originFreightZone = (int) mk.getKey(0);
 					int destinationFreightZone = (int) mk.getKey(1);
-					List<Path> pathList = rna.getPathStorageFreight().get(originFreightZone, destinationFreightZone);
+					VehicleType vht = VehicleType.values()[(int)mk.getKey(2)]; 
+					List<Path> pathList = rna.getPathStorageFreight().get(vht).get(originFreightZone, destinationFreightZone);
 					
-					int flow = 0;
-					//sum flows for each vehicle type
-					for (RoadNetworkAssignment.VehicleType vehType: RoadNetworkAssignment.VehicleType.values())
-						flow += fm.getFlow(originFreightZone, destinationFreightZone, vehType.ordinal());
+//					int flow = 0;
+//					//sum flows for each vehicle type
+//					for (RoadNetworkAssignment.VehicleType vehType: RoadNetworkAssignment.VehicleType.values())
+//						flow += fm.getFlow(originFreightZone, destinationFreightZone, vehType.ordinal());
+					//get flow for that vehicle type
+					int flow = fm.getFlow(originFreightZone, destinationFreightZone, vht.ordinal());
 	
 					assertEquals("The number of paths equals the flow", flow, pathList.size());
 		}
