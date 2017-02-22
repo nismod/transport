@@ -15,6 +15,7 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
+import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 
 /**
  * Demand prediction model.
@@ -38,6 +39,7 @@ public class DemandModel {
 	private HashMap<Integer, HashMap<String, Integer>> yearToZoneToPopulation;
 	private HashMap<Integer, HashMap<String, Double>> yearToZoneToGVA;
 	private HashMap<Integer, RoadNetworkAssignment> yearToRoadNetworkAssignment;
+	private HashMap<Integer, HashMap<EngineType, Double>> yearToEnergyUnitCosts;
 	//private SkimMatrix baseYearTimeSkimMatrix,	baseYearCostSkimMatrix;
 	private RoadNetwork roadNetwork;
 
@@ -48,7 +50,7 @@ public class DemandModel {
 	 * @throws IOException
 	 */
 	public DemandModel(RoadNetwork roadNetwork, String baseYearODMatrixFile, String baseYearTimeSkimMatrixFile,
-						String baseYearCostSkimMatrixFile, String populationFile, String GVAFile) throws FileNotFoundException, IOException {
+						String baseYearCostSkimMatrixFile, String populationFile, String GVAFile, String energyUnitCostsFile) throws FileNotFoundException, IOException {
 
 		yearToPassengerODMatrix = new HashMap<Integer, ODMatrix>();
 		yearToTimeSkimMatrix = new HashMap<Integer, SkimMatrix>();
@@ -56,6 +58,7 @@ public class DemandModel {
 		yearToZoneToPopulation = new HashMap<Integer, HashMap<String, Integer>>();
 		yearToZoneToGVA = new HashMap<Integer, HashMap<String, Double>>();
 		yearToRoadNetworkAssignment = new HashMap<Integer, RoadNetworkAssignment>();
+		yearToEnergyUnitCosts = new HashMap<Integer, HashMap<EngineType, Double>>();
 
 		this.roadNetwork = roadNetwork;
 
@@ -77,6 +80,8 @@ public class DemandModel {
 
 		//read all year GVA predictions
 		yearToZoneToGVA = readGVAFile(GVAFile);
+		
+		yearToEnergyUnitCosts = readEnergyUnitCostsFile(energyUnitCostsFile);
 		
 		//default elasticity values
 		elasticities = new HashMap<ElasticityTypes, Double>();
@@ -317,6 +322,37 @@ public class DemandModel {
 				zoneToGVA.put(zone, GVA);			
 			}
 			map.put(year, zoneToGVA);
+		} parser.close(); 
+
+		return map;
+	}
+	
+	/**
+	 * @param fileName
+	 * @return
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
+	private HashMap<Integer, HashMap<EngineType, Double>> readEnergyUnitCostsFile (String fileName) throws FileNotFoundException, IOException {
+
+		HashMap<Integer, HashMap<EngineType, Double>> map = new HashMap<Integer, HashMap<EngineType, Double>>();
+		CSVParser parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
+		//System.out.println(parser.getHeaderMap().toString());
+		Set<String> keySet = parser.getHeaderMap().keySet();
+		keySet.remove("year");
+		//System.out.println("keySet = " + keySet);
+		double unitPrice;
+		for (CSVRecord record : parser) {
+			//System.out.println(record);
+			int year = Integer.parseInt(record.get(0));
+			HashMap<EngineType, Double> engineTypeToPrice = new HashMap<EngineType, Double>();
+			for (String et: keySet) {
+				//System.out.println("Destination zone = " + destination);
+				EngineType engineType = EngineType.valueOf(et);
+				unitPrice = Double.parseDouble(record.get(engineType));
+				engineTypeToPrice.put(engineType, unitPrice);			
+			}
+			map.put(year, engineTypeToPrice);
 		} parser.close(); 
 
 		return map;

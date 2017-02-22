@@ -38,6 +38,7 @@ public class DemandModelTest {
 		final String baseYearCostSkimMatrixFile = "./src/test/resources/testdata/costSkimMatrix.csv";
 		final String populationFile = "./src/test/resources/testdata/population.csv";
 		final String GVAFile = "./src/test/resources/testdata/GVA.csv";
+		final String energyUnitCostsFile = "./src/test/resources/testdata/energyUnitCosts.csv";
 
 		//create a road network
 		RoadNetwork roadNetwork2 = new RoadNetwork(zonesUrl2, networkUrl2, nodesUrl2, AADFurl2, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile);
@@ -49,7 +50,7 @@ public class DemandModelTest {
 		//roadNetwork2.exportToShapefile("outputNetwork");
 
 		//the main demand model
-		DemandModel dm = new DemandModel(roadNetwork2, baseYearODMatrixFile, baseYearTimeSkimMatrixFile, baseYearCostSkimMatrixFile, populationFile, GVAFile);
+		DemandModel dm = new DemandModel(roadNetwork2, baseYearODMatrixFile, baseYearTimeSkimMatrixFile, baseYearCostSkimMatrixFile, populationFile, GVAFile, energyUnitCostsFile);
 		dm.predictPassengerDemand(2016, 2015);
 
 		System.out.println("Base-year (2015) matrix: ");
