@@ -84,7 +84,7 @@ public class RoadNetworkAssignment {
 	 * @param defaultLinkTravelTime Default link travel times.
 	 * @param areCodeProbabilities Probabilities of trips starting/ending in each census output area.
 	 */
-	public RoadNetworkAssignment(RoadNetwork roadNetwork, HashMap<Integer, Double> defaultLinkTravelTime, HashMap<String, Double> areaCodeProbabilities, HashMap<String, Double> workplaceZoneProbabilities) {
+	public RoadNetworkAssignment(RoadNetwork roadNetwork, HashMap<EngineType, Double> energyUnitCosts, HashMap<Integer, Double> defaultLinkTravelTime, HashMap<String, Double> areaCodeProbabilities, HashMap<String, Double> workplaceZoneProbabilities) {
 
 		this.roadNetwork = roadNetwork;
 		this.linkVolumesInPCU = new HashMap<Integer, Double>();
@@ -164,11 +164,14 @@ public class RoadNetworkAssignment {
 		vehicleTypeToPCU.put(VehicleType.VAN, 1.0);
 		
 		//set default values for energy consumption of different car engine types
-		energyUnitCosts = new HashMap<EngineType, Double>();
-		energyUnitCosts.put(EngineType.PETROL, 1.17);
-		energyUnitCosts.put(EngineType.DIESEL, 1.20);
-		energyUnitCosts.put(EngineType.LPG, 0.6);
-		energyUnitCosts.put(EngineType.ELECTRICITY, 0.1);
+		if (energyUnitCosts != null) this.energyUnitCosts = energyUnitCosts;
+		else {
+			energyUnitCosts = new HashMap<EngineType, Double>();
+			energyUnitCosts.put(EngineType.PETROL, 1.17);
+			energyUnitCosts.put(EngineType.DIESEL, 1.20);
+			energyUnitCosts.put(EngineType.LPG, 0.6);
+			energyUnitCosts.put(EngineType.ELECTRICITY, 0.1);
+		}
 		energyConsumptionsPer100km = new HashMap<EngineType, Double>();
 		energyConsumptionsPer100km.put(EngineType.PETROL, 5.4);
 		energyConsumptionsPer100km.put(EngineType.DIESEL, 4.6);
@@ -872,6 +875,13 @@ public class RoadNetworkAssignment {
 	 * Saves assignment results to output files.
 	 */
 	public void saveAssignmentResults() {
+
+	}
+	
+	/**
+	 * Saves total electricity consumption to an output file.
+	 */
+	public void saveTotalElectricityConsumption(String OutputFile) {
 
 	}
 	

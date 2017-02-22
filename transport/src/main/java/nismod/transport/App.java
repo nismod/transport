@@ -20,6 +20,8 @@ public class App {
         
 		final String areaCodeFileName = "./src/test/resources/testdata/nomisPopulation.csv";
 		final String areaCodeNearestNodeFile = "./src/test/resources/testdata/areaCodeToNearestNode.csv";
+		final String workplaceZoneFileName = "./src/test/resources/testdata/workplacePopulation.csv";
+		final String workplaceZoneNearestNodeFile = "./src/test/resources/testdata/workplaceZoneToNearestNode.csv";
 
 		final URL zonesUrl2 = new URL("file://src/test/resources/testdata/zones.shp");
 		final URL networkUrl2 = new URL("file://src/test/resources/testdata/network.shp");
@@ -27,23 +29,23 @@ public class App {
 		final URL AADFurl2 = new URL("file://src/test/resources/testdata/AADFdirected.shp");
 		
 		final String baseYearODMatrixFile = "./src/test/resources/testdata/passengerODM.csv";
-		final String baseYearTimeSkimMatrixFile = "./src/test/resources/testdata/timeSkimMatrix.csv";
-		final String baseYearCostSkimMatrixFile = "./src/test/resources/testdata/costSkimMatrix.csv";
 		final String populationFile = "./src/test/resources/testdata/population.csv";
 		final String GVAFile = "./src/test/resources/testdata/GVA.csv";
-		final String energyUnitCostsFile = "./src/test/resources/testdata/energyUnitCosts.csv";
-	
-		//final String energyUnitCostsFile = args[0];
-		System.out.println(energyUnitCostsFile);
+		//final String energyUnitCostsFile = "./src/test/resources/testdata/energyUnitCosts.csv";
+		
+		final String baseYear = args[0];
+		final String predictedYear = args[1];
+		final String energyUnitCostsFile = args[2];
+		final String outputFile = args[3];
 		
 		//create a road network
-		RoadNetwork roadNetwork2 = new RoadNetwork(zonesUrl2, networkUrl2, nodesUrl2, AADFurl2, areaCodeFileName, areaCodeNearestNodeFile);
-
+		RoadNetwork roadNetwork2 = new RoadNetwork(zonesUrl2, networkUrl2, nodesUrl2, AADFurl2, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile);
+				
 		//the main demand model
-		DemandModel dm = new DemandModel(roadNetwork2, baseYearODMatrixFile, baseYearTimeSkimMatrixFile, baseYearCostSkimMatrixFile, populationFile, GVAFile, energyUnitCostsFile);
+		DemandModel dm = new DemandModel(roadNetwork2, baseYearODMatrixFile, populationFile, GVAFile, energyUnitCostsFile);
 		
-		dm.predictPassengerDemand(2016, 2015);
+		dm.predictPassengerDemand(Integer.parseInt(predictedYear), Integer.parseInt(baseYear));
 		
-		
+		dm.saveEnergyConsumptions(Integer.parseInt(predictedYear), outputFile);
     }
 }
