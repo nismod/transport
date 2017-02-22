@@ -3,15 +3,19 @@
  */
 package nismod.transport.demand;
 
+import java.awt.List;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
@@ -49,8 +53,7 @@ public class DemandModel {
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
-	public DemandModel(RoadNetwork roadNetwork, String baseYearODMatrixFile, String baseYearTimeSkimMatrixFile,
-						String baseYearCostSkimMatrixFile, String populationFile, String GVAFile, String energyUnitCostsFile) throws FileNotFoundException, IOException {
+	public DemandModel(RoadNetwork roadNetwork, String baseYearODMatrixFile, String populationFile, String GVAFile, String energyUnitCostsFile) throws FileNotFoundException, IOException {
 
 		yearToPassengerODMatrix = new HashMap<Integer, ODMatrix>();
 		yearToTimeSkimMatrix = new HashMap<Integer, SkimMatrix>();
@@ -66,14 +69,6 @@ public class DemandModel {
 		ODMatrix passengerODMatrix = new ODMatrix(baseYearODMatrixFile);
 		passengerODMatrix.printMatrix();
 		yearToPassengerODMatrix.put(DemandModel.BASE_YEAR, passengerODMatrix);
-
-		//read base-year time skim matrix
-		//SkimMatrix baseYearTimeSkimMatrix = new SkimMatrix(baseYearTimeSkimMatrixFile);
-		//yearToTimeSkimMatrix.put(DemandModel.BASE_YEAR, baseYearTimeSkimMatrix);
-
-		//read base-year cost skim matrix
-		//SkimMatrix baseYearCostSkimMatrix = new SkimMatrix(baseYearCostSkimMatrixFile);
-		//yearToCostSkimMatrix.put(DemandModel.BASE_YEAR, baseYearCostSkimMatrix);
 
 		//read all year population predictions
 		yearToZoneToPopulation = readPopulationFile(populationFile);
@@ -114,7 +109,7 @@ public class DemandModel {
 				System.out.printf("%d year has not been assigned to the network, so assigning it now.\n", fromYear);
 				
 				//create a network assignment and assign the demand
-				rna = new RoadNetworkAssignment(this.roadNetwork, null, null, null);
+				rna = new RoadNetworkAssignment(this.roadNetwork, this.yearToEnergyUnitCosts.get(fromYear), null, null, null);
 				rna.assignFlowsAndUpdateLinkTravelTimesIterated(this.yearToPassengerODMatrix.get(fromYear), LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);
 				yearToRoadNetworkAssignment.put(fromYear, rna);
 	
@@ -165,10 +160,10 @@ public class DemandModel {
 
 				if (predictedRna == null)
 					//assign predicted year - using link travel times from fromYear
-					predictedRna = new RoadNetworkAssignment(this.roadNetwork, rna.getLinkTravelTimes(), rna.getAreaCodeProbabilities(), rna.getWorkplaceZoneProbabilities());
+					predictedRna = new RoadNetworkAssignment(this.roadNetwork, this.yearToEnergyUnitCosts.get(predictedYear), rna.getLinkTravelTimes(), rna.getAreaCodeProbabilities(), rna.getWorkplaceZoneProbabilities());
 				else
 					//using latest link travel times
-					predictedRna = new RoadNetworkAssignment(this.roadNetwork, predictedRna.getLinkTravelTimes(), predictedRna.getAreaCodeProbabilities(), predictedRna.getWorkplaceZoneProbabilities());
+					predictedRna = new RoadNetworkAssignment(this.roadNetwork, this.yearToEnergyUnitCosts.get(predictedYear), predictedRna.getLinkTravelTimes(), predictedRna.getAreaCodeProbabilities(), predictedRna.getWorkplaceZoneProbabilities());
 
 				predictedRna.assignFlowsAndUpdateLinkTravelTimesIterated(predictedPassengerODMatrix, LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);
 				
@@ -198,7 +193,7 @@ public class DemandModel {
 				predictedPassengerODMatrix.printMatrixFormatted();
 
 				//assign predicted year again using latest link travel times
-				predictedRna = new RoadNetworkAssignment(this.roadNetwork, predictedRna.getLinkTravelTimes(), predictedRna.getAreaCodeProbabilities(), predictedRna.getWorkplaceZoneProbabilities());
+				predictedRna = new RoadNetworkAssignment(this.roadNetwork, this.yearToEnergyUnitCosts.get(predictedYear), predictedRna.getLinkTravelTimes(), predictedRna.getAreaCodeProbabilities(), predictedRna.getWorkplaceZoneProbabilities());
 				//predictedRna.resetLinkVolumes();
 				//predictedRna.assignPassengerFlows(predictedPassengerODMatrix);
 				//predictedRna.updateLinkTravelTimes(ALPHA_LINK_TRAVEL_TIME_AVERAGING);
@@ -268,6 +263,50 @@ public class DemandModel {
 		return 	yearToCostSkimMatrix.get(year);
 	}
 
+
+	/**
+	 * Saves energy consumptions into a csv file
+	 * @param year
+	 * @param outputFile
+	 */
+	public void saveEnergyConsumptions (int year, String outputFile) {
+
+		//calculate energy consumptions in year year
+		HashMap<EngineType, Double> energyConsumptions = this.yearToRoadNetworkAssignment.get(year).calculateEnergyConsumptions();
+		String NEW_LINE_SEPARATOR = "\n";
+		//Object[] FILE_HEADER = {"year","PETROL","DIESEL","LPG","ELECTRICITY"};
+		ArrayList<String> header = new ArrayList<String>();
+		header.add("year");
+		for (EngineType et: EngineType.values()) header.add(et.name());
+		FileWriter fileWriter = null;
+		CSVPrinter csvFilePrinter = null;
+		CSVFormat csvFileFormat = CSVFormat.DEFAULT.withRecordSeparator(NEW_LINE_SEPARATOR);
+		try {
+			fileWriter = new FileWriter(outputFile);
+			csvFilePrinter = new CSVPrinter(fileWriter, csvFileFormat);
+			csvFilePrinter.printRecord(header);
+			ArrayList<String> record = new ArrayList<String>();
+			record.add(Integer.toString(year));
+			for (int i=1; i<header.size(); i++)	{
+				EngineType et = EngineType.valueOf(header.get(i));
+				record.add(String.format("%.2f", energyConsumptions.get(et)));
+			}
+			csvFilePrinter.printRecord(record);
+		} catch (Exception e) {
+			System.err.println("Error in CsvFileWriter!");
+			e.printStackTrace();
+		} finally {
+			try {
+				fileWriter.flush();
+				fileWriter.close();
+				csvFilePrinter.close();
+			} catch (IOException e) {
+				System.err.println("Error while flushing/closing fileWriter/csvPrinter!");
+				e.printStackTrace();
+			}
+		}
+	}
+	
 	/**
 	 * @param fileName
 	 * @return
