@@ -392,7 +392,9 @@ public class DemandModel {
 				engineTypeToPrice.put(engineType, unitPrice);			
 			}
 			map.put(year, engineTypeToPrice);
-		} parser.close(); 
+		} parser.close();
+		
+		System.out.println(map);
 
 		return map;
 	}

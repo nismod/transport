@@ -166,11 +166,11 @@ public class RoadNetworkAssignment {
 		//set default values for energy consumption of different car engine types
 		if (energyUnitCosts != null) this.energyUnitCosts = energyUnitCosts;
 		else {
-			energyUnitCosts = new HashMap<EngineType, Double>();
-			energyUnitCosts.put(EngineType.PETROL, 1.17);
-			energyUnitCosts.put(EngineType.DIESEL, 1.20);
-			energyUnitCosts.put(EngineType.LPG, 0.6);
-			energyUnitCosts.put(EngineType.ELECTRICITY, 0.1);
+			this.energyUnitCosts = new HashMap<EngineType, Double>();
+			this.energyUnitCosts.put(EngineType.PETROL, 1.17);
+			this.energyUnitCosts.put(EngineType.DIESEL, 1.20);
+			this.energyUnitCosts.put(EngineType.LPG, 0.6);
+			this.energyUnitCosts.put(EngineType.ELECTRICITY, 0.1);
 		}
 		energyConsumptionsPer100km = new HashMap<EngineType, Double>();
 		energyConsumptionsPer100km.put(EngineType.PETROL, 5.4);
