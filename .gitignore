@@ -421,3 +421,6 @@ hs_err_pid*
 
 # Quadtree Spatial Index
 *.qix
+
+### Output files ###
+transport/energyConsumptions.csv
