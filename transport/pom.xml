@@ -112,7 +112,7 @@
                         <configuration>
                             <archive>
                                 <manifest>
-                                    <mainClass>nismod.transport.demand.DemandModelTest</mainClass>
+                                    <mainClass>nismod.transport.App</mainClass>
                                 </manifest>
                             </archive>
                         </configuration>
