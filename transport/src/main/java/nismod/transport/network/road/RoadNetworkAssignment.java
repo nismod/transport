@@ -47,7 +47,7 @@ public class RoadNetworkAssignment {
 	private static RandomSingleton rng = RandomSingleton.getInstance();
 	
 	public static enum EngineType {
-	    PETROL, DIESEL, LPG, ELECTRICITY
+	    PETROL, DIESEL, LPG, ELECTRICITY, HYBRID, HYDROGEN
 	}
 	
 	public static enum VehicleType {
@@ -165,6 +165,7 @@ public class RoadNetworkAssignment {
 		vehicleTypeToPCU.put(VehicleType.VAN, 1.0);
 		
 		//set default values for energy consumption of different car engine types
+		//for petrol/diesel/lpg this is in £/l, for hydrogen in £/kg, for electricity in £/kWh.
 		if (energyUnitCosts != null) this.energyUnitCosts = energyUnitCosts;
 		else {
 			this.energyUnitCosts = new HashMap<EngineType, Double>();
@@ -172,17 +173,25 @@ public class RoadNetworkAssignment {
 			this.energyUnitCosts.put(EngineType.DIESEL, 1.20);
 			this.energyUnitCosts.put(EngineType.LPG, 0.6);
 			this.energyUnitCosts.put(EngineType.ELECTRICITY, 0.1);
+			this.energyUnitCosts.put(EngineType.HYDROGEN, 4.19);
+			this.energyUnitCosts.put(EngineType.HYBRID, 1.17);
+			
 		}
 		energyConsumptionsPer100km = new HashMap<EngineType, Double>();
 		energyConsumptionsPer100km.put(EngineType.PETROL, 5.4);
 		energyConsumptionsPer100km.put(EngineType.DIESEL, 4.6);
 		energyConsumptionsPer100km.put(EngineType.LPG, 6.75);
 		energyConsumptionsPer100km.put(EngineType.ELECTRICITY, 20.0);
+		energyConsumptionsPer100km.put(EngineType.HYDROGEN, 0.95);
+		energyConsumptionsPer100km.put(EngineType.HYBRID, 7.4);
+		
 		engineTypeFractions = new HashMap<EngineType, Double>();
-		engineTypeFractions.put(EngineType.PETROL, 0.25);
-		engineTypeFractions.put(EngineType.DIESEL, 0.25);
-		engineTypeFractions.put(EngineType.LPG, 0.25);
-		engineTypeFractions.put(EngineType.ELECTRICITY, 0.25);
+		engineTypeFractions.put(EngineType.PETROL, 0.45);
+		engineTypeFractions.put(EngineType.DIESEL, 0.35);
+		engineTypeFractions.put(EngineType.LPG, 0.1);
+		engineTypeFractions.put(EngineType.ELECTRICITY, 0.05);
+		engineTypeFractions.put(EngineType.HYDROGEN, 0.025);
+		engineTypeFractions.put(EngineType.HYBRID, 0.025);
 	}
 
 	/** 
