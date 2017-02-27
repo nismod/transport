@@ -45,10 +45,13 @@ public class ODMatrixTest {
 		passengerODMatrix.setFlow("4", "1", 456);
 		passengerODMatrix.setFlow("4", "2", 567);
 		passengerODMatrix.setFlow("4", "3", 678);
-		passengerODMatrix.setFlow("4", "4", 789);
+		passengerODMatrix.setFlow("4", "4", 987);
 	
-		passengerODMatrix.printMatrix();
-			
+		passengerODMatrix.printMatrixFormatted();
+		
+		passengerODMatrix.setFlow("4",  "4", 0);
+		passengerODMatrix.printMatrixFormatted();
+		
 		boolean condition = 		
 				passengerODMatrix.getFlow("1", "1") == 123 &&
 				passengerODMatrix.getFlow("1", "2") == 234 &&
@@ -65,19 +68,19 @@ public class ODMatrixTest {
 				passengerODMatrix.getFlow("4", "1") == 456 &&
 				passengerODMatrix.getFlow("4", "2") == 567 &&
 				passengerODMatrix.getFlow("4", "3") == 678 &&
-				passengerODMatrix.getFlow("4", "4") == 789;
+				passengerODMatrix.getFlow("4", "4") == 0;
 	
 		assertTrue("All matrix elements are correct", condition);
 		
 		ODMatrix passengerODMatrix2 = new ODMatrix("./src/test/resources/testdata/passengerODM.csv");
-		passengerODMatrix2.printMatrix();
-		System.out.println(passengerODMatrix2.getKeySet());
-		for (MultiKey mk: passengerODMatrix2.getKeySet()) {
-			System.out.println(mk);
-			System.out.println("origin = " + mk.getKey(0));
-			System.out.println("destination = " + mk.getKey(1));
-			System.out.println("flow = " + passengerODMatrix2.getFlow((String)mk.getKey(0), (String)mk.getKey(1)));
-		}
+		passengerODMatrix2.printMatrixFormatted();
+//		System.out.println(passengerODMatrix2.getKeySet());
+//		for (MultiKey mk: passengerODMatrix2.getKeySet()) {
+//			System.out.println(mk);
+//			System.out.println("origin = " + mk.getKey(0));
+//			System.out.println("destination = " + mk.getKey(1));
+//			System.out.println("flow = " + passengerODMatrix2.getFlow((String)mk.getKey(0), (String)mk.getKey(1)));
+//		}
 		
 		condition = passengerODMatrix2.getFlow("E06000045", "E06000045") == 5000 &&
 					passengerODMatrix2.getFlow("E06000045", "E07000086") == 5500 &&

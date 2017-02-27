@@ -53,7 +53,7 @@ public class ODMatrix {
 			for (String destination: keySet) {
 				//System.out.println("Destination zone = " + destination);
 				flow = Integer.parseInt(record.get(destination));
-				matrix.put(record.get(0), destination, flow);			
+				this.setFlow(record.get(0), destination, flow);			
 			}
 		}
 		parser.close(); 
@@ -79,8 +79,12 @@ public class ODMatrix {
 	 * @param flow Origin-destination flow.
 	 */
 	public void setFlow(String originZone, String destinationZone, int flow) {
-		
-		matrix.put(originZone, destinationZone, flow);
+	
+		if (flow != 0)		matrix.put(originZone, destinationZone, flow);
+		//do not store zero flows into the matrix (skip zero flow or remove if already exists)
+		else // flow == 0 
+			if (this.getFlow(originZone, destinationZone) != 0)
+							matrix.removeMultiKey(originZone, destinationZone);
 	}
 	
 	
@@ -117,11 +121,11 @@ public class ODMatrix {
 		//System.out.println(secondKeyList);
 	
 		//formatted print
-		System.out.print("origin   "); for (String s: secondKeyList) System.out.printf("%10s",s);
+		System.out.print("origin    "); for (String s: secondKeyList) System.out.printf("%10s",s);
 		System.out.println();
 		for (String o: firstKeyList) {
-			System.out.print(o);
-			for (String s: secondKeyList) System.out.printf("%10d", matrix.get(o,s));
+			System.out.printf("%-10s", o);
+			for (String s: secondKeyList) System.out.printf("%10d", this.getFlow(o,s));
 			System.out.println();
 		}
 	}

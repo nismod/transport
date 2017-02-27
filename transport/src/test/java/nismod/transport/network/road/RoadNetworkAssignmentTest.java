@@ -404,6 +404,13 @@ public class RoadNetworkAssignmentTest {
 		System.out.println(rna.getLinkFreeFlowTravelTimes());
 		System.out.println(rna.getLinkTravelTimes());
 		for (int key: rna.getLinkTravelTimes().keySet()) 			
-			assertTrue(rna.getLinkTravelTimes().get(key) >= rna.getLinkFreeFlowTravelTimes().get(key));	
+			assertTrue(rna.getLinkTravelTimes().get(key) >= rna.getLinkFreeFlowTravelTimes().get(key));
+		
+		//TEST SKIM MATRIX FOR FREIGHT
+		System.out.println("\n\n*** Testing skim matrices for freight ***");
+		System.out.println("Cost skim matrix for freight (in £):");
+		rna.calculateCostSkimMatrixFreight().printMatrixFormatted();
+		System.out.println("Time skim matrix for freight (in min):");
+		rna.calculateTimeSkimMatrixFreight().printMatrixFormatted();
 	}
 }
