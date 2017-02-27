@@ -801,10 +801,10 @@ public class RoadNetworkAssignment {
 	}
 	
 	/**
-	 * Calculates total energy consumption for each engine type (in litres for fuels and in kWh for electricity).
+	 * Calculates total energy consumption for each car engine type (in litres for fuels and in kWh for electricity).
 	 * @return Total consumption for each engine type.
 	 */
-	public HashMap<EngineType, Double> calculateEnergyConsumptions() {
+	public HashMap<EngineType, Double> calculateCarEnergyConsumptions() {
 
 		double totalDistance = 0.0;
 		//for each path in the storage
@@ -826,6 +826,55 @@ public class RoadNetworkAssignment {
 			consumptions.put(engine, consumption);
 		}
 		return consumptions;
+	}
+	
+	/**
+	 * Calculates total energy consumption for each freight vehicle engine type (in litres for fuels and in kWh for electricity).
+	 * @return Total consumption for each engine type.
+	 */
+	public HashMap<EngineType, Double> calculateFreightEnergyConsumptions() {
+
+		double totalDistance = 0.0;
+		
+		//for each vehicle type
+		for (VehicleType vht: pathStorageFreight.keySet()) {
+			//for each path in the storage
+			for (List<Path> pathList: pathStorageFreight.get(vht).values()) {
+				//for each path in the path list calculate total distance
+				for (Path path: pathList) 
+					for (Object o: path.getEdges()) {
+						Edge e = (Edge)o;
+						SimpleFeature sf = (SimpleFeature) e.getObject();
+						double length = (double) sf.getAttribute("LenNet");
+						totalDistance += length;					
+				}
+			}
+		}
+		System.out.printf("Total path distance: %.3f km\n", totalDistance);
+
+		HashMap<EngineType, Double> consumptions = new HashMap<EngineType, Double>();
+		for (EngineType engine: EngineType.values()) {
+			double consumption = totalDistance / 100 * engineTypeFractions.get(engine) * energyConsumptionsPer100km.get(engine);
+			consumptions.put(engine, consumption);
+		}
+		return consumptions;
+	}
+	
+	/**
+	 * Calculates total energy consumption for each engine type of passenger cars and freight vehicles (in litres for fuels and in kWh for electricity).
+	 * @return Total consumption for each engine type.
+	 */
+	public HashMap<EngineType, Double> calculateEnergyConsumptions() {
+		
+		HashMap<EngineType, Double> car = calculateCarEnergyConsumptions();
+		HashMap<EngineType, Double> freight = calculateFreightEnergyConsumptions();
+		HashMap<EngineType, Double> combined = new HashMap<EngineType, Double>();
+		
+		for (EngineType engine: EngineType.values()) {
+			double consumption = car.get(engine) + freight.get(engine);
+			combined.put(engine, consumption);
+		}
+		return combined;
 	}
 
 	/**
