@@ -53,7 +53,8 @@ public class FreightMatrix {
 			flow = Integer.parseInt(record.get(3));
 			matrix.put(origin, destination, vehicleType, flow);			
 			
-		} parser.close(); 
+		}
+		parser.close(); 
 	}
 	
 	/**
@@ -121,7 +122,7 @@ public class FreightMatrix {
 		System.out.printf("%6s%12s%12s%7s\n", "origin", "destination", "vehicleType", "flow");
 		for (int o: firstKeyList)
 			for (int d: secondKeyList)
-				for (int v=1; v<=3; v++)
+				for (int v=0; v<=3; v++)
 					if (this.getFlow(o, d, v) != 0) //print only if there is a flow
 						System.out.printf("%6d%12d%12d%7d\n", o, d, v, this.getFlow(o, d, v));
 	}

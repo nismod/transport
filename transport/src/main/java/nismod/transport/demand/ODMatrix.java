@@ -33,7 +33,7 @@ public class ODMatrix {
 	}
 	
 	/**
-	 * Constructor that reads OD matrix from an input csv file
+	 * Constructor that reads OD matrix from an input csv file.
 	 * @param filePath Path to the input file
 	 * @throws IOException 
 	 * @throws FileNotFoundException 
@@ -55,7 +55,8 @@ public class ODMatrix {
 				flow = Integer.parseInt(record.get(destination));
 				matrix.put(record.get(0), destination, flow);			
 			}
-		} parser.close(); 
+		}
+		parser.close(); 
 	}
 	
 	/**
@@ -66,7 +67,9 @@ public class ODMatrix {
 	 */
 	public int getFlow(String originZone, String destinationZone) {
 		
-		return (int) matrix.get(originZone, destinationZone);
+		Integer flow = (Integer) matrix.get(originZone, destinationZone);
+		if (flow == null) return 0;
+		else return flow;
 	}
 	
 	/**

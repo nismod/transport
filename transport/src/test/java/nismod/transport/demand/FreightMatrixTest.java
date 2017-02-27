@@ -12,7 +12,7 @@ import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.junit.Test;
 
 /**
- * Tests for the ODMatrix class
+ * Tests for the FreightMatrix class
  * @author Milan Lovric
  *
  */
