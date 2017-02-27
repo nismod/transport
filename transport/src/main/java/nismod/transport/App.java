@@ -29,6 +29,7 @@ public class App {
 		final URL AADFurl2 = new URL("file://src/test/resources/testdata/AADFdirected.shp");
 		
 		final String baseYearODMatrixFile = "./src/test/resources/testdata/passengerODM.csv";
+		final String baseYearFreightMatrixFile = "./src/test/resources/testdata/freightMatrix.csv";
 		final String populationFile = "./src/test/resources/testdata/population.csv";
 		final String GVAFile = "./src/test/resources/testdata/GVA.csv";
 		//final String energyUnitCostsFile = "./src/test/resources/testdata/energyUnitCosts.csv";
@@ -42,7 +43,7 @@ public class App {
 		RoadNetwork roadNetwork2 = new RoadNetwork(zonesUrl2, networkUrl2, nodesUrl2, AADFurl2, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile);
 				
 		//the main demand model
-		DemandModel dm = new DemandModel(roadNetwork2, baseYearODMatrixFile, populationFile, GVAFile, energyUnitCostsFile);
+		DemandModel dm = new DemandModel(roadNetwork2, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, energyUnitCostsFile);
 		
 		dm.predictPassengerDemand(Integer.parseInt(predictedYear), Integer.parseInt(baseYear));
 		

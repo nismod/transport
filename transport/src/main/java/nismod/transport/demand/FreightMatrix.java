@@ -156,4 +156,21 @@ public class FreightMatrix {
 	
 		return difference;
 	}
+	
+	/**
+	 * Multiplies each value of the matrix with a scaling factor.
+	 * @return Scaled freight matrix.
+	 */
+	public FreightMatrix getScaledMatrix(double scale) {
+		
+		FreightMatrix scaled = new FreightMatrix();
+		for (MultiKey mk: this.getKeySet()) {
+			int origin = (int) mk.getKey(0);
+			int destination = (int) mk.getKey(1);
+			int vehicleType = (int) mk.getKey(2);
+			int flow = (int) Math.round(this.getFlow(origin, destination, vehicleType) * scale);
+			scaled.setFlow(origin, destination, vehicleType, flow);
+		}
+		return scaled;
+	}
 }

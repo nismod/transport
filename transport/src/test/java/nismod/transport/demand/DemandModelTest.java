@@ -34,6 +34,7 @@ public class DemandModelTest {
 		final URL AADFurl2 = new URL("file://src/test/resources/testdata/AADFdirected.shp");
 		
 		final String baseYearODMatrixFile = "./src/test/resources/testdata/passengerODM.csv";
+		final String baseYearFreightMatrixFile = "./src/test/resources/testdata/freightMatrix.csv";
 		final String populationFile = "./src/test/resources/testdata/population.csv";
 		final String GVAFile = "./src/test/resources/testdata/GVA.csv";
 		final String energyUnitCostsFile = "./src/test/resources/testdata/energyUnitCosts.csv";
@@ -48,7 +49,7 @@ public class DemandModelTest {
 		//roadNetwork2.exportToShapefile("outputNetwork");
 
 		//the main demand model
-		DemandModel dm = new DemandModel(roadNetwork2, baseYearODMatrixFile, populationFile, GVAFile, energyUnitCostsFile);
+		DemandModel dm = new DemandModel(roadNetwork2, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, energyUnitCostsFile);
 		dm.predictPassengerDemand(2016, 2015);
 
 		System.out.println("Base-year (2015) matrix: ");

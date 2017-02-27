@@ -28,6 +28,8 @@ import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 public class DemandModel {
 
 	public final static int BASE_YEAR = 2015;
+	public final static int BASE_YEAR_FREIGHT = 2006;
+	public final static double FREIGHT_SCALING_FACTOR = 18366.0/21848.0;
 	public final static double LINK_TRAVEL_TIME_AVERAGING_WEIGHT = 1.0;
 	public final static int ASSIGNMENT_ITERATIONS = 1;
 	public final static int PREDICTION_ITERATIONS = 1;
@@ -37,7 +39,7 @@ public class DemandModel {
 
 	private HashMap<ElasticityTypes, Double> elasticities;
 	private HashMap<Integer, ODMatrix> yearToPassengerODMatrix; //passenger demand
-	//	private HashMap<Integer, ODMatrix> yearToFreightODMatrix; //freight demand
+	private HashMap<Integer, FreightMatrix> yearToFreightODMatrix; //freight demand
 	private HashMap<Integer, SkimMatrix> yearToTimeSkimMatrix;
 	private HashMap<Integer, SkimMatrix> yearToCostSkimMatrix;
 	private HashMap<Integer, HashMap<String, Integer>> yearToZoneToPopulation;
@@ -53,9 +55,10 @@ public class DemandModel {
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
-	public DemandModel(RoadNetwork roadNetwork, String baseYearODMatrixFile, String populationFile, String GVAFile, String energyUnitCostsFile) throws FileNotFoundException, IOException {
+	public DemandModel(RoadNetwork roadNetwork, String baseYearODMatrixFile, String baseYearFreightMatrixFile, String populationFile, String GVAFile, String energyUnitCostsFile) throws FileNotFoundException, IOException {
 
 		yearToPassengerODMatrix = new HashMap<Integer, ODMatrix>();
+		yearToFreightODMatrix = new HashMap<Integer, FreightMatrix>();
 		yearToTimeSkimMatrix = new HashMap<Integer, SkimMatrix>();
 		yearToCostSkimMatrix = new HashMap<Integer, SkimMatrix>();
 		yearToZoneToPopulation = new HashMap<Integer, HashMap<String, Integer>>();
@@ -67,9 +70,17 @@ public class DemandModel {
 
 		//read base-year passenger matrix
 		ODMatrix passengerODMatrix = new ODMatrix(baseYearODMatrixFile);
-		passengerODMatrix.printMatrix();
+		passengerODMatrix.printMatrixFormatted();
 		yearToPassengerODMatrix.put(DemandModel.BASE_YEAR, passengerODMatrix);
-
+		
+		//read base-year freight matrix
+		FreightMatrix freightMatrix = new FreightMatrix(baseYearFreightMatrixFile);
+		freightMatrix.printMatrixFormatted();
+		System.out.println("Freight matrix scaled to 2015:");
+		FreightMatrix freightMatrixScaled = freightMatrix.getScaledMatrix(FREIGHT_SCALING_FACTOR);
+		freightMatrixScaled.printMatrixFormatted();
+		yearToFreightODMatrix.put(DemandModel.BASE_YEAR, freightMatrixScaled);
+		
 		//read all year population predictions
 		yearToZoneToPopulation = readPopulationFile(populationFile);
 

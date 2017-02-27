@@ -49,6 +49,8 @@ public class FreightMatrixTest {
 		
 		freightMatrix.setFlow(2, 1, 3, 0);
 		freightMatrix.printMatrixFormatted();
+		
+		freightMatrix.getScaledMatrix(2.0).printMatrixFormatted();
 			
 		boolean condition = 		
 				freightMatrix.getFlow(1, 1, 1) == 50 &&
@@ -63,7 +65,7 @@ public class FreightMatrixTest {
 	
 		assertTrue("All matrix elements are correct", condition);
 		
-		FreightMatrix freightMatrix2 = new FreightMatrix("./src/test/resources/testdata/FreightMatrix.csv");
+		FreightMatrix freightMatrix2 = new FreightMatrix("./src/test/resources/testdata/freightMatrix.csv");
 			
 //		System.out.println(freightMatrix2.getKeySet());
 //		for (MultiKey mk: freightMatrix2.getKeySet()) {
@@ -75,6 +77,9 @@ public class FreightMatrixTest {
 //		}
 	
 		freightMatrix2.printMatrixFormatted();
+		
+		System.out.println("Scaled freight matrix: ");
+		freightMatrix2.getScaledMatrix(DemandModel.FREIGHT_SCALING_FACTOR).printMatrixFormatted();
 		
 		condition = freightMatrix2.getFlow(854, 1312, 3) == 3 &&
 					freightMatrix2.getFlow(855, 1312, 2) == 117 &&
