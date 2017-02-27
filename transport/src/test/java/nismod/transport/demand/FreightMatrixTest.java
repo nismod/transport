@@ -45,7 +45,10 @@ public class FreightMatrixTest {
 		freightMatrix.setFlow(2, 1, 2, 150);
 		freightMatrix.setFlow(2, 1, 3, 1);
 		
-		freightMatrix.printMatrix();
+		freightMatrix.printMatrixFormatted();
+		
+		freightMatrix.setFlow(2, 1, 3, 0);
+		freightMatrix.printMatrixFormatted();
 			
 		boolean condition = 		
 				freightMatrix.getFlow(1, 1, 1) == 50 &&
@@ -56,20 +59,20 @@ public class FreightMatrixTest {
 				freightMatrix.getFlow(1, 2, 3) == 60 &&
 				freightMatrix.getFlow(2, 1, 1) == 250 &&
 				freightMatrix.getFlow(2, 1, 2) == 150 &&
-				freightMatrix.getFlow(2, 1, 3) == 1;
+				freightMatrix.getFlow(2, 1, 3) == 0;
 	
 		assertTrue("All matrix elements are correct", condition);
 		
 		FreightMatrix freightMatrix2 = new FreightMatrix("./src/test/resources/testdata/FreightMatrix.csv");
 			
-		System.out.println(freightMatrix2.getKeySet());
-		for (MultiKey mk: freightMatrix2.getKeySet()) {
-			System.out.println(mk);
-			System.out.println("origin = " + mk.getKey(0));
-			System.out.println("destination = " + mk.getKey(1));
-			System.out.println("vehicleType = " + mk.getKey(2));
-			System.out.println("flow = " + freightMatrix2.getFlow((int)mk.getKey(0), (int)mk.getKey(1), (int)mk.getKey(2)));
-		}
+//		System.out.println(freightMatrix2.getKeySet());
+//		for (MultiKey mk: freightMatrix2.getKeySet()) {
+//			System.out.println(mk);
+//			System.out.println("origin = " + mk.getKey(0));
+//			System.out.println("destination = " + mk.getKey(1));
+//			System.out.println("vehicleType = " + mk.getKey(2));
+//			System.out.println("flow = " + freightMatrix2.getFlow((int)mk.getKey(0), (int)mk.getKey(1), (int)mk.getKey(2)));
+//		}
 	
 		freightMatrix2.printMatrixFormatted();
 		

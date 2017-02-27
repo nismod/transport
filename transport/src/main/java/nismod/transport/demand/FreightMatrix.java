@@ -51,7 +51,7 @@ public class FreightMatrix {
 			origin = Integer.parseInt(record.get(1));
 			vehicleType = Integer.parseInt(record.get(2));
 			flow = Integer.parseInt(record.get(3));
-			matrix.put(origin, destination, vehicleType, flow);			
+			this.setFlow(origin, destination, vehicleType, flow);			
 			
 		}
 		parser.close(); 
@@ -80,10 +80,13 @@ public class FreightMatrix {
 	 */
 	public void setFlow(int origin, int destination, int vehicleType, int flow) {
 		
-		matrix.put(origin, destination, vehicleType, flow);
+		if (flow != 0)		matrix.put(origin, destination, vehicleType, flow);
+		//do not store zero flows into the matrix (skip zero flow or remove if already exists)
+		else // flow == 0 
+			if (matrix.get(origin, destination, vehicleType) != null) 
+				matrix.removeMultiKey(origin, destination, vehicleType);
 	}
-	
-	
+		
 	/**
 	 * Prints the full matrix.
 	 */
