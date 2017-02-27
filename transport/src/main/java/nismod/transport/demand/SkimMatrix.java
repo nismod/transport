@@ -54,7 +54,7 @@ public class SkimMatrix {
 			for (String destination: keySet) {
 				//System.out.println("Destination zone = " + destination);
 				cost = Double.parseDouble(record.get(destination));
-				matrix.put(record.get(0), destination, cost);			
+				this.setCost(record.get(0), destination, cost);			
 			}
 		}
 		parser.close(); 

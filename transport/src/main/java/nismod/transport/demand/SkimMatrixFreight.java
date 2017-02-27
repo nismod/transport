@@ -53,7 +53,7 @@ public class SkimMatrixFreight {
 			origin = Integer.parseInt(record.get(1));
 			vehicleType = Integer.parseInt(record.get(2));
 			cost = Double.parseDouble(record.get(3));
-			matrix.put(origin, destination, vehicleType, cost);			
+			this.setCost(origin, destination, vehicleType, cost);			
 			
 		}
 		parser.close(); 
