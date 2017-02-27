@@ -22,6 +22,7 @@ import org.opengis.feature.simple.SimpleFeature;
 import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.ODMatrix;
 import nismod.transport.demand.SkimMatrix;
+import nismod.transport.demand.SkimMatrixFreight;
 import nismod.transport.utility.RandomSingleton;
 
 /**
@@ -46,7 +47,7 @@ public class RoadNetworkAssignment {
 	private static RandomSingleton rng = RandomSingleton.getInstance();
 	
 	public static enum EngineType {
-	    PETROL, DIESEL, LPG, ELECTRICITY 
+	    PETROL, DIESEL, LPG, ELECTRICITY
 	}
 	
 	public static enum VehicleType {
@@ -598,7 +599,7 @@ public class RoadNetworkAssignment {
 	
 	/**
 	 * Updates travel time skim matrix (zone-to-zone travel times).
-	 * @param timeSkimMatrix Inter-zonal skim matrix (time)
+	 * @param timeSkimMatrix Inter-zonal skim matrix (time).
 	 */
 	public void updateTimeSkimMatrix(SkimMatrix timeSkimMatrix) {
 		
@@ -635,38 +636,60 @@ public class RoadNetworkAssignment {
 	public SkimMatrix calculateTimeSkimMatrix() {
 		
 		SkimMatrix timeSkimMatrix = new SkimMatrix();
-		
-		//for each OD pair
-		for (MultiKey mk: pathStorage.keySet()) {
-			//System.out.println(mk);
-			String originZone = (String) mk.getKey(0);
-			String destinationZone = (String) mk.getKey(1);
-			
-			List<Path> pathList = pathStorage.get(originZone, destinationZone);
-			double totalODtravelTime = 0.0;
-			//for each path in the path list calculate total travel time
-			for (Path path: pathList) {
-				
-				double pathTravelTime = 0.0;
-				for (Object o: path.getEdges()) {
-					Edge e = (Edge)o;
-					pathTravelTime += linkTravelTime.get(e.getID());					
-				}
-				//System.out.printf("Path travel time: %.3f\n\n", pathTravelTime);
-				totalODtravelTime += pathTravelTime;
-			}
-			double averageODtravelTime = totalODtravelTime / pathList.size();
-			//System.out.printf("Average OD travel time: %.3f min\n", averageODtravelTime);
-			//update time skim matrix
-			timeSkimMatrix.setCost((String)mk.getKey(0), (String)mk.getKey(1), averageODtravelTime);
-		}
+		this.updateTimeSkimMatrix(timeSkimMatrix);
 		
 		return timeSkimMatrix;
 	}
 	
 	/**
+	 * Updates travel time skim matrix (zone-to-zone travel times) for freight.
+	 * @param timeSkimMatrixFreight Inter-zonal skim matrix (time).
+	 */
+	public void updateTimeSkimMatrixFreight(SkimMatrixFreight timeSkimMatrixFreight) {
+
+		//for each vehicle type
+		for (VehicleType vht: pathStorageFreight.keySet())
+			//for each OD pair that is stored in the path storage
+			for (MultiKey mk: pathStorageFreight.get(vht).keySet()) {
+				//System.out.println(mk);
+				int originZone = (int) mk.getKey(0);
+				int destinationZone = (int) mk.getKey(1);
+
+				List<Path> pathList = pathStorageFreight.get(vht).get(originZone, destinationZone);
+				double totalODtravelTime = 0.0;
+				//for each path in the path list calculate total travel time
+				for (Path path: pathList) {
+
+					double pathTravelTime = 0.0;
+					for (Object o: path.getEdges()) {
+						Edge e = (Edge)o;
+						pathTravelTime += linkTravelTime.get(e.getID());					
+					}
+					//System.out.printf("Path travel time: %.3f\n\n", pathTravelTime);
+					totalODtravelTime += pathTravelTime;
+				}
+				double averageODtravelTime = totalODtravelTime / pathList.size();
+				//System.out.printf("Average OD travel time: %.3f min\n", averageODtravelTime);
+				//update time skim matrix
+				timeSkimMatrixFreight.setCost(originZone, destinationZone, vht.value, averageODtravelTime);
+			}
+	}
+
+	/**
+	 * Calculated travel time skim matrix (zone-to-zone travel times) for freight.
+	 * @return Inter-zonal skim matrix (time).
+	 */
+	public SkimMatrixFreight calculateTimeSkimMatrixFreight() {
+		
+		SkimMatrixFreight timeSkimMatrixFreight = new SkimMatrixFreight();
+		this.updateTimeSkimMatrixFreight(timeSkimMatrixFreight);
+		
+		return timeSkimMatrixFreight;
+	}
+	
+	/**
 	 * Updates cost skim matrix (zone-to-zone financial costs).
-	 * @param costSkimMatrix Inter-zonal skim matrix (cost)
+	 * @param costSkimMatrix Inter-zonal skim matrix (cost).
 	 */
 	public void updateCostSkimMatrix(SkimMatrix costSkimMatrix) {
 
@@ -698,26 +721,38 @@ public class RoadNetworkAssignment {
 				energyCost += averageODdistance / 100 * engineTypeFractions.get(engine) * energyConsumptionsPer100km.get(engine) * energyUnitCosts.get(engine);
 						
 			//System.out.printf("Average OD distance: %.3f km\t Fuel cost: %.2f GBP\n", averageODdistance, energyCost);
-			//update time skim matrix
+			//update cost skim matrix
 			costSkimMatrix.setCost(originZone, destinationZone, energyCost);
 		}
 	}
 	
 	/**
 	 * Calculates cost skim matrix (zone-to-zone financial costs).
-	 * @return Inter-zonal skim matrix (cost)
+	 * @return Inter-zonal skim matrix (cost).
 	 */
 	public SkimMatrix calculateCostSkimMatrix() {
 		
 		SkimMatrix costSkimMatrix = new SkimMatrix();
+		this.updateCostSkimMatrix(costSkimMatrix);
+		
+		return costSkimMatrix;
+	}
+	
+	/**
+	 * Updates cost skim matrix (zone-to-zone financial costs) for freight.
+	 * @param costSkimMatrix Inter-zonal skim matrix (cost).
+	 */
+	public void updateCostSkimMatrixFreight(SkimMatrixFreight costSkimMatrixFreight) {
 
+		//for each vehicle type
+		for (VehicleType vht: pathStorageFreight.keySet())
 		//for each OD pair
-		for (MultiKey mk: pathStorage.keySet()) {
+		for (MultiKey mk: pathStorageFreight.get(vht).keySet()) {
 			//System.out.println(mk);
-			String originZone = (String) mk.getKey(0);
-			String destinationZone = (String) mk.getKey(1);
+			int originZone = (int) mk.getKey(0);
+			int destinationZone = (int) mk.getKey(1);
 			
-			List<Path> pathList = pathStorage.get(originZone, destinationZone);
+			List<Path> pathList = pathStorageFreight.get(vht).get(originZone, destinationZone);
 			double totalODdistance = 0.0;
 			//for each path in the path list calculate total distance
 			for (Path path: pathList) {
@@ -739,11 +774,21 @@ public class RoadNetworkAssignment {
 				energyCost += averageODdistance / 100 * engineTypeFractions.get(engine) * energyConsumptionsPer100km.get(engine) * energyUnitCosts.get(engine);
 						
 			//System.out.printf("Average OD distance: %.3f km\t Fuel cost: %.2f GBP\n", averageODdistance, energyCost);
-			//update time skim matrix
-			costSkimMatrix.setCost(originZone, destinationZone, energyCost);
+			//update cost skim matrix
+			costSkimMatrixFreight.setCost(originZone, destinationZone, vht.value, energyCost);
 		}
+	}
+	
+	/**
+	 * Calculates cost skim matrix (zone-to-zone financial costs) for freight.
+	 * @return Inter-zonal skim matrix (cost).
+	 */
+	public SkimMatrixFreight calculateCostSkimMatrixFreight() {
 		
-		return costSkimMatrix;
+		SkimMatrixFreight costSkimMatrixFreight = new SkimMatrixFreight();
+		this.updateCostSkimMatrixFreight(costSkimMatrixFreight);
+		
+		return costSkimMatrixFreight;
 	}
 	
 	/**

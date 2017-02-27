@@ -20,68 +20,69 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
 /**
- * Skim matrix
+ * Skim matrix for freight
  * @author Milan Lovric
  *
  */
-public class SkimMatrix {
+public class SkimMatrixFreight {
 	
 	private MultiKeyMap matrix;
 		
-	public SkimMatrix() {
+	public SkimMatrixFreight() {
 		
 		matrix = new MultiKeyMap();
 	}
 	
 	/**
-	 * Constructor that reads skim matrix from an input csv file.
+	 * Constructor that reads freight skim matrix from an input csv file.
 	 * @param filePath Path to the input file
 	 * @throws IOException 
 	 * @throws FileNotFoundException 
 	 */
-	public SkimMatrix(String fileName) throws FileNotFoundException, IOException {
+	public SkimMatrixFreight(String fileName) throws FileNotFoundException, IOException {
 		
 		matrix = new MultiKeyMap();
 		CSVParser parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
 		//System.out.println(parser.getHeaderMap().toString());
 		Set<String> keySet = parser.getHeaderMap().keySet();
-		keySet.remove("origin");
 		//System.out.println("keySet = " + keySet);
+		int origin, destination, vehicleType;
 		double cost;
-		for (CSVRecord record : parser) { 
-			//System.out.println(record);
-			//System.out.println("Origin zone = " + record.get(0));
-			for (String destination: keySet) {
-				//System.out.println("Destination zone = " + destination);
-				cost = Double.parseDouble(record.get(destination));
-				matrix.put(record.get(0), destination, cost);			
-			}
+		for (CSVRecord record : parser) {
+			destination  = Integer.parseInt(record.get(0));
+			origin = Integer.parseInt(record.get(1));
+			vehicleType = Integer.parseInt(record.get(2));
+			cost = Double.parseDouble(record.get(3));
+			matrix.put(origin, destination, vehicleType, cost);			
+			
 		}
 		parser.close(); 
 	}
 	
 	/**
-	 * Gets cost for a given origin-destination pair.
+	 * Gets cost for a given origin-destination pair and a vehicle type.
 	 * @param originZone Origin zone.
 	 * @param destinationZone Destination zone.
+	 * @param vehicleType Vehicle type.
 	 * @return Origin-destination cost.
 	 */
-	public double getCost(String originZone, String destinationZone) {
+	public double getCost(int originZone, int destinationZone, int vehicleType) {
 		
-		Double cost = (Double) matrix.get(originZone, destinationZone);
+		Double cost = (Double) matrix.get(originZone, destinationZone, vehicleType);
 		if (cost == null) return 0.0;
 		else return cost;
 	}
 	
 	/**
-	 * Sets cost for a given origin-destination pair.
+	 * Sets cost for a given origin-destination pair and a vehicle type.
 	 * @param originZone Origin zone.
 	 * @param destinationZone Destination zone.
+	 * @param vehicleType Vehicle type.
 	 * @param cost Origin-destination cost.
 	 */
-	public void setCost(String originZone, String destinationZone, double cost) {
+	public void setCost(int originZone, int destinationZone, int vehicleType, double cost) {
 		
-		matrix.put(originZone, destinationZone, cost);
+		matrix.put(originZone, destinationZone, vehicleType, cost);
 	}
 	
 	/**
@@ -97,33 +98,32 @@ public class SkimMatrix {
 	 */
 	public void printMatrixFormatted() {
 		
-		Set<String> firstKey = new HashSet<String>();
-		Set<String> secondKey = new HashSet<String>();
+		Set<Integer> firstKey = new HashSet<Integer>();
+		Set<Integer> secondKey = new HashSet<Integer>();
 		
 		//extract row and column keysets
 		for (Object mk: matrix.keySet()) {
-			String origin = (String) ((MultiKey)mk).getKey(0);
-			String destination = (String) ((MultiKey)mk).getKey(1);
+			int origin = (int) ((MultiKey)mk).getKey(0);
+			int destination = (int) ((MultiKey)mk).getKey(1);
 			firstKey.add(origin);
 			secondKey.add(destination);
 		}
 	
 		//put them to a list and sort them
-		List<String> firstKeyList = new ArrayList<String>(firstKey);
-		List<String> secondKeyList = new ArrayList<String>(secondKey);
+		List<Integer> firstKeyList = new ArrayList<Integer>(firstKey);
+		List<Integer> secondKeyList = new ArrayList<Integer>(secondKey);
 		Collections.sort(firstKeyList);
 		Collections.sort(secondKeyList);
 		//System.out.println(firstKeyList);
 		//System.out.println(secondKeyList);
 	
 		//formatted print
-		System.out.print("origin   "); for (String s: secondKeyList) System.out.printf("%10s",s);
-		System.out.println();
-		for (String o: firstKeyList) {
-			System.out.print(o);
-			for (String s: secondKeyList) System.out.printf("%10.2f", matrix.get(o,s));
-			System.out.println();
-		}
+		System.out.printf("%6s%12s%12s%7s\n", "origin", "destination", "vehicleType", "cost");
+		for (int o: firstKeyList)
+			for (int d: secondKeyList)
+				for (int v=1; v<=3; v++)
+					if (this.getCost(o, d, v) > 0.0) //print only if there is a cost
+						System.out.printf("%6d%12d%12d%7.2f\n", o, d, v, this.getCost(o, d, v));
 	}
 		
 	/**
@@ -136,7 +136,7 @@ public class SkimMatrix {
 	}
 	
 	/**
-	 * Gets average OD cost.
+	 * Gets average OD cost (ignores empty matrix cells).
 	 * @return
 	 */
 	public double getAverageCost() {
@@ -153,15 +153,16 @@ public class SkimMatrix {
 	 * @param flows The demand as an origin-destination matrix.
 	 * @return
 	 */
-	public double getAverageCost(ODMatrix flows) {
+	public double getAverageCost(FreightMatrix flows) {
 		
 		double averageCost = 0.0;
 		long totalFlows = 0;
 		for (MultiKey mk: flows.getKeySet()) {
-			String origin = (String) mk.getKey(0);
-			String destination = (String) mk.getKey(1);
-			averageCost += flows.getFlow(origin, destination) * (double) matrix.get(origin, destination);
-			totalFlows += flows.getFlow(origin, destination);
+			int origin = (int) mk.getKey(0);
+			int destination = (int) mk.getKey(1);
+			int vehicleType = (int) mk.getKey(2);
+			averageCost += flows.getFlow(origin, destination, vehicleType) * (double) matrix.get(origin, destination, vehicleType);
+			totalFlows += flows.getFlow(origin, destination, vehicleType);
 		}
 		averageCost /= totalFlows;
 		
@@ -173,13 +174,14 @@ public class SkimMatrix {
 	 * @param other The other matrix.
 	 * @return Sum of absolute differences.
 	 */
-	public double getAbsoluteDifference(SkimMatrix other) {
+	public double getAbsoluteDifference(SkimMatrixFreight other) {
 		
 		double difference = 0.0;
 		for (MultiKey mk: other.getKeySet()) {
-			String origin = (String) mk.getKey(0);
-			String destination = (String) mk.getKey(1);
-			difference += Math.abs(this.getCost(origin, destination) - other.getCost(origin, destination));
+			int origin = (int) mk.getKey(0);
+			int destination = (int) mk.getKey(1);
+			int vehicleType = (int) mk.getKey(2);
+			difference += Math.abs(this.getCost(origin, destination, vehicleType) - other.getCost(origin, destination, vehicleType));
 		}
 	
 		return difference;
