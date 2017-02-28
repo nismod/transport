@@ -45,7 +45,7 @@ public class App {
 		//the main demand model
 		DemandModel dm = new DemandModel(roadNetwork2, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, energyUnitCostsFile);
 		
-		dm.predictPassengerDemand(Integer.parseInt(predictedYear), Integer.parseInt(baseYear));
+		dm.predictHighwayDemand(Integer.parseInt(predictedYear), Integer.parseInt(baseYear));
 		
 		dm.saveEnergyConsumptions(Integer.parseInt(predictedYear), outputFile);
     }
