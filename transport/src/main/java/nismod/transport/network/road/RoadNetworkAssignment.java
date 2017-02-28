@@ -580,29 +580,32 @@ public class RoadNetworkAssignment {
 
 	
 	/** 
-	 * Assigns passenger origin-destination matrix to the road network.
-	 * Uses the fastest path based on the current values in the linkTravelTime field.
-	 * Then update link travel times using weighted averaging.
+	 * Assigns passenger and freight origin-destination matrix to the road network
+	 * using the fastest path based on the current values in the linkTravelTime field.
+	 * Then updates link travel times using weighted averaging.
 	 * @param passengerODM Passenger origin-destination matrix.
+	 * @param freightODM Freight origin-destination matrix.
 	 * @param weight Weighting parameter.
 	 */
-	public void assignFlowsAndUpdateLinkTravelTimes(ODMatrix passengerODM, double weight) {
+	public void assignFlowsAndUpdateLinkTravelTimes(ODMatrix passengerODM, FreightMatrix freightODM, double weight) {
 		
 		this.assignPassengerFlows(passengerODM);
+		this.assignFreightFlows(freightODM);
 		this.updateLinkTravelTimes(weight);
 	}
 	
 	/** 
 	 * Iterates assignment and travel time update a fixed number of times.
 	 * @param passengerODM Passenger origin-destination matrix.
+	 * @param freightODM Freight origin-destination matrix.
 	 * @param weight Weighting parameter.
 	 * @param iterations Number of iterations.
 	 */
-	public void assignFlowsAndUpdateLinkTravelTimesIterated(ODMatrix passengerODM, double weight, int iterations) {
+	public void assignFlowsAndUpdateLinkTravelTimesIterated(ODMatrix passengerODM, FreightMatrix freightODM, double weight, int iterations) {
 		
 		for (int i=0; i<iterations; i++) {
 			this.resetLinkVolumesInPCU(); //link volumes must be reset or they would compound across all iterations
-			this.assignFlowsAndUpdateLinkTravelTimes(passengerODM, weight);
+			this.assignFlowsAndUpdateLinkTravelTimes(passengerODM, freightODM, weight);
 		}
 	}
 	
@@ -818,7 +821,7 @@ public class RoadNetworkAssignment {
 					totalDistance += length;					
 				}
 		}
-		System.out.printf("Total path distance: %.3f km\n", totalDistance);
+		System.out.printf("Total path distance (car): %.3f km\n", totalDistance);
 
 		HashMap<EngineType, Double> consumptions = new HashMap<EngineType, Double>();
 		for (EngineType engine: EngineType.values()) {
@@ -850,7 +853,7 @@ public class RoadNetworkAssignment {
 				}
 			}
 		}
-		System.out.printf("Total path distance: %.3f km\n", totalDistance);
+		System.out.printf("Total path distance (freight): %.3f km\n", totalDistance);
 
 		HashMap<EngineType, Double> consumptions = new HashMap<EngineType, Double>();
 		for (EngineType engine: EngineType.values()) {
