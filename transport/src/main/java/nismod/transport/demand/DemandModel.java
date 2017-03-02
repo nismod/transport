@@ -403,46 +403,13 @@ public class DemandModel {
 	}
 
 	/**
-	 * Saves energy consumptions into a csv file
+	 * Saves energy consumptions into a csv file.
 	 * @param year
 	 * @param outputFile
 	 */
 	public void saveEnergyConsumptions (int year, String outputFile) {
 
-		//calculate energy consumptions in year year
-		HashMap<EngineType, Double> energyConsumptions = this.yearToRoadNetworkAssignment.get(year).calculateEnergyConsumptions();
-		String NEW_LINE_SEPARATOR = "\n";
-		//Object[] FILE_HEADER = {"year","PETROL","DIESEL","LPG","ELECTRICITY"};
-		ArrayList<String> header = new ArrayList<String>();
-		header.add("year");
-		for (EngineType et: EngineType.values()) header.add(et.name());
-		FileWriter fileWriter = null;
-		CSVPrinter csvFilePrinter = null;
-		CSVFormat csvFileFormat = CSVFormat.DEFAULT.withRecordSeparator(NEW_LINE_SEPARATOR);
-		try {
-			fileWriter = new FileWriter(outputFile);
-			csvFilePrinter = new CSVPrinter(fileWriter, csvFileFormat);
-			csvFilePrinter.printRecord(header);
-			ArrayList<String> record = new ArrayList<String>();
-			record.add(Integer.toString(year));
-			for (int i=1; i<header.size(); i++)	{
-				EngineType et = EngineType.valueOf(header.get(i));
-				record.add(String.format("%.2f", energyConsumptions.get(et)));
-			}
-			csvFilePrinter.printRecord(record);
-		} catch (Exception e) {
-			System.err.println("Error in CsvFileWriter!");
-			e.printStackTrace();
-		} finally {
-			try {
-				fileWriter.flush();
-				fileWriter.close();
-				csvFilePrinter.close();
-			} catch (IOException e) {
-				System.err.println("Error while flushing/closing fileWriter/csvPrinter!");
-				e.printStackTrace();
-			}
-		}
+		this.yearToRoadNetworkAssignment.get(year).saveTotalEnergyConsumptions(year, outputFile);
 	}
 	
 	/**

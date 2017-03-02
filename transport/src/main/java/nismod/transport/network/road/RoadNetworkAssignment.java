@@ -3,12 +3,16 @@
  */
 package nismod.transport.network.road;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.map.MultiKeyMap;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.geotools.graph.path.AStarShortestPathFinder;
 import org.geotools.graph.path.DijkstraShortestPathFinder;
 import org.geotools.graph.path.Path;
@@ -23,6 +27,7 @@ import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.ODMatrix;
 import nismod.transport.demand.SkimMatrix;
 import nismod.transport.demand.SkimMatrixFreight;
+import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.utility.RandomSingleton;
 
 /**
@@ -978,17 +983,218 @@ public class RoadNetworkAssignment {
 	}
 	
 	/**
-	 * Saves assignment results to output files.
+	 * Saves assignment results to output file.
+	 * @param year
+	 * @param outputFile
 	 */
-	public void saveAssignmentResults() {
+	public void saveAssignmentResults(int year, String outputFile) {
+		
+		//calculate peak capacities and densities
+		HashMap<Integer, Double> capacities = this.calculatePeakLinkPointCapacities();
+		HashMap<Integer, Double> densities = this.calculatePeakLinkDensities();
 
+		String NEW_LINE_SEPARATOR = "\n";
+		ArrayList<String> header = new ArrayList<String>();
+		header.add("year");
+		header.add("edgeID");
+		header.add("freeFlowTravelTime");
+		header.add("travelTime");
+		header.add("linkVolumePCU");
+		header.add("peakCapacity");
+		header.add("peakDensity");
+		header.add("maxCapacity");
+		header.add("utilisation");
+		FileWriter fileWriter = null;
+		CSVPrinter csvFilePrinter = null;
+		CSVFormat csvFileFormat = CSVFormat.DEFAULT.withRecordSeparator(NEW_LINE_SEPARATOR);
+		try {
+			fileWriter = new FileWriter(outputFile);
+			csvFilePrinter = new CSVPrinter(fileWriter, csvFileFormat);
+			csvFilePrinter.printRecord(header);
+			ArrayList<String> record = new ArrayList<String>();
+			Iterator<DirectedEdge> iter = (Iterator<DirectedEdge>) this.roadNetwork.getNetwork().getEdges().iterator();
+			while (iter.hasNext()) {
+				DirectedEdge edge = (DirectedEdge) iter.next();
+				record.clear();
+				record.add(Integer.toString(year));
+				record.add(Integer.toString(edge.getID()));
+				record.add(Double.toString(this.linkFreeFlowTravelTime.get(edge.getID())));
+				record.add(Double.toString(this.linkTravelTime.get(edge.getID())));
+				Double linkVolume = this.linkVolumesInPCU.get(edge.getID());
+				if (linkVolume == null)
+					record.add(Double.toString(0.0));
+				else
+					record.add(Double.toString(this.linkVolumesInPCU.get(edge.getID())));
+				record.add(Double.toString(capacities.get(edge.getID())));
+				record.add(Double.toString(densities.get(edge.getID())));
+				//get max capacity from road type
+				SimpleFeature feature = (SimpleFeature)edge.getObject();
+				String roadNumber = (String) feature.getAttribute("RoadNumber");
+				if (roadNumber.charAt(0) == 'M') { //motorway
+					record.add(Integer.toString(RoadNetworkAssignment.MAXIMUM_CAPACITY_M_ROAD));
+					double utilisation = capacities.get(edge.getID()) / RoadNetworkAssignment.MAXIMUM_CAPACITY_M_ROAD;
+					record.add(Double.toString(utilisation));
+				}
+				else if (roadNumber.charAt(0) == 'A') { //A road
+					record.add(Integer.toString(RoadNetworkAssignment.MAXIMUM_CAPACITY_A_ROAD));
+					double utilisation = capacities.get(edge.getID()) / RoadNetworkAssignment.MAXIMUM_CAPACITY_A_ROAD;
+					record.add(Double.toString(utilisation));
+				}
+				else { //ferry
+					record.add("N/A");
+					record.add("N/A");
+				}				
+				csvFilePrinter.printRecord(record);
+			}
+		} catch (Exception e) {
+			System.err.println("Error in CsvFileWriter!");
+			e.printStackTrace();
+		} finally {
+			try {
+				fileWriter.flush();
+				fileWriter.close();
+				csvFilePrinter.close();
+			} catch (IOException e) {
+				System.err.println("Error while flushing/closing fileWriter/csvPrinter!");
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	/**
 	 * Saves total electricity consumption to an output file.
 	 */
-	public void saveTotalElectricityConsumption(String OutputFile) {
+	public void saveTotalEnergyConsumptions(int year, String outputFile) {
 
+		//calculate energy consumptions
+		HashMap<EngineType, Double> energyConsumptions = this.calculateEnergyConsumptions();
+		
+		String NEW_LINE_SEPARATOR = "\n";
+		ArrayList<String> header = new ArrayList<String>();
+		header.add("year");
+		for (EngineType et: EngineType.values()) header.add(et.name());
+		FileWriter fileWriter = null;
+		CSVPrinter csvFilePrinter = null;
+		CSVFormat csvFileFormat = CSVFormat.DEFAULT.withRecordSeparator(NEW_LINE_SEPARATOR);
+		try {
+			fileWriter = new FileWriter(outputFile);
+			csvFilePrinter = new CSVPrinter(fileWriter, csvFileFormat);
+			csvFilePrinter.printRecord(header);
+			ArrayList<String> record = new ArrayList<String>();
+			record.add(Integer.toString(year));
+			for (int i=1; i<header.size(); i++)	{
+				EngineType et = EngineType.valueOf(header.get(i));
+				record.add(String.format("%.2f", energyConsumptions.get(et)));
+			}
+			csvFilePrinter.printRecord(record);
+		} catch (Exception e) {
+			System.err.println("Error in CsvFileWriter!");
+			e.printStackTrace();
+		} finally {
+			try {
+				fileWriter.flush();
+				fileWriter.close();
+				csvFilePrinter.close();
+			} catch (IOException e) {
+				System.err.println("Error while flushing/closing fileWriter/csvPrinter!");
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	/**
+	 * Saves peak link point capacities into a file.
+	 * @param year
+	 * @param outputFile
+	 */
+	public void savePeakLinkPointCapacities (int year, String outputFile) {
+
+		//calculate capacities
+		HashMap<Integer, Double> capacities = this.calculatePeakLinkPointCapacities();
+		
+		//save them to a file
+		String NEW_LINE_SEPARATOR = "\n";
+		ArrayList<String> header = new ArrayList<String>();
+		header.add("year");
+		header.add("edgeID");
+		header.add("capacity");
+		FileWriter fileWriter = null;
+		CSVPrinter csvFilePrinter = null;
+		CSVFormat csvFileFormat = CSVFormat.DEFAULT.withRecordSeparator(NEW_LINE_SEPARATOR);
+		try {
+			fileWriter = new FileWriter(outputFile);
+			csvFilePrinter = new CSVPrinter(fileWriter, csvFileFormat);
+			csvFilePrinter.printRecord(header);
+			ArrayList<String> record = new ArrayList<String>();
+			Iterator<DirectedEdge> iter = (Iterator<DirectedEdge>) this.roadNetwork.getNetwork().getEdges().iterator();
+			while (iter.hasNext()) {
+				DirectedEdge edge = (DirectedEdge) iter.next();
+				record.clear();
+				record.add(Integer.toString(year));
+				record.add(Integer.toString(edge.getID()));
+				//record.add(String.format("%.2f", capacities.get(edge.getID())));
+				record.add(Double.toString(capacities.get(edge.getID())));
+				csvFilePrinter.printRecord(record);
+			}
+		} catch (Exception e) {
+			System.err.println("Error in CsvFileWriter!");
+			e.printStackTrace();
+		} finally {
+			try {
+				fileWriter.flush();
+				fileWriter.close();
+				csvFilePrinter.close();
+			} catch (IOException e) {
+				System.err.println("Error while flushing/closing fileWriter/csvPrinter!");
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	/**
+	 * Saves travel times into a file.
+	 * @param year
+	 * @param outputFile
+	 */
+	public void saveLinkTravelTimes (int year, String outputFile) {
+
+		String NEW_LINE_SEPARATOR = "\n";
+		ArrayList<String> header = new ArrayList<String>();
+		header.add("year");
+		header.add("edgeID");
+		header.add("freeFlowTravelTime");
+		header.add("travelTime");
+		FileWriter fileWriter = null;
+		CSVPrinter csvFilePrinter = null;
+		CSVFormat csvFileFormat = CSVFormat.DEFAULT.withRecordSeparator(NEW_LINE_SEPARATOR);
+		try {
+			fileWriter = new FileWriter(outputFile);
+			csvFilePrinter = new CSVPrinter(fileWriter, csvFileFormat);
+			csvFilePrinter.printRecord(header);
+			ArrayList<String> record = new ArrayList<String>();
+			Iterator<DirectedEdge> iter = (Iterator<DirectedEdge>) this.roadNetwork.getNetwork().getEdges().iterator();
+			while (iter.hasNext()) {
+				DirectedEdge edge = (DirectedEdge) iter.next();
+				record.clear();
+				record.add(Integer.toString(year));
+				record.add(Integer.toString(edge.getID()));
+				record.add(Double.toString(this.linkFreeFlowTravelTime.get(edge.getID())));
+				record.add(Double.toString(this.linkTravelTime.get(edge.getID())));
+				csvFilePrinter.printRecord(record);
+			}
+		} catch (Exception e) {
+			System.err.println("Error in CsvFileWriter!");
+			e.printStackTrace();
+		} finally {
+			try {
+				fileWriter.flush();
+				fileWriter.close();
+				csvFilePrinter.close();
+			} catch (IOException e) {
+				System.err.println("Error while flushing/closing fileWriter/csvPrinter!");
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	/**
