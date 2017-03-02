@@ -120,6 +120,8 @@ public class RoadNetworkAssignmentTest {
 		
 		System.out.println("Peak-hour link densities:");
 		System.out.println(roadNetworkAssignment.calculatePeakLinkDensities());
+		
+		roadNetworkAssignment.saveAssignmentResults(2015, "assignment2015.csv");
 	}
 
 	@Test
