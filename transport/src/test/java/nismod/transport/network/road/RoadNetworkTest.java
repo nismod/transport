@@ -662,5 +662,22 @@ public class RoadNetworkTest {
 		Arrays.sort(array);
 		Arrays.sort(expectedArray4);
 		assertTrue("Nodes are correctly mapped to zone E07000086", Arrays.equals(expectedArray4, array));
+		
+		//TEST NUMBER OF LANES
+		System.out.println("\n\n*** Testing the number of lanes ***");
+		
+		iter = rn.getEdges().iterator();
+		while (iter.hasNext()) {
+			DirectedEdge edge = (DirectedEdge) iter.next();
+			SimpleFeature sf = (SimpleFeature) edge.getObject(); 
+			String roadNumber = (String) sf.getAttribute("RoadNumber");
+			if (roadNumber.charAt(0) == 'M') {//motorway
+				assertEquals("The number of lanes is correct for the road type", RoadNetworkAssignment.NUMBER_OF_LANES_M_ROAD, (int)roadNetwork.getNumberOfLanes().get(edge.getID()));
+			} else if (roadNumber.charAt(0) == 'A') {//A road
+				assertEquals("The number of lanes is correct for the road type", RoadNetworkAssignment.NUMBER_OF_LANES_A_ROAD, (int)roadNetwork.getNumberOfLanes().get(edge.getID()));
+			} else {//ferry
+				assertNull("The number of lanes for ferries is not defined", roadNetwork.getNumberOfLanes().get(edge.getID()));
+			}
+		}
 	}
 }

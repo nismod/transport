@@ -7,11 +7,15 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.geotools.graph.path.Path;
 
+import nismod.transport.decision.Intervention;
+import nismod.transport.decision.RoadExpansion;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
 
@@ -47,9 +51,20 @@ public class DemandModelTest {
 		
 		//export to shapefile
 		//roadNetwork2.exportToShapefile("outputNetwork");
-
+		
+		List<Intervention> interventions = new ArrayList<Intervention>();
+		
+		Properties props = new Properties();
+		props.setProperty("fromNode", "57");
+		props.setProperty("toNode", "39");
+		props.setProperty("CP", "26042");
+		props.setProperty("number", "2");
+		RoadExpansion re = new RoadExpansion(2016, 2025, props);
+		interventions.add(re);
+		
 		//the main demand model
-		DemandModel dm = new DemandModel(roadNetwork2, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, energyUnitCostsFile);
+		DemandModel dm = new DemandModel(roadNetwork2, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, energyUnitCostsFile, interventions);
+		
 		dm.predictHighwayDemand(2016, 2015);
 
 		System.out.println("Base-year (2015) passenger matrix: ");

@@ -79,6 +79,7 @@ public class RoadNetwork {
 	private ShapefileDataStore AADFshapefile;
 	private DijkstraIterator.EdgeWeighter dijkstraWeighter;
 	private DijkstraIterator.EdgeWeighter dijkstraTimeWeighter;
+	private HashMap<Integer, Integer> numberOfLanes;
 	private HashMap<Integer, String> nodeToZone;
 	private HashMap<String, List<Integer>> zoneToNodes;
 	private HashMap<String, List<String>> zoneToAreaCodes;
@@ -447,6 +448,15 @@ public class RoadNetwork {
 	}
 	
 	/**
+	 * Getter method for the number of lanes for each link.
+	 * @return Link to number of lanes mapping.
+	 */
+	public HashMap<Integer, Integer> getNumberOfLanes() {
+
+		return this.numberOfLanes;
+	}
+	
+	/**
 	 * Getter method for the node to zone mapping.
 	 * @return Node to zone mapping.
 	 */
@@ -589,6 +599,9 @@ public class RoadNetwork {
 
 		//map the nodes to zones
 		mapNodesToZones(zonesFeatureCollection);
+		
+		//set number of lanes
+		addNumberOfLanes();
 		
 		System.out.println("Undirected graph representation of the road network:");
 		System.out.println(undirectedGraph);
@@ -798,6 +811,31 @@ public class RoadNetwork {
 		} finally {
 			//feature iterator is a live connection that must be closed
 			iter.close();
+		}
+	}
+	
+	/**
+	 * Calculates default number of lanes from road type.
+	 */
+	private void addNumberOfLanes() {
+		
+		this.numberOfLanes = new HashMap<Integer, Integer>();
+		
+		//iterate through all the edges in the graph
+		Iterator iter = this.network.getEdges().iterator();
+		while(iter.hasNext()) {
+			
+			Edge edge = (Edge) iter.next();
+			SimpleFeature sf = (SimpleFeature) edge.getObject();
+			String roadNumber = (String) sf.getAttribute("RoadNumber");
+			Integer lanes = 0;
+			if (roadNumber.charAt(0) == 'M') //motorway
+				lanes = RoadNetworkAssignment.NUMBER_OF_LANES_M_ROAD;
+			else if (roadNumber.charAt(0) == 'A') //A-road
+				lanes = RoadNetworkAssignment.NUMBER_OF_LANES_A_ROAD;
+			else //ferry
+				lanes = null;
+			numberOfLanes.put(edge.getID(), lanes);
 		}
 	}
 	

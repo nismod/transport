@@ -3,7 +3,7 @@
  */
 package nismod.transport.demand;
 
-import java.awt.List;
+import java.util.List;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -17,6 +17,8 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
+
+import nismod.transport.decision.Intervention;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
@@ -50,6 +52,9 @@ public class DemandModel {
 	private HashMap<Integer, RoadNetworkAssignment> yearToRoadNetworkAssignment;
 	private HashMap<Integer, HashMap<EngineType, Double>> yearToEnergyUnitCosts;
 	//private SkimMatrix baseYearTimeSkimMatrix,	baseYearCostSkimMatrix;
+	
+	private List<Intervention> interventions;
+	
 	private RoadNetwork roadNetwork;
 
 	/**
@@ -58,7 +63,7 @@ public class DemandModel {
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
-	public DemandModel(RoadNetwork roadNetwork, String baseYearODMatrixFile, String baseYearFreightMatrixFile, String populationFile, String GVAFile, String energyUnitCostsFile) throws FileNotFoundException, IOException {
+	public DemandModel(RoadNetwork roadNetwork, String baseYearODMatrixFile, String baseYearFreightMatrixFile, String populationFile, String GVAFile, String energyUnitCostsFile, List<Intervention> interventions) throws FileNotFoundException, IOException {
 
 		yearToPassengerODMatrix = new HashMap<Integer, ODMatrix>();
 		yearToFreightODMatrix = new HashMap<Integer, FreightMatrix>();
@@ -70,8 +75,10 @@ public class DemandModel {
 		yearToZoneToGVA = new HashMap<Integer, HashMap<String, Double>>();
 		yearToRoadNetworkAssignment = new HashMap<Integer, RoadNetworkAssignment>();
 		yearToEnergyUnitCosts = new HashMap<Integer, HashMap<EngineType, Double>>();
-
+		
 		this.roadNetwork = roadNetwork;
+		
+		this.interventions = interventions;
 
 		//read base-year passenger matrix
 		ODMatrix passengerODMatrix = new ODMatrix(baseYearODMatrixFile);
@@ -128,6 +135,12 @@ public class DemandModel {
 			System.err.printf("Freight demand from year %d does not exist!\n", fromYear);
 			return;
 		} else {
+			
+			//check if all interventions up to fromYear have been executed
+			for (Intervention i: interventions) {
+				if (i.getStartYear() <= fromYear && i.getEndYear() >= fromYear && !i.getState())	i.install(this);
+			}
+						
 			//check if the demand for fromYear has already been assigned, if not assign it
 			RoadNetworkAssignment rna = yearToRoadNetworkAssignment.get(fromYear);
 			if (rna == null) {
@@ -148,6 +161,12 @@ public class DemandModel {
 				yearToTimeSkimMatrixFreight.put(fromYear, tsmf);
 				yearToCostSkimMatrixFreight.put(fromYear, csmf);
 			}
+			
+			//check if all interventions up to predictedYear have been executed
+			for (Intervention i: interventions) {
+				if (i.getStartYear() > fromYear && i.getStartYear() <= predictedYear && i.getEndYear() >= predictedYear && !i.getState())	i.install(this);
+			}
+				
 			
 			//copy skim matrices from fromYear into predictedYear
 			yearToTimeSkimMatrix.put(predictedYear, yearToTimeSkimMatrix.get(fromYear));
@@ -412,6 +431,15 @@ public class DemandModel {
 		this.yearToRoadNetworkAssignment.get(year).saveTotalEnergyConsumptions(year, outputFile);
 	}
 	
+	/**
+	 * Getter method for the road network.
+	 * @return Road network.
+	 */
+	public RoadNetwork getRoadNetwork() {
+		
+		return this.roadNetwork;
+	}
+		
 	/**
 	 * @param fileName
 	 * @return
