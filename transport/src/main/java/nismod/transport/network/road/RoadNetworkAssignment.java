@@ -528,6 +528,7 @@ public class RoadNetworkAssignment {
 		
 		//iterate through all the edges in the graph
 		Iterator iter = roadNetwork.getNetwork().getEdges().iterator();
+		HashMap<Integer, Integer> numberOfLanes = roadNetwork.getNumberOfLanes();
 		while(iter.hasNext()) {
 			
 			Edge edge = (Edge) iter.next();
@@ -539,9 +540,9 @@ public class RoadNetworkAssignment {
 			
 			String roadNumber = (String) sf.getAttribute("RoadNumber");
 			if (roadNumber.charAt(0) == 'M') //motorway
-				congestedTravelTime = linkFreeFlowTravelTime.get(edge.getID())*(1 + ALPHA * Math.pow(PEAK_HOUR_PERCENTAGE * linkVolumeInPCU / NUMBER_OF_LANES_M_ROAD / MAXIMUM_CAPACITY_M_ROAD, BETA_M_ROAD));
+				congestedTravelTime = linkFreeFlowTravelTime.get(edge.getID())*(1 + ALPHA * Math.pow(PEAK_HOUR_PERCENTAGE * linkVolumeInPCU / numberOfLanes.get(edge.getID()) / MAXIMUM_CAPACITY_M_ROAD, BETA_M_ROAD));
 			else if (roadNumber.charAt(0) == 'A') //A-road
-				congestedTravelTime = linkFreeFlowTravelTime.get(edge.getID())*(1 + ALPHA * Math.pow(PEAK_HOUR_PERCENTAGE * linkVolumeInPCU / NUMBER_OF_LANES_A_ROAD / MAXIMUM_CAPACITY_A_ROAD, BETA_A_ROAD));
+				congestedTravelTime = linkFreeFlowTravelTime.get(edge.getID())*(1 + ALPHA * Math.pow(PEAK_HOUR_PERCENTAGE * linkVolumeInPCU / numberOfLanes.get(edge.getID()) / MAXIMUM_CAPACITY_A_ROAD, BETA_A_ROAD));
 			else //ferry
 				congestedTravelTime = linkFreeFlowTravelTime.get(edge.getID());
 			linkTravelTime.put(edge.getID(), congestedTravelTime);
@@ -559,6 +560,7 @@ public class RoadNetworkAssignment {
 		
 		//iterate through all the edges in the graph
 		Iterator iter = roadNetwork.getNetwork().getEdges().iterator();
+		HashMap<Integer, Integer> numberOfLanes = roadNetwork.getNumberOfLanes();
 		while(iter.hasNext()) {
 			
 			Edge edge = (Edge) iter.next();
@@ -570,9 +572,9 @@ public class RoadNetworkAssignment {
 			
 			String roadNumber = (String) sf.getAttribute("RoadNumber");
 			if (roadNumber.charAt(0) == 'M') //motorway
-				congestedTravelTime = linkFreeFlowTravelTime.get(edge.getID())*(1 + ALPHA * Math.pow(PEAK_HOUR_PERCENTAGE * linkVol / NUMBER_OF_LANES_M_ROAD / MAXIMUM_CAPACITY_M_ROAD, BETA_M_ROAD));
+				congestedTravelTime = linkFreeFlowTravelTime.get(edge.getID())*(1 + ALPHA * Math.pow(PEAK_HOUR_PERCENTAGE * linkVol / numberOfLanes.get(edge.getID()) / MAXIMUM_CAPACITY_M_ROAD, BETA_M_ROAD));
 			else if (roadNumber.charAt(0) == 'A') //A-road
-				congestedTravelTime = linkFreeFlowTravelTime.get(edge.getID())*(1 + ALPHA * Math.pow(PEAK_HOUR_PERCENTAGE * linkVol / NUMBER_OF_LANES_A_ROAD / MAXIMUM_CAPACITY_A_ROAD, BETA_A_ROAD));
+				congestedTravelTime = linkFreeFlowTravelTime.get(edge.getID())*(1 + ALPHA * Math.pow(PEAK_HOUR_PERCENTAGE * linkVol / numberOfLanes.get(edge.getID()) / MAXIMUM_CAPACITY_A_ROAD, BETA_A_ROAD));
 			else //ferry
 				congestedTravelTime = linkFreeFlowTravelTime.get(edge.getID());
 			
@@ -892,6 +894,7 @@ public class RoadNetworkAssignment {
 	public HashMap<Integer, Double> calculatePeakLinkPointCapacities() {
 
 		HashMap<Integer, Double> linkPointCapacities = new HashMap<Integer, Double>();
+		HashMap<Integer, Integer> numberOfLanes = roadNetwork.getNumberOfLanes();
 		
 		//iterate through all the edges in the graph
 		Iterator iter = roadNetwork.getNetwork().getEdges().iterator();
@@ -904,9 +907,9 @@ public class RoadNetworkAssignment {
 			double capacity = 0.0;
 			String roadNumber = (String) sf.getAttribute("RoadNumber");
 			if (roadNumber.charAt(0) == 'M') //motorway
-				capacity = PEAK_HOUR_PERCENTAGE * linkVolumeInPCU / NUMBER_OF_LANES_M_ROAD;
+				capacity = PEAK_HOUR_PERCENTAGE * linkVolumeInPCU / numberOfLanes.get(edge.getID());
 			else if (roadNumber.charAt(0) == 'A') //A-road
-				capacity = PEAK_HOUR_PERCENTAGE * linkVolumeInPCU / NUMBER_OF_LANES_A_ROAD;
+				capacity = PEAK_HOUR_PERCENTAGE * linkVolumeInPCU / numberOfLanes.get(edge.getID());
 			else //ferry
 				capacity = PEAK_HOUR_PERCENTAGE * linkVolumeInPCU;
 			
@@ -921,6 +924,7 @@ public class RoadNetworkAssignment {
 	public HashMap<Integer, Double> calculatePeakLinkDensities() {
 
 		HashMap<Integer, Double> linkDensities = new HashMap<Integer, Double>();
+		HashMap<Integer, Integer> numberOfLanes = roadNetwork.getNumberOfLanes();
 		
 		//iterate through all the edges in the graph
 		Iterator iter = roadNetwork.getNetwork().getEdges().iterator();
@@ -934,9 +938,9 @@ public class RoadNetworkAssignment {
 			String roadNumber = (String) sf.getAttribute("RoadNumber");
 			double length = (double) sf.getAttribute("LenNet");
 			if (roadNumber.charAt(0) == 'M') //motorway
-				density = PEAK_HOUR_PERCENTAGE * linkVol / NUMBER_OF_LANES_M_ROAD / length;
+				density = PEAK_HOUR_PERCENTAGE * linkVol / numberOfLanes.get(edge.getID()) / length;
 			else if (roadNumber.charAt(0) == 'A') //A-road
-				density = PEAK_HOUR_PERCENTAGE * linkVol / NUMBER_OF_LANES_A_ROAD / length;
+				density = PEAK_HOUR_PERCENTAGE * linkVol / numberOfLanes.get(edge.getID()) / length;
 			else //ferry
 				density = PEAK_HOUR_PERCENTAGE * linkVol / length;
 			

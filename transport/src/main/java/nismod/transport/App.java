@@ -3,7 +3,10 @@ package nismod.transport;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
+import nismod.transport.decision.Intervention;
 import nismod.transport.demand.DemandModel;
 import nismod.transport.network.road.RoadNetwork;
 
@@ -42,8 +45,11 @@ public class App {
 		//create a road network
 		RoadNetwork roadNetwork2 = new RoadNetwork(zonesUrl2, networkUrl2, nodesUrl2, AADFurl2, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile);
 				
+		//load interventions
+		List<Intervention> interventions = new ArrayList<Intervention>();
+		
 		//the main demand model
-		DemandModel dm = new DemandModel(roadNetwork2, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, energyUnitCostsFile);
+		DemandModel dm = new DemandModel(roadNetwork2, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, energyUnitCostsFile, interventions);
 		
 		dm.predictHighwayDemand(Integer.parseInt(predictedYear), Integer.parseInt(baseYear));
 		
