@@ -55,11 +55,13 @@ public class DemandModelTest {
 		List<Intervention> interventions = new ArrayList<Intervention>();
 		
 		Properties props = new Properties();
+		props.setProperty("startYear", "2016");
+		props.setProperty("endYear", "2025");
 		props.setProperty("fromNode", "57");
 		props.setProperty("toNode", "39");
 		props.setProperty("CP", "26042");
 		props.setProperty("number", "2");
-		RoadExpansion re = new RoadExpansion(2016, 2025, props);
+		RoadExpansion re = new RoadExpansion(props);
 		interventions.add(re);
 		
 		//the main demand model

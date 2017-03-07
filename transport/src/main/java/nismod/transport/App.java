@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import nismod.transport.decision.Intervention;
+import nismod.transport.decision.RoadExpansion;
+import nismod.transport.decision.VehicleElectrification;
 import nismod.transport.demand.DemandModel;
 import nismod.transport.network.road.RoadNetwork;
 
@@ -37,6 +39,9 @@ public class App {
 		final String GVAFile = "./src/test/resources/testdata/GVA.csv";
 		//final String energyUnitCostsFile = "./src/test/resources/testdata/energyUnitCosts.csv";
 		
+		final String roadExpansionFileName = "./src/test/resources/testdata/roadExpansion.properties";
+		final String vehicleElectrificationFileName = "./src/test/resources/testdata/vehicleEletrification.properties";		
+		
 		final String baseYear = args[0];
 		final String predictedYear = args[1];
 		final String energyUnitCostsFile = args[2];
@@ -47,6 +52,10 @@ public class App {
 				
 		//load interventions
 		List<Intervention> interventions = new ArrayList<Intervention>();
+		RoadExpansion re = new RoadExpansion(roadExpansionFileName);
+		VehicleElectrification ve = new VehicleElectrification(vehicleElectrificationFileName);
+		interventions.add(re);
+		interventions.add(ve);
 		
 		//the main demand model
 		DemandModel dm = new DemandModel(roadNetwork2, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, energyUnitCostsFile, interventions);
@@ -56,3 +65,4 @@ public class App {
 		dm.saveEnergyConsumptions(Integer.parseInt(predictedYear), outputFile);
     }
 }
+
