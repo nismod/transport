@@ -12,6 +12,7 @@ import org.geotools.graph.structure.DirectedGraph;
 import org.geotools.graph.structure.DirectedNode;
 import org.opengis.feature.simple.SimpleFeature;
 
+import nismod.transport.demand.DemandModel;
 import nismod.transport.network.road.RoadNetwork;
 
 /**
@@ -22,13 +23,19 @@ import nismod.transport.network.road.RoadNetwork;
 public class RoadExpansion extends Intervention {
 	
 	/** Constructor.
-	 * @param startYear The year in which intervention is installed.
-	 * @param endYear The last year in which intervention still remains installed. 
 	 * @param props Properties of the road expansion intervention.
 	 */
-	public RoadExpansion (int startYear, int endYear, Properties props) {
+	public RoadExpansion (Properties props) {
 		
-		super(startYear, endYear, props);
+		super(props);
+	}
+	
+	/** Constructor.
+	 * @param fileName File with the properties.
+	 */
+	public RoadExpansion (String fileName) {
+		
+		super(fileName);
 	}
 
 	/* (non-Javadoc)
@@ -38,13 +45,18 @@ public class RoadExpansion extends Intervention {
 	public void install(Object o) {
 		// TODO Auto-generated method stub
 		
-		System.out.println("Implementing road expansion");
-		
-		if (!(o instanceof RoadNetwork)) {
-			System.err.println("RoadExpansion is expecting RoadNetwork argument");
+		System.out.println("Implementing road expansion.");
+		RoadNetwork rn = null;
+		if (o instanceof RoadNetwork) {
+			rn = (RoadNetwork)o;
+		}
+		else if (o instanceof DemandModel) {
+			rn = ((DemandModel)o).getRoadNetwork();
+		}
+		else {
+			System.err.println("RoadExpansion installation has received an unexpected type.");
 			return;
 		}
-		RoadNetwork rn = (RoadNetwork)o;
 		int number = Integer.parseInt(this.props.getProperty("number"));
 		Integer expandedEdgeID = this.getExpandedEdgeID(rn); 
 		int numberOfLanes = rn.getNumberOfLanes().get(expandedEdgeID);
@@ -60,12 +72,18 @@ public class RoadExpansion extends Intervention {
 	public void uninstall(Object o) {
 		// TODO Auto-generated method stub
 		
-		System.out.println("Removing road expansion");
-		if (!(o instanceof RoadNetwork)) {
-			System.err.println("RoadExpansion is expecting RoadNetwork argument");
+		System.out.println("Removing road expansion.");
+		RoadNetwork rn = null;
+		if (o instanceof RoadNetwork) {
+			rn = (RoadNetwork)o;
+		}
+		else if (o instanceof DemandModel) {
+			rn = ((DemandModel)o).getRoadNetwork();
+		}
+		else {
+			System.err.println("RoadExpansion installation has received an unexpected type.");
 			return;
 		}
-		RoadNetwork rn = (RoadNetwork)o;
 		int number = Integer.parseInt(this.props.getProperty("number"));
 		Integer expandedEdgeID = this.getExpandedEdgeID(rn); 
 		int numberOfLanes = rn.getNumberOfLanes().get(expandedEdgeID);

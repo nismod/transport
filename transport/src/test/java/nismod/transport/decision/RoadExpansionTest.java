@@ -39,11 +39,18 @@ public class RoadExpansionTest {
 	
 		List<Intervention> interventions = new ArrayList<Intervention>();
 		Properties props = new Properties();
+		props.setProperty("startYear", "2016");
+		props.setProperty("endYear", "2025");
 		props.setProperty("fromNode", "57");
 		props.setProperty("toNode", "39");
 		props.setProperty("CP", "26042");
 		props.setProperty("number", "2");
-		RoadExpansion re = new RoadExpansion(2016, 2025, props);
+		RoadExpansion re = new RoadExpansion(props);
+		
+		final String roadExpansionFileName = "./src/test/resources/testdata/roadExpansion.properties";
+		RoadExpansion re2 = new RoadExpansion(roadExpansionFileName);
+		System.out.println("Road expansion intervention: " + re2.toString());
+		
 		interventions.add(re);
 		
 		int currentYear = 2015;
@@ -58,7 +65,7 @@ public class RoadExpansionTest {
 		assertEquals("The number of lanes should be correct", 3, (int)roadNetwork.getNumberOfLanes().get(edgeID));
 
 		currentYear = 2014;
-		//check if all interventions have been executed
+		//check if correct interventions have been installed
 		for (Intervention i: interventions)
 			if (i.getStartYear() <= currentYear && i.getEndYear() >= currentYear && !i.getState()) {
 				i.install(roadNetwork);
@@ -66,7 +73,7 @@ public class RoadExpansionTest {
 		assertTrue("Intervention should not be installed", !re.getState());
 		
 		currentYear = 2026;
-		//check if all interventions have been executed
+		//check if correct interventions have been installed
 		for (Intervention i: interventions)
 			if (i.getStartYear() <= currentYear && i.getEndYear() >= currentYear && !i.getState()) {
 				i.install(roadNetwork);
@@ -74,7 +81,7 @@ public class RoadExpansionTest {
 		assertTrue("Intervention should not be installed", !re.getState());
 		
 		currentYear = 2025;
-		//check if all interventions have been executed
+		//check if correct interventions have been installed
 		for (Intervention i: interventions)
 			if (i.getStartYear() <= currentYear && i.getEndYear() >= currentYear && !i.getState()) {
 				i.install(roadNetwork);

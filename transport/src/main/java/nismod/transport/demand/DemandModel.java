@@ -51,6 +51,7 @@ public class DemandModel {
 	private HashMap<Integer, HashMap<String, Double>> yearToZoneToGVA;
 	private HashMap<Integer, RoadNetworkAssignment> yearToRoadNetworkAssignment;
 	private HashMap<Integer, HashMap<EngineType, Double>> yearToEnergyUnitCosts;
+	private HashMap<Integer, HashMap<EngineType, Double>> yearToEngineTypeFractions;
 	//private SkimMatrix baseYearTimeSkimMatrix,	baseYearCostSkimMatrix;
 	
 	private List<Intervention> interventions;
@@ -75,6 +76,7 @@ public class DemandModel {
 		yearToZoneToGVA = new HashMap<Integer, HashMap<String, Double>>();
 		yearToRoadNetworkAssignment = new HashMap<Integer, RoadNetworkAssignment>();
 		yearToEnergyUnitCosts = new HashMap<Integer, HashMap<EngineType, Double>>();
+		yearToEngineTypeFractions = new HashMap<Integer, HashMap<EngineType, Double>>();
 		
 		this.roadNetwork = roadNetwork;
 		
@@ -113,6 +115,16 @@ public class DemandModel {
 		elasticitiesFreight.put(ElasticityTypes.GVA, 0.7);
 		elasticitiesFreight.put(ElasticityTypes.TIME, -0.41);
 		elasticitiesFreight.put(ElasticityTypes.COST, -0.1);
+		
+		//base-year engine type fractions
+		HashMap<EngineType, Double> engineTypeFractions = new HashMap<EngineType, Double>();
+		engineTypeFractions.put(EngineType.PETROL, 0.45);
+		engineTypeFractions.put(EngineType.DIESEL, 0.35);
+		engineTypeFractions.put(EngineType.LPG, 0.1);
+		engineTypeFractions.put(EngineType.ELECTRICITY, 0.05);
+		engineTypeFractions.put(EngineType.HYDROGEN, 0.025);
+		engineTypeFractions.put(EngineType.HYBRID, 0.025);
+		this.yearToEngineTypeFractions.put(BASE_YEAR, engineTypeFractions);
 	}
 
 	/**
@@ -136,9 +148,10 @@ public class DemandModel {
 			return;
 		} else {
 			
-			//check if all interventions up to fromYear have been executed
+			//check if the right interventions have been installed
 			for (Intervention i: interventions) {
 				if (i.getStartYear() <= fromYear && i.getEndYear() >= fromYear && !i.getState())	i.install(this);
+				if (i.getEndYear() < fromYear && i.getState() || i.getStartYear() > fromYear && i.getState()) i.uninstall(this);
 			}
 						
 			//check if the demand for fromYear has already been assigned, if not assign it
@@ -147,7 +160,7 @@ public class DemandModel {
 				System.out.printf("%d year has not been assigned to the network, so assigning it now.\n", fromYear);
 				
 				//create a network assignment and assign the demand
-				rna = new RoadNetworkAssignment(this.roadNetwork, this.yearToEnergyUnitCosts.get(fromYear), null, null, null);
+				rna = new RoadNetworkAssignment(this.roadNetwork, this.yearToEnergyUnitCosts.get(fromYear), this.yearToEngineTypeFractions.get(fromYear), null, null, null);
 				rna.assignFlowsAndUpdateLinkTravelTimesIterated(this.yearToPassengerODMatrix.get(fromYear), this.yearToFreightODMatrix.get(fromYear), LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);
 				yearToRoadNetworkAssignment.put(fromYear, rna);
 	
@@ -162,11 +175,11 @@ public class DemandModel {
 				yearToCostSkimMatrixFreight.put(fromYear, csmf);
 			}
 			
-			//check if all interventions up to predictedYear have been executed
+			//check if the right interventions have been installed
 			for (Intervention i: interventions) {
-				if (i.getStartYear() > fromYear && i.getStartYear() <= predictedYear && i.getEndYear() >= predictedYear && !i.getState())	i.install(this);
+				if (i.getStartYear() <= predictedYear && i.getEndYear() >= predictedYear && !i.getState())	i.install(this);
+				if (i.getEndYear() < predictedYear && i.getState() || i.getStartYear() > predictedYear && i.getState()) i.uninstall(this);
 			}
-				
 			
 			//copy skim matrices from fromYear into predictedYear
 			yearToTimeSkimMatrix.put(predictedYear, yearToTimeSkimMatrix.get(fromYear));
@@ -255,10 +268,10 @@ public class DemandModel {
 
 				if (predictedRna == null)
 					//assign predicted year - using link travel times from fromYear
-					predictedRna = new RoadNetworkAssignment(this.roadNetwork, this.yearToEnergyUnitCosts.get(predictedYear), rna.getLinkTravelTimes(), rna.getAreaCodeProbabilities(), rna.getWorkplaceZoneProbabilities());
+					predictedRna = new RoadNetworkAssignment(this.roadNetwork, this.yearToEnergyUnitCosts.get(predictedYear), this.yearToEngineTypeFractions.get(predictedYear), rna.getLinkTravelTimes(), rna.getAreaCodeProbabilities(), rna.getWorkplaceZoneProbabilities());
 				else
 					//using latest link travel times
-					predictedRna = new RoadNetworkAssignment(this.roadNetwork, this.yearToEnergyUnitCosts.get(predictedYear), predictedRna.getLinkTravelTimes(), predictedRna.getAreaCodeProbabilities(), predictedRna.getWorkplaceZoneProbabilities());
+					predictedRna = new RoadNetworkAssignment(this.roadNetwork, this.yearToEnergyUnitCosts.get(predictedYear), this.yearToEngineTypeFractions.get(predictedYear), predictedRna.getLinkTravelTimes(), predictedRna.getAreaCodeProbabilities(), predictedRna.getWorkplaceZoneProbabilities());
 
 				predictedRna.assignFlowsAndUpdateLinkTravelTimesIterated(predictedPassengerODMatrix, predictedFreightODMatrix, LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);
 				
@@ -312,7 +325,7 @@ public class DemandModel {
 				predictedFreightODMatrix.printMatrixFormatted();
 				
 				//assign predicted year again using latest link travel times
-				predictedRna = new RoadNetworkAssignment(this.roadNetwork, this.yearToEnergyUnitCosts.get(predictedYear), predictedRna.getLinkTravelTimes(), predictedRna.getAreaCodeProbabilities(), predictedRna.getWorkplaceZoneProbabilities());
+				predictedRna = new RoadNetworkAssignment(this.roadNetwork, this.yearToEnergyUnitCosts.get(predictedYear), this.yearToEngineTypeFractions.get(predictedYear), predictedRna.getLinkTravelTimes(), predictedRna.getAreaCodeProbabilities(), predictedRna.getWorkplaceZoneProbabilities());
 				//predictedRna.resetLinkVolumes();
 				//predictedRna.assignPassengerFlows(predictedPassengerODMatrix);
 				//predictedRna.updateLinkTravelTimes(ALPHA_LINK_TRAVEL_TIME_AVERAGING);
@@ -429,6 +442,25 @@ public class DemandModel {
 	public void saveEnergyConsumptions (int year, String outputFile) {
 
 		this.yearToRoadNetworkAssignment.get(year).saveTotalEnergyConsumptions(year, outputFile);
+	}
+	
+	/**
+	 * Setter method for engine type fractions in a given year.
+	 * @param year
+	 * @param engineTypeFractions
+	 */
+	public void setEngineTypeFractions(int year, HashMap<EngineType, Double> engineTypeFractions) {
+		
+		this.yearToEngineTypeFractions.put(year, engineTypeFractions);
+	}
+	
+	/**
+	 * Getter method for engine type fractions in a given year.
+	 * @param year
+	 */
+	public HashMap<EngineType, Double> getEngineTypeFractions(int year) {
+		
+		return this.yearToEngineTypeFractions.get(year);
 	}
 	
 	/**
