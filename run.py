@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from smif.sector_model import SectorModel
+from smif import SpaceTimeValue
 from subprocess import check_output
 import os
 import csv
@@ -25,63 +26,69 @@ class TransportWrapper(SectorModel):
         state : list
         data : dict
         """
-        with open("./transport/src/test/resources/testdata/energyUnitCosts.csv", 'w') as fh:
-            fieldnames = ['year','PETROL','DIESEL','LPG', 'ELECTRICITY']
+        this_path = os.path.dirname(os.path.realpath(__file__))
+        data_file = "./transport/src/test/resources/testdata/energyUnitCosts.csv"
+        path_to_data = os.path.join(this_path, data_file)
+
+        with open(path_to_data, 'w') as fh:
+            fieldnames = ['year', 'PETROL', 'DIESEL', 'LPG', 'ELECTRICITY']
             writer = csv.DictWriter(fh, fieldnames)
             writer.writeheader()
-   
+
             price_set = {
-                    'year': data['year']['GB']['year']['value'],
-                    'PETROL': data['petrol_price']['GB']['year']['value'],
-                    'DIESEL': data['diesel_price']['GB']['year']['value'],
-                    'LPG': data['LPG_price']['GB']['year']['value'],
-                    'ELECTRICITY': data['electricity_price']['GB']['year']['value']
+                'year': data['timestep'],
+                'PETROL': data['petrol_price'][0].value,
+                'DIESEL': data['diesel_price'][0].value,
+                'LPG': data['lpg_price'][0].value,
+                'ELECTRICITY': data['electricity_price'][0].value
             }
 
             writer.writerow(TransportWrapper.base_data)
             writer.writerow(price_set)
-            
-        os.chdir('./transport')
+
+        os.chdir(os.path.join(this_path, 'transport'))
+
+        path_to_output = os.path.join(this_path, 'transport', 'energyConsumptions.csv')
+
         arguments = [
             'java',
             '-cp',
             './target/transport-0.0.1-SNAPSHOT-main.jar',
             'nismod.transport.App',
             str(TransportWrapper.base_data['year']),
-            str(data['year']['GB']['year']['value']),
-            './src/test/resources/testdata/energyUnitCosts.csv',
-            './energyConsumptions.csv'
+            str(data['timestep']),
+            path_to_data,
+            path_to_output
         ]
 
         output = check_output(arguments)
 
-        with open("./energyConsumptions.csv", 'r') as fh:
+        with open(path_to_output, 'r') as fh:
             reader = csv.DictReader(fh)
             output_data = next(reader)
 
 
         all_output = {
-            'electricity_demand': { 'GB': { '1': { 'value': output_data['ELECTRICITY'], 'units': 'kWh'}}},
-            'petrol_demand': { 'GB': { '1': { 'value': output_data['PETROL'], 'units': 'l'}}},
-            'diesel_demand': { 'GB': { '1': { 'value': output_data['DIESEL'], 'units': 'l'}}},
-            'LPG_demand': { 'GB': { '1': { 'value': output_data['LPG'], 'units': 'l'}}}
+            'electricity_demand': [SpaceTimeValue('GB', '1', output_data['ELECTRICITY'], 'kWh')],
+            'petrol_demand': [SpaceTimeValue('GB', '1', output_data['PETROL'], 'l')],
+            'diesel_demand': [SpaceTimeValue('GB', '1', output_data['DIESEL'], 'l')],
+            'lpg_demand': [SpaceTimeValue('GB', '1', output_data['LPG'], 'l')]
             }
-        
+
         return all_output
 
 
     def extract_obj(self, results):
         return results
 
-if __name__ == '__main__':
-
+def main():
 
     data = {
-        'year': { 'GB': { 'year': { 'value': 2016, 'units': 'y' }}},   
-        'electricity_price': { 'GB': { 'year': { 'value': 0.11, 'units': '£/kWh'}}},
-        'petrol_price': { 'GB': { 'year': { 'value': 1.18, 'units': '£/l'}}},
-        'diesel_price': { 'GB': { 'year': { 'value': 1.21, 'units': '£/l'}}},
-        'LPG_price': { 'GB': { 'year': { 'value': 0.61, 'units': '£/l'}}}
+        'timestep': 2016,
+        'electricity_price': [SpaceTimeValue('GB', 'annual', '0.11', '£/kWh')],
+        'petrol_price': [SpaceTimeValue('GB', 'annual', '1.18', '£/l')],
+        'diesel_price': [SpaceTimeValue('GB', 'annual', '1.21', '£/l')],
+        'LPG_price': [SpaceTimeValue('GB', 'annual', '0.61', '£/l')]
     }
 
     model = TransportWrapper()
@@ -90,3 +97,8 @@ if __name__ == '__main__':
     print("Finished running model")
 
     print(results)
+
+if __name__ == '__main__':
+
+    main()
+
