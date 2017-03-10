@@ -72,6 +72,11 @@ public class ODMatrixTest {
 	
 		assertTrue("All matrix elements are correct", condition);
 		
+		System.out.println("Origins: " + passengerODMatrix.getOrigins());
+		System.out.println("Destinations: " + passengerODMatrix.getDestinations());
+		System.out.println("Trip starts: " + passengerODMatrix.calculateTripStarts());
+		System.out.println("Trip ends: " + passengerODMatrix.calculateTripEnds());
+		
 		ODMatrix passengerODMatrix2 = new ODMatrix("./src/test/resources/testdata/passengerODM.csv");
 		passengerODMatrix2.printMatrixFormatted();
 //		System.out.println(passengerODMatrix2.getKeySet());
@@ -99,6 +104,11 @@ public class ODMatrixTest {
 					passengerODMatrix2.getFlow("E06000046", "E07000091") == 90 &&
 					passengerODMatrix2.getFlow("E06000046", "E06000046") == 1000;
 				
-		assertTrue("All matrix elements are correct", condition);	
+		assertTrue("All matrix elements are correct", condition);
+		
+		System.out.println("Origins: " + passengerODMatrix2.getOrigins());
+		System.out.println("Destinations: " + passengerODMatrix2.getDestinations());
+		System.out.println("Trip starts: " + passengerODMatrix2.calculateTripStarts());
+		System.out.println("Trip ends: " + passengerODMatrix2.calculateTripEnds());
 	}
 }

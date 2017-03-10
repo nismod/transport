@@ -8,6 +8,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -87,6 +88,47 @@ public class ODMatrix {
 							matrix.removeMultiKey(originZone, destinationZone);
 	}
 	
+	/**
+	 * Calculates the number of trips starting in each origin zone
+	 * @return Number of trip starts.
+	 */
+	public HashMap<String, Integer> calculateTripStarts() {
+		
+		HashMap<String, Integer> tripStarts = new HashMap<String, Integer>();
+		
+		for (Object mk: matrix.keySet()) {
+			String origin = (String) ((MultiKey)mk).getKey(0);
+			String destination = (String) ((MultiKey)mk).getKey(1);
+	
+			Integer number = tripStarts.get(origin);
+			if (number == null) number = 0;
+			number += this.getFlow(origin, destination);
+			tripStarts.put(origin, number);
+		}
+		
+		return tripStarts;
+	}
+	
+	/**
+	 * Calculates the number of trips ending in each destination zone
+	 * @return Number of trip ends.
+	 */
+	public HashMap<String, Integer> calculateTripEnds() {
+		
+		HashMap<String, Integer> tripEnds = new HashMap<String, Integer>();
+		
+		for (Object mk: matrix.keySet()) {
+			String origin = (String) ((MultiKey)mk).getKey(0);
+			String destination = (String) ((MultiKey)mk).getKey(1);
+	
+			Integer number = tripEnds.get(destination);
+			if (number == null) number = 0;
+			number += this.getFlow(origin, destination);
+			tripEnds.put(destination, number);
+		}
+		
+		return tripEnds;
+	}
 	
 	/**
 	 * Prints the full matrix.
@@ -101,22 +143,8 @@ public class ODMatrix {
 	 */
 	public void printMatrixFormatted() {
 		
-		Set<String> firstKey = new HashSet<String>();
-		Set<String> secondKey = new HashSet<String>();
-		
-		//extract row and column keysets
-		for (Object mk: matrix.keySet()) {
-			String origin = (String) ((MultiKey)mk).getKey(0);
-			String destination = (String) ((MultiKey)mk).getKey(1);
-			firstKey.add(origin);
-			secondKey.add(destination);
-		}
-	
-		//put them to a list and sort them
-		List<String> firstKeyList = new ArrayList(firstKey);
-		List<String> secondKeyList = new ArrayList(secondKey);
-		Collections.sort(firstKeyList);
-		Collections.sort(secondKeyList);
+		List<String> firstKeyList = this.getOrigins();
+		List<String> secondKeyList = this.getDestinations();
 		//System.out.println(firstKeyList);
 		//System.out.println(secondKeyList);
 	
@@ -137,6 +165,46 @@ public class ODMatrix {
 	public Set<MultiKey> getKeySet() {
 		
 		return matrix.keySet();
+	}
+	
+	/**
+	 * Gets the sorted list of origins.
+	 * @return List of origins.
+	 */
+	public List<String> getOrigins() {
+		
+		Set<String> firstKey = new HashSet<String>();
+		
+		//extract row keysets
+		for (Object mk: matrix.keySet()) {
+			String origin = (String) ((MultiKey)mk).getKey(0);
+			firstKey.add(origin);
+		}
+		//put them into a list and sort them
+		List<String> firstKeyList = new ArrayList(firstKey);
+		Collections.sort(firstKeyList);
+		
+		return firstKeyList;
+	}
+	
+	/**
+	 * Gets the sorted list of destinations.
+	 * @return List of destinations.
+	 */
+	public List<String> getDestinations() {
+		
+		Set<String> secondKey = new HashSet<String>();
+		
+		//extract column keysets
+		for (Object mk: matrix.keySet()) {
+			String destination = (String) ((MultiKey)mk).getKey(1);
+			secondKey.add(destination);
+		}
+		//put them into a list and sort them
+		List<String> secondKeyList = new ArrayList(secondKey);
+		Collections.sort(secondKeyList);
+		
+		return secondKeyList;
 	}
 	
 	/**
