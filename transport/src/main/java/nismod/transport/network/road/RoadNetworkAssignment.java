@@ -81,9 +81,17 @@ public class RoadNetworkAssignment {
 	
 	//the probability of trip starting/ending in the census output area
 	private HashMap<String, Double> areaCodeProbabilities;
-	
 	//the probability of trip starting/ending in the workplace zone
 	private HashMap<String, Double> workplaceZoneProbabilities;
+	
+	//the number of trips starting in each census output area
+	private HashMap<String, Integer> areaCodeNoTripStarts;
+	//the number of trips ending in each census output area
+	private HashMap<String, Integer> areaCodeNoTripEnds;
+	//the number of trips starting in each workplace zone
+	private HashMap<String, Integer> workplaceZoneNoTripStarts;
+	//the number of trips starting in each workplace zone
+	private HashMap<String, Integer> workplaceZoneNoTripEnds;
 	
 	/**
 	 * @param roadNetwork Road network.
@@ -104,7 +112,11 @@ public class RoadNetworkAssignment {
 			MultiKeyMap<Integer, List<Path>> map = new MultiKeyMap<Integer, List<Path>>();
 			pathStorageFreight.put(vht, map);
 		}
-		
+		areaCodeNoTripStarts = new HashMap<String, Integer>();
+		areaCodeNoTripEnds = new HashMap<String, Integer>();
+		workplaceZoneNoTripStarts = new HashMap<String, Integer>();
+		workplaceZoneNoTripEnds = new HashMap<String, Integer>();
+			
 		//calculate link travel time
 		Iterator edgesIterator = roadNetwork.getNetwork().getEdges().iterator();
 		while (edgesIterator.hasNext()) {
@@ -254,6 +266,11 @@ public class RoadNetworkAssignment {
 					}
 				}
 				if (originAreaCode == null) System.err.println("Origin output area was not selected.");
+				else { //increase the number of tips starting at originAreaCode
+					Integer number = this.areaCodeNoTripStarts.get(originAreaCode);
+					if (number == null) number = 0;
+					this.areaCodeNoTripStarts.put(originAreaCode, ++number);
+				}
 				
 				//choose destination census output area
 				cumulativeProbability = 0.0;
@@ -267,6 +284,11 @@ public class RoadNetworkAssignment {
 					}
 				}
 				if (destinationAreaCode == null) System.err.println("Destination otuput area was not selected.");
+				else { //increase the number of tips ending at destinationAreaCode
+					Integer number = this.areaCodeNoTripEnds.get(destinationAreaCode);
+					if (number == null) number = 0;
+					this.areaCodeNoTripEnds.put(destinationAreaCode, ++number);
+				}
 				
 				//take the nearest node on the network
 				int originNode = roadNetwork.getAreaCodeToNearestNode().get(originAreaCode);
@@ -412,6 +434,11 @@ public class RoadNetworkAssignment {
 						}
 					}
 					if (originWorkplaceCode == null) System.err.println("Origin output area was not selected.");
+					else { //increase the number of tips starting at originWorkplaceCode
+						Integer number = this.workplaceZoneNoTripStarts.get(originWorkplaceCode);
+						if (number == null) number = 0;
+						this.workplaceZoneNoTripStarts.put(originWorkplaceCode, ++number);
+					}
 					
 					//use the network node nearest to the workplace zone (population-weighted) centroid
 					originNode = roadNetwork.getWorkplaceZoneToNearestNode().get(originWorkplaceCode);
@@ -437,6 +464,11 @@ public class RoadNetworkAssignment {
 						}
 					}
 					if (destinationWorkplaceCode == null) System.err.println("Destination output area was not selected.");
+					else { //increase the number of tips starting at originWorkplaceCode
+						Integer number = this.workplaceZoneNoTripEnds.get(destinationWorkplaceCode);
+						if (number == null) number = 0;
+						this.workplaceZoneNoTripEnds.put(destinationWorkplaceCode, ++number);
+					}
 					
 					//use the network node nearest to the workplace zone (population-weighted) centroid
 					destinationNode = roadNetwork.getWorkplaceZoneToNearestNode().get(destinationWorkplaceCode);
@@ -615,6 +647,8 @@ public class RoadNetworkAssignment {
 		
 		for (int i=0; i<iterations; i++) {
 			this.resetLinkVolumesInPCU(); //link volumes must be reset or they would compound across all iterations
+			this.resetPathStorages(); //clear path storages
+			this.resetTripStartEndCounters(); //reset counters
 			this.assignFlowsAndUpdateLinkTravelTimes(passengerODM, freightODM, weight);
 		}
 	}
@@ -1286,12 +1320,129 @@ public class RoadNetworkAssignment {
 	}
 	
 	/**
+	 * Getter method for the number of trips starting in an output area.
+	 * @return Number of trips.
+	 */
+	public HashMap<String, Integer> getAreaCodeTripStarts() {
+
+		return this.areaCodeNoTripStarts;
+	}
+	
+	/**
+	 * Getter method for the number of trips ending in an output area.
+	 * @return Number of trips.
+	 */
+	public HashMap<String, Integer> getAreaCodeTripEnds() {
+
+		return this.areaCodeNoTripEnds;
+	}
+	
+	/**
+	 * Getter method for the number of trips starting in a workplace zone.
+	 * @return Number of trips.
+	 */
+	public HashMap<String, Integer> getWorkplaceZoneTripStarts() {
+
+		return this.workplaceZoneNoTripStarts;
+	}
+	
+	/**
+	 * Getter method for the number of trips ending in a workplace zone.
+	 * @return Number of trips.
+	 */
+	public HashMap<String, Integer> getWorkplaceZoneTripEnds() {
+
+		return this.workplaceZoneNoTripEnds;
+	}
+
+	/**
 	 * Getter method for workplace zones probabilities.
 	 * @return Workplace zones probabilities.
 	 */
 	public HashMap<String, Double> getWorkplaceZoneProbabilities() {
 
 		return this.workplaceZoneProbabilities;
+	}
+	
+	
+	/**
+	 * Calculates the number of trips starting in a LAD.
+	 * @return Number of trips.
+	 */
+	public HashMap<String, Integer> calculateLADTripStarts() {
+		
+		HashMap<String, Integer> LADNoTripStarts = new HashMap<String, Integer>();
+
+		for (String LAD: this.roadNetwork.getZoneToAreaCodes().keySet()) {
+			int numberLAD = 0;
+			for (String areaCode: this.roadNetwork.getZoneToAreaCodes().get(LAD)) {
+				Integer number = this.areaCodeNoTripStarts.get(areaCode);
+				if (number != null) numberLAD += number;
+			}
+			LADNoTripStarts.put(LAD, numberLAD);
+		}
+		
+		return LADNoTripStarts;
+	}
+	
+	/**
+	 * Calculates the number of trips ending in a LAD.
+	 * @return Number of trips.
+	 */
+	public HashMap<String, Integer> calculateLADTripEnds() {
+		
+		HashMap<String, Integer> LADNoTripEnds = new HashMap<String, Integer>();
+
+		for (String LAD: this.roadNetwork.getZoneToAreaCodes().keySet()) {
+			int numberLAD = 0;
+			for (String areaCode: this.roadNetwork.getZoneToAreaCodes().get(LAD)) {
+				Integer number = this.areaCodeNoTripEnds.get(areaCode);
+				if (number != null) numberLAD += number;
+			}
+			LADNoTripEnds.put(LAD, numberLAD);
+		}
+		
+		return LADNoTripEnds;
+	}
+	
+	/**
+	 * Calculates the number of freight trips starting in a LAD.
+	 * @return Number of trips.
+	 */
+	public HashMap<String, Integer> calculateFreightLADTripStarts() {
+		
+		HashMap<String, Integer> LADNoTripStarts = new HashMap<String, Integer>();
+
+		for (String LAD: this.roadNetwork.getZoneToWorkplaceCodes().keySet()) {
+			int numberLAD = 0;
+			for (String workplaceZone: this.roadNetwork.getZoneToWorkplaceCodes().get(LAD)) {
+				Integer number = this.workplaceZoneNoTripStarts.get(workplaceZone);
+				if (number != null) numberLAD += number;
+			}
+			LADNoTripStarts.put(LAD, numberLAD);
+		}
+		
+		return LADNoTripStarts;
+	}
+	
+	/**
+	 * Calculates the number of freight trips ending in a LAD.
+	 * @return Number of trips.
+	 */
+	public HashMap<String, Integer> calculateFreightLADTripEnds() {
+		
+		HashMap<String, Integer> LADNoTripEnds = new HashMap<String, Integer>();
+
+		for (String LAD: this.roadNetwork.getZoneToWorkplaceCodes().keySet()) {
+			int numberLAD = 0;
+			for (String workplaceZone: this.roadNetwork.getZoneToWorkplaceCodes().get(LAD)) {
+				Integer number = this.workplaceZoneNoTripEnds.get(workplaceZone);
+				if (number != null) numberLAD += number;
+			}
+			LADNoTripEnds.put(LAD, numberLAD);
+		}
+		
+		return LADNoTripEnds;
 	}
 	
 	/**
@@ -1339,5 +1490,28 @@ public class RoadNetworkAssignment {
 	public void resetLinkVolumesInPCU () {
 		
 		for (Integer key: this.linkVolumesInPCU.keySet()) this.linkVolumesInPCU.put(key, 0.0);
+	}
+	
+	/**
+	 * Resets path storages for passengers and freight.
+	 */
+	public void resetPathStorages () {
+		
+		this.pathStorage = new MultiKeyMap<String, List<Path>>();
+		for (VehicleType vht: VehicleType.values()) {
+			MultiKeyMap<Integer, List<Path>> map = new MultiKeyMap<Integer, List<Path>>();
+			pathStorageFreight.put(vht, map);
+		}
+	}
+	
+	/**
+	 * Resets trip start/end counters.
+	 */
+	public void resetTripStartEndCounters () {
+		
+		this.areaCodeNoTripStarts = new HashMap<String, Integer>();
+		this.areaCodeNoTripEnds = new HashMap<String, Integer>();
+		this.workplaceZoneNoTripStarts = new HashMap<String, Integer>();
+		this.workplaceZoneNoTripEnds = new HashMap<String, Integer>();
 	}
 }

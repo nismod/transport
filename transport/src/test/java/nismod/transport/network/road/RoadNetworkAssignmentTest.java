@@ -282,7 +282,29 @@ public class RoadNetworkAssignmentTest {
 							totalDistance += (double)((SimpleFeature)(((Edge)e).getObject())).getAttribute("LenNet");
 		}
 		System.out.println("Total distance = " + totalDistance);
-
+		
+		//TEST COUNTERS OF TRIP STARTS/ENDS
+		System.out.println("\n\n*** Testing trip starts/ends ***");
+		
+		System.out.println("Trip starts: " + rna.calculateLADTripStarts());
+		System.out.println("Trip ends: " + rna.calculateLADTripEnds());
+		System.out.println("OD matrix:");
+		odm.printMatrixFormatted();
+		System.out.println("Trip starts from OD matrix: " + odm.calculateTripStarts());
+		System.out.println("Trip ends from OD matrix: " + odm.calculateTripEnds());
+		
+		//trip starts and trip ends should match OD flows
+		HashMap<String, Integer> tripStarts = rna.calculateLADTripStarts();
+		HashMap<String, Integer> tripStartsFromODM = odm.calculateTripStarts();
+		for (String LAD: tripStarts.keySet()) {
+			assertEquals("Trip starts should match flows from each LAD", tripStarts.get(LAD), tripStartsFromODM.get(LAD));
+		}
+		HashMap<String, Integer> tripEnds = rna.calculateLADTripEnds();
+		HashMap<String, Integer> tripEndsFromODM = odm.calculateTripEnds();
+		for (String LAD: tripEnds.keySet()) {
+			assertEquals("Trip ends should match flows to each LAD", tripEnds.get(LAD), tripEndsFromODM.get(LAD));		
+		}
+			
 		//TEST LINK TRAVEL TIMES
 		System.out.println("\n\n*** Testing link travel times ***");
 
@@ -382,6 +404,11 @@ public class RoadNetworkAssignmentTest {
 	
 					assertEquals("The number of paths equals the flow", flow, pathList.size());
 		}
+		
+		//TEST COUNTERS OF TRIP STARTS/ENDS
+		System.out.println("\n\n*** Testing freight trip starts/ends ***");
+		System.out.println(rna.calculateFreightLADTripStarts());
+		System.out.println(rna.calculateFreightLADTripEnds());	
 	
 		//TEST LINK TRAVEL TIMES
 		System.out.println("\n\n*** Testing link travel times ***");
