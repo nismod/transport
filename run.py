@@ -53,7 +53,7 @@ class TransportWrapper(SectorModel):
         arguments = [
             'java',
             '-cp',
-            './target/transport-0.0.1-SNAPSHOT-main.jar',
+            './target/transport-0.0.1-SNAPSHOT-jar-with-dependencies.jar',
             'nismod.transport.App',
             str(TransportWrapper.base_data['year']),
             str(data['timestep']),
@@ -73,7 +73,7 @@ class TransportWrapper(SectorModel):
             'petrol_demand': [SpaceTimeValue('GB', '1', output_data['PETROL'], 'l')],
             'diesel_demand': [SpaceTimeValue('GB', '1', output_data['DIESEL'], 'l')],
             'lpg_demand': [SpaceTimeValue('GB', '1', output_data['LPG'], 'l')]
-            }
+        }
 
         return all_output
 
