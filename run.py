@@ -9,12 +9,14 @@ import csv
 class TransportWrapper(SectorModel):
     """Wraps the transport model
     """
-    base_data =  {
-                'year': 2015,
-                'PETROL':1.17,
-                'DIESEL':1.2,
-                'LPG':0.6,
-                'ELECTRICITY':0.1
+    base_data = {
+        'year': 2015,
+        'PETROL': 1.17,
+        'DIESEL': 1.2,
+        'LPG': 0.6,
+        'ELECTRICITY': 0.1,
+        'HYDROGEN': 4.19,
+        'HYBRID': 1.17,
     }
 
     def simulate(self, decisions, state, data):
@@ -31,7 +33,7 @@ class TransportWrapper(SectorModel):
         path_to_data = os.path.join(this_path, data_file)
 
         with open(path_to_data, 'w') as fh:
-            fieldnames = ['year', 'PETROL', 'DIESEL', 'LPG', 'ELECTRICITY']
+            fieldnames = ['year', 'PETROL', 'DIESEL', 'LPG', 'ELECTRICITY', 'HYDROGEN', 'HYBRID']
             writer = csv.DictWriter(fh, fieldnames)
             writer.writeheader()
 
@@ -40,7 +42,9 @@ class TransportWrapper(SectorModel):
                 'PETROL': data['petrol_price'][0].value,
                 'DIESEL': data['diesel_price'][0].value,
                 'LPG': data['lpg_price'][0].value,
-                'ELECTRICITY': data['electricity_price'][0].value
+                'ELECTRICITY': data['electricity_price'][0].value,
+                'HYDROGEN': data['hydrogen_price'][0].value,
+                'HYBRID': data['hybrid_price'][0].value,
             }
 
             writer.writerow(TransportWrapper.base_data)
@@ -53,7 +57,7 @@ class TransportWrapper(SectorModel):
         arguments = [
             'java',
             '-cp',
-            './target/transport-0.0.1-SNAPSHOT-main.jar',
+            './target/transport-0.0.1-SNAPSHOT-jar-with-dependencies.jar',
             'nismod.transport.App',
             str(TransportWrapper.base_data['year']),
             str(data['timestep']),
@@ -73,7 +77,7 @@ class TransportWrapper(SectorModel):
             'petrol_demand': [SpaceTimeValue('GB', '1', output_data['PETROL'], 'l')],
             'diesel_demand': [SpaceTimeValue('GB', '1', output_data['DIESEL'], 'l')],
             'lpg_demand': [SpaceTimeValue('GB', '1', output_data['LPG'], 'l')]
-            }
+        }
 
         return all_output
 
