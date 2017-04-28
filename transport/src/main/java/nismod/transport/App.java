@@ -1,10 +1,14 @@
 package nismod.transport;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import nismod.transport.decision.Intervention;
 import nismod.transport.decision.RoadExpansion;
@@ -19,28 +23,52 @@ import nismod.transport.network.road.RoadNetwork;
  */
 public class App {
 
-    public static void main( String[] args ) throws IOException {
+    public static void main( String[] args ) {
 
         System.out.println( "NISMOD V2.0.0 Transport Model" );
+        
 		try {
-			final String areaCodeFileName = "./src/test/resources/testdata/nomisPopulation.csv";
-			final String areaCodeNearestNodeFile = "./src/test/resources/testdata/areaCodeToNearestNode.csv";
-			final String workplaceZoneFileName = "./src/test/resources/testdata/workplacePopulation.csv";
-			final String workplaceZoneNearestNodeFile = "./src/test/resources/testdata/workplaceZoneToNearestNode.csv";
+			Properties props = new Properties();
+			final String propFileName = "./src/main/resources/config.properties";
+			
+			InputStream inputStream = null;
+			try {
+				inputStream = new FileInputStream(propFileName);
+				// load properties file
+				props.load(inputStream);
+			} catch (IOException ex) {
+				ex.printStackTrace();
+				System.err.println("Unable to load config.properties. Using default values.");
+				setDefaultProperties(props);
+				
+			} finally {
+				if (inputStream != null) {
+					try {
+						inputStream.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		
+			final String areaCodeFileName = props.getProperty("areaCodeFileName");
+			final String areaCodeNearestNodeFile = props.getProperty("areaCodeNearestNodeFile");
+			final String workplaceZoneFileName = props.getProperty("workplaceZoneFileName");
+			final String workplaceZoneNearestNodeFile = props.getProperty("workplaceZoneNearestNodeFile");
 
-			final URL zonesUrl2 = new URL("file://src/test/resources/testdata/zones.shp");
-			final URL networkUrl2 = new URL("file://src/test/resources/testdata/network.shp");
-			final URL nodesUrl2 = new URL("file://src/test/resources/testdata/nodes.shp");
-			final URL AADFurl2 = new URL("file://src/test/resources/testdata/AADFdirected.shp");
+			final URL zonesUrl = new URL(props.getProperty("zonesUrl"));
+			final URL networkUrl = new URL(props.getProperty("networkUrl"));
+			final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
+			final URL AADFurl = new URL(props.getProperty("AADFurl"));
 
-			final String baseYearODMatrixFile = "./src/test/resources/testdata/passengerODM.csv";
-			final String baseYearFreightMatrixFile = "./src/test/resources/testdata/freightMatrix.csv";
-			final String populationFile = "./src/test/resources/testdata/population.csv";
-			final String GVAFile = "./src/test/resources/testdata/GVA.csv";
-			//final String energyUnitCostsFile = "./src/test/resources/testdata/energyUnitCosts.csv";
+			final String baseYearODMatrixFile = props.getProperty("baseYearODMatrixFile");
+			final String baseYearFreightMatrixFile = props.getProperty("baseYearFreightMatrixFile");
+			final String populationFile = props.getProperty("populationFile");
+			final String GVAFile = props.getProperty("GVAFile");
+			//final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
 
-			final String roadExpansionFileName = "./src/test/resources/testdata/roadExpansion.properties";
-			final String vehicleElectrificationFileName = "./src/test/resources/testdata/vehicleEletrification.properties";
+			final String roadExpansionFileName = props.getProperty("roadExpansionFileName");
+			final String vehicleElectrificationFileName = props.getProperty("vehicleElectrificationFileName");
 
 			final String baseYear = args[0];
 			final String predictedYear = args[1];
@@ -48,7 +76,7 @@ public class App {
 			final String outputFile = args[3];
 
 			//create a road network
-			RoadNetwork roadNetwork2 = new RoadNetwork(zonesUrl2, networkUrl2, nodesUrl2, AADFurl2, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile);
+			RoadNetwork roadNetwork2 = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile);
 
 			//load interventions
 			List<Intervention> interventions = new ArrayList<Intervention>();
@@ -67,8 +95,29 @@ public class App {
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
-			System.out.println("Done");
+			System.out.println("Done.");
 		}
     }
+		
+	private static void setDefaultProperties(Properties props) {
+		
+		props.setProperty("zonesUrl", "file://src/test/resources/testdata/zones.shp");
+		props.setProperty("networkUrl", "file://src/test/resources/testdata/network.shp");
+		props.setProperty("nodesUrl", "file://src/test/resources/testdata/nodes.shp");
+		props.setProperty("AADFurl", "file://src/test/resources/testdata/AADFdirected.shp");
+		
+		props.setProperty("areaCodeFileName", "./src/test/resources/testdata/nomisPopulation.csv");
+		props.setProperty("areaCodeNearestNodeFile", "./src/test/resources/testdata/areaCodeToNearestNode.csv");
+		props.setProperty("workplaceZoneFileName", "./src/test/resources/testdata/workplacePopulation.csv");
+		props.setProperty("workplaceZoneNearestNodeFile", "./src/test/resources/testdata/workplaceZoneToNearestNode.csv");
+		
+		props.setProperty("baseYearODMatrixFile", "./src/test/resources/testdata/passengerODM.csv");
+		props.setProperty("baseYearFreightMatrixFile", "./src/test/resources/testdata/freightMatrix.csv");
+		props.setProperty("populationFile", "./src/test/resources/testdata/population.csv");
+		props.setProperty("GVAFile", "./src/test/resources/testdata/GVA.csv");
+		props.setProperty("energyUnitCostsFile", "./src/test/resources/testdata/energyUnitCosts.csv");
+		
+		props.setProperty("roadExpansionFileName", "./src/test/resources/testdata/roadExpansion.properties");
+		props.setProperty("vehicleElectrificationFileName", "./src/test/resources/testdata/vehicleEletrification.properties");
+	}
 }
-
