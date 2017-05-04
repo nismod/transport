@@ -40,11 +40,12 @@ public class RoadNetworkTest {
 		final URL networkUrl = new URL("file://src/test/resources/minitestdata/network.shp");
 		final URL nodesUrl = new URL("file://src/test/resources/minitestdata/nodes.shp");
 		final URL AADFurl = new URL("file://src/test/resources/minitestdata/AADFdirected.shp");
+		
 		final String areaCodeFileName = "./src/test/resources/testdata/nomisPopulation.csv";
 		final String areaCodeNearestNodeFile = "./src/test/resources/testdata/areaCodeToNearestNode.csv";
 		final String workplaceZoneFileName = "./src/test/resources/testdata/workplacePopulation.csv";
 		final String workplaceZoneNearestNodeFile = "./src/test/resources/testdata/workplaceZoneToNearestNode.csv";
-
+			
 		//create a road network
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile);
 
@@ -53,7 +54,7 @@ public class RoadNetworkTest {
 		
 		//export to shapefile
 		roadNetwork.exportToShapefile("miniOutputNetwork");
-
+		
 		final URL zonesUrl2 = new URL("file://src/test/resources/testdata/zones.shp");
 		final URL networkUrl2 = new URL("file://src/test/resources/testdata/network.shp");
 		final URL nodesUrl2 = new URL("file://src/test/resources/testdata/nodes.shp");
@@ -63,10 +64,29 @@ public class RoadNetworkTest {
 		RoadNetwork roadNetwork2 = new RoadNetwork(zonesUrl2, networkUrl2, nodesUrl2, AADFurl2, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile);
 
 		//visualise the shapefiles
-		roadNetwork2.visualise("Test Area");
+		roadNetwork2.visualise("Midi Test Area");
 		
 		//export to shapefile
-		roadNetwork2.exportToShapefile("outputNetwork");
+		roadNetwork2.exportToShapefile("midiOutputNetwork");
+		
+		final URL zonesUrl3 = new URL("file://src/main/resources/data/zones.shp");
+		final URL networkUrl3 = new URL("file://src/main/resources/data/network.shp");
+		final URL nodesUrl3 = new URL("file://src/main/resources/data/nodes.shp");
+		final URL AADFurl3 = new URL("file://src/main/resources/data/AADFdirected2015.shp");
+
+		long timeNow = System.currentTimeMillis();
+		
+		//create a road network
+		RoadNetwork roadNetwork3 = new RoadNetwork(zonesUrl3, networkUrl3, nodesUrl3, AADFurl3, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile);
+
+		timeNow = System.currentTimeMillis() - timeNow;
+		System.out.printf("Road network built in %d seconds.\n", timeNow / 1000);
+		
+		//visualise the shapefiles
+		roadNetwork3.visualise("Major Road Network");
+		
+		//export to shapefile
+		roadNetwork3.exportToShapefile("fullOutputNetwork");
 	}
 
 	@Test

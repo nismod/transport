@@ -20,6 +20,7 @@ import org.geotools.data.collection.ListFeatureCollection;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.geotools.data.CachingFeatureSource;
 import org.geotools.data.DefaultTransaction;
 import org.geotools.data.Transaction;
 import org.geotools.data.shapefile.ShapefileDataStore;
@@ -105,7 +106,7 @@ public class RoadNetwork {
 		networkShapefile = new ShapefileDataStore(networkUrl);
 		nodesShapefile = new ShapefileDataStore(nodesUrl);
 		AADFshapefile = new ShapefileDataStore(AADFurl);
-
+		
 		//build the graph
 		this.build();
 
@@ -578,17 +579,25 @@ public class RoadNetwork {
 		//get feature collections from the shapefiles
 		SimpleFeatureCollection networkFeatureCollection = networkShapefile.getFeatureSource().getFeatures();
 		SimpleFeatureCollection nodesFeatureCollection = nodesShapefile.getFeatureSource().getFeatures();
-		SimpleFeatureCollection AADFfeatureCollection = AADFshapefile.getFeatureSource().getFeatures();
+		//caching a large shapefile in memory greatly increases the speed!
+		CachingFeatureSource cache = new CachingFeatureSource(AADFshapefile.getFeatureSource());
+		SimpleFeatureCollection AADFfeatureCollection = cache.getFeatures();
 		SimpleFeatureCollection zonesFeatureCollection = zonesShapefile.getFeatureSource().getFeatures();
 
+		System.out.println("Creating undirected graph...");
+		
 		//create undirected graph with features from the network shapefile
 		Graph undirectedGraph = createUndirectedGraph(networkFeatureCollection);
-
+		
 		//graph builder to build a directed graph
 		BasicDirectedLineGraphBuilder graphBuilder = new BasicDirectedLineGraphBuilder();
 
+		System.out.println("Adding nodes to directed graph...");
+		
 		//create nodes of the directed graph directly from the nodes shapefile
 		addNodesToGraph(graphBuilder, nodesFeatureCollection);
+		
+		System.out.println("Adding edges to directed graph...");
 
 		//for each edge from the undirected graph create (usually) two directed edges in the directed graph
 		//and assign the data from the count points
@@ -597,8 +606,12 @@ public class RoadNetwork {
 		//set the instance field with the generated directed graph
 		this.network = (DirectedGraph) graphBuilder.getGraph();
 
+		System.out.println("Mapping nodes to LAD zones...");
+		
 		//map the nodes to zones
 		mapNodesToZones(zonesFeatureCollection);
+		
+		System.out.println("Determining the number of lanes...");
 		
 		//set number of lanes
 		addNumberOfLanes();
@@ -671,6 +684,7 @@ public class RoadNetwork {
 
 		//iterate through the edges of the source graph
 		Iterator edgesIterator = sourceGraph.getEdges().iterator();
+		
 		while (edgesIterator.hasNext()) {
 			Edge edge = (Edge) edgesIterator.next();
 			SimpleFeature edgeFeature = (SimpleFeature) edge.getObject();
@@ -701,6 +715,9 @@ public class RoadNetwork {
 			DirectedEdge directedEdge2 = null;
 			//iterate through AADFs to find counts with the same CP as the edge
 			SimpleFeatureIterator iterator = AADFfeatureCollection.features();
+		
+			boolean firstMatch = false, secondMatch = false;
+			char dir = '\u0000';
 			try {
 				while (iterator.hasNext()) {
 					SimpleFeature countFeature = iterator.next();
@@ -709,6 +726,10 @@ public class RoadNetwork {
 
 					//if count point matches the edge
 					if (cp == cn) {
+						
+						if (firstMatch == false) firstMatch = true;
+						else secondMatch = true;
+						
 						//get the coordinates of the nodes
 						SimpleFeature featA = (SimpleFeature) nodeA.getObject();
 						SimpleFeature featB = (SimpleFeature) nodeB.getObject();
@@ -719,7 +740,7 @@ public class RoadNetwork {
 
 						//get the direction information from the count point and create directed edge(s)
 						String direction = (String) countFeature.getAttribute("iDir");
-						char dir = direction.charAt(0);
+						dir = direction.charAt(0);
 						switch (dir) {
 						case 'N': //North
 							if (coordB.y > coordA.y) directedEdge = (DirectedEdge) graphBuilder.buildEdge(nodeA, nodeB);
@@ -751,6 +772,9 @@ public class RoadNetwork {
 						default: System.err.println("Unrecognized direction character.");
 						}
 					}
+					
+					if (firstMatch == true && dir == 'C' || secondMatch == true) break;
+					
 				} //while AADFs
 			}
 			finally {
