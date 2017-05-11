@@ -36,6 +36,7 @@ public class RoadNetworkAssignmentTest {
 		final URL networkUrl = new URL("file://src/test/resources/minitestdata/network.shp");
 		final URL nodesUrl = new URL("file://src/test/resources/minitestdata/nodes.shp");
 		final URL AADFurl = new URL("file://src/test/resources/minitestdata/AADFdirected.shp");
+		
 		final String areaCodeFileName = "./src/test/resources/minitestdata/nomisPopulation.csv";
 		final String areaCodeNearestNodeFile = "./src/test/resources/minitestdata/areaCodeToNearestNode.csv";
 		final String workplaceZoneFileName = "./src/test/resources/minitestdata/workplacePopulation.csv";
@@ -49,14 +50,20 @@ public class RoadNetworkAssignmentTest {
 		//export to shapefile
 		//roadNetwork.exportToShapefile("miniOutputNetwork");
 
-		final URL zonesUrl2 = new URL("file://src/test/resources/testdata/zones.shp");
-		final URL networkUrl2 = new URL("file://src/test/resources/testdata/network.shp");
-		final URL nodesUrl2 = new URL("file://src/test/resources/testdata/nodes.shp");
-		final URL AADFurl2 = new URL("file://src/test/resources/testdata/AADFdirected.shp");
-		final String areaCodeFileName2 = "./src/test/resources/testdata/nomisPopulation.csv";
-		final String areaCodeNearestNodeFile2 = "./src/test/resources/testdata/areaCodeToNearestNode.csv";
+//		final URL zonesUrl2 = new URL("file://src/test/resources/testdata/zones.shp");
+//		final URL networkUrl2 = new URL("file://src/test/resources/testdata/network.shp");
+//		final URL nodesUrl2 = new URL("file://src/test/resources/testdata/nodes.shp");
+//		final URL AADFurl2 = new URL("file://src/test/resources/testdata/AADFdirected.shp");
+		
+		final URL zonesUrl2 = new URL("file://src/main/resources/data/zones.shp");
+		final URL networkUrl2 = new URL("file://src/main/resources/data/network.shp");
+		final URL nodesUrl2 = new URL("file://src/main/resources/data/nodes.shp");
+		final URL AADFurl2 = new URL("file://src/main/resources/data/AADFdirected2015.shp");
+		
+		final String areaCodeFileName2 = "./src/main/resources/data/population_OA_GB.csv";
+		final String areaCodeNearestNodeFile2 = "./src/main/resources/data/nearest_node_OA_GB.csv";
 		final String workplaceZoneFileName2 = "./src/test/resources/testdata/workplacePopulation.csv";
-		final String workplaceZoneNearestNodeFile2 = "./src/test/resources/testdata/workplaceZoneToNearestNode.csv";
+		final String workplaceZoneNearestNodeFile2 = "./src/main/resources/data/nearest_node_WZ_GB_fakeSC.csv";
 
 		//create a road network
 		RoadNetwork roadNetwork2 = new RoadNetwork(zonesUrl2, networkUrl2, nodesUrl2, AADFurl2, areaCodeFileName2, areaCodeNearestNodeFile2, workplaceZoneFileName2, workplaceZoneNearestNodeFile2);
@@ -68,10 +75,14 @@ public class RoadNetworkAssignmentTest {
 		//roadNetwork2.exportToShapefile("outputNetwork");
 		
 		RoadNetworkAssignment roadNetworkAssignment = new RoadNetworkAssignment(roadNetwork2, null, null, null, null, null);
-		ODMatrix passengerODM = new ODMatrix("./src/test/resources/testdata/passengerODM.csv");
+		
+		//ODMatrix passengerODM = new ODMatrix("./src/test/resources/testdata/passengerODM.csv");
+		ODMatrix passengerODM = new ODMatrix("./src/main/resources/data/passengerODMfull.csv");
+		
 		passengerODM.printMatrix(); 
 		
-		for (int i = 0; i < 5; i++) {
+		//for (int i = 0; i < 5; i++) {
+		for (int i = 0; i < 1; i++) {
 			roadNetworkAssignment.resetLinkVolumesInPCU();
 			roadNetworkAssignment.assignPassengerFlows(passengerODM);
 			HashMap<Integer, Double> oldTravelTimes = roadNetworkAssignment.getCopyOfLinkTravelTimes();
@@ -441,5 +452,137 @@ public class RoadNetworkAssignmentTest {
 		rna.calculateCostSkimMatrixFreight().printMatrixFormatted();
 		System.out.println("Time skim matrix for freight (in min):");
 		rna.calculateTimeSkimMatrixFreight().printMatrixFormatted();
+	}
+	
+	//@Test
+	public void fullTest() throws IOException {
+
+		final URL zonesUrl = new URL("file://src/main/resources/data/zones.shp");
+		final URL networkUrl = new URL("file://src/main/resources/data/network.shp");
+		final URL nodesUrl = new URL("file://src/main/resources/data/nodes.shp");
+		final URL AADFurl = new URL("file://src/main/resources/data/AADFdirected2015.shp");
+		final String areaCodeFileName = "./src/main/resources/data/population_OA_GB.csv";
+		final String areaCodeNearestNodeFile = "./src/main/resources/data/nearest_node_OA_GB.csv";
+		final String workplaceZoneFileName = "./src/test/resources/testdata/workplacePopulation.csv";
+		final String workplaceZoneNearestNodeFile = "./src/main/resources/data/nearest_node_WZ_GB_fakeSC.csv";
+		final String baseYearODMatrixFile = "./src/main/resources/data/passengerODMfull.csv";
+
+		//create a road network
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile);
+
+		//create a road network assignment
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null);
+
+		//assign passenger flows
+		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
+		
+		odm.printMatrixFormatted();
+		
+		long timeNow = System.currentTimeMillis();
+		rna.assignPassengerFlows(odm);
+		timeNow = System.currentTimeMillis() - timeNow;
+		System.out.printf("Passenger flows assigned in %d seconds.\n", timeNow / 1000);
+		
+		//TEST OUTPUT AREA PROBABILITIES
+		System.out.println("\n\n*** Testing output area probabilities ***");
+		
+		final double EPSILON = 1e-11; //may fail for higher accuracy
+		
+		//test the probability of one output area from each LAD
+		assertEquals("The probability of the output area E00116864 is correct", (double)299/176462, rna.getAreaCodeProbabilities().get("E00116864"), EPSILON);
+		assertEquals("The probability of the output area E00086552 is correct", (double)430/236882, rna.getAreaCodeProbabilities().get("E00086552"), EPSILON);
+		assertEquals("The probability of the output area E00115160 is correct", (double)370/125199, rna.getAreaCodeProbabilities().get("E00115160"), EPSILON);
+		assertEquals("The probability of the output area E00172724 is correct", (double)666/138265, rna.getAreaCodeProbabilities().get("E00172724"), EPSILON);
+
+		//test that the sum of probabilities of output areas in each LAD zone is 1.0
+		for (String zone: roadNetwork.getZoneToAreaCodes().keySet()) {
+
+			double probabilitySum = 0.0;
+			for(Iterator<String> iter = roadNetwork.getZoneToAreaCodes().get(zone).iterator(); iter.hasNext(); ) {
+				String areaCode = iter.next();
+				probabilitySum += rna.getAreaCodeProbabilities().get(areaCode);
+			}
+			System.out.printf("The sum of probabilites for zone %s is: %.12f.\n", zone, probabilitySum);
+			assertEquals("The sum of probabilities for zone " + zone + " is 1.0", 1.0, probabilitySum, EPSILON);
+		}
+		
+		//TEST ENERGY UNIT COSTS
+		System.out.println("\n\n*** Testing the setter for the electricity unit cost ***");
+		
+		System.out.println("Energy unit costs:\t\t" + rna.getEnergyUnitCosts());
+		System.out.println("Energy consumptions per 100 km:\t" + rna.getEnergyConsumptionsPer100km());
+		System.out.println("Engine type fractions:\t\t" + rna.getEngineTypeFractions());
+		
+		rna.setEnergyUnitCost(RoadNetworkAssignment.EngineType.ELECTRICITY, 0.20);
+		
+		assertEquals("asdf", 0.20, (double) rna.getEnergyUnitCosts().get(RoadNetworkAssignment.EngineType.ELECTRICITY), EPSILON);
+		
+		//TEST PATH STORAGE
+		System.out.println("\n\n*** Testing path storage ***");
+		
+		double totalDistance = 0.0;
+		//check that the number of paths for a given OD equals the flow (the number of trips in the OD matrix).
+		rna.getPathStorage();
+		//for each OD
+		for (MultiKey mk: odm.getKeySet()) {
+					//System.out.println(mk);
+					String originZone = (String) mk.getKey(0);
+					String destinationZone = (String) mk.getKey(1);
+					List<Path> pathList = rna.getPathStorage().get(originZone, destinationZone);
+					int flow = odm.getFlow(originZone, destinationZone);
+					assertEquals("The number of paths equals the flow", flow, pathList.size());
+					
+					for (Path p: pathList) 
+						for (Object e: p.getEdges())
+							totalDistance += (double)((SimpleFeature)(((Edge)e).getObject())).getAttribute("LenNet");
+		}
+		System.out.println("Total distance = " + totalDistance);
+		
+		//TEST COUNTERS OF TRIP STARTS/ENDS
+		System.out.println("\n\n*** Testing trip starts/ends ***");
+		
+		System.out.println("Trip starts: " + rna.calculateLADTripStarts());
+		System.out.println("Trip ends: " + rna.calculateLADTripEnds());
+		System.out.println("OD matrix:");
+		odm.printMatrixFormatted();
+		System.out.println("Trip starts from OD matrix: " + odm.calculateTripStarts());
+		System.out.println("Trip ends from OD matrix: " + odm.calculateTripEnds());
+		
+		//trip starts and trip ends should match OD flows
+		HashMap<String, Integer> tripStarts = rna.calculateLADTripStarts();
+		HashMap<String, Integer> tripStartsFromODM = odm.calculateTripStarts();
+		for (String LAD: tripStarts.keySet()) {
+			assertEquals("Trip starts should match flows from each LAD", tripStarts.get(LAD), tripStartsFromODM.get(LAD));
+		}
+		HashMap<String, Integer> tripEnds = rna.calculateLADTripEnds();
+		HashMap<String, Integer> tripEndsFromODM = odm.calculateTripEnds();
+		for (String LAD: tripEnds.keySet()) {
+			assertEquals("Trip ends should match flows to each LAD", tripEnds.get(LAD), tripEndsFromODM.get(LAD));		
+		}
+			
+		//TEST LINK TRAVEL TIMES
+		System.out.println("\n\n*** Testing link travel times ***");
+
+		//before assignment link travel times should be equal to free flow travel times
+		System.out.println(rna.getLinkFreeFlowTravelTimes());
+		System.out.println(rna.getLinkTravelTimes());
+		assertTrue(rna.getLinkFreeFlowTravelTimes().equals(rna.getLinkTravelTimes()));
+
+		//check weighted averaging for travel times
+		rna.updateLinkTravelTimes(0.9);
+		HashMap<Integer, Double> averagedTravelTimes = rna.getCopyOfLinkTravelTimes();
+		rna.updateLinkTravelTimes();
+		for (int key: averagedTravelTimes.keySet()) {
+			double freeFlow = rna.getLinkFreeFlowTravelTimes().get(key);
+			double updated = rna.getLinkTravelTimes().get(key);
+			double averaged = averagedTravelTimes.get(key);
+			assertEquals("Averaged travel time should be correct", 0.9*updated + 0.1*freeFlow, averaged, EPSILON);
+		}
+		
+		//after assignment and update the link travel times should be greater or equal than the free flow travel times.
+		System.out.println(rna.getLinkFreeFlowTravelTimes());
+		System.out.println(rna.getLinkTravelTimes());
+		for (int key: rna.getLinkTravelTimes().keySet()) 			
+			assertTrue(rna.getLinkTravelTimes().get(key) >= rna.getLinkFreeFlowTravelTimes().get(key));	
 	}
 }

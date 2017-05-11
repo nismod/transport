@@ -213,7 +213,12 @@ public class DemandModel {
 						Math.pow(newGVAOriginZone / oldGVAOriginZone, elasticities.get(ElasticityTypes.GVA)) *
 						Math.pow(newPopulationDestinationZone / oldPopulationDestinationZone, elasticities.get(ElasticityTypes.POPULATION)) *
 						Math.pow(newGVADestinationZone / oldGVADestinationZone, elasticities.get(ElasticityTypes.GVA));
-
+				//System.out.printf("%d = %d * (%.0f / %.0f) ^ %.2f * (%.1f / %.1f) ^ %.2f * (%.0f / %.0f) ^ %.2f * (%.1f / %.1f) ^ %.2f\n", (int) Math.round(predictedFlow), (int) Math.round(oldFlow),
+				//newPopulationOriginZone, oldPopulationOriginZone, elasticities.get(ElasticityTypes.POPULATION),
+				//newGVAOriginZone, oldGVAOriginZone, elasticities.get(ElasticityTypes.GVA),
+				//newPopulationDestinationZone, oldPopulationDestinationZone, elasticities.get(ElasticityTypes.POPULATION),
+				//newGVADestinationZone, oldGVADestinationZone, elasticities.get(ElasticityTypes.GVA));
+				
 				predictedPassengerODMatrix.setFlow(originZone, destinationZone, (int) Math.round(predictedFlow));
 			}
 			
