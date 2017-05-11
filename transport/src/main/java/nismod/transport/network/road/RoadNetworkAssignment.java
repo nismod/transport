@@ -43,7 +43,7 @@ public class RoadNetworkAssignment {
 	public static final int MAXIMUM_CAPACITY_A_ROAD = 1380; //PCU per lane per hour
 	public static final int NUMBER_OF_LANES_M_ROAD = 3; //for one direction
 	public static final int NUMBER_OF_LANES_A_ROAD = 1; //for one direction
-	public static final double AVERAGE_SPEED_FERRY = 30.0; //30.0kph
+	public static final double AVERAGE_SPEED_FERRY = 20.0; //30.0kph
 	public static final double PEAK_HOUR_PERCENTAGE = 0.10322;
 	public static final double ALPHA = 0.15;
 	public static final double BETA_M_ROAD = 5.55;
@@ -171,8 +171,8 @@ public class RoadNetworkAssignment {
 					this.workplaceZoneProbabilities.put(workplaceCode, (double) roadNetwork.getWorkplaceCodeToPopulation().get(workplaceCode) / totalPopulationInZone);
 			}
 		}
-		System.out.println("Probabilities for workplace zones:");
-		System.out.println(this.workplaceZoneProbabilities);
+		//System.out.println("Probabilities for workplace zones:");
+		//System.out.println(this.workplaceZoneProbabilities);
 		
 		//set default values for vehicle type to PCU conversion
 		vehicleTypeToPCU = new HashMap<VehicleType, Double>();
@@ -221,14 +221,14 @@ public class RoadNetworkAssignment {
 	 */
 	public void assignPassengerFlows(ODMatrix passengerODM) {
 
-	//	System.out.println("Assigning the passenger flows from the passenger matrix...");
+		System.out.println("Assigning the passenger flows from the passenger matrix...");
 
 		//for each OD pair from the passengerODM		
 		for (MultiKey mk: passengerODM.getKeySet()) {
 			//System.out.println(mk);
 			//System.out.println("origin = " + mk.getKey(0));
 			//System.out.println("destination = " + mk.getKey(1));
-
+	
 			//for each trip
 			int flow = passengerODM.getFlow((String)mk.getKey(0), (String)mk.getKey(1));
 			for (int i=0; i<flow; i++) {
@@ -241,8 +241,8 @@ public class RoadNetworkAssignment {
 				int numberDestinationNodes = listOfDestinationNodes.size();
 				//System.out.println("Number of origin nodes: " + numberOriginNodes);
 				//System.out.println("Number of destination nodes: " + numberDestinationNodes);
-				int indexOrigin = new Random().nextInt(numberOriginNodes);
-				int indexDestination = new Random().nextInt(numberDestinationNodes);
+				int indexOrigin = rng.nextInt(numberOriginNodes);
+				int indexDestination = rng.nextInt(numberDestinationNodes);
 				//System.out.println("Index of origin node: " + indexOrigin);
 				//System.out.println("Index of destination node: " + indexDestination);
 				int originNode = (int) listOfOriginNodes.get(indexOrigin);
@@ -250,9 +250,15 @@ public class RoadNetworkAssignment {
 				//System.out.println("Origin node: " + originNode);
 				//System.out.println("Destination node: " + destinationNode);
 				*/
-					
+				
 				List<String> listOfOriginAreaCodes = roadNetwork.getZoneToAreaCodes().get(mk.getKey(0));
 				List<String> listOfDestinationAreaCodes = roadNetwork.getZoneToAreaCodes().get(mk.getKey(1));
+				
+				if (listOfOriginAreaCodes == null) System.err.println("listOfOriginAreaCodes is null for " + mk.getKey(0) );
+				if (listOfDestinationAreaCodes == null) System.err.println("listOfDestinationAreaCodes is null for " + mk.getKey(1) );
+				
+				//System.out.println("listOfOriginAreaCodes: " + listOfOriginAreaCodes);
+				//System.out.println("listOfDestinationAreaCodes: " + listOfDestinationAreaCodes);
 				
 				//choose origin census output area
 				double cumulativeProbability = 0.0;
@@ -283,16 +289,23 @@ public class RoadNetworkAssignment {
 						break;
 					}
 				}
-				if (destinationAreaCode == null) System.err.println("Destination otuput area was not selected.");
+				if (destinationAreaCode == null) System.err.println("Destination output area was not selected.");
 				else { //increase the number of tips ending at destinationAreaCode
 					Integer number = this.areaCodeNoTripEnds.get(destinationAreaCode);
 					if (number == null) number = 0;
 					this.areaCodeNoTripEnds.put(destinationAreaCode, ++number);
 				}
 				
-				//take the nearest node on the network
-				int originNode = roadNetwork.getAreaCodeToNearestNode().get(originAreaCode);
-				int destinationNode = roadNetwork.getAreaCodeToNearestNode().get(destinationAreaCode);
+				int originNode = -1, destinationNode = -1;
+				try {
+					//take the nearest node on the network
+					originNode = roadNetwork.getAreaCodeToNearestNode().get(originAreaCode);
+					destinationNode = roadNetwork.getAreaCodeToNearestNode().get(destinationAreaCode);
+				}
+				catch (NullPointerException e) {
+					e.printStackTrace();
+					System.err.printf("Couldn't find the nearest node for %s or %s output area.\n", originAreaCode, destinationAreaCode);
+				}
 				
 				//get the shortest path from the origin node to the destination node using AStar algorithm
 				DirectedGraph rn = roadNetwork.getNetwork();
@@ -356,6 +369,7 @@ public class RoadNetworkAssignment {
 					list.add(aStarPath); //list.add(path);
 				} catch (Exception e) {
 					e.printStackTrace();
+					System.err.printf("Couldnt find path from node %d to node %d!", from.getID(), to.getID());
 				}
 			}//for each trip
 		}//for each OD pair

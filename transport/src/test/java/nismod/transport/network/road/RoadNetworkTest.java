@@ -701,17 +701,18 @@ public class RoadNetworkTest {
 		}
 	}
 	
-//	@Test
+	//@Test
 	public void fullTest() throws IOException {
 
 		final URL zonesUrl = new URL("file://src/main/resources/data/zones.shp");
 		final URL networkUrl = new URL("file://src/main/resources/data/network.shp");
 		final URL nodesUrl = new URL("file://src/main/resources/data/nodes.shp");
 		final URL AADFurl = new URL("file://src/main/resources/data/AADFdirected2015.shp");
-		final String areaCodeFileName = "./src/test/resources/testdata/nomisPopulation.csv";
-		final String areaCodeNearestNodeFile = "./src/test/resources/testdata/areaCodeToNearestNode.csv";
+		
+		final String areaCodeFileName = "./src/main/resources/data/population_OA_GB.csv";
+		final String areaCodeNearestNodeFile = "./src/main/resources/data/nearest_node_OA_GB.csv";
 		final String workplaceZoneFileName = "./src/test/resources/testdata/workplacePopulation.csv";
-		final String workplaceZoneNearestNodeFile = "./src/test/resources/testdata/workplaceZoneToNearestNode.csv";
+		final String workplaceZoneNearestNodeFile = "./src/main/resources/data/nearest_node_WZ_GB_fakeSC.csv";
 	
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl,  areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile);
 		DirectedGraph rn = roadNetwork.getNetwork();
@@ -896,7 +897,60 @@ public class RoadNetworkTest {
 		assertEquals("Edge direction is correct", "S", sf.getAttribute("iDir"));
 		assertEquals("Edge length is correct", 0.1, sf.getAttribute("LenNet"));
 		assertNull("Expecting no edge in this direction", edgeBA);
+		
+		
+		//test that there are no nodes with outdegree 0, because that means it is not possible to go anywhere from this node!
+		//also check that there are no nodes with indegree 0, because that means it is not possible to reach this node!
+		
+		iter = rn.getNodes().iterator();
+		while (iter.hasNext()) {
+			DirectedNode node = (DirectedNode) iter.next();
+			if (node.getInDegree() == 0) System.err.printf("Node %d has in degree 0!\n", node.getID());
+			if (node.getOutDegree() == 0) System.err.printf("Node %d has out degree 0!\n", node.getID());
+		}
+				
+		//TEST NODE TO ZONE MAPPING
+		System.out.println("\n\n*** Testing node to zone mapping ***");
 
+		System.out.println("Nodes " + roadNetwork.getNetwork().getNodes());
+		int nodeNumber = roadNetwork.getNetwork().getNodes().size();
+		System.out.println("Nodes to zones mapping: " + roadNetwork.getNodeToZone());
+		assertEquals("All nodes except 68 nodes are mapped", nodeNumber-68, roadNetwork.getNodeToZone().size());
+
+		HashMap<String, List<Integer>> zoneToNodes = roadNetwork.getZoneToNodes();
+		System.out.println("Zone to nodes mapping: " + zoneToNodes);
+		System.out.println("The number of nodes in each zone:");
+		for (String key: zoneToNodes.keySet()) {
+			System.out.println(key + ": " + zoneToNodes.get(key).size());
+		}
+		boolean condition = 
+				zoneToNodes.get("E07000091").size() == 39 &&
+				zoneToNodes.get("E06000045").size() == 36 &&
+				zoneToNodes.get("E06000046").size() == 31 &&
+				zoneToNodes.get("E07000086").size() == 18;
+		assertTrue("The number of nodes in each zone is correct", condition);
+
+		Integer[] array = (Integer[]) zoneToNodes.get("E06000046").toArray(new Integer[0]);
+		Integer[] expectedArray3 = {2398, 5561, 2399, 12155, 7878, 12156, 7871, 5564, 7879, 12490, 5563, 11165, 5806, 10429, 9520, 9519, 11545, 11408, 11346, 8185, 11307, 5807, 12463, 5562, 9348, 2384, 8184, 2383, 12158, 12157, 9349};
+		Arrays.sort(array);
+		Arrays.sort(expectedArray3);
+		assertTrue("Nodes are correctly mapped to zone E06000046", Arrays.equals(expectedArray3, array));
+		
+		//System.out.println(roadNetwork.getAreaCodeToNearestNode());
+		//System.out.println(roadNetwork.getAreaCodeToPopulation());
+		//System.out.println(roadNetwork.getWorkplaceZoneToNearestNode());
+		//System.out.println(roadNetwork.getWorkplaceCodeToPopulation());
+		
+		System.out.println("Zone to output area mapping: ");
+		System.out.println(roadNetwork.getZoneToAreaCodes());
+		System.out.println("Output areas in zone E06000046: ");
+		System.out.println(roadNetwork.getZoneToAreaCodes().get("E06000046"));
+		
+		System.out.println("Zone to workplace zone mapping: ");
+		System.out.println(roadNetwork.getZoneToWorkplaceCodes());
+		System.out.println("Workplace zones in zone E06000046: ");
+		System.out.println(roadNetwork.getZoneToWorkplaceCodes().get("E06000046"));
+		
 		//TEST SHORTEST PATH ALGORITHMS
 		System.out.println("\n\n*** Testing the shortest path algorithms ***");
 		

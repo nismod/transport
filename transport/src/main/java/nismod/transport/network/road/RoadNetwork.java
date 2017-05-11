@@ -577,12 +577,21 @@ public class RoadNetwork {
 	private void build() throws IOException {
 
 		//get feature collections from the shapefiles
-		SimpleFeatureCollection networkFeatureCollection = networkShapefile.getFeatureSource().getFeatures();
-		SimpleFeatureCollection nodesFeatureCollection = nodesShapefile.getFeatureSource().getFeatures();
+//		SimpleFeatureCollection networkFeatureCollection = networkShapefile.getFeatureSource().getFeatures();
+//		SimpleFeatureCollection AADFfeatureCollection = AADFshapefile.getFeatureSource().getFeatures();
+//		SimpleFeatureCollection nodesFeatureCollection = nodesShapefile.getFeatureSource().getFeatures();
+//		SimpleFeatureCollection zonesFeatureCollection = zonesShapefile.getFeatureSource().getFeatures();
+		
 		//caching a large shapefile in memory greatly increases the speed!
 		CachingFeatureSource cache = new CachingFeatureSource(AADFshapefile.getFeatureSource());
 		SimpleFeatureCollection AADFfeatureCollection = cache.getFeatures();
-		SimpleFeatureCollection zonesFeatureCollection = zonesShapefile.getFeatureSource().getFeatures();
+		
+		CachingFeatureSource cache2 = new CachingFeatureSource(networkShapefile.getFeatureSource());
+		SimpleFeatureCollection networkFeatureCollection = cache2.getFeatures();
+		CachingFeatureSource cache3 = new CachingFeatureSource(nodesShapefile.getFeatureSource());
+		SimpleFeatureCollection nodesFeatureCollection = cache3.getFeatures();
+		CachingFeatureSource cache4 = new CachingFeatureSource(zonesShapefile.getFeatureSource());
+		SimpleFeatureCollection zonesFeatureCollection = cache4.getFeatures();
 
 		System.out.println("Creating undirected graph...");
 		
