@@ -92,7 +92,11 @@ public class RoadNetworkAssignment {
 	private HashMap<String, Integer> workplaceZoneNoTripStarts;
 	//the number of trips starting in each workplace zone
 	private HashMap<String, Integer> workplaceZoneNoTripEnds;
-	
+	//the number of trips starting in each LAD where finer location is unknown (not total number)
+	private HashMap<String, Integer> LADnoTripStarts;
+	//the number of trips ending in each LAD where finer location is unknown (not total number)
+	private HashMap<String, Integer> LADnoTripEnds;
+		
 	/**
 	 * @param roadNetwork Road network.
 	 * @param defaultLinkTravelTime Default link travel times.
@@ -116,6 +120,8 @@ public class RoadNetworkAssignment {
 		areaCodeNoTripEnds = new HashMap<String, Integer>();
 		workplaceZoneNoTripStarts = new HashMap<String, Integer>();
 		workplaceZoneNoTripEnds = new HashMap<String, Integer>();
+		LADnoTripStarts = new HashMap<String, Integer>();
+		LADnoTripEnds = new HashMap<String, Integer>();
 			
 		//calculate link travel time
 		Iterator edgesIterator = roadNetwork.getNetwork().getEdges().iterator();
@@ -228,88 +234,182 @@ public class RoadNetworkAssignment {
 			//System.out.println(mk);
 			//System.out.println("origin = " + mk.getKey(0));
 			//System.out.println("destination = " + mk.getKey(1));
-	
-			//for each trip
-			int flow = passengerODM.getFlow((String)mk.getKey(0), (String)mk.getKey(1));
-			for (int i=0; i<flow; i++) {
-				
-				/*
-				//choose random trip start/end nodes within the origin and the destination zone
-				List listOfOriginNodes = roadNetwork.getZoneToNodes().get(mk.getKey(0));
-				List listOfDestinationNodes = roadNetwork.getZoneToNodes().get(mk.getKey(1));
-				int numberOriginNodes = listOfOriginNodes.size();
-				int numberDestinationNodes = listOfDestinationNodes.size();
-				//System.out.println("Number of origin nodes: " + numberOriginNodes);
-				//System.out.println("Number of destination nodes: " + numberDestinationNodes);
-				int indexOrigin = rng.nextInt(numberOriginNodes);
-				int indexDestination = rng.nextInt(numberDestinationNodes);
-				//System.out.println("Index of origin node: " + indexOrigin);
-				//System.out.println("Index of destination node: " + indexDestination);
-				int originNode = (int) listOfOriginNodes.get(indexOrigin);
-				int destinationNode = (int) listOfDestinationNodes.get(indexDestination);
-				//System.out.println("Origin node: " + originNode);
-				//System.out.println("Destination node: " + destinationNode);
-				*/
-				
-				List<String> listOfOriginAreaCodes = roadNetwork.getZoneToAreaCodes().get(mk.getKey(0));
-				List<String> listOfDestinationAreaCodes = roadNetwork.getZoneToAreaCodes().get(mk.getKey(1));
-				
-				if (listOfOriginAreaCodes == null) System.err.println("listOfOriginAreaCodes is null for " + mk.getKey(0) );
-				if (listOfDestinationAreaCodes == null) System.err.println("listOfDestinationAreaCodes is null for " + mk.getKey(1) );
-				
-				//System.out.println("listOfOriginAreaCodes: " + listOfOriginAreaCodes);
-				//System.out.println("listOfDestinationAreaCodes: " + listOfDestinationAreaCodes);
-				
-				//choose origin census output area
-				double cumulativeProbability = 0.0;
-				String originAreaCode = null;
-				double random = rng.nextDouble();
-				for (String areaCode: listOfOriginAreaCodes) {
-					cumulativeProbability += areaCodeProbabilities.get(areaCode);
-					if (Double.compare(cumulativeProbability, random) > 0) {
-						originAreaCode = areaCode;
-						break;
+			String origin = (String)mk.getKey(0);
+			String destination = (String)mk.getKey(1);
+
+			//if intra-zonal flow
+			if (origin.equals(destination)) {
+
+				//for each trip
+				int flow = passengerODM.getFlow(origin, destination);
+				for (int i=0; i<flow; i++) {
+
+					/*
+					//choose random trip start/end nodes within the origin and the destination zone
+					List listOfOriginNodes = roadNetwork.getZoneToNodes().get(mk.getKey(0));
+					List listOfDestinationNodes = roadNetwork.getZoneToNodes().get(mk.getKey(1));
+					int numberOriginNodes = listOfOriginNodes.size();
+					int numberDestinationNodes = listOfDestinationNodes.size();
+					//System.out.println("Number of origin nodes: " + numberOriginNodes);
+					//System.out.println("Number of destination nodes: " + numberDestinationNodes);
+					int indexOrigin = rng.nextInt(numberOriginNodes);
+					int indexDestination = rng.nextInt(numberDestinationNodes);
+					//System.out.println("Index of origin node: " + indexOrigin);
+					//System.out.println("Index of destination node: " + indexDestination);
+					int originNode = (int) listOfOriginNodes.get(indexOrigin);
+					int destinationNode = (int) listOfDestinationNodes.get(indexDestination);
+					//System.out.println("Origin node: " + originNode);
+					//System.out.println("Destination node: " + destinationNode);
+					 */
+
+					List<String> listOfOriginAreaCodes = roadNetwork.getZoneToAreaCodes().get(mk.getKey(0));
+					List<String> listOfDestinationAreaCodes = roadNetwork.getZoneToAreaCodes().get(mk.getKey(1));
+
+					if (listOfOriginAreaCodes == null) System.err.println("listOfOriginAreaCodes is null for " + mk.getKey(0) );
+					if (listOfDestinationAreaCodes == null) System.err.println("listOfDestinationAreaCodes is null for " + mk.getKey(1) );
+
+					//System.out.println("listOfOriginAreaCodes: " + listOfOriginAreaCodes);
+					//System.out.println("listOfDestinationAreaCodes: " + listOfDestinationAreaCodes);
+
+					//choose origin census output area
+					double cumulativeProbability = 0.0;
+					String originAreaCode = null;
+					double random = rng.nextDouble();
+					for (String areaCode: listOfOriginAreaCodes) {
+						cumulativeProbability += areaCodeProbabilities.get(areaCode);
+						if (Double.compare(cumulativeProbability, random) > 0) {
+							originAreaCode = areaCode;
+							break;
+						}
 					}
-				}
-				if (originAreaCode == null) System.err.println("Origin output area was not selected.");
-				else { //increase the number of tips starting at originAreaCode
-					Integer number = this.areaCodeNoTripStarts.get(originAreaCode);
-					if (number == null) number = 0;
-					this.areaCodeNoTripStarts.put(originAreaCode, ++number);
-				}
-				
-				//choose destination census output area
-				cumulativeProbability = 0.0;
-				String destinationAreaCode = null;
-				random = rng.nextDouble();
-				for (String areaCode: listOfDestinationAreaCodes) {
-					cumulativeProbability += areaCodeProbabilities.get(areaCode);
-					if (Double.compare(cumulativeProbability, random) > 0) {
-						destinationAreaCode = areaCode;
-						break;
+					if (originAreaCode == null) System.err.println("Origin output area was not selected.");
+					else { //increase the number of tips starting at originAreaCode
+						Integer number = this.areaCodeNoTripStarts.get(originAreaCode);
+						if (number == null) number = 0;
+						this.areaCodeNoTripStarts.put(originAreaCode, ++number);
 					}
-				}
-				if (destinationAreaCode == null) System.err.println("Destination output area was not selected.");
-				else { //increase the number of tips ending at destinationAreaCode
-					Integer number = this.areaCodeNoTripEnds.get(destinationAreaCode);
-					if (number == null) number = 0;
-					this.areaCodeNoTripEnds.put(destinationAreaCode, ++number);
-				}
-				
-				int originNode = -1, destinationNode = -1;
-				try {
-					//take the nearest node on the network
-					originNode = roadNetwork.getAreaCodeToNearestNode().get(originAreaCode);
-					destinationNode = roadNetwork.getAreaCodeToNearestNode().get(destinationAreaCode);
-				}
-				catch (NullPointerException e) {
-					e.printStackTrace();
-					System.err.printf("Couldn't find the nearest node for %s or %s output area.\n", originAreaCode, destinationAreaCode);
-				}
-				
+
+					//choose destination census output area
+					cumulativeProbability = 0.0;
+					String destinationAreaCode = null;
+					random = rng.nextDouble();
+					for (String areaCode: listOfDestinationAreaCodes) {
+						cumulativeProbability += areaCodeProbabilities.get(areaCode);
+						if (Double.compare(cumulativeProbability, random) > 0) {
+							destinationAreaCode = areaCode;
+							break;
+						}
+					}
+					if (destinationAreaCode == null) System.err.println("Destination output area was not selected.");
+					else { //increase the number of tips ending at destinationAreaCode
+						Integer number = this.areaCodeNoTripEnds.get(destinationAreaCode);
+						if (number == null) number = 0;
+						this.areaCodeNoTripEnds.put(destinationAreaCode, ++number);
+					}
+
+					int originNode = -1, destinationNode = -1;
+					try {
+						//take the nearest node on the network
+						originNode = roadNetwork.getAreaCodeToNearestNode().get(originAreaCode);
+						destinationNode = roadNetwork.getAreaCodeToNearestNode().get(destinationAreaCode);
+					}
+					catch (NullPointerException e) {
+						e.printStackTrace();
+						System.err.printf("Couldn't find the nearest node for %s or %s output area.\n", originAreaCode, destinationAreaCode);
+					}
+
+					//get the shortest path from the origin node to the destination node using AStar algorithm
+					DirectedGraph rn = roadNetwork.getNetwork();
+					//set source and destination node
+					/*
+					Iterator iter = rn.getNodes().iterator();
+					Node from = null, to = null;
+					while (iter.hasNext() && (from == null || to == null)) {
+						DirectedNode node = (DirectedNode) iter.next();
+						if (node.getID() == originNode) from = node;
+						if (node.getID() == destinationNode) to = node;
+					}
+					 */
+					Node from = roadNetwork.getNodeIDtoNode().get(originNode);
+					Node to = roadNetwork.getNodeIDtoNode().get(destinationNode);
+					try {
+
+						AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctionsTime(to, this.linkTravelTime));
+						//AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctions(to));
+						aStarPathFinder.calculate();
+						Path aStarPath;
+						aStarPath = aStarPathFinder.getPath();
+						aStarPath.reverse();
+						//System.out.println(aStarPath);
+						//System.out.println("The path as a list of nodes: " + aStarPath);
+						List listOfEdges = aStarPath.getEdges();
+						//System.out.println("The path as a list of edges: " + listOfEdges);
+						//System.out.println("Path size in the number of nodes: " + aStarPath.size());
+						//System.out.println("Path size in the number of edges: " + listOfEdges.size());
+						/*
+						DijkstraShortestPathFinder pathFinder = new DijkstraShortestPathFinder(rn, from, roadNetwork.getDijkstraTimeWeighter());
+						pathFinder.calculate();
+						Path path = pathFinder.getPath(to);
+						path.reverse();
+						List listOfEdges = path.getEdges();
+						 */
+						double sum = 0;
+						List<Path> list;
+						for (Object o: listOfEdges) {
+							//DirectedEdge e = (DirectedEdge) o;
+							Edge e = (Edge) o;
+							//System.out.print(e.getID() + "|" + e.getNodeA() + "->" + e.getNodeB() + "|");
+							SimpleFeature sf = (SimpleFeature) e.getObject();
+							double length = (double) sf.getAttribute("LenNet");
+							//System.out.println(length);
+							sum += length;
+
+							//increase volume count (in PCU) for that edge
+							Double volumeInPCU = linkVolumesInPCU.get(e.getID());
+							if (volumeInPCU == null) volumeInPCU = 0.0;
+							volumeInPCU++;
+							linkVolumesInPCU.put(e.getID(), volumeInPCU);
+						}
+						//System.out.printf("Sum of edge lengths: %.3f\n\n", sum);
+
+						//store path in path storage
+						if (pathStorage.containsKey(mk.getKey(0), mk.getKey(1))) 
+							list = (List<Path>) pathStorage.get(mk.getKey(0), mk.getKey(1));
+						else {
+							list = new ArrayList<Path>();
+							pathStorage.put((String)mk.getKey(0), (String)mk.getKey(1), list);
+						}
+						list.add(aStarPath); //list.add(path);
+					} catch (Exception e) {
+						e.printStackTrace();
+						System.err.printf("Couldnt find path from node %d to node %d!", from.getID(), to.getID());
+					}
+				}//for each trip
+
+			} else { //inter-zonal trips
+
+				int flow = passengerODM.getFlow(origin, destination);
+
+				//origin and destination nodes are those to which max population gravitates
+				int originNode = roadNetwork.getZoneToMaxGravityNode().get(origin);
+				int destinationNode = roadNetwork.getZoneToMaxGravityNode().get(destination);
+
+				//increase the number of trips starting at origin LAD
+				Integer number = this.LADnoTripStarts.get(origin);
+				if (number == null) number = 0;
+				number += flow; //increase for the whole flow
+				this.LADnoTripStarts.put(origin, number);
+				//increase the number of trips ending at destination LAD
+				Integer number2 = this.LADnoTripEnds.get(destination);
+				if (number2 == null) number2 = 0;
+				number2 += flow; //increase for the whole flow
+				this.LADnoTripEnds.put(destination, number2);
+
+				//calculate just one fastest path and store it multiple times!
 				//get the shortest path from the origin node to the destination node using AStar algorithm
 				DirectedGraph rn = roadNetwork.getNetwork();
 				//set source and destination node
+				/*
 				Iterator iter = rn.getNodes().iterator();
 				Node from = null, to = null;
 				while (iter.hasNext() && (from == null || to == null)) {
@@ -317,8 +417,11 @@ public class RoadNetworkAssignment {
 					if (node.getID() == originNode) from = node;
 					if (node.getID() == destinationNode) to = node;
 				}
+				 */
+				Node from = roadNetwork.getNodeIDtoNode().get(originNode);
+				Node to = roadNetwork.getNodeIDtoNode().get(destinationNode);
 				try {
-					
+
 					AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctionsTime(to, this.linkTravelTime));
 					//AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctions(to));
 					aStarPathFinder.calculate();
@@ -331,15 +434,15 @@ public class RoadNetworkAssignment {
 					//System.out.println("The path as a list of edges: " + listOfEdges);
 					//System.out.println("Path size in the number of nodes: " + aStarPath.size());
 					//System.out.println("Path size in the number of edges: " + listOfEdges.size());
-					
+
 					/*
 					DijkstraShortestPathFinder pathFinder = new DijkstraShortestPathFinder(rn, from, roadNetwork.getDijkstraTimeWeighter());
 					pathFinder.calculate();
 					Path path = pathFinder.getPath(to);
 					path.reverse();
 					List listOfEdges = path.getEdges();
-					*/
-										
+					 */
+
 					double sum = 0;
 					List<Path> list;
 					for (Object o: listOfEdges) {
@@ -354,7 +457,7 @@ public class RoadNetworkAssignment {
 						//increase volume count (in PCU) for that edge
 						Double volumeInPCU = linkVolumesInPCU.get(e.getID());
 						if (volumeInPCU == null) volumeInPCU = 0.0;
-						volumeInPCU++;
+						volumeInPCU += flow; //increase it for the whole flow!
 						linkVolumesInPCU.put(e.getID(), volumeInPCU);
 					}
 					//System.out.printf("Sum of edge lengths: %.3f\n\n", sum);
@@ -366,12 +469,13 @@ public class RoadNetworkAssignment {
 						list = new ArrayList<Path>();
 						pathStorage.put((String)mk.getKey(0), (String)mk.getKey(1), list);
 					}
-					list.add(aStarPath); //list.add(path);
+					for (int i=0; i<flow; i++) list.add(aStarPath); //add path multiple (flow) times!
+
 				} catch (Exception e) {
 					e.printStackTrace();
 					System.err.printf("Couldnt find path from node %d to node %d!", from.getID(), to.getID());
 				}
-			}//for each trip
+			}
 		}//for each OD pair
 	}
 
@@ -1385,7 +1489,7 @@ public class RoadNetworkAssignment {
 	 */
 	public HashMap<String, Integer> calculateLADTripStarts() {
 		
-		HashMap<String, Integer> LADNoTripStarts = new HashMap<String, Integer>();
+		HashMap<String, Integer> totalLADnoTripStarts = new HashMap<String, Integer>();
 
 		for (String LAD: this.roadNetwork.getZoneToAreaCodes().keySet()) {
 			int numberLAD = 0;
@@ -1393,10 +1497,17 @@ public class RoadNetworkAssignment {
 				Integer number = this.areaCodeNoTripStarts.get(areaCode);
 				if (number != null) numberLAD += number;
 			}
-			LADNoTripStarts.put(LAD, numberLAD);
+			totalLADnoTripStarts.put(LAD, numberLAD);
 		}
 		
-		return LADNoTripStarts;
+		for (String LAD: this.LADnoTripStarts.keySet()) {
+			Integer number = this.LADnoTripStarts.get(LAD);
+			Integer number2 = totalLADnoTripStarts.get(LAD);
+			if (number2 != null) number += number2;
+			totalLADnoTripStarts.put(LAD, number);
+		}
+		
+		return totalLADnoTripStarts;
 	}
 	
 	/**
@@ -1405,7 +1516,7 @@ public class RoadNetworkAssignment {
 	 */
 	public HashMap<String, Integer> calculateLADTripEnds() {
 		
-		HashMap<String, Integer> LADNoTripEnds = new HashMap<String, Integer>();
+		HashMap<String, Integer> totalLADnoTripEnds = new HashMap<String, Integer>();
 
 		for (String LAD: this.roadNetwork.getZoneToAreaCodes().keySet()) {
 			int numberLAD = 0;
@@ -1413,10 +1524,17 @@ public class RoadNetworkAssignment {
 				Integer number = this.areaCodeNoTripEnds.get(areaCode);
 				if (number != null) numberLAD += number;
 			}
-			LADNoTripEnds.put(LAD, numberLAD);
+			totalLADnoTripEnds.put(LAD, numberLAD);
 		}
 		
-		return LADNoTripEnds;
+		for (String LAD: this.LADnoTripEnds.keySet()) {
+			Integer number = this.LADnoTripEnds.get(LAD);
+			Integer number2 = totalLADnoTripEnds.get(LAD);
+			if (number2 != null) number += number2;
+			totalLADnoTripEnds.put(LAD, number);
+		}
+		
+		return totalLADnoTripEnds;
 	}
 	
 	/**

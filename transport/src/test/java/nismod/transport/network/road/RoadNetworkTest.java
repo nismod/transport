@@ -284,7 +284,18 @@ public class RoadNetworkTest {
 		assertEquals("Edge direction is correct", "S", sf.getAttribute("iDir"));
 		assertEquals("Edge length is correct", 0.1, sf.getAttribute("LenNet"));
 		assertNull("Expecting no edge in this direction", edgeBA);
-
+		
+		//TEST NODE GRAVITATING POPULATION
+		System.out.println("\n\n*** Testing node gravitating population ***");
+		
+		System.out.println(roadNetwork.getNodeToGravitatingPopulation());
+		
+		//node 60 -> area codes (population): E00086593(281), E00086587(402), E00086591(389), E00086592(290), E00086627(294)
+		assertEquals("Gravitating population is correct", (281 + 402 + 389 + 290 + 294) , (int) roadNetwork.getNodeToGravitatingPopulation().get(60));
+		
+		System.out.println(roadNetwork.getZoneToNodes());
+		System.out.println(roadNetwork.getZoneToMaxGravityNode());
+		
 		//TEST SHORTEST PATH ALGORITHMS
 		System.out.println("\n\n*** Testing the shortest path algorithms ***");
 		
@@ -682,6 +693,17 @@ public class RoadNetworkTest {
 		Arrays.sort(array);
 		Arrays.sort(expectedArray4);
 		assertTrue("Nodes are correctly mapped to zone E07000086", Arrays.equals(expectedArray4, array));
+		
+		//TEST NODE GRAVITATING POPULATION
+		System.out.println("\n\n*** Testing node gravitating population ***");
+		
+		System.out.println(roadNetwork.getNodeToGravitatingPopulation());
+		
+		//node 60 -> area codes (population): E00086593(281), E00086587(402), E00086591(389), E00086592(290), E00086627(294)
+		assertEquals("Gravitating population is correct", (281 + 402 + 389 + 290 + 294) , (int) roadNetwork.getNodeToGravitatingPopulation().get(60));
+		
+		System.out.println(roadNetwork.getZoneToNodes());
+		System.out.println(roadNetwork.getZoneToMaxGravityNode());
 		
 		//TEST NUMBER OF LANES
 		System.out.println("\n\n*** Testing the number of lanes ***");
