@@ -83,6 +83,7 @@ public class RoadNetwork {
 	private HashMap<Integer, Integer> numberOfLanes;
 	private HashMap<Integer, String> nodeToZone;
 	private HashMap<String, List<Integer>> zoneToNodes;
+	private HashMap<String, Integer> zoneToMaxGravityNode;
 	private HashMap<String, List<String>> zoneToAreaCodes;
 	private HashMap<String, Integer> areaCodeToNearestNode;
 	private HashMap<String, Integer> areaCodeToPopulation;
@@ -91,8 +92,10 @@ public class RoadNetwork {
 	private HashMap<String, Integer> workplaceZoneToNearestNode;
 	private HashMap<String, List<String>> zoneToWorkplaceCodes;
 	private HashMap<String, Integer> workplaceCodeToPopulation;
-
-
+	private HashMap<Integer, Integer> nodeToGravitatingPopulation;
+	private HashMap<Integer, Node> nodeIDtoNode;
+	
+	
 	/**
 	 * @param zonesUrl Url for the shapefile with zone polygons
 	 * @param networkUrl Url for the shapefile with road network
@@ -142,6 +145,9 @@ public class RoadNetwork {
 		this.loadAreaCodeNearestNode(areaCodeNearestNodeFile);
 		this.loadWorkplaceZonePopulationData(workplaceZoneFileName);
 		this.loadWorkplaceZoneNearestNode(workplaceZoneNearestNodeFile);
+		
+		this.calculateNodeGravitatingPopulation();
+		this.findMaxGravityNodes();
 		
 		this.freightZoneToLAD = new HashMap<Integer, String>();
 		this.freightZoneToLAD.put(855, "E06000045");
@@ -547,6 +553,33 @@ public class RoadNetwork {
 		return this.workplaceCodeToPopulation;
 	}
 	
+	/**
+	 * Getter method for the node to gravitating population mapping.
+	 * @return Node to gravitating population mapping.
+	 */
+	public HashMap<Integer, Integer> getNodeToGravitatingPopulation() {
+
+		return this.nodeToGravitatingPopulation;
+	}
+	
+	/**
+	 * Getter method for the zone to max gravity node mapping.
+	 * @return Zone to max gravity node mapping.
+	 */
+	public HashMap<String, Integer> getZoneToMaxGravityNode() {
+
+		return this.zoneToMaxGravityNode;
+	}
+	
+	/**
+	 * Getter method for nodeID to node mapping.
+	 * @return Node ID to node mapping.
+	 */
+	public HashMap<Integer, Node> getNodeIDtoNode() {
+		
+		return this.nodeIDtoNode;
+	}
+	
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */
@@ -619,6 +652,10 @@ public class RoadNetwork {
 		
 		//map the nodes to zones
 		mapNodesToZones(zonesFeatureCollection);
+		
+		System.out.println("Creating a direct access map of nodes");
+		createDirectAccessNodeMap();
+		
 		
 		System.out.println("Determining the number of lanes...");
 		
@@ -847,6 +884,19 @@ public class RoadNetwork {
 		}
 	}
 	
+	
+	private void createDirectAccessNodeMap() {
+		
+		this.nodeIDtoNode = new HashMap<Integer, Node>();
+		
+		Iterator nodeIter = (Iterator) network.getNodes().iterator();
+		while (nodeIter.hasNext()) {
+		
+				Node node = (Node) nodeIter.next();
+				this.nodeIDtoNode.put(node.getID(), node);
+		}		
+	}
+	
 	/**
 	 * Calculates default number of lanes from road type.
 	 */
@@ -979,6 +1029,59 @@ public class RoadNetwork {
 		} 
 		parser.close(); 
 	}
+	
+	/**
+	 * Calculates the population gravitating to each node by summing up the population of area codes
+	 * which have been mapped to this node using the nearest neighbour method.
+	 */
+	private void calculateNodeGravitatingPopulation() {
+		
+		HashMap<Integer, Integer> map = new HashMap<Integer, Integer>();
+		
+		for (String areaCode: this.areaCodeToNearestNode.keySet()) {
+			
+			int node = this.areaCodeToNearestNode.get(areaCode);
+			int population = this.areaCodeToPopulation.get(areaCode);
+			
+			Integer currentPopulation = map.get(node);
+			if (currentPopulation == null) currentPopulation = population;
+			else  currentPopulation += population;
+			
+			map.put(node, currentPopulation);
+		}
+		
+		this.nodeToGravitatingPopulation = map;
+	}
+	
+	/**
+	 * For each zone (LAD) finds the node with the highest number of gravitating population based on
+	 * the nearest neighbour assignment of area code populations.
+	 */
+	private void findMaxGravityNodes() {
+		
+		HashMap<String, Integer> map = new HashMap<String, Integer>();
+		
+		for (String LAD: this.zoneToNodes.keySet()) {
+			
+			List list = this.zoneToNodes.get(LAD);
+			Iterator<Integer> iter = list.iterator();
+			int maxPopulation = 0;
+			Integer maxNode = null;
+			while (iter.hasNext()) {
+				Integer node = iter.next();
+				Integer population = this.nodeToGravitatingPopulation.get(node);
+				if (population == null) population = 0;
+				if (population >  maxPopulation) {
+					maxPopulation = population;
+					maxNode = node;
+				}
+			}
+			map.put(LAD, maxNode);
+		}
+		
+		this.zoneToMaxGravityNode = map;
+	}
+	
 	
 	/**
 	 * Prompts the user for the name and path to use for the output shapefile.

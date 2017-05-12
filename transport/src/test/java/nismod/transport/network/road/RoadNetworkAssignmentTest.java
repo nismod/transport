@@ -454,7 +454,7 @@ public class RoadNetworkAssignmentTest {
 		rna.calculateTimeSkimMatrixFreight().printMatrixFormatted();
 	}
 	
-	//@Test
+	@Test
 	public void fullTest() throws IOException {
 
 		final URL zonesUrl = new URL("file://src/main/resources/data/zones.shp");
