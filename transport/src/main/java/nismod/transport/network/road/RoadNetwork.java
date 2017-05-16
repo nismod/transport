@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -83,7 +85,6 @@ public class RoadNetwork {
 	private HashMap<Integer, Integer> numberOfLanes;
 	private HashMap<Integer, String> nodeToZone;
 	private HashMap<String, List<Integer>> zoneToNodes;
-	private HashMap<String, Integer> zoneToMaxGravityNode;
 	private HashMap<String, List<String>> zoneToAreaCodes;
 	private HashMap<String, Integer> areaCodeToNearestNode;
 	private HashMap<String, Integer> areaCodeToPopulation;
@@ -147,7 +148,7 @@ public class RoadNetwork {
 		this.loadWorkplaceZoneNearestNode(workplaceZoneNearestNodeFile);
 		
 		this.calculateNodeGravitatingPopulation();
-		this.findMaxGravityNodes();
+		this.sortGravityNodes();
 		
 		this.freightZoneToLAD = new HashMap<Integer, String>();
 		this.freightZoneToLAD.put(855, "E06000045");
@@ -560,15 +561,6 @@ public class RoadNetwork {
 	public HashMap<Integer, Integer> getNodeToGravitatingPopulation() {
 
 		return this.nodeToGravitatingPopulation;
-	}
-	
-	/**
-	 * Getter method for the zone to max gravity node mapping.
-	 * @return Zone to max gravity node mapping.
-	 */
-	public HashMap<String, Integer> getZoneToMaxGravityNode() {
-
-		return this.zoneToMaxGravityNode;
 	}
 	
 	/**
@@ -1033,6 +1025,7 @@ public class RoadNetwork {
 	/**
 	 * Calculates the population gravitating to each node by summing up the population of area codes
 	 * which have been mapped to this node using the nearest neighbour method.
+	 * Nodes with 0 gravitating population are not a member of this map!
 	 */
 	private void calculateNodeGravitatingPopulation() {
 		
@@ -1054,34 +1047,28 @@ public class RoadNetwork {
 	}
 	
 	/**
-	 * For each zone (LAD) finds the node with the highest number of gravitating population based on
-	 * the nearest neighbour assignment of area code populations.
+	 * For each zone (LAD) sorts the list of contained nodes based on the gravitating population.
 	 */
-	private void findMaxGravityNodes() {
+	private void sortGravityNodes() {
 		
-		HashMap<String, Integer> map = new HashMap<String, Integer>();
+		HashMap<Integer, Integer> nodeToPop = this.nodeToGravitatingPopulation;
+		
+		Comparator<Integer> c = new Comparator<Integer>() {
+		    public int compare(Integer s, Integer s2) {
+		    	Integer population = nodeToPop.get(s);
+		    	if (population == null) population = 0; //no population gravitates to this node
+		    	Integer population2 = nodeToPop.get(s2);
+		    	if (population2 == null) population2 = 0;
+		    	
+		    	return population2.compareTo(population);
+		    	}
+		};
 		
 		for (String LAD: this.zoneToNodes.keySet()) {
-			
 			List list = this.zoneToNodes.get(LAD);
-			Iterator<Integer> iter = list.iterator();
-			int maxPopulation = 0;
-			Integer maxNode = null;
-			while (iter.hasNext()) {
-				Integer node = iter.next();
-				Integer population = this.nodeToGravitatingPopulation.get(node);
-				if (population == null) population = 0;
-				if (population >  maxPopulation) {
-					maxPopulation = population;
-					maxNode = node;
-				}
-			}
-			map.put(LAD, maxNode);
+			Collections.sort(list, c);
 		}
-		
-		this.zoneToMaxGravityNode = map;
 	}
-	
 	
 	/**
 	 * Prompts the user for the name and path to use for the output shapefile.

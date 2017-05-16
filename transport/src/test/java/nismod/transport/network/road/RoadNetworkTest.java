@@ -40,21 +40,21 @@ public class RoadNetworkTest {
 		final URL networkUrl = new URL("file://src/test/resources/minitestdata/network.shp");
 		final URL nodesUrl = new URL("file://src/test/resources/minitestdata/nodes.shp");
 		final URL AADFurl = new URL("file://src/test/resources/minitestdata/AADFdirected.shp");
-		
+
 		final String areaCodeFileName = "./src/test/resources/testdata/nomisPopulation.csv";
 		final String areaCodeNearestNodeFile = "./src/test/resources/testdata/areaCodeToNearestNode.csv";
 		final String workplaceZoneFileName = "./src/test/resources/testdata/workplacePopulation.csv";
 		final String workplaceZoneNearestNodeFile = "./src/test/resources/testdata/workplaceZoneToNearestNode.csv";
-			
+
 		//create a road network
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile);
 
 		//visualise the shapefiles
 		roadNetwork.visualise("Mini Test Area");
-		
+
 		//export to shapefile
 		roadNetwork.exportToShapefile("miniOutputNetwork");
-		
+
 		final URL zonesUrl2 = new URL("file://src/test/resources/testdata/zones.shp");
 		final URL networkUrl2 = new URL("file://src/test/resources/testdata/network.shp");
 		final URL nodesUrl2 = new URL("file://src/test/resources/testdata/nodes.shp");
@@ -65,26 +65,26 @@ public class RoadNetworkTest {
 
 		//visualise the shapefiles
 		roadNetwork2.visualise("Midi Test Area");
-		
+
 		//export to shapefile
 		roadNetwork2.exportToShapefile("midiOutputNetwork");
-		
+
 		final URL zonesUrl3 = new URL("file://src/main/resources/data/zones.shp");
 		final URL networkUrl3 = new URL("file://src/main/resources/data/network.shp");
 		final URL nodesUrl3 = new URL("file://src/main/resources/data/nodes.shp");
 		final URL AADFurl3 = new URL("file://src/main/resources/data/AADFdirected2015.shp");
 
 		long timeNow = System.currentTimeMillis();
-		
+
 		//create a road network
 		RoadNetwork roadNetwork3 = new RoadNetwork(zonesUrl3, networkUrl3, nodesUrl3, AADFurl3, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile);
 
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Road network built in %d seconds.\n", timeNow / 1000);
-		
+
 		//visualise the shapefiles
 		roadNetwork3.visualise("Major Road Network");
-		
+
 		//export to shapefile
 		roadNetwork3.exportToShapefile("fullOutputNetwork");
 	}
@@ -100,7 +100,7 @@ public class RoadNetworkTest {
 		final String areaCodeNearestNodeFile = "./src/test/resources/testdata/areaCodeToNearestNode.csv";
 		final String workplaceZoneFileName = "./src/test/resources/testdata/workplacePopulation.csv";
 		final String workplaceZoneNearestNodeFile = "./src/test/resources/testdata/workplaceZoneToNearestNode.csv";
-	
+
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl,  areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile);
 		DirectedGraph rn = roadNetwork.getNetwork();
 
@@ -284,21 +284,39 @@ public class RoadNetworkTest {
 		assertEquals("Edge direction is correct", "S", sf.getAttribute("iDir"));
 		assertEquals("Edge length is correct", 0.1, sf.getAttribute("LenNet"));
 		assertNull("Expecting no edge in this direction", edgeBA);
-		
+
 		//TEST NODE GRAVITATING POPULATION
 		System.out.println("\n\n*** Testing node gravitating population ***");
-		
+
 		System.out.println(roadNetwork.getNodeToGravitatingPopulation());
-		
+
 		//node 60 -> area codes (population): E00086593(281), E00086587(402), E00086591(389), E00086592(290), E00086627(294)
 		assertEquals("Gravitating population is correct", (281 + 402 + 389 + 290 + 294) , (int) roadNetwork.getNodeToGravitatingPopulation().get(60));
-		
-		System.out.println(roadNetwork.getZoneToNodes());
-		System.out.println(roadNetwork.getZoneToMaxGravityNode());
-		
+
+		System.out.println("Zone to sorted nodes: " + roadNetwork.getZoneToNodes());
+
+		//find the node with maximum gravitating population
+		for (String LAD: roadNetwork.getZoneToNodes().keySet()) {
+			List<Integer> list = roadNetwork.getZoneToNodes().get(LAD);
+			Iterator<Integer> iterator = (Iterator<Integer>) list.iterator();
+			int maxPopulation = 0;
+			Integer maxNode = null;
+			while (iterator.hasNext()) {
+				Integer node = iterator.next();
+				Integer population = roadNetwork.getNodeToGravitatingPopulation().get(node);
+				if (population == null) population = 0;
+				if (population >  maxPopulation) {
+					maxPopulation = population;
+					maxNode = node;
+				}
+			}
+			assertEquals("Max gravity node is the first node in the sorted list of nodes", maxNode, roadNetwork.getZoneToNodes().get(LAD).get(0));
+			assertEquals("Max gravitating population is correct", maxPopulation, (int) roadNetwork.getNodeToGravitatingPopulation().get(maxNode));
+		}
+
 		//TEST SHORTEST PATH ALGORITHMS
 		System.out.println("\n\n*** Testing the shortest path algorithms ***");
-		
+
 		System.out.println("The whole network: " + roadNetwork.toString());
 
 		System.out.println("\n*** Dijkstra ***");
@@ -335,7 +353,7 @@ public class RoadNetworkTest {
 			sum += length;
 		}
 		System.out.printf("Sum of edge lengths: %.3f\n\n", sum);
-		
+
 		//compare with expected values
 		int[] expectedNodeList = new int[] {86, 87, 105, 95, 48, 19}; //node IDs are persistent
 		int[] expectedEdgeList = new int[] {81, 61, 67, 74, 77}; //cannot check as edge IDs are not persistent
@@ -575,7 +593,7 @@ public class RoadNetworkTest {
 		//assertEquals("Edge CP is correct", 70084L, sf1.getAttribute("CP"));
 		//assertEquals("Edge direction is correct", "C", sf1.getAttribute("iDir"));
 		assertTrue("Edge CP and direction are correct", sf1.getAttribute("CP").equals(70084L) && sf1.getAttribute("iDir").equals("C") ||
-														sf1.getAttribute("CP").equals(70083L) && sf1.getAttribute("iDir").equals("N"));
+				sf1.getAttribute("CP").equals(70083L) && sf1.getAttribute("iDir").equals("N"));
 		assertEquals("Edge length is correct", 0.5, sf1.getAttribute("LenNet"));
 		System.out.println(sf2.getAttribute("CP"));
 		System.out.println(sf2.getAttribute("iDir"));
@@ -583,7 +601,7 @@ public class RoadNetworkTest {
 		//assertEquals("Edge CP is correct", 70083L, sf2.getAttribute("CP"));
 		//assertEquals("Edge direction is correct", "N", sf2.getAttribute("iDir"));
 		assertTrue("Edge CP and direction are correct", sf2.getAttribute("CP").equals(70084L) && sf2.getAttribute("iDir").equals("C") ||
-														sf2.getAttribute("CP").equals(70083L) && sf2.getAttribute("iDir").equals("N"));
+				sf2.getAttribute("CP").equals(70083L) && sf2.getAttribute("iDir").equals("N"));
 		assertEquals("Edge length is correct", 0.5, sf2.getAttribute("LenNet"));
 
 		//just one edge from node 84 to node 106
@@ -693,21 +711,39 @@ public class RoadNetworkTest {
 		Arrays.sort(array);
 		Arrays.sort(expectedArray4);
 		assertTrue("Nodes are correctly mapped to zone E07000086", Arrays.equals(expectedArray4, array));
-		
+
 		//TEST NODE GRAVITATING POPULATION
 		System.out.println("\n\n*** Testing node gravitating population ***");
-		
-		System.out.println(roadNetwork.getNodeToGravitatingPopulation());
-		
+
+		System.out.println("Node to gravitating population: \n" + roadNetwork.getNodeToGravitatingPopulation());
+
 		//node 60 -> area codes (population): E00086593(281), E00086587(402), E00086591(389), E00086592(290), E00086627(294)
 		assertEquals("Gravitating population is correct", (281 + 402 + 389 + 290 + 294) , (int) roadNetwork.getNodeToGravitatingPopulation().get(60));
+
+		System.out.println("Zone to sorted nodes: " + roadNetwork.getZoneToNodes());
 		
-		System.out.println(roadNetwork.getZoneToNodes());
-		System.out.println(roadNetwork.getZoneToMaxGravityNode());
-		
+		//find the node with maximum gravitating population
+		for (String LAD: roadNetwork.getZoneToNodes().keySet()) {
+			List<Integer> list = roadNetwork.getZoneToNodes().get(LAD);
+			Iterator<Integer> iterator = (Iterator<Integer>) list.iterator();
+			int maxPopulation = 0;
+			Integer maxNode = null;
+			while (iterator.hasNext()) {
+				Integer node = iterator.next();
+				Integer population = roadNetwork.getNodeToGravitatingPopulation().get(node);
+				if (population == null) population = 0;
+				if (population >  maxPopulation) {
+					maxPopulation = population;
+					maxNode = node;
+				}
+			}
+			assertEquals("Max gravity node is the first node in the sorted list of nodes", maxNode, roadNetwork.getZoneToNodes().get(LAD).get(0));
+			assertEquals("Max gravitating population is correct", maxPopulation, (int) roadNetwork.getNodeToGravitatingPopulation().get(maxNode));
+		}		
+
 		//TEST NUMBER OF LANES
 		System.out.println("\n\n*** Testing the number of lanes ***");
-		
+
 		iter = rn.getEdges().iterator();
 		while (iter.hasNext()) {
 			DirectedEdge edge = (DirectedEdge) iter.next();
@@ -722,7 +758,7 @@ public class RoadNetworkTest {
 			}
 		}
 	}
-	
+
 	//@Test
 	public void fullTest() throws IOException {
 
@@ -730,12 +766,12 @@ public class RoadNetworkTest {
 		final URL networkUrl = new URL("file://src/main/resources/data/network.shp");
 		final URL nodesUrl = new URL("file://src/main/resources/data/nodes.shp");
 		final URL AADFurl = new URL("file://src/main/resources/data/AADFdirected2015.shp");
-		
+
 		final String areaCodeFileName = "./src/main/resources/data/population_OA_GB.csv";
 		final String areaCodeNearestNodeFile = "./src/main/resources/data/nearest_node_OA_GB.csv";
 		final String workplaceZoneFileName = "./src/test/resources/testdata/workplacePopulation.csv";
 		final String workplaceZoneNearestNodeFile = "./src/main/resources/data/nearest_node_WZ_GB_fakeSC.csv";
-	
+
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl,  areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile);
 		DirectedGraph rn = roadNetwork.getNetwork();
 
@@ -919,18 +955,18 @@ public class RoadNetworkTest {
 		assertEquals("Edge direction is correct", "S", sf.getAttribute("iDir"));
 		assertEquals("Edge length is correct", 0.1, sf.getAttribute("LenNet"));
 		assertNull("Expecting no edge in this direction", edgeBA);
-		
-		
+
+
 		//test that there are no nodes with outdegree 0, because that means it is not possible to go anywhere from this node!
 		//also check that there are no nodes with indegree 0, because that means it is not possible to reach this node!
-		
+
 		iter = rn.getNodes().iterator();
 		while (iter.hasNext()) {
 			DirectedNode node = (DirectedNode) iter.next();
 			if (node.getInDegree() == 0) System.err.printf("Node %d has in degree 0!\n", node.getID());
 			if (node.getOutDegree() == 0) System.err.printf("Node %d has out degree 0!\n", node.getID());
 		}
-				
+
 		//TEST NODE TO ZONE MAPPING
 		System.out.println("\n\n*** Testing node to zone mapping ***");
 
@@ -957,25 +993,54 @@ public class RoadNetworkTest {
 		Arrays.sort(array);
 		Arrays.sort(expectedArray3);
 		assertTrue("Nodes are correctly mapped to zone E06000046", Arrays.equals(expectedArray3, array));
-		
+
 		//System.out.println(roadNetwork.getAreaCodeToNearestNode());
 		//System.out.println(roadNetwork.getAreaCodeToPopulation());
 		//System.out.println(roadNetwork.getWorkplaceZoneToNearestNode());
 		//System.out.println(roadNetwork.getWorkplaceCodeToPopulation());
-		
+
 		System.out.println("Zone to output area mapping: ");
 		System.out.println(roadNetwork.getZoneToAreaCodes());
 		System.out.println("Output areas in zone E06000046: ");
 		System.out.println(roadNetwork.getZoneToAreaCodes().get("E06000046"));
-		
+
 		System.out.println("Zone to workplace zone mapping: ");
 		System.out.println(roadNetwork.getZoneToWorkplaceCodes());
 		System.out.println("Workplace zones in zone E06000046: ");
 		System.out.println(roadNetwork.getZoneToWorkplaceCodes().get("E06000046"));
-		
+
+		//TEST NODE GRAVITATING POPULATION
+		System.out.println("\n\n*** Testing node gravitating population ***");
+
+		System.out.println("Node to gravitating population: \n" + roadNetwork.getNodeToGravitatingPopulation());
+
+		//node 7058 -> area codes (population): E00086587(402), E00086591(389), E00086592(290)
+		assertEquals("Gravitating population is correct", (402 + 389 + 290) , (int) roadNetwork.getNodeToGravitatingPopulation().get(7058));
+
+		System.out.println("Zone to sorted nodes: " + roadNetwork.getZoneToNodes());
+
+		//find the node with maximum gravitating population
+		for (String LAD: roadNetwork.getZoneToNodes().keySet()) {
+			List<Integer> list = roadNetwork.getZoneToNodes().get(LAD);
+			Iterator<Integer> iterator = (Iterator<Integer>) list.iterator();
+			int maxPopulation = 0;
+			Integer maxNode = null;
+			while (iterator.hasNext()) {
+				Integer node = iterator.next();
+				Integer population = roadNetwork.getNodeToGravitatingPopulation().get(node);
+				if (population == null) population = 0;
+				if (population >  maxPopulation) {
+					maxPopulation = population;
+					maxNode = node;
+				}
+			}
+			assertEquals("Max gravity node is the first node in the sorted list of nodes", maxNode, roadNetwork.getZoneToNodes().get(LAD).get(0));
+			assertEquals("Max gravitating population is correct", maxPopulation, (int) roadNetwork.getNodeToGravitatingPopulation().get(maxNode));
+		}
+
 		//TEST SHORTEST PATH ALGORITHMS
 		System.out.println("\n\n*** Testing the shortest path algorithms ***");
-		
+
 		System.out.println("The whole network: " + roadNetwork.toString());
 
 		System.out.println("\n*** Dijkstra ***");
@@ -1012,7 +1077,7 @@ public class RoadNetworkTest {
 			sum += length;
 		}
 		System.out.printf("Sum of edge lengths: %.3f\n\n", sum);
-		
+
 		//compare with expected values
 		int[] expectedNodeList = new int[] {9521, 9522, 11540, 10611, 5548, 1643}; //node IDs are persistent
 		int[] expectedEdgeList = new int[] {81, 61, 67, 74, 77}; //cannot check as edge IDs are not persistent

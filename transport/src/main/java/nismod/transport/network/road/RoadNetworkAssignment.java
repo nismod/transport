@@ -390,9 +390,9 @@ public class RoadNetworkAssignment {
 
 				int flow = passengerODM.getFlow(origin, destination);
 
-				//origin and destination nodes are those to which max population gravitates
-				int originNode = roadNetwork.getZoneToMaxGravityNode().get(origin);
-				int destinationNode = roadNetwork.getZoneToMaxGravityNode().get(destination);
+				//origin and destination nodes are those to which max population gravitates (the first element in the sorted list)
+				int originNode = roadNetwork.getZoneToNodes().get(origin).get(0);
+				int destinationNode = roadNetwork.getZoneToNodes().get(destination).get(0);
 
 				//increase the number of trips starting at origin LAD
 				Integer number = this.LADnoTripStarts.get(origin);
