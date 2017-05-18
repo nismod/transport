@@ -288,10 +288,10 @@ public class RoadNetworkTest {
 		//TEST NODE GRAVITATING POPULATION
 		System.out.println("\n\n*** Testing node gravitating population ***");
 
-		System.out.println(roadNetwork.getNodeToGravitatingPopulation());
+		//System.out.println(roadNetwork.getNodeToGravitatingPopulation());
 
 		//node 60 -> area codes (population): E00086593(281), E00086587(402), E00086591(389), E00086592(290), E00086627(294)
-		assertEquals("Gravitating population is correct", (281 + 402 + 389 + 290 + 294) , (int) roadNetwork.getNodeToGravitatingPopulation().get(60));
+		assertEquals("Gravitating population is correct", (281 + 402 + 389 + 290 + 294) , (int) roadNetwork.getGravitatingPopulation(60));
 
 		System.out.println("Zone to sorted nodes: " + roadNetwork.getZoneToNodes());
 
@@ -303,7 +303,7 @@ public class RoadNetworkTest {
 			Integer maxNode = null;
 			while (iterator.hasNext()) {
 				Integer node = iterator.next();
-				Integer population = roadNetwork.getNodeToGravitatingPopulation().get(node);
+				Integer population = roadNetwork.getGravitatingPopulation(node);
 				if (population == null) population = 0;
 				if (population >  maxPopulation) {
 					maxPopulation = population;
@@ -311,7 +311,7 @@ public class RoadNetworkTest {
 				}
 			}
 			assertEquals("Max gravity node is the first node in the sorted list of nodes", maxNode, roadNetwork.getZoneToNodes().get(LAD).get(0));
-			assertEquals("Max gravitating population is correct", maxPopulation, (int) roadNetwork.getNodeToGravitatingPopulation().get(maxNode));
+			assertEquals("Max gravitating population is correct", maxPopulation, (int) roadNetwork.getGravitatingPopulation(maxNode));
 		}
 
 		//TEST SHORTEST PATH ALGORITHMS
@@ -715,10 +715,10 @@ public class RoadNetworkTest {
 		//TEST NODE GRAVITATING POPULATION
 		System.out.println("\n\n*** Testing node gravitating population ***");
 
-		System.out.println("Node to gravitating population: \n" + roadNetwork.getNodeToGravitatingPopulation());
+		//System.out.println("Node to gravitating population: \n" + roadNetwork.getNodeToGravitatingPopulation());
 
 		//node 60 -> area codes (population): E00086593(281), E00086587(402), E00086591(389), E00086592(290), E00086627(294)
-		assertEquals("Gravitating population is correct", (281 + 402 + 389 + 290 + 294) , (int) roadNetwork.getNodeToGravitatingPopulation().get(60));
+		assertEquals("Gravitating population is correct", (281 + 402 + 389 + 290 + 294) , (int) roadNetwork.getGravitatingPopulation(60));
 
 		System.out.println("Zone to sorted nodes: " + roadNetwork.getZoneToNodes());
 		
@@ -730,7 +730,7 @@ public class RoadNetworkTest {
 			Integer maxNode = null;
 			while (iterator.hasNext()) {
 				Integer node = iterator.next();
-				Integer population = roadNetwork.getNodeToGravitatingPopulation().get(node);
+				Integer population = roadNetwork.getGravitatingPopulation(node);
 				if (population == null) population = 0;
 				if (population >  maxPopulation) {
 					maxPopulation = population;
@@ -738,7 +738,7 @@ public class RoadNetworkTest {
 				}
 			}
 			assertEquals("Max gravity node is the first node in the sorted list of nodes", maxNode, roadNetwork.getZoneToNodes().get(LAD).get(0));
-			assertEquals("Max gravitating population is correct", maxPopulation, (int) roadNetwork.getNodeToGravitatingPopulation().get(maxNode));
+			assertEquals("Max gravitating population is correct", maxPopulation, (int) roadNetwork.getGravitatingPopulation(maxNode));
 		}		
 
 		//TEST NUMBER OF LANES
@@ -1012,10 +1012,10 @@ public class RoadNetworkTest {
 		//TEST NODE GRAVITATING POPULATION
 		System.out.println("\n\n*** Testing node gravitating population ***");
 
-		System.out.println("Node to gravitating population: \n" + roadNetwork.getNodeToGravitatingPopulation());
+		//System.out.println("Node to gravitating population: \n" + roadNetwork.getNodeToGravitatingPopulation());
 
 		//node 7058 -> area codes (population): E00086587(402), E00086591(389), E00086592(290)
-		assertEquals("Gravitating population is correct", (402 + 389 + 290) , (int) roadNetwork.getNodeToGravitatingPopulation().get(7058));
+		assertEquals("Gravitating population is correct", (402 + 389 + 290) , (int) roadNetwork.getGravitatingPopulation(7058));
 
 		System.out.println("Zone to sorted nodes: " + roadNetwork.getZoneToNodes());
 
@@ -1027,7 +1027,7 @@ public class RoadNetworkTest {
 			Integer maxNode = null;
 			while (iterator.hasNext()) {
 				Integer node = iterator.next();
-				Integer population = roadNetwork.getNodeToGravitatingPopulation().get(node);
+				Integer population = roadNetwork.getGravitatingPopulation(node);
 				if (population == null) population = 0;
 				if (population >  maxPopulation) {
 					maxPopulation = population;
@@ -1035,7 +1035,7 @@ public class RoadNetworkTest {
 				}
 			}
 			assertEquals("Max gravity node is the first node in the sorted list of nodes", maxNode, roadNetwork.getZoneToNodes().get(LAD).get(0));
-			assertEquals("Max gravitating population is correct", maxPopulation, (int) roadNetwork.getNodeToGravitatingPopulation().get(maxNode));
+			assertEquals("Max gravitating population is correct", maxPopulation, (int) roadNetwork.getGravitatingPopulation(maxNode));
 		}
 
 		//TEST SHORTEST PATH ALGORITHMS

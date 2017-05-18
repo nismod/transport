@@ -77,14 +77,20 @@ public class RoadNetworkAssignmentTest {
 		RoadNetworkAssignment roadNetworkAssignment = new RoadNetworkAssignment(roadNetwork2, null, null, null, null, null);
 		
 		//ODMatrix passengerODM = new ODMatrix("./src/test/resources/testdata/passengerODM.csv");
-		ODMatrix passengerODM = new ODMatrix("./src/main/resources/data/passengerODMfull.csv");
+		//ODMatrix passengerODM = new ODMatrix("./src/main/resources/data/passengerODMfull.csv");
+		ODMatrix passengerODM = new ODMatrix("./src/main/resources/data/passengerODMtempro.csv");
 		
 		passengerODM.printMatrix(); 
 		
 		//for (int i = 0; i < 5; i++) {
 		for (int i = 0; i < 1; i++) {
 			roadNetworkAssignment.resetLinkVolumesInPCU();
+			
+			long timeNow = System.currentTimeMillis();
 			roadNetworkAssignment.assignPassengerFlows(passengerODM);
+			timeNow = System.currentTimeMillis() - timeNow;
+			System.out.printf("Passenger flows assigned in %d seconds.\n", timeNow / 1000);
+				
 			HashMap<Integer, Double> oldTravelTimes = roadNetworkAssignment.getCopyOfLinkTravelTimes();
 			roadNetworkAssignment.updateLinkTravelTimes(0.9);
 			System.out.println("Difference in link travel times: " + roadNetworkAssignment.getAbsoluteDifferenceInLinkTravelTimes(oldTravelTimes));
@@ -257,6 +263,24 @@ public class RoadNetworkAssignmentTest {
 			for(Iterator<String> iter = roadNetwork.getZoneToAreaCodes().get(zone).iterator(); iter.hasNext(); ) {
 				String areaCode = iter.next();
 				probabilitySum += rna.getAreaCodeProbabilities().get(areaCode);
+			}
+			System.out.printf("The sum of probabilites for zone %s is: %.12f.\n", zone, probabilitySum);
+			assertEquals("The sum of probabilities for zone " + zone + " is 1.0", 1.0, probabilitySum, EPSILON);
+		}
+		
+		//TEST NODE PROBABILITIES
+		System.out.println("\n\n*** Testing node probabilities ***");
+		
+		//test the probability of one node from one LAD
+		assertEquals("The probability of node 60 is correct", (double)1656/234671, rna.getNodeProbabilities().get(60), EPSILON);
+
+		//test that the sum of probabilities of nodes in each LAD zone is 1.0
+		for (String zone: roadNetwork.getZoneToNodes().keySet()) {
+
+			double probabilitySum = 0.0;
+			for(Iterator<Integer> iter = roadNetwork.getZoneToNodes().get(zone).iterator(); iter.hasNext(); ) {
+				Integer node = iter.next();
+				probabilitySum += rna.getNodeProbabilities().get(node);
 			}
 			System.out.printf("The sum of probabilites for zone %s is: %.12f.\n", zone, probabilitySum);
 			assertEquals("The sum of probabilities for zone " + zone + " is 1.0", 1.0, probabilitySum, EPSILON);
