@@ -554,13 +554,26 @@ public class RoadNetwork {
 		return this.workplaceCodeToPopulation;
 	}
 	
+//	/**
+//	 * Getter method for the node to gravitating population mapping.
+//	 * @return Node to gravitating population mapping.
+//	 */
+//	public HashMap<Integer, Integer> getNodeToGravitatingPopulation() {
+//
+//		return this.nodeToGravitatingPopulation;
+//	}
+	
 	/**
-	 * Getter method for the node to gravitating population mapping.
-	 * @return Node to gravitating population mapping.
+	 * Population gravitating to a node.
+	 * @param node Node to which the population gravitates.
+	 * @return Gravitating population.
 	 */
-	public HashMap<Integer, Integer> getNodeToGravitatingPopulation() {
-
-		return this.nodeToGravitatingPopulation;
+	public int getGravitatingPopulation(int node) {
+		
+		Integer population = this.nodeToGravitatingPopulation.get(node);
+		if (population == null) population = 0;
+		
+		return population;
 	}
 	
 	/**
