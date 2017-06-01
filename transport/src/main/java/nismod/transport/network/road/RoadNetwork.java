@@ -836,7 +836,7 @@ public class RoadNetwork {
 				System.err.printf("No count point data found for this edge (RoadNumber = '%s', ferry = %d).\n", 
 						edgeFeature.getAttribute("RoadNumber"), edgeFeature.getAttribute("ferry"));
 
-				//still need to create to edges for the ferry line
+				//still need to create two edges for the ferry line
 				directedEdge = (DirectedEdge) graphBuilder.buildEdge(nodeA, nodeB);
 				directedEdge.setObject(edge.getObject()); // put the edge from the source graph as the object (contains a distance attribute LenNet used for routing)
 				graphBuilder.addEdge(directedEdge);
