@@ -5,9 +5,11 @@ package nismod.transport.demand;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -17,7 +19,10 @@ import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.map.MultiKeyMap;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
+
+import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 
 /**
  * Skim matrix
@@ -66,11 +71,13 @@ public class SkimMatrix {
 	 * @param destinationZone Destination zone.
 	 * @return Origin-destination cost.
 	 */
-	public double getCost(String originZone, String destinationZone) {
+	public Double getCost(String originZone, String destinationZone) {
 		
 		Double cost = (Double) matrix.get(originZone, destinationZone);
-		if (cost == null) return 0.0;
-		else return cost;
+//		if (cost == null) return 0.0;
+//		else return cost;
+		
+		return cost;
 	}
 	
 	/**
@@ -121,8 +128,69 @@ public class SkimMatrix {
 		System.out.println();
 		for (String o: firstKeyList) {
 			System.out.print(o);
-			for (String s: secondKeyList) System.out.printf("%10.2f", matrix.get(o,s));
+			for (String s: secondKeyList) {
+				Double cost = this.getCost(o,s);
+				if (cost != null)	System.out.printf("%10.2f", this.getCost(o,s));
+				else				System.out.printf("%10s", "N/A");
+			}
 			System.out.println();
+		}
+	}
+	
+	/**
+	 * Saves the matrix into a csv file.
+	 */
+	public void saveMatrixFormatted(String outputFile) {
+		
+		Set<String> firstKey = new HashSet<String>();
+		Set<String> secondKey = new HashSet<String>();
+		
+		//extract row and column keysets
+		for (Object mk: matrix.keySet()) {
+			String origin = (String) ((MultiKey)mk).getKey(0);
+			String destination = (String) ((MultiKey)mk).getKey(1);
+			firstKey.add(origin);
+			secondKey.add(destination);
+		}
+	
+		//put them to a list and sort them
+		List<String> firstKeyList = new ArrayList<String>(firstKey);
+		List<String> secondKeyList = new ArrayList<String>(secondKey);
+		Collections.sort(firstKeyList);
+		Collections.sort(secondKeyList);
+		//System.out.println(firstKeyList);
+		//System.out.println(secondKeyList);
+	
+		String NEW_LINE_SEPARATOR = "\n";
+		ArrayList<String> header = new ArrayList<String>();
+		header.add("origin");
+		for (String s: secondKeyList) header.add(s);
+		FileWriter fileWriter = null;
+		CSVPrinter csvFilePrinter = null;
+		CSVFormat csvFileFormat = CSVFormat.DEFAULT.withRecordSeparator(NEW_LINE_SEPARATOR);
+		try {
+			fileWriter = new FileWriter(outputFile);
+			csvFilePrinter = new CSVPrinter(fileWriter, csvFileFormat);
+			csvFilePrinter.printRecord(header);
+			ArrayList<String> record = new ArrayList<String>();
+			for (String origin: firstKeyList) {
+				record.clear();
+				record.add(origin);
+				for (String destination: secondKeyList) record.add(String.format("%.2f", this.getCost(origin, destination)));
+				csvFilePrinter.printRecord(record);
+			}
+		} catch (Exception e) {
+			System.err.println("Error in CsvFileWriter!");
+			e.printStackTrace();
+		} finally {
+			try {
+				fileWriter.flush();
+				fileWriter.close();
+				csvFilePrinter.close();
+			} catch (IOException e) {
+				System.err.println("Error while flushing/closing fileWriter/csvPrinter!");
+				e.printStackTrace();
+			}
 		}
 	}
 		
