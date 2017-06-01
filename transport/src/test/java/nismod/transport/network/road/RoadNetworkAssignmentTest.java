@@ -128,6 +128,11 @@ public class RoadNetworkAssignmentTest {
 		
 		System.out.println("Cost skim matrix:");
 		roadNetworkAssignment.calculateCostSkimMatrix().printMatrixFormatted();
+		
+		System.out.println("Distance skim matrix:");
+		SkimMatrix distanceSkimMatrix = roadNetworkAssignment.calculateDistanceSkimMatrix();
+		distanceSkimMatrix.printMatrixFormatted();
+		distanceSkimMatrix.saveMatrixFormatted("distanceSkimMatrix.csv");
 				
 		System.out.println("Total energy consumptions:");
 		System.out.println(roadNetworkAssignment.calculateEnergyConsumptions());
@@ -138,7 +143,9 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("Peak-hour link densities:");
 		System.out.println(roadNetworkAssignment.calculatePeakLinkDensities());
 		
-		roadNetworkAssignment.saveAssignmentResults(2015, "assignment2015.csv");
+		//roadNetworkAssignment.saveAssignmentResults(2015, "assignment2015.csv");
+		
+		System.out.printf("RMSN for counts: %.2f%%", roadNetworkAssignment.calculateRMSNforCounts());
 	}
 
 	@Test

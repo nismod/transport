@@ -3,6 +3,9 @@
  */
 package nismod.transport.network.road;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -970,6 +973,45 @@ public class RoadNetworkAssignment {
 	}
 	
 	/**
+	 * Updates cost skim matrix (zone-to-zone financial costs).
+	 * @return Inter-zonal skim matrix (distance).
+	 */
+	public SkimMatrix calculateDistanceSkimMatrix() {
+		
+		SkimMatrix distanceSkimMatrix = new SkimMatrix();
+
+		//for each OD pair
+		for (MultiKey mk: pathStorage.keySet()) {
+			//System.out.println(mk);
+			String originZone = (String) mk.getKey(0);
+			String destinationZone = (String) mk.getKey(1);
+			
+			List<Path> pathList = pathStorage.get(originZone, destinationZone);
+			double totalODdistance = 0.0;
+			//for each path in the path list calculate total distance
+			for (Path path: pathList) {
+				
+				double pathLength = 0.0;
+				for (Object o: path.getEdges()) {
+					Edge e = (Edge)o;
+					SimpleFeature sf = (SimpleFeature) e.getObject();
+					double length = (double) sf.getAttribute("LenNet");
+					pathLength += length;					
+				}
+				//System.out.printf("Path length: %.3f\n\n", pathLength);
+				totalODdistance += pathLength;
+			}
+			double averageODdistance = totalODdistance / pathList.size();
+	
+			//System.out.printf("Average OD distance: %.3f km\t Fuel cost: %.2f GBP\n", averageODdistance, energyCost);
+			//update distance skim matrix
+			distanceSkimMatrix.setCost(originZone, destinationZone, averageODdistance);
+		}
+		
+		return distanceSkimMatrix;
+	}
+	
+	/**
 	 * Updates cost skim matrix (zone-to-zone financial costs) for freight.
 	 * @param costSkimMatrix Inter-zonal skim matrix (cost).
 	 */
@@ -1711,5 +1753,43 @@ public class RoadNetworkAssignment {
 		this.areaCodeNoTripEnds = new HashMap<String, Integer>();
 		this.workplaceZoneNoTripStarts = new HashMap<String, Integer>();
 		this.workplaceZoneNoTripEnds = new HashMap<String, Integer>();
+	}
+	
+	public double calculateRMSNforCounts () {
+		
+		Iterator iter = this.roadNetwork.getNetwork().getEdges().iterator();
+		int countOfCounts = 0;
+		long sumOfCounts = 0;
+		double sumOfSquaredDiffs = 0.0;
+		
+		while (iter.hasNext()) {
+			DirectedEdge edge = (DirectedEdge) iter.next();
+			SimpleFeature sf = (SimpleFeature) edge.getObject(); 
+			String roadNumber = (String) sf.getAttribute("RoadNumber");
+			
+			if (roadNumber.charAt(0) != 'M' && roadNumber.charAt(0) != 'A') continue; //ferry
+			
+			String direction = (String) sf.getAttribute("iDir");
+			char dir = direction.charAt(0);
+			
+			//ignore combined counts 'C' for now
+			if (dir == 'N' || dir == 'S' || dir == 'W' || dir == 'E') {
+				
+				long carCount = (long) sf.getAttribute("FdCar");
+				long carVolume;
+				Double carVolumeFetch = this.linkVolumesInPCU.get(edge.getID());
+				if (carVolumeFetch == null) carVolume = 0;
+				else 						carVolume = Math.round(this.linkVolumesInPCU.get(edge.getID()));
+				
+				countOfCounts++;
+				sumOfCounts += carCount;
+				sumOfSquaredDiffs += (carCount - carVolume)^2;
+			}
+		}
+		
+		double RMSE = Math.sqrt(sumOfSquaredDiffs);
+		double averageTrueCount = (double) sumOfCounts / countOfCounts;
+		
+		return (RMSE / averageTrueCount ) * 100;
 	}
 }
