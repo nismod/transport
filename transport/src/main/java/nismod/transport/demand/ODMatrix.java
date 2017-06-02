@@ -223,4 +223,26 @@ public class ODMatrix {
 	
 		return difference;
 	}
+	
+	
+	public void printMatrixFormatted(String s) {
+		
+		
+		System.out.println(s);
+		this.printMatrixFormatted();
+	}
+	
+	@Override
+	public ODMatrix clone() {
+
+		ODMatrix odm = new ODMatrix();
+		
+		for (MultiKey mk: this.getKeySet()) {
+			String origin = (String) mk.getKey(0);
+			String destination = (String) mk.getKey(1);
+			odm.setFlow(origin, destination, this.getFlow(origin, destination));
+		}
+
+		return odm;
+	}
 }

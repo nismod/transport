@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -33,6 +34,49 @@ public class EstimatedODMAtrix extends RealODMatrix {
 	private ODMatrix binIndexMatrix;
 	private double[] tripLengthDistribution;
 
+	/**
+	 * Constructor for estimated OD matrix.
+	 * @param productions Productions
+	 * @param attractions Attractions
+	 * @param distanceSkimMatrix Distance skim matrix
+	 * @param binLimitsKm Bin limits in km
+	 * @param observedTripLengthDistribution Observed trip length distribution (normalised).
+	 */
+	public EstimatedODMAtrix(HashMap<String, Integer> productions, HashMap<String, Integer>attractions, SkimMatrix distanceSkimMatrix,
+			final double[] binLimitsKm, final double[] observedTripLengthDistribution) {
+
+		super();
+
+		this.binLimitsKm = binLimitsKm;
+		this.observedTripLengthDistribution = observedTripLengthDistribution;
+		this.productions = productions;
+		this.attractions = attractions;
+		this.zones = new ArrayList<String>();
+		this.binIndexMatrix = new ODMatrix();
+		this.tripLengthDistribution = new double[observedTripLengthDistribution.length];
+
+		for (String zone: productions.keySet()) zones.add(zone);
+
+		System.out.println("Zones = " + zones);
+		System.out.println("Productions = " + productions);
+		System.out.println("Attractions = " + attractions);
+
+		//check validity
+		int sumProductions = 0, sumAttractions = 0;
+		for (String zone: zones) {
+			sumProductions += this.productions.get(zone);
+			sumAttractions += this.attractions.get(zone);
+		}
+		if (sumProductions != sumAttractions) System.err.println("The sum of productions does not equal the sum of attractions!");
+
+		//determine binning based on the distanceSkimMatrix (this will not change for a given distance skim matrix).
+		this.determineBinIndexMatrix(distanceSkimMatrix);
+		//this.binIndexMatrix.printMatrixFormatted();
+
+		createUnitMatrix();
+		iterate();
+	}
+	
 	/**
 	 * Constructor for estimated OD matrix that reads productions and attractions from an input csv file.
 	 * @param filePath Path to the input file with productions and attractions
@@ -76,46 +120,12 @@ public class EstimatedODMAtrix extends RealODMatrix {
 		System.out.println("Attractions = " + attractions);
 
 		//check validity
-		//sum of productions = sum of attractions
-
-		//determine binning based on the distanceSkimMatrix (this will not change for a given distance skim matrix).
-		this.determineBinIndexMatrix(distanceSkimMatrix);
-		//this.binIndexMatrix.printMatrixFormatted();
-
-		createUnitMatrix();
-		iterate();
-	}
-
-
-	/**
-	 * Constructor for estimated OD matrix.
-	 * @param productions Productions
-	 * @param attractions Attractions
-	 * @param distanceSkimMatrix Distance skim matrix
-	 * @param binLimitsKm Bin limits in km
-	 * @param observedTripLengthDistribution Observed trip length distribution (normalised).
-	 */
-	public EstimatedODMAtrix(HashMap<String, Integer> productions, HashMap<String, Integer>attractions, SkimMatrix distanceSkimMatrix,
-			final double[] binLimitsKm, final double[] observedTripLengthDistribution) {
-
-		super();
-
-		this.binLimitsKm = binLimitsKm;
-		this.observedTripLengthDistribution = observedTripLengthDistribution;
-		this.productions = productions;
-		this.attractions = attractions;
-		this.zones = new ArrayList<String>();
-		this.binIndexMatrix = new ODMatrix();
-		this.tripLengthDistribution = new double[observedTripLengthDistribution.length];
-
-		for (String zone: productions.keySet()) zones.add(zone);
-
-		System.out.println("Zones = " + zones);
-		System.out.println("Productions = " + productions);
-		System.out.println("Attractions = " + attractions);
-
-		//check validity
-		//sum of productions = sum of attractions
+		int sumProductions = 0, sumAttractions = 0;
+		for (String zone: zones) {
+			sumProductions += this.productions.get(zone);
+			sumAttractions += this.attractions.get(zone);
+		}
+		if (sumProductions != sumAttractions) System.err.println("The sum of productions does not equal the sum of attractions!");
 
 		//determine binning based on the distanceSkimMatrix (this will not change for a given distance skim matrix).
 		this.determineBinIndexMatrix(distanceSkimMatrix);
@@ -328,4 +338,24 @@ public class EstimatedODMAtrix extends RealODMatrix {
 		System.out.print("Attract.  "); for (String s: secondKeyList) System.out.printf("%10d", this.attractions.get(s));
 		System.out.println();
 	}
+	
+	@Override
+	public void printMatrixFormatted(String message) {
+		
+		System.out.println(message);
+		this.printMatrixFormatted();
+	}
+	
+	/**
+	 * Deletes all interzonal flows to/from a particular zone (leaving only intrazonal flows)
+	 * @param zone
+	 */
+	public void deleteInterzonalFlows(String zone) {
+		
+		for (String zone2: this.zones) 
+			if (!zone2.equals(zone)) {
+				this.setFlow(zone, zone2, 0.0);
+				this.setFlow(zone2,  zone, 0.0);
+			}
+		}
 }
