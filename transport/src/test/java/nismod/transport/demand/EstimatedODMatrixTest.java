@@ -18,6 +18,40 @@ import org.junit.Test;
  *
  */
 public class EstimatedODMatrixTest {
+	
+	public static void main( String[] args ) throws FileNotFoundException, IOException {
+		
+		double[] BIN_LIMITS_KM = {0.0, 0.621371, 1.242742, 3.106855, 6.21371, 15.534275, 31.06855, 62.1371, 93.20565, 155.34275, 217.47985};
+		double[] OTLD = {0.05526, 0.16579, 0.34737, 0.21053, 0.15789, 0.03947, 0.01579, 0.00432, 0.00280, 0.00063, 0.00014};
+		
+		SkimMatrix distanceSkimMatrix = new SkimMatrix("./distanceSkimMatrix.csv");
+		
+		EstimatedODMAtrix odmpa = new EstimatedODMAtrix("./src/main/resources/data/passengerProductionsAttractions.csv", distanceSkimMatrix, BIN_LIMITS_KM, OTLD);
+
+		//odmpa.printMatrixFormatted();
+		odmpa.getBinIndexMatrix().printMatrixFormatted("Bin index matrix:");
+		
+		odmpa.createUnitMatrix();
+		odmpa.printMatrixFormatted("Unit matrix:");
+		
+		odmpa.scaleToProductions();
+		odmpa.printMatrixFormatted("Scaled to productions:");
+		
+		odmpa.scaleToAttractions();
+		odmpa.printMatrixFormatted("Scaled to attractions:");
+		
+		odmpa.deleteInterzonalFlows("E06000053");
+		odmpa.printMatrixFormatted("After deleting interzonal flows for zone E06000053");
+		
+		odmpa.scaleToObservedTripLenghtDistribution();
+		odmpa.printMatrixFormatted("Scaled to observed trip length distribution:");
+		
+		for (int i=0; i<10; i++) odmpa.iterate();
+		
+		odmpa.printMatrixFormatted("After 10 further iterations:");
+		
+		odmpa.saveMatrixFormatted("balancedODMatrix.csv");
+	}
 
 	@Test
 	public void test() throws FileNotFoundException, IOException {
@@ -61,12 +95,17 @@ public class EstimatedODMatrixTest {
 
 		//distanceSkimMatrix.setCost("4",  "4", 0);
 		distanceSkimMatrix.printMatrixFormatted();
-
+		
 		EstimatedODMAtrix odmpa = new EstimatedODMAtrix(productions, attractions, distanceSkimMatrix, BIN_LIMITS, OTLD);
 
 		odmpa.printMatrixFormatted();
 		odmpa.getBinIndexMatrix().printMatrixFormatted();
 
+		
+		odmpa.deleteInterzonalFlows("3");
+		odmpa.printMatrixFormatted("After deletion of interzonal flows for zone 3:");
+		
+		
 		for (int i=0; i<10; i++) {
 
 			odmpa.scaleToProductions();
@@ -137,5 +176,11 @@ public class EstimatedODMatrixTest {
 			System.out.println(	Arrays.stream(odmpa2.getTripLengthDistribution()).sum() );
 			System.out.println(	Arrays.stream(odmpa2.getObservedTripLengthDistribution()).sum() );
 		}
+		
+		odmpa2.printMatrixFormatted("Final OD matrix:");
+		
+		odmpa2.deleteInterzonalFlows("E07000086");
+		odmpa2.printMatrixFormatted("After deletion of interzonal flows from/to E07000086:");
+		
 	}
 }

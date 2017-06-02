@@ -48,11 +48,14 @@ public class ODMatrixTest {
 		passengerODMatrix.setFlow("4", "3", 678);
 		passengerODMatrix.setFlow("4", "4", 987);
 	
-		passengerODMatrix.printMatrixFormatted();
+		passengerODMatrix.printMatrixFormatted("OD matrix:");
+		ODMatrix copy = passengerODMatrix.clone();
+		copy.printMatrixFormatted("Cloned matrix:");
 		
 		passengerODMatrix.setFlow("4",  "4", 0);
-		passengerODMatrix.printMatrixFormatted();
-		
+		passengerODMatrix.printMatrixFormatted("OD matrix:");
+		copy.printMatrixFormatted("Cloned matrix:");		
+
 		boolean condition = 		
 				passengerODMatrix.getFlow("1", "1") == 123 &&
 				passengerODMatrix.getFlow("1", "2") == 234 &&
@@ -72,6 +75,8 @@ public class ODMatrixTest {
 				passengerODMatrix.getFlow("4", "4") == 0;
 	
 		assertTrue("All matrix elements are correct", condition);
+		
+		assertEquals("An element of the cloned matrix is correct", 987, copy.getFlow("4",  "4"));
 		
 		System.out.println("Origins: " + passengerODMatrix.getOrigins());
 		System.out.println("Destinations: " + passengerODMatrix.getDestinations());
