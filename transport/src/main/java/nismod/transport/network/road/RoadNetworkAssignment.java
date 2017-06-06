@@ -9,6 +9,7 @@ import static org.junit.Assert.assertNull;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -257,12 +258,9 @@ public class RoadNetworkAssignment {
 			String origin = (String)mk.getKey(0);
 			String destination = (String)mk.getKey(1);
 
-			//if intra-zonal flow
-			if (origin.equals(destination)) {
-
-				//for each trip
-				int flow = passengerODM.getFlow(origin, destination);
-				for (int i=0; i<flow; i++) {
+			//for each trip
+			int flow = passengerODM.getFlow(origin, destination);
+			for (int i=0; i<flow; i++) {
 
 					/*
 					//choose random trip start/end nodes within the origin and the destination zone
@@ -342,7 +340,8 @@ public class RoadNetworkAssignment {
 					*/
 
 					//choose origin/destination nodes based on the gravitating population
-					//the choice is with replacement (i.e. possible origin node = destination node)
+					//the choice with replacement means that possibly: destination node = origin node
+					//the choice without replacement means that destination node has to be different from origin node
 					List<Integer> listOfOriginNodes = roadNetwork.getZoneToNodes().get(origin); //the list is already sorted
 					List<Integer> listOfDestinationNodes = roadNetwork.getZoneToNodes().get(destination); //the list is already sorted
 					//choose origin node
@@ -356,55 +355,79 @@ public class RoadNetworkAssignment {
 							break;
 						}
 					}
+				
 					//choose destination node
 					cumulativeProbability = 0.0;
 					Integer destinationNode = null;
 					random = rng.nextDouble();
-					for (int node: listOfDestinationNodes) {
-						cumulativeProbability += nodeProbabilities.get(node);
-						if (Double.compare(cumulativeProbability, random) > 0) {
-							destinationNode = node;
-							break;
+					//if intrazonal trip, the probability of the originNode should be 0 so it cannot be chosen again
+					//also, it is important to rescale other node probabilities (now that the originNode is removed) by dividing with (1.0 - p(originNode))!
+					if (origin.equals(destination)) { //intra-zonal trip
+							for (int node: listOfDestinationNodes) {
+								if (node == originNode.intValue()) continue; //skip if the node is the same as origin
+								cumulativeProbability += nodeProbabilities.get(node) / (1.0 - nodeProbabilities.get(originNode));
+								if (Double.compare(cumulativeProbability, random) > 0) {
+									destinationNode = node;
+									break;
+								}
+							}
+					} else	{ //inter-zonal trip
+						for (int node: listOfDestinationNodes) {
+							cumulativeProbability += nodeProbabilities.get(node);
+							if (Double.compare(cumulativeProbability, random) > 0) {
+								destinationNode = node;
+								break;
+							}
 						}
-					}
+					}			
 					
-					//increase the number of trips starting at origin LAD
-					Integer number = this.LADnoTripStarts.get(origin);
-					if (number == null) number = 0;
-					this.LADnoTripStarts.put(origin, ++number);
-					//increase the number of trips ending at destination LAD
-					Integer number2 = this.LADnoTripEnds.get(destination);
-					if (number2 == null) number2 = 0;
-					this.LADnoTripEnds.put(destination, ++number2);
-					
-					//get the shortest path from the origin node to the destination node using AStar algorithm
 					DirectedGraph rn = roadNetwork.getNetwork();
 					//set source and destination node
-					/*
-					Iterator iter = rn.getNodes().iterator();
-					Node from = null, to = null;
-					while (iter.hasNext() && (from == null || to == null)) {
-						DirectedNode node = (DirectedNode) iter.next();
-						if (node.getID() == originNode) from = node;
-						if (node.getID() == destinationNode) to = node;
-					}
-					*/
-									
 					Node from = roadNetwork.getNodeIDtoNode().get(originNode);
 					Node to = roadNetwork.getNodeIDtoNode().get(destinationNode);
+//					System.out.println("from " + from + " to " + to);
+					Path foundPath = null;
 					try {
+						
+						//see if that path from node 'from' to node 'to' already exists in the path storage
+						if (pathStorage.containsKey(origin, destination)) { 
+							List<Path> list = (List<Path>) pathStorage.get(origin, destination);
+							for (Path p: list) {
+								//if (p.getFirst().equals(from) && p.getLast().equals(to)) {
+								if (p.getFirst().getID() == from.getID() && p.getLast().getID() == to.getID()) {
+									foundPath = p;
+									break;
+								}
+							}
+						}
+					
+						//if path does not already exist, get the shortest path from the origin node to the destination node using AStar algorithm
+						if (foundPath == null) {
+							//System.out.println("The path does not exist in the path storage");
+							AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctionsTime(to, this.linkTravelTime));
+							//AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctions(to));
+							aStarPathFinder.calculate();
+							Path aStarPath;
+							aStarPath = aStarPathFinder.getPath();
+							aStarPath.reverse();
+							//System.out.println(aStarPath);
+							//System.out.println("The path as a list of nodes: " + aStarPath);
 
-						AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctionsTime(to, this.linkTravelTime));
-						//AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctions(to));
-						aStarPathFinder.calculate();
-						Path aStarPath;
-						aStarPath = aStarPathFinder.getPath();
-						aStarPath.reverse();
-						//System.out.println(aStarPath);
-						//System.out.println("The path as a list of nodes: " + aStarPath);
-						List listOfEdges = aStarPath.getEdges();
+							foundPath = aStarPath;
+						}
+									
+						//increase the number of trips starting at origin LAD
+						Integer number = this.LADnoTripStarts.get(origin);
+						if (number == null) number = 0;
+						this.LADnoTripStarts.put(origin, ++number);
+						//increase the number of trips ending at destination LAD
+						Integer number2 = this.LADnoTripEnds.get(destination);
+						if (number2 == null) number2 = 0;
+						this.LADnoTripEnds.put(destination, ++number2);
+						
+						List listOfEdges = foundPath.getEdges();
 						//System.out.println("The path as a list of edges: " + listOfEdges);
-						//System.out.println("Path size in the number of nodes: " + aStarPath.size());
+						//System.out.println("Path size in the number of nodes: " + pathFound.size());
 						//System.out.println("Path size in the number of edges: " + listOfEdges.size());
 						/*
 						DijkstraShortestPathFinder pathFinder = new DijkstraShortestPathFinder(rn, from, roadNetwork.getDijkstraTimeWeighter());
@@ -439,103 +462,12 @@ public class RoadNetworkAssignment {
 							list = new ArrayList<Path>();
 							pathStorage.put((String)mk.getKey(0), (String)mk.getKey(1), list);
 						}
-						list.add(aStarPath); //list.add(path);
+						list.add(foundPath); //list.add(path);
 					} catch (Exception e) {
 						e.printStackTrace();
 						System.err.printf("Couldnt find path from node %d to node %d!", from.getID(), to.getID());
 					}
 				}//for each trip
-
-			} else { //inter-zonal trips
-
-				int flow = passengerODM.getFlow(origin, destination);
-				
-				//origin and destination nodes are those to which max population gravitates (the first element in the sorted list)
-				int originNode = roadNetwork.getZoneToNodes().get(origin).get(0);
-				int destinationNode = roadNetwork.getZoneToNodes().get(destination).get(0);
-
-				//increase the number of trips starting at origin LAD
-				Integer number = this.LADnoTripStarts.get(origin);
-				if (number == null) number = 0;
-				number += flow; //increase for the whole flow
-				this.LADnoTripStarts.put(origin, number);
-				//increase the number of trips ending at destination LAD
-				Integer number2 = this.LADnoTripEnds.get(destination);
-				if (number2 == null) number2 = 0;
-				number2 += flow; //increase for the whole flow
-				this.LADnoTripEnds.put(destination, number2);
-
-				//calculate just one fastest path and store it multiple times!
-				//get the shortest path from the origin node to the destination node using AStar algorithm
-				DirectedGraph rn = roadNetwork.getNetwork();
-				//set source and destination node
-				/*
-				Iterator iter = rn.getNodes().iterator();
-				Node from = null, to = null;
-				while (iter.hasNext() && (from == null || to == null)) {
-					DirectedNode node = (DirectedNode) iter.next();
-					if (node.getID() == originNode) from = node;
-					if (node.getID() == destinationNode) to = node;
-				}
-				 */
-				Node from = roadNetwork.getNodeIDtoNode().get(originNode);
-				Node to = roadNetwork.getNodeIDtoNode().get(destinationNode);
-				try {
-
-					AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctionsTime(to, this.linkTravelTime));
-					//AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctions(to));
-					aStarPathFinder.calculate();
-					Path aStarPath;
-					aStarPath = aStarPathFinder.getPath();
-					aStarPath.reverse();
-					//System.out.println(aStarPath);
-					//System.out.println("The path as a list of nodes: " + aStarPath);
-					List listOfEdges = aStarPath.getEdges();
-					//System.out.println("The path as a list of edges: " + listOfEdges);
-					//System.out.println("Path size in the number of nodes: " + aStarPath.size());
-					//System.out.println("Path size in the number of edges: " + listOfEdges.size());
-
-					/*
-					DijkstraShortestPathFinder pathFinder = new DijkstraShortestPathFinder(rn, from, roadNetwork.getDijkstraTimeWeighter());
-					pathFinder.calculate();
-					Path path = pathFinder.getPath(to);
-					path.reverse();
-					List listOfEdges = path.getEdges();
-					 */
-
-					double sum = 0;
-					List<Path> list;
-					for (Object o: listOfEdges) {
-						//DirectedEdge e = (DirectedEdge) o;
-						Edge e = (Edge) o;
-						//System.out.print(e.getID() + "|" + e.getNodeA() + "->" + e.getNodeB() + "|");
-						SimpleFeature sf = (SimpleFeature) e.getObject();
-						double length = (double) sf.getAttribute("LenNet");
-						//System.out.println(length);
-						sum += length;
-
-						//increase volume count (in PCU) for that edge
-						Double volumeInPCU = linkVolumesInPCU.get(e.getID());
-						if (volumeInPCU == null) volumeInPCU = 0.0;
-						volumeInPCU += flow; //increase it for the whole flow!
-						linkVolumesInPCU.put(e.getID(), volumeInPCU);
-					}
-					//System.out.printf("Sum of edge lengths: %.3f\n\n", sum);
-
-					//store path in path storage
-					if (pathStorage.containsKey(mk.getKey(0), mk.getKey(1))) 
-						list = (List<Path>) pathStorage.get(mk.getKey(0), mk.getKey(1));
-					else {
-						list = new ArrayList<Path>();
-						pathStorage.put((String)mk.getKey(0), (String)mk.getKey(1), list);
-					}
-					for (int i=0; i<flow; i++) list.add(aStarPath); //add path multiple (flow) times!
-
-				} catch (Exception e) {
-					e.printStackTrace();
-					System.err.printf("Couldnt find path from node %d to node %d!", from.getID(), to.getID());
-				}
-			}
 		}//for each OD pair
 	}
 
@@ -1262,6 +1194,9 @@ public class RoadNetworkAssignment {
 		header.add("peakDensity");
 		header.add("maxCapacity");
 		header.add("utilisation");
+		header.add("CP");
+		header.add("direction");
+		header.add("countCar");
 		FileWriter fileWriter = null;
 		CSVPrinter csvFilePrinter = null;
 		CSVFormat csvFileFormat = CSVFormat.DEFAULT.withRecordSeparator(NEW_LINE_SEPARATOR);
@@ -1292,13 +1227,28 @@ public class RoadNetworkAssignment {
 					record.add(Integer.toString(RoadNetworkAssignment.MAXIMUM_CAPACITY_M_ROAD));
 					double utilisation = capacities.get(edge.getID()) / RoadNetworkAssignment.MAXIMUM_CAPACITY_M_ROAD;
 					record.add(Double.toString(utilisation));
+					long countPoint = (long) feature.getAttribute("CP");
+					record.add(Long.toString(countPoint));
+					String direction = (String) feature.getAttribute("iDir");
+					record.add(direction);
+					long carCount = (long) feature.getAttribute("FdCar");
+					record.add(Long.toString(carCount));
 				}
 				else if (roadNumber.charAt(0) == 'A') { //A road
 					record.add(Integer.toString(RoadNetworkAssignment.MAXIMUM_CAPACITY_A_ROAD));
 					double utilisation = capacities.get(edge.getID()) / RoadNetworkAssignment.MAXIMUM_CAPACITY_A_ROAD;
 					record.add(Double.toString(utilisation));
+					long countPoint = (long) feature.getAttribute("CP");
+					record.add(Long.toString(countPoint));
+					String direction = (String) feature.getAttribute("iDir");
+					record.add(direction);
+					long carCount = (long) feature.getAttribute("FdCar");
+					record.add(Long.toString(carCount));
 				}
 				else { //ferry
+					record.add("N/A");
+					record.add("N/A");
+					record.add("N/A");
 					record.add("N/A");
 					record.add("N/A");
 				}				

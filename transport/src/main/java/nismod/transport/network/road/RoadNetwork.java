@@ -95,6 +95,8 @@ public class RoadNetwork {
 	private HashMap<String, Integer> workplaceCodeToPopulation;
 	private HashMap<Integer, Integer> nodeToGravitatingPopulation;
 	private HashMap<Integer, Node> nodeIDtoNode;
+	private List<Integer> startNodeBlacklist;
+	private List<Integer> endNodeBlacklist;
 	
 	
 	/**
@@ -585,6 +587,36 @@ public class RoadNetwork {
 		return this.nodeIDtoNode;
 	}
 	
+	public List<Integer> getStartNodeBlacklist() {
+		
+		return this.startNodeBlacklist;
+	}
+	
+	public List<Integer> getEndNodeBlacklist() {
+		
+		return this.endNodeBlacklist;
+	}
+	
+	/**
+	 * Finds out if the node is blacklisted as a path start node.
+	 * @param nodeId
+	 * @return whether nodes is blacklisted
+	 */
+	public boolean isBlacklistedAsStartNode(int nodeId) {
+		
+		return (this.startNodeBlacklist.contains(nodeId)); 
+	}
+	
+	/**
+	 * Finds out if the node is blacklisted as a path end node.
+	 * @param nodeId
+	 * @return whether nodes is blacklisted
+	 */
+	public boolean isBlacklistedAsEndNode(int nodeId) {
+		
+		return (this.endNodeBlacklist.contains(nodeId)); 
+	}
+	
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */
@@ -661,6 +693,8 @@ public class RoadNetwork {
 		System.out.println("Creating a direct access map of nodes");
 		createDirectAccessNodeMap();
 		
+		System.out.println("Populating blacklists with unallowed starting/ending node IDs");
+		createNodeBlacklists();
 		
 		System.out.println("Determining the number of lanes...");
 		
@@ -889,7 +923,6 @@ public class RoadNetwork {
 		}
 	}
 	
-	
 	private void createDirectAccessNodeMap() {
 		
 		this.nodeIDtoNode = new HashMap<Integer, Node>();
@@ -899,6 +932,21 @@ public class RoadNetwork {
 		
 				Node node = (Node) nodeIter.next();
 				this.nodeIDtoNode.put(node.getID(), node);
+		}		
+	}
+	
+	private void createNodeBlacklists() {
+
+		this.startNodeBlacklist = new ArrayList<Integer>();
+		this.endNodeBlacklist = new ArrayList<Integer>();
+
+
+		Iterator nodeIter = (Iterator) network.getNodes().iterator();
+		while (nodeIter.hasNext()) {
+
+			DirectedNode node = (DirectedNode) nodeIter.next();
+			if (node.getOutDegree() == 0) this.startNodeBlacklist.add(node.getID());
+			if (node.getInDegree() == 0) this.endNodeBlacklist.add(node.getID());
 		}		
 	}
 	

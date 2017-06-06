@@ -284,7 +284,15 @@ public class RoadNetworkTest {
 		assertEquals("Edge direction is correct", "S", sf.getAttribute("iDir"));
 		assertEquals("Edge length is correct", 0.1, sf.getAttribute("LenNet"));
 		assertNull("Expecting no edge in this direction", edgeBA);
-
+		
+		//TEST NODE BLACKLISTS
+		iter = rn.getNodes().iterator();
+		while (iter.hasNext()) {
+			DirectedNode node = (DirectedNode) iter.next();
+			System.out.printf("Node %d has %d in degree and %d out degree. \n", node.getID(), node.getInDegree(), node.getOutDegree());
+			System.out.printf("Blacklisted as start node is %b, blacklisted as end node is %b \n", roadNetwork.isBlacklistedAsStartNode(node.getID()), roadNetwork.isBlacklistedAsEndNode(node.getID()));		
+		}
+	
 		//TEST NODE GRAVITATING POPULATION
 		System.out.println("\n\n*** Testing node gravitating population ***");
 
@@ -396,9 +404,23 @@ public class RoadNetworkTest {
 		assertEquals("The shortest path length is correct", 2.1, pathFinder.getCost(from), EPSILON);
 
 		System.out.println("\n*** AStar ***");
+		
+//		iter = rn.getNodes().iterator();
+//		from = null; to = null;
+//		while (iter.hasNext() && (from == null || to == null)) {
+//			DirectedNode node = (DirectedNode) iter.next();
+//			if (node.getID() == 105) from = node;
+//			if (node.getID() == 31) to = node;
+//		}
+		
+//		from = roadNetwork.getNodeIDtoNode().get(105);
+//		to = roadNetwork.getNodeIDtoNode().get(31);
 
 		//find the shortest path using AStar algorithm
 		try {
+			
+			System.out.printf("Finding the shortest path from %d to %d using astar: \n", from.getID(), to.getID());
+			
 			AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctions(to));
 			aStarPathFinder.calculate();
 			Path aStarPath;
@@ -431,6 +453,7 @@ public class RoadNetworkTest {
 
 		} catch (Exception e) {
 			e.printStackTrace();
+			System.err.println("Could not find the shortest path using astar.");
 		}
 
 		//reverse path
@@ -741,6 +764,14 @@ public class RoadNetworkTest {
 			assertEquals("Max gravitating population is correct", maxPopulation, (int) roadNetwork.getGravitatingPopulation(maxNode));
 		}		
 
+		//TEST NODE BLACKLISTS
+		iter = rn.getNodes().iterator();
+		while (iter.hasNext()) {
+			DirectedNode node = (DirectedNode) iter.next();
+			System.out.printf("Node %d has %d in degree and %d out degree. \n", node.getID(), node.getInDegree(), node.getOutDegree());
+			System.out.printf("Blacklisted as start node is %b, blacklisted as end node is %b \n", roadNetwork.isBlacklistedAsStartNode(node.getID()), roadNetwork.isBlacklistedAsEndNode(node.getID()));		
+		}
+		
 		//TEST NUMBER OF LANES
 		System.out.println("\n\n*** Testing the number of lanes ***");
 
@@ -759,7 +790,7 @@ public class RoadNetworkTest {
 		}
 	}
 
-	//@Test
+	@Test
 	public void fullTest() throws IOException {
 
 		final URL zonesUrl = new URL("file://src/main/resources/data/zones.shp");
@@ -1036,6 +1067,19 @@ public class RoadNetworkTest {
 			}
 			assertEquals("Max gravity node is the first node in the sorted list of nodes", maxNode, roadNetwork.getZoneToNodes().get(LAD).get(0));
 			assertEquals("Max gravitating population is correct", maxPopulation, (int) roadNetwork.getGravitatingPopulation(maxNode));
+		}
+		
+		//TEST NODE BLACKLISTS
+		System.out.println("\n\n*** Testing node blacklists ***");
+		
+		System.out.println("Start node blacklist : " + roadNetwork.getStartNodeBlacklist());
+		System.out.println("End node blacklist : " + roadNetwork.getEndNodeBlacklist());
+		
+		iter = rn.getNodes().iterator();
+		while (iter.hasNext()) {
+			DirectedNode node = (DirectedNode) iter.next();
+			System.out.printf("Node %d has %d in degree and %d out degree. \n", node.getID(), node.getInDegree(), node.getOutDegree());
+			System.out.printf("Blacklisted as start node is %b, blacklisted as end node is %b \n", roadNetwork.isBlacklistedAsStartNode(node.getID()), roadNetwork.isBlacklistedAsEndNode(node.getID()));		
 		}
 
 		//TEST SHORTEST PATH ALGORITHMS
