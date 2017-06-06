@@ -78,7 +78,8 @@ public class RoadNetworkAssignmentTest {
 		
 		//ODMatrix passengerODM = new ODMatrix("./src/test/resources/testdata/passengerODM.csv");
 		//ODMatrix passengerODM = new ODMatrix("./src/main/resources/data/passengerODMfull.csv");
-		ODMatrix passengerODM = new ODMatrix("./src/main/resources/data/passengerODMtempro.csv");
+		//ODMatrix passengerODM = new ODMatrix("./src/main/resources/data/passengerODMtempro.csv");
+		ODMatrix passengerODM = new ODMatrix("./src/main/resources/data/balancedODMatrix.csv");
 		
 		passengerODM.printMatrix(); 
 		
@@ -143,7 +144,7 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("Peak-hour link densities:");
 		System.out.println(roadNetworkAssignment.calculatePeakLinkDensities());
 		
-		//roadNetworkAssignment.saveAssignmentResults(2015, "assignment2015.csv");
+		roadNetworkAssignment.saveAssignmentResults(2015, "assignment2015balanced.csv");
 		
 		System.out.printf("RMSN for counts: %.2f%%", roadNetworkAssignment.calculateRMSNforCounts());
 	}
@@ -203,7 +204,8 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("\n\n*** Testing path storage ***");
 
 		//check that the number of paths for a given OD equals the flow (the number of trips in the OD matrix).
-		rna.getPathStorage();
+		System.out.println("Path storage: " + rna.getPathStorage());
+		
 		//for each OD
 		for (MultiKey mk: odm.getKeySet()) {
 			String originZone = (String) mk.getKey(0);
@@ -371,6 +373,8 @@ public class RoadNetworkAssignmentTest {
 		System.out.println(rna.getLinkTravelTimes());
 		for (int key: rna.getLinkTravelTimes().keySet()) 			
 			assertTrue(rna.getLinkTravelTimes().get(key) >= rna.getLinkFreeFlowTravelTimes().get(key));	
+		
+		//rna.saveAssignmentResults(2015, "testAssignmentResults.csv");
 	}
 	
 	@Test
