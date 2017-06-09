@@ -1705,12 +1705,17 @@ public class RoadNetworkAssignment {
 		this.workplaceZoneNoTripEnds = new HashMap<String, Integer>();
 	}
 	
+	/**
+	 * Calculate RMSN for for counts.
+	 * @return Normalised root mean square error
+	 */
 	public double calculateRMSNforCounts () {
 		
 		Iterator iter = this.roadNetwork.getNetwork().getEdges().iterator();
 		int countOfCounts = 0;
 		long sumOfCounts = 0;
 		double sumOfSquaredDiffs = 0.0;
+		ArrayList<Long> checkedCP = new ArrayList<Long>(); 
 		
 		while (iter.hasNext()) {
 			DirectedEdge edge = (DirectedEdge) iter.next();
@@ -1718,6 +1723,8 @@ public class RoadNetworkAssignment {
 			String roadNumber = (String) sf.getAttribute("RoadNumber");
 			
 			if (roadNumber.charAt(0) != 'M' && roadNumber.charAt(0) != 'A') continue; //ferry
+			
+			Long countPoint = (long) sf.getAttribute("CP");
 			
 			String direction = (String) sf.getAttribute("iDir");
 			char dir = direction.charAt(0);
@@ -1734,6 +1741,31 @@ public class RoadNetworkAssignment {
 				countOfCounts++;
 				sumOfCounts += carCount;
 				sumOfSquaredDiffs += (carCount - carVolume)^2;
+			}
+			
+			if (dir == 'C' && !checkedCP.contains(countPoint)) { //for combined counts check if this countPoint has been processed already
+	
+				//get combined count
+				long carCount = (long) sf.getAttribute("FdCar");
+				
+				//get volumes for this direction
+				long carVolume;
+				Double carVolumeFetch = this.linkVolumesInPCU.get(edge.getID());
+				if (carVolumeFetch == null) carVolume = 0;
+				else 						carVolume = Math.round(this.linkVolumesInPCU.get(edge.getID()));
+				
+				//get volumes for other direction (if exists)
+				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(edge.getID());
+				long carVolume2;
+				Double carVolumeFetch2 = this.linkVolumesInPCU.get(edge2);
+				if (carVolumeFetch2 == null) carVolume2 = 0;
+				else 						 carVolume2 = Math.round(this.linkVolumesInPCU.get(edge2));
+				
+				countOfCounts++;
+				sumOfCounts += carCount;
+				sumOfSquaredDiffs += (carCount - carVolume - carVolume2)^2;
+				
+				checkedCP.add(countPoint);
 			}
 		}
 		

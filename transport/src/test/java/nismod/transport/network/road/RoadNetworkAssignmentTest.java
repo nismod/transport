@@ -229,6 +229,9 @@ public class RoadNetworkAssignmentTest {
 		System.out.println(rna.getLinkTravelTimes());
 		for (int key: rna.getLinkTravelTimes().keySet()) 			
 			assertTrue(rna.getLinkTravelTimes().get(key) >= rna.getLinkFreeFlowTravelTimes().get(key));	
+		
+		System.out.println("RMSN: " + rna.calculateRMSNforCounts());
+		
 	}
 
 	@Test
@@ -375,6 +378,8 @@ public class RoadNetworkAssignmentTest {
 			assertTrue(rna.getLinkTravelTimes().get(key) >= rna.getLinkFreeFlowTravelTimes().get(key));	
 		
 		//rna.saveAssignmentResults(2015, "testAssignmentResults.csv");
+		
+		System.out.println("RMSN: " + rna.calculateRMSNforCounts());
 	}
 	
 	@Test

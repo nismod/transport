@@ -292,6 +292,12 @@ public class RoadNetworkTest {
 			System.out.printf("Node %d has %d in degree and %d out degree. \n", node.getID(), node.getInDegree(), node.getOutDegree());
 			System.out.printf("Blacklisted as start node is %b, blacklisted as end node is %b \n", roadNetwork.isBlacklistedAsStartNode(node.getID()), roadNetwork.isBlacklistedAsEndNode(node.getID()));		
 		}
+		
+		//TEST EDGE TO OTHER DIRECTION EDGE MAPPING
+		System.out.println("\n\n*** Testing edge to other direction edge mapping ***");
+		
+		System.out.println(roadNetwork.getEdgeIDtoEdge());
+		System.out.println(roadNetwork.getEdgeIDtoOtherDirectionEdgeID());
 	
 		//TEST NODE GRAVITATING POPULATION
 		System.out.println("\n\n*** Testing node gravitating population ***");
@@ -788,9 +794,15 @@ public class RoadNetworkTest {
 				assertNull("The number of lanes for ferries is not defined", roadNetwork.getNumberOfLanes().get(edge.getID()));
 			}
 		}
+		
+		//TEST EDGE TO OTHER DIRECTION EDGE MAPPING
+		System.out.println("\n\n*** Testing edge to other direction edge mapping ***");
+		
+		System.out.println(roadNetwork.getEdgeIDtoEdge());
+		System.out.println(roadNetwork.getEdgeIDtoOtherDirectionEdgeID());
 	}
 
-	@Test
+	//@Test
 	public void fullTest() throws IOException {
 
 		final URL zonesUrl = new URL("file://src/main/resources/data/zones.shp");
