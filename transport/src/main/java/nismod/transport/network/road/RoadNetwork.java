@@ -94,7 +94,9 @@ public class RoadNetwork {
 	private HashMap<String, List<String>> zoneToWorkplaceCodes;
 	private HashMap<String, Integer> workplaceCodeToPopulation;
 	private HashMap<Integer, Integer> nodeToGravitatingPopulation;
-	private HashMap<Integer, Node> nodeIDtoNode;
+	private HashMap<Integer, Node> nodeIDtoNode; //for direct access
+	private HashMap<Integer, Edge> edgeIDtoEdge; //for direct access
+	private HashMap<Integer, Integer> edgeIDtoOtherDirectionEdgeID;
 	private List<Integer> startNodeBlacklist;
 	private List<Integer> endNodeBlacklist;
 	
@@ -189,7 +191,7 @@ public class RoadNetwork {
 		map.addLayer(zonesLayer);
 
 		//create style for road network
-		Style networkStyle = SLD.createLineStyle(Color.GREEN, 2.0f, "CP_Number", null);
+		Style networkStyle = SLD.createLineStyle(Color.GREEN, 2.0f, "CP", null);
 
 		//add network layer to the map
 		FeatureLayer networkLayer = new FeatureLayer(networkShapefile.getFeatureSource(), networkStyle);
@@ -587,6 +589,25 @@ public class RoadNetwork {
 		return this.nodeIDtoNode;
 	}
 	
+	/**
+	 * Getter method for edgeID to edge mapping.
+	 * @return Edge ID to edge mapping.
+	 */
+	public HashMap<Integer, Edge> getEdgeIDtoEdge() {
+		
+		return this.edgeIDtoEdge;
+	}
+	
+	/**
+	 * Getter method for edgeID to other direction edgeID mapping.
+	 * @return Edge ID to other direction edge ID mapping.
+	 */
+	public HashMap<Integer, Integer> getEdgeIDtoOtherDirectionEdgeID() {
+		
+		return this.edgeIDtoOtherDirectionEdgeID;
+	}
+	
+	
 	public List<Integer> getStartNodeBlacklist() {
 		
 		return this.startNodeBlacklist;
@@ -690,10 +711,12 @@ public class RoadNetwork {
 		//map the nodes to zones
 		mapNodesToZones(zonesFeatureCollection);
 		
-		System.out.println("Creating a direct access map of nodes");
+		System.out.println("Creating direct access maps for nodes and edges...");
 		createDirectAccessNodeMap();
+		createDirectAccessEdgeMap();
+		createEdgeToOtherDirectionEdgeMap();
 		
-		System.out.println("Populating blacklists with unallowed starting/ending node IDs");
+		System.out.println("Populating blacklists with unallowed starting/ending node IDs...");
 		createNodeBlacklists();
 		
 		System.out.println("Determining the number of lanes...");
@@ -807,7 +830,7 @@ public class RoadNetwork {
 				while (iterator.hasNext()) {
 					SimpleFeature countFeature = iterator.next();
 					long cp =  (long) countFeature.getAttribute("CP");
-					double cn = (double) edgeFeature.getAttribute("CP_Number");
+					double cn = (double) edgeFeature.getAttribute("CP");
 
 					//if count point matches the edge
 					if (cp == cn) {
@@ -932,6 +955,58 @@ public class RoadNetwork {
 		
 				Node node = (Node) nodeIter.next();
 				this.nodeIDtoNode.put(node.getID(), node);
+		}		
+	}
+	
+	private void createDirectAccessEdgeMap() {
+		
+		this.edgeIDtoEdge = new HashMap<Integer, Edge>();
+		
+		Iterator edgeIter = (Iterator) network.getEdges().iterator();
+		while (edgeIter.hasNext()) {
+		
+				Edge edge = (Edge) edgeIter.next();
+				this.edgeIDtoEdge.put(edge.getID(), edge);
+		}		
+	}
+	
+	private void createEdgeToOtherDirectionEdgeMap() {
+		
+		this.edgeIDtoOtherDirectionEdgeID = new HashMap<Integer, Integer>();
+		
+		Iterator edgeIter = (Iterator) network.getEdges().iterator();
+		while (edgeIter.hasNext()) {
+		
+				DirectedEdge edge = (DirectedEdge) edgeIter.next();
+				SimpleFeature sf = (SimpleFeature) edge.getObject();
+				String roadNumber = (String) sf.getAttribute("RoadNumber");
+				long countPoint;
+				if (roadNumber.charAt(0) == 'F')
+								countPoint = Math.round((double) sf.getAttribute("CP"));
+				else
+								countPoint = (long) sf.getAttribute("CP");
+				
+				//get edges from node B to node A
+				DirectedNode nodeA = (DirectedNode) edge.getNodeA();
+				DirectedNode nodeB = (DirectedNode) edge.getNodeB();
+				List otherEdges = nodeB.getOutEdges(nodeA);
+				
+				for (Object o: otherEdges) {
+					DirectedEdge edge2 = (DirectedEdge) o;
+					SimpleFeature sf2 = (SimpleFeature) edge2.getObject();
+					String roadNumber2 = (String) sf2.getAttribute("RoadNumber");
+					long countPoint2;
+					if (roadNumber2.charAt(0) == 'F')
+									countPoint2 = Math.round((double) sf2.getAttribute("CP"));
+					else
+									countPoint2 = (long) sf2.getAttribute("CP");
+				
+					if (countPoint == countPoint2) //if there is a count point match
+						this.edgeIDtoOtherDirectionEdgeID.put(edge.getID(), edge2.getID());
+				}
+	
+//				if (this.edgeIDtoOtherDirectionEdgeID.get(edge.getID()) == null)
+//					this.edgeIDtoOtherDirectionEdgeID.put(edge.getID(), null);
 		}		
 	}
 	
