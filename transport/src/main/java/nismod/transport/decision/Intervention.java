@@ -75,6 +75,15 @@ public abstract class Intervention {
 		return installed;
 	}
 	
+	/**
+	 * @param key Name of the property
+	 * @return Property
+	 */
+	public String getProperty(String key) {
+		
+		return props.getProperty(key);
+	}
+	
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */

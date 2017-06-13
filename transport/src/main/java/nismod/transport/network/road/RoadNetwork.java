@@ -344,7 +344,54 @@ public class RoadNetwork {
 			System.err.println(typeName + " does not support read/write access");
 		}
 	}
-
+	
+	public Edge createNewRoadLink(Node fromNode, Node toNode, int numberOfLanes, char roadCategory) {
+		
+		BasicDirectedLineGraphBuilder graphBuilder = new BasicDirectedLineGraphBuilder();
+		graphBuilder.importGraph(this.network);
+		
+		DirectedEdge directedEdge = (DirectedEdge) graphBuilder.buildEdge(fromNode, toNode);
+		graphBuilder.addEdge(directedEdge);
+		
+		this.network = (DirectedGraph) graphBuilder.getGraph();
+		
+		//add edge to list
+		this.edgeIDtoEdge.put(directedEdge.getID(), directedEdge);
+		this.numberOfLanes.put(directedEdge.getID(), numberOfLanes);
+		
+		//create objects to add to edges
+		
+		//update blacklists of nodes as some nodes might now become accessible
+//		for (int nodeId: startNodeBlacklist) {
+//			DirectedNode node = (DirectedNode) this.nodeIDtoNode.get(nodeId);
+//			if (node.getOutDegree() > 0) this.startNodeBlacklist.remove(node.getID());
+//		}
+//		for (int nodeId: endNodeBlacklist) {
+//			DirectedNode node = (DirectedNode) this.nodeIDtoNode.get(nodeId);
+//			if (node.getInDegree() > 0) this.endNodeBlacklist.remove(node.getID());
+//		}
+		this.createNodeBlacklists(); //just create them from scratch
+		
+		return directedEdge;
+	}
+	
+	public void removeRoadLink(Edge edge) {
+		
+		BasicDirectedLineGraphBuilder graphBuilder = new BasicDirectedLineGraphBuilder();
+		graphBuilder.importGraph(this.network);
+		
+		graphBuilder.removeEdge(edge);
+		
+		this.network = (DirectedGraph) graphBuilder.getGraph();
+		
+		//update
+		this.edgeIDtoEdge.remove(edge.getID());
+		this.numberOfLanes.remove(edge.getID());
+		
+		//update node blacklists
+		this.createNodeBlacklists();
+	}
+	
 	/**
 	 * Getter method for the road network.
 	 * @return Directed graph representation of the road network.

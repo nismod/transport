@@ -46,7 +46,7 @@ public class RoadExpansionTest {
 		props.setProperty("CP", "26042");
 		props.setProperty("number", "2");
 		RoadExpansion re = new RoadExpansion(props);
-		
+								
 		final String roadExpansionFileName = "./src/test/resources/testdata/roadExpansion.properties";
 		RoadExpansion re2 = new RoadExpansion(roadExpansionFileName);
 		System.out.println("Road expansion intervention: " + re2.toString());
