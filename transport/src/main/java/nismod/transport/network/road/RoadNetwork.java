@@ -345,7 +345,7 @@ public class RoadNetwork {
 		}
 	}
 	
-	public Edge createNewRoadLink(Node fromNode, Node toNode, int numberOfLanes, char roadCategory) {
+	public Edge createNewRoadLink(Node fromNode, Node toNode, int numberOfLanes, char roadCategory, double length) {
 		
 		BasicDirectedLineGraphBuilder graphBuilder = new BasicDirectedLineGraphBuilder();
 		graphBuilder.importGraph(this.network);
@@ -359,8 +359,19 @@ public class RoadNetwork {
 		this.edgeIDtoEdge.put(directedEdge.getID(), directedEdge);
 		this.numberOfLanes.put(directedEdge.getID(), numberOfLanes);
 		
-		//create objects to add to edges
-		
+		//create an object to add to edge
+		//dynamically creates a feature type to describe the shapefile contents
+		SimpleFeatureType type = createNewRoadLinkFeatureType();
+		SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(type);
+		//featureBuilder.reset();
+		//build feature
+		List<Object> objList = new ArrayList();
+		objList.add(0); //null
+		objList.add(roadCategory);
+		objList.add(length);		
+		SimpleFeature feature = featureBuilder.build(type, objList, Integer.toString(directedEdge.getID()));
+		directedEdge.setObject(feature);
+				
 		//update blacklists of nodes as some nodes might now become accessible
 //		for (int nodeId: startNodeBlacklist) {
 //			DirectedNode node = (DirectedNode) this.nodeIDtoNode.get(nodeId);
@@ -1312,6 +1323,29 @@ public class RoadNetwork {
 		builder.add("FFspeed", Double.class);
 		builder.add("FFtime", Double.class);
 		builder.add("IsFerry", Boolean.class);
+
+		//build the type
+		final SimpleFeatureType SIMPLE_FEATURE_TYPE = builder.buildFeatureType();
+		//return the type
+		return SIMPLE_FEATURE_TYPE;
+	}
+	
+	/**
+	 * Creates the schema for the object assigned to new road links
+	 * @return SimpleFeature type.
+	 */
+	private static SimpleFeatureType createNewRoadLinkFeatureType() {
+
+		SimpleFeatureTypeBuilder builder = new SimpleFeatureTypeBuilder();
+
+		builder.setName("New road link");
+		
+		//add attributes in order
+		builder.add("CountPoint", Integer.class);
+		//builder.length(1).add("iDir", String.class);
+		builder.add("RoadType", String.class );
+		builder.add("LenNet", Double.class);
+		//builder.add("IsFerry", Boolean.class);
 
 		//build the type
 		final SimpleFeatureType SIMPLE_FEATURE_TYPE = builder.buildFeatureType();

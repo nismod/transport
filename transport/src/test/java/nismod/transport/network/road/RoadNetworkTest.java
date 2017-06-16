@@ -496,6 +496,56 @@ public class RoadNetworkTest {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		
+		//TEST ADDING NEW ROAD LONKS
+		System.out.println("\n\n*** Testing addition of new links ***");
+		
+		Node fromNode = roadNetwork.getNodeIDtoNode().get(86);
+		Node toNode = roadNetwork.getNodeIDtoNode().get(48);
+		
+		DirectedEdge newEdge = (DirectedEdge) roadNetwork.createNewRoadLink(fromNode, toNode, 2, 'A', 0.6);
+		
+		//find path from node 86 to node 19
+		from = roadNetwork.getNodeIDtoNode().get(86);
+		to = roadNetwork.getNodeIDtoNode().get(19);
+	
+		//find the shortest path using AStar algorithm
+		try {
+
+			System.out.printf("Finding the shortest path from %d to %d using astar: \n", from.getID(), to.getID());
+
+			AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctions(to));
+			aStarPathFinder.calculate();
+			Path aStarPath;
+			aStarPath = aStarPathFinder.getPath();
+			aStarPath.reverse();
+			System.out.println(aStarPath);
+			System.out.println("The path as a list of nodes: " + aStarPath);
+			listOfEdges = aStarPath.getEdges();
+			System.out.println("The path as a list of edges: " + listOfEdges);
+			System.out.println("Path size in the number of nodes: " + aStarPath.size());
+			System.out.println("Path size in the number of edges: " + listOfEdges.size());
+			sum = 0;
+			for (Object o: listOfEdges) {
+				//DirectedEdge e = (DirectedEdge) o;
+				Edge e = (Edge) o;
+				System.out.print(e.getID() + "|" + e.getNodeA() + "->" + e.getNodeB() + "|");
+				sf = (SimpleFeature) e.getObject();
+				double length = (double) sf.getAttribute("LenNet");
+				System.out.println(length);
+				sum += length;
+			}
+			System.out.printf("Sum of edge lengths: %.3f\n\n", sum);
+
+			//compare with expected values
+			expectedNodeList = new int[] {86, 48, 19}; //node IDs are persistent
+			assertEquals("The list of nodes in the shortest path is correct", Arrays.toString(expectedNodeList), aStarPath.toString());
+			assertEquals("The shortest path length is correct", 1.3, sum, EPSILON);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.err.println("Could not find the shortest path using astar.");
+		}
 	}
 
 	@Test
