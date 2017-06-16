@@ -73,7 +73,7 @@ public class RoadDevelopment extends Intervention {
 		}
 		
 		//create one edge
-		Edge newEdge = rn.createNewRoadLink(fromNode, toNode, numberOfLanesPerDirection, roadCategory);
+		Edge newEdge = rn.createNewRoadLink(fromNode, toNode, numberOfLanesPerDirection, roadCategory, length);
 		if (newEdge == null) {
 			System.err.println("Edge creation was not sucessful");
 			return;
@@ -83,7 +83,7 @@ public class RoadDevelopment extends Intervention {
 		
 		//if bidirectional, create the second edge too (in the other direction)
 		if(biDirectional) {
-			Edge newEdge2 = rn.createNewRoadLink(toNode, fromNode, numberOfLanesPerDirection, roadCategory);
+			Edge newEdge2 = rn.createNewRoadLink(toNode, fromNode, numberOfLanesPerDirection, roadCategory, length);
 			if (newEdge2 == null) {
 				System.err.println("Second edge creation was not sucessful");
 				return;
