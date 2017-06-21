@@ -65,9 +65,18 @@ public class RoadNetworkTest {
 
 		//visualise the shapefiles
 		roadNetwork2.visualise("Midi Test Area");
-
+		
+		//create new road link
+		Node fromNode = roadNetwork2.getNodeIDtoNode().get(86);
+		Node toNode = roadNetwork2.getNodeIDtoNode().get(48);
+		DirectedEdge newEdge = (DirectedEdge) roadNetwork2.createNewRoadLink(fromNode, toNode, 2, 'A', 0.6);
+		DirectedEdge newEdge2 = (DirectedEdge) roadNetwork2.createNewRoadLink(toNode, fromNode, 2, 'A', 0.6);
+		
 		//export to shapefile
 		roadNetwork2.exportToShapefile("midiOutputNetwork");
+
+		//visualise updated network 
+		roadNetwork2.visualise("Midi Test Area");
 
 		final URL zonesUrl3 = new URL("file://src/main/resources/data/zones.shp");
 		final URL networkUrl3 = new URL("file://src/main/resources/data/network.shp");
@@ -497,7 +506,7 @@ public class RoadNetworkTest {
 			e.printStackTrace();
 		}
 		
-		//TEST ADDING NEW ROAD LONKS
+		//TEST ADDING NEW ROAD LINKS
 		System.out.println("\n\n*** Testing addition of new links ***");
 		
 		Node fromNode = roadNetwork.getNodeIDtoNode().get(86);
@@ -546,6 +555,48 @@ public class RoadNetworkTest {
 			e.printStackTrace();
 			System.err.println("Could not find the shortest path using astar.");
 		}
+		
+		//find the shortest path using time-based Dijkstra
+		System.out.println("Source node: " + from.getID() + " | Destination node: " + to.getID());
+		pathFinder = new DijkstraShortestPathFinder(rn, from, roadNetwork.getDijkstraTimeWeighter());
+		pathFinder.calculate();
+		path = pathFinder.getPath(to);
+		path.reverse();
+		System.out.println("The path as a list of nodes nodes: " + path);
+		listOfEdges = path.getEdges();
+		System.out.println("The path as a list of edges: " + listOfEdges);
+		System.out.println("Path size in the number of nodes: " + path.size());
+		System.out.println("Path size in the number of edges: " + listOfEdges.size());
+		System.out.printf("Total path length in km: %.3f\n", pathFinder.getCost(to));
+
+		sum = 0;
+		for (Object o: listOfEdges) {
+			//DirectedEdge e = (DirectedEdge) o;
+			Edge e = (Edge) o;
+			System.out.print(e.getID() + "|" + e.getNodeA() + "->" + e.getNodeB() + "|");
+			sf = (SimpleFeature) e.getObject();
+			double length = (double) sf.getAttribute("LenNet");
+			double time;
+			String roadNumber = (String) sf.getAttribute("RoadNumber");
+			if (roadNumber.charAt(0) == 'M') //motorway
+				time = length / RoadNetworkAssignment.SPEED_LIMIT_M_ROAD * 60;  //travel time in minutes
+			else if (roadNumber.charAt(0) == 'A') //A road
+				time = length / RoadNetworkAssignment.SPEED_LIMIT_A_ROAD * 60;  //travel time in minutes
+			else if (roadNumber.charAt(0) == 'F') //ferry
+				time = length / RoadNetworkAssignment.AVERAGE_SPEED_FERRY * 60;  //travel time in minutes
+			else { //unknown road type
+				System.err.println("Uknown road type for link " + e.getID());
+				time = Double.NaN;
+			}
+			System.out.println(time);
+			sum += time;
+		}
+		System.out.printf("Sum of edge travel times: %.3f\n\n", sum);
+
+		//compare with expected values
+		expectedNodeList = new int[] {86, 48, 19}; //node IDs are persistent
+		assertEquals("The list of nodes in the shortest path is correct", Arrays.toString(expectedNodeList), path.toString());
+		assertEquals("The shortest path travel time equals the sum of edge travel times", sum, pathFinder.getCost(to), EPSILON);
 	}
 
 	@Test
