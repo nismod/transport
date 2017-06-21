@@ -87,7 +87,8 @@ public class RoadNetwork {
 	private HashMap<Integer, String> nodeToZone;
 	private HashMap<String, List<Integer>> zoneToNodes;
 	private HashMap<String, List<String>> zoneToAreaCodes;
-	private HashMap<String, Integer> areaCodeToNearestNode;
+	private HashMap<String, Integer> areaCodeToNearestNodeID;
+	private HashMap<String, Double> areaCodeToNearestNodeDistance;
 	private HashMap<String, Integer> areaCodeToPopulation;
 	private HashMap<Integer, Integer> freightZoneToNearestNode;
 	private HashMap<Integer, String> freightZoneToLAD;
@@ -95,13 +96,13 @@ public class RoadNetwork {
 	private HashMap<String, List<String>> zoneToWorkplaceCodes;
 	private HashMap<String, Integer> workplaceCodeToPopulation;
 	private HashMap<Integer, Integer> nodeToGravitatingPopulation;
+	private HashMap<Integer, Double> nodeToAverageAccessEgressDistance;
 	private HashMap<Integer, Node> nodeIDtoNode; //for direct access
 	private HashMap<Integer, Edge> edgeIDtoEdge; //for direct access
 	private HashMap<Integer, Integer> edgeIDtoOtherDirectionEdgeID;
 	private List<Integer> startNodeBlacklist;
 	private List<Integer> endNodeBlacklist;
-	
-	
+		
 	/**
 	 * @param zonesUrl Url for the shapefile with zone polygons
 	 * @param networkUrl Url for the shapefile with road network
@@ -152,11 +153,12 @@ public class RoadNetwork {
 		};
 		
 		this.loadAreaCodePopulationData(areaCodeFileName);
-		this.loadAreaCodeNearestNode(areaCodeNearestNodeFile);
+		this.loadAreaCodeNearestNodeAndDistance(areaCodeNearestNodeFile);
 		this.loadWorkplaceZonePopulationData(workplaceZoneFileName);
 		this.loadWorkplaceZoneNearestNode(workplaceZoneNearestNodeFile);
 		
 		this.calculateNodeGravitatingPopulation();
+		this.calculateNodeAccessEgressDistance();
 		this.sortGravityNodes();
 		
 		this.freightZoneToLAD = new HashMap<Integer, String>();
@@ -600,9 +602,9 @@ public class RoadNetwork {
 	 * Getter method for the area code to the nearest node mapping.
 	 * @return Area code to the nearest node mapping.
 	 */
-	public HashMap<String, Integer> getAreaCodeToNearestNode() {
+	public HashMap<String, Integer> getAreaCodeToNearestNodeID() {
 
-		return this.areaCodeToNearestNode;
+		return this.areaCodeToNearestNodeID;
 	}
 	
 	/**
@@ -650,14 +652,14 @@ public class RoadNetwork {
 		return this.workplaceCodeToPopulation;
 	}
 	
-//	/**
-//	 * Getter method for the node to gravitating population mapping.
-//	 * @return Node to gravitating population mapping.
-//	 */
-//	public HashMap<Integer, Integer> getNodeToGravitatingPopulation() {
-//
-//		return this.nodeToGravitatingPopulation;
-//	}
+	/**
+	 * Getter method for the node to gravitating population mapping.
+	 * @return Node to gravitating population mapping.
+	 */
+	public HashMap<Integer, Integer> getNodeToGravitatingPopulation() {
+
+		return this.nodeToGravitatingPopulation;
+	}
 	
 	/**
 	 * Population gravitating to a node.
@@ -670,6 +672,28 @@ public class RoadNetwork {
 		if (population == null) population = 0;
 		
 		return population;
+	}
+	
+	/**
+	 * Getter method for the node to average access/egress distance mapping.
+	 * @return Node to average access/egress distance mapping.
+	 */
+	public HashMap<Integer, Double> getNodeToAverageAccessEgressDistance() {
+
+		return this.nodeToAverageAccessEgressDistance;
+	}
+	
+	/**
+	 * Average access/egress distance to access a node that has gravitating population.
+	 * @param node Node to which
+	 * @return Gravitating population.
+	 */
+	public double getAverageAcessEgressDistance(int node) {
+		
+		Double distance = this.nodeToAverageAccessEgressDistance.get(node);
+		if (distance == null) distance = 0.0; //TODO
+		
+		return distance;
 	}
 	
 	/**
@@ -1219,9 +1243,10 @@ public class RoadNetwork {
 	 * @param areaCodeNearestNodeFile File with area code nearest neighbour.
 	 * @throws IOException 
 	 */
-	private void loadAreaCodeNearestNode(String areaCodeNearestNodeFile) throws IOException {
+	private void loadAreaCodeNearestNodeAndDistance(String areaCodeNearestNodeFile) throws IOException {
 
-		this.areaCodeToNearestNode = new HashMap<String, Integer>();
+		this.areaCodeToNearestNodeID = new HashMap<String, Integer>();
+		this.areaCodeToNearestNodeDistance = new HashMap<String, Double>();
 		
 		CSVParser parser = new CSVParser(new FileReader(areaCodeNearestNodeFile), CSVFormat.DEFAULT.withHeader());
 		//System.out.println(parser.getHeaderMap().toString());
@@ -1231,7 +1256,9 @@ public class RoadNetwork {
 			//System.out.println(record);
 			String areaCode = record.get("area_code");
 			int nodeID = Integer.parseInt(record.get("nodeID"));
-			areaCodeToNearestNode.put(areaCode, nodeID);
+			double distance = Double.parseDouble(record.get("distance"));
+			areaCodeToNearestNodeID.put(areaCode, nodeID);
+			areaCodeToNearestNodeDistance.put(areaCode, distance);
 		} 
 		parser.close(); 
 	}
@@ -1267,9 +1294,9 @@ public class RoadNetwork {
 		
 		HashMap<Integer, Integer> map = new HashMap<Integer, Integer>();
 		
-		for (String areaCode: this.areaCodeToNearestNode.keySet()) {
+		for (String areaCode: this.areaCodeToNearestNodeID.keySet()) {
 			
-			int node = this.areaCodeToNearestNode.get(areaCode);
+			int node = this.areaCodeToNearestNodeID.get(areaCode);
 			int population = this.areaCodeToPopulation.get(areaCode);
 			
 			Integer currentPopulation = map.get(node);
@@ -1280,6 +1307,31 @@ public class RoadNetwork {
 		}
 		
 		this.nodeToGravitatingPopulation = map;
+	}
+	
+	/**
+	 * Calculates average access/egress distance to each node that has a gravitating population
+	 * Nodes with 0 gravitating population are not a member of this map!
+	 */
+	private void calculateNodeAccessEgressDistance() {
+		
+		HashMap<Integer, Double> map = new HashMap<Integer, Double>();
+		
+		for (String areaCode: this.areaCodeToNearestNodeID.keySet()) {
+			
+			int node = this.areaCodeToNearestNodeID.get(areaCode);
+			int population = this.areaCodeToPopulation.get(areaCode);
+			double distance = this.areaCodeToNearestNodeDistance.get(areaCode);
+			double gravitatingPopulation = this.nodeToGravitatingPopulation.get(node);
+			
+			Double weightedDistance = map.get(node);
+			if (weightedDistance == null) weightedDistance = population * distance / gravitatingPopulation;
+			else  weightedDistance += population * distance / gravitatingPopulation;
+			
+			map.put(node, weightedDistance);
+		}
+		
+		this.nodeToAverageAccessEgressDistance = map;
 	}
 	
 	/**

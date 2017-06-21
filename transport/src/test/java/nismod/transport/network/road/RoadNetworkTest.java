@@ -311,7 +311,7 @@ public class RoadNetworkTest {
 		//TEST NODE GRAVITATING POPULATION
 		System.out.println("\n\n*** Testing node gravitating population ***");
 
-		//System.out.println(roadNetwork.getNodeToGravitatingPopulation());
+		System.out.println(roadNetwork.getNodeToGravitatingPopulation());
 
 		//node 60 -> area codes (population): E00086593(281), E00086587(402), E00086591(389), E00086592(290), E00086627(294)
 		assertEquals("Gravitating population is correct", (281 + 402 + 389 + 290 + 294) , (int) roadNetwork.getGravitatingPopulation(60));
@@ -337,6 +337,12 @@ public class RoadNetworkTest {
 			assertEquals("Max gravitating population is correct", maxPopulation, (int) roadNetwork.getGravitatingPopulation(maxNode));
 		}
 
+		System.out.println("Node to average access/egress distance:");
+		System.out.println(roadNetwork.getNodeToAverageAccessEgressDistance());
+		
+		//node 60 -> area codes (population): E00086593(281), E00086587(402), E00086591(389), E00086592(290), E00086627(294)
+		assertEquals("Gravitating population is correct", (281*898.5662589 + 402*505.6027418 + 389*258.6423605 + 290*499.6014909 + 294*206.1543577) / (281+402+389+290+294) , (double) roadNetwork.getAverageAcessEgressDistance(60), 1e-5);
+		
 		//TEST SHORTEST PATH ALGORITHMS
 		System.out.println("\n\n*** Testing the shortest path algorithms ***");
 
