@@ -80,6 +80,7 @@ public class RoadNetwork {
 	private ShapefileDataStore networkShapefile;
 	private ShapefileDataStore nodesShapefile;
 	private ShapefileDataStore AADFshapefile;
+	private ShapefileDataStore newNetworkShapefile;
 	private DijkstraIterator.EdgeWeighter dijkstraWeighter;
 	private DijkstraIterator.EdgeWeighter dijkstraTimeWeighter;
 	private HashMap<Integer, Integer> numberOfLanes;
@@ -140,8 +141,12 @@ public class RoadNetwork {
 						cost = length / RoadNetworkAssignment.SPEED_LIMIT_M_ROAD * 60;  //travel time in minutes
 					else if (roadNumber.charAt(0) == 'A') //A road
 						cost = length / RoadNetworkAssignment.SPEED_LIMIT_A_ROAD * 60;  //travel time in minutes
-					else //ferry
+					else if (roadNumber.charAt(0) == 'F')//ferry
 						cost = length / RoadNetworkAssignment.AVERAGE_SPEED_FERRY * 60;  //travel time in minutes
+					else {
+						System.err.println("Unknown road type for link " + edge.getID());
+						cost = Double.NaN;
+					}
 				return cost;
 			}
 		};
@@ -194,7 +199,11 @@ public class RoadNetwork {
 		Style networkStyle = SLD.createLineStyle(Color.GREEN, 2.0f, "CP", null);
 
 		//add network layer to the map
-		FeatureLayer networkLayer = new FeatureLayer(networkShapefile.getFeatureSource(), networkStyle);
+		FeatureLayer networkLayer;
+		if (newNetworkShapefile != null)
+			networkLayer = new FeatureLayer(newNetworkShapefile.getFeatureSource(), networkStyle);
+		else
+			networkLayer = new FeatureLayer(networkShapefile.getFeatureSource(), networkStyle);
 		map.addLayer(networkLayer);
 
 		//create style for nodes
@@ -214,7 +223,7 @@ public class RoadNetwork {
 		//show the map 
 		JMapFrame.showMap(map);
 	}
-
+	
 	/**
 	 * Exports a directed multigraph representation of the network as a shapefile.
 	 * @param fileName The name of the output shapefile.
@@ -234,7 +243,7 @@ public class RoadNetwork {
 		Map<String, Serializable> params = new HashMap<>();
 		params.put("url", newFile.toURI().toURL());
 		params.put("create spatial index", Boolean.TRUE);
-		ShapefileDataStore newDataStore = (ShapefileDataStore) dataStoreFactory.createNewDataStore(params);
+		this.newNetworkShapefile = (ShapefileDataStore) dataStoreFactory.createNewDataStore(params);
 
 		//dynamically creates a feature type to describe the shapefile contents
 		SimpleFeatureType type = createFeatureType();
@@ -270,7 +279,7 @@ public class RoadNetwork {
 			objList.add(edge.getNodeA().getID());
 			objList.add(edge.getNodeB().getID());
 			SimpleFeature feat = (SimpleFeature) edge.getObject();
-			if (feat != null) { //has a count point
+			if (feat != null) { //has an object (e.g. count point)
 				objList.add(feat.getAttribute("CP"));
 				objList.add(feat.getAttribute("iDir"));
 				objList.add(feat.getAttribute("S Ref E"));
@@ -281,35 +290,38 @@ public class RoadNetwork {
 					objList.add(RoadNetworkAssignment.SPEED_LIMIT_M_ROAD);
 					Double freeFlowTime = (double)feat.getAttribute("LenNet") / RoadNetworkAssignment.SPEED_LIMIT_M_ROAD * 60; //in minutes
 					objList.add(freeFlowTime);
-				} else { //A road
+					objList.add(false); //not a ferry
+				} else if (roadNumber.charAt(0) == 'A') {//A road
 					objList.add(RoadNetworkAssignment.SPEED_LIMIT_A_ROAD);
 					Double freeFlowTime = (double)feat.getAttribute("LenNet") / RoadNetworkAssignment.SPEED_LIMIT_A_ROAD * 60; //in minutes
 					objList.add(freeFlowTime);
+					objList.add(false); //not a ferry
+				} else if (roadNumber.charAt(0) == 'F') {//ferry
+					objList.add(RoadNetworkAssignment.AVERAGE_SPEED_FERRY);
+					Double freeFlowTime = (double)feat.getAttribute("LenNet") / RoadNetworkAssignment.AVERAGE_SPEED_FERRY * 60; //in minutes
+					objList.add(freeFlowTime);
+					objList.add(true); //ferry
+				} else {
+					System.err.println("Unknown road category for edge " + edge.getID());
+					objList.add(null);
+					objList.add(null);
+					objList.add(null);
 				}
-				objList.add(false); //not a ferry
-			} else { //no count point, assume it is ferry (TODO could be link with no count point)
-				objList.add(0); //null
-				objList.add(0); //null
-				objList.add(0); //null
-				objList.add(0); //null
-				objList.add(10);
-				final Double SPEED_LIMIT = 30.0; //30 kph
-				Double freeFlowTime = 20.0; //TODO actual ferry travel time needed
-				objList.add(freeFlowTime);
-				objList.add(true); //is a ferry
+			} else {
+				System.err.println("No object assigned to the edge " + edge.getID());
 			}
 			SimpleFeature feature = featureBuilder.build(type, objList, Integer.toString(edge.getID()));
 			//System.out.println(feature.toString());
 			features.add(feature);
 		}
 
-		newDataStore.createSchema(type);
+		this.newNetworkShapefile.createSchema(type);
 
 		//Write the features to the shapefile using a Transaction
 		Transaction transaction = new DefaultTransaction("create");
 
-		String typeName = newDataStore.getTypeNames()[0];
-		SimpleFeatureSource featureSource = newDataStore.getFeatureSource(typeName);
+		String typeName = this.newNetworkShapefile.getTypeNames()[0];
+		SimpleFeatureSource featureSource = this.newNetworkShapefile.getFeatureSource(typeName);
 		SimpleFeatureType SHAPE_TYPE = featureSource.getSchema();
 		/*
 		 * The Shapefile format has a couple limitations:
@@ -345,6 +357,15 @@ public class RoadNetwork {
 		}
 	}
 	
+	/**
+	 * Creates a new (unidirectional) road link (edge) between existing intersections (nodes).
+	 * @param fromNode Start node of the new road link.
+	 * @param toNode End node of the new road link.
+	 * @param numberOfLanes Number of lanes in the road link.
+	 * @param roadCategory Road category.
+	 * @param length Length of the road link.
+	 * @return Newly created edge.
+	 */
 	public Edge createNewRoadLink(Node fromNode, Node toNode, int numberOfLanes, char roadCategory, double length) {
 		
 		BasicDirectedLineGraphBuilder graphBuilder = new BasicDirectedLineGraphBuilder();
@@ -358,6 +379,15 @@ public class RoadNetwork {
 		//add edge to list
 		this.edgeIDtoEdge.put(directedEdge.getID(), directedEdge);
 		this.numberOfLanes.put(directedEdge.getID(), numberOfLanes);
+		
+		//calculate straight line distance between nodes
+		SimpleFeature sf1 = (SimpleFeature)fromNode.getObject();
+		Point point = (Point)sf1.getDefaultGeometry();
+		SimpleFeature sf2 = (SimpleFeature)toNode.getObject();
+		Point point2 = (Point)sf2.getDefaultGeometry();
+		double distance = point.distance(point2) / 1000.0; //straight line distance (from metres to kilometres)!
+		if (length < distance) 
+			System.err.printf("The length of the newly created link (%.2f) is smaller than the straight line distance (%.2f)!\n", length, distance);
 		
 		//create an object to add to edge
 		//dynamically creates a feature type to describe the shapefile contents
@@ -494,8 +524,12 @@ public class RoadNetwork {
 						cost = (double) feature.getAttribute("LenNet") / RoadNetworkAssignment.SPEED_LIMIT_M_ROAD * 60;  //travel time in minutes
 					else if (roadNumber.charAt(0) == 'A') //A road
 						cost = (double) feature.getAttribute("LenNet") / RoadNetworkAssignment.SPEED_LIMIT_A_ROAD * 60;  //travel time in minutes
-					else //ferry
+					else if (roadNumber.charAt(0) == 'F')//ferry
 						cost = (double) feature.getAttribute("LenNet") / RoadNetworkAssignment.AVERAGE_SPEED_FERRY * 60;  //travel time in minutes
+					else {
+						System.err.println("Unknown road type for link " + edge.getID());
+						cost = Double.NaN;
+					}
 				} else //use provided travel time
 					cost = linkTravelTime.get(edge.getID()); 
 				return cost;
@@ -1043,6 +1077,7 @@ public class RoadNetwork {
 								countPoint = Math.round((double) sf.getAttribute("CP"));
 				else
 								countPoint = (long) sf.getAttribute("CP");
+				double length1 = (double) sf.getAttribute("LenNet");
 				
 				//get edges from node B to node A
 				DirectedNode nodeA = (DirectedNode) edge.getNodeA();
@@ -1053,6 +1088,7 @@ public class RoadNetwork {
 					DirectedEdge edge2 = (DirectedEdge) o;
 					SimpleFeature sf2 = (SimpleFeature) edge2.getObject();
 					String roadNumber2 = (String) sf2.getAttribute("RoadNumber");
+					double length2 = (double) sf.getAttribute("LenNet");
 					long countPoint2;
 					if (roadNumber2.charAt(0) == 'F')
 									countPoint2 = Math.round((double) sf2.getAttribute("CP"));
@@ -1061,6 +1097,8 @@ public class RoadNetwork {
 				
 					if (countPoint == countPoint2) //if there is a count point match
 						this.edgeIDtoOtherDirectionEdgeID.put(edge.getID(), edge2.getID());
+						if (length1 != length2) //if lenghts are different something may be wrong (possible with more edges with 0 CP)
+							System.err.println("Edge to other direction edge have different lengths!");
 				}
 	
 //				if (this.edgeIDtoOtherDirectionEdgeID.get(edge.getID()) == null)
@@ -1102,8 +1140,12 @@ public class RoadNetwork {
 				lanes = RoadNetworkAssignment.NUMBER_OF_LANES_M_ROAD;
 			else if (roadNumber.charAt(0) == 'A') //A-road
 				lanes = RoadNetworkAssignment.NUMBER_OF_LANES_A_ROAD;
-			else //ferry
+			else if (roadNumber.charAt(0) == 'F')//ferry
 				lanes = null;
+			else {
+				System.err.println("Link with unknown road type " + edge.getID());
+				lanes = null;
+			}
 			numberOfLanes.put(edge.getID(), lanes);
 		}
 	}
@@ -1315,7 +1357,7 @@ public class RoadNetwork {
 		builder.add("EdgeID",Integer.class);
 		builder.add("Anode",Integer.class);
 		builder.add("Bnode",Integer.class);
-		builder.add("CountPoint", Integer.class);
+		builder.add("CP", Integer.class);
 		builder.length(1).add("iDir", String.class);
 		builder.add("SRefE", Integer.class);
 		builder.add("SRefN", Integer.class);
@@ -1341,9 +1383,9 @@ public class RoadNetwork {
 		builder.setName("New road link");
 		
 		//add attributes in order
-		builder.add("CountPoint", Integer.class);
+		builder.add("CP", Integer.class);
 		//builder.length(1).add("iDir", String.class);
-		builder.add("RoadType", String.class );
+		builder.add("RoadNumber", String.class );
 		builder.add("LenNet", Double.class);
 		//builder.add("IsFerry", Boolean.class);
 
