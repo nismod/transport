@@ -47,7 +47,9 @@ public class RoadNetworkAssignment {
 	public static final int MAXIMUM_CAPACITY_A_ROAD = 1380; //PCU per lane per hour
 	public static final int NUMBER_OF_LANES_M_ROAD = 3; //for one direction
 	public static final int NUMBER_OF_LANES_A_ROAD = 1; //for one direction
-	public static final double AVERAGE_SPEED_FERRY = 20.0; //30.0kph
+	public static final double AVERAGE_SPEED_FERRY = 20.0; //kph
+	public static final double AVERAGE_ACCESS_EGRESS_SPEED_CAR = 48.0; //30mph = 48kph  
+	public static final double AVERAGE_ACCESS_EGRESS_SPEED_FREIGHT = 48.0; //30mph = 48kph 
 	public static final double PEAK_HOUR_PERCENTAGE = 0.10322;
 	public static final double ALPHA = 0.15;
 	public static final double BETA_M_ROAD = 5.55;
@@ -785,8 +787,18 @@ public class RoadNetworkAssignment {
 					Edge e = (Edge)o;
 					pathTravelTime += linkTravelTime.get(e.getID());					
 				}
-				//System.out.printf("Path travel time: %.3f\n\n", pathTravelTime);
+				//System.out.printf("Path travel time: %.3f\n", pathTravelTime);
 				totalODtravelTime += pathTravelTime;
+				
+				//add average access and egress time to the first and the last node [m -> km] [h -> s]
+				double averageAccessDistance = this.roadNetwork.getAverageAcessEgressDistance(path.getFirst().getID()) / 1000;
+				double averageEgressDistance = this.roadNetwork.getAverageAcessEgressDistance(path.getLast().getID()) / 1000;
+				double averageAccessTime = averageAccessDistance /  AVERAGE_ACCESS_EGRESS_SPEED_CAR * 60;
+				double averageEgressTime = averageEgressDistance /  AVERAGE_ACCESS_EGRESS_SPEED_CAR * 60;
+				//System.out.printf("Acess time: %.3f min Egress time: %.3f min\n", averageAccessTime, averageEgressTime);
+				//System.out.printf("Path travel time with access/egress: %.3f\n", pathTravelTime + averageAccessTime + averageEgressTime);
+				totalODtravelTime += (averageAccessTime + averageEgressTime);
+				
 			}
 			double averageODtravelTime = totalODtravelTime / pathList.size();
 			//System.out.printf("Average OD travel time: %.3f min\n", averageODtravelTime);
@@ -831,8 +843,13 @@ public class RoadNetworkAssignment {
 						Edge e = (Edge)o;
 						pathTravelTime += linkTravelTime.get(e.getID());					
 					}
-					//System.out.printf("Path travel time: %.3f\n\n", pathTravelTime);
+					//System.out.printf("Path travel time: %.3f\n", pathTravelTime);
 					totalODtravelTime += pathTravelTime;
+					
+					//add average access and egress time to the first and the last node [m -> km] [h -> min]
+					double averageAccessDistance = this.roadNetwork.getAverageAcessEgressDistance(path.getFirst().getID()) / 1000;
+					double averageEgressDistance = this.roadNetwork.getAverageAcessEgressDistance(path.getLast().getID()) / 1000;
+					totalODtravelTime += (averageAccessDistance + averageEgressDistance) / AVERAGE_ACCESS_EGRESS_SPEED_FREIGHT * 60;
 				}
 				double averageODtravelTime = totalODtravelTime / pathList.size();
 				//System.out.printf("Average OD travel time: %.3f min\n", averageODtravelTime);
@@ -879,6 +896,10 @@ public class RoadNetworkAssignment {
 				}
 				//System.out.printf("Path length: %.3f\n\n", pathLength);
 				totalODdistance += pathLength;
+				
+				//add average access and egress distance to the first and the last node [m -> km!]
+				totalODdistance += this.roadNetwork.getAverageAcessEgressDistance(path.getFirst().getID()) / 1000;
+				totalODdistance += this.roadNetwork.getAverageAcessEgressDistance(path.getLast().getID()) / 1000;
 			}
 			double averageODdistance = totalODdistance / pathList.size();
 			double energyCost = 0.0;
@@ -905,7 +926,7 @@ public class RoadNetworkAssignment {
 	}
 	
 	/**
-	 * Updates cost skim matrix (zone-to-zone financial costs).
+	 * Updates cost skim matrix (zone-to-zone distances).
 	 * @return Inter-zonal skim matrix (distance).
 	 */
 	public SkimMatrix calculateDistanceSkimMatrix() {
@@ -930,12 +951,19 @@ public class RoadNetworkAssignment {
 					double length = (double) sf.getAttribute("LenNet");
 					pathLength += length;					
 				}
-				//System.out.printf("Path length: %.3f\n\n", pathLength);
+				//System.out.printf("Path length: %.3f\n", pathLength);
 				totalODdistance += pathLength;
+				
+				//add average access and egress distance to the first and the last node [m -> km!]
+				double accessDistance = this.roadNetwork.getAverageAcessEgressDistance(path.getFirst().getID()) / 1000;
+				double egressDistance = this.roadNetwork.getAverageAcessEgressDistance(path.getLast().getID()) / 1000;
+				//System.out.printf("Acess: %.3f Egress: %.3f\n ", accessDistance, egressDistance);
+				//System.out.printf("Path length with access and egress: %.3f km\n", pathLength + accessDistance + egressDistance);
+				totalODdistance += (accessDistance + egressDistance);
 			}
 			double averageODdistance = totalODdistance / pathList.size();
 	
-			//System.out.printf("Average OD distance: %.3f km\t Fuel cost: %.2f GBP\n", averageODdistance, energyCost);
+			//System.out.printf("Average OD distance: %.3f km\n", averageODdistance);
 			//update distance skim matrix
 			distanceSkimMatrix.setCost(originZone, destinationZone, averageODdistance);
 		}
