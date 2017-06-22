@@ -341,7 +341,7 @@ public class RoadNetworkTest {
 		System.out.println(roadNetwork.getNodeToAverageAccessEgressDistance());
 		
 		//node 60 -> area codes (population): E00086593(281), E00086587(402), E00086591(389), E00086592(290), E00086627(294)
-		assertEquals("Gravitating population is correct", (281*898.5662589 + 402*505.6027418 + 389*258.6423605 + 290*499.6014909 + 294*206.1543577) / (281+402+389+290+294) , (double) roadNetwork.getAverageAcessEgressDistance(60), 1e-5);
+		assertEquals("Average access/egress distance is correct", (281*898.5662589 + 402*505.6027418 + 389*258.6423605 + 290*499.6014909 + 294*206.1543577) / (281+402+389+290+294) , (double) roadNetwork.getAverageAcessEgressDistance(60), 1e-5);
 		
 		//TEST SHORTEST PATH ALGORITHMS
 		System.out.println("\n\n*** Testing the shortest path algorithms ***");

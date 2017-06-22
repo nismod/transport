@@ -330,6 +330,12 @@ public class RoadNetworkAssignmentTest {
 		}
 		System.out.println("Total distance = " + totalDistance);
 		
+		System.out.println("Distance skim matrix: ");
+		rna.calculateDistanceSkimMatrix().printMatrixFormatted();
+		
+		System.out.println("Time skim matrix: ");
+		rna.calculateTimeSkimMatrix().printMatrixFormatted();
+		
 		//TEST COUNTERS OF TRIP STARTS/ENDS
 		System.out.println("\n\n*** Testing trip starts/ends ***");
 		
@@ -376,6 +382,9 @@ public class RoadNetworkAssignmentTest {
 		System.out.println(rna.getLinkTravelTimes());
 		for (int key: rna.getLinkTravelTimes().keySet()) 			
 			assertTrue(rna.getLinkTravelTimes().get(key) >= rna.getLinkFreeFlowTravelTimes().get(key));	
+		
+		System.out.println("Time skim matrix: ");
+		rna.calculateTimeSkimMatrix().printMatrixFormatted();
 		
 		//rna.saveAssignmentResults(2015, "testAssignmentResults.csv");
 		

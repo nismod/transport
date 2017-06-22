@@ -88,7 +88,7 @@ public class RoadNetwork {
 	private HashMap<String, List<Integer>> zoneToNodes;
 	private HashMap<String, List<String>> zoneToAreaCodes;
 	private HashMap<String, Integer> areaCodeToNearestNodeID;
-	private HashMap<String, Double> areaCodeToNearestNodeDistance;
+	private HashMap<String, Double> areaCodeToNearestNodeDistance; //[m]
 	private HashMap<String, Integer> areaCodeToPopulation;
 	private HashMap<Integer, Integer> freightZoneToNearestNode;
 	private HashMap<Integer, String> freightZoneToLAD;
@@ -96,7 +96,7 @@ public class RoadNetwork {
 	private HashMap<String, List<String>> zoneToWorkplaceCodes;
 	private HashMap<String, Integer> workplaceCodeToPopulation;
 	private HashMap<Integer, Integer> nodeToGravitatingPopulation;
-	private HashMap<Integer, Double> nodeToAverageAccessEgressDistance;
+	private HashMap<Integer, Double> nodeToAverageAccessEgressDistance; //[m]
 	private HashMap<Integer, Node> nodeIDtoNode; //for direct access
 	private HashMap<Integer, Edge> edgeIDtoEdge; //for direct access
 	private HashMap<Integer, Integer> edgeIDtoOtherDirectionEdgeID;
