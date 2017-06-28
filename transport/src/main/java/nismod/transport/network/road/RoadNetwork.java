@@ -91,6 +91,7 @@ public class RoadNetwork {
 	private HashMap<String, Double> areaCodeToNearestNodeDistance; //[m]
 	private HashMap<String, Integer> areaCodeToPopulation;
 	private HashMap<Integer, Integer> freightZoneToNearestNode;
+	private HashMap<Integer, Double> freightZoneToNearestNodeDistance; //[m]
 	private HashMap<Integer, String> freightZoneToLAD;
 	private HashMap<String, Integer> workplaceZoneToNearestNode;
 	private HashMap<String, List<String>> zoneToWorkplaceCodes;
@@ -110,7 +111,7 @@ public class RoadNetwork {
 	 * @param AADFurl Url for the shapefile with AADF counts
 	 * @throws IOException 
 	 */
-	public RoadNetwork(URL zonesUrl, URL networkUrl, URL nodesUrl, URL AADFurl, String areaCodeFileName, String areaCodeNearestNodeFile, String workplaceZoneFileName, String workplaceZoneNearestNodeFile) throws IOException {
+	public RoadNetwork(URL zonesUrl, URL networkUrl, URL nodesUrl, URL AADFurl, String areaCodeFileName, String areaCodeNearestNodeFile, String workplaceZoneFileName, String workplaceZoneNearestNodeFile, String freightZoneToLADfile, String freightZoneNearestNodeFile) throws IOException {
 
 		zonesShapefile = new ShapefileDataStore(zonesUrl);
 		networkShapefile = new ShapefileDataStore(networkUrl);
@@ -161,14 +162,17 @@ public class RoadNetwork {
 		this.calculateNodeAccessEgressDistance();
 		this.sortGravityNodes();
 		
-		this.freightZoneToLAD = new HashMap<Integer, String>();
-		this.freightZoneToLAD.put(855, "E06000045");
-		this.freightZoneToLAD.put(854, "E07000086");
-		this.freightZoneToLAD.put(866, "E07000091");
-		this.freightZoneToLAD.put(867, "E06000046");
-		this.freightZoneToNearestNode = new HashMap<Integer, Integer>();
-		this.freightZoneToNearestNode.put(1312, 86);
-		this.freightZoneToNearestNode.put(1313, 115);
+//		this.freightZoneToLAD = new HashMap<Integer, String>();
+//		this.freightZoneToLAD.put(855, "E06000045");
+//		this.freightZoneToLAD.put(854, "E07000086");
+//		this.freightZoneToLAD.put(866, "E07000091");
+//		this.freightZoneToLAD.put(867, "E06000046");
+//		this.freightZoneToNearestNode = new HashMap<Integer, Integer>();
+//		this.freightZoneToNearestNode.put(1312, 86);
+//		this.freightZoneToNearestNode.put(1313, 115);
+		this.loadFreightZoneNearestNodeAndDistance(freightZoneNearestNodeFile);
+		this.loadFreightZoneToLAD(freightZoneToLADfile);
+		
 			
 		//System.out.println(this.zoneToAreaCodes);
 		//System.out.println(this.areaCodeToPopulation);
@@ -1281,6 +1285,54 @@ public class RoadNetwork {
 			String workplaceCode = record.get("workplace_code");
 			int nodeID = Integer.parseInt(record.get("nodeID"));
 			workplaceZoneToNearestNode.put(workplaceCode, nodeID);
+		} 
+		parser.close(); 
+	}
+	
+	
+	/**
+	 * Loads freight zone to LAD zone mapping (for freight zone that are LADs).
+	 * @param freightZoneToLADfile File with freight zone to LAD mapping.
+	 * @throws IOException 
+	 */
+	private void loadFreightZoneToLAD(String freightZoneToLADfile) throws IOException {
+
+		this.freightZoneToLAD = new HashMap<Integer, String>();
+			
+		CSVParser parser = new CSVParser(new FileReader(freightZoneToLADfile), CSVFormat.DEFAULT.withHeader());
+		//System.out.println(parser.getHeaderMap().toString());
+		Set<String> keySet = parser.getHeaderMap().keySet();
+		//System.out.println("keySet = " + keySet);
+		for (CSVRecord record : parser) {
+			//System.out.println(record);
+			int freightZone = Integer.parseInt(record.get("freight_code"));
+			String lad = record.get("lad_code");
+			freightZoneToLAD.put(freightZone, lad);
+		} 
+		parser.close(); 
+	}
+	
+	/**
+	 * Loads freight zone to nearest node mapping (for freight zones that are points: airports, distribution centres, ports).
+	 * @param freightZoneNearestNodeFile File with area code nearest neighbour.
+	 * @throws IOException 
+	 */
+	private void loadFreightZoneNearestNodeAndDistance(String freightZoneNearestNodeFile) throws IOException {
+
+		this.freightZoneToNearestNode = new HashMap<Integer, Integer>();
+		this.freightZoneToNearestNodeDistance = new HashMap<Integer, Double>();
+		
+		CSVParser parser = new CSVParser(new FileReader(freightZoneNearestNodeFile), CSVFormat.DEFAULT.withHeader());
+		//System.out.println(parser.getHeaderMap().toString());
+		Set<String> keySet = parser.getHeaderMap().keySet();
+		//System.out.println("keySet = " + keySet);
+		for (CSVRecord record : parser) {
+			//System.out.println(record);
+			int freightZone = Integer.parseInt(record.get("freight_code"));
+			int nodeID = Integer.parseInt(record.get("nodeID"));
+			double distance = Double.parseDouble(record.get("distance"));
+			freightZoneToNearestNode.put(freightZone, nodeID);
+			freightZoneToNearestNodeDistance.put(freightZone, distance);
 		} 
 		parser.close(); 
 	}

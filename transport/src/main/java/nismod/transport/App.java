@@ -55,6 +55,8 @@ public class App {
 			final String areaCodeNearestNodeFile = props.getProperty("areaCodeNearestNodeFile");
 			final String workplaceZoneFileName = props.getProperty("workplaceZoneFileName");
 			final String workplaceZoneNearestNodeFile = props.getProperty("workplaceZoneNearestNodeFile");
+			final String freightZoneToLADfile = props.getProperty("freightZoneToLADFile");
+			final String freightZoneNearestNodeFile = props.getProperty("freightZoneNearestNodeFile");
 
 			final URL zonesUrl = new URL(props.getProperty("zonesUrl"));
 			final URL networkUrl = new URL(props.getProperty("networkUrl"));
@@ -76,7 +78,7 @@ public class App {
 			final String outputFile = args[3];
 
 			//create a road network
-			RoadNetwork roadNetwork2 = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile);
+			RoadNetwork roadNetwork2 = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
 
 			//load interventions
 			List<Intervention> interventions = new ArrayList<Intervention>();
@@ -110,6 +112,8 @@ public class App {
 		props.setProperty("areaCodeNearestNodeFile", "./src/test/resources/testdata/areaCodeToNearestNode.csv");
 		props.setProperty("workplaceZoneFileName", "./src/test/resources/testdata/workplacePopulation.csv");
 		props.setProperty("workplaceZoneNearestNodeFile", "./src/test/resources/testdata/workplaceZoneToNearestNode.csv");
+		props.setProperty("freightZoneToLADfile", "./src/test/resources/testdata/freightZoneToLAD.csv");
+		props.setProperty("freightZoneNearestNodeFile", "./src/test/resources/testdata/freightZoneToNearestNode.csv");
 		
 		props.setProperty("baseYearODMatrixFile", "./src/test/resources/testdata/passengerODM.csv");
 		props.setProperty("baseYearFreightMatrixFile", "./src/test/resources/testdata/freightMatrix.csv");
