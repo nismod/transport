@@ -88,6 +88,6 @@ public class FreightMatrixTest {
 					freightMatrix2.getFlow(1312, 867, 1) == 2 &&
 					freightMatrix2.getFlow(867, 867, 1) == 95;
 					
-		assertTrue("All matrix elements are correct", condition);	
+		assertTrue("All matrix elements are correct", condition);
 	}
 }

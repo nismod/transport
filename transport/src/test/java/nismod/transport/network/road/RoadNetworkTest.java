@@ -590,9 +590,9 @@ public class RoadNetworkTest {
 			double time;
 			String roadNumber = (String) sf.getAttribute("RoadNumber");
 			if (roadNumber.charAt(0) == 'M') //motorway
-				time = length / RoadNetworkAssignment.SPEED_LIMIT_M_ROAD * 60;  //travel time in minutes
+				time = length / RoadNetworkAssignment.FREE_FLOW_SPEED_M_ROAD * 60;  //travel time in minutes
 			else if (roadNumber.charAt(0) == 'A') //A road
-				time = length / RoadNetworkAssignment.SPEED_LIMIT_A_ROAD * 60;  //travel time in minutes
+				time = length / RoadNetworkAssignment.FREE_FLOW_SPEED_A_ROAD * 60;  //travel time in minutes
 			else if (roadNumber.charAt(0) == 'F') //ferry
 				time = length / RoadNetworkAssignment.AVERAGE_SPEED_FERRY * 60;  //travel time in minutes
 			else { //unknown road type
@@ -926,7 +926,7 @@ public class RoadNetworkTest {
 
 		final String areaCodeFileName = "./src/main/resources/data/population_OA_GB.csv";
 		final String areaCodeNearestNodeFile = "./src/main/resources/data/nearest_node_OA_GB.csv";
-		final String workplaceZoneFileName = "./src/test/resources/testdata/workplacePopulation.csv";
+		final String workplaceZoneFileName = "./src/main/resources/data/workplacePopulationFakeSC.csv";
 		final String workplaceZoneNearestNodeFile = "./src/main/resources/data/nearest_node_WZ_GB_fakeSC.csv";
 		final String freightZoneToLADfile = "./src/main/resources/data/freightZoneToLAD.csv";
 		final String freightZoneNearestNodeFile = "./src/main/resources/data/freightZoneToNearestNode.csv";

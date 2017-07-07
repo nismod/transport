@@ -41,8 +41,10 @@ import nismod.transport.utility.RandomSingleton;
  */
 public class RoadNetworkAssignment {
 
-	public static final double SPEED_LIMIT_M_ROAD = 112.65; //70mph = 31.29mps = 112.65kph
-	public static final double SPEED_LIMIT_A_ROAD = 96.56; //60mph = 26.82mps = 96.56kph
+	//public static final double SPEED_LIMIT_M_ROAD = 112.65; //70mph = 31.29mps = 112.65kph
+	//public static final double SPEED_LIMIT_A_ROAD = 96.56; //60mph = 26.82mps = 96.56kph
+	public static final double FREE_FLOW_SPEED_M_ROAD = 115.7923; //71.95mph = 32.16mps = 115.79kph
+	public static final double FREE_FLOW_SPEED_A_ROAD = 90.203731; //56.05mph = 25.05mps = 90.20kph
 	public static final int MAXIMUM_CAPACITY_M_ROAD = 2330; //PCU per lane per hour
 	public static final int MAXIMUM_CAPACITY_A_ROAD = 1380; //PCU per lane per hour
 	public static final int NUMBER_OF_LANES_M_ROAD = 3; //for one direction
@@ -54,13 +56,14 @@ public class RoadNetworkAssignment {
 	public static final double ALPHA = 0.15;
 	public static final double BETA_M_ROAD = 5.55;
 	public static final double BETA_A_ROAD = 4;
-	
+	public static final boolean FLAG_INTRAZONAL_ASSIGNMENT_REPLACEMENT = false; //true means that origin and destination nodes can be the same
+
 	private static RandomSingleton rng = RandomSingleton.getInstance();
-	
+
 	public static enum EngineType {
-	    PETROL, DIESEL, LPG, ELECTRICITY, HYBRID, HYDROGEN
+		PETROL, DIESEL, LPG, ELECTRICITY, HYBRID, HYDROGEN
 	}
-	
+
 	public static enum VehicleType {
 		CAR(0), ARTIC(1), RIGID(2), VAN(3);
 		private int value; 
@@ -68,11 +71,11 @@ public class RoadNetworkAssignment {
 	};
 
 	private HashMap<VehicleType, Double> vehicleTypeToPCU;
-	
+
 	private HashMap<EngineType, Double> energyUnitCosts;
 	private HashMap<EngineType, Double> energyConsumptionsPer100km;
 	private HashMap<EngineType, Double> engineTypeFractions;
-		
+
 	private RoadNetwork roadNetwork;
 
 	private HashMap<Integer, Double> linkVolumesInPCU;
@@ -84,14 +87,16 @@ public class RoadNetworkAssignment {
 	private MultiKeyMap<String, List<Path>> pathStorage;
 	//private MultiKeyMap<Integer, List<Path>> pathStorageFreight;
 	private HashMap<VehicleType, MultiKeyMap<Integer, List<Path>>> pathStorageFreight;
-	
+
 	//the probability of trip starting/ending in the census output area
 	private HashMap<String, Double> areaCodeProbabilities;
 	//the probability of trip starting/ending in the workplace zone
 	private HashMap<String, Double> workplaceZoneProbabilities;
 	//the probability of trip starting/ending at a node
 	private HashMap<Integer, Double> nodeProbabilities;
-	
+	//the probability of freight trip starting/ending at a node
+	private HashMap<Integer, Double> nodeProbabilitiesFreight;
+
 	//the number of trips starting in each census output area
 	private HashMap<String, Integer> areaCodeNoTripStarts;
 	//the number of trips ending in each census output area
@@ -104,7 +109,11 @@ public class RoadNetworkAssignment {
 	private HashMap<String, Integer> LADnoTripStarts;
 	//the number of trips ending in each LAD where finer location is unknown (not total number)
 	private HashMap<String, Integer> LADnoTripEnds;
-		
+	//the number of freight trips starting in each LAD (obtained by mapping trip origin nodes to LADs)
+	private HashMap<String, Integer> LADnoTripStartsFreight;
+	//the number of freight trips ending in each LAD (obtained by mapping trip destination nodes to LADs)
+	private HashMap<String, Integer> LADnoTripEndsFreight;
+
 	/**
 	 * @param roadNetwork Road network.
 	 * @param defaultLinkTravelTime Default link travel times.
@@ -130,7 +139,9 @@ public class RoadNetworkAssignment {
 		workplaceZoneNoTripEnds = new HashMap<String, Integer>();
 		LADnoTripStarts = new HashMap<String, Integer>();
 		LADnoTripEnds = new HashMap<String, Integer>();
-			
+		LADnoTripStartsFreight = new HashMap<String, Integer>();
+		LADnoTripEndsFreight = new HashMap<String, Integer>();
+
 		//calculate link travel time
 		Iterator edgesIterator = roadNetwork.getNetwork().getEdges().iterator();
 		while (edgesIterator.hasNext()) {
@@ -140,20 +151,20 @@ public class RoadNetworkAssignment {
 			String roadNumber = (String) feature.getAttribute("RoadNumber");
 			double travelTime = 0;
 			if (roadNumber.charAt(0) == 'M') //motorway
-				travelTime = (double) feature.getAttribute("LenNet") / RoadNetworkAssignment.SPEED_LIMIT_M_ROAD * 60;  //travel time in minutes
+				travelTime = (double) feature.getAttribute("LenNet") / RoadNetworkAssignment.FREE_FLOW_SPEED_M_ROAD * 60;  //travel time in minutes
 			else if (roadNumber.charAt(0) == 'A') //A road
-				travelTime = (double) feature.getAttribute("LenNet") / RoadNetworkAssignment.SPEED_LIMIT_A_ROAD * 60;  //travel time in minutes
+				travelTime = (double) feature.getAttribute("LenNet") / RoadNetworkAssignment.FREE_FLOW_SPEED_A_ROAD * 60;  //travel time in minutes
 			else //ferry
 				travelTime = (double) feature.getAttribute("LenNet") / RoadNetworkAssignment.AVERAGE_SPEED_FERRY * 60;  //travel time in minutes
 			linkFreeFlowTravelTime.put(edge.getID(), travelTime);
-			
+
 			//if no default link travel time, use free flow travel time as default
 			if (defaultLinkTravelTime != null)	
 				this.linkTravelTime.put(edge.getID(), defaultLinkTravelTime.get(edge.getID()));
 			else
 				this.linkTravelTime.put(edge.getID(), linkFreeFlowTravelTime.get(edge.getID()));
 		}
-		
+
 		//calculate area code choice probability
 		if (areaCodeProbabilities != null)	this.areaCodeProbabilities = areaCodeProbabilities;
 		else {
@@ -170,7 +181,7 @@ public class RoadNetworkAssignment {
 		}
 		//System.out.println("Probabilities for area codes:");
 		//System.out.println(this.areaCodeProbabilities);
-		
+
 		//calculate workplace zone choice probability
 		if (workplaceZoneProbabilities != null)	this.workplaceZoneProbabilities = workplaceZoneProbabilities;
 		else {
@@ -187,7 +198,7 @@ public class RoadNetworkAssignment {
 		}
 		//System.out.println("Probabilities for workplace zones:");
 		//System.out.println(this.workplaceZoneProbabilities);
-		
+
 		//calculate node probabilities from gravitating population
 		nodeProbabilities = new HashMap<Integer, Double>();
 		System.out.println(roadNetwork.getZoneToNodes().keySet());
@@ -202,7 +213,22 @@ public class RoadNetworkAssignment {
 		}
 		System.out.println("Probabilities for nodes:");
 		System.out.println(this.nodeProbabilities);
-		
+
+		//calculate node probabilities from gravitating workplace population
+		nodeProbabilitiesFreight = new HashMap<Integer, Double>();
+		System.out.println(roadNetwork.getZoneToNodes().keySet());
+		for (String zone: roadNetwork.getZoneToNodes().keySet()) {
+			double sum = 0;
+			System.out.println(roadNetwork.getZoneToNodes().get(zone));
+			for (Integer node: roadNetwork.getZoneToNodes().get(zone)) sum += roadNetwork.getGravitatingWorkplacePopulation(node);
+			for (Integer node: roadNetwork.getZoneToNodes().get(zone)) {
+				double probability = roadNetwork.getGravitatingWorkplacePopulation(node) / sum;
+				nodeProbabilitiesFreight.put(node, probability);
+			}
+		}
+		System.out.println("Node probabilities for freight:");
+		System.out.println(this.nodeProbabilitiesFreight);
+
 		//set default values for vehicle type to PCU conversion
 		vehicleTypeToPCU = new HashMap<VehicleType, Double>();
 		vehicleTypeToPCU.put(VehicleType.CAR, 1.0);
@@ -248,9 +274,13 @@ public class RoadNetworkAssignment {
 	 * Uses the fastest path based on the current values in the linkTravelTime field.
 	 * @param passengerODM Passenger origin-destination matrix.
 	 */
+	@SuppressWarnings("unused")
 	public void assignPassengerFlows(ODMatrix passengerODM) {
 
 		System.out.println("Assigning the passenger flows from the passenger matrix...");
+
+		//sort nodes based on the gravitating population
+		this.roadNetwork.sortGravityNodes();
 
 		//for each OD pair from the passengerODM		
 		for (MultiKey mk: passengerODM.getKeySet()) {
@@ -264,7 +294,7 @@ public class RoadNetworkAssignment {
 			int flow = passengerODM.getFlow(origin, destination);
 			for (int i=0; i<flow; i++) {
 
-					/*
+				/*
 					//choose random trip start/end nodes within the origin and the destination zone
 					List listOfOriginNodes = roadNetwork.getZoneToNodes().get(mk.getKey(0));
 					List listOfDestinationNodes = roadNetwork.getZoneToNodes().get(mk.getKey(1));
@@ -280,9 +310,9 @@ public class RoadNetworkAssignment {
 					int destinationNode = (int) listOfDestinationNodes.get(indexDestination);
 					//System.out.println("Origin node: " + originNode);
 					//System.out.println("Destination node: " + destinationNode);
-					 */
+				 */
 
-					/*
+				/*
 					//choose origin/destination census output areas and map them to their nearest network nodes
 					List<String> listOfOriginAreaCodes = roadNetwork.getZoneToAreaCodes().get(mk.getKey(0));
 					List<String> listOfDestinationAreaCodes = roadNetwork.getZoneToAreaCodes().get(mk.getKey(1));
@@ -339,137 +369,137 @@ public class RoadNetworkAssignment {
 						e.printStackTrace();
 						System.err.printf("Couldn't find the nearest node for %s or %s output area.\n", originAreaCode, destinationAreaCode);
 					}
-					*/
+				 */
 
-					//choose origin/destination nodes based on the gravitating population
-					//the choice with replacement means that possibly: destination node = origin node
-					//the choice without replacement means that destination node has to be different from origin node
-					List<Integer> listOfOriginNodes = roadNetwork.getZoneToNodes().get(origin); //the list is already sorted
-					List<Integer> listOfDestinationNodes = roadNetwork.getZoneToNodes().get(destination); //the list is already sorted
-					//choose origin node
-					double cumulativeProbability = 0.0;
-					Integer originNode = null;
-					double random = rng.nextDouble();
-					for (int node: listOfOriginNodes) {
-						cumulativeProbability += nodeProbabilities.get(node);
+				//choose origin/destination nodes based on the gravitating population
+				//the choice with replacement means that possibly: destination node = origin node
+				//the choice without replacement means that destination node has to be different from origin node
+				List<Integer> listOfOriginNodes = roadNetwork.getZoneToNodes().get(origin); //the list is already sorted
+				List<Integer> listOfDestinationNodes = roadNetwork.getZoneToNodes().get(destination); //the list is already sorted
+				//choose origin node
+				double cumulativeProbability = 0.0;
+				Integer originNode = null;
+				double random = rng.nextDouble();
+				for (int node: listOfOriginNodes) {
+					cumulativeProbability += nodeProbabilities.get(node);
+					if (Double.compare(cumulativeProbability, random) > 0) {
+						originNode = node;
+						break;
+					}
+				}
+
+				//choose destination node
+				cumulativeProbability = 0.0;
+				Integer destinationNode = null;
+				random = rng.nextDouble();
+				//if intrazonal trip and replacement is not allowed, the probability of the originNode should be 0 so it cannot be chosen again
+				//also, in that case it is important to rescale other node probabilities (now that the originNode is removed) by dividing with (1.0 - p(originNode))!
+				if (FLAG_INTRAZONAL_ASSIGNMENT_REPLACEMENT == false && origin.equals(destination)) { //no replacement and intra-zonal trip
+					for (int node: listOfDestinationNodes) {
+						if (node == originNode.intValue()) continue; //skip if the node is the same as origin
+						cumulativeProbability += nodeProbabilities.get(node) / (1.0 - nodeProbabilities.get(originNode));
 						if (Double.compare(cumulativeProbability, random) > 0) {
-							originNode = node;
+							destinationNode = node;
 							break;
 						}
 					}
-				
-					//choose destination node
-					cumulativeProbability = 0.0;
-					Integer destinationNode = null;
-					random = rng.nextDouble();
-					//if intrazonal trip, the probability of the originNode should be 0 so it cannot be chosen again
-					//also, it is important to rescale other node probabilities (now that the originNode is removed) by dividing with (1.0 - p(originNode))!
-					if (origin.equals(destination)) { //intra-zonal trip
-							for (int node: listOfDestinationNodes) {
-								if (node == originNode.intValue()) continue; //skip if the node is the same as origin
-								cumulativeProbability += nodeProbabilities.get(node) / (1.0 - nodeProbabilities.get(originNode));
-								if (Double.compare(cumulativeProbability, random) > 0) {
-									destinationNode = node;
-									break;
-								}
-							}
-					} else	{ //inter-zonal trip
-						for (int node: listOfDestinationNodes) {
-							cumulativeProbability += nodeProbabilities.get(node);
-							if (Double.compare(cumulativeProbability, random) > 0) {
-								destinationNode = node;
+				} else	{ //inter-zonal trip (or intra-zonal with replacement)
+					for (int node: listOfDestinationNodes) {
+						cumulativeProbability += nodeProbabilities.get(node);
+						if (Double.compare(cumulativeProbability, random) > 0) {
+							destinationNode = node;
+							break;
+						}
+					}
+				}			
+
+				DirectedGraph rn = roadNetwork.getNetwork();
+				//set source and destination node
+				Node from = roadNetwork.getNodeIDtoNode().get(originNode);
+				Node to = roadNetwork.getNodeIDtoNode().get(destinationNode);
+				//					System.out.println("from " + from + " to " + to);
+				Path foundPath = null;
+				try {
+
+					//see if that path from node 'from' to node 'to' already exists in the path storage
+					if (pathStorage.containsKey(origin, destination)) { 
+						List<Path> list = (List<Path>) pathStorage.get(origin, destination);
+						for (Path p: list) {
+							//if (p.getFirst().equals(from) && p.getLast().equals(to)) {
+							if (p.getFirst().getID() == from.getID() && p.getLast().getID() == to.getID()) {
+								foundPath = p;
 								break;
 							}
 						}
-					}			
-					
-					DirectedGraph rn = roadNetwork.getNetwork();
-					//set source and destination node
-					Node from = roadNetwork.getNodeIDtoNode().get(originNode);
-					Node to = roadNetwork.getNodeIDtoNode().get(destinationNode);
-//					System.out.println("from " + from + " to " + to);
-					Path foundPath = null;
-					try {
-						
-						//see if that path from node 'from' to node 'to' already exists in the path storage
-						if (pathStorage.containsKey(origin, destination)) { 
-							List<Path> list = (List<Path>) pathStorage.get(origin, destination);
-							for (Path p: list) {
-								//if (p.getFirst().equals(from) && p.getLast().equals(to)) {
-								if (p.getFirst().getID() == from.getID() && p.getLast().getID() == to.getID()) {
-									foundPath = p;
-									break;
-								}
-							}
-						}
-					
-						//if path does not already exist, get the shortest path from the origin node to the destination node using AStar algorithm
-						if (foundPath == null) {
-							//System.out.println("The path does not exist in the path storage");
-							AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctionsTime(to, this.linkTravelTime));
-							//AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctions(to));
-							aStarPathFinder.calculate();
-							Path aStarPath;
-							aStarPath = aStarPathFinder.getPath();
-							aStarPath.reverse();
-							//System.out.println(aStarPath);
-							//System.out.println("The path as a list of nodes: " + aStarPath);
+					}
 
-							foundPath = aStarPath;
-						}
-									
-						//increase the number of trips starting at origin LAD
-						Integer number = this.LADnoTripStarts.get(origin);
-						if (number == null) number = 0;
-						this.LADnoTripStarts.put(origin, ++number);
-						//increase the number of trips ending at destination LAD
-						Integer number2 = this.LADnoTripEnds.get(destination);
-						if (number2 == null) number2 = 0;
-						this.LADnoTripEnds.put(destination, ++number2);
-						
-						List listOfEdges = foundPath.getEdges();
-						//System.out.println("The path as a list of edges: " + listOfEdges);
-						//System.out.println("Path size in the number of nodes: " + pathFound.size());
-						//System.out.println("Path size in the number of edges: " + listOfEdges.size());
-						/*
+					//if path does not already exist, get the shortest path from the origin node to the destination node using AStar algorithm
+					if (foundPath == null) {
+						//System.out.println("The path does not exist in the path storage");
+						AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctionsTime(to, this.linkTravelTime));
+						//AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctions(to));
+						aStarPathFinder.calculate();
+						Path aStarPath;
+						aStarPath = aStarPathFinder.getPath();
+						aStarPath.reverse();
+						//System.out.println(aStarPath);
+						//System.out.println("The path as a list of nodes: " + aStarPath);
+
+						foundPath = aStarPath;
+					}
+
+					//increase the number of trips starting at origin LAD
+					Integer number = this.LADnoTripStarts.get(origin);
+					if (number == null) number = 0;
+					this.LADnoTripStarts.put(origin, ++number);
+					//increase the number of trips ending at destination LAD
+					Integer number2 = this.LADnoTripEnds.get(destination);
+					if (number2 == null) number2 = 0;
+					this.LADnoTripEnds.put(destination, ++number2);
+
+					List listOfEdges = foundPath.getEdges();
+					//System.out.println("The path as a list of edges: " + listOfEdges);
+					//System.out.println("Path size in the number of nodes: " + pathFound.size());
+					//System.out.println("Path size in the number of edges: " + listOfEdges.size());
+					/*
 						DijkstraShortestPathFinder pathFinder = new DijkstraShortestPathFinder(rn, from, roadNetwork.getDijkstraTimeWeighter());
 						pathFinder.calculate();
 						Path path = pathFinder.getPath(to);
 						path.reverse();
 						List listOfEdges = path.getEdges();
-						 */
-						double sum = 0;
-						List<Path> list;
-						for (Object o: listOfEdges) {
-							//DirectedEdge e = (DirectedEdge) o;
-							Edge e = (Edge) o;
-							//System.out.print(e.getID() + "|" + e.getNodeA() + "->" + e.getNodeB() + "|");
-							SimpleFeature sf = (SimpleFeature) e.getObject();
-							double length = (double) sf.getAttribute("LenNet");
-							//System.out.println(length);
-							sum += length;
+					 */
+					double sum = 0;
+					List<Path> list;
+					for (Object o: listOfEdges) {
+						//DirectedEdge e = (DirectedEdge) o;
+						Edge e = (Edge) o;
+						//System.out.print(e.getID() + "|" + e.getNodeA() + "->" + e.getNodeB() + "|");
+						SimpleFeature sf = (SimpleFeature) e.getObject();
+						double length = (double) sf.getAttribute("LenNet");
+						//System.out.println(length);
+						sum += length;
 
-							//increase volume count (in PCU) for that edge
-							Double volumeInPCU = linkVolumesInPCU.get(e.getID());
-							if (volumeInPCU == null) volumeInPCU = 0.0;
-							volumeInPCU++;
-							linkVolumesInPCU.put(e.getID(), volumeInPCU);
-						}
-						//System.out.printf("Sum of edge lengths: %.3f\n\n", sum);
-
-						//store path in path storage
-						if (pathStorage.containsKey(mk.getKey(0), mk.getKey(1))) 
-							list = (List<Path>) pathStorage.get(mk.getKey(0), mk.getKey(1));
-						else {
-							list = new ArrayList<Path>();
-							pathStorage.put((String)mk.getKey(0), (String)mk.getKey(1), list);
-						}
-						list.add(foundPath); //list.add(path);
-					} catch (Exception e) {
-						e.printStackTrace();
-						System.err.printf("Couldnt find path from node %d to node %d!", from.getID(), to.getID());
+						//increase volume count (in PCU) for that edge
+						Double volumeInPCU = linkVolumesInPCU.get(e.getID());
+						if (volumeInPCU == null) volumeInPCU = 0.0;
+						volumeInPCU++;
+						linkVolumesInPCU.put(e.getID(), volumeInPCU);
 					}
-				}//for each trip
+					//System.out.printf("Sum of edge lengths: %.3f\n\n", sum);
+
+					//store path in path storage
+					if (pathStorage.containsKey(mk.getKey(0), mk.getKey(1))) 
+						list = (List<Path>) pathStorage.get(mk.getKey(0), mk.getKey(1));
+					else {
+						list = new ArrayList<Path>();
+						pathStorage.put((String)mk.getKey(0), (String)mk.getKey(1), list);
+					}
+					list.add(foundPath); //list.add(path);
+				} catch (Exception e) {
+					e.printStackTrace();
+					System.err.printf("Couldnt find path from node %d to node %d!", from.getID(), to.getID());
+				}
+			}//for each trip
 		}//for each OD pair
 	}
 
@@ -486,10 +516,14 @@ public class RoadNetworkAssignment {
 	 * </ul>   
 	 * @param freightODM Freight origin-destination matrix
 	 */
+	@SuppressWarnings("unused")
 	public void assignFreightFlows(FreightMatrix freightMatrix) {
 
-		
-		//System.out.println("Assigning the vehicle flows from the freight matrix...");
+
+		System.out.println("Assigning the vehicle flows from the freight matrix...");
+
+		//sort nodes based on the gravitating workplace population
+		this.roadNetwork.sortGravityNodesFreight();
 
 		//for each OD pair from the passengerODM		
 		for (MultiKey mk: freightMatrix.getKeySet()) {
@@ -497,12 +531,15 @@ public class RoadNetworkAssignment {
 			//System.out.println("origin = " + mk.getKey(0));
 			//System.out.println("destination = " + mk.getKey(1));
 			//System.out.println("vehicle type = " + mk.getKey(2));
+			int origin = (int) mk.getKey(0);
+			int destination = (int) mk.getKey(1);
+			int vehicleType = (int) mk.getKey(2);
 
 			//for each trip
-			int flow = freightMatrix.getFlow((int)mk.getKey(0), (int)mk.getKey(1), (int)mk.getKey(2));
+			int flow = freightMatrix.getFlow(origin, destination, (int)mk.getKey(2));
 			for (int i=0; i<flow; i++) {
-				
-				int originNode, destinationNode;
+
+				Integer originNode = null, destinationNode = null;
 
 				/*
 				//choose random start and end nodes
@@ -527,11 +564,12 @@ public class RoadNetworkAssignment {
 				} else {// freight zone is a point (port, airport or distribution centre)
 					destinationNode = roadNetwork.getFreightZoneToNearestNode().get((int)mk.getKey(1));
 				}
-				*/
-					
+				 */
+
+				/*
 				//chose origin node based on the population in workplace zones
 				if ((int)mk.getKey(0) <= 1032) { //origin freight zone is a LAD
-					
+
 					//choose origin workplace zone within the LAD
 					String originZone = roadNetwork.getFreightZoneToLAD().get((int)mk.getKey(0)); 
 					List<String> listOfOriginWorkplaceCodes = roadNetwork.getZoneToWorkplaceCodes().get(originZone);
@@ -551,17 +589,17 @@ public class RoadNetworkAssignment {
 						if (number == null) number = 0;
 						this.workplaceZoneNoTripStarts.put(originWorkplaceCode, ++number);
 					}
-					
+
 					//use the network node nearest to the workplace zone (population-weighted) centroid
 					originNode = roadNetwork.getWorkplaceZoneToNearestNode().get(originWorkplaceCode);
-					
+
 				} else {// freight zone is a point (port, airport or distribution centre)
 					originNode = roadNetwork.getFreightZoneToNearestNode().get((int)mk.getKey(0));
 				}
-				
+
 				//choose destination node based on the population in workplace zones
 				if ((int)mk.getKey(1) <= 1032) { //destination freight zone is a LAD
-					
+
 					//choose destination workplace zone within the LAD
 					String destinationZone = roadNetwork.getFreightZoneToLAD().get((int)mk.getKey(1)); 
 					List<String> listOfDestinationWorkplaceCodes = roadNetwork.getZoneToWorkplaceCodes().get(destinationZone);
@@ -581,46 +619,135 @@ public class RoadNetworkAssignment {
 						if (number == null) number = 0;
 						this.workplaceZoneNoTripEnds.put(destinationWorkplaceCode, ++number);
 					}
-					
+
 					//use the network node nearest to the workplace zone (population-weighted) centroid
 					destinationNode = roadNetwork.getWorkplaceZoneToNearestNode().get(destinationWorkplaceCode);
-					
+
 				} else {// freight zone is a point (port, airport or distribution centre)
 					destinationNode = roadNetwork.getFreightZoneToNearestNode().get((int)mk.getKey(1));
 				}
-				
-				//get the shortest path from the origin node to the destination node using AStar algorithm
+				 */
+
+				//choose origin node based on the gravitating population
+				if (origin <= 1032) { //origin freight zone is a LAD
+
+					//choose origin node based on the gravitating population
+					//the choice with replacement means that possibly: destination node = origin node
+					//the choice without replacement means that destination node has to be different from origin node
+
+					//map freight zone number to LAD code
+					String originLAD = roadNetwork.getFreightZoneToLAD().get(origin);
+					List<Integer> listOfOriginNodes = roadNetwork.getZoneToNodes().get(originLAD); //the list is already sorted
+					//choose origin node
+					double cumulativeProbability = 0.0;
+					double random = rng.nextDouble();
+					for (int node: listOfOriginNodes) {
+						cumulativeProbability += nodeProbabilitiesFreight.get(node);
+						if (Double.compare(cumulativeProbability, random) > 0) {
+							originNode = node;
+							break;
+						}
+					}
+
+				} else {// freight zone is a point (port, airport or distribution centre)
+					originNode = roadNetwork.getFreightZoneToNearestNode().get(origin);
+				}
+
+				//choose destination node based on the gravitating population
+				if (destination <= 1032) { //destination freight zone is a LAD
+
+					//choose origin/destination nodes based on the gravitating population
+					//the choice with replacement means that possibly: destination node = origin node
+					//the choice without replacement means that destination node has to be different from origin node
+
+					//map freight zone number to LAD code
+					String destinationLAD = roadNetwork.getFreightZoneToLAD().get(destination);
+					List<Integer> listOfDestinationNodes = roadNetwork.getZoneToNodes().get(destinationLAD); //the list is already sorted
+					//choose origin node
+					double cumulativeProbability = 0.0;
+					double random = rng.nextDouble();
+					//if intrazonal trip and replacement is not allowed, the probability of the originNode should be 0 so it cannot be chosen again
+					//also, in that case it is important to rescale other node probabilities (now that the originNode is removed) by dividing with (1.0 - p(originNode))!
+					if (FLAG_INTRAZONAL_ASSIGNMENT_REPLACEMENT == false && origin == destination) { //no replacement and intra-zonal trip
+						for (int node: listOfDestinationNodes) {
+							if (node == originNode.intValue()) continue; //skip if the node is the same as origin
+							cumulativeProbability += nodeProbabilitiesFreight.get(node) / (1.0 - nodeProbabilitiesFreight.get(originNode));
+							if (Double.compare(cumulativeProbability, random) > 0) {
+								destinationNode = node;
+								break;
+							}
+						}
+					} else	{ //inter-zonal trip (or intra-zonal with replacement)
+						for (int node: listOfDestinationNodes) {
+							cumulativeProbability += nodeProbabilitiesFreight.get(node);
+							if (Double.compare(cumulativeProbability, random) > 0) {
+								destinationNode = node;
+								break;
+							}
+						}
+					}
+
+				} else {// freight zone is a point (port, airport or distribution centre)
+					destinationNode = roadNetwork.getFreightZoneToNearestNode().get(destination);
+				}
+
+				if (originNode == null) System.err.println("Could not find origin node for a freight trip!");
+				if (destinationNode == null) System.err.println("Could not find destination node for a freight trip!");
+								
 				DirectedGraph rn = roadNetwork.getNetwork();
 				//set source and destination node
-				Iterator iter = rn.getNodes().iterator();
-				Node from = null, to = null;
-				while (iter.hasNext() && (from == null || to == null)) {
-					DirectedNode node = (DirectedNode) iter.next();
-					if (node.getID() == originNode) from = node;
-					if (node.getID() == destinationNode) to = node;
-				}
+				Node from = roadNetwork.getNodeIDtoNode().get(originNode);
+				Node to = roadNetwork.getNodeIDtoNode().get(destinationNode);
+				//System.out.println("from " + from + " to " + to);
+				Path foundPath = null;
 				try {
-					AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctionsTime(to, this.linkTravelTime));
-					//AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctions(to));
-					aStarPathFinder.calculate();
-					Path aStarPath;
-					aStarPath = aStarPathFinder.getPath();
-					aStarPath.reverse();
-					//System.out.println(aStarPath);
-					//System.out.println("The path as a list of nodes: " + aStarPath);
-					List listOfEdges = aStarPath.getEdges();
+
+					VehicleType vht = VehicleType.values()[vehicleType];
+					//see if that path from node 'from' to node 'to' already exists in the path storage for that vehicle type
+					if (pathStorageFreight.get(vht).containsKey(origin, destination)) { 
+						List<Path> list = (List<Path>) pathStorageFreight.get(vht).get(origin, destination);
+						for (Path p: list) {
+							//if (p.getFirst().equals(from) && p.getLast().equals(to)) {
+							if (p.getFirst().getID() == from.getID() && p.getLast().getID() == to.getID()) {
+								foundPath = p;
+								break;
+							}
+						}
+					}
+
+					//if path does not already exist, get the shortest path from the origin node to the destination node using AStar algorithm
+					if (foundPath == null) {
+						//System.out.println("The path does not exist in the path storage");
+						AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctionsTime(to, this.linkTravelTime));
+						//AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctions(to));
+						aStarPathFinder.calculate();
+						Path aStarPath;
+						aStarPath = aStarPathFinder.getPath();
+						aStarPath.reverse();
+						//System.out.println(aStarPath);
+						//System.out.println("The path as a list of nodes: " + aStarPath);
+
+						foundPath = aStarPath;
+					}
+
+					//check to which LAD chosen origin and destination nodes belong to!
+					String originLAD = roadNetwork.getNodeToZone().get(originNode);
+					String destinationLAD = roadNetwork.getNodeToZone().get(destinationNode);
+		
+					//increase the number of freight trips starting at origin LAD
+					Integer number = this.LADnoTripStartsFreight.get(originLAD);
+					if (number == null) number = 0;
+					this.LADnoTripStartsFreight.put(originLAD, ++number);
+					//increase the number of trips ending at destination LAD
+					Integer number2 = this.LADnoTripEndsFreight.get(destinationLAD);
+					if (number2 == null) number2 = 0;
+					this.LADnoTripEndsFreight.put(destinationLAD, ++number2);
+
+					List listOfEdges = foundPath.getEdges();
 					//System.out.println("The path as a list of edges: " + listOfEdges);
 					//System.out.println("Path size in the number of nodes: " + aStarPath.size());
 					//System.out.println("Path size in the number of edges: " + listOfEdges.size());
-					
-					/*
-					DijkstraShortestPathFinder pathFinder = new DijkstraShortestPathFinder(rn, from, roadNetwork.getDijkstraTimeWeighter());
-					pathFinder.calculate();
-					Path path = pathFinder.getPath(to);
-					path.reverse();
-					List listOfEdges = path.getEdges();
-					*/
-										
+
 					double sum = 0;
 					List<Path> list;
 					for (Object o: listOfEdges) {
@@ -635,30 +762,20 @@ public class RoadNetworkAssignment {
 						//increase volume count for that edge
 						Double volumeInPCU = linkVolumesInPCU.get(e.getID());
 						if (volumeInPCU == null) volumeInPCU = 0.0;
-						volumeInPCU += this.vehicleTypeToPCU.get(VehicleType.values()[(int)mk.getKey(2)]);
+						volumeInPCU += this.vehicleTypeToPCU.get(VehicleType.values()[vehicleType]);
 						linkVolumesInPCU.put(e.getID(), volumeInPCU);
 					}
 					//System.out.printf("Sum of edge lengths: %.3f\n\n", sum);
 
-//					//store path in path storage
-//					if (pathStorageFreight.containsKey(mk.getKey(0), mk.getKey(1))) 
-//						list = (List<Path>) pathStorageFreight.get(mk.getKey(0), mk.getKey(1));
-//					else {
-//						list = new ArrayList<Path>();
-//						pathStorageFreight.put((int)mk.getKey(0), (int)mk.getKey(1), list);
-//					}
-//					list.add(aStarPath); //list.add(path);
-					
 					//store path in path storage
-					VehicleType vht = VehicleType.values()[(int)mk.getKey(2)];
-					if (pathStorageFreight.get(vht).containsKey(mk.getKey(0), mk.getKey(1))) 
-						list = (List<Path>) pathStorageFreight.get(vht).get(mk.getKey(0), mk.getKey(1));
+					if (pathStorageFreight.get(vht).containsKey(origin, destination)) 
+						list = (List<Path>) pathStorageFreight.get(vht).get(origin, destination);
 					else {
 						list = new ArrayList<Path>();
-						pathStorageFreight.get(vht).put((int)mk.getKey(0), (int)mk.getKey(1), list);
+						pathStorageFreight.get(vht).put(origin, destination, list);
 					}
-					list.add(aStarPath); //list.add(path);
-					
+					list.add(foundPath);
+
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -672,30 +789,60 @@ public class RoadNetworkAssignment {
 	public void updateLinkTravelTimes() {
 
 		double congestedTravelTime;
-		
+
 		//iterate through all the edges in the graph
 		Iterator iter = roadNetwork.getNetwork().getEdges().iterator();
 		HashMap<Integer, Integer> numberOfLanes = roadNetwork.getNumberOfLanes();
 		while(iter.hasNext()) {
-			
+
 			Edge edge = (Edge) iter.next();
 			SimpleFeature sf = (SimpleFeature) edge.getObject();
-			
+
 			double linkVolumeInPCU;
 			if (linkVolumesInPCU.get(edge.getID()) == null) linkVolumeInPCU = 0.0;
 			else linkVolumeInPCU = linkVolumesInPCU.get(edge.getID());
-			
+
 			String roadNumber = (String) sf.getAttribute("RoadNumber");
+			double roadLength = (double) sf.getAttribute("LenNet"); //[km]
+			
+			/*
+			//Bureau of Public Roads (1964) formulation
 			if (roadNumber.charAt(0) == 'M') //motorway
 				congestedTravelTime = linkFreeFlowTravelTime.get(edge.getID())*(1 + ALPHA * Math.pow(PEAK_HOUR_PERCENTAGE * linkVolumeInPCU / numberOfLanes.get(edge.getID()) / MAXIMUM_CAPACITY_M_ROAD, BETA_M_ROAD));
 			else if (roadNumber.charAt(0) == 'A') //A-road
 				congestedTravelTime = linkFreeFlowTravelTime.get(edge.getID())*(1 + ALPHA * Math.pow(PEAK_HOUR_PERCENTAGE * linkVolumeInPCU / numberOfLanes.get(edge.getID()) / MAXIMUM_CAPACITY_A_ROAD, BETA_A_ROAD));
 			else //ferry
 				congestedTravelTime = linkFreeFlowTravelTime.get(edge.getID());
+			*/
+		
+			//Speed-flow curves from FORGE (Department for Transport, 2005)
+			if (roadNumber.charAt(0) == 'M') {//motorway
+				
+				double flow = PEAK_HOUR_PERCENTAGE * linkVolumeInPCU / numberOfLanes.get(edge.getID());
+				double speed = 0.0;
+				if (flow < 1398) speed = ((69.96 - 71.95) / 1398 * flow + 71.95) * 1.609344; //[kph]
+				else 			 speed = ((34.55 - 69.96) / (2330 - 1398) * (flow - 1398) + 69.96) * 1.609344; //[kph]
+				
+				if (speed <= 0.0) System.err.println("Speed is not positive!");
+				congestedTravelTime = roadLength / speed * 60; //[min]
+						
+			} else if (roadNumber.charAt(0) == 'A') {//A-road
+				
+				double flow = PEAK_HOUR_PERCENTAGE * linkVolumeInPCU / numberOfLanes.get(edge.getID());
+				double speed = 0.0;
+				if (flow < 1251) speed = ((50.14 - 56.05) / 1251 * flow + 56.05) * 1.609344; //[kph]
+				else 			 speed = ((27.22 - 50.14) / (1740 - 1251) * (flow - 1251) + 50.14) * 1.609344; //[kph]
+				
+				if (speed <= 0.0) System.err.println("Speed is not positive!");
+				congestedTravelTime = roadLength / speed * 60;
+				
+			} else //ferry
+				congestedTravelTime = linkFreeFlowTravelTime.get(edge.getID());
+				
 			linkTravelTime.put(edge.getID(), congestedTravelTime);
 		}
 	}
-	
+
 	/**
 	 * Updates link travel times using weighted averaging between new values (calculated from link volumes) 
 	 * and older values (stored in the instance field).
@@ -704,35 +851,64 @@ public class RoadNetworkAssignment {
 	public void updateLinkTravelTimes(double weight) {
 
 		double congestedTravelTime;
-		
+
 		//iterate through all the edges in the graph
 		Iterator iter = roadNetwork.getNetwork().getEdges().iterator();
 		HashMap<Integer, Integer> numberOfLanes = roadNetwork.getNumberOfLanes();
 		while(iter.hasNext()) {
-			
+
 			Edge edge = (Edge) iter.next();
 			SimpleFeature sf = (SimpleFeature) edge.getObject();
-			
-			double linkVol;
-			if (linkVolumesInPCU.get(edge.getID()) == null) linkVol = 0.0;
-			else linkVol = linkVolumesInPCU.get(edge.getID());
-			
+
+			double linkVolumeInPCU;
+			if (linkVolumesInPCU.get(edge.getID()) == null) linkVolumeInPCU = 0.0;
+			else linkVolumeInPCU = linkVolumesInPCU.get(edge.getID());
+
 			String roadNumber = (String) sf.getAttribute("RoadNumber");
+			double roadLength = (double) sf.getAttribute("LenNet"); //[km]
+			
+			/*
+			//Bureau of Public Roads (1964) formulation
 			if (roadNumber.charAt(0) == 'M') //motorway
-				congestedTravelTime = linkFreeFlowTravelTime.get(edge.getID())*(1 + ALPHA * Math.pow(PEAK_HOUR_PERCENTAGE * linkVol / numberOfLanes.get(edge.getID()) / MAXIMUM_CAPACITY_M_ROAD, BETA_M_ROAD));
+				congestedTravelTime = linkFreeFlowTravelTime.get(edge.getID())*(1 + ALPHA * Math.pow(PEAK_HOUR_PERCENTAGE * linkVolumeInPCU / numberOfLanes.get(edge.getID()) / MAXIMUM_CAPACITY_M_ROAD, BETA_M_ROAD));
 			else if (roadNumber.charAt(0) == 'A') //A-road
-				congestedTravelTime = linkFreeFlowTravelTime.get(edge.getID())*(1 + ALPHA * Math.pow(PEAK_HOUR_PERCENTAGE * linkVol / numberOfLanes.get(edge.getID()) / MAXIMUM_CAPACITY_A_ROAD, BETA_A_ROAD));
+				congestedTravelTime = linkFreeFlowTravelTime.get(edge.getID())*(1 + ALPHA * Math.pow(PEAK_HOUR_PERCENTAGE * linkVolumeInPCU / numberOfLanes.get(edge.getID()) / MAXIMUM_CAPACITY_A_ROAD, BETA_A_ROAD));
 			else //ferry
 				congestedTravelTime = linkFreeFlowTravelTime.get(edge.getID());
-			
+			*/
+		
+			//Speed-flow curves from FORGE (Department for Transport, 2005)
+			if (roadNumber.charAt(0) == 'M') {//motorway
+				
+				double flow = PEAK_HOUR_PERCENTAGE * linkVolumeInPCU / numberOfLanes.get(edge.getID());
+				double speed = 0.0;
+				if (flow < 1398) speed = ((69.96 - 71.95) / 1398 * flow + 71.95) * 1.609344; //[kph]
+				else 			 speed = ((34.55 - 69.96) / (2330 - 1398) * (flow - 1398) + 69.96) * 1.609344; //[kph]
+				
+				if (speed <= 0.0) System.err.println("Speed is not positive!");
+				congestedTravelTime = roadLength / speed * 60; //[min]
+						
+			} else if (roadNumber.charAt(0) == 'A') {//A-road
+				
+				double flow = PEAK_HOUR_PERCENTAGE * linkVolumeInPCU / numberOfLanes.get(edge.getID());
+				double speed = 0.0;
+				if (flow < 1251) speed = ((50.14 - 56.05) / 1251 * flow + 56.05) * 1.609344; //[kph]
+				else 			 speed = ((27.22 - 50.14) / (1740 - 1251) * (flow - 1251) + 50.14) * 1.609344; //[kph]
+				
+				if (speed <= 0.0) System.err.println("Speed is not positive!");
+				congestedTravelTime = roadLength / speed * 60;
+				
+			} else //ferry
+				congestedTravelTime = linkFreeFlowTravelTime.get(edge.getID());
+		
 			//average with the old value (currently stored in the linkTravelTime field)
 			congestedTravelTime = weight * congestedTravelTime + (1 - weight) * linkTravelTime.get(edge.getID());
-			
+
 			linkTravelTime.put(edge.getID(), congestedTravelTime);
 		}
 	}
 
-	
+
 	/** 
 	 * Assigns passenger and freight origin-destination matrix to the road network
 	 * using the fastest path based on the current values in the linkTravelTime field.
@@ -742,12 +918,12 @@ public class RoadNetworkAssignment {
 	 * @param weight Weighting parameter.
 	 */
 	public void assignFlowsAndUpdateLinkTravelTimes(ODMatrix passengerODM, FreightMatrix freightODM, double weight) {
-		
+
 		this.assignPassengerFlows(passengerODM);
 		this.assignFreightFlows(freightODM);
 		this.updateLinkTravelTimes(weight);
 	}
-	
+
 	/** 
 	 * Iterates assignment and travel time update a fixed number of times.
 	 * @param passengerODM Passenger origin-destination matrix.
@@ -756,7 +932,7 @@ public class RoadNetworkAssignment {
 	 * @param iterations Number of iterations.
 	 */
 	public void assignFlowsAndUpdateLinkTravelTimesIterated(ODMatrix passengerODM, FreightMatrix freightODM, double weight, int iterations) {
-		
+
 		for (int i=0; i<iterations; i++) {
 			this.resetLinkVolumesInPCU(); //link volumes must be reset or they would compound across all iterations
 			this.resetPathStorages(); //clear path storages
@@ -764,24 +940,24 @@ public class RoadNetworkAssignment {
 			this.assignFlowsAndUpdateLinkTravelTimes(passengerODM, freightODM, weight);
 		}
 	}
-	
+
 	/**
 	 * Updates travel time skim matrix (zone-to-zone travel times).
 	 * @param timeSkimMatrix Inter-zonal skim matrix (time).
 	 */
 	public void updateTimeSkimMatrix(SkimMatrix timeSkimMatrix) {
-		
+
 		//for each OD pair
 		for (MultiKey mk: pathStorage.keySet()) {
 			//System.out.println(mk);
 			String originZone = (String) mk.getKey(0);
 			String destinationZone = (String) mk.getKey(1);
-			
+
 			List<Path> pathList = pathStorage.get(originZone, destinationZone);
 			double totalODtravelTime = 0.0;
 			//for each path in the path list calculate total travel time
 			for (Path path: pathList) {
-				
+
 				double pathTravelTime = 0.0;
 				for (Object o: path.getEdges()) {
 					Edge e = (Edge)o;
@@ -789,7 +965,7 @@ public class RoadNetworkAssignment {
 				}
 				//System.out.printf("Path travel time: %.3f\n", pathTravelTime);
 				totalODtravelTime += pathTravelTime;
-				
+
 				//add average access and egress time to the first and the last node [m -> km] [h -> s]
 				double averageAccessDistance = this.roadNetwork.getAverageAcessEgressDistance(path.getFirst().getID()) / 1000;
 				double averageEgressDistance = this.roadNetwork.getAverageAcessEgressDistance(path.getLast().getID()) / 1000;
@@ -798,7 +974,7 @@ public class RoadNetworkAssignment {
 				//System.out.printf("Acess time: %.3f min Egress time: %.3f min\n", averageAccessTime, averageEgressTime);
 				//System.out.printf("Path travel time with access/egress: %.3f\n", pathTravelTime + averageAccessTime + averageEgressTime);
 				totalODtravelTime += (averageAccessTime + averageEgressTime);
-				
+
 			}
 			double averageODtravelTime = totalODtravelTime / pathList.size();
 			//System.out.printf("Average OD travel time: %.3f min\n", averageODtravelTime);
@@ -812,13 +988,13 @@ public class RoadNetworkAssignment {
 	 * @return Inter-zonal skim matrix (time).
 	 */
 	public SkimMatrix calculateTimeSkimMatrix() {
-		
+
 		SkimMatrix timeSkimMatrix = new SkimMatrix();
 		this.updateTimeSkimMatrix(timeSkimMatrix);
-		
+
 		return timeSkimMatrix;
 	}
-	
+
 	/**
 	 * Updates travel time skim matrix (zone-to-zone travel times) for freight.
 	 * @param timeSkimMatrixFreight Inter-zonal skim matrix (time).
@@ -845,10 +1021,10 @@ public class RoadNetworkAssignment {
 					}
 					//System.out.printf("Path travel time: %.3f\n", pathTravelTime);
 					totalODtravelTime += pathTravelTime;
-					
+
 					//add average access and egress time to the first and the last node [m -> km] [h -> min]
-					double averageAccessDistance = this.roadNetwork.getAverageAcessEgressDistance(path.getFirst().getID()) / 1000;
-					double averageEgressDistance = this.roadNetwork.getAverageAcessEgressDistance(path.getLast().getID()) / 1000;
+					double averageAccessDistance = this.roadNetwork.getAverageAcessEgressDistanceFreight(path.getFirst().getID()) / 1000;
+					double averageEgressDistance = this.roadNetwork.getAverageAcessEgressDistanceFreight(path.getLast().getID()) / 1000;
 					totalODtravelTime += (averageAccessDistance + averageEgressDistance) / AVERAGE_ACCESS_EGRESS_SPEED_FREIGHT * 60;
 				}
 				double averageODtravelTime = totalODtravelTime / pathList.size();
@@ -863,13 +1039,13 @@ public class RoadNetworkAssignment {
 	 * @return Inter-zonal skim matrix (time).
 	 */
 	public SkimMatrixFreight calculateTimeSkimMatrixFreight() {
-		
+
 		SkimMatrixFreight timeSkimMatrixFreight = new SkimMatrixFreight();
 		this.updateTimeSkimMatrixFreight(timeSkimMatrixFreight);
-		
+
 		return timeSkimMatrixFreight;
 	}
-	
+
 	/**
 	 * Updates cost skim matrix (zone-to-zone financial costs).
 	 * @param costSkimMatrix Inter-zonal skim matrix (cost).
@@ -881,12 +1057,12 @@ public class RoadNetworkAssignment {
 			//System.out.println(mk);
 			String originZone = (String) mk.getKey(0);
 			String destinationZone = (String) mk.getKey(1);
-			
+
 			List<Path> pathList = pathStorage.get(originZone, destinationZone);
 			double totalODdistance = 0.0;
 			//for each path in the path list calculate total distance
 			for (Path path: pathList) {
-				
+
 				double pathLength = 0.0;
 				for (Object o: path.getEdges()) {
 					Edge e = (Edge)o;
@@ -896,7 +1072,7 @@ public class RoadNetworkAssignment {
 				}
 				//System.out.printf("Path length: %.3f\n\n", pathLength);
 				totalODdistance += pathLength;
-				
+
 				//add average access and egress distance to the first and the last node [m -> km!]
 				totalODdistance += this.roadNetwork.getAverageAcessEgressDistance(path.getFirst().getID()) / 1000;
 				totalODdistance += this.roadNetwork.getAverageAcessEgressDistance(path.getLast().getID()) / 1000;
@@ -906,31 +1082,31 @@ public class RoadNetworkAssignment {
 			//iterate over engine types
 			for (EngineType engine: EngineType.values())
 				energyCost += averageODdistance / 100 * engineTypeFractions.get(engine) * energyConsumptionsPer100km.get(engine) * energyUnitCosts.get(engine);
-						
+
 			//System.out.printf("Average OD distance: %.3f km\t Fuel cost: %.2f GBP\n", averageODdistance, energyCost);
 			//update cost skim matrix
 			costSkimMatrix.setCost(originZone, destinationZone, energyCost);
 		}
 	}
-	
+
 	/**
 	 * Calculates cost skim matrix (zone-to-zone financial costs).
 	 * @return Inter-zonal skim matrix (cost).
 	 */
 	public SkimMatrix calculateCostSkimMatrix() {
-		
+
 		SkimMatrix costSkimMatrix = new SkimMatrix();
 		this.updateCostSkimMatrix(costSkimMatrix);
-		
+
 		return costSkimMatrix;
 	}
-	
+
 	/**
 	 * Updates cost skim matrix (zone-to-zone distances).
 	 * @return Inter-zonal skim matrix (distance).
 	 */
 	public SkimMatrix calculateDistanceSkimMatrix() {
-		
+
 		SkimMatrix distanceSkimMatrix = new SkimMatrix();
 
 		//for each OD pair
@@ -938,12 +1114,12 @@ public class RoadNetworkAssignment {
 			//System.out.println(mk);
 			String originZone = (String) mk.getKey(0);
 			String destinationZone = (String) mk.getKey(1);
-			
+
 			List<Path> pathList = pathStorage.get(originZone, destinationZone);
 			double totalODdistance = 0.0;
 			//for each path in the path list calculate total distance
 			for (Path path: pathList) {
-				
+
 				double pathLength = 0.0;
 				for (Object o: path.getEdges()) {
 					Edge e = (Edge)o;
@@ -953,7 +1129,7 @@ public class RoadNetworkAssignment {
 				}
 				//System.out.printf("Path length: %.3f\n", pathLength);
 				totalODdistance += pathLength;
-				
+
 				//add average access and egress distance to the first and the last node [m -> km!]
 				double accessDistance = this.roadNetwork.getAverageAcessEgressDistance(path.getFirst().getID()) / 1000;
 				double egressDistance = this.roadNetwork.getAverageAcessEgressDistance(path.getLast().getID()) / 1000;
@@ -962,15 +1138,15 @@ public class RoadNetworkAssignment {
 				totalODdistance += (accessDistance + egressDistance);
 			}
 			double averageODdistance = totalODdistance / pathList.size();
-	
+
 			//System.out.printf("Average OD distance: %.3f km\n", averageODdistance);
 			//update distance skim matrix
 			distanceSkimMatrix.setCost(originZone, destinationZone, averageODdistance);
 		}
-		
+
 		return distanceSkimMatrix;
 	}
-	
+
 	/**
 	 * Updates cost skim matrix (zone-to-zone financial costs) for freight.
 	 * @param costSkimMatrix Inter-zonal skim matrix (cost).
@@ -979,51 +1155,55 @@ public class RoadNetworkAssignment {
 
 		//for each vehicle type
 		for (VehicleType vht: pathStorageFreight.keySet())
-		//for each OD pair
-		for (MultiKey mk: pathStorageFreight.get(vht).keySet()) {
-			//System.out.println(mk);
-			int originZone = (int) mk.getKey(0);
-			int destinationZone = (int) mk.getKey(1);
-			
-			List<Path> pathList = pathStorageFreight.get(vht).get(originZone, destinationZone);
-			double totalODdistance = 0.0;
-			//for each path in the path list calculate total distance
-			for (Path path: pathList) {
-				
-				double pathLength = 0.0;
-				for (Object o: path.getEdges()) {
-					Edge e = (Edge)o;
-					SimpleFeature sf = (SimpleFeature) e.getObject();
-					double length = (double) sf.getAttribute("LenNet");
-					pathLength += length;					
+			//for each OD pair
+			for (MultiKey mk: pathStorageFreight.get(vht).keySet()) {
+				//System.out.println(mk);
+				int originZone = (int) mk.getKey(0);
+				int destinationZone = (int) mk.getKey(1);
+
+				List<Path> pathList = pathStorageFreight.get(vht).get(originZone, destinationZone);
+				double totalODdistance = 0.0;
+				//for each path in the path list calculate total distance
+				for (Path path: pathList) {
+
+					double pathLength = 0.0;
+					for (Object o: path.getEdges()) {
+						Edge e = (Edge)o;
+						SimpleFeature sf = (SimpleFeature) e.getObject();
+						double length = (double) sf.getAttribute("LenNet");
+						pathLength += length;					
+					}
+					//System.out.printf("Path length: %.3f\n\n", pathLength);
+					totalODdistance += pathLength;
+					
+					//add average access and egress distance to the first and the last node [m -> km!]
+					totalODdistance += this.roadNetwork.getAverageAcessEgressDistanceFreight(path.getFirst().getID()) / 1000;
+					totalODdistance += this.roadNetwork.getAverageAcessEgressDistanceFreight(path.getLast().getID()) / 1000;
 				}
-				//System.out.printf("Path length: %.3f\n\n", pathLength);
-				totalODdistance += pathLength;
+				double averageODdistance = totalODdistance / pathList.size();
+				double energyCost = 0.0;
+				//iterate over engine types
+				for (EngineType engine: EngineType.values())
+					energyCost += averageODdistance / 100 * engineTypeFractions.get(engine) * energyConsumptionsPer100km.get(engine) * energyUnitCosts.get(engine);
+
+				//System.out.printf("Average OD distance: %.3f km\t Fuel cost: %.2f GBP\n", averageODdistance, energyCost);
+				//update cost skim matrix
+				costSkimMatrixFreight.setCost(originZone, destinationZone, vht.value, energyCost);
 			}
-			double averageODdistance = totalODdistance / pathList.size();
-			double energyCost = 0.0;
-			//iterate over engine types
-			for (EngineType engine: EngineType.values())
-				energyCost += averageODdistance / 100 * engineTypeFractions.get(engine) * energyConsumptionsPer100km.get(engine) * energyUnitCosts.get(engine);
-						
-			//System.out.printf("Average OD distance: %.3f km\t Fuel cost: %.2f GBP\n", averageODdistance, energyCost);
-			//update cost skim matrix
-			costSkimMatrixFreight.setCost(originZone, destinationZone, vht.value, energyCost);
-		}
 	}
-	
+
 	/**
 	 * Calculates cost skim matrix (zone-to-zone financial costs) for freight.
 	 * @return Inter-zonal skim matrix (cost).
 	 */
 	public SkimMatrixFreight calculateCostSkimMatrixFreight() {
-		
+
 		SkimMatrixFreight costSkimMatrixFreight = new SkimMatrixFreight();
 		this.updateCostSkimMatrixFreight(costSkimMatrixFreight);
-		
+
 		return costSkimMatrixFreight;
 	}
-	
+
 	/**
 	 * Calculates total energy consumption for each car engine type (in litres for fuels and in kWh for electricity).
 	 * @return Total consumption for each engine type.
@@ -1051,7 +1231,7 @@ public class RoadNetworkAssignment {
 		}
 		return consumptions;
 	}
-	
+
 	/**
 	 * Calculates total energy consumption for each freight vehicle engine type (in litres for fuels and in kWh for electricity).
 	 * @return Total consumption for each engine type.
@@ -1059,7 +1239,7 @@ public class RoadNetworkAssignment {
 	public HashMap<EngineType, Double> calculateFreightEnergyConsumptions() {
 
 		double totalDistance = 0.0;
-		
+
 		//for each vehicle type
 		for (VehicleType vht: pathStorageFreight.keySet()) {
 			//for each path in the storage
@@ -1071,7 +1251,7 @@ public class RoadNetworkAssignment {
 						SimpleFeature sf = (SimpleFeature) e.getObject();
 						double length = (double) sf.getAttribute("LenNet");
 						totalDistance += length;					
-				}
+					}
 			}
 		}
 		System.out.printf("Total path distance (freight): %.3f km\n", totalDistance);
@@ -1083,17 +1263,17 @@ public class RoadNetworkAssignment {
 		}
 		return consumptions;
 	}
-	
+
 	/**
 	 * Calculates total energy consumption for each engine type of passenger cars and freight vehicles (in litres for fuels and in kWh for electricity).
 	 * @return Total consumption for each engine type.
 	 */
 	public HashMap<EngineType, Double> calculateEnergyConsumptions() {
-		
+
 		HashMap<EngineType, Double> car = calculateCarEnergyConsumptions();
 		HashMap<EngineType, Double> freight = calculateFreightEnergyConsumptions();
 		HashMap<EngineType, Double> combined = new HashMap<EngineType, Double>();
-		
+
 		for (EngineType engine: EngineType.values()) {
 			double consumption = car.get(engine) + freight.get(engine);
 			combined.put(engine, consumption);
@@ -1109,11 +1289,11 @@ public class RoadNetworkAssignment {
 
 		HashMap<Integer, Double> linkPointCapacities = new HashMap<Integer, Double>();
 		HashMap<Integer, Integer> numberOfLanes = roadNetwork.getNumberOfLanes();
-		
+
 		//iterate through all the edges in the graph
 		Iterator iter = roadNetwork.getNetwork().getEdges().iterator();
 		while(iter.hasNext()) {
-			
+
 			Edge edge = (Edge) iter.next();
 			SimpleFeature sf = (SimpleFeature) edge.getObject();
 			double linkVolumeInPCU = 0.0;
@@ -1126,12 +1306,12 @@ public class RoadNetworkAssignment {
 				capacity = PEAK_HOUR_PERCENTAGE * linkVolumeInPCU / numberOfLanes.get(edge.getID());
 			else //ferry
 				capacity = PEAK_HOUR_PERCENTAGE * linkVolumeInPCU;
-			
+
 			linkPointCapacities.put(edge.getID(), capacity);
 		}
 		return linkPointCapacities;
 	}
-	
+
 	/**
 	 * Calculate peak-hour link densities (PCU/lane/km/hr)
 	 */
@@ -1139,11 +1319,11 @@ public class RoadNetworkAssignment {
 
 		HashMap<Integer, Double> linkDensities = new HashMap<Integer, Double>();
 		HashMap<Integer, Integer> numberOfLanes = roadNetwork.getNumberOfLanes();
-		
+
 		//iterate through all the edges in the graph
 		Iterator iter = roadNetwork.getNetwork().getEdges().iterator();
 		while(iter.hasNext()) {
-			
+
 			Edge edge = (Edge) iter.next();
 			SimpleFeature sf = (SimpleFeature) edge.getObject();
 			double linkVol = 0.0;
@@ -1157,56 +1337,56 @@ public class RoadNetworkAssignment {
 				density = PEAK_HOUR_PERCENTAGE * linkVol / numberOfLanes.get(edge.getID()) / length;
 			else //ferry
 				density = PEAK_HOUR_PERCENTAGE * linkVol / length;
-			
+
 			linkDensities.put(edge.getID(), density);
 		}
 		return linkDensities;
 	}
-	
+
 	/**
 	 * @return The sum of all link travel times in the network.
 	 */
 	public double getTotalLinkTravelTimes() {
-		
+
 		double totalTravelTime = 0.0;
 		for (Integer key: this.linkTravelTime.keySet()) totalTravelTime += linkTravelTime.get(key);
-		
+
 		return totalTravelTime;
 	}
-	
+
 	/**
 	 * @return The copy of all link travel times.
 	 */
 	public HashMap<Integer, Double> getCopyOfLinkTravelTimes() {
-		
+
 		HashMap<Integer, Double> linkTravelTimes = new HashMap<Integer, Double>();
 		for (Integer key: this.linkTravelTime.keySet()) linkTravelTimes.put(key, this.linkTravelTime.get(key));
-		
+
 		return linkTravelTimes;
 	}
-	
-	
+
+
 	/**
 	 * Calculates the sum of absolute differences in link travel times.
 	 * @param other Link travel times to compare with.
 	 * @return Sum of absolute differences in link travel times.
 	 */
 	public double getAbsoluteDifferenceInLinkTravelTimes(HashMap<Integer, Double> other) {
-		
+
 		double difference = 0.0;
 		for (Integer key: this.linkTravelTime.keySet())
 			difference += Math.abs(this.linkTravelTime.get(key) - other.get(key));
-		
+
 		return difference;
 	}
-	
+
 	/**
 	 * Saves assignment results to output file.
 	 * @param year
 	 * @param outputFile
 	 */
 	public void saveAssignmentResults(int year, String outputFile) {
-		
+
 		//calculate peak capacities and densities
 		HashMap<Integer, Double> capacities = this.calculatePeakLinkPointCapacities();
 		HashMap<Integer, Double> densities = this.calculatePeakLinkDensities();
@@ -1296,7 +1476,7 @@ public class RoadNetworkAssignment {
 			}
 		}
 	}
-	
+
 	/**
 	 * Saves total electricity consumption to an output file.
 	 */
@@ -1304,7 +1484,7 @@ public class RoadNetworkAssignment {
 
 		//calculate energy consumptions
 		HashMap<EngineType, Double> energyConsumptions = this.calculateEnergyConsumptions();
-		
+
 		String NEW_LINE_SEPARATOR = "\n";
 		ArrayList<String> header = new ArrayList<String>();
 		header.add("year");
@@ -1337,7 +1517,7 @@ public class RoadNetworkAssignment {
 			}
 		}
 	}
-	
+
 	/**
 	 * Saves peak link point capacities into a file.
 	 * @param year
@@ -1347,7 +1527,7 @@ public class RoadNetworkAssignment {
 
 		//calculate capacities
 		HashMap<Integer, Double> capacities = this.calculatePeakLinkPointCapacities();
-		
+
 		//save them to a file
 		String NEW_LINE_SEPARATOR = "\n";
 		ArrayList<String> header = new ArrayList<String>();
@@ -1386,7 +1566,7 @@ public class RoadNetworkAssignment {
 			}
 		}
 	}
-	
+
 	/**
 	 * Saves travel times into a file.
 	 * @param year
@@ -1432,7 +1612,7 @@ public class RoadNetworkAssignment {
 			}
 		}
 	}
-	
+
 	/**
 	 * Getter method for energy unit costs.
 	 * @return Energy unit costs.
@@ -1441,7 +1621,7 @@ public class RoadNetworkAssignment {
 
 		return this.energyUnitCosts;
 	}
-	
+
 	/**
 	 * Getter method for energy consumptions per 100 km.
 	 * @return Energy consumptions per 100 km.
@@ -1450,7 +1630,7 @@ public class RoadNetworkAssignment {
 
 		return this.energyConsumptionsPer100km;
 	}
-	
+
 	/**
 	 * Getter method for engine type fractions.
 	 * @return Engine type fractions.
@@ -1459,7 +1639,7 @@ public class RoadNetworkAssignment {
 
 		return this.engineTypeFractions;
 	}
-	
+
 	/**
 	 * Getter method for daily link volumes in PCU.
 	 * @return Link volumes in PCU
@@ -1468,7 +1648,7 @@ public class RoadNetworkAssignment {
 
 		return this.linkVolumesInPCU;
 	}
-	
+
 	/**
 	 * Getter method for the link travel times.
 	 * @return Link volumes
@@ -1477,7 +1657,7 @@ public class RoadNetworkAssignment {
 
 		return this.linkTravelTime;
 	}
-	
+
 	/**
 	 * Getter method for the link free-flow travel times.
 	 * @return Link volumes
@@ -1495,7 +1675,7 @@ public class RoadNetworkAssignment {
 
 		return this.pathStorage;
 	}
-	
+
 	/**
 	 * Getter method for the path storage for freight.
 	 * @return Path storage for freight
@@ -1504,7 +1684,7 @@ public class RoadNetworkAssignment {
 
 		return this.pathStorageFreight;
 	}
-	
+
 	/**
 	 * Getter method for output area probabilities.
 	 * @return Output area probabilities.
@@ -1513,7 +1693,7 @@ public class RoadNetworkAssignment {
 
 		return this.areaCodeProbabilities;
 	}
-	
+
 	/**
 	 * Getter method for node probabilities.
 	 * @return Node probabilities.
@@ -1522,7 +1702,7 @@ public class RoadNetworkAssignment {
 
 		return this.nodeProbabilities;
 	}
-	
+
 	/**
 	 * Getter method for the number of trips starting in an output area.
 	 * @return Number of trips.
@@ -1531,7 +1711,7 @@ public class RoadNetworkAssignment {
 
 		return this.areaCodeNoTripStarts;
 	}
-	
+
 	/**
 	 * Getter method for the number of trips ending in an output area.
 	 * @return Number of trips.
@@ -1540,7 +1720,7 @@ public class RoadNetworkAssignment {
 
 		return this.areaCodeNoTripEnds;
 	}
-	
+
 	/**
 	 * Getter method for the number of trips starting in a workplace zone.
 	 * @return Number of trips.
@@ -1549,7 +1729,7 @@ public class RoadNetworkAssignment {
 
 		return this.workplaceZoneNoTripStarts;
 	}
-	
+
 	/**
 	 * Getter method for the number of trips ending in a workplace zone.
 	 * @return Number of trips.
@@ -1567,14 +1747,14 @@ public class RoadNetworkAssignment {
 
 		return this.workplaceZoneProbabilities;
 	}
-	
-	
+
+
 	/**
 	 * Calculates the number of trips starting in a LAD.
 	 * @return Number of trips.
 	 */
 	public HashMap<String, Integer> calculateLADTripStarts() {
-		
+
 		HashMap<String, Integer> totalLADnoTripStarts = new HashMap<String, Integer>();
 
 		for (String LAD: this.roadNetwork.getZoneToAreaCodes().keySet()) {
@@ -1585,23 +1765,23 @@ public class RoadNetworkAssignment {
 			}
 			totalLADnoTripStarts.put(LAD, numberLAD);
 		}
-		
+
 		for (String LAD: this.LADnoTripStarts.keySet()) {
 			Integer number = this.LADnoTripStarts.get(LAD);
 			Integer number2 = totalLADnoTripStarts.get(LAD);
 			if (number2 != null) number += number2;
 			totalLADnoTripStarts.put(LAD, number);
 		}
-		
+
 		return totalLADnoTripStarts;
 	}
-	
+
 	/**
 	 * Calculates the number of trips ending in a LAD.
 	 * @return Number of trips.
 	 */
 	public HashMap<String, Integer> calculateLADTripEnds() {
-		
+
 		HashMap<String, Integer> totalLADnoTripEnds = new HashMap<String, Integer>();
 
 		for (String LAD: this.roadNetwork.getZoneToAreaCodes().keySet()) {
@@ -1612,24 +1792,24 @@ public class RoadNetworkAssignment {
 			}
 			totalLADnoTripEnds.put(LAD, numberLAD);
 		}
-		
+
 		for (String LAD: this.LADnoTripEnds.keySet()) {
 			Integer number = this.LADnoTripEnds.get(LAD);
 			Integer number2 = totalLADnoTripEnds.get(LAD);
 			if (number2 != null) number += number2;
 			totalLADnoTripEnds.put(LAD, number);
 		}
-		
+
 		return totalLADnoTripEnds;
 	}
-	
+
 	/**
 	 * Calculates the number of freight trips starting in a LAD.
 	 * @return Number of trips.
 	 */
 	public HashMap<String, Integer> calculateFreightLADTripStarts() {
-		
-		HashMap<String, Integer> LADNoTripStarts = new HashMap<String, Integer>();
+
+		HashMap<String, Integer> totalLADnoTripStartsFreight = new HashMap<String, Integer>();
 
 		for (String LAD: this.roadNetwork.getZoneToWorkplaceCodes().keySet()) {
 			int numberLAD = 0;
@@ -1637,19 +1817,26 @@ public class RoadNetworkAssignment {
 				Integer number = this.workplaceZoneNoTripStarts.get(workplaceZone);
 				if (number != null) numberLAD += number;
 			}
-			LADNoTripStarts.put(LAD, numberLAD);
+			totalLADnoTripStartsFreight.put(LAD, numberLAD);
 		}
 		
-		return LADNoTripStarts;
+		for (String LAD: this.LADnoTripStartsFreight.keySet()) {
+			Integer number = this.LADnoTripStartsFreight.get(LAD);
+			Integer number2 = totalLADnoTripStartsFreight.get(LAD);
+			if (number2 != null) number += number2;
+			totalLADnoTripStartsFreight.put(LAD, number);
+		}
+
+		return totalLADnoTripStartsFreight;
 	}
-	
+
 	/**
 	 * Calculates the number of freight trips ending in a LAD.
 	 * @return Number of trips.
 	 */
 	public HashMap<String, Integer> calculateFreightLADTripEnds() {
-		
-		HashMap<String, Integer> LADNoTripEnds = new HashMap<String, Integer>();
+
+		HashMap<String, Integer> totalLADnoTripEndsFreight = new HashMap<String, Integer>();
 
 		for (String LAD: this.roadNetwork.getZoneToWorkplaceCodes().keySet()) {
 			int numberLAD = 0;
@@ -1657,149 +1844,160 @@ public class RoadNetworkAssignment {
 				Integer number = this.workplaceZoneNoTripEnds.get(workplaceZone);
 				if (number != null) numberLAD += number;
 			}
-			LADNoTripEnds.put(LAD, numberLAD);
+			totalLADnoTripEndsFreight.put(LAD, numberLAD);
+		}
+
+		for (String LAD: this.LADnoTripEndsFreight.keySet()) {
+			Integer number = this.LADnoTripEndsFreight.get(LAD);
+			Integer number2 = totalLADnoTripEndsFreight.get(LAD);
+			if (number2 != null) number += number2;
+			totalLADnoTripEndsFreight.put(LAD, number);
 		}
 		
-		return LADNoTripEnds;
+		return totalLADnoTripEndsFreight;
 	}
-	
+
 	/**
 	 * Setter method for the electricity unit cost.
 	 * @param electricityUnitCost The cost of 1 kWh in £.
 	 */
 	public void setElectricityUnitCost (double electricityUnitCost) {
-		
+
 		energyUnitCosts.put(EngineType.ELECTRICITY, electricityUnitCost);
 	}
-	
-	 /**
-	  * Setter method for the energy unit cost.
-	  * @param engineType The type of a car engine.
-	  * @param energyUnitCost The cost of 1 L (of fuel) or 1 kWh (of electricity) in £.
-	  */
+
+	/**
+	 * Setter method for the energy unit cost.
+	 * @param engineType The type of a car engine.
+	 * @param energyUnitCost The cost of 1 L (of fuel) or 1 kWh (of electricity) in £.
+	 */
 	public void setEnergyUnitCost (EngineType engineType, double energyUnitCost) {
-		
+
 		this.energyUnitCosts.put(engineType, energyUnitCost);
 	}
-	
-	 /**
-	  * Setter method for the energy consumption per 100 km.
-	  * @param engineType The type of a car engine.
-	  * @param energyConsumptionPer100km Energy consumption per 100 km (in L for fuel and kWh for electricity).
-	  */
+
+	/**
+	 * Setter method for the energy consumption per 100 km.
+	 * @param engineType The type of a car engine.
+	 * @param energyConsumptionPer100km Energy consumption per 100 km (in L for fuel and kWh for electricity).
+	 */
 	public void setEnergyConsumptionPer100km (EngineType engineType, double energyConsumptionPer100km) {
-		
+
 		this.energyConsumptionsPer100km.put(engineType, energyConsumptionPer100km);
 	}
-	
-	 /**
-	  * Setter method for the energy type fractions.
-	  * @param engineType The type of a car engine.
-	  * @param engineTypeFractions Engine type fractions.
-	  */
+
+	/**
+	 * Setter method for the energy type fractions.
+	 * @param engineType The type of a car engine.
+	 * @param engineTypeFractions Engine type fractions.
+	 */
 	public void setEngineTypeFractions (EngineType engineType, double engineTypeFraction) {
-		
+
 		this.engineTypeFractions.put(engineType, engineTypeFraction);
 	}
-	
+
 	/**
 	 * Resets link volumes to zero.
 	 */
 	public void resetLinkVolumesInPCU () {
-		
+
 		for (Integer key: this.linkVolumesInPCU.keySet()) this.linkVolumesInPCU.put(key, 0.0);
 	}
-	
+
 	/**
 	 * Resets path storages for passengers and freight.
 	 */
 	public void resetPathStorages () {
-		
+
 		this.pathStorage = new MultiKeyMap<String, List<Path>>();
 		for (VehicleType vht: VehicleType.values()) {
 			MultiKeyMap<Integer, List<Path>> map = new MultiKeyMap<Integer, List<Path>>();
 			pathStorageFreight.put(vht, map);
 		}
 	}
-	
+
 	/**
 	 * Resets trip start/end counters.
 	 */
 	public void resetTripStartEndCounters () {
-		
+
 		this.areaCodeNoTripStarts = new HashMap<String, Integer>();
 		this.areaCodeNoTripEnds = new HashMap<String, Integer>();
 		this.workplaceZoneNoTripStarts = new HashMap<String, Integer>();
 		this.workplaceZoneNoTripEnds = new HashMap<String, Integer>();
+		this.LADnoTripStarts = new HashMap<String, Integer>();
+		this.LADnoTripEnds = new HashMap<String, Integer>();
+		this.LADnoTripStartsFreight = new HashMap<String, Integer>();
+		this.LADnoTripEndsFreight = new HashMap<String, Integer>();
 	}
-	
+
 	/**
 	 * Calculate RMSN for for counts.
 	 * @return Normalised root mean square error
 	 */
 	public double calculateRMSNforCounts () {
-		
+
 		Iterator iter = this.roadNetwork.getNetwork().getEdges().iterator();
 		int countOfCounts = 0;
 		long sumOfCounts = 0;
 		double sumOfSquaredDiffs = 0.0;
 		ArrayList<Long> checkedCP = new ArrayList<Long>(); 
-		
+
 		while (iter.hasNext()) {
 			DirectedEdge edge = (DirectedEdge) iter.next();
 			SimpleFeature sf = (SimpleFeature) edge.getObject(); 
 			String roadNumber = (String) sf.getAttribute("RoadNumber");
-			
+
 			if (roadNumber.charAt(0) != 'M' && roadNumber.charAt(0) != 'A') continue; //ferry
-			
+
 			Long countPoint = (long) sf.getAttribute("CP");
-			
+
 			String direction = (String) sf.getAttribute("iDir");
 			char dir = direction.charAt(0);
-			
+
 			//ignore combined counts 'C' for now
 			if (dir == 'N' || dir == 'S' || dir == 'W' || dir == 'E') {
-				
+
 				long carCount = (long) sf.getAttribute("FdCar");
 				long carVolume;
 				Double carVolumeFetch = this.linkVolumesInPCU.get(edge.getID());
 				if (carVolumeFetch == null) carVolume = 0;
 				else 						carVolume = Math.round(this.linkVolumesInPCU.get(edge.getID()));
-				
+
 				countOfCounts++;
 				sumOfCounts += carCount;
 				sumOfSquaredDiffs += (carCount - carVolume)^2;
 			}
-			
+
 			if (dir == 'C' && !checkedCP.contains(countPoint)) { //for combined counts check if this countPoint has been processed already
-	
+
 				//get combined count
 				long carCount = (long) sf.getAttribute("FdCar");
-				
+
 				//get volumes for this direction
 				long carVolume;
 				Double carVolumeFetch = this.linkVolumesInPCU.get(edge.getID());
 				if (carVolumeFetch == null) carVolume = 0;
 				else 						carVolume = Math.round(this.linkVolumesInPCU.get(edge.getID()));
-				
+
 				//get volumes for other direction (if exists)
 				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(edge.getID());
 				long carVolume2;
 				Double carVolumeFetch2 = this.linkVolumesInPCU.get(edge2);
 				if (carVolumeFetch2 == null) carVolume2 = 0;
 				else 						 carVolume2 = Math.round(this.linkVolumesInPCU.get(edge2));
-				
+
 				countOfCounts++;
 				sumOfCounts += carCount;
 				sumOfSquaredDiffs += (carCount - carVolume - carVolume2)^2;
-				
+
 				checkedCP.add(countPoint);
 			}
 		}
-		
+
 		double RMSE = Math.sqrt(sumOfSquaredDiffs);
 		double averageTrueCount = (double) sumOfCounts / countOfCounts;
-		
+
 		return (RMSE / averageTrueCount ) * 100;
 	}
 }
