@@ -93,11 +93,14 @@ public class RoadNetwork {
 	private HashMap<Integer, Integer> freightZoneToNearestNode;
 	private HashMap<Integer, Double> freightZoneToNearestNodeDistance; //[m]
 	private HashMap<Integer, String> freightZoneToLAD;
-	private HashMap<String, Integer> workplaceZoneToNearestNode;
+	private HashMap<String, Integer> workplaceZoneToNearestNodeID;
+	private HashMap<String, Double> workplaceZoneToNearestNodeDistance; //[m]
+	private HashMap<String, Integer> workplaceZoneToPopulation;
 	private HashMap<String, List<String>> zoneToWorkplaceCodes;
-	private HashMap<String, Integer> workplaceCodeToPopulation;
 	private HashMap<Integer, Integer> nodeToGravitatingPopulation;
+	private HashMap<Integer, Integer> nodeToGravitatingWorkplacePopulation;
 	private HashMap<Integer, Double> nodeToAverageAccessEgressDistance; //[m]
+	private HashMap<Integer, Double> nodeToAverageAccessEgressDistanceFreight; //[m]
 	private HashMap<Integer, Node> nodeIDtoNode; //for direct access
 	private HashMap<Integer, Edge> edgeIDtoEdge; //for direct access
 	private HashMap<Integer, Integer> edgeIDtoOtherDirectionEdgeID;
@@ -109,7 +112,13 @@ public class RoadNetwork {
 	 * @param networkUrl Url for the shapefile with road network
 	 * @param nodesUrl Url for the shapefile with nodes
 	 * @param AADFurl Url for the shapefile with AADF counts
-	 * @throws IOException 
+	 * @param areaCodeFileName Path to the file with census output areas
+	 * @param areaCodeNearestNodeFile Path to the file with nearest nodes to output area centroids
+	 * @param workplaceZoneFileName Path to the file with workplace zones
+	 * @param workplaceZoneNearestNodeFile Path to the file with nearest nodes to workplace zone centroids
+	 * @param freightZoneToLADfile Path to the file with freight zone to LAD mapping
+	 * @param freightZoneNearestNodeFile Path to the file with nearest nodes to freight zones that are points
+	 * @throws IOException
 	 */
 	public RoadNetwork(URL zonesUrl, URL networkUrl, URL nodesUrl, URL AADFurl, String areaCodeFileName, String areaCodeNearestNodeFile, String workplaceZoneFileName, String workplaceZoneNearestNodeFile, String freightZoneToLADfile, String freightZoneNearestNodeFile) throws IOException {
 
@@ -140,9 +149,9 @@ public class RoadNetwork {
 				double cost;
 				String roadNumber = (String) feature.getAttribute("RoadNumber");
 					if (roadNumber.charAt(0) == 'M') //motorway
-						cost = length / RoadNetworkAssignment.SPEED_LIMIT_M_ROAD * 60;  //travel time in minutes
+						cost = length / RoadNetworkAssignment.FREE_FLOW_SPEED_M_ROAD * 60;  //travel time in minutes
 					else if (roadNumber.charAt(0) == 'A') //A road
-						cost = length / RoadNetworkAssignment.SPEED_LIMIT_A_ROAD * 60;  //travel time in minutes
+						cost = length / RoadNetworkAssignment.FREE_FLOW_SPEED_A_ROAD * 60;  //travel time in minutes
 					else if (roadNumber.charAt(0) == 'F')//ferry
 						cost = length / RoadNetworkAssignment.AVERAGE_SPEED_FERRY * 60;  //travel time in minutes
 					else {
@@ -156,11 +165,15 @@ public class RoadNetwork {
 		this.loadAreaCodePopulationData(areaCodeFileName);
 		this.loadAreaCodeNearestNodeAndDistance(areaCodeNearestNodeFile);
 		this.loadWorkplaceZonePopulationData(workplaceZoneFileName);
-		this.loadWorkplaceZoneNearestNode(workplaceZoneNearestNodeFile);
+		this.loadWorkplaceZoneNearestNodeAndDistance(workplaceZoneNearestNodeFile);
 		
 		this.calculateNodeGravitatingPopulation();
 		this.calculateNodeAccessEgressDistance();
 		this.sortGravityNodes();
+		
+		this.calculateNodeGravitatingWorkplacePopulation();
+		this.calculateNodeAccessEgressDistanceFreight();
+		//this.sortGravityNodesFreight(); //call this before freight assignment
 		
 //		this.freightZoneToLAD = new HashMap<Integer, String>();
 //		this.freightZoneToLAD.put(855, "E06000045");
@@ -293,13 +306,13 @@ public class RoadNetwork {
 				objList.add(feat.getAttribute("LenNet"));
 				String roadNumber = (String) feat.getAttribute("RoadNumber");
 				if (roadNumber.charAt(0) == 'M') {//motorway
-					objList.add(RoadNetworkAssignment.SPEED_LIMIT_M_ROAD);
-					Double freeFlowTime = (double)feat.getAttribute("LenNet") / RoadNetworkAssignment.SPEED_LIMIT_M_ROAD * 60; //in minutes
+					objList.add(RoadNetworkAssignment.FREE_FLOW_SPEED_M_ROAD);
+					Double freeFlowTime = (double)feat.getAttribute("LenNet") / RoadNetworkAssignment.FREE_FLOW_SPEED_M_ROAD * 60; //in minutes
 					objList.add(freeFlowTime);
 					objList.add(false); //not a ferry
 				} else if (roadNumber.charAt(0) == 'A') {//A road
-					objList.add(RoadNetworkAssignment.SPEED_LIMIT_A_ROAD);
-					Double freeFlowTime = (double)feat.getAttribute("LenNet") / RoadNetworkAssignment.SPEED_LIMIT_A_ROAD * 60; //in minutes
+					objList.add(RoadNetworkAssignment.FREE_FLOW_SPEED_A_ROAD);
+					Double freeFlowTime = (double)feat.getAttribute("LenNet") / RoadNetworkAssignment.FREE_FLOW_SPEED_A_ROAD * 60; //in minutes
 					objList.add(freeFlowTime);
 					objList.add(false); //not a ferry
 				} else if (roadNumber.charAt(0) == 'F') {//ferry
@@ -527,9 +540,9 @@ public class RoadNetwork {
 					SimpleFeature feature = (SimpleFeature)edge.getObject();
 					String roadNumber = (String) feature.getAttribute("RoadNumber");
 					if (roadNumber.charAt(0) == 'M') //motorway
-						cost = (double) feature.getAttribute("LenNet") / RoadNetworkAssignment.SPEED_LIMIT_M_ROAD * 60;  //travel time in minutes
+						cost = (double) feature.getAttribute("LenNet") / RoadNetworkAssignment.FREE_FLOW_SPEED_M_ROAD * 60;  //travel time in minutes
 					else if (roadNumber.charAt(0) == 'A') //A road
-						cost = (double) feature.getAttribute("LenNet") / RoadNetworkAssignment.SPEED_LIMIT_A_ROAD * 60;  //travel time in minutes
+						cost = (double) feature.getAttribute("LenNet") / RoadNetworkAssignment.FREE_FLOW_SPEED_A_ROAD * 60;  //travel time in minutes
 					else if (roadNumber.charAt(0) == 'F')//ferry
 						cost = (double) feature.getAttribute("LenNet") / RoadNetworkAssignment.AVERAGE_SPEED_FERRY * 60;  //travel time in minutes
 					else {
@@ -550,7 +563,7 @@ public class RoadNetwork {
 				SimpleFeature feature2 = (SimpleFeature)destinationNode.getObject();
 				Point point2 = (Point)feature2.getDefaultGeometry();
 				double distance = point.distance(point2) / 1000.0; //straight line distance (from metres to kilometres)!
-				return (distance / RoadNetworkAssignment.SPEED_LIMIT_M_ROAD * 60); //travel time in minutes
+				return (distance / RoadNetworkAssignment.FREE_FLOW_SPEED_M_ROAD * 60); //travel time in minutes
 			}
 		};
 
@@ -644,7 +657,7 @@ public class RoadNetwork {
 	 */
 	public HashMap<String, Integer> getWorkplaceZoneToNearestNode() {
 
-		return this.workplaceZoneToNearestNode;
+		return this.workplaceZoneToNearestNodeID;
 	}
 	
 	/**
@@ -653,7 +666,7 @@ public class RoadNetwork {
 	 */
 	public HashMap<String, Integer> getWorkplaceCodeToPopulation() {
 
-		return this.workplaceCodeToPopulation;
+		return this.workplaceZoneToPopulation;
 	}
 	
 	/**
@@ -679,12 +692,34 @@ public class RoadNetwork {
 	}
 	
 	/**
+	 * Workplace population gravitating to a node.
+	 * @param node Node to which the workplace population gravitates.
+	 * @return Gravitating workplace population.
+	 */
+	public int getGravitatingWorkplacePopulation(int node) {
+		
+		Integer population = this.nodeToGravitatingWorkplacePopulation.get(node);
+		if (population == null) population = 0;
+		
+		return population;
+	}
+	
+	/**
 	 * Getter method for the node to average access/egress distance mapping.
 	 * @return Node to average access/egress distance mapping.
 	 */
 	public HashMap<Integer, Double> getNodeToAverageAccessEgressDistance() {
 
 		return this.nodeToAverageAccessEgressDistance;
+	}
+	
+	/**
+	 * Getter method for the node to average access/egress distance mapping for freight.
+	 * @return Node to average access/egress distance mapping for freight.
+	 */
+	public HashMap<Integer, Double> getNodeToAverageAccessEgressDistanceFreight() {
+
+		return this.nodeToAverageAccessEgressDistanceFreight;
 	}
 	
 	/**
@@ -696,6 +731,19 @@ public class RoadNetwork {
 		
 		Double distance = this.nodeToAverageAccessEgressDistance.get(node);
 		if (distance == null) distance = 0.0; //TODO
+		
+		return distance;
+	}
+	
+	/**
+	 * Average access/egress distance to access a node that has gravitating population.
+	 * @param node Node to which
+	 * @return Gravitating population.
+	 */
+	public double getAverageAcessEgressDistanceFreight(int node) {
+		
+		Double distance = this.nodeToAverageAccessEgressDistanceFreight.get(node);
+		if (distance == null) distance = 0.0; //TODO there could be some distance if a node has no gravitating population but is the nearest node to a point-based freight zone
 		
 		return distance;
 	}
@@ -1218,7 +1266,7 @@ public class RoadNetwork {
 	private void loadWorkplaceZonePopulationData(String workplaceZoneFileName) throws IOException {
 
 		this.zoneToWorkplaceCodes = new HashMap<String, List<String>>();
-		this.workplaceCodeToPopulation = new HashMap<String, Integer>();
+		this.workplaceZoneToPopulation = new HashMap<String, Integer>();
 		
 		CSVParser parser = new CSVParser(new FileReader(workplaceZoneFileName), CSVFormat.DEFAULT.withHeader());
 		//System.out.println(parser.getHeaderMap().toString());
@@ -1237,7 +1285,7 @@ public class RoadNetwork {
 			}
 			workplaceCodesList.add(workplaceCode);
 			
-			workplaceCodeToPopulation.put(workplaceCode, population);
+			workplaceZoneToPopulation.put(workplaceCode, population);
 		} 
 		parser.close(); 
 	}
@@ -1272,9 +1320,10 @@ public class RoadNetwork {
 	 * @param workplaceZoneNearestNodeFile File with workplace zone nearest neighbours.
 	 * @throws IOException 
 	 */
-	private void loadWorkplaceZoneNearestNode(String workplaceZoneNearestNodeFile) throws IOException {
+	private void loadWorkplaceZoneNearestNodeAndDistance(String workplaceZoneNearestNodeFile) throws IOException {
 
-		this.workplaceZoneToNearestNode = new HashMap<String, Integer>();
+		this.workplaceZoneToNearestNodeID = new HashMap<String, Integer>();
+		this.workplaceZoneToNearestNodeDistance = new HashMap<String, Double>();
 		
 		CSVParser parser = new CSVParser(new FileReader(workplaceZoneNearestNodeFile), CSVFormat.DEFAULT.withHeader());
 		//System.out.println(parser.getHeaderMap().toString());
@@ -1284,12 +1333,13 @@ public class RoadNetwork {
 			//System.out.println(record);
 			String workplaceCode = record.get("workplace_code");
 			int nodeID = Integer.parseInt(record.get("nodeID"));
-			workplaceZoneToNearestNode.put(workplaceCode, nodeID);
+			double distance = Double.parseDouble(record.get("distance"));
+			workplaceZoneToNearestNodeID.put(workplaceCode, nodeID);
+			workplaceZoneToNearestNodeDistance.put(workplaceCode, distance);
 		} 
 		parser.close(); 
 	}
-	
-	
+
 	/**
 	 * Loads freight zone to LAD zone mapping (for freight zone that are LADs).
 	 * @param freightZoneToLADfile File with freight zone to LAD mapping.
@@ -1362,6 +1412,30 @@ public class RoadNetwork {
 	}
 	
 	/**
+	 * Calculates the workplace population gravitating to each node by summing up the population of workplace zones
+	 * which have been mapped to this node using the nearest neighbour method.
+	 * Nodes with 0 gravitating population are not a member of this map!
+	 */
+	private void calculateNodeGravitatingWorkplacePopulation() {
+		
+		HashMap<Integer, Integer> map = new HashMap<Integer, Integer>();
+		
+		for (String workplaceZone: this.workplaceZoneToNearestNodeID.keySet()) {
+			
+			int node = this.workplaceZoneToNearestNodeID.get(workplaceZone);
+			int population = this.workplaceZoneToPopulation.get(workplaceZone);
+			
+			Integer currentPopulation = map.get(node);
+			if (currentPopulation == null) currentPopulation = population;
+			else  currentPopulation += population;
+			
+			map.put(node, currentPopulation);
+		}
+		
+		this.nodeToGravitatingWorkplacePopulation = map;
+	}
+	
+	/**
 	 * Calculates average access/egress distance to each node that has a gravitating population
 	 * Nodes with 0 gravitating population are not a member of this map!
 	 */
@@ -1387,11 +1461,61 @@ public class RoadNetwork {
 	}
 	
 	/**
+	 * Calculates average access/egress distance to each node that has a gravitating workplace population
+	 * This is used only for freight zones that are LADs (not points such as ports, airports and distribution centres).
+	 * Nodes with 0 gravitating population are not a member of this map!
+	 */
+	private void calculateNodeAccessEgressDistanceFreight() {
+		
+		HashMap<Integer, Double> map = new HashMap<Integer, Double>();
+		
+		for (String workplaceZone: this.workplaceZoneToNearestNodeID.keySet()) {
+			
+			int node = this.workplaceZoneToNearestNodeID.get(workplaceZone);
+			int population = this.workplaceZoneToPopulation.get(workplaceZone);
+			double distance = this.workplaceZoneToNearestNodeDistance.get(workplaceZone);
+			double gravitatingPopulation = this.nodeToGravitatingWorkplacePopulation.get(node);
+			
+			Double weightedDistance = map.get(node);
+			if (weightedDistance == null) weightedDistance = population * distance / gravitatingPopulation;
+			else  weightedDistance += population * distance / gravitatingPopulation;
+			
+			map.put(node, weightedDistance);
+		}
+		
+		this.nodeToAverageAccessEgressDistanceFreight = map;
+	}
+	
+	/**
 	 * For each zone (LAD) sorts the list of contained nodes based on the gravitating population.
 	 */
-	private void sortGravityNodes() {
+	public void sortGravityNodes() {
 		
 		HashMap<Integer, Integer> nodeToPop = this.nodeToGravitatingPopulation;
+		
+		Comparator<Integer> c = new Comparator<Integer>() {
+		    public int compare(Integer s, Integer s2) {
+		    	Integer population = nodeToPop.get(s);
+		    	if (population == null) population = 0; //no population gravitates to this node
+		    	Integer population2 = nodeToPop.get(s2);
+		    	if (population2 == null) population2 = 0;
+		    	
+		    	return population2.compareTo(population);
+		    	}
+		};
+		
+		for (String LAD: this.zoneToNodes.keySet()) {
+			List list = this.zoneToNodes.get(LAD);
+			Collections.sort(list, c);
+		}
+	}
+	
+	/**
+	 * For each zone (LAD) sorts the list of contained nodes based on the gravitating workplace population.
+	 */
+	public void sortGravityNodesFreight() {
+		
+		HashMap<Integer, Integer> nodeToPop = this.nodeToGravitatingWorkplacePopulation;
 		
 		Comparator<Integer> c = new Comparator<Integer>() {
 		    public int compare(Integer s, Integer s2) {

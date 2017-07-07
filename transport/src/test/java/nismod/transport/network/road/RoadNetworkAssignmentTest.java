@@ -5,6 +5,9 @@ package nismod.transport.network.road;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.closeTo;
 
 import java.io.IOException;
 import java.net.URL;
@@ -15,8 +18,12 @@ import java.util.List;
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.geotools.graph.path.Path;
 import org.geotools.graph.structure.Edge;
+import org.hamcrest.Matcher;
+import org.hamcrest.MatcherAssert;
 import org.junit.Test;
 import org.opengis.feature.simple.SimpleFeature;
+
+import com.google.inject.matcher.Matchers;
 
 import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.ODMatrix;
@@ -84,22 +91,31 @@ public class RoadNetworkAssignmentTest {
 		//ODMatrix passengerODM = new ODMatrix("./src/main/resources/data/passengerODMfull.csv");
 		//ODMatrix passengerODM = new ODMatrix("./src/main/resources/data/passengerODMtempro.csv");
 		ODMatrix passengerODM = new ODMatrix("./src/main/resources/data/balancedODMatrix.csv");
+
+		passengerODM.printMatrix();
 		
-		passengerODM.printMatrix(); 
+		//assign freight flows
+		FreightMatrix freightMatrix = new FreightMatrix("./src/test/resources/testdata/FreightMatrix.csv");
+	
+		freightMatrix.printMatrixFormatted();
+ 
 		
-		//for (int i = 0; i < 5; i++) {
-		for (int i = 0; i < 1; i++) {
-			roadNetworkAssignment.resetLinkVolumesInPCU();
-			
-			long timeNow = System.currentTimeMillis();
-			roadNetworkAssignment.assignPassengerFlows(passengerODM);
-			timeNow = System.currentTimeMillis() - timeNow;
-			System.out.printf("Passenger flows assigned in %d seconds.\n", timeNow / 1000);
-				
-			HashMap<Integer, Double> oldTravelTimes = roadNetworkAssignment.getCopyOfLinkTravelTimes();
-			roadNetworkAssignment.updateLinkTravelTimes(0.9);
-			System.out.println("Difference in link travel times: " + roadNetworkAssignment.getAbsoluteDifferenceInLinkTravelTimes(oldTravelTimes));
-		}		
+		roadNetworkAssignment.assignFreightFlows(freightMatrix);
+		
+		
+//		//for (int i = 0; i < 5; i++) {
+//		for (int i = 0; i < 1; i++) {
+//			roadNetworkAssignment.resetLinkVolumesInPCU();
+//			
+//			long timeNow = System.currentTimeMillis();
+//			roadNetworkAssignment.assignPassengerFlows(passengerODM);
+//			timeNow = System.currentTimeMillis() - timeNow;
+//			System.out.printf("Passenger flows assigned in %d seconds.\n", timeNow / 1000);
+//				
+//			HashMap<Integer, Double> oldTravelTimes = roadNetworkAssignment.getCopyOfLinkTravelTimes();
+//			roadNetworkAssignment.updateLinkTravelTimes(0.9);
+//			System.out.println("Difference in link travel times: " + roadNetworkAssignment.getAbsoluteDifferenceInLinkTravelTimes(oldTravelTimes));
+//		}		
 
 		System.out.println("Nodes:");
 		System.out.println(roadNetwork2.getNetwork().getNodes());
@@ -234,11 +250,17 @@ public class RoadNetworkAssignmentTest {
 		rna.updateLinkTravelTimes();
 		System.out.println(rna.getLinkFreeFlowTravelTimes());
 		System.out.println(rna.getLinkTravelTimes());
-		for (int key: rna.getLinkTravelTimes().keySet()) 			
-			assertTrue(rna.getLinkTravelTimes().get(key) >= rna.getLinkFreeFlowTravelTimes().get(key));	
+		for (int key: rna.getLinkTravelTimes().keySet()) {
+			double actual = rna.getLinkTravelTimes().get(key);
+			double freeFlow = rna.getLinkFreeFlowTravelTimes().get(key);
+			//assertTrue(actual >= freeFlow);
+			//assertThat(actual, greaterThanOrEqualTo(freeFlow));
+			final double PRECISION = 1e-6;
+			//if freeFlow time is larger, it is only due to calculation error, so it has to be very close:
+			if (freeFlow > actual)	assertThat(actual, closeTo(freeFlow, PRECISION));
+		}
 		
 		System.out.println("RMSN: " + rna.calculateRMSNforCounts());
-		
 	}
 
 	@Test
@@ -389,9 +411,22 @@ public class RoadNetworkAssignmentTest {
 		//after assignment and update the link travel times should be greater or equal than the free flow travel times.
 		System.out.println(rna.getLinkFreeFlowTravelTimes());
 		System.out.println(rna.getLinkTravelTimes());
-		for (int key: rna.getLinkTravelTimes().keySet()) 			
-			assertTrue(rna.getLinkTravelTimes().get(key) >= rna.getLinkFreeFlowTravelTimes().get(key));	
-		
+		for (int key: rna.getLinkTravelTimes().keySet()) {
+			if (rna.getLinkTravelTimes().get(key) < rna.getLinkFreeFlowTravelTimes().get(key)) {
+				System.err.println("For link id = " + key);
+				System.err.println("Link volume in PCU: " + rna.getLinkVolumesInPCU().get(key));
+				System.err.println("Link travel time " + rna.getLinkTravelTimes().get(key));
+				System.err.println("Free-flow Link travel time " + rna.getLinkFreeFlowTravelTimes().get(key));
+			}
+			double actual = rna.getLinkTravelTimes().get(key);
+			double freeFlow = rna.getLinkFreeFlowTravelTimes().get(key);
+			//assertTrue(actual >= freeFlow);
+			//assertThat(actual, greaterThanOrEqualTo(freeFlow));
+			final double PRECISION = 1e-6;
+			//if freeFlow time is larger, it is only due to calculation error, so it has to be very close:
+			if (freeFlow > actual)	assertThat(actual, closeTo(freeFlow, PRECISION));
+		}
+						
 		System.out.println("Time skim matrix: ");
 		rna.calculateTimeSkimMatrix().printMatrixFormatted();
 		
@@ -415,6 +450,19 @@ public class RoadNetworkAssignmentTest {
 		final String freightZoneNearestNodeFile = "./src/test/resources/testdata/freightZoneToNearestNode.csv";
 		final String baseYearODMatrixFile = "./src/test/resources/testdata/passengerODM.csv";
 		final String freightMatrixFile = "./src/test/resources/testdata/FreightMatrix.csv";
+		
+//		final URL zonesUrl = new URL("file://src/main/resources/data/zones.shp");
+//		final URL networkUrl = new URL("file://src/main/resources/data/network.shp");
+//		final URL nodesUrl = new URL("file://src/main/resources/data/nodes.shp");
+//		final URL AADFurl = new URL("file://src/main/resources/data/AADFdirected2015.shp");
+//		final String areaCodeFileName = "./src/main/resources/data/population_OA_GB.csv";
+//		final String areaCodeNearestNodeFile = "./src/main/resources/data/nearest_node_OA_GB.csv";
+//		final String workplaceZoneFileName = "./src/main/resources/data/workplacePopulationFakeSC.csv";
+//		final String workplaceZoneNearestNodeFile = "./src/main/resources/data/nearest_node_WZ_GB_fakeSC.csv";
+//		final String freightZoneToLADfile = "./src/main/resources/data/freightZoneToLAD.csv";
+//		final String freightZoneNearestNodeFile = "./src/main/resources/data/freightZoneToNearestNode.csv";
+//		final String baseYearODMatrixFile = "./src/main/resources/data/balancedODMatrix.csv";
+//		final String freightMatrixFile = "./src/main/resources/data/FreightMatrix.csv";
 
 		//create a road network
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
@@ -424,24 +472,24 @@ public class RoadNetworkAssignmentTest {
 
 		//assign passenger flows
 		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
-		rna.assignPassengerFlows(odm);
+		//rna.assignPassengerFlows(odm);
 		
 		//assign freight flows
 		FreightMatrix fm = new FreightMatrix(freightMatrixFile);
 		rna.assignFreightFlows(fm);
 		
 		//TEST OUTPUT AREA PROBABILITIES
-		System.out.println("\n\n*** Testing output area probabilities ***");
+		System.out.println("\n\n*** Testing workplace zone probabilities ***");
 		
 		final double EPSILON = 1e-11; //may fail for higher accuracy
 		
-		//test the probability of one output area from each LAD
+		//test the probability of one workplace zone from each LAD
 		assertEquals("The probability of the workplace zone E33040972 is correct", (double)372/112852, rna.getWorkplaceZoneProbabilities().get("E33040972"), EPSILON);
 		assertEquals("The probability of the workplace zone E33037947 is correct", (double)215/64219, rna.getWorkplaceZoneProbabilities().get("E33037947"), EPSILON);
 		assertEquals("The probability of the workplace zone E33038064 is correct", (double)390/75620, rna.getWorkplaceZoneProbabilities().get("E33038064"), EPSILON);
 		assertEquals("The probability of the workplace zone E33041117 is correct", (double)449/56591, rna.getWorkplaceZoneProbabilities().get("E33041117"), EPSILON);
 
-		//test that the sum of probabilities of output areas in each LAD zone is 1.0
+		//test that the sum of probabilities of workplace zones in each LAD zone is 1.0
 		for (String zone: roadNetwork.getZoneToWorkplaceCodes().keySet()) {
 
 			double probabilitySum = 0.0;
@@ -457,7 +505,8 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("\n\n*** Testing path storage for freight ***");
 		
 		//check that the number of paths for a given OD equals the flow (the number of trips in the OD matrix).
-		rna.getPathStorageFreight();
+		//System.out.println(rna.getPathStorageFreight());
+				
 		//for each OD
 		for (MultiKey mk: fm.getKeySet()) {
 					//System.out.println(mk);
@@ -503,8 +552,15 @@ public class RoadNetworkAssignmentTest {
 		//after assignment and update the link travel times should be greater or equal than the free flow travel times.
 		System.out.println(rna.getLinkFreeFlowTravelTimes());
 		System.out.println(rna.getLinkTravelTimes());
-		for (int key: rna.getLinkTravelTimes().keySet()) 			
-			assertTrue(rna.getLinkTravelTimes().get(key) >= rna.getLinkFreeFlowTravelTimes().get(key));
+		for (int key: rna.getLinkTravelTimes().keySet()) {			
+			double actual = rna.getLinkTravelTimes().get(key);
+			double freeFlow = rna.getLinkFreeFlowTravelTimes().get(key);
+			//assertTrue(actual >= freeFlow);
+			//assertThat(actual, greaterThanOrEqualTo(freeFlow));
+			final double PRECISION = 1e-6;
+			//if freeFlow time is larger, it is only due to calculation error, so it has to be very close:
+			if (freeFlow > actual)	assertThat(actual, closeTo(freeFlow, PRECISION));
+		}
 		
 		//TEST SKIM MATRIX FOR FREIGHT
 		System.out.println("\n\n*** Testing skim matrices for freight ***");
@@ -644,7 +700,14 @@ public class RoadNetworkAssignmentTest {
 		//after assignment and update the link travel times should be greater or equal than the free flow travel times.
 		System.out.println(rna.getLinkFreeFlowTravelTimes());
 		System.out.println(rna.getLinkTravelTimes());
-		for (int key: rna.getLinkTravelTimes().keySet()) 			
-			assertTrue(rna.getLinkTravelTimes().get(key) >= rna.getLinkFreeFlowTravelTimes().get(key));	
+		for (int key: rna.getLinkTravelTimes().keySet()) {			
+			double actual = rna.getLinkTravelTimes().get(key);
+			double freeFlow = rna.getLinkFreeFlowTravelTimes().get(key);
+			//assertTrue(actual >= freeFlow);
+			//assertThat(actual, greaterThanOrEqualTo(freeFlow));
+			final double PRECISION = 1e-6;
+			//if freeFlow time is larger, it is only due to calculation error, so it has to be very close:
+			if (freeFlow > actual)	assertThat(actual, closeTo(freeFlow, PRECISION));
+		}
 	}
 }
