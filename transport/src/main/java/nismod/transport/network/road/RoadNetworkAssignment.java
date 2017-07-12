@@ -79,7 +79,7 @@ public class RoadNetworkAssignment {
 	private RoadNetwork roadNetwork;
 
 	private HashMap<Integer, Double> linkVolumesInPCU;
-	private HashMap<Integer, HashMap<VehicleType, Integer>> linkVolumesPerVehicleType;
+	private HashMap<VehicleType, HashMap<Integer, Integer>> linkVolumesPerVehicleType;
 	private HashMap<Integer, Double> linkFreeFlowTravelTime;
 	private HashMap<Integer, Double> linkTravelTime;
 
@@ -123,7 +123,11 @@ public class RoadNetworkAssignment {
 
 		this.roadNetwork = roadNetwork;
 		this.linkVolumesInPCU = new HashMap<Integer, Double>();
-		//this.linkVolumesPerVehicleType = new HashMap<Integer, HashMap<String, Double>>();
+		this.linkVolumesPerVehicleType = new HashMap<VehicleType, HashMap<Integer, Integer>>();
+		for (VehicleType vht: VehicleType.values()) {
+			HashMap<Integer, Integer> map = new HashMap<Integer, Integer>();
+			linkVolumesPerVehicleType.put(vht, map);
+		}
 		this.linkFreeFlowTravelTime = new HashMap<Integer, Double>();
 		this.linkTravelTime = new HashMap<Integer, Double>();
 		this.pathStorage = new MultiKeyMap<String, List<Path>>();
@@ -484,6 +488,12 @@ public class RoadNetworkAssignment {
 						if (volumeInPCU == null) volumeInPCU = 0.0;
 						volumeInPCU++;
 						linkVolumesInPCU.put(e.getID(), volumeInPCU);
+						
+						//increase volume count for that edge and for a car vehicle type
+						Integer volume = linkVolumesPerVehicleType.get(VehicleType.CAR).get(e.getID());
+						if (volume == null) volume = 0;
+						volume++;
+						linkVolumesPerVehicleType.get(VehicleType.CAR).put(e.getID(), volume);
 					}
 					//System.out.printf("Sum of edge lengths: %.3f\n\n", sum);
 
@@ -759,11 +769,17 @@ public class RoadNetworkAssignment {
 						//System.out.println(length);
 						sum += length;
 
-						//increase volume count for that edge
+						//increase volume count for that edge (in PCU)
 						Double volumeInPCU = linkVolumesInPCU.get(e.getID());
 						if (volumeInPCU == null) volumeInPCU = 0.0;
-						volumeInPCU += this.vehicleTypeToPCU.get(VehicleType.values()[vehicleType]);
+						volumeInPCU += this.vehicleTypeToPCU.get(vht);
 						linkVolumesInPCU.put(e.getID(), volumeInPCU);
+						
+						//increase volume count for that edge and for that vehicle type
+						Integer volume = linkVolumesPerVehicleType.get(vht).get(e.getID());
+						if (volume == null) volume = 0;
+						volume++;
+						linkVolumesPerVehicleType.get(vht).put(e.getID(), volume);
 					}
 					//System.out.printf("Sum of edge lengths: %.3f\n\n", sum);
 
@@ -823,7 +839,10 @@ public class RoadNetworkAssignment {
 				if (flow < 1398) speed = ((69.96 - 71.95) / 1398 * flow + 71.95) * 1.609344; //[kph]
 				else 			 speed = ((34.55 - 69.96) / (2330 - 1398) * (flow - 1398) + 69.96) * 1.609344; //[kph]
 				
-				if (speed <= 0.0) System.err.println("Speed is not positive!");
+				if (speed <= 0.0) {
+					System.err.println("Speed is not positive!");
+					speed = 34.55; //constraint speed
+				}
 				congestedTravelTime = roadLength / speed * 60; //[min]
 						
 			} else if (roadNumber.charAt(0) == 'A') {//A-road
@@ -833,7 +852,10 @@ public class RoadNetworkAssignment {
 				if (flow < 1251) speed = ((50.14 - 56.05) / 1251 * flow + 56.05) * 1.609344; //[kph]
 				else 			 speed = ((27.22 - 50.14) / (1740 - 1251) * (flow - 1251) + 50.14) * 1.609344; //[kph]
 				
-				if (speed <= 0.0) System.err.println("Speed is not positive!");
+				if (speed <= 0.0) {
+					System.err.println("Speed is not positive!");
+					speed = 27.22; //constraint speed
+				}
 				congestedTravelTime = roadLength / speed * 60;
 				
 			} else //ferry
@@ -885,7 +907,10 @@ public class RoadNetworkAssignment {
 				if (flow < 1398) speed = ((69.96 - 71.95) / 1398 * flow + 71.95) * 1.609344; //[kph]
 				else 			 speed = ((34.55 - 69.96) / (2330 - 1398) * (flow - 1398) + 69.96) * 1.609344; //[kph]
 				
-				if (speed <= 0.0) System.err.println("Speed is not positive!");
+				if (speed <= 0.0) {
+					System.err.println("Speed is not positive!");
+					speed = 34.55; //constraint speed
+				}
 				congestedTravelTime = roadLength / speed * 60; //[min]
 						
 			} else if (roadNumber.charAt(0) == 'A') {//A-road
@@ -895,7 +920,10 @@ public class RoadNetworkAssignment {
 				if (flow < 1251) speed = ((50.14 - 56.05) / 1251 * flow + 56.05) * 1.609344; //[kph]
 				else 			 speed = ((27.22 - 50.14) / (1740 - 1251) * (flow - 1251) + 50.14) * 1.609344; //[kph]
 				
-				if (speed <= 0.0) System.err.println("Speed is not positive!");
+				if (speed <= 0.0) {
+					System.err.println("Speed is not positive!");
+					speed = 27.22; //constraint speed
+				}
 				congestedTravelTime = roadLength / speed * 60;
 				
 			} else //ferry
@@ -1147,6 +1175,53 @@ public class RoadNetworkAssignment {
 		return distanceSkimMatrix;
 	}
 
+	/**
+	 * Updates cost skim matrix (zone-to-zone distances) for freight.
+	 * @return Inter-zonal skim matrix (distance).
+	 */
+	public SkimMatrix calculateDistanceSkimMatrixFreight() {
+
+		SkimMatrix distanceSkimMatrixFreight = new SkimMatrix();
+
+		//for each vehicle type
+		for (VehicleType vht: pathStorageFreight.keySet())
+			//for each OD pair that is stored in the path storage
+			for (MultiKey mk: pathStorageFreight.get(vht).keySet()) {
+				//System.out.println(mk);
+				String originZone = (String) mk.getKey(0);
+				String destinationZone = (String) mk.getKey(1);
+
+				List<Path> pathList = pathStorageFreight.get(vht).get(originZone, destinationZone);
+				double totalODdistance = 0.0;
+				//for each path in the path list calculate total distance
+				for (Path path: pathList) {
+					double pathLength = 0.0;
+					for (Object o: path.getEdges()) {
+						Edge e = (Edge)o;
+						SimpleFeature sf = (SimpleFeature) e.getObject();
+						double length = (double) sf.getAttribute("LenNet");
+						pathLength += length;					
+					}
+				//System.out.printf("Path length: %.3f\n", pathLength);
+				totalODdistance += pathLength;
+				//add average access and egress distance to the first and the last node [m -> km!]
+				double accessDistance = this.roadNetwork.getAverageAcessEgressDistanceFreight(path.getFirst().getID()) / 1000;
+				double egressDistance = this.roadNetwork.getAverageAcessEgressDistanceFreight(path.getLast().getID()) / 1000;
+				//System.out.printf("Acess: %.3f Egress: %.3f\n ", accessDistance, egressDistance);
+				//System.out.printf("Path length with access and egress: %.3f km\n", pathLength + accessDistance + egressDistance);
+				totalODdistance += (accessDistance + egressDistance);
+			}
+			double averageODdistance = totalODdistance / pathList.size();
+
+			//System.out.printf("Average OD distance: %.3f km\n", averageODdistance);
+			//update distance skim matrix
+			distanceSkimMatrixFreight.setCost(originZone, destinationZone, averageODdistance);
+		}
+
+		return distanceSkimMatrixFreight;
+	}
+
+	
 	/**
 	 * Updates cost skim matrix (zone-to-zone financial costs) for freight.
 	 * @param costSkimMatrix Inter-zonal skim matrix (cost).
@@ -1933,7 +2008,7 @@ public class RoadNetworkAssignment {
 
 	/**
 	 * Calculate RMSN for for counts.
-	 * @return Normalised root mean square error
+	 * @return Normalised root mean square error.
 	 */
 	public double calculateRMSNforCounts () {
 
@@ -1960,9 +2035,9 @@ public class RoadNetworkAssignment {
 
 				long carCount = (long) sf.getAttribute("FdCar");
 				long carVolume;
-				Double carVolumeFetch = this.linkVolumesInPCU.get(edge.getID());
+				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edge.getID());
 				if (carVolumeFetch == null) carVolume = 0;
-				else 						carVolume = Math.round(this.linkVolumesInPCU.get(edge.getID()));
+				else 						carVolume = carVolumeFetch;
 
 				countOfCounts++;
 				sumOfCounts += carCount;
@@ -1976,20 +2051,126 @@ public class RoadNetworkAssignment {
 
 				//get volumes for this direction
 				long carVolume;
-				Double carVolumeFetch = this.linkVolumesInPCU.get(edge.getID());
+				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edge.getID());
 				if (carVolumeFetch == null) carVolume = 0;
-				else 						carVolume = Math.round(this.linkVolumesInPCU.get(edge.getID()));
+				else 						carVolume = carVolumeFetch;
 
 				//get volumes for other direction (if exists)
 				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(edge.getID());
 				long carVolume2;
-				Double carVolumeFetch2 = this.linkVolumesInPCU.get(edge2);
+				Integer carVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edge2);
 				if (carVolumeFetch2 == null) carVolume2 = 0;
-				else 						 carVolume2 = Math.round(this.linkVolumesInPCU.get(edge2));
+				else 						 carVolume2 = carVolumeFetch2;
 
 				countOfCounts++;
 				sumOfCounts += carCount;
 				sumOfSquaredDiffs += (carCount - carVolume - carVolume2)^2;
+
+				checkedCP.add(countPoint);
+			}
+		}
+
+		double RMSE = Math.sqrt(sumOfSquaredDiffs);
+		double averageTrueCount = (double) sumOfCounts / countOfCounts;
+
+		return (RMSE / averageTrueCount ) * 100;
+	}
+	
+	/**
+	 * Calculate RMSN for for freight counts.
+	 * @return Normalised root mean square error.
+	 */
+	public double calculateRMSNforFreightCounts () {
+
+		Iterator iter = this.roadNetwork.getNetwork().getEdges().iterator();
+		int countOfCounts = 0;
+		long sumOfCounts = 0;
+		double sumOfSquaredDiffs = 0.0;
+		ArrayList<Long> checkedCP = new ArrayList<Long>(); 
+
+		while (iter.hasNext()) {
+			DirectedEdge edge = (DirectedEdge) iter.next();
+			SimpleFeature sf = (SimpleFeature) edge.getObject(); 
+			String roadNumber = (String) sf.getAttribute("RoadNumber");
+
+			if (roadNumber.charAt(0) != 'M' && roadNumber.charAt(0) != 'A') continue; //ferry
+
+			Long countPoint = (long) sf.getAttribute("CP");
+
+			String direction = (String) sf.getAttribute("iDir");
+			char dir = direction.charAt(0);
+
+			//ignore combined counts 'C' for now
+			if (dir == 'N' || dir == 'S' || dir == 'W' || dir == 'E') {
+
+				long vanCount = (long) sf.getAttribute("FdLGV");
+				long rigidCount = (long) sf.getAttribute("FdHGVR2") + (long) sf.getAttribute("FdHGVR3") + (long) sf.getAttribute("FdHGVR4");
+				long articCount = (long) sf.getAttribute("FdHGVA3") + (long) sf.getAttribute("FdHGVA5") + (long) sf.getAttribute("FdHGVA6");
+								
+				long vanVolume;
+				Integer vanVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.VAN).get(edge.getID());
+				if (vanVolumeFetch == null) vanVolume = 0;
+				else 						vanVolume = vanVolumeFetch;
+
+				long rigidVolume;
+				Integer rigidVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.RIGID).get(edge.getID());
+				if (rigidVolumeFetch == null) rigidVolume = 0;
+				else 						  rigidVolume = rigidVolumeFetch;
+				
+				long articVolume;
+				Integer articVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC).get(edge.getID());
+				if (articVolumeFetch == null) articVolume = 0;
+				else 						  articVolume = articVolumeFetch;
+				
+				countOfCounts += 3;
+				sumOfCounts += vanCount + rigidCount + articCount;
+				sumOfSquaredDiffs += (vanCount - vanVolume)^2 + (rigidCount - rigidVolume)^2 + (articCount - articVolume)^2;
+			}
+
+			if (dir == 'C' && !checkedCP.contains(countPoint)) { //for combined counts check if this countPoint has been processed already
+
+				//get combined count
+				long vanCount = (long) sf.getAttribute("FdLGV");
+				long rigidCount = (long) sf.getAttribute("FdHGVR2") + (long) sf.getAttribute("FdHGVR3") + (long) sf.getAttribute("FdHGVR4");
+				long articCount = (long) sf.getAttribute("FdHGVA3") + (long) sf.getAttribute("FdHGVA5") + (long) sf.getAttribute("FdHGVA6");
+
+				//get volumes for this direction
+				long vanVolume;
+				Integer vanVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.VAN).get(edge.getID());
+				if (vanVolumeFetch == null) vanVolume = 0;
+				else 						vanVolume = vanVolumeFetch;
+
+				long rigidVolume;
+				Integer rigidVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.RIGID).get(edge.getID());
+				if (rigidVolumeFetch == null) rigidVolume = 0;
+				else 						  rigidVolume = rigidVolumeFetch;
+				
+				long articVolume;
+				Integer articVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC).get(edge.getID());
+				if (articVolumeFetch == null) articVolume = 0;
+				else 						  articVolume = articVolumeFetch;
+
+				//get volumes for other direction (if exists)
+				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(edge.getID());
+				
+				long vanVolume2;
+				Integer vanVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.VAN).get(edge2);
+				if (vanVolumeFetch2 == null) vanVolume2 = 0;
+				else 						 vanVolume2 = vanVolumeFetch2;
+
+				long rigidVolume2;
+				Integer rigidVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.RIGID).get(edge2);
+				if (rigidVolumeFetch2 == null) rigidVolume2 = 0;
+				else 						   rigidVolume2 = rigidVolumeFetch2;
+				
+				long articVolume2;
+				Integer articVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC).get(edge2);
+				if (articVolumeFetch2 == null) articVolume2 = 0;
+				else 						   articVolume2 = articVolumeFetch2;
+
+				countOfCounts += 3;
+				sumOfCounts += vanCount + rigidCount + articCount;
+				sumOfSquaredDiffs += (vanCount - vanVolume - vanVolume2)^2 + (rigidCount - rigidVolume - rigidVolume2)^2 + (articCount - articVolume - articVolume2)^2;
 
 				checkedCP.add(countPoint);
 			}
