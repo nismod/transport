@@ -58,8 +58,12 @@ public class SkimMatrix {
 			//System.out.println("Origin zone = " + record.get(0));
 			for (String destination: keySet) {
 				//System.out.println("Destination zone = " + destination);
+				try {
 				cost = Double.parseDouble(record.get(destination));
-				this.setCost(record.get(0), destination, cost);			
+				this.setCost(record.get(0), destination, cost);
+				} catch(NumberFormatException e) {
+					System.err.println("Number format exception in the skim matrix input file: " + e.getMessage());
+				}
 			}
 		}
 		parser.close(); 
@@ -176,7 +180,11 @@ public class SkimMatrix {
 			for (String origin: firstKeyList) {
 				record.clear();
 				record.add(origin);
-				for (String destination: secondKeyList) record.add(String.format("%.2f", this.getCost(origin, destination)));
+				for (String destination: secondKeyList) {
+					Double cost = this.getCost(origin, destination);
+					if (cost != null)	record.add(String.format("%.2f", cost));
+					else				record.add("N/A");
+				}
 				csvFilePrinter.printRecord(record);
 			}
 		} catch (Exception e) {

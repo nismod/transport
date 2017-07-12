@@ -71,7 +71,7 @@ public class RoadNetworkAssignmentTest {
 		
 		final String areaCodeFileName2 = "./src/main/resources/data/population_OA_GB.csv";
 		final String areaCodeNearestNodeFile2 = "./src/main/resources/data/nearest_node_OA_GB.csv";
-		final String workplaceZoneFileName2 = "./src/test/resources/testdata/workplacePopulation.csv";
+		final String workplaceZoneFileName2 = "./src/main/resources/data/workplacePopulationFakeSC.csv";
 		final String workplaceZoneNearestNodeFile2 = "./src/main/resources/data/nearest_node_WZ_GB_fakeSC.csv";
 		final String freightZoneToLADfile2 = "./src/main/resources/data/freightZoneToLAD.csv";
 		final String freightZoneNearestNodeFile2 = "./src/main/resources/data/freightZoneToNearestNode.csv";
@@ -90,32 +90,29 @@ public class RoadNetworkAssignmentTest {
 		//ODMatrix passengerODM = new ODMatrix("./src/test/resources/testdata/passengerODM.csv");
 		//ODMatrix passengerODM = new ODMatrix("./src/main/resources/data/passengerODMfull.csv");
 		//ODMatrix passengerODM = new ODMatrix("./src/main/resources/data/passengerODMtempro.csv");
-		ODMatrix passengerODM = new ODMatrix("./src/main/resources/data/balancedODMatrix.csv");
+		ODMatrix passengerODM = new ODMatrix("./src/main/resources/data/balancedODMatrixOldLengths.csv");
 
 		passengerODM.printMatrix();
 		
 		//assign freight flows
-		FreightMatrix freightMatrix = new FreightMatrix("./src/test/resources/testdata/FreightMatrix.csv");
-	
+		FreightMatrix freightMatrix = new FreightMatrix("./src/main/resources/data/FreightMatrix.csv");	
 		freightMatrix.printMatrixFormatted();
- 
-		
-		roadNetworkAssignment.assignFreightFlows(freightMatrix);
+//		roadNetworkAssignment.assignFreightFlows(freightMatrix);
 		
 		
-//		//for (int i = 0; i < 5; i++) {
-//		for (int i = 0; i < 1; i++) {
-//			roadNetworkAssignment.resetLinkVolumesInPCU();
-//			
-//			long timeNow = System.currentTimeMillis();
-//			roadNetworkAssignment.assignPassengerFlows(passengerODM);
-//			timeNow = System.currentTimeMillis() - timeNow;
-//			System.out.printf("Passenger flows assigned in %d seconds.\n", timeNow / 1000);
-//				
-//			HashMap<Integer, Double> oldTravelTimes = roadNetworkAssignment.getCopyOfLinkTravelTimes();
-//			roadNetworkAssignment.updateLinkTravelTimes(0.9);
-//			System.out.println("Difference in link travel times: " + roadNetworkAssignment.getAbsoluteDifferenceInLinkTravelTimes(oldTravelTimes));
-//		}		
+		//for (int i = 0; i < 5; i++) {
+		for (int i = 0; i < 1; i++) {
+			roadNetworkAssignment.resetLinkVolumesInPCU();
+			
+			long timeNow = System.currentTimeMillis();
+			roadNetworkAssignment.assignPassengerFlows(passengerODM);
+			timeNow = System.currentTimeMillis() - timeNow;
+			System.out.printf("Passenger flows assigned in %d seconds.\n", timeNow / 1000);
+				
+			HashMap<Integer, Double> oldTravelTimes = roadNetworkAssignment.getCopyOfLinkTravelTimes();
+			roadNetworkAssignment.updateLinkTravelTimes(0.9);
+			System.out.println("Difference in link travel times: " + roadNetworkAssignment.getAbsoluteDifferenceInLinkTravelTimes(oldTravelTimes));
+		}		
 
 		System.out.println("Nodes:");
 		System.out.println(roadNetwork2.getNetwork().getNodes());
@@ -153,7 +150,7 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("Distance skim matrix:");
 		SkimMatrix distanceSkimMatrix = roadNetworkAssignment.calculateDistanceSkimMatrix();
 		distanceSkimMatrix.printMatrixFormatted();
-		distanceSkimMatrix.saveMatrixFormatted("distanceSkimMatrix.csv");
+		//distanceSkimMatrix.saveMatrixFormatted("distanceSkimMatrix.csv");
 				
 		System.out.println("Total energy consumptions:");
 		System.out.println(roadNetworkAssignment.calculateEnergyConsumptions());
@@ -164,7 +161,7 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("Peak-hour link densities:");
 		System.out.println(roadNetworkAssignment.calculatePeakLinkDensities());
 		
-		roadNetworkAssignment.saveAssignmentResults(2015, "assignment2015balanced.csv");
+		//roadNetworkAssignment.saveAssignmentResults(2015, "assignment2015balanced.csv");
 		
 		System.out.printf("RMSN for counts: %.2f%%", roadNetworkAssignment.calculateRMSNforCounts());
 	}
@@ -260,7 +257,7 @@ public class RoadNetworkAssignmentTest {
 			if (freeFlow > actual)	assertThat(actual, closeTo(freeFlow, PRECISION));
 		}
 		
-		System.out.println("RMSN: " + rna.calculateRMSNforCounts());
+		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforCounts());
 	}
 
 	@Test
@@ -430,9 +427,12 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("Time skim matrix: ");
 		rna.calculateTimeSkimMatrix().printMatrixFormatted();
 		
+		System.out.println("Distance skim matrix:");
+		rna.calculateDistanceSkimMatrix().printMatrixFormatted();
+				
 		//rna.saveAssignmentResults(2015, "testAssignmentResults.csv");
 		
-		System.out.println("RMSN: " + rna.calculateRMSNforCounts());
+		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforCounts());
 	}
 	
 	@Test
@@ -568,6 +568,8 @@ public class RoadNetworkAssignmentTest {
 		rna.calculateCostSkimMatrixFreight().printMatrixFormatted();
 		System.out.println("Time skim matrix for freight (in min):");
 		rna.calculateTimeSkimMatrixFreight().printMatrixFormatted();
+		
+		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforFreightCounts());
 	}
 	
 	//@Test
@@ -579,7 +581,7 @@ public class RoadNetworkAssignmentTest {
 		final URL AADFurl = new URL("file://src/main/resources/data/AADFdirected2015.shp");
 		final String areaCodeFileName = "./src/main/resources/data/population_OA_GB.csv";
 		final String areaCodeNearestNodeFile = "./src/main/resources/data/nearest_node_OA_GB.csv";
-		final String workplaceZoneFileName = "./src/test/resources/testdata/workplacePopulation.csv";
+		final String workplaceZoneFileName = "./src/main/resources/data/workplacePopulationFakeSC.csv";
 		final String workplaceZoneNearestNodeFile = "./src/main/resources/data/nearest_node_WZ_GB_fakeSC.csv";
 		final String freightZoneToLADfile = "./src/main/resources/data/freightZoneToLAD.csv";
 		final String freightZoneNearestNodeFile = "./src/main/resources/data/freightZoneToNearestNode.csv";
@@ -709,5 +711,13 @@ public class RoadNetworkAssignmentTest {
 			//if freeFlow time is larger, it is only due to calculation error, so it has to be very close:
 			if (freeFlow > actual)	assertThat(actual, closeTo(freeFlow, PRECISION));
 		}
+		
+		System.out.println("Time skim matrix: ");
+		rna.calculateTimeSkimMatrix().printMatrixFormatted();
+		
+		System.out.println("Distance skim matrix:");
+		rna.calculateDistanceSkimMatrix().printMatrixFormatted();
+				
+		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforCounts());
 	}
 }
