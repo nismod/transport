@@ -102,7 +102,7 @@ public class RoadNetworkAssignmentTest {
 		
 		//for (int i = 0; i < 5; i++) {
 		for (int i = 0; i < 1; i++) {
-			roadNetworkAssignment.resetLinkVolumesInPCU();
+			roadNetworkAssignment.resetLinkVolumes();
 			
 			long timeNow = System.currentTimeMillis();
 			roadNetworkAssignment.assignPassengerFlows(passengerODM);
@@ -477,6 +477,8 @@ public class RoadNetworkAssignmentTest {
 		//assign freight flows
 		FreightMatrix fm = new FreightMatrix(freightMatrixFile);
 		rna.assignFreightFlows(fm);
+		
+		//rna.saveAssignmentResults(2015, "testAssignmentResultsWithFreight.csv");
 		
 		//TEST OUTPUT AREA PROBABILITIES
 		System.out.println("\n\n*** Testing workplace zone probabilities ***");

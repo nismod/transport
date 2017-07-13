@@ -962,7 +962,7 @@ public class RoadNetworkAssignment {
 	public void assignFlowsAndUpdateLinkTravelTimesIterated(ODMatrix passengerODM, FreightMatrix freightODM, double weight, int iterations) {
 
 		for (int i=0; i<iterations; i++) {
-			this.resetLinkVolumesInPCU(); //link volumes must be reset or they would compound across all iterations
+			this.resetLinkVolumes(); //link volumes must be reset or they would compound across all iterations
 			this.resetPathStorages(); //clear path storages
 			this.resetTripStartEndCounters(); //reset counters
 			this.assignFlowsAndUpdateLinkTravelTimes(passengerODM, freightODM, weight);
@@ -1470,9 +1470,14 @@ public class RoadNetworkAssignment {
 		ArrayList<String> header = new ArrayList<String>();
 		header.add("year");
 		header.add("edgeID");
+		header.add("roadNumber");
 		header.add("freeFlowTravelTime");
 		header.add("travelTime");
-		header.add("linkVolumePCU");
+		header.add("linkVolumeCar");
+		header.add("linkVolumeVan");
+		header.add("linkVolumeRigid");
+		header.add("linkVolumeArtic");
+		header.add("linkVolumeInPCU");
 		header.add("peakCapacity");
 		header.add("peakDensity");
 		header.add("maxCapacity");
@@ -1480,6 +1485,9 @@ public class RoadNetworkAssignment {
 		header.add("CP");
 		header.add("direction");
 		header.add("countCar");
+		header.add("countVan");
+		header.add("countRigid");
+		header.add("countArtic");
 		FileWriter fileWriter = null;
 		CSVPrinter csvFilePrinter = null;
 		CSVFormat csvFileFormat = CSVFormat.DEFAULT.withRecordSeparator(NEW_LINE_SEPARATOR);
@@ -1494,18 +1502,29 @@ public class RoadNetworkAssignment {
 				record.clear();
 				record.add(Integer.toString(year));
 				record.add(Integer.toString(edge.getID()));
+				SimpleFeature feature = (SimpleFeature)edge.getObject();
+				String roadNumber = (String) feature.getAttribute("RoadNumber");
+				record.add(roadNumber);
 				record.add(Double.toString(this.linkFreeFlowTravelTime.get(edge.getID())));
 				record.add(Double.toString(this.linkTravelTime.get(edge.getID())));
-				Double linkVolume = this.linkVolumesInPCU.get(edge.getID());
-				if (linkVolume == null)
-					record.add(Double.toString(0.0));
-				else
-					record.add(Double.toString(this.linkVolumesInPCU.get(edge.getID())));
+				Integer linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edge.getID());
+				if (linkVolume == null) record.add(Integer.toString(0));
+				else 					record.add(Integer.toString(linkVolume));
+				linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.VAN).get(edge.getID());
+				if (linkVolume == null) record.add(Integer.toString(0));
+				else 					record.add(Integer.toString(linkVolume));
+				linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.RIGID).get(edge.getID());
+				if (linkVolume == null) record.add(Integer.toString(0));
+				else 					record.add(Integer.toString(linkVolume));
+				linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC).get(edge.getID());
+				if (linkVolume == null) record.add(Integer.toString(0));
+				else 					record.add(Integer.toString(linkVolume));
+				Double linkVolumePCU = this.linkVolumesInPCU.get(edge.getID());
+				if (linkVolumePCU == null) record.add(Double.toString(0.0));
+				else					   record.add(Double.toString(linkVolumePCU));
 				record.add(Double.toString(capacities.get(edge.getID())));
 				record.add(Double.toString(densities.get(edge.getID())));
 				//get max capacity from road type
-				SimpleFeature feature = (SimpleFeature)edge.getObject();
-				String roadNumber = (String) feature.getAttribute("RoadNumber");
 				if (roadNumber.charAt(0) == 'M') { //motorway
 					record.add(Integer.toString(RoadNetworkAssignment.MAXIMUM_CAPACITY_M_ROAD));
 					double utilisation = capacities.get(edge.getID()) / RoadNetworkAssignment.MAXIMUM_CAPACITY_M_ROAD;
@@ -1516,6 +1535,12 @@ public class RoadNetworkAssignment {
 					record.add(direction);
 					long carCount = (long) feature.getAttribute("FdCar");
 					record.add(Long.toString(carCount));
+					long vanCount = (long) feature.getAttribute("FdLGV");
+					record.add(Long.toString(vanCount));
+					long rigidCount = (long) feature.getAttribute("FdHGVR2") + (long) feature.getAttribute("FdHGVR3") + (long) feature.getAttribute("FdHGVR4");
+					record.add(Long.toString(rigidCount));
+					long articCount = (long) feature.getAttribute("FdHGVA3") + (long) feature.getAttribute("FdHGVA5") + (long) feature.getAttribute("FdHGVA6");
+					record.add(Long.toString(articCount));
 				}
 				else if (roadNumber.charAt(0) == 'A') { //A road
 					record.add(Integer.toString(RoadNetworkAssignment.MAXIMUM_CAPACITY_A_ROAD));
@@ -1527,8 +1552,17 @@ public class RoadNetworkAssignment {
 					record.add(direction);
 					long carCount = (long) feature.getAttribute("FdCar");
 					record.add(Long.toString(carCount));
+					long vanCount = (long) feature.getAttribute("FdLGV");
+					record.add(Long.toString(vanCount));
+					long rigidCount = (long) feature.getAttribute("FdHGVR2") + (long) feature.getAttribute("FdHGVR3") + (long) feature.getAttribute("FdHGVR4");
+					record.add(Long.toString(rigidCount));
+					long articCount = (long) feature.getAttribute("FdHGVA3") + (long) feature.getAttribute("FdHGVA5") + (long) feature.getAttribute("FdHGVA6");
+					record.add(Long.toString(articCount));
 				}
 				else { //ferry
+					record.add("N/A");
+					record.add("N/A");
+					record.add("N/A");
 					record.add("N/A");
 					record.add("N/A");
 					record.add("N/A");
@@ -1974,9 +2008,16 @@ public class RoadNetworkAssignment {
 	/**
 	 * Resets link volumes to zero.
 	 */
-	public void resetLinkVolumesInPCU () {
+	public void resetLinkVolumes () {
 
+		//reset link volumes in PCU
 		for (Integer key: this.linkVolumesInPCU.keySet()) this.linkVolumesInPCU.put(key, 0.0);
+		
+		//reset link volumes per vehicle type
+		for (VehicleType vht: VehicleType.values()) {
+			HashMap<Integer, Integer> map = new HashMap<Integer, Integer>();
+			this.linkVolumesPerVehicleType.put(vht, map);
+		}
 	}
 
 	/**
