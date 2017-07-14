@@ -79,6 +79,8 @@ public class RoadDevelopmentTest {
 		assertEquals("From node ID is correct", newEdge2.getNodeA().getID(), Integer.parseInt(rd.getProperty("toNode")));
 		assertEquals("To node ID is correct", newEdge2.getNodeB().getID(), Integer.parseInt(rd.getProperty("fromNode")));
 		
+		System.out.println(newEdge.getObject());
+		
 		//check length
 	
 		rd.uninstall(roadNetwork);

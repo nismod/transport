@@ -91,28 +91,38 @@ public class RoadNetworkAssignmentTest {
 		//ODMatrix passengerODM = new ODMatrix("./src/main/resources/data/passengerODMfull.csv");
 		//ODMatrix passengerODM = new ODMatrix("./src/main/resources/data/passengerODMtempro.csv");
 		ODMatrix passengerODM = new ODMatrix("./src/main/resources/data/balancedODMatrixOldLengths.csv");
-
 		passengerODM.printMatrix();
 		
 		//assign freight flows
 		FreightMatrix freightMatrix = new FreightMatrix("./src/main/resources/data/FreightMatrix.csv");	
 		freightMatrix.printMatrixFormatted();
 //		roadNetworkAssignment.assignFreightFlows(freightMatrix);
+
+		long timeNow = System.currentTimeMillis();
+		roadNetworkAssignment.assignPassengerFlows(passengerODM);
+		timeNow = System.currentTimeMillis() - timeNow;
+		System.out.printf("Passenger flows assigned in %d seconds.\n", timeNow / 1000);
+
+		timeNow = System.currentTimeMillis();
+		roadNetworkAssignment.assignFreightFlows(freightMatrix);
+		timeNow = System.currentTimeMillis() - timeNow;
+		System.out.printf("Freight flows assigned in %d seconds.\n", timeNow / 1000);
 		
+		roadNetworkAssignment.saveAssignmentResults(2015, "assignment2015passengerAndFreigh.csv");
 		
-		//for (int i = 0; i < 5; i++) {
-		for (int i = 0; i < 1; i++) {
-			roadNetworkAssignment.resetLinkVolumes();
-			
-			long timeNow = System.currentTimeMillis();
-			roadNetworkAssignment.assignPassengerFlows(passengerODM);
-			timeNow = System.currentTimeMillis() - timeNow;
-			System.out.printf("Passenger flows assigned in %d seconds.\n", timeNow / 1000);
-				
-			HashMap<Integer, Double> oldTravelTimes = roadNetworkAssignment.getCopyOfLinkTravelTimes();
-			roadNetworkAssignment.updateLinkTravelTimes(0.9);
-			System.out.println("Difference in link travel times: " + roadNetworkAssignment.getAbsoluteDifferenceInLinkTravelTimes(oldTravelTimes));
-		}		
+//		//for (int i = 0; i < 5; i++) {
+//		for (int i = 0; i < 1; i++) {
+//			roadNetworkAssignment.resetLinkVolumes();
+//			
+//			long timeNow = System.currentTimeMillis();
+//			roadNetworkAssignment.assignPassengerFlows(passengerODM);
+//			timeNow = System.currentTimeMillis() - timeNow;
+//			System.out.printf("Passenger flows assigned in %d seconds.\n", timeNow / 1000);
+//				
+//			HashMap<Integer, Double> oldTravelTimes = roadNetworkAssignment.getCopyOfLinkTravelTimes();
+//			roadNetworkAssignment.updateLinkTravelTimes(0.9);
+//			System.out.println("Difference in link travel times: " + roadNetworkAssignment.getAbsoluteDifferenceInLinkTravelTimes(oldTravelTimes));
+//		}		
 
 		System.out.println("Nodes:");
 		System.out.println(roadNetwork2.getNetwork().getNodes());
@@ -164,6 +174,7 @@ public class RoadNetworkAssignmentTest {
 		//roadNetworkAssignment.saveAssignmentResults(2015, "assignment2015balanced.csv");
 		
 		System.out.printf("RMSN for counts: %.2f%%", roadNetworkAssignment.calculateRMSNforCounts());
+		System.out.printf("RMSN for freight: %.2f%%", roadNetworkAssignment.calculateRMSNforFreightCounts());
 	}
 
 	@Test
