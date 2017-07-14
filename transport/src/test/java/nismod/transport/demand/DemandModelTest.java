@@ -15,7 +15,9 @@ import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.geotools.graph.path.Path;
 
 import nismod.transport.decision.Intervention;
+import nismod.transport.decision.RoadDevelopment;
 import nismod.transport.decision.RoadExpansion;
+import nismod.transport.decision.VehicleElectrification;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
 
@@ -31,8 +33,8 @@ public class DemandModelTest {
 		final String areaCodeNearestNodeFile = "./src/test/resources/testdata/areaCodeToNearestNode.csv";
 		final String workplaceZoneFileName = "./src/test/resources/testdata/workplacePopulation.csv";
 		final String workplaceZoneNearestNodeFile = "./src/test/resources/testdata/workplaceZoneToNearestNode.csv";
-		final String freightZoneToLADfile = "./src/test/resources/minitestdata/freightZoneToLAD.csv";
-		final String freightZoneNearestNodeFile = "./src/test/resources/minitestdata/freightZoneToNearestNode.csv";
+		final String freightZoneToLADfile = "./src/test/resources/testdata/freightZoneToLAD.csv";
+		final String freightZoneNearestNodeFile = "./src/test/resources/testdata/freightZoneToNearestNode.csv";
 
 		final URL zonesUrl2 = new URL("file://src/test/resources/testdata/zones.shp");
 		final URL networkUrl2 = new URL("file://src/test/resources/testdata/network.shp");
@@ -56,15 +58,105 @@ public class DemandModelTest {
 		
 		List<Intervention> interventions = new ArrayList<Intervention>();
 		
+//		Properties props = new Properties();
+//		props.setProperty("startYear", "2016");
+//		props.setProperty("endYear", "2025");
+//		props.setProperty("fromNode", "57");
+//		props.setProperty("toNode", "39");
+//		props.setProperty("CP", "26042");
+//		props.setProperty("number", "2");
+//		RoadExpansion re = new RoadExpansion(props);
+//		interventions.add(re);
+		
+		/*
 		Properties props = new Properties();
 		props.setProperty("startYear", "2016");
 		props.setProperty("endYear", "2025");
-		props.setProperty("fromNode", "57");
-		props.setProperty("toNode", "39");
-		props.setProperty("CP", "26042");
-		props.setProperty("number", "2");
+		props.setProperty("fromNode", "11");
+		props.setProperty("toNode", "12");
+		props.setProperty("CP", "6368");
+		props.setProperty("number", "1");
 		RoadExpansion re = new RoadExpansion(props);
 		interventions.add(re);
+		
+		props = new Properties();
+		props.setProperty("startYear", "2016");
+		props.setProperty("endYear", "2025");
+		props.setProperty("fromNode", "12");
+		props.setProperty("toNode", "11");
+		props.setProperty("CP", "6368");
+		props.setProperty("number", "1");
+		re = new RoadExpansion(props);
+		interventions.add(re);
+		
+		props = new Properties();
+		props.setProperty("startYear", "2016");
+		props.setProperty("endYear", "2025");
+		props.setProperty("fromNode", "11");
+		props.setProperty("toNode", "76");
+		props.setProperty("CP", "73615");
+		props.setProperty("number", "1");
+		re = new RoadExpansion(props);
+		interventions.add(re);
+		
+		props = new Properties();
+		props.setProperty("startYear", "2016");
+		props.setProperty("endYear", "2025");
+		props.setProperty("fromNode", "76");
+		props.setProperty("toNode", "11");
+		props.setProperty("CP", "73615");
+		props.setProperty("number", "1");
+		re = new RoadExpansion(props);
+		interventions.add(re);
+		
+		props = new Properties();
+		props.setProperty("startYear", "2016");
+		props.setProperty("endYear", "2025");
+		props.setProperty("fromNode", "42");
+		props.setProperty("toNode", "76");
+		props.setProperty("CP", "36375");
+		props.setProperty("number", "1");
+		re = new RoadExpansion(props);
+		interventions.add(re);
+		
+		props = new Properties();
+		props.setProperty("startYear", "2016");
+		props.setProperty("endYear", "2025");
+		props.setProperty("fromNode", "76");
+		props.setProperty("toNode", "42");
+		props.setProperty("CP", "36375");
+		props.setProperty("number", "1");
+		re = new RoadExpansion(props);
+		interventions.add(re);
+		*/
+		
+		/*
+		Properties props = new Properties();
+		props.setProperty("startYear", "2016");
+		props.setProperty("endYear", "2025");
+		props.setProperty("fromNode", "12");
+		props.setProperty("toNode", "62");
+		props.setProperty("biDirectional", "true");
+		props.setProperty("lanesPerDirection", "2");
+		props.setProperty("length", "2.73");
+		props.setProperty("roadCategory", "A");
+		RoadDevelopment rd = new RoadDevelopment(props);
+		interventions.add(rd);
+		*/
+		
+		/*
+		Properties props = new Properties();
+		props.setProperty("startYear", "2016");
+		props.setProperty("endYear", "2025");
+		props.setProperty("PETROL", "0.40");
+		props.setProperty("DIESEL", "0.30");
+		props.setProperty("LPG", "0.1");
+		props.setProperty("ELECTRICITY", "0.15");
+		props.setProperty("HYDROGEN", "0.025");
+		props.setProperty("HYBRID", "0.025");
+		VehicleElectrification ve = new VehicleElectrification(props);
+		interventions.add(ve);
+		*/
 		
 		//the main demand model
 		DemandModel dm = new DemandModel(roadNetwork2, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, energyUnitCostsFile, interventions);
@@ -139,5 +231,12 @@ public class DemandModelTest {
 		System.out.println(rna2015.calculatePeakLinkDensities());
 		System.out.println("Predicted (2016) peak-hour link densities:");
 		System.out.println(rna2016.calculatePeakLinkDensities());
+		
+		dm.saveAssignmentResults(2015, "assignment2015noInterventions.csv");
+		dm.saveAssignmentResults(2016, "assignment2016noInterventions.csv");
+		//dm.saveAssignmentResults(2016, "assignment2016roadExpansion.csv");
+		//dm.saveAssignmentResults(2016, "assignment2016roadDevelopment.csv");
+		//dm.saveAssignmentResults(2016, "assignment2016electrification.csv");
+		//roadNetwork2.exportToShapefile("networkRoadDevelopment");
 	}
 }

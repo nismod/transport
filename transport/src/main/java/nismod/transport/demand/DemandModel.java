@@ -149,10 +149,11 @@ public class DemandModel {
 		} else {
 			
 			//check if the right interventions have been installed
-			for (Intervention i: interventions) {
-				if (i.getStartYear() <= fromYear && i.getEndYear() >= fromYear && !i.getState())	i.install(this);
-				if (i.getEndYear() < fromYear && i.getState() || i.getStartYear() > fromYear && i.getState()) i.uninstall(this);
-			}
+			if (interventions != null)
+				for (Intervention i: interventions) {
+					if (i.getStartYear() <= fromYear && i.getEndYear() >= fromYear && !i.getState())				i.install(this);
+					if (i.getEndYear() < fromYear && i.getState() || i.getStartYear() > fromYear && i.getState())	i.uninstall(this);
+				}
 						
 			//check if the demand for fromYear has already been assigned, if not assign it
 			RoadNetworkAssignment rna = yearToRoadNetworkAssignment.get(fromYear);
@@ -176,10 +177,11 @@ public class DemandModel {
 			}
 			
 			//check if the right interventions have been installed
-			for (Intervention i: interventions) {
-				if (i.getStartYear() <= predictedYear && i.getEndYear() >= predictedYear && !i.getState())	i.install(this);
-				if (i.getEndYear() < predictedYear && i.getState() || i.getStartYear() > predictedYear && i.getState()) i.uninstall(this);
-			}
+			if (interventions != null) 
+				for (Intervention i: interventions) {
+					if (i.getStartYear() <= predictedYear && i.getEndYear() >= predictedYear && !i.getState())				i.install(this);
+					if (i.getEndYear() < predictedYear && i.getState() || i.getStartYear() > predictedYear && i.getState()) i.uninstall(this);
+				}
 			
 			//copy skim matrices from fromYear into predictedYear
 			yearToTimeSkimMatrix.put(predictedYear, yearToTimeSkimMatrix.get(fromYear));
@@ -458,6 +460,17 @@ public class DemandModel {
 		
 		this.yearToEngineTypeFractions.put(year, engineTypeFractions);
 	}
+	
+	/**
+	 * Saves road network assignment results into a csv file.
+	 * @param year
+	 * @param outputFile
+	 */
+	public void saveAssignmentResults (int year, String outputFile) {
+
+		this.yearToRoadNetworkAssignment.get(year).saveAssignmentResults(year, outputFile);
+	}
+	
 	
 	/**
 	 * Getter method for engine type fractions in a given year.

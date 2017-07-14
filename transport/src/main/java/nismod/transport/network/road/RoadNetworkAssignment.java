@@ -648,6 +648,7 @@ public class RoadNetworkAssignment {
 					//map freight zone number to LAD code
 					String originLAD = roadNetwork.getFreightZoneToLAD().get(origin);
 					List<Integer> listOfOriginNodes = roadNetwork.getZoneToNodes().get(originLAD); //the list is already sorted
+			
 					//choose origin node
 					double cumulativeProbability = 0.0;
 					double random = rng.nextDouble();
@@ -930,7 +931,24 @@ public class RoadNetworkAssignment {
 				congestedTravelTime = linkFreeFlowTravelTime.get(edge.getID());
 		
 			//average with the old value (currently stored in the linkTravelTime field)
-			congestedTravelTime = weight * congestedTravelTime + (1 - weight) * linkTravelTime.get(edge.getID());
+			Double oldLinkTravelTime = linkTravelTime.get(edge.getID());
+			
+			if (oldLinkTravelTime == null) {
+				int nodeA = this.roadNetwork.getEdgeIDtoEdge().get(edge.getID()).getNodeA().getID();
+				int nodeB = this.roadNetwork.getEdgeIDtoEdge().get(edge.getID()).getNodeB().getID();
+				System.err.printf("There is not link travel time for edge %d from node %d to node %d.\n", edge.getID(), nodeA, nodeB);
+				//calculate free flow travel time for that edge
+				SimpleFeature feature = (SimpleFeature) edge.getObject();
+				if (roadNumber.charAt(0) == 'M') //motorway
+					oldLinkTravelTime = (double) feature.getAttribute("LenNet") / RoadNetworkAssignment.FREE_FLOW_SPEED_M_ROAD * 60;  //travel time in minutes
+				else if (roadNumber.charAt(0) == 'A') //A road
+					oldLinkTravelTime = (double) feature.getAttribute("LenNet") / RoadNetworkAssignment.FREE_FLOW_SPEED_A_ROAD * 60;  //travel time in minutes
+				else //ferry
+					oldLinkTravelTime = (double) feature.getAttribute("LenNet") / RoadNetworkAssignment.AVERAGE_SPEED_FERRY * 60;  //travel time in minutes
+				}
+				
+			//congestedTravelTime = weight * congestedTravelTime + (1 - weight) * linkTravelTime.get(edge.getID());
+			congestedTravelTime = weight * congestedTravelTime + (1 - weight) * oldLinkTravelTime;
 
 			linkTravelTime.put(edge.getID(), congestedTravelTime);
 		}
@@ -1386,6 +1404,56 @@ public class RoadNetworkAssignment {
 		}
 		return linkPointCapacities;
 	}
+	
+	/**
+	 * Calculate peak-hour link point capacities (PCU/lane/hr) averaged by two directions.
+	 * @return Peak-hour link point capacities.
+	 */
+	private HashMap<Integer, Double> calculateAveragePeakLinkPointCapacities() {
+		
+		HashMap<Integer, Double> capacities = this.calculatePeakLinkPointCapacities();
+		HashMap<Integer, Double> averagedCapacities = new HashMap<Integer, Double>();
+	
+		for (Integer edgeID: capacities.keySet()) {
+			double capacity1 = capacities.get(edgeID);
+			Integer otherEdgeID = roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(edgeID);
+			if (otherEdgeID == null) averagedCapacities.put(edgeID, capacity1); //if just one direction, copy value
+			else { //otherwise, store average for both directions
+				Double capacity2 = capacities.get(otherEdgeID);
+				averagedCapacities.put(edgeID, (capacity1 + capacity2) / 2.0);
+				averagedCapacities.put(otherEdgeID, (capacity1 + capacity2) / 2.0);
+			}
+		}
+		
+		return averagedCapacities;
+	}
+	
+	/**
+	 * Calculate peak-hour link point capacities (PCU/lane/hr) maximum of the two directions.
+	 * @return Peak-hour link point capacities.
+	 */
+	private HashMap<Integer, Double> calculateMaximumPeakLinkPointCapacities() {
+		
+		HashMap<Integer, Double> capacities = this.calculatePeakLinkPointCapacities();
+		HashMap<Integer, Double> maximumCapacities = new HashMap<Integer, Double>();
+	
+		for (Integer edgeID: capacities.keySet()) {
+			double capacity1 = capacities.get(edgeID);
+			Integer otherEdgeID = roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(edgeID);
+			if (otherEdgeID == null) maximumCapacities.put(edgeID, capacity1); //if just one direction, copy value
+			else { //otherwise, store maximum of both directions
+				double capacity2 = capacities.get(otherEdgeID);
+				double maxCapacity = 0.0;
+				if (capacity1 > capacity2) maxCapacity = capacity1;
+				else 					   maxCapacity = capacity2;
+				
+				maximumCapacities.put(edgeID, maxCapacity);
+				maximumCapacities.put(otherEdgeID, maxCapacity);
+			}
+		}
+		
+		return maximumCapacities;
+	}
 
 	/**
 	 * Calculate peak-hour link densities (PCU/lane/km/hr)
@@ -1464,6 +1532,8 @@ public class RoadNetworkAssignment {
 
 		//calculate peak capacities and densities
 		HashMap<Integer, Double> capacities = this.calculatePeakLinkPointCapacities();
+		HashMap<Integer, Double> averageCapacities = this.calculateAveragePeakLinkPointCapacities();
+		HashMap<Integer, Double> maximumCapacities = this.calculateMaximumPeakLinkPointCapacities();
 		HashMap<Integer, Double> densities = this.calculatePeakLinkDensities();
 
 		String NEW_LINE_SEPARATOR = "\n";
@@ -1482,6 +1552,8 @@ public class RoadNetworkAssignment {
 		header.add("peakDensity");
 		header.add("maxCapacity");
 		header.add("utilisation");
+		header.add("AVGutilisation");
+		header.add("MAXutilisation");		
 		header.add("CP");
 		header.add("direction");
 		header.add("countCar");
@@ -1529,40 +1601,44 @@ public class RoadNetworkAssignment {
 					record.add(Integer.toString(RoadNetworkAssignment.MAXIMUM_CAPACITY_M_ROAD));
 					double utilisation = capacities.get(edge.getID()) / RoadNetworkAssignment.MAXIMUM_CAPACITY_M_ROAD;
 					record.add(Double.toString(utilisation));
-					long countPoint = (long) feature.getAttribute("CP");
-					record.add(Long.toString(countPoint));
-					String direction = (String) feature.getAttribute("iDir");
-					record.add(direction);
-					long carCount = (long) feature.getAttribute("FdCar");
-					record.add(Long.toString(carCount));
-					long vanCount = (long) feature.getAttribute("FdLGV");
-					record.add(Long.toString(vanCount));
-					long rigidCount = (long) feature.getAttribute("FdHGVR2") + (long) feature.getAttribute("FdHGVR3") + (long) feature.getAttribute("FdHGVR4");
-					record.add(Long.toString(rigidCount));
-					long articCount = (long) feature.getAttribute("FdHGVA3") + (long) feature.getAttribute("FdHGVA5") + (long) feature.getAttribute("FdHGVA6");
-					record.add(Long.toString(articCount));
-				}
+					double averageUtilisation = averageCapacities.get(edge.getID()) / RoadNetworkAssignment.MAXIMUM_CAPACITY_M_ROAD;
+					record.add(Double.toString(averageUtilisation));
+					double maximumUtilisation = maximumCapacities.get(edge.getID()) / RoadNetworkAssignment.MAXIMUM_CAPACITY_M_ROAD;
+					record.add(Double.toString(maximumUtilisation));
+				}	
 				else if (roadNumber.charAt(0) == 'A') { //A road
-					record.add(Integer.toString(RoadNetworkAssignment.MAXIMUM_CAPACITY_A_ROAD));
-					double utilisation = capacities.get(edge.getID()) / RoadNetworkAssignment.MAXIMUM_CAPACITY_A_ROAD;
-					record.add(Double.toString(utilisation));
-					long countPoint = (long) feature.getAttribute("CP");
-					record.add(Long.toString(countPoint));
-					String direction = (String) feature.getAttribute("iDir");
-					record.add(direction);
-					long carCount = (long) feature.getAttribute("FdCar");
-					record.add(Long.toString(carCount));
-					long vanCount = (long) feature.getAttribute("FdLGV");
-					record.add(Long.toString(vanCount));
-					long rigidCount = (long) feature.getAttribute("FdHGVR2") + (long) feature.getAttribute("FdHGVR3") + (long) feature.getAttribute("FdHGVR4");
-					record.add(Long.toString(rigidCount));
-					long articCount = (long) feature.getAttribute("FdHGVA3") + (long) feature.getAttribute("FdHGVA5") + (long) feature.getAttribute("FdHGVA6");
-					record.add(Long.toString(articCount));
+						record.add(Integer.toString(RoadNetworkAssignment.MAXIMUM_CAPACITY_A_ROAD));
+						double utilisation = capacities.get(edge.getID()) / RoadNetworkAssignment.MAXIMUM_CAPACITY_A_ROAD;
+						record.add(Double.toString(utilisation));
+						double averageUtilisation = averageCapacities.get(edge.getID()) / RoadNetworkAssignment.MAXIMUM_CAPACITY_A_ROAD;
+						record.add(Double.toString(averageUtilisation));
+						double maximumUtilisation = maximumCapacities.get(edge.getID()) / RoadNetworkAssignment.MAXIMUM_CAPACITY_A_ROAD;
+						record.add(Double.toString(maximumUtilisation));
 				}
 				else { //ferry
 					record.add("N/A");
 					record.add("N/A");
 					record.add("N/A");
+					record.add("N/A");
+				}
+				Object countPointObject = feature.getAttribute("CP");
+				long countPoint;
+				if (countPointObject instanceof Double) countPoint = (long) Math.round((double)countPointObject);
+				else countPoint = (long) countPointObject;
+				record.add(Long.toString(countPoint));
+				if (countPoint != 0) { //not a ferry nor a newly developed road with no count point
+					String direction = (String) feature.getAttribute("iDir");
+					record.add(direction);
+					long carCount = (long) feature.getAttribute("FdCar");
+					record.add(Long.toString(carCount));
+					long vanCount = (long) feature.getAttribute("FdLGV");
+					record.add(Long.toString(vanCount));
+					long rigidCount = (long) feature.getAttribute("FdHGVR2") + (long) feature.getAttribute("FdHGVR3") + (long) feature.getAttribute("FdHGVR4");
+					record.add(Long.toString(rigidCount));
+					long articCount = (long) feature.getAttribute("FdHGVA3") + (long) feature.getAttribute("FdHGVA5") + (long) feature.getAttribute("FdHGVA6");
+					record.add(Long.toString(articCount));
+				}
+				else { //ferry or a newly developed road with no count point
 					record.add("N/A");
 					record.add("N/A");
 					record.add("N/A");

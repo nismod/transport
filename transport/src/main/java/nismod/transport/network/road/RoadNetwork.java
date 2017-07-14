@@ -432,6 +432,8 @@ public class RoadNetwork {
 //		}
 		this.createNodeBlacklists(); //just create them from scratch
 		
+		this.createEdgeToOtherDirectionEdgeMap(); //force re-creation of edge to other edge mapping
+		
 		return directedEdge;
 	}
 	
@@ -1611,7 +1613,7 @@ public class RoadNetwork {
 		builder.setName("New road link");
 		
 		//add attributes in order
-		builder.add("CP", Integer.class);
+		builder.add("CP", Long.class);
 		//builder.length(1).add("iDir", String.class);
 		builder.add("RoadNumber", String.class );
 		builder.add("LenNet", Double.class);
