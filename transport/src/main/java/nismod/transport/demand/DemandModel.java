@@ -350,10 +350,12 @@ public class DemandModel {
 				tsmf = predictedRna.calculateTimeSkimMatrixFreight();
 				csmf = predictedRna.calculateCostSkimMatrixFreight();
 
+				/*
 				System.out.println("Difference in consecutive time skim matrices: " + tsm.getAbsoluteDifference(yearToTimeSkimMatrix.get(predictedYear)));
 				System.out.println("Difference in consecutive cost skim matrix: " + csm.getAbsoluteDifference(yearToCostSkimMatrix.get(predictedYear)));
 				System.out.println("Difference in consecutive time skim matrices for freight: " + tsmf.getAbsoluteDifference(yearToTimeSkimMatrixFreight.get(predictedYear)));
 				System.out.println("Difference in consecutive cost skim matrix for freight: " + csmf.getAbsoluteDifference(yearToCostSkimMatrixFreight.get(predictedYear)));
+				*/
 				
 				//store road network assignment
 				yearToRoadNetworkAssignment.put(predictedYear, predictedRna);

@@ -9,6 +9,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -914,6 +915,55 @@ public class RoadNetworkTest {
 		
 		System.out.println(roadNetwork.getEdgeIDtoEdge());
 		System.out.println(roadNetwork.getEdgeIDtoOtherDirectionEdgeID());
+		
+		
+		//TEST PATH CREATION FROM A LIST OF NODES
+		System.out.println("\n\n*** Testing path creation from a list of nodes using RoadPath***");
+			
+		Path cPath = new RoadPath();
+		DirectedNode node1 = (DirectedNode) roadNetwork.getNodeIDtoNode().get(6);
+		DirectedNode node2 = (DirectedNode) roadNetwork.getNodeIDtoNode().get(89);
+		DirectedNode node3 = (DirectedNode) roadNetwork.getNodeIDtoNode().get(39);
+		cPath.add(node1);
+		cPath.add(node2);
+		cPath.add(node3);
+		System.out.println(cPath);
+		System.out.println("Is path valid? " + cPath.isValid());
+		assertTrue("Path 6 -> 89 -> 39 should be valid", cPath.isValid());
+		
+		ArrayList<Node> pathList = new ArrayList<Node>();
+		//48 -> 95
+		pathList.add((DirectedNode) roadNetwork.getNodeIDtoNode().get(48));
+		pathList.add((DirectedNode) roadNetwork.getNodeIDtoNode().get(95));
+		cPath = new RoadPath(pathList);
+		System.out.println(cPath);
+		System.out.println("Is path valid? " + cPath.isValid()); //this path should not be valid (GeoTools Path.isValid method ignores edge direction!)
+		assertTrue("Path 48 -> 95 should not be valid", !cPath.isValid());
+		
+		System.out.println("Edges: " + cPath.getEdges());
+		System.out.println("First node: " + cPath.getFirst());
+		System.out.println("Last node: " + cPath.getLast());
+		DirectedEdge edge = (DirectedEdge) cPath.getEdges().get(0);
+		System.out.println("Directed edge: " + edge);
+				
+		cPath.reverse();
+		System.out.println(cPath);
+		System.out.println("Is path valid? " + cPath.isValid());
+		assertTrue("Path 95 -> 48 should be valid", cPath.isValid());
+
+		//48 -> 82 ->95
+		pathList.clear();
+		pathList.add((DirectedNode) roadNetwork.getNodeIDtoNode().get(48));
+		pathList.add((DirectedNode) roadNetwork.getNodeIDtoNode().get(82));
+		pathList.add((DirectedNode) roadNetwork.getNodeIDtoNode().get(95));
+		cPath = new RoadPath(pathList);
+		System.out.println(cPath);
+		System.out.println("Is path valid? " + cPath.isValid());
+		assertTrue("Path 48 -> 82 -> 95 should be valid", cPath.isValid());
+		cPath.reverse();
+		System.out.println(cPath);
+		System.out.println("Is path valid? " + cPath.isValid());
+		assertTrue("Path 95 -> 82 -> 48 should not be valid", !cPath.isValid());
 	}
 
 	//@Test
@@ -1206,8 +1256,16 @@ public class RoadNetworkTest {
 		iter = rn.getNodes().iterator();
 		while (iter.hasNext()) {
 			DirectedNode node = (DirectedNode) iter.next();
-			System.out.printf("Node %d has %d in degree and %d out degree. \n", node.getID(), node.getInDegree(), node.getOutDegree());
-			System.out.printf("Blacklisted as start node is %b, blacklisted as end node is %b \n", roadNetwork.isBlacklistedAsStartNode(node.getID()), roadNetwork.isBlacklistedAsEndNode(node.getID()));		
+//			System.out.printf("Node %d has %d in degree and %d out degree. \n", node.getID(), node.getInDegree(), node.getOutDegree());
+//			System.out.printf("Blacklisted as start node is %b, blacklisted as end node is %b \n", roadNetwork.isBlacklistedAsStartNode(node.getID()), roadNetwork.isBlacklistedAsEndNode(node.getID()));		
+		
+			//if node is blacklisted as either start or end node, check if it has any gravitating population, as this could potentially create problems in path finding
+			if (roadNetwork.isBlacklistedAsStartNode(node.getID()) || roadNetwork.isBlacklistedAsEndNode(node.getID())) {
+				if (roadNetwork.getGravitatingPopulation(node.getID()) > 0) 
+					System.err.printf("Blacklisted node %d has gravitating population!\n", node.getID());
+				if (roadNetwork.getGravitatingWorkplacePopulation(node.getID()) > 0) 
+					System.err.printf("Blacklisted node %d has gravitating workplace population!\n", node.getID());
+			}
 		}
 
 		//TEST SHORTEST PATH ALGORITHMS
@@ -1292,7 +1350,7 @@ public class RoadNetworkTest {
 		assertEquals("The shortest path length is correct", 2.1, pathFinder.getCost(from), EPSILON);
 
 		System.out.println("\n*** AStar ***");
-
+		
 		//find the shortest path using AStar algorithm
 		try {
 			AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctions(to));

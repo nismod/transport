@@ -1307,13 +1307,20 @@ public class RoadNetworkAssignment {
 		//for each path in the storage
 		for (List<Path> pathList: pathStorage.values()) {
 			//for each path in the path list calculate total distance
-			for (Path path: pathList) 
+			for (Path path: pathList) { 
 				for (Object o: path.getEdges()) {
 					Edge e = (Edge)o;
 					SimpleFeature sf = (SimpleFeature) e.getObject();
 					double length = (double) sf.getAttribute("LenNet");
-					totalDistance += length;					
+					totalDistance += length;		
 				}
+				//add average access and egress distance to the first and the last node [m -> km!]
+				double accessDistance = this.roadNetwork.getAverageAcessEgressDistanceFreight(path.getFirst().getID()) / 1000;
+				double egressDistance = this.roadNetwork.getAverageAcessEgressDistanceFreight(path.getLast().getID()) / 1000;
+				//System.out.printf("Access: %.3f Egress: %.3f\n ", accessDistance, egressDistance);
+				//System.out.printf("Path length with access and egress: %.3f km\n", pathLength + accessDistance + egressDistance);
+				totalDistance += (accessDistance + egressDistance);
+			}
 		}
 		System.out.printf("Total path distance (car): %.3f km\n", totalDistance);
 
@@ -1338,13 +1345,17 @@ public class RoadNetworkAssignment {
 			//for each path in the storage
 			for (List<Path> pathList: pathStorageFreight.get(vht).values()) {
 				//for each path in the path list calculate total distance
-				for (Path path: pathList) 
+				for (Path path: pathList) {
 					for (Object o: path.getEdges()) {
 						Edge e = (Edge)o;
 						SimpleFeature sf = (SimpleFeature) e.getObject();
 						double length = (double) sf.getAttribute("LenNet");
 						totalDistance += length;					
 					}
+					//add average access and egress distance to the first and the last node [m -> km!]
+					totalDistance += this.roadNetwork.getAverageAcessEgressDistanceFreight(path.getFirst().getID()) / 1000;
+					totalDistance += this.roadNetwork.getAverageAcessEgressDistanceFreight(path.getLast().getID()) / 1000;
+				}
 			}
 		}
 		System.out.printf("Total path distance (freight): %.3f km\n", totalDistance);
