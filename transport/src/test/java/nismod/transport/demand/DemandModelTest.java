@@ -46,7 +46,26 @@ public class DemandModelTest {
 		final String populationFile = "./src/test/resources/testdata/population.csv";
 		final String GVAFile = "./src/test/resources/testdata/GVA.csv";
 		final String energyUnitCostsFile = "./src/test/resources/testdata/energyUnitCosts.csv";
-
+		
+		
+//		final URL zonesUrl2 = new URL("file://src/main/resources/data/zones.shp");
+//		final URL networkUrl2 = new URL("file://src/main/resources/data/network.shp");
+//		final URL nodesUrl2 = new URL("file://src/main/resources/data/nodes.shp");
+//		final URL AADFurl2 = new URL("file://src/main/resources/data/AADFdirected2015.shp");
+//		
+//		final String areaCodeFileName = "./src/main/resources/data/population_OA_GB.csv";
+//		final String areaCodeNearestNodeFile = "./src/main/resources/data/nearest_node_OA_GB.csv";
+//		final String workplaceZoneFileName = "./src/main/resources/data/workplacePopulationFakeSC.csv";
+//		final String workplaceZoneNearestNodeFile = "./src/main/resources/data/nearest_node_WZ_GB_fakeSC.csv";
+//		final String freightZoneToLADfile = "./src/main/resources/data/freightZoneToLAD.csv";
+//		final String freightZoneNearestNodeFile = "./src/main/resources/data/freightZoneToNearestNode.csv";
+//		
+//		final String baseYearODMatrixFile = "./src/main/resources/data/balancedODMatrixOldLengths.csv";
+//		final String baseYearFreightMatrixFile = "./src/main/resources/data/freightMatrix.csv";
+//		final String populationFile = "./src/main/resources/data/populationfull.csv";
+//		final String GVAFile = "./src/main/resources/data/GVAperHeadFull.csv";
+//		final String energyUnitCostsFile = "./src/main/resources/data/energyUnitCosts.csv";
+		
 		//create a road network
 		RoadNetwork roadNetwork2 = new RoadNetwork(zonesUrl2, networkUrl2, nodesUrl2, AADFurl2, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
 		
@@ -144,7 +163,7 @@ public class DemandModelTest {
 		interventions.add(rd);
 		*/
 		
-		/*
+		
 		Properties props = new Properties();
 		props.setProperty("startYear", "2016");
 		props.setProperty("endYear", "2025");
@@ -156,13 +175,22 @@ public class DemandModelTest {
 		props.setProperty("HYBRID", "0.025");
 		VehicleElectrification ve = new VehicleElectrification(props);
 		interventions.add(ve);
-		*/
+		
 		
 		//the main demand model
 		DemandModel dm = new DemandModel(roadNetwork2, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, energyUnitCostsFile, interventions);
 		
-		dm.predictHighwayDemand(2016, 2015);
+		dm.predictHighwayDemand(2025, 2015);
+		RoadNetworkAssignment rna2015 = dm.getRoadNetworkAssignment(2015);
+		RoadNetworkAssignment rna2025 = dm.getRoadNetworkAssignment(2025);
 
+		System.out.println("Base-year (2015) car energy consumptions:");
+		System.out.println(rna2015.calculateCarEnergyConsumptions());
+		System.out.println("Predicted (2025) car energy consumptions:");
+		System.out.println(rna2025.calculateCarEnergyConsumptions());
+		
+		/*
+		
 		System.out.println("Base-year (2015) passenger matrix: ");
 		dm.getPassengerDemand(2015).printMatrixFormatted();
 		System.out.println("Predicted (2016) passenger matrix: ");
@@ -217,6 +245,16 @@ public class DemandModelTest {
 		System.out.println("Predicted (2016) peak-hour travel times:");
 		System.out.println(rna2016.getLinkTravelTimes());
 		
+		System.out.println("Base-year (2015) car energy consumptions:");
+		System.out.println(rna2015.calculateCarEnergyConsumptions());
+		System.out.println("Predicted (2016) car energy consumptions:");
+		System.out.println(rna2016.calculateCarEnergyConsumptions());
+		
+		System.out.println("Base-year (2015) freight energy consumptions:");
+		System.out.println(rna2015.calculateFreightEnergyConsumptions());
+		System.out.println("Predicted (2016) freight energy consumptions:");
+		System.out.println(rna2016.calculateFreightEnergyConsumptions());
+		
 		System.out.println("Base-year (2015) total energy consumptions:");
 		System.out.println(rna2015.calculateEnergyConsumptions());
 		System.out.println("Predicted (2016) total energy consumptions:");
@@ -232,11 +270,18 @@ public class DemandModelTest {
 		System.out.println("Predicted (2016) peak-hour link densities:");
 		System.out.println(rna2016.calculatePeakLinkDensities());
 		
-		dm.saveAssignmentResults(2015, "assignment2015noInterventions.csv");
-		dm.saveAssignmentResults(2016, "assignment2016noInterventions.csv");
+		*/
+		
+		//dm.saveAssignmentResults(2015, "assignment2015noIntervention.csv");
+		//dm.saveAssignmentResults(2016, "assignment2016noIntervention.csv");
 		//dm.saveAssignmentResults(2016, "assignment2016roadExpansion.csv");
 		//dm.saveAssignmentResults(2016, "assignment2016roadDevelopment.csv");
 		//dm.saveAssignmentResults(2016, "assignment2016electrification.csv");
 		//roadNetwork2.exportToShapefile("networkRoadDevelopment");
+		
+		//dm.saveAssignmentResults(2015, "assignment2015noInterventionFull.csv");
+		//dm.saveAssignmentResults(2016, "assignment2016electrificationFull.csv");
+		//roadNetwork2.exportToShapefile("networkFullModel");
+		
 	}
 }
