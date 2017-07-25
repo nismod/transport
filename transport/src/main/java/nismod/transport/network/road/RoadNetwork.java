@@ -3,6 +3,8 @@
  */
 package nismod.transport.network.road;
 
+import static org.junit.Assert.assertEquals;
+
 import java.awt.Color;
 import java.io.File;
 import java.io.FileReader;
@@ -10,6 +12,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -37,6 +40,8 @@ import org.geotools.geometry.jts.JTSFactoryFinder;
 import org.geotools.graph.build.feature.FeatureGraphGenerator;
 import org.geotools.graph.build.line.BasicDirectedLineGraphBuilder;
 import org.geotools.graph.build.line.DirectedLineStringGraphGenerator;
+import org.geotools.graph.path.AStarShortestPathFinder;
+import org.geotools.graph.path.Path;
 import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedGraph;
 import org.geotools.graph.structure.DirectedNode;
@@ -570,6 +575,44 @@ public class RoadNetwork {
 		};
 
 		return aStarFunctions;
+	}
+	
+	/**
+	 * Gets the fastest path between two nodes using astar algorithm and provided link travel times.
+	 * Links which have no travel time provided will use free flow travel times.
+	 * @param from Origin node.
+	 * @param to Destination node.
+	 * @param linkTravelTime The map with link travel times.
+	 * @return Fastest path.
+	 */
+	public RoadPath getFastestPath(DirectedNode from, DirectedNode to, HashMap<Integer, Double> linkTravelTime) {
+
+		if (linkTravelTime == null) linkTravelTime = new HashMap<Integer, Double>();
+		RoadPath path = new RoadPath();
+		//find the shortest path using AStar algorithm
+		try {
+			//System.out.printf("Finding the shortest path from %d to %d using astar: \n", from.getID(), to.getID());
+			AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(this.network, from, to, this.getAstarFunctionsTime(to, linkTravelTime));
+			aStarPathFinder.calculate();
+			Path aStarPath;
+			aStarPath = aStarPathFinder.getPath();
+			aStarPath.reverse();
+			//System.out.println(aStarPath);
+			//System.out.println("The path as a list of nodes: " + aStarPath);
+			List listOfEdges = aStarPath.getEdges();
+			//System.out.println("The path as a list of edges: " + listOfEdges);
+			//System.out.println("Path size in the number of nodes: " + aStarPath.size());
+			//System.out.println("Path size in the number of edges: " + listOfEdges.size());
+			for (Object o: listOfEdges) {
+				DirectedEdge e = (DirectedEdge) o;
+				path.addEdge(e);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.err.println("Could not find the shortest path using astar.");
+		}
+		if (path != null && !path.isValid()) System.err.printf("Fastest path from %d to %d exists, but is not valid! \n", from.getID(), to.getID());
+		return path;
 	}
 	
 	/**

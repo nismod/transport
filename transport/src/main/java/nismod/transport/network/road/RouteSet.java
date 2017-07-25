@@ -135,4 +135,20 @@ public class RouteSet {
 		
 		return choiceSet.indexOf(route); //assuming no route repetition in the choice set
 	}
+	
+	public DirectedNode getOriginNode() {
+		
+		return this.originNode;
+	}
+	
+	public DirectedNode getDestinationNode() {
+		
+		return this.destinationNode;
+	}
+	
+	public List<Route> getChoiceSet() {
+		
+		return this.choiceSet;
+	}
+	
 }
