@@ -31,6 +31,9 @@ public class RoadPath extends Path {
 	 */
 	@Override
 	public boolean isValid() {
+		
+		if (!super.isValid()) return false;
+		
 		ListIterator<DirectedNode> iter = this.listIterator();
 		while (iter.hasNext()) {
 			DirectedNode node1 = iter.next();

@@ -31,6 +31,22 @@ public class Route {
 		this.id = ++Route.counter;
 	}
 	
+	public Route(RoadPath path) {
+		
+		this.edges = new ArrayList<DirectedEdge>();
+		this.id = ++Route.counter;
+		
+		if (path.getEdges() == null) {
+			System.err.println("Path is empty!");
+			return;
+		}
+		
+		for (Object o: path.getEdges()) {
+			DirectedEdge edge = (DirectedEdge) o;
+			this.addEdge(edge);
+		}
+	}
+	
 	/**
 	 * Adds a directed edge to the end of the current route.
 	 * @param edge Directed edge to be added.
@@ -81,6 +97,11 @@ public class Route {
 		this.utility = utility;
 	}
 	
+	public boolean isEmpty() {
+		
+		return this.edges.isEmpty();
+	}
+	
 	public double getLength() {
 		
 		return length;
@@ -103,12 +124,13 @@ public class Route {
 	
 	public DirectedNode getOriginNode() {
 		
-		return this.edges.get(0).getInNode();
+		if (edges.isEmpty()) 	return null;
+		else 					return this.edges.get(0).getInNode();
 	}
 	
 	public DirectedNode getDestinationNode() {
-		
-		return this.edges.get(edges.size()).getOutNode();	
+		if (edges.isEmpty()) 	return null;
+		else					return this.edges.get(edges.size() - 1).getOutNode();	
 	}
 	
 	public int getID() {
@@ -148,6 +170,27 @@ public class Route {
 		sb.append("(");
 		sb.append(edges.get(edges.size()-1).getOutNode());
 		sb.append(")");
+		
+		return sb.toString();
+	}
+	
+	public String getFormattedString() {
+		
+		if (edges.isEmpty()) return null;
+		
+		StringBuilder sb = new StringBuilder();
+		
+		//origin and destination node IDs
+		sb.append(this.getOriginNode().getID());
+		sb.append(":");
+		sb.append(this.getDestinationNode().getID());
+		sb.append(":");
+				
+		for (DirectedEdge edge: edges) {
+			sb.append(edge.getID());
+			sb.append("-");
+		}
+		sb.delete(sb.length()-1, sb.length()); //delete last dash
 		
 		return sb.toString();
 	}
