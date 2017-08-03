@@ -66,6 +66,7 @@ public class RoadNetworkAssignmentTest {
 		
 		final URL zonesUrl2 = new URL("file://src/main/resources/data/zones.shp");
 		final URL networkUrl2 = new URL("file://src/main/resources/data/network.shp");
+		final URL networkUrl2New = new URL("file://src/main/resources/data/fullNetworkWithEdgeIDs.shp");
 		final URL nodesUrl2 = new URL("file://src/main/resources/data/nodes.shp");
 		final URL AADFurl2 = new URL("file://src/main/resources/data/AADFdirected2015.shp");
 		
@@ -78,7 +79,7 @@ public class RoadNetworkAssignmentTest {
 
 		//create a road network
 		RoadNetwork roadNetwork2 = new RoadNetwork(zonesUrl2, networkUrl2, nodesUrl2, AADFurl2, areaCodeFileName2, areaCodeNearestNodeFile2, workplaceZoneFileName2, workplaceZoneNearestNodeFile2, freightZoneToLADfile2, freightZoneNearestNodeFile2);
-		
+		roadNetwork2.replaceNetworkEdgeIDs(networkUrl2New);
 		//visualise the shapefiles
 		//roadNetwork2.visualise("Test Area");
 		
@@ -98,17 +99,21 @@ public class RoadNetworkAssignmentTest {
 		freightMatrix.printMatrixFormatted();
 //		roadNetworkAssignment.assignFreightFlows(freightMatrix);
 
+		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork2);
+		rsg.readRoutes("completeRoutesNewest.txt");
+		
 		long timeNow = System.currentTimeMillis();
-		roadNetworkAssignment.assignPassengerFlows(passengerODM);
+		roadNetworkAssignment.assignPassengerFlowsRouteChoice(passengerODM, rsg);
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Passenger flows assigned in %d seconds.\n", timeNow / 1000);
-
+/*
 		timeNow = System.currentTimeMillis();
 		roadNetworkAssignment.assignFreightFlows(freightMatrix);
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Freight flows assigned in %d seconds.\n", timeNow / 1000);
 		
 		roadNetworkAssignment.saveAssignmentResults(2015, "assignment2015passengerAndFreigh.csv");
+*/
 		
 //		//for (int i = 0; i < 5; i++) {
 //		for (int i = 0; i < 1; i++) {
@@ -276,6 +281,7 @@ public class RoadNetworkAssignmentTest {
 
 		final URL zonesUrl = new URL("file://src/test/resources/testdata/zones.shp");
 		final URL networkUrl = new URL("file://src/test/resources/testdata/network.shp");
+		final URL networkUrlfixedEdgeIDs = new URL("file://src/test/resources/testdata/testOutputNetwork.shp");
 		final URL nodesUrl = new URL("file://src/test/resources/testdata/nodes.shp");
 		final URL AADFurl = new URL("file://src/test/resources/testdata/AADFdirected.shp");
 		final String areaCodeFileName = "./src/test/resources/testdata/nomisPopulation.csv";
@@ -288,7 +294,8 @@ public class RoadNetworkAssignmentTest {
 
 		//create a road network
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
-
+		roadNetwork.replaceNetworkEdgeIDs(networkUrlfixedEdgeIDs);
+		
 		//create a road network assignment
 		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null);
 
@@ -444,6 +451,17 @@ public class RoadNetworkAssignmentTest {
 		//rna.saveAssignmentResults(2015, "testAssignmentResults.csv");
 		
 		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforCounts());
+		
+		
+		//TEST ASSIGNMENT WITH ROUTE CHOICE
+		System.out.println("\n\n*** Testing assignment with route choice ***");
+		rna.resetLinkVolumes();
+		rna.resetPathStorages();
+		rna.resetTripStartEndCounters();
+		
+		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
+		rsg.readRoutes("./src/test/resources/testdata/testRoutes.txt");
+		rna.assignPassengerFlowsRouteChoice(odm, rsg);
 	}
 	
 	@Test
