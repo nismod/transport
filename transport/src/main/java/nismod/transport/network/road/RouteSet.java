@@ -36,13 +36,30 @@ public class RouteSet {
 	 * @param route Route to be added.
 	 */
 	public void addRoute(Route route) {
-		choiceSet.add(route);
 		
 		//TODO
 		//test route validity
+		if (!route.isValid()) {
+			//System.err.println("Trying to add a non-valid route to the choice set. Ignoring request.");
+			return;
+		}
+			
 		//test that origin and destination nodes match the first and the last node of the route
-	}
+		if (!route.getOriginNode().equals(this.originNode) || !route.getDestinationNode().equals(this.destinationNode)) {
+			//System.err.println("Trying to add a route with wrong origin/destination node to the choice set. Ignoring request.");
+			return;
+		}
 	
+		for (Route r: choiceSet)
+			if (r.equals(route)) {
+				//System.err.println("Trying to add a duplicate route to the choice set. Ignoring request.");
+				return;
+			}
+	
+		//add route to the choice set
+		choiceSet.add(route);
+	}
+		
 	/**
 	 * Sorts routes on their utility in a descending order.
 	 */
@@ -83,11 +100,11 @@ public class RouteSet {
 			double probability = Math.exp(choiceSet.get(index).getUtility()) / sum;
 			probabilities.set(index, probability);
 		}
-		
+		/*
 		System.out.println("Utility / Probability");
 		for (int index = 0; index < choiceSet.size(); index++)
 			System.out.printf("%.2f / %.2f \n", choiceSet.get(index).getUtility(), probabilities.get(index));
-		
+		*/
 		this.probabilities = probabilities;
 	}
 	
@@ -107,7 +124,10 @@ public class RouteSet {
 	public Route choose() {
 		
 		//probabilities must be calculated at least once
-		if (probabilities == null) calculateProbabilities();
+		if (probabilities == null) {
+			this.calculateProbabilities();
+			this.sortRoutesOnUtility();
+		}
 		
 		RandomSingleton rng = RandomSingleton.getInstance();
 			
@@ -149,6 +169,17 @@ public class RouteSet {
 	public List<Route> getChoiceSet() {
 		
 		return this.choiceSet;
+	}
+	
+	public int getSize() {
+
+		return this.choiceSet.size();
+	}
+	
+	public void printStatistics() {
+		
+		System.out.printf("Statistics for route set from %d to %d: %d distinct routes. \n", this.originNode.getID(), this.destinationNode.getID(), this.choiceSet.size());
+		
 	}
 	
 }

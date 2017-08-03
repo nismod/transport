@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
@@ -19,6 +20,8 @@ import org.apache.commons.csv.CSVRecord;
 import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedNode;
 
+import nismod.transport.demand.ODMatrix;
+
 /**
  * RouteSetGenerator can generate, save and read route sets for route choice.
  * @author Milan Lovric
@@ -27,7 +30,6 @@ import org.geotools.graph.structure.DirectedNode;
 public class RouteSetGenerator {
 
 	private MultiKeyMap routes;
-	
 	private RoadNetwork roadNetwork;
 	
 	public RouteSetGenerator(RoadNetwork roadNetwork) {
@@ -47,6 +49,11 @@ public class RouteSetGenerator {
 			return;
 		}
 		
+		if (!route.isValid()) {
+			System.err.println("Route is not valid. Not adding the route!");
+			return;
+		}
+		
 		int origin = route.getOriginNode().getID();
 		int destination = route.getDestinationNode().getID();
 		
@@ -59,7 +66,7 @@ public class RouteSetGenerator {
 	}
 	
 	/**
-	 * Generates a route set using the link elimination method -
+	 * Generates a route set between two nodes using the link elimination method -
 	 * It first finds the fastest path and then blocks each of its links and tries to find an alternative path.
 	 * @param origin
 	 * @param destination
@@ -73,10 +80,25 @@ public class RouteSetGenerator {
 		//find the fastest path from origin to destination
 		RoadPath path  = this.roadNetwork.getFastestPath(originNode, destinationNode, null);
 		//System.out.println(path.toString());
+		//System.out.println("Path validity: " + path.isValid());
+		
+		if (path == null) {
+			System.err.printf("Unable to find the fastest path between nodes %d and %d! Link elimination method unsucsessful!\n", origin, destination);
+			return;
+		}
+		
 		Route route = new Route(path);
+		//System.out.println("Route validity: " + route.isValid());
 		//rs.addRoute(route);
 		//rs.printChoiceSet();
-		this.addRoute(route);
+		
+		//check that origin and destination node are correct!
+		if (route.getOriginNode().equals(originNode) && route.getDestinationNode().equals(destinationNode))
+			this.addRoute(route);
+		else {
+			System.err.println("Fastest path does not contain correct origin and destination nodes!");
+			return;
+		}
 		
 		//link elimination method
 		for (Object o: path.getEdges()) {
@@ -85,14 +107,98 @@ public class RouteSetGenerator {
 			linkTravelTimes.put(edge.getID(), Double.MAX_VALUE); //blocks by setting a maximum travel time
 			path = this.roadNetwork.getFastestPath(originNode, destinationNode, linkTravelTimes);
 			if (path != null) {
-				System.out.println(path.toString());
+				//System.out.println(path.toString());
+				//System.out.println("Path validity: " + path.isValid());
 				route = new Route(path);
+				//System.out.println(route);
 				//rs.addRoute(route);
-				this.addRoute(route);
+				if (route.getOriginNode().equals(originNode) && route.getDestinationNode().equals(destinationNode))
+					this.addRoute(route);
+				else 
+					System.err.println("Path generated with link elimination does not contain correct origin and destination nodes!");
 			}
 		}
 	}
-
+	
+	/**
+	 * Generates routes between all combinations of nodes from two LAD zones
+	 * @param originLAD
+	 * @param destinationLAD
+	 */
+	public void generateRouteSetWithLinkElimination(String originLAD, String destinationLAD) {
+		
+		List<Integer> originNodes = this.roadNetwork.getZoneToNodes().get(originLAD);
+		List<Integer> destinationNodes = this.roadNetwork.getZoneToNodes().get(destinationLAD);
+		System.out.printf("Generating routes from %s (%d nodes) to %s (%d nodes) %n", originLAD, originNodes.size(), destinationLAD, destinationNodes.size());
+		for (Integer origin: originNodes)
+			for (Integer destination: destinationNodes)
+				if (origin != destination) 					
+					this.generateRouteSetWithLinkElimination(origin, destination);
+	}
+	
+	/**
+	 * Generates routes between top N nodes (sorted by gravitating population) from two LAD zones.
+	 * If origin and destination LAD are the same (i.e., intra-zonal), then use all the nodes
+	 * @param originLAD
+	 * @param destinationLAD
+	 * @param topNodes
+	 */
+	public void generateRouteSetWithLinkElimination(String originLAD, String destinationLAD, int topNodes) {
+		
+		//if intra-zonal, use all node combinations:
+		if (originLAD.equals(destinationLAD)) this.generateRouteSetWithLinkElimination(originLAD, destinationLAD);
+		else { //if inter-zonal, use only top nodes
+		
+		//assume pre-sorted
+		List<Integer> originNodes = this.roadNetwork.getZoneToNodes().get(originLAD);
+		//System.out.println("origin nodes: " + originNodes);
+		List<Integer> destinationNodes = this.roadNetwork.getZoneToNodes().get(destinationLAD);
+		//System.out.println("destination nodes: " + destinationNodes);
+				
+		System.out.printf("Generating routes between top %d nodes from %s to %s %n", topNodes, originLAD, destinationLAD);
+		for (int i = 0; i < topNodes && i < originNodes.size(); i++)
+			for (int j = 0; j < topNodes && j < destinationNodes.size(); j++)	{
+				
+				int origin = originNodes.get(i);
+				int destination = destinationNodes.get(j);
+				//System.out.printf("Generating routes between nodes %d and %d \n", origin, destination);
+				this.generateRouteSetWithLinkElimination(origin, destination);
+			}
+		}
+	}
+	
+	/**
+	 * Generates routes for all non-zero OD flows in the OD matrix.
+	 * For inter-zonal flows generates routes only between top N nodes.
+	 * @param originLAD
+	 * @param destinationLAD
+	 * @param topNodes
+	 */
+	public void generateRouteSetWithLinkElimination(ODMatrix matrix, int topNodes) {
+		
+		for (MultiKey mk: matrix.getKeySet()) {
+				String originLAD = (String) ((MultiKey)mk).getKey(0);
+				String destinationLAD = (String) ((MultiKey)mk).getKey(1);
+				if (matrix.getFlow(originLAD, destinationLAD) != 0)
+					this.generateRouteSetWithLinkElimination(originLAD, destinationLAD, topNodes);
+		}
+	}
+	
+	/**
+	 * Generates routes for all non-zero OD flows in the OD matrix.
+	 * @param originLAD
+	 * @param destinationLAD
+	 */
+	public void generateRouteSetWithLinkElimination(ODMatrix matrix) {
+		
+		for (MultiKey mk: matrix.getKeySet()) {
+				String originLAD = (String) ((MultiKey)mk).getKey(0);
+				String destinationLAD = (String) ((MultiKey)mk).getKey(1);
+				if (matrix.getFlow(originLAD, destinationLAD) != 0)
+					this.generateRouteSetWithLinkElimination(originLAD, destinationLAD);
+		}
+	}
+	
 	/**
 	 * Getter method for a route set between a specific origin and a destination.
 	 * @param origin Origin node ID.
@@ -106,17 +212,41 @@ public class RouteSetGenerator {
 	}
 	
 	/**
+	 * Clears all stored routes.
+	 */
+	public void clearRoutes() {
+		
+		this.routes.clear();
+	}
+	
+	/**
 	 * Prints all route sets.
 	 */
-	public void print() {
+	public void printChoiceSets() {
 
 		for (Object mk: routes.keySet()) {
 			int origin = (int) ((MultiKey)mk).getKey(0);
 			int destination = (int) ((MultiKey)mk).getKey(1);
 		
 			((RouteSet)routes.get(origin, destination)).printChoiceSet();
-			
 		}
+	}
+	
+	/**
+	 * Prints all route set statistics.
+	 */
+	public void printStatistics() {
+
+		System.out.println("Number of OD pairs / route sets: " + this.routes.size());
+		int totalRoutes = 0;
+		for (Object mk: routes.keySet()) {
+			int origin = (int) ((MultiKey)mk).getKey(0);
+			int destination = (int) ((MultiKey)mk).getKey(1);
+			RouteSet rs = (RouteSet)routes.get(origin, destination);
+			rs.printStatistics();
+			totalRoutes += rs.getSize();
+		}
+		System.out.println("Total number of routes: " + totalRoutes);
 	}
 	
 	/**
@@ -134,7 +264,7 @@ public class RouteSetGenerator {
 				RouteSet rs = (RouteSet)value;
 				//iterate over all routes
 				for (Route route: rs.getChoiceSet()) 
-					fileWriter.write(route.getFormattedString() + "\n");
+					fileWriter.write(route.getFormattedString() + System.getProperty("line.separator"));
 			}
 		} catch (Exception e) {
 			System.err.println("Error in fileWriter!");
@@ -149,29 +279,38 @@ public class RouteSetGenerator {
 			}
 		}
 	}
-	
+		
 	/**
 	 * Reads route sets from a text file.
 	 * @param fileName File name.
 	 */
 	public void readRoutes(String fileName) {
 		
+		System.out.println("Reading pre-generated routes...");
 		BufferedReader br = null;
 		try {
 			br = new BufferedReader(new FileReader(fileName));
 		    String line = br.readLine();
+		    //System.out.println(line);
+		    
 		    while (line != null) {
 		    	String splitLine[] = line.split(":");
 		    	//System.out.println(Arrays.toString(splitLine));
 		    	int originID = Integer.parseInt(splitLine[0]);
 		    	int destinationID = Integer.parseInt(splitLine[1]);
 		    	String edges[] = splitLine[2].split("-");
+		    	//System.out.println(Arrays.toString(edges));
+		    	
 		    	Route route = new Route();
-		    	for (String edge: edges) 
-		    		route.addEdge((DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(Integer.parseInt(edge)));
+		    	boolean success = false;
+		    	for (String edge: edges) {
+		    		success = route.addEdge((DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(Integer.parseInt(edge)));
+		    		if (!success) break;
+		    	}
 		    	//System.out.println(route.getFormattedString());
-		    	this.addRoute(route);
+		    	if (success) this.addRoute(route); //add route only if fine;
 		    	line = br.readLine();
+		    	//System.out.println(line);
 		    }
 		} catch (Exception e) {
 			System.err.println("Error in fileReader!");

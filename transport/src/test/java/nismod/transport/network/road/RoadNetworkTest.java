@@ -943,8 +943,9 @@ public class RoadNetworkTest {
 		System.out.println("Edges: " + cPath.getEdges());
 		System.out.println("First node: " + cPath.getFirst());
 		System.out.println("Last node: " + cPath.getLast());
-		DirectedEdge edge = (DirectedEdge) cPath.getEdges().get(0);
-		System.out.println("Directed edge: " + edge);
+		//DirectedEdge edge = (DirectedEdge) cPath.getEdges().get(0);
+		//System.out.println("Directed edge: " + edge);
+		org.junit.Assert.assertNull("There are no edges for invalid path", cPath.getEdges());
 				
 		cPath.reverse();
 		System.out.println(cPath);
@@ -964,6 +965,16 @@ public class RoadNetworkTest {
 		System.out.println(cPath);
 		System.out.println("Is path valid? " + cPath.isValid());
 		assertTrue("Path 95 -> 82 -> 48 should not be valid", !cPath.isValid());
+		
+		//TEST EDGE ID REPLACEMENT
+		System.out.println("\n\n*** Testing edge ID replacement ***");
+		
+		System.out.println("Directed graph representation of the road network before replacement:");
+		System.out.println(roadNetwork.getNetwork());
+		final URL networkUrlNew = new URL("file://src/test/resources/testdata/testOutputNetwork.shp");
+		roadNetwork.replaceNetworkEdgeIDs(networkUrlNew);
+		System.out.println("Directed graph representation of the road network after replacement:");
+		System.out.println(roadNetwork.getNetwork());
 	}
 
 	//@Test

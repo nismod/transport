@@ -57,6 +57,7 @@ public class RoadNetworkAssignment {
 	public static final double BETA_M_ROAD = 5.55;
 	public static final double BETA_A_ROAD = 4;
 	public static final boolean FLAG_INTRAZONAL_ASSIGNMENT_REPLACEMENT = false; //true means that origin and destination nodes can be the same
+	public static final int INTERZONAL_TOP_NODES = 3; //how many top nodes (based on gravitated population size) to considers as trip origin/destination
 
 	private static RandomSingleton rng = RandomSingleton.getInstance();
 
@@ -87,7 +88,11 @@ public class RoadNetworkAssignment {
 	private MultiKeyMap<String, List<Path>> pathStorage;
 	//private MultiKeyMap<Integer, List<Path>> pathStorageFreight;
 	private HashMap<VehicleType, MultiKeyMap<Integer, List<Path>>> pathStorageFreight;
-
+	//inter-zonal path storage - for every OD pair stores a list of paths
+	private MultiKeyMap<String, List<Route>> routeStorage;
+	//private MultiKeyMap<Integer, List<Path>> pathStorageFreight;
+	private HashMap<VehicleType, MultiKeyMap<Integer, List<Route>>> routeStorageFreight;
+	
 	//the probability of trip starting/ending in the census output area
 	private HashMap<String, Double> areaCodeProbabilities;
 	//the probability of trip starting/ending in the workplace zone
@@ -136,6 +141,12 @@ public class RoadNetworkAssignment {
 		for (VehicleType vht: VehicleType.values()) {
 			MultiKeyMap<Integer, List<Path>> map = new MultiKeyMap<Integer, List<Path>>();
 			pathStorageFreight.put(vht, map);
+		}
+		this.routeStorage = new MultiKeyMap<String, List<Route>>();
+		this.routeStorageFreight = new HashMap<VehicleType, MultiKeyMap<Integer, List<Route>>>();
+		for (VehicleType vht: VehicleType.values()) {
+			MultiKeyMap<Integer, List<Route>> map = new MultiKeyMap<Integer, List<Route>>();
+			routeStorageFreight.put(vht, map);
 		}
 		areaCodeNoTripStarts = new HashMap<String, Integer>();
 		areaCodeNoTripEnds = new HashMap<String, Integer>();
@@ -509,6 +520,145 @@ public class RoadNetworkAssignment {
 					e.printStackTrace();
 					System.err.printf("Couldnt find path from node %d to node %d!", from.getID(), to.getID());
 				}
+			}//for each trip
+		}//for each OD pair
+	}
+	
+	/** 
+	 * Assigns passenger origin-destination matrix to the road network.
+	 * Uses the route choice and pre-generated paths.
+	 * @param passengerODM Passenger origin-destination matrix.
+	 */
+	@SuppressWarnings("unused")
+	public void assignPassengerFlowsRouteChoice(ODMatrix passengerODM, RouteSetGenerator rsg) {
+
+		System.out.println("Assigning the passenger flows from the passenger matrix...");
+
+		//sort nodes based on the gravitating population
+		this.roadNetwork.sortGravityNodes();
+
+		//for each OD pair from the passengerODM		
+		for (MultiKey mk: passengerODM.getKeySet()) {
+			//System.out.println(mk);
+			//System.out.println("origin = " + mk.getKey(0));
+			//System.out.println("destination = " + mk.getKey(1));
+			String origin = (String)mk.getKey(0);
+			String destination = (String)mk.getKey(1);
+
+			//for each trip
+			int flow = passengerODM.getFlow(origin, destination);
+			for (int i=0; i<flow; i++) {
+
+				//choose origin/destination nodes based on the gravitating population
+				//the choice with replacement means that possibly: destination node = origin node
+				//the choice without replacement means that destination node has to be different from origin node
+				List<Integer> listOfOriginNodes = roadNetwork.getZoneToNodes().get(origin); //the list is already sorted
+				List<Integer> listOfDestinationNodes = roadNetwork.getZoneToNodes().get(destination); //the list is already sorted
+			
+				Integer originNode = null;
+				Integer destinationNode = null;
+								
+				if (origin.equals(destination)) { //if intra-zonal
+
+					//choose origin node
+					double cumulativeProbability = 0.0;
+					double random = rng.nextDouble();
+					for (int node: listOfOriginNodes) {
+						cumulativeProbability += nodeProbabilities.get(node);
+						if (Double.compare(cumulativeProbability, random) > 0) {
+							originNode = node;
+							break;
+						}
+					}
+
+					//choose destination node
+					cumulativeProbability = 0.0;
+					random = rng.nextDouble();
+					//if intrazonal trip and replacement is not allowed, the probability of the originNode should be 0 so it cannot be chosen again
+					//also, in that case it is important to rescale other node probabilities (now that the originNode is removed) by dividing with (1.0 - p(originNode))!
+					if (FLAG_INTRAZONAL_ASSIGNMENT_REPLACEMENT == false) { //no replacement
+						for (int node: listOfDestinationNodes) {
+							if (node == originNode.intValue()) continue; //skip if the node is the same as origin
+							cumulativeProbability += nodeProbabilities.get(node) / (1.0 - nodeProbabilities.get(originNode));
+							if (Double.compare(cumulativeProbability, random) > 0) {
+								destinationNode = node;
+								break;
+							}
+						}
+					} else	{ //with replacement
+						for (int node: listOfDestinationNodes) {
+							cumulativeProbability += nodeProbabilities.get(node);
+							if (Double.compare(cumulativeProbability, random) > 0) {
+								destinationNode = node;
+								break;
+							}
+						}
+					}		
+				
+				} else { //inter-zonal
+					
+					//for (int nodeIndex=0; nodeIndex < INTERZONAL_TOP_NODES && listOfOriginNodes.size(); nodeIndex++)
+					//choose random from top_nodes regardless of population size
+					int indexOrigin = rng.nextInt(INTERZONAL_TOP_NODES<listOfOriginNodes.size()?INTERZONAL_TOP_NODES:listOfOriginNodes.size());
+					int indexDestination = rng.nextInt(INTERZONAL_TOP_NODES<listOfDestinationNodes.size()?INTERZONAL_TOP_NODES:listOfDestinationNodes.size());
+					//System.out.println("Index of origin node: " + indexOrigin);
+					//System.out.println("Index of destination node: " + indexDestination);
+					originNode = (int) listOfOriginNodes.get(indexOrigin);					
+					destinationNode = (int) listOfDestinationNodes.get(indexDestination);
+					
+				}
+				
+				RouteSet fetchedRouteSet = rsg.getRouteSet(originNode, destinationNode);
+				if (fetchedRouteSet == null) {
+					System.err.printf("Can't fech the route set between nodes %d and %d! %s", originNode, destinationNode, System.lineSeparator());
+					continue;
+				}
+				Route chosenRoute = fetchedRouteSet.choose();
+				if (chosenRoute == null) {
+					System.err.printf("No chosen route between nodes %d and %d! %s", originNode, destinationNode, System.lineSeparator());
+					continue;
+				}
+
+					//increase the number of trips starting at origin LAD
+					Integer number = this.LADnoTripStarts.get(origin);
+					if (number == null) number = 0;
+					this.LADnoTripStarts.put(origin, ++number);
+					//increase the number of trips ending at destination LAD
+					Integer number2 = this.LADnoTripEnds.get(destination);
+					if (number2 == null) number2 = 0;
+					this.LADnoTripEnds.put(destination, ++number2);
+
+					List listOfEdges = chosenRoute.getEdges();
+					//System.out.println("The path as a list of edges: " + listOfEdges);
+					//System.out.println("Path size in the number of edges: " + listOfEdges.size());
+
+					double sum = 0;
+					List<Route> list;
+					for (Object o: listOfEdges) {
+						DirectedEdge e = (DirectedEdge) o;
+		
+						//increase volume count (in PCU) for that edge
+						Double volumeInPCU = linkVolumesInPCU.get(e.getID());
+						if (volumeInPCU == null) volumeInPCU = 0.0;
+						volumeInPCU++;
+						linkVolumesInPCU.put(e.getID(), volumeInPCU);
+						
+						//increase volume count for that edge and for a car vehicle type
+						Integer volume = linkVolumesPerVehicleType.get(VehicleType.CAR).get(e.getID());
+						if (volume == null) volume = 0;
+						volume++;
+						linkVolumesPerVehicleType.get(VehicleType.CAR).put(e.getID(), volume);
+					}
+
+					//store path in path storage
+					if (routeStorage.containsKey(origin, destination)) 
+						list = (List<Route>) routeStorage.get(origin, destination);
+					else {
+						list = new ArrayList<Route>();
+						routeStorage.put(origin, destination, list);
+					}
+					list.add(chosenRoute); //list.add(path);
+					
 			}//for each trip
 		}//for each OD pair
 	}

@@ -2,9 +2,11 @@ package nismod.transport.network.road;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedNode;
+import org.geotools.graph.structure.Edge;
 import org.opengis.feature.simple.SimpleFeature;
 
 /**
@@ -32,29 +34,71 @@ public class Route {
 	}
 	
 	public Route(RoadPath path) {
+
+		if (path == null) {
+			System.err.println("Route constructur: Path is null!");
+			return;
+		}
+		
+		if (path.getEdges() == null) {
+			System.err.println("Route constructor: Path has no edges!");
+			return;
+		}
+		
+		if (!path.isValid()) {
+			System.err.println("Route constructor: Path is not valid!");
+			return;
+		}
 		
 		this.edges = new ArrayList<DirectedEdge>();
 		this.id = ++Route.counter;
 		
-		if (path.getEdges() == null) {
-			System.err.println("Path is empty!");
-			return;
-		}
-		
+		//System.out.println("Constructing a route from path (nodes): " + path.toString());
+		//System.out.println("Constructing a route from path (edges): " + path.getEdges());
+				
 		for (Object o: path.getEdges()) {
 			DirectedEdge edge = (DirectedEdge) o;
 			this.addEdge(edge);
 		}
 	}
 	
+	public List<DirectedEdge> getEdges() {
+		
+		return	this.edges;
+	}
+	
 	/**
 	 * Adds a directed edge to the end of the current route.
 	 * @param edge Directed edge to be added.
+	 * @return true if edge addition was sucessful, false otherwise.
 	 */
-	public void addEdge(DirectedEdge edge) {
-		
-		this.edges.add(edge);		
+	public boolean addEdge(DirectedEdge edge) {
+
+		if (this.edges.isEmpty()) this.edges.add(edge);
+		else {
+			DirectedEdge lastEdge = this.edges.get(this.edges.size()-1);
+			if (!lastEdge.getOutNode().equals(edge.getInNode())) {
+				System.err.printf("Trying to add an edge %d that is not connected to the last edge %d in the route (id = %d)\n", edge.getID(), lastEdge.getID(), this.getID());
+				System.err.printf("(%d)-%d->(%d), (%d)-%d->(%d)", lastEdge.getInNode().getID(), lastEdge.getID(), lastEdge.getOutNode().getID(), edge.getInNode().getID(), edge.getID(), edge.getOutNode().getID());
+				return false;
+			} else
+				this.edges.add(edge);
+		}
+		return true;
 	}
+	
+//	/**
+//	 * Adds a directed edge to the end of the current route.
+//	 * @param edge Directed edge to be added.
+//	 */
+//	public void addEdge(DirectedEdge edge) {
+//		
+//		this.edges.add(edge);
+//		if (!this.isValid()) {
+//			System.err.println("Added edge that makes route invalid. Removing!");
+//			this.edges.remove(edge);
+//		}
+//	}
 	
 	/**
 	 * Calculates the route travel time based on link travel times.
@@ -138,6 +182,18 @@ public class Route {
 		return id;
 	}
 	
+	public boolean isValid() {
+		
+		if (this.edges.size() == 1) return true;
+		
+		for (int i = 1; i < this.edges.size(); i++) {
+			DirectedEdge edge1 = this.edges.get(i-1);
+			DirectedEdge edge2 = this.edges.get(i);
+			if (!edge1.getOutNode().equals(edge2.getInNode())) return false; //if edges are not connected
+		}
+		return true;
+	}
+	
 //	@Override
 //	public String toString() {
 //		
@@ -155,6 +211,21 @@ public class Route {
 //	}
 	
 	@Override
+	public boolean equals(Object obj) {
+	    if (obj == null) {
+	        return false;
+	    }
+	    if (!Route.class.isAssignableFrom(obj.getClass())) {
+	        return false;
+	    }
+	    final Route other = (Route) obj;
+	    if ((this.edges == null) ? (other.edges != null) : !this.edges.equals(other.edges)) {
+	        return false;
+	    }
+	    return true;
+	}
+	
+	@Override
 	public String toString() {
 			
 		if (edges.isEmpty()) return null;
@@ -166,6 +237,10 @@ public class Route {
 			sb.append(")--");
 			sb.append(edge.getID());
 			sb.append("->");
+			
+			sb.append("(");
+			sb.append(edge.getOutNode().getID());
+			sb.append(")");
 		}
 		sb.append("(");
 		sb.append(edges.get(edges.size()-1).getOutNode());
