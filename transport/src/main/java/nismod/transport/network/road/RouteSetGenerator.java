@@ -243,7 +243,7 @@ public class RouteSetGenerator {
 			int origin = (int) ((MultiKey)mk).getKey(0);
 			int destination = (int) ((MultiKey)mk).getKey(1);
 			RouteSet rs = (RouteSet)routes.get(origin, destination);
-			rs.printStatistics();
+			//rs.printStatistics();
 			totalRoutes += rs.getSize();
 		}
 		System.out.println("Total number of routes: " + totalRoutes);
