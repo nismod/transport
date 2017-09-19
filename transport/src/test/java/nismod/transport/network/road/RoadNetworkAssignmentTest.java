@@ -93,20 +93,21 @@ public class RoadNetworkAssignmentTest {
 		//ODMatrix passengerODM = new ODMatrix("./src/main/resources/data/passengerODMtempro.csv");
 		ODMatrix passengerODM = new ODMatrix("./src/main/resources/data/balancedODMatrixOldLengths.csv");
 		passengerODM.printMatrix();
-		
-		//assign freight flows
-		FreightMatrix freightMatrix = new FreightMatrix("./src/main/resources/data/FreightMatrix.csv");	
-		freightMatrix.printMatrixFormatted();
-//		roadNetworkAssignment.assignFreightFlows(freightMatrix);
 
+		FreightMatrix freightMatrix = new FreightMatrix("./src/main/resources/data/freightMatrix.csv");	
+		freightMatrix.printMatrixFormatted();
+
+		//read routes
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork2);
 		rsg.readRoutes("completeRoutesNewest.txt");
-		
+			
+		//assign passenger flows
 		long timeNow = System.currentTimeMillis();
 		roadNetworkAssignment.assignPassengerFlowsRouteChoice(passengerODM, rsg);
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Passenger flows assigned in %d seconds.\n", timeNow / 1000);
 /*
+ 		//assign freight flows
 		timeNow = System.currentTimeMillis();
 		roadNetworkAssignment.assignFreightFlows(freightMatrix);
 		timeNow = System.currentTimeMillis() - timeNow;
@@ -478,7 +479,7 @@ public class RoadNetworkAssignmentTest {
 		final String freightZoneToLADfile = "./src/test/resources/testdata/freightZoneToLAD.csv";
 		final String freightZoneNearestNodeFile = "./src/test/resources/testdata/freightZoneToNearestNode.csv";
 		final String baseYearODMatrixFile = "./src/test/resources/testdata/passengerODM.csv";
-		final String freightMatrixFile = "./src/test/resources/testdata/FreightMatrix.csv";
+		final String freightMatrixFile = "./src/test/resources/testdata/freightMatrix.csv";
 		
 //		final URL zonesUrl = new URL("file://src/main/resources/data/zones.shp");
 //		final URL networkUrl = new URL("file://src/main/resources/data/network.shp");
@@ -491,7 +492,7 @@ public class RoadNetworkAssignmentTest {
 //		final String freightZoneToLADfile = "./src/main/resources/data/freightZoneToLAD.csv";
 //		final String freightZoneNearestNodeFile = "./src/main/resources/data/freightZoneToNearestNode.csv";
 //		final String baseYearODMatrixFile = "./src/main/resources/data/balancedODMatrix.csv";
-//		final String freightMatrixFile = "./src/main/resources/data/FreightMatrix.csv";
+//		final String freightMatrixFile = "./src/main/resources/data/freightMatrix.csv";
 
 		//create a road network
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
