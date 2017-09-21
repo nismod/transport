@@ -1,5 +1,7 @@
 package nismod.transport.network.road;
 
+import static org.junit.Assert.*;
+
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -253,7 +255,8 @@ public class RouteSetGeneratorTest {
 		ODMatrix passengerODM = new ODMatrix("./src/test/resources/testdata/passengerODM.csv");
 		
 		RouteSetGenerator routes = new RouteSetGenerator(roadNetwork);
-		
+
+		/*
 		//routes.generateRouteSetWithLinkElimination(7, 40);
 		//routes.generateRouteSetWithLinkElimination("E06000045", "E07000091", 2);
 		routes.generateRouteSetWithLinkElimination(passengerODM, 3);
@@ -264,5 +267,36 @@ public class RouteSetGeneratorTest {
 		routes.readRoutes("testRoutes.txt");
 		routes.printChoiceSets();
 		routes.printStatistics();
+		*/
+		
+		//generate all route sets
+		routes.clearRoutes();
+		routes.generateRouteSetWithLinkElimination(passengerODM, 1, 1, 3);
+		routes.printStatistics();
+		int totalRouteSets = routes.getNumberOfRouteSets();
+		int totalRoutes = routes.getNumberOfRoutes();
+		
+		//generate first slice
+		routes.clearRoutes();
+		routes.generateRouteSetWithLinkElimination(passengerODM, 1, 3, 3);
+		routes.printStatistics();
+		int routeSets1 = routes.getNumberOfRouteSets();
+		int routes1 = routes.getNumberOfRoutes();
+	
+		//generate second slice
+		routes.clearRoutes();
+		routes.generateRouteSetWithLinkElimination(passengerODM, 2, 3, 3);
+		routes.printStatistics();
+		int routeSets2 = routes.getNumberOfRouteSets();
+		int routes2 = routes.getNumberOfRoutes();
+		
+		//generate third slice
+		routes.clearRoutes();
+		routes.generateRouteSetWithLinkElimination(passengerODM, 3, 3, 3);
+		routes.printStatistics();
+		int routeSets3 = routes.getNumberOfRouteSets();
+		int routes3 = routes.getNumberOfRoutes();
+		
+		assertEquals("The sum of route sets generated across OD matrix slices is equal to total", totalRouteSets, routeSets1 + routeSets2 + routeSets3);
 	}
 }
