@@ -29,7 +29,9 @@ public class App {
         
 		try {
 			Properties props = new Properties();
-			final String propFileName = "./src/main/resources/config.properties";
+			//final String propFileName = "./src/main/resources/config.properties";
+			//final String propFileName = "./src/test/resources/config.properties";
+			final String propFileName = args[0];
 			
 			InputStream inputStream = null;
 			try {
@@ -51,15 +53,19 @@ public class App {
 				}
 			}
 		
+			final String baseYear = props.getProperty("baseYear");
+			final String predictedYear = props.getProperty("predictedYear");
+			
 			final String areaCodeFileName = props.getProperty("areaCodeFileName");
 			final String areaCodeNearestNodeFile = props.getProperty("areaCodeNearestNodeFile");
 			final String workplaceZoneFileName = props.getProperty("workplaceZoneFileName");
 			final String workplaceZoneNearestNodeFile = props.getProperty("workplaceZoneNearestNodeFile");
-			final String freightZoneToLADfile = props.getProperty("freightZoneToLADFile");
+			final String freightZoneToLADfile = props.getProperty("freightZoneToLADfile");
 			final String freightZoneNearestNodeFile = props.getProperty("freightZoneNearestNodeFile");
 
 			final URL zonesUrl = new URL(props.getProperty("zonesUrl"));
 			final URL networkUrl = new URL(props.getProperty("networkUrl"));
+			final URL networkUrlFixedEdgeIDs = new URL(props.getProperty("networkUrlFixedEdgeIDs"));
 			final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
 			final URL AADFurl = new URL(props.getProperty("AADFurl"));
 
@@ -67,19 +73,17 @@ public class App {
 			final String baseYearFreightMatrixFile = props.getProperty("baseYearFreightMatrixFile");
 			final String populationFile = props.getProperty("populationFile");
 			final String GVAFile = props.getProperty("GVAFile");
-			//final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
-
+	
 			final String roadExpansionFileName = props.getProperty("roadExpansionFileName");
 			final String vehicleElectrificationFileName = props.getProperty("vehicleElectrificationFileName");
 
-			final String baseYear = args[0];
-			final String predictedYear = args[1];
-			final String energyUnitCostsFile = args[2];
-			final String outputFile = args[3];
-
+			final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
+			final String energyConsumptionsFile = props.getProperty("energyConsumptionsFile");
+			
 			//create a road network
-			RoadNetwork roadNetwork2 = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
-
+			RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
+			roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
+			
 			//load interventions
 			List<Intervention> interventions = new ArrayList<Intervention>();
 			RoadExpansion re = new RoadExpansion(roadExpansionFileName);
@@ -88,11 +92,11 @@ public class App {
 			interventions.add(ve);
 
 			//the main demand model
-			DemandModel dm = new DemandModel(roadNetwork2, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, energyUnitCostsFile, interventions);
+			DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, energyUnitCostsFile, interventions);
 
 			dm.predictHighwayDemand(Integer.parseInt(predictedYear), Integer.parseInt(baseYear));
 
-			dm.saveEnergyConsumptions(Integer.parseInt(predictedYear), outputFile);
+			dm.saveEnergyConsumptions(Integer.parseInt(predictedYear), energyConsumptionsFile);
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -103,8 +107,12 @@ public class App {
 		
 	private static void setDefaultProperties(Properties props) {
 		
+		props.setProperty("baseYear", "2015");
+		props.setProperty("predictedYear", "2016");
+		
 		props.setProperty("zonesUrl", "file://src/test/resources/testdata/zones.shp");
 		props.setProperty("networkUrl", "file://src/test/resources/testdata/network.shp");
+		props.setProperty("networkUrlFixedEdgeIDs", "file://src/test/resources/testdata/testOutputNetwork.shp");
 		props.setProperty("nodesUrl", "file://src/test/resources/testdata/nodes.shp");
 		props.setProperty("AADFurl", "file://src/test/resources/testdata/AADFdirected.shp");
 		
@@ -114,12 +122,14 @@ public class App {
 		props.setProperty("workplaceZoneNearestNodeFile", "./src/test/resources/testdata/workplaceZoneToNearestNode.csv");
 		props.setProperty("freightZoneToLADfile", "./src/test/resources/testdata/freightZoneToLAD.csv");
 		props.setProperty("freightZoneNearestNodeFile", "./src/test/resources/testdata/freightZoneToNearestNode.csv");
-		
+	
 		props.setProperty("baseYearODMatrixFile", "./src/test/resources/testdata/passengerODM.csv");
 		props.setProperty("baseYearFreightMatrixFile", "./src/test/resources/testdata/freightMatrix.csv");
 		props.setProperty("populationFile", "./src/test/resources/testdata/population.csv");
 		props.setProperty("GVAFile", "./src/test/resources/testdata/GVA.csv");
+		
 		props.setProperty("energyUnitCostsFile", "./src/test/resources/testdata/energyUnitCosts.csv");
+		props.setProperty("energyConsumptionsFile", "./energyConsumptions.csv");
 		
 		props.setProperty("roadExpansionFileName", "./src/test/resources/testdata/roadExpansion.properties");
 		props.setProperty("vehicleElectrificationFileName", "./src/test/resources/testdata/vehicleEletrification.properties");

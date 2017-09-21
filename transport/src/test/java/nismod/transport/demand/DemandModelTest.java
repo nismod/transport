@@ -38,6 +38,7 @@ public class DemandModelTest {
 
 		final URL zonesUrl2 = new URL("file://src/test/resources/testdata/zones.shp");
 		final URL networkUrl2 = new URL("file://src/test/resources/testdata/network.shp");
+		final URL networkUrlfixedEdgeIDs = new URL("file://src/test/resources/testdata/testOutputNetwork.shp");
 		final URL nodesUrl2 = new URL("file://src/test/resources/testdata/nodes.shp");
 		final URL AADFurl2 = new URL("file://src/test/resources/testdata/AADFdirected.shp");
 		
@@ -68,6 +69,7 @@ public class DemandModelTest {
 		
 		//create a road network
 		RoadNetwork roadNetwork2 = new RoadNetwork(zonesUrl2, networkUrl2, nodesUrl2, AADFurl2, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
+		roadNetwork2.replaceNetworkEdgeIDs(networkUrlfixedEdgeIDs);
 		
 		//visualise the shapefiles
 		//roadNetwork2.visualise("Test Area");
@@ -162,8 +164,7 @@ public class DemandModelTest {
 		RoadDevelopment rd = new RoadDevelopment(props);
 		interventions.add(rd);
 		*/
-		
-		
+			
 		Properties props = new Properties();
 		props.setProperty("startYear", "2016");
 		props.setProperty("endYear", "2025");
@@ -175,7 +176,6 @@ public class DemandModelTest {
 		props.setProperty("HYBRID", "0.025");
 		VehicleElectrification ve = new VehicleElectrification(props);
 		interventions.add(ve);
-		
 		
 		//the main demand model
 		DemandModel dm = new DemandModel(roadNetwork2, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, energyUnitCostsFile, interventions);
