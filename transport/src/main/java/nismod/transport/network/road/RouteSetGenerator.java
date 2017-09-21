@@ -170,8 +170,7 @@ public class RouteSetGenerator {
 	/**
 	 * Generates routes for all non-zero OD flows in the OD matrix.
 	 * For inter-zonal flows generates routes only between top N nodes.
-	 * @param originLAD
-	 * @param destinationLAD
+	 * @param matrix
 	 * @param topNodes
 	 */
 	public void generateRouteSetWithLinkElimination(ODMatrix matrix, int topNodes) {
@@ -186,8 +185,7 @@ public class RouteSetGenerator {
 	
 	/**
 	 * Generates routes for all non-zero OD flows in the OD matrix.
-	 * @param originLAD
-	 * @param destinationLAD
+	 * @param matrix
 	 */
 	public void generateRouteSetWithLinkElimination(ODMatrix matrix) {
 		
@@ -199,6 +197,69 @@ public class RouteSetGenerator {
 		}
 	}
 	
+	/**
+	 * Generates routes for a slice of the OD matrix (useful for cluster computing).
+	 * @param matrix Origin-destination matrix.
+	 * @param sliceIndex Index of the OD matrix slice for which to generate routes [1..N].
+	 * @param sliceNumber Number of slices to divide matrix into (N).
+	 */
+	public void generateRouteSetWithLinkElimination(ODMatrix matrix, int sliceIndex, int sliceNumber) {
+		
+		List<String> origins = matrix.getOrigins();
+		List<String> destinations = matrix.getDestinations();
+		
+		int originsPerSlice = (int) Math.floor(1.0 * origins.size() / sliceNumber); //the last slice may have a different number of origins
+		//int originsInLastSlice = origins.size() - (sliceNumber - 1) * originsPerSlice;
+		
+		if (sliceIndex < sliceNumber) {
+			for (int i = (sliceIndex - 1) * originsPerSlice; i < sliceIndex * originsPerSlice && i < origins.size(); i++) {
+				String originLAD = origins.get(i);
+				for (String destinationLAD: destinations) 
+					if (matrix.getFlow(originLAD, destinationLAD) != 0)
+						this.generateRouteSetWithLinkElimination(originLAD, destinationLAD);
+			}
+		} else { //for the last slice there may be more origins, so go all the way to the end of the list
+			for (int i = (sliceIndex - 1) * originsPerSlice; i < origins.size(); i++) {
+				String originLAD = origins.get(i);
+				for (String destinationLAD: destinations) 
+					if (matrix.getFlow(originLAD, destinationLAD) != 0)
+						this.generateRouteSetWithLinkElimination(originLAD, destinationLAD);
+			}
+		}
+	}
+	
+	/**
+	 * Generates routes for a slice of the OD matrix (useful for cluster computing), for topNodes only
+	 * @param matrix Origin-destination matrix.
+	 * @param sliceIndex Index of the OD matrix slice for which to generate routes [1..N].
+	 * @param sliceNumber Number of slices to divide matrix into (N).
+	 * @param topNodes Number of topNodes to consider for inter-zonal routes.
+	 */
+	public void generateRouteSetWithLinkElimination(ODMatrix matrix, int sliceIndex, int sliceNumber, int topNodes) {
+		
+		List<String> origins = matrix.getOrigins();
+		List<String> destinations = matrix.getDestinations();
+		
+		int originsPerSlice = (int) Math.floor(1.0 * origins.size() / sliceNumber); //the last slice may have a different number of origins
+		//int originsInLastSlice = origins.size() - (sliceNumber - 1) * originsPerSlice;
+		
+		if (sliceIndex < sliceNumber) {
+			for (int i = (sliceIndex - 1) * originsPerSlice; i < sliceIndex * originsPerSlice && i < origins.size(); i++) {
+				String originLAD = origins.get(i);
+				for (String destinationLAD: destinations) 
+					if (matrix.getFlow(originLAD, destinationLAD) != 0)
+						this.generateRouteSetWithLinkElimination(originLAD, destinationLAD, topNodes);
+			}
+		} else { //for the last slice there may be more origins, so go all the way to the end of the list
+			for (int i = (sliceIndex - 1) * originsPerSlice; i < origins.size(); i++) {
+				String originLAD = origins.get(i);
+				for (String destinationLAD: destinations) 
+					if (matrix.getFlow(originLAD, destinationLAD) != 0)
+						this.generateRouteSetWithLinkElimination(originLAD, destinationLAD, topNodes);
+			}
+		}
+	}
+		
 	/**
 	 * Getter method for a route set between a specific origin and a destination.
 	 * @param origin Origin node ID.
@@ -237,7 +298,25 @@ public class RouteSetGenerator {
 	 */
 	public void printStatistics() {
 
-		System.out.println("Number of OD pairs / route sets: " + this.routes.size());
+		System.out.println("Number of OD pairs / route sets: " + this.getNumberOfRouteSets());
+		System.out.println("Total number of routes: " + this.getNumberOfRoutes());
+	}
+	
+	/**
+	 * Gets the numbers of route sets (OD pairs).
+	 * @return Number of route sets.
+	 */
+	public int getNumberOfRouteSets() { 
+	
+		return this.routes.size();
+	}
+	
+	/**
+	 * Gets the total number of routes.
+	 * @return Number of routes.
+	 */
+	public int getNumberOfRoutes() { 
+	
 		int totalRoutes = 0;
 		for (Object mk: routes.keySet()) {
 			int origin = (int) ((MultiKey)mk).getKey(0);
@@ -246,8 +325,9 @@ public class RouteSetGenerator {
 			//rs.printStatistics();
 			totalRoutes += rs.getSize();
 		}
-		System.out.println("Total number of routes: " + totalRoutes);
+		return totalRoutes;
 	}
+	
 	
 	/**
 	 * Saves all route sets into a text file.
