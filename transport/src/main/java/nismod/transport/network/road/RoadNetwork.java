@@ -3,8 +3,6 @@
  */
 package nismod.transport.network.road;
 
-import static org.junit.Assert.assertEquals;
-
 import java.awt.Color;
 import java.io.File;
 import java.io.FileReader;
