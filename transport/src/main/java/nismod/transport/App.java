@@ -14,7 +14,9 @@ import nismod.transport.decision.Intervention;
 import nismod.transport.decision.RoadExpansion;
 import nismod.transport.decision.VehicleElectrification;
 import nismod.transport.demand.DemandModel;
+import nismod.transport.demand.ODMatrix;
 import nismod.transport.network.road.RoadNetwork;
+import nismod.transport.network.road.RouteSetGenerator;
 
 /**
  * NISMOD V2.0.0 Transport Model
@@ -52,7 +54,7 @@ public class App {
 					}
 				}
 			}
-		
+			
 			final String baseYear = props.getProperty("baseYear");
 			final String predictedYear = props.getProperty("predictedYear");
 			
@@ -84,20 +86,62 @@ public class App {
 			RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
 			roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
 			
-			//load interventions
-			List<Intervention> interventions = new ArrayList<Intervention>();
-			RoadExpansion re = new RoadExpansion(roadExpansionFileName);
-			VehicleElectrification ve = new VehicleElectrification(vehicleElectrificationFileName);
-			interventions.add(re);
-			interventions.add(ve);
+			if (args.length == 1) {//run the demand model
 
-			//the main demand model
-			DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, energyUnitCostsFile, interventions);
+				//load interventions
+				List<Intervention> interventions = new ArrayList<Intervention>();
+				RoadExpansion re = new RoadExpansion(roadExpansionFileName);
+				VehicleElectrification ve = new VehicleElectrification(vehicleElectrificationFileName);
+				interventions.add(re);
+				interventions.add(ve);
 
-			dm.predictHighwayDemand(Integer.parseInt(predictedYear), Integer.parseInt(baseYear));
-
-			dm.saveEnergyConsumptions(Integer.parseInt(predictedYear), energyConsumptionsFile);
-
+				//the main demand model
+				DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, energyUnitCostsFile, interventions);
+				dm.predictHighwayDemand(Integer.parseInt(predictedYear), Integer.parseInt(baseYear));
+				dm.saveEnergyConsumptions(Integer.parseInt(predictedYear), energyConsumptionsFile);
+				
+			} else {//there are additional parameters
+				
+				final String flag = args[1]; //read the flag
+				
+				if (flag.charAt(0) == '-') { 
+					switch (flag.charAt(1)) { 
+						case 'r': 
+								  final String sliceIndex;
+								  final String sliceNumber;
+								  if (args.length < 4) throw new IllegalArgumentException();
+								  else {
+									  sliceIndex = args[2];
+								  	  sliceNumber = args[3];
+									} 
+								  
+								  String topNodes = "";
+								  if (args.length == 5) topNodes = args[4];
+								  
+								  RouteSetGenerator routes = new RouteSetGenerator(roadNetwork);
+								  ODMatrix passengerODM = new ODMatrix(baseYearODMatrixFile);
+									
+								  if (!topNodes.isEmpty()) {
+									  //generate only between top nodes
+									  System.out.printf("Generating routes for slice %s out of %s for %s top nodes \n", sliceIndex, sliceNumber, topNodes);
+									  routes.generateRouteSetWithLinkElimination(passengerODM, Integer.parseInt(sliceIndex), Integer.parseInt(sliceNumber), Integer.parseInt(topNodes));
+									  routes.saveRoutes("routes" + sliceIndex + "of" + sliceNumber + "top" + topNodes + ".txt", false);
+								  } else { 
+									  //generate between all nodes
+									  System.out.printf("Generating routes for slice %s out of %s \n", sliceIndex, sliceNumber);
+									  routes.generateRouteSetWithLinkElimination(passengerODM, Integer.parseInt(sliceIndex), Integer.parseInt(sliceNumber));
+									  routes.saveRoutes("routes" + sliceIndex + "of" + sliceNumber + ".txt", false);
+								  }
+								  break;
+						default:  throw new IllegalArgumentException();
+					}
+				}	else throw new IllegalArgumentException();
+				
+			}
+		} catch (IllegalArgumentException e) {
+			System.err.println("Correct arguments for route generation should be one of the following:");
+			System.err.println("<path>/config.properties -r sliceIndex sliceNumber");
+			System.err.println("<path>/config.properties -r sliceIndex sliceNumber topNumbers");
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
