@@ -228,7 +228,18 @@ public class RouteSetGeneratorTest {
 		//routes5.printStatistics();
 		//routes5.printChoiceSets();
 		
-		routes5.readRoutes("completeRoutesNewest.txt");
+		//routes5.readRoutes("completeRoutesNewest.txt");
+		//routes5.readRoutes("./src/main/resources/data/routes5of190top10.txt");
+		
+		for (int i = 1; i <= 190; i++) {
+			StringBuilder path = new StringBuilder(60);
+			path.append("./src/main/resources/data/top10routes/routes");
+			path.append(i);
+			path.append("of190top10.txt");
+			
+			routes5.readRoutes(path.toString());
+		}
+		
 		routes5.printStatistics();
 //		routes5.printChoiceSets();
 	}
@@ -271,28 +282,28 @@ public class RouteSetGeneratorTest {
 		
 		//generate all route sets
 		routes.clearRoutes();
-		routes.generateRouteSetWithLinkElimination(passengerODM, 1, 1, 3);
+		routes.generateRouteSet(passengerODM, 1, 1, 3);
 		routes.printStatistics();
 		int totalRouteSets = routes.getNumberOfRouteSets();
 		int totalRoutes = routes.getNumberOfRoutes();
 		
 		//generate first slice
 		routes.clearRoutes();
-		routes.generateRouteSetWithLinkElimination(passengerODM, 1, 3, 3);
+		routes.generateRouteSet(passengerODM, 1, 3, 3);
 		routes.printStatistics();
 		int routeSets1 = routes.getNumberOfRouteSets();
 		int routes1 = routes.getNumberOfRoutes();
 	
 		//generate second slice
 		routes.clearRoutes();
-		routes.generateRouteSetWithLinkElimination(passengerODM, 2, 3, 3);
+		routes.generateRouteSet(passengerODM, 2, 3, 3);
 		routes.printStatistics();
 		int routeSets2 = routes.getNumberOfRouteSets();
 		int routes2 = routes.getNumberOfRoutes();
 		
 		//generate third slice
 		routes.clearRoutes();
-		routes.generateRouteSetWithLinkElimination(passengerODM, 3, 3, 3);
+		routes.generateRouteSet(passengerODM, 3, 3, 3);
 		routes.printStatistics();
 		int routeSets3 = routes.getNumberOfRouteSets();
 		int routes3 = routes.getNumberOfRoutes();
