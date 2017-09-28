@@ -124,12 +124,12 @@ public class App {
 								  if (!topNodes.isEmpty()) {
 									  //generate only between top nodes
 									  System.out.printf("Generating routes for slice %s out of %s for %s top nodes \n", sliceIndex, sliceNumber, topNodes);
-									  routes.generateRouteSetWithLinkElimination(passengerODM, Integer.parseInt(sliceIndex), Integer.parseInt(sliceNumber), Integer.parseInt(topNodes));
+									  routes.generateRouteSet(passengerODM, Integer.parseInt(sliceIndex), Integer.parseInt(sliceNumber), Integer.parseInt(topNodes));
 									  routes.saveRoutes("routes" + sliceIndex + "of" + sliceNumber + "top" + topNodes + ".txt", false);
 								  } else { 
 									  //generate between all nodes
 									  System.out.printf("Generating routes for slice %s out of %s \n", sliceIndex, sliceNumber);
-									  routes.generateRouteSetWithLinkElimination(passengerODM, Integer.parseInt(sliceIndex), Integer.parseInt(sliceNumber));
+									  routes.generateRouteSet(passengerODM, Integer.parseInt(sliceIndex), Integer.parseInt(sliceNumber));
 									  routes.saveRoutes("routes" + sliceIndex + "of" + sliceNumber + ".txt", false);
 								  }
 								  break;
