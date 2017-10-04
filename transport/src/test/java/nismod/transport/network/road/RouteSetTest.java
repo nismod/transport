@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.HashMap;
 
 import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedNode;
@@ -66,39 +67,32 @@ public class RouteSetTest {
 		r1.addEdge(e1);
 		r1.addEdge(e2);
 		r1.addEdge(e3);
-		r1.calculateTravelTime(rna.getLinkTravelTimes());
-		r1.calculateLength();
-		r1.calculateUtility();
+		r1.calculateUtility(rna.getLinkTravelTimes());
 				
 		r2.addEdge(e1);
 		r2.addEdge(e2);
 		r2.addEdge(e4);
 		r2.addEdge(e5);
-		r2.calculateTravelTime(rna.getLinkTravelTimes());
-		r2.calculateLength();
-		r2.calculateUtility();
+		r2.calculateUtility(rna.getLinkTravelTimes());
 		
 		r3.addEdge(e6);
 		r3.addEdge(e7);
 		r3.addEdge(e2);
 		r3.addEdge(e3);
-		r3.calculateTravelTime(rna.getLinkTravelTimes());
-		r3.calculateLength();
-		r3.calculateUtility();
+		r3.calculateUtility(rna.getLinkTravelTimes());
 		
 		r4.addEdge(e6);
 		r4.addEdge(e7);
 		r4.addEdge(e2);
 		r4.addEdge(e4);
 		r4.addEdge(e5);
-		r4.calculateTravelTime(rna.getLinkTravelTimes());
-		r4.calculateLength();
-		r4.calculateUtility();
+		r4.calculateUtility(rna.getLinkTravelTimes());
 		
 		DirectedNode originNode = (DirectedNode)roadNetwork2.getNodeIDtoNode().get(7);
 		DirectedNode destinationNode = (DirectedNode)roadNetwork2.getNodeIDtoNode().get(40);
 		
 		RouteSet rs = new RouteSet(originNode, destinationNode);
+		rs.setLinkTravelTime(rna.getLinkTravelTimes());
 		//rs.addRoute(r1);
 		rs.addRoute(r2);
 		rs.addRoute(r3);
@@ -108,6 +102,7 @@ public class RouteSetTest {
 		rs.printChoiceSet();
 		rs.printStatistics();
 		rs.calculateProbabilities();
+		rs.printProbabilities();
 		
 		int[] choiceFrequency = new int[4];
 		
@@ -133,5 +128,11 @@ public class RouteSetTest {
 		rs.addRoute(newRoute);
 		rs.printChoiceSet();
 		rs.printStatistics();
+
+		rs.calculateProbabilities();
+		rs.sortRoutesOnUtility();
+		rs.printChoiceSet();
+		Route chosenRoute = rs.choose();
+		System.out.println("Chosen route: " + chosenRoute.toString());
 	}
 }

@@ -23,9 +23,9 @@ public class Route {
 	private static int counter = 0;
 	private int id;
 	private ArrayList<DirectedEdge> edges;
-	private double length;
-	private double time;
-	private double utility;
+	private Double length;
+	private Double time;
+	private Double utility;
 	
 	public Route() {
 	
@@ -104,7 +104,7 @@ public class Route {
 	 * Calculates the route travel time based on link travel times.
 	 * @param linkTravelTime Link travel times.
 	 */
-	public void calculateTravelTime(HashMap<Integer, Double> linkTravelTime) {
+	private void calculateTravelTime(HashMap<Integer, Double> linkTravelTime) {
 		
 		double travelTime = 0.0;
 		for (DirectedEdge edge: edges) {
@@ -117,7 +117,7 @@ public class Route {
 	/**
 	 * Calculates the lenght of the route.
 	 */
-	public void calculateLength(){
+	private void calculateLength(){
 	
 		double length = 0.0;
 		for (DirectedEdge edge: edges) {
@@ -131,11 +131,14 @@ public class Route {
 	/**
 	 * Calculates the utility of the route.
 	 */
-	public void calculateUtility() {
+	public void calculateUtility(HashMap<Integer, Double> linkTravelTime) {
+		
+		if (this.length == null)  this.calculateLength();
+		if (this.time == null) this.calculateTravelTime(linkTravelTime);
 		
 		double length = this.getLength();
 		double time = this.getTime();
-		double intersec = this.getNumberOfIntersections();
+		int intersec = this.getNumberOfIntersections();
 		
 		double utility = paramTime * time + paramLength * length + paramInter * intersec;  
 		this.utility = utility;
@@ -146,13 +149,13 @@ public class Route {
 		return this.edges.isEmpty();
 	}
 	
-	public double getLength() {
+	public Double getLength() {
 		
 		return length;
 	}
 	
-	public double getTime() {
-		
+	public Double getTime() {
+	
 		return time;
 	}
 	
@@ -161,8 +164,11 @@ public class Route {
 		return (this.edges.size() - 1);
 	}
 	
-	public double getUtility() {
+	public Double getUtility() {
 		
+//		if (this.utility == null) {
+//			System.err.println("Route utility needs to be first calculated using link travel time and other variables!");
+//			}
 		return utility;
 	}
 	

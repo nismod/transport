@@ -54,7 +54,7 @@ public class RoadNetworkAssignment {
 	public static final double BETA_M_ROAD = 5.55;
 	public static final double BETA_A_ROAD = 4;
 	public static final boolean FLAG_INTRAZONAL_ASSIGNMENT_REPLACEMENT = false; //true means that origin and destination nodes can be the same
-	public static final int INTERZONAL_TOP_NODES = 3; //how many top nodes (based on gravitated population size) to considers as trip origin/destination
+	public static final int INTERZONAL_TOP_NODES = 10; //how many top nodes (based on gravitated population size) to considers as trip origin/destination
 
 	private static RandomSingleton rng = RandomSingleton.getInstance();
 
@@ -526,7 +526,7 @@ public class RoadNetworkAssignment {
 	 * Uses the route choice and pre-generated paths.
 	 * @param passengerODM Passenger origin-destination matrix.
 	 */
-	@SuppressWarnings("unused")
+	//@SuppressWarnings("unused")
 	public void assignPassengerFlowsRouteChoice(ODMatrix passengerODM, RouteSetGenerator rsg) {
 
 		System.out.println("Assigning the passenger flows from the passenger matrix...");
@@ -610,6 +610,13 @@ public class RoadNetworkAssignment {
 					System.err.printf("Can't fech the route set between nodes %d and %d! %s", originNode, destinationNode, System.lineSeparator());
 					continue;
 				}
+				
+				if (fetchedRouteSet.getProbabilities() == null) {
+					//probabilities need to be calculated for this route set before a choice can be made
+					fetchedRouteSet.calculateProbabilities(this.linkTravelTime);
+					fetchedRouteSet.sortRoutesOnUtility();
+				}
+				
 				Route chosenRoute = fetchedRouteSet.choose();
 				if (chosenRoute == null) {
 					System.err.printf("No chosen route between nodes %d and %d! %s", originNode, destinationNode, System.lineSeparator());

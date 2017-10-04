@@ -3,6 +3,7 @@ package nismod.transport.network.road;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 
 import org.geotools.graph.structure.DirectedNode;
@@ -20,6 +21,7 @@ public class RouteSet {
 	private DirectedNode destinationNode;
 	private List<Route> choiceSet;
 	private ArrayList<Double> probabilities;
+	private HashMap<Integer, Double> linkTravelTime;
 	
 	/**
 	 * @param originNode
@@ -28,6 +30,18 @@ public class RouteSet {
 	public RouteSet(DirectedNode originNode, DirectedNode destinationNode) {
 		this.originNode = originNode;
 		this.destinationNode = destinationNode;
+		
+		choiceSet = new ArrayList<Route>();
+	}
+	
+	/**
+	 * @param originNode
+	 * @param destinationNode
+	 */
+	public RouteSet(DirectedNode originNode, DirectedNode destinationNode, HashMap<Integer, Double> linkTravelTime) {
+		this.originNode = originNode;
+		this.destinationNode = destinationNode;
+		this.linkTravelTime = linkTravelTime;
 		choiceSet = new ArrayList<Route>();
 	}
 	
@@ -81,7 +95,7 @@ public class RouteSet {
 	 */
 	public void printChoiceSet() {
 		
-		System.out.printf("Origin %d - Destination %d: \n", originNode.getID(), destinationNode.getID());
+		System.out.printf("Choice set for origin node %d and destination node %d: \n", originNode.getID(), destinationNode.getID());
 		for (Route r: choiceSet) 
 			System.out.println(r.toString());
 	}
@@ -89,13 +103,20 @@ public class RouteSet {
 	/**
 	 * Calculates choice probabilities using logit formula.
 	 */
-	public void calculateProbabilities() {
+	public void calculateProbabilities(HashMap<Integer, Double> linkTravelTime) {
 		
 		ArrayList<Double> probabilities = new ArrayList<Double>();
 		for (Route r: choiceSet) probabilities.add(0.0);
 		
 		double sum = 0.0;
-		for (Route r: choiceSet) sum += Math.exp(r.getUtility());
+		
+		//all routes need to have utility calculated, if not calculate it
+		for (Route r: choiceSet) {
+						
+			if (r.getUtility() == null) r.calculateUtility(linkTravelTime);
+			sum += Math.exp(r.getUtility());
+		}
+		
 		for (int index = 0; index < choiceSet.size(); index++) {
 			double probability = Math.exp(choiceSet.get(index).getUtility()) / sum;
 			probabilities.set(index, probability);
@@ -106,6 +127,19 @@ public class RouteSet {
 			System.out.printf("%.2f / %.2f \n", choiceSet.get(index).getUtility(), probabilities.get(index));
 		*/
 		this.probabilities = probabilities;
+	}
+	
+	/**
+	 * Calculates choice probabilities using logit formula.
+	 */
+	public void calculateProbabilities() {
+		
+		if (this.linkTravelTime == null) { 
+			System.err.println("Before calculating probabilities of a choice set, set link travel times to be used for the calculation!");
+			return;
+		}
+				
+		calculateProbabilities(this.linkTravelTime);
 	}
 	
 	/**
@@ -125,7 +159,7 @@ public class RouteSet {
 		
 		//probabilities must be calculated at least once
 		if (probabilities == null) {
-			this.calculateProbabilities();
+			this.calculateProbabilities(this.linkTravelTime);
 			this.sortRoutesOnUtility();
 		}
 		
@@ -176,10 +210,20 @@ public class RouteSet {
 		return this.choiceSet.size();
 	}
 	
+	public void setLinkTravelTime(HashMap<Integer, Double> linkTravelTime) {
+		
+		this.linkTravelTime = linkTravelTime;
+	}
+	
 	public void printStatistics() {
 		
 		System.out.printf("Statistics for route set from %d to %d: %d distinct routes. \n", this.originNode.getID(), this.destinationNode.getID(), this.choiceSet.size());
 		
 	}
 	
+	public void printProbabilities() {
+
+		System.out.println("Probabilities : ");
+		System.out.println(this.probabilities);
+	}
 }

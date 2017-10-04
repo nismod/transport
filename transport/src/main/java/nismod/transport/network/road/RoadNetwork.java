@@ -268,6 +268,34 @@ public class RoadNetwork {
 	}
 	
 	/**
+	 * Overrides actual edge lengths with straight line distances, when they are smaller than straight line distances.
+	 */
+	public void makeEdgesAdmissible() {
+		
+		for (Object o: this.network.getEdges()) {
+			
+			DirectedEdge edge = (DirectedEdge) o;
+			DirectedNode fromNode = edge.getInNode();
+			DirectedNode toNode = edge.getOutNode();
+			
+			SimpleFeature feature = (SimpleFeature)edge.getObject();
+			double length = (double) feature.getAttribute("LenNet");  //use actual physical length
+			
+			//calculate straight line distance between nodes
+			SimpleFeature sf1 = (SimpleFeature)fromNode.getObject();
+			Point point = (Point)sf1.getDefaultGeometry();
+			SimpleFeature sf2 = (SimpleFeature)toNode.getObject();
+			Point point2 = (Point)sf2.getDefaultGeometry();
+			double distance = point.distance(point2) / 1000.0; //straight line distance (from metres to kilometres)!
+			if (length < distance) {
+				System.err.printf("The length of the edge (%.2f) is smaller than the straight line distance (%.2f)!\n", length, distance);
+				System.err.printf("I am overriding actual distance for edge (%d)-%d->(%d) \n", fromNode.getID(), edge.getID(), toNode.getID());
+				feature.setAttribute("LenNet", distance);
+			}
+		}
+	}
+		
+	/**
 	 * Visualises the road network as loaded from shapefiles.
 	 * @param mapTitle Map title for the window.
 	 * @throws IOException
@@ -633,7 +661,8 @@ public class RoadNetwork {
 				Edge edge = ((DirectedNode) aStarNode1.getNode()).getOutEdge((DirectedNode) aStarNode2.getNode());
 				if (edge == null) {
 					//no edge found in that direction (set maximum weight)
-					return Double.MAX_VALUE;
+					//return Double.MAX_VALUE;
+					return Double.POSITIVE_INFINITY;
 				}
 				SimpleFeature feature = (SimpleFeature)edge.getObject();
 				double cost = (double) feature.getAttribute("LenNet");  //use actual physical length
@@ -670,9 +699,12 @@ public class RoadNetwork {
 
 				//Edge edge = aStarNode1.getNode().getEdge(aStarNode2.getNode()); // does not work, a directed version must be used!
 				Edge edge = ((DirectedNode) aStarNode1.getNode()).getOutEdge((DirectedNode) aStarNode2.getNode());
+				//System.out.printf("Asking for cost from node %d to node %d \n", aStarNode1.getNode().getID(), aStarNode2.getNode().getID());
 				if (edge == null) {
 					//no edge found in that direction (set maximum weight)
-					return Double.MAX_VALUE;
+					//System.out.println("Edge in that direction not found so setting max cost");
+					//return Double.MAX_VALUE;
+					return Double.POSITIVE_INFINITY;
 				}
 				double cost;
 				if (linkTravelTime.get(edge.getID()) == null) { //use default link travel time
@@ -693,6 +725,8 @@ public class RoadNetwork {
 					cost = RoadNetwork.this.freeFlowTravelTime.get(edge.getID());
 				} else //use provided travel time
 					cost = linkTravelTime.get(edge.getID()); 
+				
+				//System.out.println("Cost = " + cost);
 				return cost;
 			}
 
@@ -723,6 +757,7 @@ public class RoadNetwork {
 	public RoadPath getFastestPath(DirectedNode from, DirectedNode to, HashMap<Integer, Double> linkTravelTime) {
 
 		if (linkTravelTime == null) linkTravelTime = new HashMap<Integer, Double>();
+		//if (linkTravelTime == null) linkTravelTime = this.freeFlowTravelTime;
 		RoadPath path = new RoadPath();
 		//find the shortest path using AStar algorithm
 		try {
@@ -1026,6 +1061,12 @@ public class RoadNetwork {
 		
 		return (this.endNodeBlacklist.contains(nodeId)); 
 	}
+	
+	public HashMap<Integer, Double> getFreeFlowTravelTime() {
+		
+		return this.freeFlowTravelTime;
+	}
+	
 	
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()

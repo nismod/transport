@@ -181,7 +181,9 @@ public class RouteSetGenerator {
 			Object o = fastestPath.getEdges().get(randomIndex); //pick random edge
 			HashMap<Integer, Double> linkTravelTimes = new HashMap<Integer, Double>();
 			DirectedEdge edge = (DirectedEdge) o;
-			linkTravelTimes.put(edge.getID(), Double.MAX_VALUE); //blocks by setting a maximum travel time
+//			linkTravelTimes.put(edge.getID(), Double.MAX_VALUE); //blocks by setting a maximum travel time
+//			linkTravelTimes.put(edge.getID(), 100000.0); //blocks by setting a maximum travel time
+			linkTravelTimes.put(edge.getID(), Double.POSITIVE_INFINITY); //blocks by setting a maximum travel time
 			RoadPath path = this.roadNetwork.getFastestPath(originNode, destinationNode, linkTravelTimes);
 			if (path != null) {
 				//System.out.println(path.toString());

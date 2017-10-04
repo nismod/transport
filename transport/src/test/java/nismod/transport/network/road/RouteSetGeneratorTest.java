@@ -1,5 +1,7 @@
 package nismod.transport.network.road;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.closeTo;
 import static org.junit.Assert.*;
 
 import java.io.FileOutputStream;
@@ -7,7 +9,12 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 
+import org.apache.commons.collections4.keyvalue.MultiKey;
+import org.geotools.graph.path.Path;
 import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedGraph;
 import org.geotools.graph.structure.DirectedNode;
@@ -231,14 +238,24 @@ public class RouteSetGeneratorTest {
 		//routes5.readRoutes("completeRoutesNewest.txt");
 		//routes5.readRoutes("./src/main/resources/data/routes5of190top10.txt");
 		
+		
+		
+		long timeNow = System.currentTimeMillis();
+		
 		for (int i = 1; i <= 190; i++) {
 			StringBuilder path = new StringBuilder(60);
-			path.append("./src/main/resources/data/top10routes/routes");
+			path.append("./src/main/resources/data/5routes10nodes/routes");
 			path.append(i);
 			path.append("of190top10.txt");
 			
+			System.out.print(i + ":");
 			routes5.readRoutes(path.toString());
 		}
+		
+	//	routes5.readRoutes("./src/main/resources/data/all5routestop10/all5routestop10.txt");
+		
+		timeNow = System.currentTimeMillis() - timeNow;
+		System.out.printf("Routes loaded into memory in %d seconds.\n", timeNow / 1000);
 		
 		routes5.printStatistics();
 //		routes5.printChoiceSets();
@@ -293,14 +310,14 @@ public class RouteSetGeneratorTest {
 		routes.printStatistics();
 		int routeSets1 = routes.getNumberOfRouteSets();
 		int routes1 = routes.getNumberOfRoutes();
-	
+		
 		//generate second slice
 		routes.clearRoutes();
 		routes.generateRouteSet(passengerODM, 2, 3, 3);
 		routes.printStatistics();
 		int routeSets2 = routes.getNumberOfRouteSets();
 		int routes2 = routes.getNumberOfRoutes();
-		
+				
 		//generate third slice
 		routes.clearRoutes();
 		routes.generateRouteSet(passengerODM, 3, 3, 3);
@@ -308,6 +325,96 @@ public class RouteSetGeneratorTest {
 		int routeSets3 = routes.getNumberOfRouteSets();
 		int routes3 = routes.getNumberOfRoutes();
 		
-		assertEquals("The sum of route sets generated across OD matrix slices is equal to total", totalRouteSets, routeSets1 + routeSets2 + routeSets3);
+		System.out.printf("%d route sets, %d routes \n", totalRouteSets, totalRoutes);
+		System.out.printf("%d route sets, %d routes \n", routeSets1, routes1);
+		System.out.printf("%d route sets, %d routes \n", routeSets2, routes2);
+		System.out.printf("%d route sets, %d routes \n", routeSets3, routes3);
+		System.out.printf("Total routes of all the slices: %d \n", routes1 + routes2 + routes3);
+		
+		assertEquals("The sum of route sets generated across OD matrix slices is equal to the total", totalRouteSets, routeSets1 + routeSets2 + routeSets3);
+		
+		//due to randomness in the link elimination generation, the total number of routes will typically not be the same!
+		//assertEquals("The sum of routes generated across OD matrix slices is equal to the total", totalRoutes, routes1 + routes2 + routes3);
+	}
+	
+	@Test
+	public void miniTest() throws IOException {
+
+		final URL zonesUrl = new URL("file://src/test/resources/minitestdata/zones.shp");
+		final URL networkUrl = new URL("file://src/test/resources/minitestdata/network.shp");
+		final URL networkUrlfixedEdgeIDs = new URL("file://src/test/resources/minitestdata/miniOutputNetwork.shp");
+		final URL nodesUrl = new URL("file://src/test/resources/minitestdata/nodes.shp");
+		final URL AADFurl = new URL("file://src/test/resources/minitestdata/AADFdirected.shp");
+		final String areaCodeFileName = "./src/test/resources/minitestdata/nomisPopulation.csv";
+		final String areaCodeNearestNodeFile = "./src/test/resources/minitestdata/areaCodeToNearestNode.csv";
+		final String workplaceZoneFileName = "./src/test/resources/testdata/workplacePopulation.csv";
+		final String workplaceZoneNearestNodeFile = "./src/test/resources/testdata/workplaceZoneToNearestNode.csv";
+		final String freightZoneToLADfile = "./src/test/resources/testdata/freightZoneToLAD.csv";
+		final String freightZoneNearestNodeFile = "./src/test/resources/testdata/freightZoneToNearestNode.csv";
+		final String baseYearODMatrixFile = "./src/test/resources/minitestdata/passengerODM.csv";
+		
+		//create a road network
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
+		roadNetwork.replaceNetworkEdgeIDs(networkUrlfixedEdgeIDs);	
+		roadNetwork.makeEdgesAdmissible();
+		
+//		//create a road network assignment
+//		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null);
+//		
+//		//assign passenger flows
+//		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
+//		rna.assignPassengerFlows(odm);
+//		
+//		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforCounts());
+	
+		//TEST ROUTE SET GENERATION
+		System.out.println("\n\n*** Testing route set generation ***");
+
+		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
+		//rsg.generateRouteSet(odm);
+		//rsg.generateRouteSet(31, 82);
+		rsg.generateRouteSetWithRandomLinkEliminationRestricted(31, 82);
+		rsg.printChoiceSets();
+		rsg.printStatistics();
+
+
+//		RoadPath rp = roadNetwork.getFastestPath((DirectedNode)roadNetwork.getNodeIDtoNode().get(31), 
+//				(DirectedNode)roadNetwork.getNodeIDtoNode().get(82),
+//				null);
+//		
+//		RoadPath rp = roadNetwork.getFastestPath((DirectedNode)roadNetwork.getNodeIDtoNode().get(31), 
+//				(DirectedNode)roadNetwork.getNodeIDtoNode().get(82),
+//				roadNetwork.getFreeFlowTravelTime());
+		
+		HashMap<Integer, Double> linkTravelTimes = new HashMap<Integer, Double>();
+		DirectedNode node1 = (DirectedNode)roadNetwork.getNodeIDtoNode().get(48);
+		DirectedNode node2 = (DirectedNode)roadNetwork.getNodeIDtoNode().get(82);
+		DirectedEdge edge = (DirectedEdge) node1.getOutEdge(node2);
+		linkTravelTimes.put(edge.getID(), Double.POSITIVE_INFINITY); //blocks by setting a maximum travel time
+//		linkTravelTimes.put(edge.getID(), Double.MAX_VALUE); //blocks by setting a maximum travel time
+//		linkTravelTimes.put(edge.getID(), 100000.0); //blocks by setting a maximum travel time
+		
+				
+		RoadPath rp = roadNetwork.getFastestPath((DirectedNode)roadNetwork.getNodeIDtoNode().get(31), 
+									(DirectedNode)roadNetwork.getNodeIDtoNode().get(82),
+									linkTravelTimes);
+		
+		if (rp != null) {
+		
+		System.out.println(rp);
+		System.out.println("Is it valid: " + rp.isValid());
+		System.out.println(rp.buildEdges());
+		Route route = new Route(rp);
+		System.out.println(route.isValid());
+		System.out.println(route.getFormattedString());
+		
+		}
+		
+		//rna.assignPassengerFlowsRouteChoice(odm, rsg);
+		//System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforCounts());
+		
+		
+		
+		
 	}
 }

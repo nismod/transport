@@ -17,6 +17,7 @@ import java.util.List;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.geotools.graph.path.Path;
+import org.geotools.graph.structure.DirectedNode;
 import org.geotools.graph.structure.Edge;
 import org.hamcrest.Matcher;
 import org.hamcrest.MatcherAssert;
@@ -91,15 +92,20 @@ public class RoadNetworkAssignmentTest {
 		//ODMatrix passengerODM = new ODMatrix("./src/test/resources/testdata/passengerODM.csv");
 		//ODMatrix passengerODM = new ODMatrix("./src/main/resources/data/passengerODMfull.csv");
 		//ODMatrix passengerODM = new ODMatrix("./src/main/resources/data/passengerODMtempro.csv");
-		ODMatrix passengerODM = new ODMatrix("./src/main/resources/data/balancedODMatrixOldLengths.csv");
+		//ODMatrix passengerODM = new ODMatrix("./src/main/resources/data/balancedODMatrixOldLengths.csv");
+		ODMatrix passengerODM = new ODMatrix("./src/main/resources/data/balancedODMatrix.csv");
 		passengerODM.printMatrix();
 
+/*
 		FreightMatrix freightMatrix = new FreightMatrix("./src/main/resources/data/freightMatrix.csv");	
 		freightMatrix.printMatrixFormatted();
-
+*/
+		
 		//read routes
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork2);
-		rsg.readRoutes("completeRoutesNewest.txt");
+		//rsg.readRoutes("completeRoutesNewest.txt");
+		rsg.readRoutes("./src/main/resources/data/all5routestop10/all5routestop10.txt");
+		rsg.printStatistics();
 			
 		//assign passenger flows
 		long timeNow = System.currentTimeMillis();
@@ -188,6 +194,7 @@ public class RoadNetworkAssignmentTest {
 
 		final URL zonesUrl = new URL("file://src/test/resources/minitestdata/zones.shp");
 		final URL networkUrl = new URL("file://src/test/resources/minitestdata/network.shp");
+		final URL networkUrlfixedEdgeIDs = new URL("file://src/test/resources/minitestdata/miniOutputNetwork.shp");
 		final URL nodesUrl = new URL("file://src/test/resources/minitestdata/nodes.shp");
 		final URL AADFurl = new URL("file://src/test/resources/minitestdata/AADFdirected.shp");
 		final String areaCodeFileName = "./src/test/resources/minitestdata/nomisPopulation.csv";
@@ -198,10 +205,10 @@ public class RoadNetworkAssignmentTest {
 		final String freightZoneNearestNodeFile = "./src/test/resources/testdata/freightZoneToNearestNode.csv";
 		final String baseYearODMatrixFile = "./src/test/resources/minitestdata/passengerODM.csv";
 		
-		
 		//create a road network
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
-			
+		roadNetwork.replaceNetworkEdgeIDs(networkUrlfixedEdgeIDs);	
+		
 		//create a road network assignment
 		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null);
 		
@@ -275,6 +282,43 @@ public class RoadNetworkAssignmentTest {
 		}
 		
 		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforCounts());
+		
+		//TEST ASSIGNMENT WITH ROUTE CHOICE
+		System.out.println("\n\n*** Testing assignment with route choice ***");
+		
+		//create a new road network assignment
+		//rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null);
+		
+		rna.resetLinkVolumes();
+		rna.resetPathStorages();
+		rna.resetTripStartEndCounters();
+		
+		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
+		//rsg.generateRouteSet(odm);
+		//rsg.generateRouteSet(31, 82);
+		rsg.generateRouteSetWithRandomLinkEliminationRestricted(31, 82);
+		rsg.printChoiceSets();
+		System.out.println(rsg.getRouteSet(31, 82).getChoiceSet());
+
+//		RoadPath rp = roadNetwork.getFastestPath((DirectedNode)roadNetwork.getNodeIDtoNode().get(31), 
+//				(DirectedNode)roadNetwork.getNodeIDtoNode().get(82),
+//				null);
+//		
+////		RoadPath rp = roadNetwork.getFastestPath((DirectedNode)roadNetwork.getNodeIDtoNode().get(31), 
+////									(DirectedNode)roadNetwork.getNodeIDtoNode().get(82),
+////									rna.getLinkTravelTimes());
+//		System.out.println(rp);
+//		System.out.println("Is it valid: " + rp.isValid());
+//		System.out.println(rp.buildEdges());
+//		Route route = new Route(rp);
+//		System.out.println(route.isValid());
+//		System.out.println(route.getFormattedString());
+		
+		
+		
+		//rna.assignPassengerFlowsRouteChoice(odm, rsg);
+		
+		//System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforCounts());
 	}
 
 	@Test
@@ -461,8 +505,11 @@ public class RoadNetworkAssignmentTest {
 		rna.resetTripStartEndCounters();
 		
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
-		rsg.readRoutes("./src/test/resources/testdata/testRoutes.txt");
+		//rsg.readRoutes("./src/test/resources/testdata/testRoutes.txt");
+		rsg.readRoutes("./src/test/resources/testdata/allRoutes.txt");
 		rna.assignPassengerFlowsRouteChoice(odm, rsg);
+		
+		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforCounts());
 	}
 	
 	@Test
