@@ -294,10 +294,10 @@ public class RoadNetworkAssignmentTest {
 		rna.resetTripStartEndCounters();
 		
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
-		//rsg.generateRouteSet(odm);
+		rsg.generateRouteSet(odm);
 		//rsg.generateRouteSet(31, 82);
-		rsg.generateRouteSetWithRandomLinkEliminationRestricted(31, 82);
-		rsg.printChoiceSets();
+		//rsg.generateRouteSetWithRandomLinkEliminationRestricted(31, 82);
+		//rsg.printChoiceSets();
 		System.out.println(rsg.getRouteSet(31, 82).getChoiceSet());
 
 //		RoadPath rp = roadNetwork.getFastestPath((DirectedNode)roadNetwork.getNodeIDtoNode().get(31), 
@@ -316,9 +316,8 @@ public class RoadNetworkAssignmentTest {
 		
 		
 		
-		//rna.assignPassengerFlowsRouteChoice(odm, rsg);
-		
-		//System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforCounts());
+		rna.assignPassengerFlowsRouteChoice(odm, rsg);
+		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforCounts());
 	}
 
 	@Test

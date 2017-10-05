@@ -213,10 +213,10 @@ public class RoadNetworkAssignment {
 
 		//calculate node probabilities from gravitating population
 		nodeProbabilities = new HashMap<Integer, Double>();
-		System.out.println(roadNetwork.getZoneToNodes().keySet());
+		//System.out.println(roadNetwork.getZoneToNodes().keySet());
 		for (String zone: roadNetwork.getZoneToNodes().keySet()) {
 			double sum = 0;
-			System.out.println(roadNetwork.getZoneToNodes().get(zone));
+			//System.out.println(roadNetwork.getZoneToNodes().get(zone));
 			for (Integer node: roadNetwork.getZoneToNodes().get(zone)) sum += roadNetwork.getGravitatingPopulation(node);
 			for (Integer node: roadNetwork.getZoneToNodes().get(zone)) {
 				double probability = roadNetwork.getGravitatingPopulation(node) / sum;
@@ -228,10 +228,10 @@ public class RoadNetworkAssignment {
 
 		//calculate node probabilities from gravitating workplace population
 		nodeProbabilitiesFreight = new HashMap<Integer, Double>();
-		System.out.println(roadNetwork.getZoneToNodes().keySet());
+		//System.out.println(roadNetwork.getZoneToNodes().keySet());
 		for (String zone: roadNetwork.getZoneToNodes().keySet()) {
 			double sum = 0;
-			System.out.println(roadNetwork.getZoneToNodes().get(zone));
+			//System.out.println(roadNetwork.getZoneToNodes().get(zone));
 			for (Integer node: roadNetwork.getZoneToNodes().get(zone)) sum += roadNetwork.getGravitatingWorkplacePopulation(node);
 			for (Integer node: roadNetwork.getZoneToNodes().get(zone)) {
 				double probability = roadNetwork.getGravitatingWorkplacePopulation(node) / sum;
@@ -293,6 +293,10 @@ public class RoadNetworkAssignment {
 
 		//sort nodes based on the gravitating population
 		this.roadNetwork.sortGravityNodes();
+		
+		//counters to calculate percentage of assignment success
+		long counterAssignedTrips = 0;
+		long counterTotalFlow = 0;
 
 		//for each OD pair from the passengerODM		
 		for (MultiKey mk: passengerODM.getKeySet()) {
@@ -304,6 +308,8 @@ public class RoadNetworkAssignment {
 
 			//for each trip
 			int flow = passengerODM.getFlow(origin, destination);
+			counterTotalFlow += flow;
+			
 			for (int i=0; i<flow; i++) {
 
 				/*
@@ -406,7 +412,7 @@ public class RoadNetworkAssignment {
 				random = rng.nextDouble();
 				//if intrazonal trip and replacement is not allowed, the probability of the originNode should be 0 so it cannot be chosen again
 				//also, in that case it is important to rescale other node probabilities (now that the originNode is removed) by dividing with (1.0 - p(originNode))!
-				if (FLAG_INTRAZONAL_ASSIGNMENT_REPLACEMENT == false && origin.equals(destination)) { //no replacement and intra-zonal trip
+				if (!FLAG_INTRAZONAL_ASSIGNMENT_REPLACEMENT && origin.equals(destination)) { //no replacement and intra-zonal trip
 					for (int node: listOfDestinationNodes) {
 						if (node == originNode.intValue()) continue; //skip if the node is the same as origin
 						cumulativeProbability += nodeProbabilities.get(node) / (1.0 - nodeProbabilities.get(originNode));
@@ -460,6 +466,8 @@ public class RoadNetworkAssignment {
 						foundPath = aStarPath;
 					}
 
+					counterAssignedTrips++;
+					
 					//increase the number of trips starting at origin LAD
 					Integer number = this.LADnoTripStarts.get(origin);
 					if (number == null) number = 0;
@@ -519,6 +527,10 @@ public class RoadNetworkAssignment {
 				}
 			}//for each trip
 		}//for each OD pair
+		
+		System.out.println("Total flow: " + counterTotalFlow);
+		System.out.println("Total assigned trips: " + counterAssignedTrips);
+		System.out.println("Assignment percentage: " + 100.0* counterAssignedTrips / counterTotalFlow);
 	}
 	
 	/** 
@@ -531,6 +543,10 @@ public class RoadNetworkAssignment {
 
 		System.out.println("Assigning the passenger flows from the passenger matrix...");
 
+		//counters to calculate percentage of assignment success
+		long counterAssignedTrips = 0;
+		long counterTotalFlow = 0;
+		
 		//sort nodes based on the gravitating population
 		this.roadNetwork.sortGravityNodes();
 
@@ -544,6 +560,8 @@ public class RoadNetworkAssignment {
 
 			//for each trip
 			int flow = passengerODM.getFlow(origin, destination);
+			counterTotalFlow += flow;
+			
 			for (int i=0; i<flow; i++) {
 
 				//choose origin/destination nodes based on the gravitating population
@@ -573,7 +591,7 @@ public class RoadNetworkAssignment {
 					random = rng.nextDouble();
 					//if intrazonal trip and replacement is not allowed, the probability of the originNode should be 0 so it cannot be chosen again
 					//also, in that case it is important to rescale other node probabilities (now that the originNode is removed) by dividing with (1.0 - p(originNode))!
-					if (FLAG_INTRAZONAL_ASSIGNMENT_REPLACEMENT == false) { //no replacement
+					if (!FLAG_INTRAZONAL_ASSIGNMENT_REPLACEMENT) { //no replacement
 						for (int node: listOfDestinationNodes) {
 							if (node == originNode.intValue()) continue; //skip if the node is the same as origin
 							cumulativeProbability += nodeProbabilities.get(node) / (1.0 - nodeProbabilities.get(originNode));
@@ -607,7 +625,7 @@ public class RoadNetworkAssignment {
 				
 				RouteSet fetchedRouteSet = rsg.getRouteSet(originNode, destinationNode);
 				if (fetchedRouteSet == null) {
-					System.err.printf("Can't fech the route set between nodes %d and %d! %s", originNode, destinationNode, System.lineSeparator());
+					System.err.printf("Can't fetch the route set between nodes %d and %d! %s", originNode, destinationNode, System.lineSeparator());
 					continue;
 				}
 				
@@ -622,6 +640,9 @@ public class RoadNetworkAssignment {
 					System.err.printf("No chosen route between nodes %d and %d! %s", originNode, destinationNode, System.lineSeparator());
 					continue;
 				}
+					
+					//there is a chosenRoute
+					counterAssignedTrips++;
 
 					//increase the number of trips starting at origin LAD
 					Integer number = this.LADnoTripStarts.get(origin);
@@ -662,9 +683,13 @@ public class RoadNetworkAssignment {
 						routeStorage.put(origin, destination, list);
 					}
 					list.add(chosenRoute); //list.add(path);
-					
+		
 			}//for each trip
 		}//for each OD pair
+	
+		System.out.println("Total flow: " + counterTotalFlow);
+		System.out.println("Total assigned trips: " + counterAssignedTrips);
+		System.out.println("Assignment percentage: " + 100.0* counterAssignedTrips / counterTotalFlow);
 	}
 
 	/**
