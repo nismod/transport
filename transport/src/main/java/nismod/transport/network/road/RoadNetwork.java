@@ -773,10 +773,16 @@ public class RoadNetwork {
 			//System.out.println("The path as a list of edges: " + listOfEdges);
 			//System.out.println("Path size in the number of nodes: " + aStarPath.size());
 			//System.out.println("Path size in the number of edges: " + listOfEdges.size());
-			for (Object o: listOfEdges) {
-				DirectedEdge e = (DirectedEdge) o;
-				path.addEdge(e);
-			}
+//			for (Object o: listOfEdges) {
+//				DirectedEdge e = (DirectedEdge) o;
+//				path.addEdge(e);
+//			}
+			path = new RoadPath(aStarPath);
+			//System.out.println("RoadPath: " + path.toString());
+			//System.out.println("RoadPath edges: " + path.getEdges());
+			//path.buildEdges();
+			//System.out.println("RoadPath edges: " + path.getEdges());
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.err.println("Could not find the shortest path using astar.");

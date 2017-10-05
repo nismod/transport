@@ -94,13 +94,12 @@ public class RouteSetGenerator {
 		
 		//find the fastest path from origin to destination
 		RoadPath fastestPath  = this.roadNetwork.getFastestPath(originNode, destinationNode, null);
-		//System.out.println(fastestPath.toString());
-		//System.out.println("Path validity: " + fastestPath.isValid());
-		
 		if (fastestPath == null) {
 			System.err.printf("Unable to find the fastest path between nodes %d and %d! Link elimination method unsucsessful!\n", origin, destination);
 			return;
 		}
+		//System.out.println(fastestPath.toString());
+		//System.out.println("Path validity: " + fastestPath.isValid());
 		
 		Route fastestRoute = new Route(fastestPath);
 		//System.out.println("Route validity: " + fastestRoute.isValid());
@@ -152,24 +151,23 @@ public class RouteSetGenerator {
 		
 		//find the fastest path from origin to destination
 		RoadPath fastestPath  = this.roadNetwork.getFastestPath(originNode, destinationNode, null);
-		//System.out.println(fastestPath.toString());
-		//System.out.println("Path validity: " + fastestPath.isValid());
-		
 		if (fastestPath == null) {
 			System.err.printf("Unable to find the fastest path between nodes %d and %d! Link elimination method unsucsessful!\n", origin, destination);
 			return;
 		}
-		
+		//System.out.println("RoadPath " + fastestPath.toString());
+		//System.out.println("Path validity: " + fastestPath.isValid());
+				
 		Route fastestRoute = new Route(fastestPath);
-		//System.out.println("Route validity: " + route.isValid());
-		//rs.addRoute(fastestRoute);
-		//rs.printChoiceSet();
-		
+		//System.out.println("Route: " + fastestRoute.getFormattedString());
+		//System.out.println("Route validity: " + fastestRoute.isValid());
+		//System.out.println("Route origin node: " + fastestRoute.getOriginNode().getID());
+		//System.out.println("Route destination node: " + fastestRoute.getDestinationNode().getID());
 		//check that origin and destination node are correct!
 		if (fastestRoute.getOriginNode().equals(originNode) && fastestRoute.getDestinationNode().equals(destinationNode))
 			this.addRoute(fastestRoute);
 		else {
-			System.err.println("Fastest path does not contain correct origin and destination nodes!");
+			System.err.printf("Fastest route between nodes %d and %d does not contain correct origin and destination nodes! Link elimination method unsucsessful!\n", origin, destination);
 			return;
 		}
 
@@ -181,8 +179,8 @@ public class RouteSetGenerator {
 			Object o = fastestPath.getEdges().get(randomIndex); //pick random edge
 			HashMap<Integer, Double> linkTravelTimes = new HashMap<Integer, Double>();
 			DirectedEdge edge = (DirectedEdge) o;
-//			linkTravelTimes.put(edge.getID(), Double.MAX_VALUE); //blocks by setting a maximum travel time
-//			linkTravelTimes.put(edge.getID(), 100000.0); //blocks by setting a maximum travel time
+			//System.out.printf("Blocking edge (%d)-%d->(%d) \n", edge.getInNode().getID(), edge.getID(), edge.getOutNode().getID());
+			//linkTravelTimes.put(edge.getID(), Double.MAX_VALUE); //blocks by setting a maximum travel time
 			linkTravelTimes.put(edge.getID(), Double.POSITIVE_INFINITY); //blocks by setting a maximum travel time
 			RoadPath path = this.roadNetwork.getFastestPath(originNode, destinationNode, linkTravelTimes);
 			if (path != null) {
@@ -194,7 +192,7 @@ public class RouteSetGenerator {
 				if (route.getOriginNode().equals(originNode) && route.getDestinationNode().equals(destinationNode))
 					this.addRoute(route);
 				else 
-					System.err.println("Path generated with link elimination does not contain correct origin and destination nodes!");
+					System.err.println("Route generated with link elimination does not contain correct origin and destination nodes! Skipping this route.");
 			}
 			RouteSet rs = (RouteSet)routes.get(origin, destination);
 			if (rs.getSize() >= ROUTE_LIMIT) break; //stop if sufficient number of routes has been generated 
