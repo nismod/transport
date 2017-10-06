@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Properties;
 
 import org.geotools.graph.structure.DirectedNode;
 
@@ -22,6 +23,7 @@ public class RouteSet {
 	private List<Route> choiceSet;
 	private ArrayList<Double> probabilities;
 	private HashMap<Integer, Double> linkTravelTime;
+	private Properties params;
 	
 	/**
 	 * @param originNode
@@ -88,6 +90,9 @@ public class RouteSet {
 		};
 		
 		Collections.sort(choiceSet, c);
+		
+		//need to re-calculate probabilities as the order of the choice set has changed
+		this.calculateProbabilities();
 	}
 	
 	/**
@@ -103,8 +108,12 @@ public class RouteSet {
 	/**
 	 * Calculates choice probabilities using logit formula.
 	 */
-	public void calculateProbabilities(HashMap<Integer, Double> linkTravelTime) {
+	public void calculateProbabilities(HashMap<Integer, Double> linkTravelTime, Properties params) {
 		
+		//store arguments into instance fields
+		this.linkTravelTime = linkTravelTime;
+		this.params = params;
+				
 		ArrayList<Double> probabilities = new ArrayList<Double>();
 		for (Route r: choiceSet) probabilities.add(0.0);
 		
@@ -113,7 +122,7 @@ public class RouteSet {
 		//all routes need to have utility calculated, if not calculate it
 		for (Route r: choiceSet) {
 						
-			if (r.getUtility() == null) r.calculateUtility(linkTravelTime);
+			if (r.getUtility() == null) r.calculateUtility(linkTravelTime, params);
 			sum += Math.exp(r.getUtility());
 		}
 		
@@ -130,6 +139,31 @@ public class RouteSet {
 	}
 	
 	/**
+	 * Re-calculates utilities for all the routes.
+	 */
+	public void calculateUtilities(HashMap<Integer, Double> linkTravelTime, Properties params) {
+		
+		//store arguments into instance fields
+		this.linkTravelTime = linkTravelTime;
+		this.params = params;
+		
+		//re-calculate utility for all the routes
+		for (Route r: choiceSet)
+			r.calculateUtility(linkTravelTime, params);
+	}
+	
+	/**
+	 * Re-calculates utilities for all the routes.
+	 */
+	public void calculateUtilities() {
+		
+		//re-calculate utility for all the routes
+		for (Route r: choiceSet)
+			r.calculateUtility(this.linkTravelTime, this.params);
+	}
+	
+	
+	/**
 	 * Calculates choice probabilities using logit formula.
 	 */
 	public void calculateProbabilities() {
@@ -138,8 +172,12 @@ public class RouteSet {
 			System.err.println("Before calculating probabilities of a choice set, set link travel times to be used for the calculation!");
 			return;
 		}
+		if (this.params == null) { 
+			System.err.println("Before calculating probabilities of a choice set, set parameter values to be used for the calculation!");
+			return;
+		}
 				
-		calculateProbabilities(this.linkTravelTime);
+		calculateProbabilities(this.linkTravelTime, this.params);
 	}
 	
 	/**
@@ -151,15 +189,58 @@ public class RouteSet {
 		return this.probabilities;
 	}
 	
+	public ArrayList<Double> getUtilities() {
+		
+		ArrayList<Double> utilities = new ArrayList<Double>();
+		
+		for (Route r: this.choiceSet) {
+			utilities.add(r.getUtility());
+		}
+		
+		return utilities;
+		
+	}
+	
+	
+//	/**
+//	 * Chooses a route based on the probabilities.
+//	 * @return Chosen route.
+//	 */
+//	public Route choose() {
+//		
+//		//probabilities must be calculated at least once
+//		if (probabilities == null) {
+//			this.calculateProbabilities();
+//			this.sortRoutesOnUtility();
+//		}
+//		
+//		RandomSingleton rng = RandomSingleton.getInstance();
+//			
+//		//choose route
+//		double cumulativeProbability = 0.0;
+//		double random = rng.nextDouble();
+//		int chosenIndex = -1;
+//		for (int index = 0; index < choiceSet.size(); index++) {
+//			cumulativeProbability += this.probabilities.get(index);
+//			if (Double.compare(cumulativeProbability, random) > 0) {
+//				chosenIndex = index;
+//				break;
+//			}
+//		}
+//		if (chosenIndex == -1) return null;
+//		else return choiceSet.get(chosenIndex);
+//	}
+	
 	/**
 	 * Chooses a route based on the probabilities.
-	 * @return
+	 * @param params The parameters of the route choice model.
+	 * @return Chosen route.
 	 */
-	public Route choose() {
+	public Route choose(Properties params) {
 		
 		//probabilities must be calculated at least once
 		if (probabilities == null) {
-			this.calculateProbabilities(this.linkTravelTime);
+			this.calculateProbabilities(this.linkTravelTime, params);
 			this.sortRoutesOnUtility();
 		}
 		
@@ -215,6 +296,11 @@ public class RouteSet {
 		this.linkTravelTime = linkTravelTime;
 	}
 	
+	public void setParameters(Properties params) {
+		
+		this.params = params;
+	}
+	
 	public void printStatistics() {
 		
 		System.out.printf("Statistics for route set from %d to %d: %d distinct routes. \n", this.originNode.getID(), this.destinationNode.getID(), this.choiceSet.size());
@@ -223,7 +309,13 @@ public class RouteSet {
 	
 	public void printProbabilities() {
 
-		System.out.println("Probabilities : ");
+		System.out.println("Probabilities: ");
 		System.out.println(this.probabilities);
+	}
+	
+	public void printUtilities() {
+
+		System.out.println("Utilities: ");
+		System.out.println(this.getUtilities());
 	}
 }

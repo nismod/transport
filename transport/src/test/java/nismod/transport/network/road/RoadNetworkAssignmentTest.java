@@ -14,6 +14,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.geotools.graph.path.Path;
@@ -106,10 +107,16 @@ public class RoadNetworkAssignmentTest {
 		//rsg.readRoutes("completeRoutesNewest.txt");
 		rsg.readRoutes("./src/main/resources/data/all5routestop10/all5routestop10.txt");
 		rsg.printStatistics();
-			
+		
+		//set route choice parameters
+		Properties params = new Properties();
+		params.setProperty("TIME", "-1.5");
+		params.setProperty("LENGTH", "-1.5");
+		params.setProperty("INTERSECTIONS", "-0.1");
+		
 		//assign passenger flows
 		long timeNow = System.currentTimeMillis();
-		roadNetworkAssignment.assignPassengerFlowsRouteChoice(passengerODM, rsg);
+		roadNetworkAssignment.assignPassengerFlowsRouteChoice(passengerODM, rsg, params);
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Passenger flows assigned in %d seconds.\n", timeNow / 1000);
 /*
@@ -314,9 +321,13 @@ public class RoadNetworkAssignmentTest {
 //		System.out.println(route.isValid());
 //		System.out.println(route.getFormattedString());
 		
+		//set route choice parameters
+		Properties params = new Properties();
+		params.setProperty("TIME", "-1.5");
+		params.setProperty("LENGTH", "-1.5");
+		params.setProperty("INTERSECTIONS", "-0.1");
 		
-		
-		rna.assignPassengerFlowsRouteChoice(odm, rsg);
+		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
 		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforCounts());
 	}
 
@@ -503,10 +514,35 @@ public class RoadNetworkAssignmentTest {
 		rna.resetPathStorages();
 		rna.resetTripStartEndCounters();
 		
+		//set route choice parameters
+		Properties params = new Properties();
+		params.setProperty("TIME", "-1.5");
+		params.setProperty("LENGTH", "-1.0");
+		params.setProperty("INTERSECTIONS", "-0.1");
+		
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
 		//rsg.readRoutes("./src/test/resources/testdata/testRoutes.txt");
 		rsg.readRoutes("./src/test/resources/testdata/allRoutes.txt");
-		rna.assignPassengerFlowsRouteChoice(odm, rsg);
+		//rsg.calculateAllUtilities(rna.getLinkTravelTimes(), params);
+		
+		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
+		
+		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforCounts());
+		
+		
+		//TEST ASSIGNMENT WITH ROUTE CHOICE
+		System.out.println("\n\n*** Testing assignment with route choice ***");
+		rna.resetLinkVolumes();
+		rna.resetPathStorages();
+		rna.resetTripStartEndCounters();
+		
+		//set route choice parameters
+		params.setProperty("TIME", "-1.0");
+		params.setProperty("LENGTH", "-1.5");
+		params.setProperty("INTERSECTIONS", "-3.1");
+		
+		//rsg.calculateAllUtilities(rna.getLinkTravelTimes(), params);
+		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
 		
 		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforCounts());
 	}

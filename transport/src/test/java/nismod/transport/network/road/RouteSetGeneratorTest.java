@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.geotools.graph.path.Path;
@@ -471,8 +472,13 @@ public class RouteSetGeneratorTest {
 		odm.setFlow("E07000202", "E07000203", 1000000);
 		odm.printMatrixFormatted();
 
+		Properties params = new Properties();
+		params.setProperty("TIME", "-1.5");
+		params.setProperty("LENGTH", "-1.5");
+		params.setProperty("INTERSECTIONS", "-0.1");
+		
 		long timeNow = System.currentTimeMillis();
-		rna.assignPassengerFlowsRouteChoice(odm, rsg);
+		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Passenger flows assigned with route choice in %d seconds.\n", timeNow / 1000);
 		
