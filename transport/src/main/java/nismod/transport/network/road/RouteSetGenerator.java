@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
@@ -25,6 +26,14 @@ import nismod.transport.utility.RandomSingleton;
 
 /**
  * RouteSetGenerator can generate, save and read route sets for route choice.
+ * @author Milan Lovric
+ *
+ */
+/**
+ * @author Milan Lovric
+ *
+ */
+/**
  * @author Milan Lovric
  *
  */
@@ -407,6 +416,23 @@ public class RouteSetGenerator {
 		return totalRoutes;
 	}
 	
+
+	/**
+	 * Calculates utilities for all the routes in all the route sets.
+	 * @param linkTravelTime
+	 * @param params
+	 */
+	public void calculateAllUtilities(HashMap<Integer, Double> linkTravelTime, Properties params) {
+
+		for (Object mk: routes.keySet()) {
+			int origin = (int) ((MultiKey)mk).getKey(0);
+			int destination = (int) ((MultiKey)mk).getKey(1);
+		
+			RouteSet rs = (RouteSet)routes.get(origin, destination);
+			rs.calculateUtilities(linkTravelTime, params);
+			rs.sortRoutesOnUtility(); //will update probabilities as well
+		}
+	}
 	
 	/**
 	 * Saves all route sets into a text file.

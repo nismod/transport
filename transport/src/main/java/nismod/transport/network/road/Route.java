@@ -3,6 +3,7 @@ package nismod.transport.network.road;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Properties;
 
 import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedNode;
@@ -16,9 +17,10 @@ import org.opengis.feature.simple.SimpleFeature;
  */
 public class Route {
 	
-	public static double paramTime = -1.5;
-	public static double paramLength = -1.0;
-	public static double paramInter = -0.1;
+	//default route-choice parameters
+	public static final double PARAM_TIME = -1.5;
+	public static final double PARAM_LENGTH = -1.0;
+	public static final double PARAM_INTERSECTIONS = -0.1;
 
 	private static int counter = 0;
 	private int id;
@@ -131,16 +133,27 @@ public class Route {
 	/**
 	 * Calculates the utility of the route.
 	 */
-	public void calculateUtility(HashMap<Integer, Double> linkTravelTime) {
+	public void calculateUtility(HashMap<Integer, Double> linkTravelTime, Properties params) {
 		
-		if (this.length == null)  this.calculateLength();
+		if (this.length == null) this.calculateLength();
 		if (this.time == null) this.calculateTravelTime(linkTravelTime);
 		
 		double length = this.getLength();
 		double time = this.getTime();
 		int intersec = this.getNumberOfIntersections();
 		
-		double utility = paramTime * time + paramLength * length + paramInter * intersec;  
+		double paramTime, paramLength, paramIntersections;
+		if (params == null) { //use default parameters
+			paramTime = this.PARAM_TIME;
+			paramLength = this.PARAM_LENGTH;
+			paramIntersections = this.PARAM_INTERSECTIONS;			
+		} else {
+			paramTime = Double.parseDouble(params.getProperty("TIME"));
+			paramLength = Double.parseDouble(params.getProperty("LENGTH"));
+			paramIntersections = Double.parseDouble(params.getProperty("INTERSECTIONS"));			
+		}
+		
+		double utility = paramTime * time + paramLength * length + paramIntersections * intersec;  
 		this.utility = utility;
 	}
 	
@@ -240,13 +253,12 @@ public class Route {
 		for (DirectedEdge edge: edges) {
 			sb.append("(");
 			sb.append(edge.getInNode().getID());
-			sb.append(")--");
+			sb.append(")-");
 			sb.append(edge.getID());
 			sb.append("->");
-			
-			sb.append("(");
-			sb.append(edge.getOutNode().getID());
-			sb.append(")");
+			//sb.append("(");
+			//sb.append(edge.getOutNode().getID());
+			//sb.append(")");
 		}
 		sb.append("(");
 		sb.append(edges.get(edges.size()-1).getOutNode());

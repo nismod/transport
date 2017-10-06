@@ -10,6 +10,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
+
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.map.MultiKeyMap;
 import org.apache.commons.csv.CSVFormat;
@@ -539,7 +541,7 @@ public class RoadNetworkAssignment {
 	 * @param passengerODM Passenger origin-destination matrix.
 	 */
 	//@SuppressWarnings("unused")
-	public void assignPassengerFlowsRouteChoice(ODMatrix passengerODM, RouteSetGenerator rsg) {
+	public void assignPassengerFlowsRouteChoice(ODMatrix passengerODM, RouteSetGenerator rsg, Properties params) {
 
 		System.out.println("Assigning the passenger flows from the passenger matrix...");
 
@@ -631,11 +633,14 @@ public class RoadNetworkAssignment {
 				
 				if (fetchedRouteSet.getProbabilities() == null) {
 					//probabilities need to be calculated for this route set before a choice can be made
-					fetchedRouteSet.calculateProbabilities(this.linkTravelTime);
+					fetchedRouteSet.setLinkTravelTime(this.linkTravelTime);
+					fetchedRouteSet.setParameters(params);
+					fetchedRouteSet.calculateUtilities(this.linkTravelTime, params);
+					fetchedRouteSet.calculateProbabilities(this.linkTravelTime, params);
 					fetchedRouteSet.sortRoutesOnUtility();
 				}
 				
-				Route chosenRoute = fetchedRouteSet.choose();
+				Route chosenRoute = fetchedRouteSet.choose(params);
 				if (chosenRoute == null) {
 					System.err.printf("No chosen route between nodes %d and %d! %s", originNode, destinationNode, System.lineSeparator());
 					continue;
