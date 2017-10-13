@@ -48,7 +48,7 @@ public class RoadNetworkTest {
 		final String workplaceZoneNearestNodeFile = "./src/test/resources/testdata/workplaceZoneToNearestNode.csv";
 		final String freightZoneToLADfile = "./src/test/resources/testdata/freightZoneToLAD.csv";
 		final String freightZoneNearestNodeFile = "./src/test/resources/testdata/freightZoneToNearestNode.csv";
-		
+
 
 		//create a road network
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
@@ -69,13 +69,13 @@ public class RoadNetworkTest {
 
 		//visualise the shapefiles
 		roadNetwork2.visualise("Midi Test Area");
-		
+
 		//create new road link
 		Node fromNode = roadNetwork2.getNodeIDtoNode().get(86);
 		Node toNode = roadNetwork2.getNodeIDtoNode().get(48);
 		DirectedEdge newEdge = (DirectedEdge) roadNetwork2.createNewRoadLink(fromNode, toNode, 2, 'A', 0.6);
 		DirectedEdge newEdge2 = (DirectedEdge) roadNetwork2.createNewRoadLink(toNode, fromNode, 2, 'A', 0.6);
-		
+
 		//export to shapefile
 		roadNetwork2.exportToShapefile("midiOutputNetwork");
 
@@ -107,6 +107,7 @@ public class RoadNetworkTest {
 
 		final URL zonesUrl = new URL("file://src/test/resources/minitestdata/zones.shp");
 		final URL networkUrl = new URL("file://src/test/resources/minitestdata/network.shp");
+		final URL networkUrlNew = new URL("file://src/test/resources/minitestdata/miniOutputNetwork.shp");
 		final URL nodesUrl = new URL("file://src/test/resources/minitestdata/nodes.shp");
 		final URL AADFurl = new URL("file://src/test/resources/minitestdata/AADFdirected.shp");
 		final String areaCodeFileName = "./src/test/resources/testdata/nomisPopulation.csv";
@@ -116,7 +117,10 @@ public class RoadNetworkTest {
 		final String freightZoneToLADfile = "./src/test/resources/testdata/freightZoneToLAD.csv";
 		final String freightZoneNearestNodeFile = "./src/test/resources/testdata/freightZoneToNearestNode.csv";
 
+		//create network
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl,  areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
+		//replace edge IDs with persistent ones
+		roadNetwork.replaceNetworkEdgeIDs(networkUrlNew);
 		DirectedGraph rn = roadNetwork.getNetwork();
 
 		//TEST NODE AND EDGE CREATION
@@ -299,7 +303,7 @@ public class RoadNetworkTest {
 		assertEquals("Edge direction is correct", "S", sf.getAttribute("iDir"));
 		assertEquals("Edge length is correct", 0.1, sf.getAttribute("LenNet"));
 		assertNull("Expecting no edge in this direction", edgeBA);
-		
+
 		//TEST NODE BLACKLISTS
 		iter = rn.getNodes().iterator();
 		while (iter.hasNext()) {
@@ -307,13 +311,13 @@ public class RoadNetworkTest {
 			System.out.printf("Node %d has %d in degree and %d out degree. \n", node.getID(), node.getInDegree(), node.getOutDegree());
 			System.out.printf("Blacklisted as start node is %b, blacklisted as end node is %b \n", roadNetwork.isBlacklistedAsStartNode(node.getID()), roadNetwork.isBlacklistedAsEndNode(node.getID()));		
 		}
-		
+
 		//TEST EDGE TO OTHER DIRECTION EDGE MAPPING
 		System.out.println("\n\n*** Testing edge to other direction edge mapping ***");
-		
+
 		System.out.println(roadNetwork.getEdgeIDtoEdge());
 		System.out.println(roadNetwork.getEdgeIDtoOtherDirectionEdgeID());
-	
+
 		//TEST NODE GRAVITATING POPULATION
 		System.out.println("\n\n*** Testing node gravitating population ***");
 
@@ -345,10 +349,10 @@ public class RoadNetworkTest {
 
 		System.out.println("Node to average access/egress distance:");
 		System.out.println(roadNetwork.getNodeToAverageAccessEgressDistance());
-		
+
 		//node 60 -> area codes (population): E00086593(281), E00086587(402), E00086591(389), E00086592(290), E00086627(294)
 		assertEquals("Average access/egress distance is correct", (281*898.5662589 + 402*505.6027418 + 389*258.6423605 + 290*499.6014909 + 294*206.1543577) / (281+402+389+290+294) , (double) roadNetwork.getAverageAcessEgressDistance(60), 1e-5);
-		
+
 		//TEST SHORTEST PATH ALGORITHMS
 		System.out.println("\n\n*** Testing the shortest path algorithms ***");
 
@@ -391,12 +395,17 @@ public class RoadNetworkTest {
 
 		//compare with expected values
 		int[] expectedNodeList = new int[] {86, 87, 105, 95, 48, 19}; //node IDs are persistent
-		int[] expectedEdgeList = new int[] {81, 61, 67, 74, 77}; //cannot check as edge IDs are not persistent
+		int[] expectedEdgeList = new int[] {58, 93, 71, 64, 67}; //edge IDs are persistent after edge ID replacement
 		assertEquals("The list of nodes in the shortest path is correct", Arrays.toString(expectedNodeList), path.toString());
-		//assertEquals("The list of edges in the shortest path is correct", Arrays.toString(expectedEdgeList), listOfEdges.toString());
+		assertEquals("The list of edges in the shortest path is correct", Arrays.toString(expectedEdgeList), listOfEdges.toString());
 		assertEquals("The shortest path length equals the sum of edge lengths", sum, pathFinder.getCost(to), EPSILON);
 		assertEquals("The shortest path length is correct", 2.1, pathFinder.getCost(to), EPSILON);
-
+		
+		//test the fastest path method from the road network
+		path = roadNetwork.getFastestPathDijkstra((DirectedNode)from, (DirectedNode)to, roadNetwork.getFreeFlowTravelTime());
+		assertEquals("The list of nodes in the shortest path is correct", Arrays.toString(expectedNodeList), path.toString());
+		assertEquals("The list of edges in the shortest path is correct", Arrays.toString(expectedEdgeList), path.getEdges().toString());
+		
 		//reverse direction
 		System.out.println("Source node: " + to.getID() + " | Destination node: " + from.getID());
 		pathFinder = new DijkstraShortestPathFinder(rn, to, roadNetwork.getDijkstraWeighter());
@@ -424,31 +433,25 @@ public class RoadNetworkTest {
 
 		//compare with expected values
 		expectedNodeList = new int[] {19, 48, 82, 95, 105, 87, 86}; //node IDs are persistent
-		expectedEdgeList = new int[] {78, 60, 69, 68, 62, 82}; //cannot check as edge IDs are not persistent
+		expectedEdgeList = new int[] {68, 90, 77, 72, 94, 59}; //edge IDs are persistent after edge ID replacement
 		assertEquals("The list of nodes in the shortest path is correct", Arrays.toString(expectedNodeList), path.toString());
-		//assertEquals("The list of edges in the shortest path is correct", Arrays.toString(expectedEdgeList), listOfEdges.toString());
+		assertEquals("The list of edges in the shortest path is correct", Arrays.toString(expectedEdgeList), listOfEdges.toString());
 		assertEquals("The shortest path length equals the sum of edge lengths", sum, pathFinder.getCost(from), EPSILON);
 		assertEquals("The shortest path length is correct", 2.1, pathFinder.getCost(from), EPSILON);
 
+		//test the fastest path method from the road network
+		path = roadNetwork.getFastestPathDijkstra((DirectedNode)to, (DirectedNode)from, roadNetwork.getFreeFlowTravelTime());
+		assertEquals("The list of nodes in the shortest path is correct", Arrays.toString(expectedNodeList), path.toString());
+		assertEquals("The list of edges in the shortest path is correct", Arrays.toString(expectedEdgeList), path.getEdges().toString());
+			
 		System.out.println("\n*** AStar ***");
-		
-//		iter = rn.getNodes().iterator();
-//		from = null; to = null;
-//		while (iter.hasNext() && (from == null || to == null)) {
-//			DirectedNode node = (DirectedNode) iter.next();
-//			if (node.getID() == 105) from = node;
-//			if (node.getID() == 31) to = node;
-//		}
-		
-//		from = roadNetwork.getNodeIDtoNode().get(105);
-//		to = roadNetwork.getNodeIDtoNode().get(31);
 
 		//find the shortest path using AStar algorithm
 		try {
-			
+
 			System.out.printf("Finding the shortest path from %d to %d using astar: \n", from.getID(), to.getID());
-			
-			AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctions(to));
+
+			MyAStarShortestPathFinder aStarPathFinder = new MyAStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctions(to));
 			aStarPathFinder.calculate();
 			Path aStarPath;
 			aStarPath = aStarPathFinder.getPath();
@@ -473,19 +476,24 @@ public class RoadNetworkTest {
 
 			//compare with expected values
 			expectedNodeList = new int[] {86, 87, 105, 95, 48, 19}; //node IDs are persistent
-			expectedEdgeList = new int[] {81, 61, 67, 74, 77}; //cannot check as edge IDs are not persistent
+			expectedEdgeList = new int[] {58, 93, 71, 64, 67}; //edge IDs are persistent after edge ID replacement
 			assertEquals("The list of nodes in the shortest path is correct", Arrays.toString(expectedNodeList), aStarPath.toString());
-			//assertEquals("The list of edges in the shortest path is correct", Arrays.toString(expectedEdgeList), listOfEdges.toString());
+			assertEquals("The list of edges in the shortest path is correct", Arrays.toString(expectedEdgeList), listOfEdges.toString());
 			assertEquals("The shortest path length is correct", 2.1, sum, EPSILON);
-
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.err.println("Could not find the shortest path using astar.");
 		}
-
+			
+		//test the AStar fastest path method from the road network
+		path = roadNetwork.getFastestPath((DirectedNode)from, (DirectedNode)to, roadNetwork.getFreeFlowTravelTime());
+		assertEquals("The list of nodes in the shortest path is correct", Arrays.toString(expectedNodeList), path.toString());
+		assertEquals("The list of edges in the shortest path is correct", Arrays.toString(expectedEdgeList), path.getEdges().toString());
+	
 		//reverse path
 		try {
-			AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, to, from, roadNetwork.getAstarFunctions(to));
+			MyAStarShortestPathFinder aStarPathFinder = new MyAStarShortestPathFinder(rn, to, from, roadNetwork.getAstarFunctions(to));
 			aStarPathFinder.calculate();
 			Path aStarPath = aStarPathFinder.getPath();
 			aStarPath.reverse();
@@ -509,33 +517,38 @@ public class RoadNetworkTest {
 
 			//compare with expected values
 			expectedNodeList = new int[] {19, 48, 82, 95, 105, 87, 86}; //persistent
-			expectedEdgeList = new int[] {78, 60, 69, 68, 62, 82}; //not persistent
+			expectedEdgeList = new int[] {68, 90, 77, 72, 94, 59}; //edge IDs are persistent after edge ID replacement
 			assertEquals("The list of nodes in the shortest path is correct", Arrays.toString(expectedNodeList), aStarPath.toString());
-			//assertEquals("The list of edges in the shortest path is correct", Arrays.toString(expectedEdgeList), listOfEdges.toString());
+			assertEquals("The list of edges in the shortest path is correct", Arrays.toString(expectedEdgeList), listOfEdges.toString());
 			assertEquals("The shortest path length is correct", 2.1, sum, EPSILON);
 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		
+		//test the AStar fastest path method from the road network
+		path = roadNetwork.getFastestPath((DirectedNode)to, (DirectedNode)from, roadNetwork.getFreeFlowTravelTime());
+		assertEquals("The list of nodes in the shortest path is correct", Arrays.toString(expectedNodeList), path.toString());
+		assertEquals("The list of edges in the shortest path is correct", Arrays.toString(expectedEdgeList), path.getEdges().toString());
+
 		//TEST ADDING NEW ROAD LINKS
 		System.out.println("\n\n*** Testing addition of new links ***");
-		
+
 		Node fromNode = roadNetwork.getNodeIDtoNode().get(86);
 		Node toNode = roadNetwork.getNodeIDtoNode().get(48);
-		
+
 		DirectedEdge newEdge = (DirectedEdge) roadNetwork.createNewRoadLink(fromNode, toNode, 2, 'A', 0.6);
-		
+
 		//find path from node 86 to node 19
 		from = roadNetwork.getNodeIDtoNode().get(86);
 		to = roadNetwork.getNodeIDtoNode().get(19);
-	
+
 		//find the shortest path using AStar algorithm
 		try {
 
 			System.out.printf("Finding the shortest path from %d to %d using astar: \n", from.getID(), to.getID());
 
-			AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctions(to));
+			MyAStarShortestPathFinder aStarPathFinder = new MyAStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctions(to));
 			aStarPathFinder.calculate();
 			Path aStarPath;
 			aStarPath = aStarPathFinder.getPath();
@@ -560,7 +573,9 @@ public class RoadNetworkTest {
 
 			//compare with expected values
 			expectedNodeList = new int[] {86, 48, 19}; //node IDs are persistent
+			expectedEdgeList = new int[] {newEdge.getID(), 67}; //edge IDs are persistent after edge ID replacement
 			assertEquals("The list of nodes in the shortest path is correct", Arrays.toString(expectedNodeList), aStarPath.toString());
+			assertEquals("The list of edges in the shortest path is correct", Arrays.toString(expectedEdgeList), listOfEdges.toString());
 			assertEquals("The shortest path length is correct", 1.3, sum, EPSILON);
 
 		} catch (Exception e) {
@@ -568,9 +583,15 @@ public class RoadNetworkTest {
 			System.err.println("Could not find the shortest path using astar.");
 		}
 		
+		//test the AStar fastest path method from the road network
+		path = roadNetwork.getFastestPath((DirectedNode)from, (DirectedNode)to, roadNetwork.getFreeFlowTravelTime());
+		assertEquals("The list of nodes in the shortest path is correct", Arrays.toString(expectedNodeList), path.toString());
+		assertEquals("The list of edges in the shortest path is correct", Arrays.toString(expectedEdgeList), path.getEdges().toString());
+	
 		//find the shortest path using time-based Dijkstra
 		System.out.println("Source node: " + from.getID() + " | Destination node: " + to.getID());
-		pathFinder = new DijkstraShortestPathFinder(rn, from, roadNetwork.getDijkstraTimeWeighter());
+		//pathFinder = new DijkstraShortestPathFinder(rn, from, roadNetwork.getDijkstraTimeWeighter());
+		pathFinder = new DijkstraShortestPathFinder(rn, from, roadNetwork.getDijkstraTimeWeighter(null));
 		pathFinder.calculate();
 		path = pathFinder.getPath(to);
 		path.reverse();
@@ -607,8 +628,15 @@ public class RoadNetworkTest {
 
 		//compare with expected values
 		expectedNodeList = new int[] {86, 48, 19}; //node IDs are persistent
+		expectedEdgeList = new int[] {newEdge.getID(), 67}; //edge IDs are persistent after edge ID replacement
 		assertEquals("The list of nodes in the shortest path is correct", Arrays.toString(expectedNodeList), path.toString());
+		assertEquals("The list of edges in the shortest path is correct", Arrays.toString(expectedEdgeList), listOfEdges.toString());
 		assertEquals("The shortest path travel time equals the sum of edge travel times", sum, pathFinder.getCost(to), EPSILON);
+		
+		//test the fastest path method from the road network
+		path = roadNetwork.getFastestPathDijkstra((DirectedNode)from, (DirectedNode)to, roadNetwork.getFreeFlowTravelTime());
+		assertEquals("The list of nodes in the shortest path is correct", Arrays.toString(expectedNodeList), path.toString());
+		assertEquals("The list of edges in the shortest path is correct", Arrays.toString(expectedEdgeList), path.getEdges().toString());
 	}
 
 	@Test
@@ -865,7 +893,7 @@ public class RoadNetworkTest {
 		assertEquals("Gravitating population is correct", (281 + 402 + 389 + 290 + 294) , (int) roadNetwork.getGravitatingPopulation(60));
 
 		System.out.println("Zone to sorted nodes: " + roadNetwork.getZoneToNodes());
-		
+
 		//find the node with maximum gravitating population
 		for (String LAD: roadNetwork.getZoneToNodes().keySet()) {
 			List<Integer> list = roadNetwork.getZoneToNodes().get(LAD);
@@ -892,7 +920,7 @@ public class RoadNetworkTest {
 			System.out.printf("Node %d has %d in degree and %d out degree. \n", node.getID(), node.getInDegree(), node.getOutDegree());
 			System.out.printf("Blacklisted as start node is %b, blacklisted as end node is %b \n", roadNetwork.isBlacklistedAsStartNode(node.getID()), roadNetwork.isBlacklistedAsEndNode(node.getID()));		
 		}
-		
+
 		//TEST NUMBER OF LANES
 		System.out.println("\n\n*** Testing the number of lanes ***");
 
@@ -909,17 +937,17 @@ public class RoadNetworkTest {
 				assertNull("The number of lanes for ferries is not defined", roadNetwork.getNumberOfLanes().get(edge.getID()));
 			}
 		}
-		
+
 		//TEST EDGE TO OTHER DIRECTION EDGE MAPPING
 		System.out.println("\n\n*** Testing edge to other direction edge mapping ***");
-		
+
 		System.out.println(roadNetwork.getEdgeIDtoEdge());
 		System.out.println(roadNetwork.getEdgeIDtoOtherDirectionEdgeID());
-		
-		
+
+
 		//TEST PATH CREATION FROM A LIST OF NODES
 		System.out.println("\n\n*** Testing path creation from a list of nodes using RoadPath***");
-			
+
 		Path cPath = new RoadPath();
 		DirectedNode node1 = (DirectedNode) roadNetwork.getNodeIDtoNode().get(6);
 		DirectedNode node2 = (DirectedNode) roadNetwork.getNodeIDtoNode().get(89);
@@ -930,7 +958,7 @@ public class RoadNetworkTest {
 		System.out.println(cPath);
 		System.out.println("Is path valid? " + cPath.isValid());
 		assertTrue("Path 6 -> 89 -> 39 should be valid", cPath.isValid());
-		
+
 		ArrayList<Node> pathList = new ArrayList<Node>();
 		//48 -> 95
 		pathList.add((DirectedNode) roadNetwork.getNodeIDtoNode().get(48));
@@ -939,14 +967,14 @@ public class RoadNetworkTest {
 		System.out.println(cPath);
 		System.out.println("Is path valid? " + cPath.isValid()); //this path should not be valid (GeoTools Path.isValid method ignores edge direction!)
 		assertTrue("Path 48 -> 95 should not be valid", !cPath.isValid());
-		
+
 		System.out.println("Edges: " + cPath.getEdges());
 		System.out.println("First node: " + cPath.getFirst());
 		System.out.println("Last node: " + cPath.getLast());
 		//DirectedEdge edge = (DirectedEdge) cPath.getEdges().get(0);
 		//System.out.println("Directed edge: " + edge);
 		org.junit.Assert.assertNull("There are no edges for invalid path", cPath.getEdges());
-				
+
 		cPath.reverse();
 		System.out.println(cPath);
 		System.out.println("Is path valid? " + cPath.isValid());
@@ -965,16 +993,64 @@ public class RoadNetworkTest {
 		System.out.println(cPath);
 		System.out.println("Is path valid? " + cPath.isValid());
 		assertTrue("Path 95 -> 82 -> 48 should not be valid", !cPath.isValid());
-		
+
 		//TEST EDGE ID REPLACEMENT
 		System.out.println("\n\n*** Testing edge ID replacement ***");
-		
+
 		System.out.println("Directed graph representation of the road network before replacement:");
 		System.out.println(roadNetwork.getNetwork());
 		final URL networkUrlNew = new URL("file://src/test/resources/testdata/testOutputNetwork.shp");
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlNew);
 		System.out.println("Directed graph representation of the road network after replacement:");
 		System.out.println(roadNetwork.getNetwork());
+
+		//TEST SHORTEST PATH ALGORITHMS
+		System.out.println("\n\n*** Testing the shortest path algorithms ***");
+
+		System.out.println("The whole network: " + roadNetwork.toString());
+
+		System.out.println("\n*** Dijkstra ***");
+		//set source and destination node
+		iter = rn.getNodes().iterator();
+		Node from = null, to = null;
+		while (iter.hasNext() && (from == null || to == null)) {
+			DirectedNode node = (DirectedNode) iter.next();
+			if (node.getID() == 83) from = node;
+			if (node.getID() == 31) to = node;
+		}
+
+		//find the shortest path using Dijkstra
+		System.out.println("Source node: " + from.getID() + " | Destination node: " + to.getID());
+		DijkstraShortestPathFinder pathFinder = new DijkstraShortestPathFinder(rn, from, roadNetwork.getDijkstraWeighter());
+		pathFinder.calculate();
+		Path path = pathFinder.getPath(to);
+		path.reverse();
+		System.out.println("The path as a list of nodes nodes: " + path);
+		listOfEdges = path.getEdges();
+		System.out.println("The path as a list of edges: " + listOfEdges);
+		System.out.println("Path size in the number of nodes: " + path.size());
+		System.out.println("Path size in the number of edges: " + listOfEdges.size());
+		System.out.printf("Total path length in km: %.3f\n", pathFinder.getCost(to));
+
+		double sum = 0;
+		for (Object o: listOfEdges) {
+			//DirectedEdge e = (DirectedEdge) o;
+			Edge e = (Edge) o;
+			System.out.print(e.getID() + "|" + e.getNodeA() + "->" + e.getNodeB() + "|");
+			SimpleFeature sf = (SimpleFeature) e.getObject();
+			double length = (double) sf.getAttribute("LenNet");
+			System.out.println(length);
+			sum += length;
+		}
+		System.out.printf("Sum of edge lengths: %.3f\n\n", sum);
+
+		//compare with expected values
+		int[] expectedNodeList = new int[] {83, 82, 95, 105, 87, 86, 102, 30, 31}; //node IDs are persistent
+		int[] expectedEdgeList = new int[] {700, 789, 538, 770, 628, 784, 679, 774}; //edge IDs are persistent after edge ID replacement
+		assertEquals("The list of nodes in the shortest path is correct", Arrays.toString(expectedNodeList), path.toString());
+		assertEquals("The list of edges in the shortest path is correct", Arrays.toString(expectedEdgeList), listOfEdges.toString());
+		assertEquals("The shortest path length equals the sum of edge lengths", sum, pathFinder.getCost(to), EPSILON);
+		assertEquals("The shortest path length is correct", 8.8, pathFinder.getCost(to), EPSILON);
 	}
 
 	//@Test
@@ -1257,19 +1333,19 @@ public class RoadNetworkTest {
 			assertEquals("Max gravity node is the first node in the sorted list of nodes", maxNode, roadNetwork.getZoneToNodes().get(LAD).get(0));
 			assertEquals("Max gravitating population is correct", maxPopulation, (int) roadNetwork.getGravitatingPopulation(maxNode));
 		}
-		
+
 		//TEST NODE BLACKLISTS
 		System.out.println("\n\n*** Testing node blacklists ***");
-		
+
 		System.out.println("Start node blacklist : " + roadNetwork.getStartNodeBlacklist());
 		System.out.println("End node blacklist : " + roadNetwork.getEndNodeBlacklist());
-		
+
 		iter = rn.getNodes().iterator();
 		while (iter.hasNext()) {
 			DirectedNode node = (DirectedNode) iter.next();
-//			System.out.printf("Node %d has %d in degree and %d out degree. \n", node.getID(), node.getInDegree(), node.getOutDegree());
-//			System.out.printf("Blacklisted as start node is %b, blacklisted as end node is %b \n", roadNetwork.isBlacklistedAsStartNode(node.getID()), roadNetwork.isBlacklistedAsEndNode(node.getID()));		
-		
+			//			System.out.printf("Node %d has %d in degree and %d out degree. \n", node.getID(), node.getInDegree(), node.getOutDegree());
+			//			System.out.printf("Blacklisted as start node is %b, blacklisted as end node is %b \n", roadNetwork.isBlacklistedAsStartNode(node.getID()), roadNetwork.isBlacklistedAsEndNode(node.getID()));		
+
 			//if node is blacklisted as either start or end node, check if it has any gravitating population, as this could potentially create problems in path finding
 			if (roadNetwork.isBlacklistedAsStartNode(node.getID()) || roadNetwork.isBlacklistedAsEndNode(node.getID())) {
 				if (roadNetwork.getGravitatingPopulation(node.getID()) > 0) 
@@ -1361,10 +1437,10 @@ public class RoadNetworkTest {
 		assertEquals("The shortest path length is correct", 2.1, pathFinder.getCost(from), EPSILON);
 
 		System.out.println("\n*** AStar ***");
-		
+
 		//find the shortest path using AStar algorithm
 		try {
-			AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctions(to));
+			MyAStarShortestPathFinder aStarPathFinder = new MyAStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctions(to));
 			aStarPathFinder.calculate();
 			Path aStarPath;
 			aStarPath = aStarPathFinder.getPath();
@@ -1400,7 +1476,7 @@ public class RoadNetworkTest {
 
 		//reverse path
 		try {
-			AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, to, from, roadNetwork.getAstarFunctions(to));
+			MyAStarShortestPathFinder aStarPathFinder = new MyAStarShortestPathFinder(rn, to, from, roadNetwork.getAstarFunctions(to));
 			aStarPathFinder.calculate();
 			Path aStarPath = aStarPathFinder.getPath();
 			aStarPath.reverse();
