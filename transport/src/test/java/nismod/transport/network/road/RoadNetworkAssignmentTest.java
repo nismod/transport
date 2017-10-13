@@ -111,7 +111,7 @@ public class RoadNetworkAssignmentTest {
 		//set route choice parameters
 		Properties params = new Properties();
 		params.setProperty("TIME", "-1.5");
-		params.setProperty("LENGTH", "-1.5");
+		params.setProperty("LENGTH", "-1.0");
 		params.setProperty("INTERSECTIONS", "-0.1");
 		
 		//assign passenger flows
@@ -149,6 +149,7 @@ public class RoadNetworkAssignmentTest {
 		System.out.println(roadNetwork2.getNodeToZone());
 		System.out.println("Zone to nodes mapping: ");
 		System.out.println(roadNetwork2.getZoneToNodes());
+		
 		System.out.println("Path storage: ");
 		//System.out.println(roadNetworkAssigment.getPathStorage());
 		System.out.println(roadNetworkAssignment.getPathStorage().keySet());
@@ -159,6 +160,19 @@ public class RoadNetworkAssignmentTest {
 			List list = (List) roadNetworkAssignment.getPathStorage().get((String)((MultiKey)mk).getKey(0), (String)((MultiKey)mk).getKey(1));
 			System.out.println("number of paths = " + list.size());
 		}
+		
+		System.out.println("Route storage: ");
+		//System.out.println(roadNetworkAssigment.getPathStorage());
+		System.out.println(roadNetworkAssignment.getRouteStorage().keySet());
+		for (Object mk: roadNetworkAssignment.getRouteStorage().keySet()) {
+			System.out.println(mk);
+			System.out.println("origin = " + ((MultiKey)mk).getKey(0));
+			System.out.println("destination = " + ((MultiKey)mk).getKey(1));
+			List list = (List) roadNetworkAssignment.getRouteStorage().get((String)((MultiKey)mk).getKey(0), (String)((MultiKey)mk).getKey(1));
+			System.out.println("number of paths = " + list.size());
+		}
+	
+		
 		System.out.println("Link volumes in PCU: ");
 		System.out.println(roadNetworkAssignment.getLinkVolumesInPCU());	
 		
@@ -178,6 +192,11 @@ public class RoadNetworkAssignmentTest {
 		
 		System.out.println("Distance skim matrix:");
 		SkimMatrix distanceSkimMatrix = roadNetworkAssignment.calculateDistanceSkimMatrix();
+		distanceSkimMatrix.printMatrixFormatted();
+		//distanceSkimMatrix.saveMatrixFormatted("distanceSkimMatrix.csv");
+		
+		System.out.println("Distance skim matrix from routes:");
+		distanceSkimMatrix = roadNetworkAssignment.calculateDistanceSkimMatrixFromRoutes();
 		distanceSkimMatrix.printMatrixFormatted();
 		//distanceSkimMatrix.saveMatrixFormatted("distanceSkimMatrix.csv");
 				

@@ -18,6 +18,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
+import org.geotools.graph.build.line.BasicDirectedLineGraphBuilder;
 import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedNode;
 
@@ -151,22 +152,26 @@ public class RouteSetGenerator {
 	 * @param destination
 	 */
 	public void generateRouteSetWithRandomLinkEliminationRestricted(int origin, int destination) {
-		
+
 		RandomSingleton rng = RandomSingleton.getInstance();
-			
+
+		//System.out.printf("Generating route set between nodes %d and %d with random link elimination.\n", origin, destination);
+
 		DirectedNode originNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(origin);
 		DirectedNode destinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(destination);
 		//RouteSet rs = new RouteSet(originNode, destinationNode);
-		
-		//find the fastest path from origin to destination
+
+		//find the fastest path from origin to destination (astar or dijkstra)
 		RoadPath fastestPath  = this.roadNetwork.getFastestPath(originNode, destinationNode, null);
+		//RoadPath fastestPath  = this.roadNetwork.getFastestPathDijkstra(originNode, destinationNode, null);
+
 		if (fastestPath == null) {
 			System.err.printf("Unable to find the fastest path between nodes %d and %d! Link elimination method unsucsessful!\n", origin, destination);
 			return;
 		}
 		//System.out.println("RoadPath " + fastestPath.toString());
 		//System.out.println("Path validity: " + fastestPath.isValid());
-				
+
 		Route fastestRoute = new Route(fastestPath);
 		//System.out.println("Route: " + fastestRoute.getFormattedString());
 		//System.out.println("Route validity: " + fastestRoute.isValid());
@@ -180,34 +185,89 @@ public class RouteSetGenerator {
 			return;
 		}
 
-		//random link elimination method
 		int pathSizeInLinks = fastestPath.size() - 1; //number of edges = number of nodes - 1
-		for (int i = 0; i < GENERATION_LIMIT; i++) {
-		
-			int randomIndex = rng.nextInt(pathSizeInLinks);
-			Object o = fastestPath.getEdges().get(randomIndex); //pick random edge
-			HashMap<Integer, Double> linkTravelTimes = new HashMap<Integer, Double>();
-			DirectedEdge edge = (DirectedEdge) o;
-			//System.out.printf("Blocking edge (%d)-%d->(%d) \n", edge.getInNode().getID(), edge.getID(), edge.getOutNode().getID());
-			//linkTravelTimes.put(edge.getID(), Double.MAX_VALUE); //blocks by setting a maximum travel time
-			linkTravelTimes.put(edge.getID(), Double.POSITIVE_INFINITY); //blocks by setting a maximum travel time
-			RoadPath path = this.roadNetwork.getFastestPath(originNode, destinationNode, linkTravelTimes);
-			if (path != null) {
-				//System.out.println(path.toString());
-				//System.out.println("Path validity: " + path.isValid());
-				Route route = new Route(path);
-				//System.out.println(route);
-				//rs.addRoute(route);
-				if (route.getOriginNode().equals(originNode) && route.getDestinationNode().equals(destinationNode))
-					this.addRoute(route);
-				else 
-					System.err.println("Route generated with link elimination does not contain correct origin and destination nodes! Skipping this route.");
+
+		//if the number of links in the fastest path is smaller than the ROUTE_LIMIT,
+		//then block each link successively (this will generate up to ROUTE_LIMIT routes using less calculations than the random method)
+		if (pathSizeInLinks < ROUTE_LIMIT) {
+
+			for (Object o: fastestPath.getEdges()) {
+
+				HashMap<Integer, Double> linkTravelTimes = new HashMap<Integer, Double>();
+				DirectedEdge edge = (DirectedEdge) o;
+				//System.out.printf("Blocking edge (%d)-%d->(%d) \n", edge.getInNode().getID(), edge.getID(), edge.getOutNode().getID());
+
+				//linkTravelTimes.put(edge.getID(), Double.POSITIVE_INFINITY); //blocks by setting a maximum travel time (does not work for astar)
+
+				//block the edge by removing it temporarily from the graph
+				BasicDirectedLineGraphBuilder graphBuilder = new BasicDirectedLineGraphBuilder();
+				graphBuilder.importGraph(this.roadNetwork.getNetwork());
+				int edgeID = edge.getID();
+				graphBuilder.removeEdge(edge);
+
+				//find the fastest path
+				RoadPath path = this.roadNetwork.getFastestPath(originNode, destinationNode, linkTravelTimes);
+				//RoadPath path = this.roadNetwork.getFastestPathDijkstra(originNode, destinationNode, linkTravelTimes);
+
+				//return the removed edge
+				graphBuilder.addEdge(edge);
+				edge.setID(edgeID);
+
+				if (path != null) {
+					//System.out.println("Nodes: " + path.toString());
+					//System.out.println("Path validity: " + path.isValid());
+					Route route = new Route(path);
+					//System.out.println("Route: " + route.getFormattedString());
+					//rs.addRoute(route);
+					if (route.getOriginNode().equals(originNode) && route.getDestinationNode().equals(destinationNode))
+						this.addRoute(route);
+					else 
+						System.err.println("Route generated with link elimination does not contain correct origin and destination nodes! Skipping this route.");
+				}
 			}
-			RouteSet rs = (RouteSet)routes.get(origin, destination);
-			if (rs.getSize() >= ROUTE_LIMIT) break; //stop if sufficient number of routes has been generated 
+		} else { //otherwise use the actual random link elimination method 
+
+			for (int i = 0; i < GENERATION_LIMIT; i++) {
+
+				int randomIndex = rng.nextInt(pathSizeInLinks);
+				Object o = fastestPath.getEdges().get(randomIndex); //pick random edge
+				HashMap<Integer, Double> linkTravelTimes = new HashMap<Integer, Double>();
+				DirectedEdge edge = (DirectedEdge) o;
+				//System.out.printf("Blocking edge (%d)-%d->(%d) \n", edge.getInNode().getID(), edge.getID(), edge.getOutNode().getID());
+
+				//linkTravelTimes.put(edge.getID(), Double.POSITIVE_INFINITY); //blocks by setting a maximum travel time (does not work for astar)
+
+				//block the edge by removing it temporarily from the graph
+				BasicDirectedLineGraphBuilder graphBuilder = new BasicDirectedLineGraphBuilder();
+				graphBuilder.importGraph(this.roadNetwork.getNetwork());
+				int edgeID = edge.getID();
+				graphBuilder.removeEdge(edge);
+
+				//find the fastest path
+				RoadPath path = this.roadNetwork.getFastestPath(originNode, destinationNode, linkTravelTimes);
+				//RoadPath path = this.roadNetwork.getFastestPathDijkstra(originNode, destinationNode, linkTravelTimes);
+
+				//return the removed edge
+				graphBuilder.addEdge(edge);
+				edge.setID(edgeID);
+
+				if (path != null) {
+					//System.out.println("Nodes: " + path.toString());
+					//System.out.println("Path validity: " + path.isValid());
+					Route route = new Route(path);
+					//System.out.println("Route: " + route.getFormattedString());
+					//rs.addRoute(route);
+					if (route.getOriginNode().equals(originNode) && route.getDestinationNode().equals(destinationNode))
+						this.addRoute(route);
+					else 
+						System.err.println("Route generated with link elimination does not contain correct origin and destination nodes! Skipping this route.");
+				}
+				RouteSet rs = (RouteSet)routes.get(origin, destination);
+				if (rs.getSize() >= ROUTE_LIMIT) break; //stop if sufficient number of routes has been generated 
+			}
 		}
 	}
-	
+
 	/**
 	 * Generates routes between all combinations of nodes from two LAD zones
 	 * @param originLAD

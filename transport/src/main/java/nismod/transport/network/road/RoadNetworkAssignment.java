@@ -120,8 +120,11 @@ public class RoadNetworkAssignment {
 
 	/**
 	 * @param roadNetwork Road network.
+	 * @param energyUnitCosts Energy unit costs.
+	 * @param engineTypeFractions Market shares of different engine/fuel types.
 	 * @param defaultLinkTravelTime Default link travel times.
-	 * @param areCodeProbabilities Probabilities of trips starting/ending in each census output area.
+	 * @param areaCodeProbabilities Probabilities of trips starting/ending in each census output area.
+	 * @param workplaceZoneProbabilities Probabilities of freight trips starting/ending in each census output area.
 	 */
 	public RoadNetworkAssignment(RoadNetwork roadNetwork, HashMap<EngineType, Double> energyUnitCosts, HashMap<EngineType, Double> engineTypeFractions, HashMap<Integer, Double> defaultLinkTravelTime, HashMap<String, Double> areaCodeProbabilities, HashMap<String, Double> workplaceZoneProbabilities) {
 
@@ -285,8 +288,8 @@ public class RoadNetworkAssignment {
 
 	/** 
 	 * Assigns passenger origin-destination matrix to the road network.
-	 * Uses the fastest path based on the current values in the linkTravelTime field.
-	 * @param passengerODM Passenger origin-destination matrix.
+	 * Calculates the fastest path based on the current values in the linkTravelTime instance field.
+	 * @param passengerODM Passenger origin-destination matrix with flows to be assigned.
 	 */
 	@SuppressWarnings("unused")
 	public void assignPassengerFlows(ODMatrix passengerODM) {
@@ -456,7 +459,7 @@ public class RoadNetworkAssignment {
 					//if path does not already exist, get the shortest path from the origin node to the destination node using AStar algorithm
 					if (foundPath == null) {
 						//System.out.println("The path does not exist in the path storage");
-						AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctionsTime(to, this.linkTravelTime));
+						MyAStarShortestPathFinder aStarPathFinder = new MyAStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctionsTime(to, this.linkTravelTime));
 						//AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctions(to));
 						aStarPathFinder.calculate();
 						Path aStarPath;
@@ -539,9 +542,11 @@ public class RoadNetworkAssignment {
 	 * Assigns passenger origin-destination matrix to the road network.
 	 * Uses the route choice and pre-generated paths.
 	 * @param passengerODM Passenger origin-destination matrix.
+	 * @param rsg Route set generator containing the routes.
+	 * @param routeChoiceParameters Route choice parameters.
 	 */
 	//@SuppressWarnings("unused")
-	public void assignPassengerFlowsRouteChoice(ODMatrix passengerODM, RouteSetGenerator rsg, Properties params) {
+	public void assignPassengerFlowsRouteChoice(ODMatrix passengerODM, RouteSetGenerator rsg, Properties routeChoiceParameters) {
 
 		System.out.println("Assigning the passenger flows from the passenger matrix...");
 
@@ -634,13 +639,13 @@ public class RoadNetworkAssignment {
 				if (fetchedRouteSet.getProbabilities() == null) {
 					//probabilities need to be calculated for this route set before a choice can be made
 					fetchedRouteSet.setLinkTravelTime(this.linkTravelTime);
-					fetchedRouteSet.setParameters(params);
-					fetchedRouteSet.calculateUtilities(this.linkTravelTime, params);
-					fetchedRouteSet.calculateProbabilities(this.linkTravelTime, params);
+					fetchedRouteSet.setParameters(routeChoiceParameters);
+					fetchedRouteSet.calculateUtilities(this.linkTravelTime, routeChoiceParameters);
+					fetchedRouteSet.calculateProbabilities(this.linkTravelTime, routeChoiceParameters);
 					fetchedRouteSet.sortRoutesOnUtility();
 				}
 				
-				Route chosenRoute = fetchedRouteSet.choose(params);
+				Route chosenRoute = fetchedRouteSet.choose(routeChoiceParameters);
 				if (chosenRoute == null) {
 					System.err.printf("No chosen route between nodes %d and %d! %s", originNode, destinationNode, System.lineSeparator());
 					continue;
@@ -708,7 +713,7 @@ public class RoadNetworkAssignment {
 	 * 		<li>Major distribution centres: 1201 - 1256</li>
 	 * 		<li>Freight ports: 1301 - 1388</li>
 	 * </ul>   
-	 * @param freightODM Freight origin-destination matrix
+	 * @param freightODM Freight origin-destination matrix.
 	 */
 	@SuppressWarnings("unused")
 	public void assignFreightFlows(FreightMatrix freightMatrix) {
@@ -913,7 +918,7 @@ public class RoadNetworkAssignment {
 					//if path does not already exist, get the shortest path from the origin node to the destination node using AStar algorithm
 					if (foundPath == null) {
 						//System.out.println("The path does not exist in the path storage");
-						AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctionsTime(to, this.linkTravelTime));
+						MyAStarShortestPathFinder aStarPathFinder = new MyAStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctionsTime(to, this.linkTravelTime));
 						//AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctions(to));
 						aStarPathFinder.calculate();
 						Path aStarPath;
@@ -1376,6 +1381,55 @@ public class RoadNetworkAssignment {
 
 		return distanceSkimMatrix;
 	}
+	
+	/**
+	 * Updates cost skim matrix (zone-to-zone distances).
+	 * @return Inter-zonal skim matrix (distance).
+	 */
+	public SkimMatrix calculateDistanceSkimMatrixFromRoutes() {
+
+		SkimMatrix distanceSkimMatrix = new SkimMatrix();
+
+		//for each OD pair
+		for (MultiKey mk: routeStorage.keySet()) {
+			//System.out.println(mk);
+			String originZone = (String) mk.getKey(0);
+			String destinationZone = (String) mk.getKey(1);
+
+			List<Route> routeList = routeStorage.get(originZone, destinationZone);
+			double totalODdistance = 0.0;
+			//for each path in the path list calculate total distance
+			for (Route route: routeList) {
+
+//				double routeLength = 0.0;
+//				for (Object o: route.getEdges()) {
+//					Edge e = (Edge)o;
+//					SimpleFeature sf = (SimpleFeature) e.getObject();
+//					double length = (double) sf.getAttribute("LenNet");
+//					routeLength += length;					
+//				}
+//				//System.out.printf("Route length: %.3f\n", routeLength);
+//				totalODdistance += routeLength;
+				
+				totalODdistance += route.getLength();
+
+				//add average access and egress distance to the first and the last node [m -> km!]
+				double accessDistance = this.roadNetwork.getAverageAcessEgressDistance(route.getOriginNode().getID()) / 1000;
+				double egressDistance = this.roadNetwork.getAverageAcessEgressDistance(route.getDestinationNode().getID()) / 1000;
+				//System.out.printf("Acess: %.3f Egress: %.3f\n ", accessDistance, egressDistance);
+				//System.out.printf("Path length with access and egress: %.3f km\n", pathLength + accessDistance + egressDistance);
+				totalODdistance += (accessDistance + egressDistance);
+			}
+			double averageODdistance = totalODdistance / routeList.size();
+
+			//System.out.printf("Average OD distance: %.3f km\n", averageODdistance);
+			//update distance skim matrix
+			distanceSkimMatrix.setCost(originZone, destinationZone, averageODdistance);
+		}
+
+		return distanceSkimMatrix;
+	}
+	
 
 	/**
 	 * Updates cost skim matrix (zone-to-zone distances) for freight.
@@ -2056,6 +2110,16 @@ public class RoadNetworkAssignment {
 		return this.pathStorage;
 	}
 
+	/**
+	 * Getter method for the route storage.
+	 * @return Route storage
+	 */
+	public MultiKeyMap<String, List<Route>> getRouteStorage() {
+
+		return this.routeStorage;
+	}
+	
+	
 	/**
 	 * Getter method for the path storage for freight.
 	 * @return Path storage for freight

@@ -80,6 +80,7 @@ import com.vividsolutions.jts.geom.Point;
 public class RoadNetwork {
 
 	private DirectedGraph network;
+	//BasicDirectedLineGraphBuilder graphBuilder;
 	private ShapefileDataStore zonesShapefile;
 	private ShapefileDataStore networkShapefile;
 	private ShapefileDataStore nodesShapefile;
@@ -342,8 +343,23 @@ public class RoadNetwork {
 		FeatureLayer AADFlayer = new FeatureLayer(AADFshapefile.getFeatureSource(), AADFstyle);
 		map.addLayer(AADFlayer);
 
-		//show the map 
-		JMapFrame.showMap(map);
+		//show the map in JMapFrame
+		JMapFrame show = new JMapFrame(map);
+		
+		//list layers and set them as visible + selected
+		show.enableLayerTable(true);
+		
+		//zoom in, zoom out, pan, show all
+		show.enableToolBar(true);
+		
+		//location of cursor and bounds of current
+		show.enableStatusBar(true);
+		
+		//display
+		show.setVisible(true);
+		
+		//maximise window
+		show.setExtendedState(JMapFrame.MAXIMIZED_BOTH);
 	}
 	
 	/**
@@ -577,36 +593,36 @@ public class RoadNetwork {
 		return dijkstraWeighter;
 	}
 	
-	/**
-	 * Getter method for the Dijkstra edge weighter with time.
-	 * @return Dijkstra edge weighter with time.
-	 */
-	public DijkstraIterator.EdgeWeighter getDijkstraTimeWeighter() {
-			
-		//weight the edges of the graph using the free-flow travel time		
-		DijkstraIterator.EdgeWeighter dijkstraTimeWeighter = new EdgeWeighter() {
-			@Override
-			public double getWeight(org.geotools.graph.structure.Edge edge) {
-				SimpleFeature feature = (SimpleFeature) edge.getObject(); 
-				double length = (double) feature.getAttribute("LenNet");
-				double cost;
-				String roadNumber = (String) feature.getAttribute("RoadNumber");
-					if (roadNumber.charAt(0) == 'M') //motorway
-						cost = length / RoadNetworkAssignment.FREE_FLOW_SPEED_M_ROAD * 60;  //travel time in minutes
-					else if (roadNumber.charAt(0) == 'A') //A road
-						cost = length / RoadNetworkAssignment.FREE_FLOW_SPEED_A_ROAD * 60;  //travel time in minutes
-					else if (roadNumber.charAt(0) == 'F')//ferry
-						cost = length / RoadNetworkAssignment.AVERAGE_SPEED_FERRY * 60;  //travel time in minutes
-					else {
-						System.err.println("Unknown road type for link " + edge.getID());
-						cost = Double.NaN;
-					}
-				return cost;
-			}
-		};
-		
-		return dijkstraTimeWeighter;
-	}
+//	/**
+//	 * Getter method for the Dijkstra edge weighter with time.
+//	 * @return Dijkstra edge weighter with time.
+//	 */
+//	public DijkstraIterator.EdgeWeighter getDijkstraTimeWeighter() {
+//			
+//		//weight the edges of the graph using the free-flow travel time		
+//		DijkstraIterator.EdgeWeighter dijkstraTimeWeighter = new EdgeWeighter() {
+//			@Override
+//			public double getWeight(org.geotools.graph.structure.Edge edge) {
+//				SimpleFeature feature = (SimpleFeature) edge.getObject(); 
+//				double length = (double) feature.getAttribute("LenNet");
+//				double cost;
+//				String roadNumber = (String) feature.getAttribute("RoadNumber");
+//					if (roadNumber.charAt(0) == 'M') //motorway
+//						cost = length / RoadNetworkAssignment.FREE_FLOW_SPEED_M_ROAD * 60;  //travel time in minutes
+//					else if (roadNumber.charAt(0) == 'A') //A road
+//						cost = length / RoadNetworkAssignment.FREE_FLOW_SPEED_A_ROAD * 60;  //travel time in minutes
+//					else if (roadNumber.charAt(0) == 'F')//ferry
+//						cost = length / RoadNetworkAssignment.AVERAGE_SPEED_FERRY * 60;  //travel time in minutes
+//					else {
+//						System.err.println("Unknown road type for link " + edge.getID());
+//						cost = Double.NaN;
+//					}
+//				return cost;
+//			}
+//		};
+//		
+//		return dijkstraTimeWeighter;
+//	}
 	
 	/**
 	 * Getter method for the Dijkstra edge weighter with time.
@@ -622,9 +638,10 @@ public class RoadNetwork {
 				if (edge == null) {
 					//no edge provided (set maximum weight)
 					return Double.MAX_VALUE;
+					//return Double.POSITIVE_INFINITY;
 				}
 				double cost;
-				if (linkTravelTime.get(edge.getID()) == null) { //use default link travel time
+				if (linkTravelTime == null || linkTravelTime.get(edge.getID()) == null) { //use default link travel time
 					SimpleFeature feature = (SimpleFeature)edge.getObject();
 					String roadNumber = (String) feature.getAttribute("RoadNumber");
 					if (roadNumber.charAt(0) == 'M') //motorway
@@ -650,12 +667,12 @@ public class RoadNetwork {
 	 * @param to Destination node.
 	 * @return AStar functions.
 	 */
-	public AStarIterator.AStarFunctions getAstarFunctions(Node destinationNode) {
+	public MyAStarIterator.AStarFunctions getAstarFunctions(Node destinationNode) {
 
-		AStarIterator.AStarFunctions aStarFunctions = new  AStarIterator.AStarFunctions(destinationNode){
+		MyAStarIterator.AStarFunctions aStarFunctions = new  MyAStarIterator.AStarFunctions(destinationNode){
 
 			@Override
-			public double cost(AStarIterator.AStarNode aStarNode1, AStarIterator.AStarNode aStarNode2) {
+			public double cost(MyAStarIterator.AStarNode aStarNode1, MyAStarIterator.AStarNode aStarNode2) {
 
 				//Edge edge = aStarNode1.getNode().getEdge(aStarNode2.getNode()); // does not work, a directed version must be used!
 				Edge edge = ((DirectedNode) aStarNode1.getNode()).getOutEdge((DirectedNode) aStarNode2.getNode());
@@ -690,12 +707,12 @@ public class RoadNetwork {
 	 * @param linkTravelTime Link travel times.
 	 * @return AStar functions.
 	 */
-	public AStarIterator.AStarFunctions getAstarFunctionsTime(Node destinationNode, HashMap<Integer, Double> linkTravelTime) {
+	public MyAStarIterator.AStarFunctions getAstarFunctionsTime(Node destinationNode, HashMap<Integer, Double> linkTravelTime) {
 
-		AStarIterator.AStarFunctions aStarFunctions = new  AStarIterator.AStarFunctions(destinationNode){
+		MyAStarIterator.AStarFunctions aStarFunctions = new  MyAStarIterator.AStarFunctions(destinationNode){
 			
 			@Override
-			public double cost(AStarIterator.AStarNode aStarNode1, AStarIterator.AStarNode aStarNode2) {
+			public double cost(MyAStarIterator.AStarNode aStarNode1, MyAStarIterator.AStarNode aStarNode2) {
 
 				//Edge edge = aStarNode1.getNode().getEdge(aStarNode2.getNode()); // does not work, a directed version must be used!
 				Edge edge = ((DirectedNode) aStarNode1.getNode()).getOutEdge((DirectedNode) aStarNode2.getNode());
@@ -758,35 +775,39 @@ public class RoadNetwork {
 
 		if (linkTravelTime == null) linkTravelTime = new HashMap<Integer, Double>();
 		//if (linkTravelTime == null) linkTravelTime = this.freeFlowTravelTime;
-		RoadPath path = new RoadPath();
+		RoadPath path;
 		//find the shortest path using AStar algorithm
 		try {
 			//System.out.printf("Finding the shortest path from %d to %d using astar: \n", from.getID(), to.getID());
-			AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(this.network, from, to, this.getAstarFunctionsTime(to, linkTravelTime));
+			MyAStarShortestPathFinder aStarPathFinder = new MyAStarShortestPathFinder(this.network, from, to, this.getAstarFunctionsTime(to, linkTravelTime));
 			aStarPathFinder.calculate();
 			Path aStarPath;
 			aStarPath = aStarPathFinder.getPath();
-			aStarPath.reverse();
-			//System.out.println(aStarPath);
-			//System.out.println("The path as a list of nodes: " + aStarPath);
-			List listOfEdges = aStarPath.getEdges();
-			//System.out.println("The path as a list of edges: " + listOfEdges);
-			//System.out.println("Path size in the number of nodes: " + aStarPath.size());
-			//System.out.println("Path size in the number of edges: " + listOfEdges.size());
-//			for (Object o: listOfEdges) {
-//				DirectedEdge e = (DirectedEdge) o;
-//				path.addEdge(e);
-//			}
-			path = new RoadPath(aStarPath);
-			//System.out.println("RoadPath: " + path.toString());
-			//System.out.println("RoadPath edges: " + path.getEdges());
-			//path.buildEdges();
-			//System.out.println("RoadPath edges: " + path.getEdges());
-			
+			if (aStarPath != null) {
+				aStarPath.reverse();
+				//System.out.println(aStarPath);
+				//System.out.println("The path as a list of nodes: " + aStarPath);
+				//List listOfEdges = aStarPath.getEdges();
+				//System.out.println("The path as a list of edges: " + listOfEdges);
+				//System.out.println("Path size in the number of nodes: " + aStarPath.size());
+				//System.out.println("Path size in the number of edges: " + listOfEdges.size());
+				path = new RoadPath(aStarPath);
+				//System.out.println("RoadPath: " + path.toString());
+				//System.out.println("RoadPath edges: " + path.getEdges());
+				//path.buildEdges();
+				//System.out.println("RoadPath edges: " + path.getEdges());
+			} else {
+				//System.err.println("Could not find the shortest path using astar.");
+				return null;
+			}
+		} catch (WrongPathException e) {
+			System.err.println("Could not find the shortest path using astar.");
+			path = null;
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.err.println("Could not find the shortest path using astar.");
-		}
+			path = null;
+		} 
 		if (path != null && !path.isValid()) {
 			System.err.printf("Fastest path from %d to %d exists, but is not valid! %n", from.getID(), to.getID());
 			return null;
@@ -795,7 +816,7 @@ public class RoadNetwork {
 	}
 	
 	/**
-	 * Gets the fastest path between two nodes using dijkstra algorithm and provided link travel times.
+	 * Gets the fastest path between two nodes using Dijkstra's algorithm and provided link travel times.
 	 * Links which have no travel time provided will use free flow travel times.
 	 * @param from Origin node.
 	 * @param to Destination node.
@@ -805,31 +826,41 @@ public class RoadNetwork {
 	public RoadPath getFastestPathDijkstra(DirectedNode from, DirectedNode to, HashMap<Integer, Double> linkTravelTime) {
 
 		if (linkTravelTime == null) linkTravelTime = new HashMap<Integer, Double>();
-		RoadPath roadPath = new RoadPath();
-		//find the shortest path using AStar algorithm
+		//if (linkTravelTime == null) linkTravelTime = this.freeFlowTravelTime;
+		RoadPath path;
+		//find the shortest path using Dijkstra algorithm
 		try {
 			//System.out.printf("Finding the shortest path from %d to %d using dijkstra: \n", from.getID(), to.getID());
 			DijkstraShortestPathFinder pathFinder = new DijkstraShortestPathFinder(this.network, from, this.getDijkstraTimeWeighter(linkTravelTime));
 			pathFinder.calculate();
-			Path path = pathFinder.getPath(to);
-			path.reverse();
-						
-			//System.out.println(path);
-			//System.out.println("The path as a list of nodes: " + path);
-			List listOfEdges = path.getEdges();
+			Path dijkstraPath = pathFinder.getPath(to);
+			if (dijkstraPath != null) {
+			dijkstraPath.reverse();
+			//System.out.println(dijkstraPath);
+			//System.out.println("The path as a list of nodes: " + dijkstraPath);
+			//List listOfEdges = dijkstraPath.getEdges();
 			//System.out.println("The path as a list of edges: " + listOfEdges);
-			//System.out.println("Path size in the number of nodes: " + path.size());
+			//System.out.println("Path size in the number of nodes: " + dijkstraPath.size());
 			//System.out.println("Path size in the number of edges: " + listOfEdges.size());
-			for (Object o: listOfEdges) {
-				DirectedEdge e = (DirectedEdge) o;
-				roadPath.addEdge(e);
+			path = new RoadPath(dijkstraPath);
+			//System.out.println("RoadPath: " + path.toString());
+			//System.out.println("RoadPath edges: " + path.getEdges());
+			//path.buildEdges();
+			//System.out.println("RoadPath edges: " + path.getEdges());
+			} else {
+				//System.err.println("Could not find the shortest path using Dijkstra.");
+				return null;
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.err.println("Could not find the shortest path using Dijkstra.");
+			return null;
 		}
-		if (roadPath != null && !roadPath.isValid()) System.err.printf("Fastest path from %d to %d exists, but is not valid! \n", from.getID(), to.getID());
-		return roadPath;
+		if (path != null && !path.isValid()) {
+			System.err.printf("Fastest path from %d to %d exists, but is not valid! %n", from.getID(), to.getID());
+			return null;
+		}
+		return path;
 	}
 	
 	/**

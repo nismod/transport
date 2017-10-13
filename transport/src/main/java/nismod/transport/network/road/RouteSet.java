@@ -12,7 +12,7 @@ import org.geotools.graph.structure.DirectedNode;
 import nismod.transport.utility.RandomSingleton;
 
 /**
- * RouteSet is a choice set of possible routes between origin and destination node
+ * RouteSet is a choice set of possible routes between origin and destination node.
  * @author Milan Lovric
  *
  */
@@ -39,6 +39,7 @@ public class RouteSet {
 	/**
 	 * @param originNode
 	 * @param destinationNode
+	 * @param linkTravelTime
 	 */
 	public RouteSet(DirectedNode originNode, DirectedNode destinationNode, HashMap<Integer, Double> linkTravelTime) {
 		this.originNode = originNode;
@@ -162,7 +163,6 @@ public class RouteSet {
 			r.calculateUtility(this.linkTravelTime, this.params);
 	}
 	
-	
 	/**
 	 * Calculates choice probabilities using logit formula.
 	 */
@@ -198,9 +198,7 @@ public class RouteSet {
 		}
 		
 		return utilities;
-		
 	}
-	
 	
 //	/**
 //	 * Chooses a route based on the probabilities.

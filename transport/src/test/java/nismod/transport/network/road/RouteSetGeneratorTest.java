@@ -285,6 +285,11 @@ public class RouteSetGeneratorTest {
 		DirectedGraph rn = roadNetwork.getNetwork();
 		ODMatrix passengerODM = new ODMatrix("./src/test/resources/testdata/passengerODM.csv");
 
+		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
+		rsg.generateRouteSetWithRandomLinkEliminationRestricted(83, 31);
+		rsg.printChoiceSets();
+		rsg.printStatistics();
+		
 		RouteSetGenerator routes = new RouteSetGenerator(roadNetwork);
 
 		/*
@@ -292,14 +297,23 @@ public class RouteSetGeneratorTest {
 		//routes.generateRouteSetWithLinkElimination("E06000045", "E07000091", 2);
 		routes.generateRouteSetWithLinkElimination(passengerODM, 3);
 		routes.saveRoutes("testRoutes.txt", false);
-//		routes.printChoiceSets();
-//		routes.printStatistics();
+		routes.printChoiceSets();
+		routes.printStatistics();
 		routes.clearRoutes();
 		routes.readRoutes("testRoutes.txt");
 		routes.printChoiceSets();
 		routes.printStatistics();
 		 */
-
+		
+		routes.generateRouteSetWithRandomLinkEliminationRestricted(116, 106);
+		routes.printChoiceSets();
+		routes.printStatistics();
+		
+		routes.clearRoutes();
+		routes.generateRouteSet(passengerODM, 10);
+		routes.printChoiceSets();
+		routes.printStatistics();
+		
 		//generate all route sets
 		routes.clearRoutes();
 		routes.generateRouteSet(passengerODM, 1, 1, 3);
@@ -334,9 +348,8 @@ public class RouteSetGeneratorTest {
 		System.out.printf("%d route sets, %d routes \n", routeSets3, routes3);
 		System.out.printf("Total routes of all the slices: %d \n", routes1 + routes2 + routes3);
 
-		assertEquals("The sum of route sets generated across OD matrix slices is equal to the total", totalRouteSets, routeSets1 + routeSets2 + routeSets3);
-
-		//due to randomness in the link elimination generation, the total number of routes will typically not be the same!
+		assertEquals("The sum of route sets generated across OD matrix slices is equal to the total number of route sets", totalRouteSets, routeSets1 + routeSets2 + routeSets3);
+		//however, due to randomness in the link elimination generation, the total number of routes will typically not be the same!
 		//assertEquals("The sum of routes generated across OD matrix slices is equal to the total", totalRoutes, routes1 + routes2 + routes3);
 	}
 
@@ -361,15 +374,6 @@ public class RouteSetGeneratorTest {
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlfixedEdgeIDs);	
 		roadNetwork.makeEdgesAdmissible();
 
-		//		//create a road network assignment
-		//		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null);
-		//		
-		//		//assign passenger flows
-		//		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
-		//		rna.assignPassengerFlows(odm);
-		//		
-		//		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforCounts());
-
 		//TEST ROUTE SET GENERATION
 		System.out.println("\n\n*** Testing route set generation ***");
 
@@ -379,43 +383,29 @@ public class RouteSetGeneratorTest {
 		rsg.generateRouteSetWithRandomLinkEliminationRestricted(31, 82);
 		rsg.printChoiceSets();
 		rsg.printStatistics();
-
-
-		//		RoadPath rp = roadNetwork.getFastestPath((DirectedNode)roadNetwork.getNodeIDtoNode().get(31), 
-		//				(DirectedNode)roadNetwork.getNodeIDtoNode().get(82),
-		//				null);
-		//		
-		//		RoadPath rp = roadNetwork.getFastestPath((DirectedNode)roadNetwork.getNodeIDtoNode().get(31), 
-		//				(DirectedNode)roadNetwork.getNodeIDtoNode().get(82),
-		//				roadNetwork.getFreeFlowTravelTime());
-
+		
 		HashMap<Integer, Double> linkTravelTimes = new HashMap<Integer, Double>();
 		DirectedNode node1 = (DirectedNode)roadNetwork.getNodeIDtoNode().get(48);
 		DirectedNode node2 = (DirectedNode)roadNetwork.getNodeIDtoNode().get(82);
 		DirectedEdge edge = (DirectedEdge) node1.getOutEdge(node2);
-		linkTravelTimes.put(edge.getID(), Double.POSITIVE_INFINITY); //blocks by setting a maximum travel time
-		//		linkTravelTimes.put(edge.getID(), Double.MAX_VALUE); //blocks by setting a maximum travel time
-		//		linkTravelTimes.put(edge.getID(), 100000.0); //blocks by setting a maximum travel time
-
+		
+		//linkTravelTimes.put(edge.getID(), Double.POSITIVE_INFINITY); //setting maximum travel time does not block or aStar!
+		roadNetwork.removeRoadLink(edge);
 
 		RoadPath rp = roadNetwork.getFastestPath((DirectedNode)roadNetwork.getNodeIDtoNode().get(31), 
 				(DirectedNode)roadNetwork.getNodeIDtoNode().get(82),
 				linkTravelTimes);
 
 		if (rp != null) {
-
 			System.out.println(rp);
 			System.out.println("Is it valid: " + rp.isValid());
 			System.out.println(rp.buildEdges());
 			Route route = new Route(rp);
 			System.out.println(route.isValid());
 			System.out.println(route.getFormattedString());
-
+		} else {
+			System.err.println("Could not find the shortest path using astar.");
 		}
-
-		//rna.assignPassengerFlowsRouteChoice(odm, rsg);
-		//System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforCounts());
-
 	}
 
 	//@Test
