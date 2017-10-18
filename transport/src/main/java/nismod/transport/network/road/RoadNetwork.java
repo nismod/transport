@@ -4,6 +4,7 @@
 package nismod.transport.network.road;
 
 import java.awt.Color;
+import java.awt.RenderingHints;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -53,10 +54,15 @@ import org.geotools.graph.traverse.standard.DijkstraIterator.EdgeWeighter;
 import org.geotools.map.FeatureLayer;
 import org.geotools.map.MapContent;
 import org.geotools.referencing.CRS;
+import org.geotools.renderer.GTRenderer;
+import org.geotools.styling.FeatureTypeStyle;
+import org.geotools.styling.Font;
 import org.geotools.styling.PolygonSymbolizer;
 import org.geotools.styling.SLD;
 import org.geotools.styling.Style;
 import org.geotools.styling.StyleBuilder;
+import org.geotools.styling.Symbolizer;
+import org.geotools.styling.TextSymbolizer;
 import org.geotools.swing.JMapFrame;
 import org.geotools.swing.data.JFileDataStoreChooser;
 import org.opengis.feature.simple.SimpleFeature;
@@ -128,16 +134,16 @@ public class RoadNetwork {
 	 */
 	public RoadNetwork(URL zonesUrl, URL networkUrl, URL nodesUrl, URL AADFurl, String areaCodeFileName, String areaCodeNearestNodeFile, String workplaceZoneFileName, String workplaceZoneNearestNodeFile, String freightZoneToLADfile, String freightZoneNearestNodeFile) throws IOException {
 
-		zonesShapefile = new ShapefileDataStore(zonesUrl);
-		networkShapefile = new ShapefileDataStore(networkUrl);
-		nodesShapefile = new ShapefileDataStore(nodesUrl);
-		AADFshapefile = new ShapefileDataStore(AADFurl);
+		this.zonesShapefile = new ShapefileDataStore(zonesUrl);
+		this.networkShapefile = new ShapefileDataStore(networkUrl);
+		this.nodesShapefile = new ShapefileDataStore(nodesUrl);
+		this.AADFshapefile = new ShapefileDataStore(AADFurl);
 		
 		//build the graph
 		this.build();
 
 		//weight the edges of the graph using the physical distance of each road segment		
-		dijkstraWeighter = new EdgeWeighter() {
+		this.dijkstraWeighter = new EdgeWeighter() {
 			@Override
 			public double getWeight(org.geotools.graph.structure.Edge edge) {
 				SimpleFeature sf = (SimpleFeature) edge.getObject(); 
@@ -147,7 +153,7 @@ public class RoadNetwork {
 		};
 		
 		//weight the edges of the graph using the free-flow travel time		
-		dijkstraTimeWeighter = new EdgeWeighter() {
+		this.dijkstraTimeWeighter = new EdgeWeighter() {
 			@Override
 			public double getWeight(org.geotools.graph.structure.Edge edge) {
 				SimpleFeature feature = (SimpleFeature) edge.getObject(); 
@@ -184,18 +190,8 @@ public class RoadNetwork {
 		this.calculateNodeAccessEgressDistanceFreight();
 		//this.sortGravityNodesFreight(); //call this before freight assignment
 		
-//		this.freightZoneToLAD = new HashMap<Integer, String>();
-//		this.freightZoneToLAD.put(855, "E06000045");
-//		this.freightZoneToLAD.put(854, "E07000086");
-//		this.freightZoneToLAD.put(866, "E07000091");
-//		this.freightZoneToLAD.put(867, "E06000046");
-//		this.freightZoneToNearestNode = new HashMap<Integer, Integer>();
-//		this.freightZoneToNearestNode.put(1312, 86);
-//		this.freightZoneToNearestNode.put(1313, 115);
 		this.loadFreightZoneNearestNodeAndDistance(freightZoneNearestNodeFile);
 		this.loadFreightZoneToLAD(freightZoneToLADfile);
-		
-			
 		//System.out.println(this.zoneToAreaCodes);
 		//System.out.println(this.areaCodeToPopulation);
 		//System.out.println(this.areaCodeToNearestNode);
@@ -310,56 +306,79 @@ public class RoadNetwork {
 
 		//create style for zones
 		StyleBuilder styleBuilder = new StyleBuilder();
+		
+		//create fonts
+		Font font1 = styleBuilder.createFont("Lucida Sans", false, false, 10);
+		Font font2 = styleBuilder.createFont("Arial", false, false, 10);
+		Font zonesFont = styleBuilder.createFont("Arial", false, true, 14);
+				
 		PolygonSymbolizer symbolizer = styleBuilder.createPolygonSymbolizer(Color.DARK_GRAY, Color.BLACK, 1);
 		symbolizer.getFill().setOpacity(styleBuilder.literalExpression(0.5));
 		org.geotools.styling.Style zonesStyle = styleBuilder.createStyle(symbolizer);
-
+		
+		TextSymbolizer textSymbolizer = styleBuilder.createTextSymbolizer(Color.DARK_GRAY, zonesFont, "NAME");
+		Symbolizer[] syms = new Symbolizer[2];
+		syms[0] = symbolizer; syms[1] = textSymbolizer;
+	
+		Style zonesStyle4 = styleBuilder.createStyle(textSymbolizer);		
+		Style zonesStyle2 = SLD.createPolygonStyle(Color.DARK_GRAY, Color.DARK_GRAY, 0.5f);
+		Style zonesStyle3 = SLD.createPolygonStyle(Color.DARK_GRAY, Color.DARK_GRAY, 0.5f, "NAME", zonesFont);
+		
 		//add zones layer to the map     
-		FeatureLayer zonesLayer = new FeatureLayer(zonesShapefile.getFeatureSource(), zonesStyle);
+		FeatureLayer zonesLayer = new FeatureLayer(this.zonesShapefile.getFeatureSource(), (Style) zonesStyle3);
 		map.addLayer(zonesLayer);
 
 		//create style for road network
-		Style networkStyle = SLD.createLineStyle(Color.GREEN, 2.0f, "CP", null);
+		Style networkStyle = SLD.createLineStyle(Color.GREEN, 4.0f, "RoadNumber", font2);
 
 		//add network layer to the map
 		FeatureLayer networkLayer;
 		if (newNetworkShapefile != null)
-			networkLayer = new FeatureLayer(newNetworkShapefile.getFeatureSource(), networkStyle);
+			networkLayer = new FeatureLayer(this.newNetworkShapefile.getFeatureSource(), networkStyle);
 		else
-			networkLayer = new FeatureLayer(networkShapefile.getFeatureSource(), networkStyle);
+			networkLayer = new FeatureLayer(this.networkShapefile.getFeatureSource(), networkStyle);
 		map.addLayer(networkLayer);
 
 		//create style for nodes
-		Style nodesStyle = SLD.createPointStyle("Circle", Color.DARK_GRAY, Color.RED, 1, 4, "nodeID", null);
+		Style nodesStyle = SLD.createPointStyle("Circle", Color.DARK_GRAY, Color.BLUE, 1, 5, "nodeID", font2);
 
 		//add nodes layer to the map     
 		FeatureLayer nodesLayer = new FeatureLayer(nodesShapefile.getFeatureSource(), nodesStyle);
 		map.addLayer(nodesLayer);					
 
 		//create style for AADF counts
-		Style AADFstyle = SLD.createPointStyle("Circle", Color.DARK_GRAY, Color.YELLOW, 1, 4, "CP", null);
+		Style AADFstyle = SLD.createPointStyle("Circle", Color.DARK_GRAY, Color.YELLOW, 1, 4, null, font2);
 
 		//add counts layer to the map     
-		FeatureLayer AADFlayer = new FeatureLayer(AADFshapefile.getFeatureSource(), AADFstyle);
+		FeatureLayer AADFlayer = new FeatureLayer(this.AADFshapefile.getFeatureSource(), AADFstyle);
 		map.addLayer(AADFlayer);
 
 		//show the map in JMapFrame
 		JMapFrame show = new JMapFrame(map);
 		
-		//list layers and set them as visible + selected
+	  	//list layers and set them as visible + selected
 		show.enableLayerTable(true);
-		
 		//zoom in, zoom out, pan, show all
 		show.enableToolBar(true);
-		
 		//location of cursor and bounds of current
 		show.enableStatusBar(true);
-		
 		//display
 		show.setVisible(true);
-		
 		//maximise window
 		show.setExtendedState(JMapFrame.MAXIMIZED_BOTH);
+
+		//improve rendering
+		GTRenderer     renderer = show.getMapPane().getRenderer();
+		RenderingHints hints    = new RenderingHints(RenderingHints.KEY_ANTIALIASING,
+		                                  RenderingHints.VALUE_ANTIALIAS_ON);    
+	    hints.put(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+	    hints.put(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+	    hints.put(RenderingHints.KEY_DITHERING, RenderingHints.VALUE_DITHER_ENABLE);
+	    hints.put(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+	    hints.put(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+	    hints.put(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
+	    renderer.setJava2DHints(hints);
+	    show.getMapPane().setRenderer(renderer);
 	}
 	
 	/**
@@ -419,6 +438,7 @@ public class RoadNetwork {
 			SimpleFeature feat = (SimpleFeature) edge.getObject();
 			if (feat != null) { //has an object (e.g. count point)
 				objList.add(feat.getAttribute("CP"));
+				objList.add(feat.getAttribute("RoadNumber"));
 				objList.add(feat.getAttribute("iDir"));
 				objList.add(feat.getAttribute("S Ref E"));
 				objList.add(feat.getAttribute("S Ref N"));
@@ -592,37 +612,6 @@ public class RoadNetwork {
 
 		return dijkstraWeighter;
 	}
-	
-//	/**
-//	 * Getter method for the Dijkstra edge weighter with time.
-//	 * @return Dijkstra edge weighter with time.
-//	 */
-//	public DijkstraIterator.EdgeWeighter getDijkstraTimeWeighter() {
-//			
-//		//weight the edges of the graph using the free-flow travel time		
-//		DijkstraIterator.EdgeWeighter dijkstraTimeWeighter = new EdgeWeighter() {
-//			@Override
-//			public double getWeight(org.geotools.graph.structure.Edge edge) {
-//				SimpleFeature feature = (SimpleFeature) edge.getObject(); 
-//				double length = (double) feature.getAttribute("LenNet");
-//				double cost;
-//				String roadNumber = (String) feature.getAttribute("RoadNumber");
-//					if (roadNumber.charAt(0) == 'M') //motorway
-//						cost = length / RoadNetworkAssignment.FREE_FLOW_SPEED_M_ROAD * 60;  //travel time in minutes
-//					else if (roadNumber.charAt(0) == 'A') //A road
-//						cost = length / RoadNetworkAssignment.FREE_FLOW_SPEED_A_ROAD * 60;  //travel time in minutes
-//					else if (roadNumber.charAt(0) == 'F')//ferry
-//						cost = length / RoadNetworkAssignment.AVERAGE_SPEED_FERRY * 60;  //travel time in minutes
-//					else {
-//						System.err.println("Unknown road type for link " + edge.getID());
-//						cost = Double.NaN;
-//					}
-//				return cost;
-//			}
-//		};
-//		
-//		return dijkstraTimeWeighter;
-//	}
 	
 	/**
 	 * Getter method for the Dijkstra edge weighter with time.
@@ -1885,6 +1874,7 @@ public class RoadNetwork {
 		builder.add("Anode",Integer.class);
 		builder.add("Bnode",Integer.class);
 		builder.add("CP", Integer.class);
+		builder.add("RoadNumber", String.class);
 		builder.length(1).add("iDir", String.class);
 		builder.add("SRefE", Integer.class);
 		builder.add("SRefN", Integer.class);
