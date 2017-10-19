@@ -1,8 +1,15 @@
 package nismod.transport.network.road;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.junit.Assert.assertEquals;
+
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.Properties;
 
 import org.geotools.graph.structure.DirectedEdge;
@@ -100,16 +107,41 @@ public class RouteSetTest {
 		rs.setParameters(params);
 		rs.calculateUtilities();
 		rs.printUtilities();
+	
+		for (double utility: rs.getUtilities())
+			assertThat(0.0, greaterThanOrEqualTo(utility)); //all utilities should be negative (or 0)
+		
 		rs.calculateProbabilities();
 		rs.printProbabilities();
+		
+		//test that the sum of probabilities is 1.0
+		final double EPSILON = 1e-11; //may fail for higher accuracy
+		double probabilitySum = 0.0;
+		for (double probability: rs.getProbabilities()) 
+			probabilitySum += probability;
+		
+		System.out.printf("The sum of probabilites is: %.12f.%n", probabilitySum);
+		assertEquals("The sum of probabilities is 1.0", 1.0, probabilitySum, EPSILON);
+		
 		rs.sortRoutesOnUtility();
 		rs.printUtilities();
 		rs.printProbabilities();
+
+		for (double utility: rs.getUtilities())
+			assertThat(0.0, greaterThanOrEqualTo(utility)); //all utilities should be negative (or 0)
+
+		//test that the sum of probabilities is 1.0
+		probabilitySum = 0.0;
+		for (double probability: rs.getProbabilities()) 
+			probabilitySum += probability;
+		
+		//check that probabilities are also sorted after sorting the utilities
+		ArrayList<Double> sorted = new ArrayList<Double>(rs.getProbabilities());
+		Collections.sort(sorted, Collections.reverseOrder());
+		assertEquals ("Probabilities list is sorted", sorted, rs.getProbabilities());
 		
 		int[] choiceFrequency = new int[4];
-		
 		for (int i=0; i<1000; i++) {
-		
 			Route chosenRoute = rs.choose(null);
 			int choiceIndex = rs.getIndexOfRoute(chosenRoute);
 			choiceFrequency[choiceIndex]++;
@@ -132,7 +164,16 @@ public class RouteSetTest {
 		rs.addRoute(newRoute);
 		rs.printChoiceSet();
 		rs.printStatistics();
-
+		rs.printUtilities();
+		rs.calculateProbabilities(roadNetwork.getFreeFlowTravelTime(), params);
+		rs.printProbabilities();
+		
+		//correct utility with path size only for the new route
+		int routeIndex = rs.getChoiceSet().indexOf(newRoute);
+		System.out.println("Correcting the utility of the new route with index: " + routeIndex);
+		rs.correctUtilityWithPathSize(routeIndex);
+		rs.printUtilities();
+		
 		//rs.calculateProbabilities(roadNetwork.getFreeFlowTravelTime(), null);
 		rs.calculateProbabilities(roadNetwork.getFreeFlowTravelTime(), params);
 		rs.sortRoutesOnUtility();
