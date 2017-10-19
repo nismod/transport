@@ -7,7 +7,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 
+import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedNode;
+import org.geotools.graph.structure.Edge;
+import org.opengis.feature.simple.SimpleFeature;
 
 import nismod.transport.utility.RandomSingleton;
 
@@ -120,11 +123,12 @@ public class RouteSet {
 		
 		double sum = 0.0;
 		
-		//all routes need to have utility calculated, if not calculate it
+		//all routes need to have a utility calculated
 		for (Route r: choiceSet) {
-						
-			if (r.getUtility() == null) r.calculateUtility(linkTravelTime, params);
-			sum += Math.exp(r.getUtility());
+			if (r.getUtility() == null) 
+				System.err.printf("Route %d does not have a calculated utility! %n", r.getID());
+			else
+				sum += Math.exp(r.getUtility());
 		}
 		
 		for (int index = 0; index < choiceSet.size(); index++) {
@@ -151,6 +155,9 @@ public class RouteSet {
 		//re-calculate utility for all the routes
 		for (Route r: choiceSet)
 			r.calculateUtility(linkTravelTime, params);
+		
+		//correct for correlation with path-size
+		this.correctUtilitiesWithPathSize();
 	}
 	
 	/**
@@ -161,6 +168,9 @@ public class RouteSet {
 		//re-calculate utility for all the routes
 		for (Route r: choiceSet)
 			r.calculateUtility(this.linkTravelTime, this.params);
+		
+		//correct for correlation with path-size
+		this.correctUtilitiesWithPathSize();
 	}
 	
 	/**
@@ -200,34 +210,41 @@ public class RouteSet {
 		return utilities;
 	}
 	
-//	/**
-//	 * Chooses a route based on the probabilities.
-//	 * @return Chosen route.
-//	 */
-//	public Route choose() {
-//		
-//		//probabilities must be calculated at least once
-//		if (probabilities == null) {
-//			this.calculateProbabilities();
-//			this.sortRoutesOnUtility();
-//		}
-//		
-//		RandomSingleton rng = RandomSingleton.getInstance();
-//			
-//		//choose route
-//		double cumulativeProbability = 0.0;
-//		double random = rng.nextDouble();
-//		int chosenIndex = -1;
-//		for (int index = 0; index < choiceSet.size(); index++) {
-//			cumulativeProbability += this.probabilities.get(index);
-//			if (Double.compare(cumulativeProbability, random) > 0) {
-//				chosenIndex = index;
-//				break;
-//			}
-//		}
-//		if (chosenIndex == -1) return null;
-//		else return choiceSet.get(chosenIndex);
-//	}
+	/**
+	 * Correct each route's utility with path size (measure of correlation with other routes in the choice set)
+	 */
+	public void correctUtilitiesWithPathSize() {
+		
+		for (int routeIndex = 0; routeIndex < this.choiceSet.size(); routeIndex++)
+			this.correctUtilityWithPathSize(routeIndex);
+	}
+	
+	/**
+	 * Corrects utility with path size for a particular route within the choice set.
+	 * @param routeIndex index of the route (list element) within the choice set
+	 */
+	public void correctUtilityWithPathSize(int routeIndex) {
+
+		Route i = this.choiceSet.get(routeIndex);
+		double pathSize = 0.0;
+		for (DirectedEdge a: i.getEdges()) {
+
+			SimpleFeature sf = (SimpleFeature) a.getObject();
+			double edgeLength = (double) sf.getAttribute("LenNet"); //in [km]
+			double firstTerm = edgeLength / i.getLength();
+
+			double secondTerm = 0.0;
+			for (Route j: this.choiceSet)
+				if (j.getEdges().contains(a))
+					secondTerm += i.getLength() / j.getLength();
+
+			pathSize += firstTerm / secondTerm;
+		}
+		//correct utility with pathsize
+		double utility = i.getUtility();
+		utility += Math.log(pathSize);
+		i.setUtility(utility);
+	}
 	
 	/**
 	 * Chooses a route based on the probabilities.

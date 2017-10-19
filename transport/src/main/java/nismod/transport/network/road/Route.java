@@ -185,6 +185,11 @@ public class Route {
 		return utility;
 	}
 	
+	public void setUtility(double utility) {
+		
+		this.utility = utility;
+	}
+	
 	public DirectedNode getOriginNode() {
 		
 		if (edges.isEmpty()) 	return null;
