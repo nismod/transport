@@ -225,6 +225,18 @@ public class SkimMatrix {
 	}
 	
 	/**
+	 * Gets sum of OD costs.
+	 * @return
+	 */
+	public double getSumOfCosts() {
+		
+		double sumOfCosts = 0.0;
+		for (Object cost: matrix.values()) sumOfCosts += (double) cost;
+		
+		return sumOfCosts;
+	}
+	
+	/**
 	 * Gets average OD cost weighted by demand.
 	 * @param flows The demand as an origin-destination matrix.
 	 * @return
@@ -242,6 +254,22 @@ public class SkimMatrix {
 		averageCost /= totalFlows;
 		
 		return averageCost;
+	}
+	
+	/**
+	 * Gets sum of costs weighted by demand.
+	 * @param flows The demand as an origin-destination matrix.
+	 * @return
+	 */
+	public double getSumOfCosts(ODMatrix flows) {
+		
+		double sumOfCosts = 0.0;
+		for (MultiKey mk: flows.getKeySet()) {
+			String origin = (String) mk.getKey(0);
+			String destination = (String) mk.getKey(1);
+			sumOfCosts += flows.getFlow(origin, destination) * (double) matrix.get(origin, destination);
+		}
+		return sumOfCosts;
 	}
 	
 	/**

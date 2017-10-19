@@ -57,6 +57,7 @@ public class RoadNetworkAssignment {
 	public static final double BETA_A_ROAD = 4;
 	public static final boolean FLAG_INTRAZONAL_ASSIGNMENT_REPLACEMENT = false; //true means that origin and destination nodes can be the same
 	public static final int INTERZONAL_TOP_NODES = 10; //how many top nodes (based on gravitated population size) to considers as trip origin/destination
+	public static final double ORIGIN_ZONE_ENERGY_WEIGHT = 0.85; //percentage of energy consumption assigned to origin zone (the rest assigned to destination zone)
 
 	private static RandomSingleton rng = RandomSingleton.getInstance();
 
@@ -1383,6 +1384,50 @@ public class RoadNetworkAssignment {
 	}
 	
 	/**
+	 * Calculates zone-to-zone total travelled distances.
+	 * @return Inter-zonal total travelled distance.
+	 */
+	public SkimMatrix calculateTotalTravelledDistanceMatrix() {
+
+		SkimMatrix totalTravelledDistance = new SkimMatrix();
+
+		//for each OD pair
+		for (MultiKey mk: pathStorage.keySet()) {
+			//System.out.println(mk);
+			String originZone = (String) mk.getKey(0);
+			String destinationZone = (String) mk.getKey(1);
+
+			List<Path> pathList = pathStorage.get(originZone, destinationZone);
+			double totalODdistance = 0.0;
+			//for each path in the path list calculate total distance
+			for (Path path: pathList) {
+
+				double pathLength = 0.0;
+				for (Object o: path.getEdges()) {
+					Edge e = (Edge)o;
+					SimpleFeature sf = (SimpleFeature) e.getObject();
+					double length = (double) sf.getAttribute("LenNet");
+					pathLength += length;					
+				}
+				//System.out.printf("Path length: %.3f\n", pathLength);
+				totalODdistance += pathLength;
+
+				//add average access and egress distance to the first and the last node [m -> km!]
+				double accessDistance = this.roadNetwork.getAverageAcessEgressDistance(path.getFirst().getID()) / 1000;
+				double egressDistance = this.roadNetwork.getAverageAcessEgressDistance(path.getLast().getID()) / 1000;
+				//System.out.printf("Acess: %.3f Egress: %.3f\n ", accessDistance, egressDistance);
+				//System.out.printf("Path length with access and egress: %.3f km\n", pathLength + accessDistance + egressDistance);
+				totalODdistance += (accessDistance + egressDistance);
+			}
+
+			//update distance skim matrix
+			totalTravelledDistance.setCost(originZone, destinationZone, totalODdistance);
+		}
+
+		return totalTravelledDistance;
+	}
+	
+	/**
 	 * Updates cost skim matrix (zone-to-zone distances).
 	 * @return Inter-zonal skim matrix (distance).
 	 */
@@ -1568,6 +1613,53 @@ public class RoadNetworkAssignment {
 			consumptions.put(engine, consumption);
 		}
 		return consumptions;
+	}
+	
+	/**
+	 * Calculates spatial energy consumption for each car engine type (in litres for fuels and in kWh for electricity).
+	 * @return Zonal consumption for each engine type.
+	 */
+	public HashMap<EngineType, HashMap<String, Double>> calculateZonalCarEnergyConsumptions() {
+
+		SkimMatrix totalTravelledDistance = calculateTotalTravelledDistanceMatrix();
+		
+		//first calculate zonal distances
+		HashMap<String, Double> zonalDistances = new HashMap<String, Double>();
+		for (MultiKey mk: totalTravelledDistance.getKeySet()) {
+			String originZone = (String) mk.getKey(0);
+			String destinationZone = (String) mk.getKey(1);
+		
+			Double totalDistance = totalTravelledDistance.getCost(originZone, destinationZone);
+			if (totalDistance == null) totalDistance = 0.0;
+						
+			Double zonalDistancesAtOrigin = zonalDistances.get(originZone);
+			if (zonalDistancesAtOrigin == null) zonalDistancesAtOrigin = 0.0;
+			zonalDistancesAtOrigin += ORIGIN_ZONE_ENERGY_WEIGHT * totalDistance;
+			zonalDistances.put(originZone, zonalDistancesAtOrigin);
+						
+			Double zonalDistancesAtDestination = zonalDistances.get(destinationZone);
+			if (zonalDistancesAtDestination == null) zonalDistancesAtDestination = 0.0;
+			zonalDistancesAtDestination += (1.0 - ORIGIN_ZONE_ENERGY_WEIGHT) * totalDistance;
+			zonalDistances.put(destinationZone, zonalDistancesAtDestination);
+		}
+		
+		//initialise hashmaps
+		HashMap<EngineType, HashMap<String, Double>> zonalConsumptions = new HashMap<EngineType, HashMap<String, Double>>();
+		for (EngineType engine: EngineType.values()) {
+			HashMap<String, Double> consumption = new HashMap<String, Double>();
+			zonalConsumptions.put(engine, consumption);
+		}
+
+		//calculate consumptions
+		for (EngineType engine: EngineType.values()) {
+			HashMap<String, Double> consumptionMap = zonalConsumptions.get(engine);
+			for (String zone: zonalDistances.keySet()) {
+				double consumption = zonalDistances.get(zone) / 100 * engineTypeFractions.get(engine) * energyConsumptionsPer100km.get(engine);
+				consumptionMap.put(zone, consumption);
+			}
+		}
+		
+		return zonalConsumptions;
 	}
 
 	/**
