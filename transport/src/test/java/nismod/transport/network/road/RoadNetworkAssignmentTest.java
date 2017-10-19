@@ -105,7 +105,8 @@ public class RoadNetworkAssignmentTest {
 		//read routes
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork2);
 		//rsg.readRoutes("completeRoutesNewest.txt");
-		rsg.readRoutes("./src/main/resources/data/all5routestop10/all5routestop10.txt");
+		//rsg.readRoutes("./src/main/resources/data/all5routestop10/all5routestop10.txt");
+		rsg.readRoutes("./src/main/resources/data/5routes10nodesnew/all5routestop10new.txt");
 		rsg.printStatistics();
 		
 		//set route choice parameters
@@ -203,6 +204,12 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("Total energy consumptions:");
 		System.out.println(roadNetworkAssignment.calculateEnergyConsumptions());
 		
+		System.out.println("Total travelled distance matrix:");
+		roadNetworkAssignment.calculateTotalTravelledDistanceMatrix().printMatrixFormatted();
+		
+		System.out.println("Zonal car energy consumptions:");
+		System.out.println(roadNetworkAssignment.calculateZonalCarEnergyConsumptions());
+				
 		System.out.println("Peak-hour link point capacities:");
 		System.out.println(roadNetworkAssignment.calculatePeakLinkPointCapacities());
 		
@@ -521,6 +528,19 @@ public class RoadNetworkAssignmentTest {
 		
 		System.out.println("Distance skim matrix:");
 		rna.calculateDistanceSkimMatrix().printMatrixFormatted();
+		
+		System.out.println("Total travelled distance matrix:");
+		rna.calculateTotalTravelledDistanceMatrix().printMatrixFormatted();
+		
+		System.out.println("Zonal car energy consumptions:");
+		System.out.println(rna.calculateZonalCarEnergyConsumptions());
+		
+		System.out.println("Total car energy consumptions:");
+		System.out.println(rna.calculateCarEnergyConsumptions());
+		
+		System.out.println("Total energy consumptions:");
+		System.out.println(rna.calculateEnergyConsumptions());
+		
 				
 		//rna.saveAssignmentResults(2015, "testAssignmentResults.csv");
 		
