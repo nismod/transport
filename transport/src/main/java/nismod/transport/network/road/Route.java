@@ -119,7 +119,7 @@ public class Route {
 	/**
 	 * Calculates the lenght of the route.
 	 */
-	private void calculateLength(){
+	public void calculateLength(){
 	
 		double length = 0.0;
 		for (DirectedEdge edge: edges) {

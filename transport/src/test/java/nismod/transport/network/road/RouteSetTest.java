@@ -160,22 +160,14 @@ public class RouteSetTest {
 		Route newRoute = new Route(rp);
 		System.out.println(newRoute.isValid());
 		
-		newRoute.calculateUtility(roadNetwork.getFreeFlowTravelTime(), params);
 		rs.addRoute(newRoute);
 		rs.printChoiceSet();
 		rs.printStatistics();
+		//all routes need to have re-calculated utility and path size after the new route is added!
+		rs.calculateUtilities(roadNetwork.getFreeFlowTravelTime(), params);
 		rs.printUtilities();
 		rs.calculateProbabilities(roadNetwork.getFreeFlowTravelTime(), params);
 		rs.printProbabilities();
-		
-		//correct utility with path size only for the new route
-		int routeIndex = rs.getChoiceSet().indexOf(newRoute);
-		System.out.println("Correcting the utility of the new route with index: " + routeIndex);
-		rs.correctUtilityWithPathSize(routeIndex);
-		rs.printUtilities();
-		
-		//rs.calculateProbabilities(roadNetwork.getFreeFlowTravelTime(), null);
-		rs.calculateProbabilities(roadNetwork.getFreeFlowTravelTime(), params);
 		rs.sortRoutesOnUtility();
 		rs.printChoiceSet();
 		rs.printUtilities();

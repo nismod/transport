@@ -215,8 +215,27 @@ public class RouteSet {
 	 */
 	public void correctUtilitiesWithPathSize() {
 		
-		for (int routeIndex = 0; routeIndex < this.choiceSet.size(); routeIndex++)
-			this.correctUtilityWithPathSize(routeIndex);
+		for (Route i: this.choiceSet) {
+			
+			double pathSize = 0.0;
+			for (DirectedEdge a: i.getEdges()) {
+
+				SimpleFeature sf = (SimpleFeature) a.getObject();
+				double edgeLength = (double) sf.getAttribute("LenNet"); //in [km]
+				double firstTerm = edgeLength / i.getLength();
+
+				double secondTerm = 0.0;
+				for (Route j: this.choiceSet)
+					if (j.getEdges().contains(a))
+						secondTerm += i.getLength() / j.getLength();
+
+				pathSize += firstTerm / secondTerm;
+			}
+			//correct utility with pathsize
+			double utility = i.getUtility();
+			utility += Math.log(pathSize);
+			i.setUtility(utility);
+		}
 	}
 	
 	/**

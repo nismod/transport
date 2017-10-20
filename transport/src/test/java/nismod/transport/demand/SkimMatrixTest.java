@@ -41,7 +41,6 @@ public class SkimMatrixTest {
 		//skimMatrix.setCost("E06000046", "E06000046", 6.2);
 		
 		skimMatrix.printMatrixFormatted();
-		
 		skimMatrix.saveMatrixFormatted("skimMatrix.csv");
 	}
 }
