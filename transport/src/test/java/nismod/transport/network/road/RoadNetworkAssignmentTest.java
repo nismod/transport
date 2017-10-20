@@ -173,7 +173,6 @@ public class RoadNetworkAssignmentTest {
 			System.out.println("number of paths = " + list.size());
 		}
 	
-		
 		System.out.println("Link volumes in PCU: ");
 		System.out.println(roadNetworkAssignment.getLinkVolumesInPCU());	
 		
@@ -205,10 +204,10 @@ public class RoadNetworkAssignmentTest {
 		System.out.println(roadNetworkAssignment.calculateEnergyConsumptions());
 		
 		System.out.println("Total travelled distance matrix:");
-		roadNetworkAssignment.calculateTotalTravelledDistanceMatrix().printMatrixFormatted();
+		roadNetworkAssignment.calculateTotalTravelledDistanceMatrixFromRouteStorage().printMatrixFormatted();
 		
 		System.out.println("Zonal car energy consumptions:");
-		System.out.println(roadNetworkAssignment.calculateZonalCarEnergyConsumptions());
+		System.out.println(roadNetworkAssignment.calculateZonalCarEnergyConsumptions(0.5));
 				
 		System.out.println("Peak-hour link point capacities:");
 		System.out.println(roadNetworkAssignment.calculatePeakLinkPointCapacities());
@@ -217,6 +216,8 @@ public class RoadNetworkAssignmentTest {
 		System.out.println(roadNetworkAssignment.calculatePeakLinkDensities());
 		
 		//roadNetworkAssignment.saveAssignmentResults(2015, "assignment2015balanced.csv");
+		roadNetworkAssignment.saveZonalCarEnergyConsumptions(2015, 0.85, "zonalCarEnergyConsumption85.csv");
+		roadNetworkAssignment.saveZonalCarEnergyConsumptions(2015, 0.5, "zonalCarEnergyConsumption50.csv");
 		
 		System.out.printf("RMSN for counts: %.2f%%", roadNetworkAssignment.calculateRMSNforCounts());
 		System.out.printf("RMSN for freight: %.2f%%", roadNetworkAssignment.calculateRMSNforFreightCounts());
@@ -324,6 +325,7 @@ public class RoadNetworkAssignmentTest {
 		
 		rna.resetLinkVolumes();
 		rna.resetPathStorages();
+		rna.resetRouteStorages();
 		rna.resetTripStartEndCounters();
 		
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
@@ -529,11 +531,12 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("Distance skim matrix:");
 		rna.calculateDistanceSkimMatrix().printMatrixFormatted();
 		
-		System.out.println("Total travelled distance matrix:");
-		rna.calculateTotalTravelledDistanceMatrix().printMatrixFormatted();
+		System.out.println("Total travelled distance matrix from path storage:");
+		rna.calculateTotalTravelledDistanceMatrixFromPathStorage().printMatrixFormatted();
+		System.out.println("Sum of all distances: " + rna.calculateTotalTravelledDistanceMatrixFromPathStorage().getSumOfCosts());
 		
 		System.out.println("Zonal car energy consumptions:");
-		System.out.println(rna.calculateZonalCarEnergyConsumptions());
+		System.out.println(rna.calculateZonalCarEnergyConsumptions(0.85));
 		
 		System.out.println("Total car energy consumptions:");
 		System.out.println(rna.calculateCarEnergyConsumptions());
@@ -541,7 +544,7 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("Total energy consumptions:");
 		System.out.println(rna.calculateEnergyConsumptions());
 		
-				
+		//rna.saveZonalCarEnergyConsumptions(2015, 0.85 , "testZonalCarEnergyConsumptions.csv");
 		//rna.saveAssignmentResults(2015, "testAssignmentResults.csv");
 		
 		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforCounts());
@@ -572,7 +575,7 @@ public class RoadNetworkAssignmentTest {
 		//TEST ASSIGNMENT WITH ROUTE CHOICE
 		System.out.println("\n\n*** Testing assignment with route choice ***");
 		rna.resetLinkVolumes();
-		rna.resetPathStorages();
+		rna.resetRouteStorages();
 		rna.resetTripStartEndCounters();
 		
 		//set route choice parameters
@@ -583,6 +586,9 @@ public class RoadNetworkAssignmentTest {
 		//rsg.calculateAllUtilities(rna.getLinkTravelTimes(), params);
 		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
 		
+		System.out.println("Total travelled distance from route storage: ");
+		rna.calculateTotalTravelledDistanceMatrixFromRouteStorage().printMatrixFormatted();
+				
 		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforCounts());
 	}
 	
