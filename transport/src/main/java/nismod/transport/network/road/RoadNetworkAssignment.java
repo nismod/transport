@@ -86,8 +86,8 @@ public class RoadNetworkAssignment {
 	private HashMap<Integer, Double> linkFreeFlowTravelTime;
 	private HashMap<Integer, Double> linkTravelTime;
 
-	//inter-zonal path storage - for every OD pair stores a list of paths
-	private MultiKeyMap<String, List<Path>> pathStorage;
+//	//inter-zonal path storage - for every OD pair stores a list of paths
+//	private MultiKeyMap<String, List<Path>> pathStorage;
 	//private MultiKeyMap<Integer, List<Path>> pathStorageFreight;
 	private HashMap<VehicleType, MultiKeyMap<Integer, List<Path>>> pathStorageFreight;
 	//inter-zonal path storage - for every OD pair stores a list of paths
@@ -140,7 +140,6 @@ public class RoadNetworkAssignment {
 		}
 		this.linkFreeFlowTravelTime = new HashMap<Integer, Double>();
 		this.linkTravelTime = new HashMap<Integer, Double>();
-		this.pathStorage = new MultiKeyMap<String, List<Path>>();
 		//this.pathStorageFreight = new MultiKeyMap<Integer, List<Path>>();
 		this.pathStorageFreight = new HashMap<VehicleType, MultiKeyMap<Integer, List<Path>>>();
 		for (VehicleType vht: VehicleType.values()) {
@@ -472,23 +471,22 @@ public class RoadNetworkAssignment {
 				Node from = roadNetwork.getNodeIDtoNode().get(originNode);
 				Node to = roadNetwork.getNodeIDtoNode().get(destinationNode);
 				//					System.out.println("from " + from + " to " + to);
-				Path foundPath = null;
+				Route foundRoute = null;
 				try {
 
-					//see if that path from node 'from' to node 'to' already exists in the path storage
-					if (pathStorage.containsKey(originZone, destinationZone)) { 
-						List<Path> list = (List<Path>) pathStorage.get(originZone, destinationZone);
-						for (Path p: list) {
-							//if (p.getFirst().equals(from) && p.getLast().equals(to)) {
-							if (p.getFirst().getID() == from.getID() && p.getLast().getID() == to.getID()) {
-								foundPath = p;
+					//see if that path from node 'from' to node 'to' already exists in the route storage
+					if (routeStorage.containsKey(originZone, destinationZone)) { 
+						List<Route> list = (List<Route>) routeStorage.get(originZone, destinationZone);
+						for (Route r: list) {
+							if (r.getOriginNode().getID() == from.getID() && r.getDestinationNode().getID() == to.getID()) {
+								foundRoute = r;
 								break;
 							}
 						}
 					}
 
-					//if path does not already exist, get the shortest path from the origin node to the destination node using AStar algorithm
-					if (foundPath == null) {
+					//if route does not already exist, get the shortest path from the origin node to the destination node using AStar algorithm
+					if (foundRoute == null) {
 						//System.out.println("The path does not exist in the path storage");
 			
 						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(originNode);
@@ -500,7 +498,7 @@ public class RoadNetworkAssignment {
 							continue;
 						}
 
-						foundPath = fastestPath;
+						foundRoute = new Route(fastestPath);
 					}
 
 					counterAssignedTrips++;
@@ -514,7 +512,7 @@ public class RoadNetworkAssignment {
 					if (number2 == null) number2 = 0;
 					this.LADnoTripEnds.put(destinationZone, ++number2);
 
-					List listOfEdges = foundPath.getEdges();
+					List listOfEdges = foundRoute.getEdges();
 					//System.out.println("The path as a list of edges: " + listOfEdges);
 					//System.out.println("Path size in the number of nodes: " + pathFound.size());
 					//System.out.println("Path size in the number of edges: " + listOfEdges.size());
@@ -526,7 +524,7 @@ public class RoadNetworkAssignment {
 						List listOfEdges = path.getEdges();
 					 */
 					double sum = 0;
-					List<Path> list;
+					List<Route> list;
 					for (Object o: listOfEdges) {
 						//DirectedEdge e = (DirectedEdge) o;
 						Edge e = (Edge) o;
@@ -550,14 +548,15 @@ public class RoadNetworkAssignment {
 					}
 					//System.out.printf("Sum of edge lengths: %.3f\n\n", sum);
 
-					//store path in path storage
-					if (pathStorage.containsKey(mk.getKey(0), mk.getKey(1))) 
-						list = (List<Path>) pathStorage.get(mk.getKey(0), mk.getKey(1));
+					//store route in route storage
+					if (routeStorage.containsKey(originZone, destinationZone)) 
+						list = (List<Route>) routeStorage.get(originZone, destinationZone);
 					else {
-						list = new ArrayList<Path>();
-						pathStorage.put((String)mk.getKey(0), (String)mk.getKey(1), list);
+						list = new ArrayList<Route>();
+						routeStorage.put(originZone, destinationZone, list);
 					}
-					list.add(foundPath); //list.add(path);
+					list.add(foundRoute); //list.add(path);
+					
 				} catch (Exception e) {
 					e.printStackTrace();
 					System.err.printf("Couldnt find path from node %d to node %d!", from.getID(), to.getID());
@@ -772,7 +771,7 @@ public class RoadNetworkAssignment {
 					linkVolumesPerVehicleType.get(VehicleType.CAR).put(e.getID(), volume);
 				}
 
-				//store path in path storage
+				//store route in route storage
 				if (routeStorage.containsKey(origin, destination)) 
 					list = (List<Route>) routeStorage.get(origin, destination);
 				else {
@@ -1270,27 +1269,22 @@ public class RoadNetworkAssignment {
 	public void updateTimeSkimMatrix(SkimMatrix timeSkimMatrix) {
 
 		//for each OD pair
-		for (MultiKey mk: pathStorage.keySet()) {
+		for (MultiKey mk: routeStorage.keySet()) {
 			//System.out.println(mk);
 			String originZone = (String) mk.getKey(0);
 			String destinationZone = (String) mk.getKey(1);
 
-			List<Path> pathList = pathStorage.get(originZone, destinationZone);
+			List<Route> routeList = routeStorage.get(originZone, destinationZone);
 			double totalODtravelTime = 0.0;
 			//for each path in the path list calculate total travel time
-			for (Path path: pathList) {
+			for (Route route: routeList) {
 
-				double pathTravelTime = 0.0;
-				for (Object o: path.getEdges()) {
-					Edge e = (Edge)o;
-					pathTravelTime += linkTravelTime.get(e.getID());					
-				}
-				//System.out.printf("Path travel time: %.3f\n", pathTravelTime);
-				totalODtravelTime += pathTravelTime;
+				route.calculateTravelTime(this.linkTravelTime);
+				totalODtravelTime += route.getTime();
 
 				//add average access and egress time to the first and the last node [m -> km] [h -> s]
-				double averageAccessDistance = this.roadNetwork.getAverageAcessEgressDistance(path.getFirst().getID()) / 1000;
-				double averageEgressDistance = this.roadNetwork.getAverageAcessEgressDistance(path.getLast().getID()) / 1000;
+				double averageAccessDistance = this.roadNetwork.getAverageAcessEgressDistance(route.getOriginNode().getID()) / 1000;
+				double averageEgressDistance = this.roadNetwork.getAverageAcessEgressDistance(route.getDestinationNode().getID()) / 1000;
 				double averageAccessTime = averageAccessDistance /  AVERAGE_ACCESS_EGRESS_SPEED_CAR * 60;
 				double averageEgressTime = averageEgressDistance /  AVERAGE_ACCESS_EGRESS_SPEED_CAR * 60;
 				//System.out.printf("Acess time: %.3f min Egress time: %.3f min\n", averageAccessTime, averageEgressTime);
@@ -1298,7 +1292,7 @@ public class RoadNetworkAssignment {
 				totalODtravelTime += (averageAccessTime + averageEgressTime);
 
 			}
-			double averageODtravelTime = totalODtravelTime / pathList.size();
+			double averageODtravelTime = totalODtravelTime / routeList.size();
 			//System.out.printf("Average OD travel time: %.3f min\n", averageODtravelTime);
 			//update time skim matrix
 			timeSkimMatrix.setCost((String)mk.getKey(0), (String)mk.getKey(1), averageODtravelTime);
@@ -1375,31 +1369,24 @@ public class RoadNetworkAssignment {
 	public void updateCostSkimMatrix(SkimMatrix costSkimMatrix) {
 
 		//for each OD pair
-		for (MultiKey mk: pathStorage.keySet()) {
+		for (MultiKey mk: routeStorage.keySet()) {
 			//System.out.println(mk);
 			String originZone = (String) mk.getKey(0);
 			String destinationZone = (String) mk.getKey(1);
 
-			List<Path> pathList = pathStorage.get(originZone, destinationZone);
+			List<Route> routeList = routeStorage.get(originZone, destinationZone);
 			double totalODdistance = 0.0;
-			//for each path in the path list calculate total distance
-			for (Path path: pathList) {
-
-				double pathLength = 0.0;
-				for (Object o: path.getEdges()) {
-					Edge e = (Edge)o;
-					SimpleFeature sf = (SimpleFeature) e.getObject();
-					double length = (double) sf.getAttribute("LenNet");
-					pathLength += length;					
-				}
-				//System.out.printf("Path length: %.3f\n\n", pathLength);
-				totalODdistance += pathLength;
+			//for each route in the route list calculate total distance
+			for (Route route: routeList) {
+				
+				route.calculateLength();
+				totalODdistance += route.getLength();
 
 				//add average access and egress distance to the first and the last node [m -> km!]
-				totalODdistance += this.roadNetwork.getAverageAcessEgressDistance(path.getFirst().getID()) / 1000;
-				totalODdistance += this.roadNetwork.getAverageAcessEgressDistance(path.getLast().getID()) / 1000;
+				totalODdistance += this.roadNetwork.getAverageAcessEgressDistance(route.getOriginNode().getID()) / 1000;
+				totalODdistance += this.roadNetwork.getAverageAcessEgressDistance(route.getDestinationNode().getID()) / 1000;
 			}
-			double averageODdistance = totalODdistance / pathList.size();
+			double averageODdistance = totalODdistance / routeList.size();
 			double energyCost = 0.0;
 			//iterate over engine types
 			for (EngineType engine: EngineType.values())
@@ -1432,34 +1419,27 @@ public class RoadNetworkAssignment {
 		SkimMatrix distanceSkimMatrix = new SkimMatrix();
 
 		//for each OD pair
-		for (MultiKey mk: pathStorage.keySet()) {
+		for (MultiKey mk: routeStorage.keySet()) {
 			//System.out.println(mk);
 			String originZone = (String) mk.getKey(0);
 			String destinationZone = (String) mk.getKey(1);
 
-			List<Path> pathList = pathStorage.get(originZone, destinationZone);
+			List<Route> routeList = routeStorage.get(originZone, destinationZone);
 			double totalODdistance = 0.0;
 			//for each path in the path list calculate total distance
-			for (Path path: pathList) {
+			for (Route route: routeList) {
 
-				double pathLength = 0.0;
-				for (Object o: path.getEdges()) {
-					Edge e = (Edge)o;
-					SimpleFeature sf = (SimpleFeature) e.getObject();
-					double length = (double) sf.getAttribute("LenNet");
-					pathLength += length;					
-				}
-				//System.out.printf("Path length: %.3f\n", pathLength);
-				totalODdistance += pathLength;
+				route.calculateLength();
+				totalODdistance += route.getLength();
 
 				//add average access and egress distance to the first and the last node [m -> km!]
-				double accessDistance = this.roadNetwork.getAverageAcessEgressDistance(path.getFirst().getID()) / 1000;
-				double egressDistance = this.roadNetwork.getAverageAcessEgressDistance(path.getLast().getID()) / 1000;
+				double accessDistance = this.roadNetwork.getAverageAcessEgressDistance(route.getOriginNode().getID()) / 1000;
+				double egressDistance = this.roadNetwork.getAverageAcessEgressDistance(route.getDestinationNode().getID()) / 1000;
 				//System.out.printf("Acess: %.3f Egress: %.3f\n ", accessDistance, egressDistance);
 				//System.out.printf("Path length with access and egress: %.3f km\n", pathLength + accessDistance + egressDistance);
 				totalODdistance += (accessDistance + egressDistance);
 			}
-			double averageODdistance = totalODdistance / pathList.size();
+			double averageODdistance = totalODdistance / routeList.size();
 
 			//System.out.printf("Average OD distance: %.3f km\n", averageODdistance);
 			//update distance skim matrix
@@ -1467,50 +1447,6 @@ public class RoadNetworkAssignment {
 		}
 
 		return distanceSkimMatrix;
-	}
-	
-	/**
-	 * Calculates zone-to-zone total travelled distances.
-	 * @return Inter-zonal total travelled distance.
-	 */
-	public SkimMatrix calculateTotalTravelledDistanceMatrixFromPathStorage() {
-
-		SkimMatrix totalTravelledDistance = new SkimMatrix();
-
-		//for each OD pair
-		for (MultiKey mk: pathStorage.keySet()) {
-			//System.out.println(mk);
-			String originZone = (String) mk.getKey(0);
-			String destinationZone = (String) mk.getKey(1);
-
-			List<Path> pathList = pathStorage.get(originZone, destinationZone);
-			double totalODdistance = 0.0;
-			//for each path in the path list calculate total distance
-			for (Path path: pathList) {
-
-				double pathLength = 0.0;
-				for (Object o: path.getEdges()) {
-					Edge e = (Edge)o;
-					SimpleFeature sf = (SimpleFeature) e.getObject();
-					double length = (double) sf.getAttribute("LenNet");
-					pathLength += length;					
-				}
-				//System.out.printf("Path length: %.3f\n", pathLength);
-				totalODdistance += pathLength;
-
-				//add average access and egress distance to the first and the last node [m -> km!]
-				double accessDistance = this.roadNetwork.getAverageAcessEgressDistance(path.getFirst().getID()) / 1000;
-				double egressDistance = this.roadNetwork.getAverageAcessEgressDistance(path.getLast().getID()) / 1000;
-				//System.out.printf("Acess: %.3f Egress: %.3f\n ", accessDistance, egressDistance);
-				//System.out.printf("Path length with access and egress: %.3f km\n", pathLength + accessDistance + egressDistance);
-				totalODdistance += (accessDistance + egressDistance);
-			}
-
-			//update distance skim matrix
-			totalTravelledDistance.setCost(originZone, destinationZone, totalODdistance);
-		}
-
-		return totalTravelledDistance;
 	}
 	
 	/**
@@ -1531,6 +1467,7 @@ public class RoadNetworkAssignment {
 			double totalODdistance = 0.0;
 			//for each path in the path list calculate total distance
 			for (Route route: routeList) {
+				route.calculateLength();
 				totalODdistance += route.getLength();
 				//add average access and egress distance to the first and the last node [m -> km!]
 				double accessDistance = this.roadNetwork.getAverageAcessEgressDistance(route.getOriginNode().getID()) / 1000;
@@ -1696,18 +1633,16 @@ public class RoadNetworkAssignment {
 
 		double totalDistance = 0.0;
 		//for each path in the storage
-		for (List<Path> pathList: pathStorage.values()) {
+		for (List<Route> routeList: routeStorage.values()) {
 			//for each path in the path list calculate total distance
-			for (Path path: pathList) { 
-				for (Object o: path.getEdges()) {
-					Edge e = (Edge)o;
-					SimpleFeature sf = (SimpleFeature) e.getObject();
-					double length = (double) sf.getAttribute("LenNet");
-					totalDistance += length;		
-				}
+			for (Route route: routeList) { 
+	
+				route.calculateLength();
+				totalDistance += route.getLength();		
+				
 				//add average access and egress distance to the first and the last node [m -> km!]
-				double accessDistance = this.roadNetwork.getAverageAcessEgressDistanceFreight(path.getFirst().getID()) / 1000;
-				double egressDistance = this.roadNetwork.getAverageAcessEgressDistanceFreight(path.getLast().getID()) / 1000;
+				double accessDistance = this.roadNetwork.getAverageAcessEgressDistanceFreight(route.getOriginNode().getID()) / 1000;
+				double egressDistance = this.roadNetwork.getAverageAcessEgressDistanceFreight(route.getDestinationNode().getID()) / 1000;
 				//System.out.printf("Access: %.3f Egress: %.3f\n ", accessDistance, egressDistance);
 				//System.out.printf("Path length with access and egress: %.3f km\n", pathLength + accessDistance + egressDistance);
 				totalDistance += (accessDistance + egressDistance);
@@ -2356,15 +2291,6 @@ public class RoadNetworkAssignment {
 	}
 
 	/**
-	 * Getter method for the path storage.
-	 * @return Path storage
-	 */
-	public MultiKeyMap<String, List<Path>> getPathStorage() {
-
-		return this.pathStorage;
-	}
-
-	/**
 	 * Getter method for the route storage.
 	 * @return Route storage
 	 */
@@ -2614,7 +2540,6 @@ public class RoadNetworkAssignment {
 	 */
 	public void resetPathStorages () {
 
-		this.pathStorage = new MultiKeyMap<String, List<Path>>();
 		for (VehicleType vht: VehicleType.values()) {
 			MultiKeyMap<Integer, List<Path>> map = new MultiKeyMap<Integer, List<Path>>();
 			this.pathStorageFreight.put(vht, map);

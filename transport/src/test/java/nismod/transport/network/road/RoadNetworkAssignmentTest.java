@@ -106,7 +106,7 @@ public class RoadNetworkAssignmentTest {
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork2);
 		//rsg.readRoutes("completeRoutesNewest.txt");
 		//rsg.readRoutes("./src/main/resources/data/all5routestop10/all5routestop10.txt");
-		rsg.readRoutes("./src/main/resources/data/5routes10nodesnew/all5routestop10new.txt");
+//		rsg.readRoutes("./src/main/resources/data/5routes10nodesnew/all5routestop10new.txt");
 		rsg.printStatistics();
 		
 		//set route choice parameters
@@ -117,8 +117,8 @@ public class RoadNetworkAssignmentTest {
 		
 		//assign passenger flows
 		long timeNow = System.currentTimeMillis();
-		//roadNetworkAssignment.assignPassengerFlows(passengerODM);
-		roadNetworkAssignment.assignPassengerFlowsRouteChoice(passengerODM, rsg, params);
+		roadNetworkAssignment.assignPassengerFlows(passengerODM);
+		//roadNetworkAssignment.assignPassengerFlowsRouteChoice(passengerODM, rsg, params);
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Passenger flows assigned in %d seconds.\n", timeNow / 1000);
 /*
@@ -151,17 +151,6 @@ public class RoadNetworkAssignmentTest {
 		System.out.println(roadNetwork2.getNodeToZone());
 		System.out.println("Zone to nodes mapping: ");
 		System.out.println(roadNetwork2.getZoneToNodes());
-		
-		System.out.println("Path storage: ");
-		//System.out.println(roadNetworkAssigment.getPathStorage());
-		System.out.println(roadNetworkAssignment.getPathStorage().keySet());
-		for (Object mk: roadNetworkAssignment.getPathStorage().keySet()) {
-			System.out.println(mk);
-			System.out.println("origin = " + ((MultiKey)mk).getKey(0));
-			System.out.println("destination = " + ((MultiKey)mk).getKey(1));
-			List list = (List) roadNetworkAssignment.getPathStorage().get((String)((MultiKey)mk).getKey(0), (String)((MultiKey)mk).getKey(1));
-			System.out.println("number of paths = " + list.size());
-		}
 		
 		System.out.println("Route storage: ");
 		//System.out.println(roadNetworkAssigment.getPathStorage());
@@ -279,19 +268,19 @@ public class RoadNetworkAssignmentTest {
 		rna.setEnergyUnitCost(RoadNetworkAssignment.EngineType.ELECTRICITY, 0.20);
 		assertEquals("asdf", 0.20, (double) rna.getEnergyUnitCosts().get(RoadNetworkAssignment.EngineType.ELECTRICITY), EPSILON);
 
-		//TEST PATH STORAGE
-		System.out.println("\n\n*** Testing path storage ***");
+		//TEST ROUTE STORAGE
+		System.out.println("\n\n*** Testing route storage ***");
 
-		//check that the number of paths for a given OD equals the flow (the number of trips in the OD matrix).
-		System.out.println("Path storage: " + rna.getPathStorage());
+		//check that the number of routes for a given OD equals the flow (the number of trips in the OD matrix).
+		System.out.println("Route storage: " + rna.getRouteStorage());
 		
 		//for each OD
 		for (MultiKey mk: odm.getKeySet()) {
 			String originZone = (String) mk.getKey(0);
 			String destinationZone = (String) mk.getKey(1);
-			List<Path> pathList = rna.getPathStorage().get(originZone, destinationZone);
+			List<Route> routeList = rna.getRouteStorage().get(originZone, destinationZone);
 			int flow = odm.getFlow(originZone, destinationZone);
-			assertEquals("The number of paths equals the flow", flow, pathList.size());
+			assertEquals("The number of paths equals the flow", flow, routeList.size());
 		}
 
 		//TEST LINK TRAVEL TIMES
@@ -439,27 +428,27 @@ public class RoadNetworkAssignmentTest {
 		
 		assertEquals("asdf", 0.20, (double) rna.getEnergyUnitCosts().get(RoadNetworkAssignment.EngineType.ELECTRICITY), EPSILON);
 		
-		//TEST PATH STORAGE
-		System.out.println("\n\n*** Testing path storage ***");
+		//TEST ROUTE STORAGE
+		System.out.println("\n\n*** Testing route storage ***");
+
+		//check that the number of routes for a given OD equals the flow (the number of trips in the OD matrix).
+		System.out.println("Route storage: " + rna.getRouteStorage());
 		
 		double totalDistance = 0.0;
-		//check that the number of paths for a given OD equals the flow (the number of trips in the OD matrix).
-		rna.getPathStorage();
 		//for each OD
 		for (MultiKey mk: odm.getKeySet()) {
-					//System.out.println(mk);
-					String originZone = (String) mk.getKey(0);
-					String destinationZone = (String) mk.getKey(1);
-					List<Path> pathList = rna.getPathStorage().get(originZone, destinationZone);
-					int flow = odm.getFlow(originZone, destinationZone);
-					assertEquals("The number of paths equals the flow", flow, pathList.size());
-					
-					for (Path p: pathList) 
-						for (Object e: p.getEdges())
-							totalDistance += (double)((SimpleFeature)(((Edge)e).getObject())).getAttribute("LenNet");
+			String originZone = (String) mk.getKey(0);
+			String destinationZone = (String) mk.getKey(1);
+			List<Route> routeList = rna.getRouteStorage().get(originZone, destinationZone);
+			int flow = odm.getFlow(originZone, destinationZone);
+			assertEquals("The number of routes equals the flow", flow, routeList.size());
+			for (Route r: routeList) {
+				r.calculateLength();
+				totalDistance += r.getLength();
+			}
 		}
 		System.out.println("Total distance = " + totalDistance);
-		
+
 		System.out.println("Distance skim matrix: ");
 		rna.calculateDistanceSkimMatrix().printMatrixFormatted();
 		
@@ -532,9 +521,9 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("Distance skim matrix:");
 		rna.calculateDistanceSkimMatrix().printMatrixFormatted();
 		
-		System.out.println("Total travelled distance matrix from path storage:");
-		rna.calculateTotalTravelledDistanceMatrixFromPathStorage().printMatrixFormatted();
-		System.out.println("Sum of all distances: " + rna.calculateTotalTravelledDistanceMatrixFromPathStorage().getSumOfCosts());
+		System.out.println("Total travelled distance matrix from route storage:");
+		rna.calculateTotalTravelledDistanceMatrixFromRouteStorage().printMatrixFormatted();
+		System.out.println("Sum of all distances: " + rna.calculateTotalTravelledDistanceMatrixFromRouteStorage().getSumOfCosts());
 		
 		System.out.println("Zonal car energy consumptions:");
 		System.out.println(rna.calculateZonalCarEnergyConsumptions(0.85));
@@ -797,24 +786,24 @@ public class RoadNetworkAssignmentTest {
 		
 		assertEquals("asdf", 0.20, (double) rna.getEnergyUnitCosts().get(RoadNetworkAssignment.EngineType.ELECTRICITY), EPSILON);
 		
-		//TEST PATH STORAGE
-		System.out.println("\n\n*** Testing path storage ***");
+		//TEST ROUTE STORAGE
+		System.out.println("\n\n*** Testing route storage ***");
+
+		//check that the number of routes for a given OD equals the flow (the number of trips in the OD matrix).
+		System.out.println("Route storage: " + rna.getRouteStorage());
 		
 		double totalDistance = 0.0;
-		//check that the number of paths for a given OD equals the flow (the number of trips in the OD matrix).
-		rna.getPathStorage();
 		//for each OD
 		for (MultiKey mk: odm.getKeySet()) {
-					//System.out.println(mk);
-					String originZone = (String) mk.getKey(0);
-					String destinationZone = (String) mk.getKey(1);
-					List<Path> pathList = rna.getPathStorage().get(originZone, destinationZone);
-					int flow = odm.getFlow(originZone, destinationZone);
-					assertEquals("The number of paths equals the flow", flow, pathList.size());
-					
-					for (Path p: pathList) 
-						for (Object e: p.getEdges())
-							totalDistance += (double)((SimpleFeature)(((Edge)e).getObject())).getAttribute("LenNet");
+			String originZone = (String) mk.getKey(0);
+			String destinationZone = (String) mk.getKey(1);
+			List<Route> routeList = rna.getRouteStorage().get(originZone, destinationZone);
+			int flow = odm.getFlow(originZone, destinationZone);
+			assertEquals("The number of routes equals the flow", flow, routeList.size());
+			for (Route r: routeList) {
+				r.calculateLength();
+				totalDistance += r.getLength();
+			}
 		}
 		System.out.println("Total distance = " + totalDistance);
 		

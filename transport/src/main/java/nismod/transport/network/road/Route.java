@@ -106,7 +106,7 @@ public class Route {
 	 * Calculates the route travel time based on link travel times.
 	 * @param linkTravelTime Link travel times.
 	 */
-	private void calculateTravelTime(HashMap<Integer, Double> linkTravelTime) {
+	public void calculateTravelTime(HashMap<Integer, Double> linkTravelTime) {
 		
 		double travelTime = 0.0;
 		for (DirectedEdge edge: edges) {
