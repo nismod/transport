@@ -195,5 +195,33 @@ public class RouteTest {
 		calculatedUtility = paramTime * time + paramLength * length + paramIntersections * intersections;
 		
 		assertEquals("Utility should be correctly calculated", utility, calculatedUtility, EPSILON);
+		
+		//create a one-node route
+		Route r5 = new Route();
+		RoadPath rp = new RoadPath();
+		rp.add(n1);
+		System.out.println(rp.toString());
+		System.out.println(rp.buildEdges());
+
+		r5 = new Route(rp);
+		System.out.println("Valid: " + r5.isValid());
+		System.out.println("Empty: " + r5.isEmpty());
+		System.out.println(r5.toString());
+		System.out.println(r5.getFormattedString());
+		
+		r5.calculateLength();
+		r5.calculateTravelTime(roadNetwork.getFreeFlowTravelTime());
+		System.out.println("Intersections: " + r5.getNumberOfIntersections());
+		r5.calculateUtility(roadNetwork.getFreeFlowTravelTime(), params);
+		System.out.println("Length: " + r5.getLength());
+		System.out.println("Time: " + r5.getTime());
+		System.out.println("Utility: " + r5.getUtility());
+		
+		System.out.println("First node: " + r5.getOriginNode());
+		System.out.println("Last node: " + r5.getDestinationNode());
+		
+		
+		
+		
 	}
 }

@@ -8,6 +8,7 @@ import java.util.Properties;
 import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedNode;
 import org.geotools.graph.structure.Edge;
+import org.geotools.graph.structure.Node;
 import org.opengis.feature.simple.SimpleFeature;
 
 /**
@@ -28,6 +29,7 @@ public class Route {
 	private Double length;
 	private Double time;
 	private Double utility;
+	private Node singleNode;
 	
 	public Route() {
 	
@@ -42,14 +44,23 @@ public class Route {
 			return;
 		}
 		
-		if (path.getEdges() == null) {
-			System.err.println("Route constructor: Path has no edges!");
-			return;
-		}
-		
 		if (!path.isValid()) {
 			System.err.println("Route constructor: Path is not valid!");
 			return;
+		}
+		
+		if (path.getEdges() == null) {
+			System.err.println("Route constructor: Edge list is null!");
+			return;
+		}
+
+		if (path.getEdges().isEmpty()) {
+			if (path.getFirst().equals(path.getLast()))
+				this.singleNode = path.getFirst(); 	//single node path can be accepted
+			else {
+				System.err.println("Route constructor: Path has no edges!");
+				return;
+			}
 		}
 		
 		this.edges = new ArrayList<DirectedEdge>();
@@ -174,7 +185,10 @@ public class Route {
 	
 	public int getNumberOfIntersections() {
 		
-		return (this.edges.size() - 1);
+		if (this.isEmpty())
+			return 0;
+		else 
+			return (this.edges.size() - 1);
 	}
 	
 	public Double getUtility() {
@@ -192,12 +206,12 @@ public class Route {
 	
 	public DirectedNode getOriginNode() {
 		
-		if (edges.isEmpty()) 	return null;
+		if (edges.isEmpty()) 	return (DirectedNode) this.singleNode;
 		else 					return this.edges.get(0).getInNode();
 	}
 	
 	public DirectedNode getDestinationNode() {
-		if (edges.isEmpty()) 	return null;
+		if (edges.isEmpty()) 	return (DirectedNode) this.singleNode;
 		else					return this.edges.get(edges.size() - 1).getOutNode();	
 	}
 	
@@ -251,30 +265,39 @@ public class Route {
 	
 	@Override
 	public String toString() {
-			
-		if (edges.isEmpty()) return null;
-		
+
+		if (edges.isEmpty() && this.singleNode == null) return null;
+
 		StringBuilder sb = new StringBuilder();
-		for (DirectedEdge edge: edges) {
+
+		if (this.singleNode != null) {
 			sb.append("(");
-			sb.append(edge.getInNode().getID());
-			sb.append(")-");
-			sb.append(edge.getID());
-			sb.append("->");
-			//sb.append("(");
-			//sb.append(edge.getOutNode().getID());
-			//sb.append(")");
+			sb.append(this.getOriginNode().getID());
+			sb.append(")->(");
+			sb.append(this.getDestinationNode().getID());
+			sb.append(")");
+		} else {
+			for (DirectedEdge edge: edges) {
+				sb.append("(");
+				sb.append(edge.getInNode().getID());
+				sb.append(")-");
+				sb.append(edge.getID());
+				sb.append("->");
+				//sb.append("(");
+				//sb.append(edge.getOutNode().getID());
+				//sb.append(")");
+			}
+			sb.append("(");
+			sb.append(edges.get(edges.size()-1).getOutNode());
+			sb.append(")");
 		}
-		sb.append("(");
-		sb.append(edges.get(edges.size()-1).getOutNode());
-		sb.append(")");
-		
+
 		return sb.toString();
 	}
 	
 	public String getFormattedString() {
 		
-		if (edges.isEmpty()) return null;
+		if (edges.isEmpty() && this.singleNode == null) return null;
 		
 		StringBuilder sb = new StringBuilder();
 		
