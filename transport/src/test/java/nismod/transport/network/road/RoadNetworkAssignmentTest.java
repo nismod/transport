@@ -117,6 +117,7 @@ public class RoadNetworkAssignmentTest {
 		
 		//assign passenger flows
 		long timeNow = System.currentTimeMillis();
+		//roadNetworkAssignment.assignPassengerFlows(passengerODM);
 		roadNetworkAssignment.assignPassengerFlowsRouteChoice(passengerODM, rsg, params);
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Passenger flows assigned in %d seconds.\n", timeNow / 1000);
