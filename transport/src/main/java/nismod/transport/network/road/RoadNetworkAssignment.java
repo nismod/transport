@@ -311,11 +311,36 @@ public class RoadNetworkAssignment {
 			//System.out.println(mk);
 			//System.out.println("origin = " + mk.getKey(0));
 			//System.out.println("destination = " + mk.getKey(1));
-			String origin = (String)mk.getKey(0);
-			String destination = (String)mk.getKey(1);
+			String originZone = (String)mk.getKey(0);
+			String destinationZone = (String)mk.getKey(1);
+			
+			List<Integer> listOfOriginNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(originZone)); //the list is already sorted
+			List<Integer> listOfDestinationNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(destinationZone)); //the list is already sorted
 
+			//removing blacklisted nodes
+			for (Integer originNode: roadNetwork.getZoneToNodes().get(originZone))
+				//check if any of the nodes is blacklisted
+				if (this.roadNetwork.getStartNodeBlacklist().contains(originNode)) 
+					listOfOriginNodes.remove(originNode);
+
+			//removing blacklisted nodes
+			for (Integer destinationNode: roadNetwork.getZoneToNodes().get(destinationZone))
+				//check if any of the nodes is blacklisted
+				if (this.roadNetwork.getEndNodeBlacklist().contains(destinationNode)) 
+					listOfDestinationNodes.remove(destinationNode);
+
+			//normalise probabilities
+			HashMap<Integer, Double> originNodeProbabilities = new HashMap<Integer, Double>();
+			HashMap<Integer, Double> destinationNodeProbabilities = new HashMap<Integer, Double>();
+			double sumation = 0.0;
+			for (Integer originNode: listOfOriginNodes) sumation += this.nodeProbabilities.get(originNode);
+			for (Integer originNode: listOfOriginNodes) originNodeProbabilities.put(originNode, this.nodeProbabilities.get(originNode) / sumation);
+			sumation = 0.0;
+			for (Integer destinationNode: listOfDestinationNodes) sumation += this.nodeProbabilities.get(destinationNode);
+			for (Integer destinationNode: listOfDestinationNodes) destinationNodeProbabilities.put(destinationNode, this.nodeProbabilities.get(destinationNode) / sumation);
+			
 			//for each trip
-			int flow = passengerODM.getFlow(origin, destination);
+			int flow = passengerODM.getFlow(originZone, destinationZone);
 			counterTotalFlow += flow;
 			
 			for (int i=0; i<flow; i++) {
@@ -400,19 +425,20 @@ public class RoadNetworkAssignment {
 				//choose origin/destination nodes based on the gravitating population
 				//the choice with replacement means that possibly: destination node = origin node
 				//the choice without replacement means that destination node has to be different from origin node
-				List<Integer> listOfOriginNodes = roadNetwork.getZoneToNodes().get(origin); //the list is already sorted
-				List<Integer> listOfDestinationNodes = roadNetwork.getZoneToNodes().get(destination); //the list is already sorted
+
 				//choose origin node
 				double cumulativeProbability = 0.0;
 				Integer originNode = null;
 				double random = rng.nextDouble();
-				for (int node: listOfOriginNodes) {
-					cumulativeProbability += nodeProbabilities.get(node);
+				for (Integer node: listOfOriginNodes) {
+					cumulativeProbability += originNodeProbabilities.get(node);
 					if (Double.compare(cumulativeProbability, random) > 0) {
 						originNode = node;
 						break;
 					}
 				}
+				
+				if (originNode == null) System.err.println("Origin node was not chosen!");
 
 				//choose destination node
 				cumulativeProbability = 0.0;
@@ -420,25 +446,27 @@ public class RoadNetworkAssignment {
 				random = rng.nextDouble();
 				//if intrazonal trip and replacement is not allowed, the probability of the originNode should be 0 so it cannot be chosen again
 				//also, in that case it is important to rescale other node probabilities (now that the originNode is removed) by dividing with (1.0 - p(originNode))!
-				if (!FLAG_INTRAZONAL_ASSIGNMENT_REPLACEMENT && origin.equals(destination)) { //no replacement and intra-zonal trip
-					for (int node: listOfDestinationNodes) {
-						if (node == originNode.intValue()) continue; //skip if the node is the same as origin
-						cumulativeProbability += nodeProbabilities.get(node) / (1.0 - nodeProbabilities.get(originNode));
+				if (!FLAG_INTRAZONAL_ASSIGNMENT_REPLACEMENT && originZone.equals(destinationZone) && listOfDestinationNodes.contains(originNode)) { //no replacement and intra-zonal trip
+					for (Integer node: listOfDestinationNodes) {
+						if (node.intValue() == originNode.intValue()) continue; //skip if the node is the same as origin
+						cumulativeProbability += destinationNodeProbabilities.get(node) / (1.0 - destinationNodeProbabilities.get(originNode));
 						if (Double.compare(cumulativeProbability, random) > 0) {
 							destinationNode = node;
 							break;
 						}
 					}
 				} else	{ //inter-zonal trip (or intra-zonal with replacement)
-					for (int node: listOfDestinationNodes) {
-						cumulativeProbability += nodeProbabilities.get(node);
+					for (Integer node: listOfDestinationNodes) {
+						cumulativeProbability += destinationNodeProbabilities.get(node);
 						if (Double.compare(cumulativeProbability, random) > 0) {
 							destinationNode = node;
 							break;
 						}
 					}
-				}			
-
+				}	
+				
+				if (destinationNode == null) System.err.println("Destination node was not chosen!");
+				
 				DirectedGraph rn = roadNetwork.getNetwork();
 				//set source and destination node
 				Node from = roadNetwork.getNodeIDtoNode().get(originNode);
@@ -448,8 +476,8 @@ public class RoadNetworkAssignment {
 				try {
 
 					//see if that path from node 'from' to node 'to' already exists in the path storage
-					if (pathStorage.containsKey(origin, destination)) { 
-						List<Path> list = (List<Path>) pathStorage.get(origin, destination);
+					if (pathStorage.containsKey(originZone, destinationZone)) { 
+						List<Path> list = (List<Path>) pathStorage.get(originZone, destinationZone);
 						for (Path p: list) {
 							//if (p.getFirst().equals(from) && p.getLast().equals(to)) {
 							if (p.getFirst().getID() == from.getID() && p.getLast().getID() == to.getID()) {
@@ -462,28 +490,29 @@ public class RoadNetworkAssignment {
 					//if path does not already exist, get the shortest path from the origin node to the destination node using AStar algorithm
 					if (foundPath == null) {
 						//System.out.println("The path does not exist in the path storage");
-						MyAStarShortestPathFinder aStarPathFinder = new MyAStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctionsTime(to, this.linkTravelTime));
-						//AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctions(to));
-						aStarPathFinder.calculate();
-						Path aStarPath;
-						aStarPath = aStarPathFinder.getPath();
-						aStarPath.reverse();
-						//System.out.println(aStarPath);
-						//System.out.println("The path as a list of nodes: " + aStarPath);
+			
+						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(originNode);
+						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(destinationNode);
 
-						foundPath = aStarPath;
+						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTime);
+						if (fastestPath == null) {
+							System.err.println("Not even aStar could find a route!");
+							continue;
+						}
+
+						foundPath = fastestPath;
 					}
 
 					counterAssignedTrips++;
 					
 					//increase the number of trips starting at origin LAD
-					Integer number = this.LADnoTripStarts.get(origin);
+					Integer number = this.LADnoTripStarts.get(originZone);
 					if (number == null) number = 0;
-					this.LADnoTripStarts.put(origin, ++number);
+					this.LADnoTripStarts.put(originZone, ++number);
 					//increase the number of trips ending at destination LAD
-					Integer number2 = this.LADnoTripEnds.get(destination);
+					Integer number2 = this.LADnoTripEnds.get(destinationZone);
 					if (number2 == null) number2 = 0;
-					this.LADnoTripEnds.put(destination, ++number2);
+					this.LADnoTripEnds.put(destinationZone, ++number2);
 
 					List listOfEdges = foundPath.getEdges();
 					//System.out.println("The path as a list of edges: " + listOfEdges);
@@ -559,7 +588,7 @@ public class RoadNetworkAssignment {
 
 		//sort nodes based on the gravitating population
 		this.roadNetwork.sortGravityNodes();
-
+		
 		//for each OD pair from the passengerODM		
 		for (MultiKey mk: passengerODM.getKeySet()) {
 			//System.out.println(mk);
@@ -567,7 +596,32 @@ public class RoadNetworkAssignment {
 			//System.out.println("destination = " + mk.getKey(1));
 			String origin = (String)mk.getKey(0);
 			String destination = (String)mk.getKey(1);
+			
+			List<Integer> listOfOriginNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(origin)); //the list is already sorted
+			List<Integer> listOfDestinationNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(destination)); //the list is already sorted
 
+			//removing blacklisted nodes
+			for (Integer originNode: roadNetwork.getZoneToNodes().get(origin))
+				//check if any of the nodes is blacklisted
+				if (this.roadNetwork.getStartNodeBlacklist().contains(originNode)) 
+					listOfOriginNodes.remove(originNode);
+
+			//removing blacklisted nodes
+			for (Integer destinationNode: roadNetwork.getZoneToNodes().get(destination))
+				//check if any of the nodes is blacklisted
+				if (this.roadNetwork.getEndNodeBlacklist().contains(destinationNode)) 
+					listOfDestinationNodes.remove(destinationNode);
+			
+			//normalise probabilities
+			HashMap<Integer, Double> originNodeProbabilities = new HashMap<Integer, Double>();
+			HashMap<Integer, Double> destinationNodeProbabilities = new HashMap<Integer, Double>();
+			double sumation = 0.0;
+			for (Integer originNode: listOfOriginNodes) sumation += this.nodeProbabilities.get(originNode);
+			for (Integer originNode: listOfOriginNodes) originNodeProbabilities.put(originNode, this.nodeProbabilities.get(originNode) / sumation);
+			sumation = 0.0;
+			for (Integer destinationNode: listOfDestinationNodes) sumation += this.nodeProbabilities.get(destinationNode);
+			for (Integer destinationNode: listOfDestinationNodes) destinationNodeProbabilities.put(destinationNode, this.nodeProbabilities.get(destinationNode) / sumation);
+						
 			//for each trip
 			int flow = passengerODM.getFlow(origin, destination);
 			counterTotalFlow += flow;
@@ -577,8 +631,6 @@ public class RoadNetworkAssignment {
 				//choose origin/destination nodes based on the gravitating population
 				//the choice with replacement means that possibly: destination node = origin node
 				//the choice without replacement means that destination node has to be different from origin node
-				List<Integer> listOfOriginNodes = roadNetwork.getZoneToNodes().get(origin); //the list is already sorted
-				List<Integer> listOfDestinationNodes = roadNetwork.getZoneToNodes().get(destination); //the list is already sorted
 
 				Integer originNode = null;
 				Integer destinationNode = null;
@@ -588,37 +640,41 @@ public class RoadNetworkAssignment {
 					//choose origin node
 					double cumulativeProbability = 0.0;
 					double random = rng.nextDouble();
-					for (int node: listOfOriginNodes) {
-						cumulativeProbability += nodeProbabilities.get(node);
+					for (Integer node: listOfOriginNodes) {
+						cumulativeProbability += originNodeProbabilities.get(node);
 						if (Double.compare(cumulativeProbability, random) > 0) {
 							originNode = node;
 							break;
 						}
 					}
+					
+					if (originNode == null) System.err.println("Origin node for intra-zonal trip was not chosen!");
 
 					//choose destination node
 					cumulativeProbability = 0.0;
 					random = rng.nextDouble();
 					//if intrazonal trip and replacement is not allowed, the probability of the originNode should be 0 so it cannot be chosen again
 					//also, in that case it is important to rescale other node probabilities (now that the originNode is removed) by dividing with (1.0 - p(originNode))!
-					if (!FLAG_INTRAZONAL_ASSIGNMENT_REPLACEMENT) { //no replacement
-						for (int node: listOfDestinationNodes) {
-							if (node == originNode.intValue()) continue; //skip if the node is the same as origin
-							cumulativeProbability += nodeProbabilities.get(node) / (1.0 - nodeProbabilities.get(originNode));
+					if (!FLAG_INTRAZONAL_ASSIGNMENT_REPLACEMENT && listOfDestinationNodes.contains(originNode)) { //no replacement
+						for (Integer node: listOfDestinationNodes) {
+							if (node.intValue() == originNode.intValue()) continue; //skip if the node is the same as origin
+							cumulativeProbability += destinationNodeProbabilities.get(node) / (1.0 - destinationNodeProbabilities.get(originNode));
 							if (Double.compare(cumulativeProbability, random) > 0) {
 								destinationNode = node;
 								break;
 							}
 						}
 					} else	{ //with replacement
-						for (int node: listOfDestinationNodes) {
-							cumulativeProbability += nodeProbabilities.get(node);
+						for (Integer node: listOfDestinationNodes) {
+							cumulativeProbability += destinationNodeProbabilities.get(node);
 							if (Double.compare(cumulativeProbability, random) > 0) {
 								destinationNode = node;
 								break;
 							}
 						}
-					}		
+					}	
+					
+					if (destinationNode == null) System.err.println("Destination for intra-zonal trip node was not chosen!");
 
 				} else { //inter-zonal
 
@@ -628,23 +684,15 @@ public class RoadNetworkAssignment {
 					int indexDestination = rng.nextInt(INTERZONAL_TOP_NODES<listOfDestinationNodes.size()?INTERZONAL_TOP_NODES:listOfDestinationNodes.size());
 					//System.out.println("Index of origin node: " + indexOrigin);
 					//System.out.println("Index of destination node: " + indexDestination);
-					originNode = (int) listOfOriginNodes.get(indexOrigin);					
-					destinationNode = (int) listOfDestinationNodes.get(indexDestination);
-
-				}
-				
-				//check if any of the nodes is blacklisted
-				if (this.roadNetwork.getStartNodeBlacklist().contains(originNode)) {
-					System.err.println("Origin node is in the blacklist!");
-					continue;
-				}
-				if (this.roadNetwork.getEndNodeBlacklist().contains(destinationNode)) {
-					System.err.println("Destination node is in the blacklist!");
-					continue;
+					originNode = listOfOriginNodes.get(indexOrigin);					
+					destinationNode = listOfDestinationNodes.get(indexDestination);
+					
+					if (originNode == null) System.err.println("Origin node for inter-zonal trip was not chosen!");
+					if (destinationNode == null) System.err.println("Destination node for inter-zonal trip was not chosen!");
 				}
 				
 				Route chosenRoute = null;
-				RouteSet fetchedRouteSet = rsg.getRouteSet(originNode, destinationNode);
+				RouteSet fetchedRouteSet = rsg.getRouteSet(originNode.intValue(), destinationNode.intValue());
 				if (fetchedRouteSet == null) {
 					System.err.printf("Can't fetch the route set between nodes %d and %d! %s", originNode, destinationNode, System.lineSeparator());
 
