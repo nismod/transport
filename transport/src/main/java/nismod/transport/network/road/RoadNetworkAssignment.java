@@ -716,6 +716,8 @@ public class RoadNetworkAssignment {
 							System.err.printf("Empty route between nodes %d and %d! %s", originNode, destinationNode, System.lineSeparator());
 							continue;
 						}
+						//store generated route into the rsg!
+						rsg.addRoute(chosenRoute);
 					}
 				} else { //there is a route set
 
@@ -934,7 +936,7 @@ public class RoadNetworkAssignment {
 					String originLAD = roadNetwork.getFreightZoneToLAD().get(origin);
 					//List<Integer> listOfOriginNodes = roadNetwork.getZoneToNodes().get(originLAD); //the list is already sorted
 					List<Integer> listOfOriginNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(originLAD)); //the list is already sorted
-					
+
 					//removing blacklisted nodes
 					for (Integer node: roadNetwork.getZoneToNodes().get(originLAD))
 						//check if any of the nodes is blacklisted
@@ -972,8 +974,8 @@ public class RoadNetworkAssignment {
 					for (Integer node: roadNetwork.getZoneToNodes().get(destinationLAD))
 						//check if any of the nodes is blacklisted
 						if (this.roadNetwork.isBlacklistedAsEndNode(node)) 
-								listOfDestinationNodes.remove(node);
-										
+							listOfDestinationNodes.remove(node);
+
 					//choose origin node
 					double cumulativeProbability = 0.0;
 					double random = rng.nextDouble();
@@ -1107,6 +1109,331 @@ public class RoadNetworkAssignment {
 		System.out.println("Total assigned trips: " + counterAssignedTrips);
 		System.out.println("Assignment percentage: " + 100.0* counterAssignedTrips / counterTotalFlow);
 	}
+
+	/**
+	 * Assigns freight origin-destination matrix to the road network using a route choice model and pre-generated routes.
+	 * Zone ID ranges from the BYFM DfT model:
+	 * <ul>
+	 * 		<li>England: 1 - 867</li>
+	 * 		<li>Wales: 901 - 922</li>
+	 * 		<li>Scotland: 1001 - 1032</li>
+	 * 		<li>Freight airports: 1111 - 1115</li>
+	 * 		<li>Major distribution centres: 1201 - 1256</li>
+	 * 		<li>Freight ports: 1301 - 1388</li>
+	 * </ul>   
+	 * @param freightODM Freight origin-destination matrix.
+	 * @param rsg Route set generator containing the routes.
+	 * @param routeChoiceParameters Route choice parameters.
+	 */
+	@SuppressWarnings("unused")
+	public void assignFreightFlowsRouteChoice(FreightMatrix freightMatrix, RouteSetGenerator rsg, Properties routeChoiceParameters) {
+
+		System.out.println("Assigning the vehicle flows from the freight matrix...");
+
+		//counters to calculate percentage of assignment success
+		long counterAssignedTrips = 0;
+		long counterTotalFlow = 0;
+
+		//sort nodes based on the gravitating workplace population
+		this.roadNetwork.sortGravityNodesFreight();
+
+		//for each OD pair from the passengerODM		
+		for (MultiKey mk: freightMatrix.getKeySet()) {
+			//System.out.println(mk);
+			//System.out.println("origin = " + mk.getKey(0));
+			//System.out.println("destination = " + mk.getKey(1));
+			//System.out.println("vehicle type = " + mk.getKey(2));
+			int origin = (int) mk.getKey(0);
+			int destination = (int) mk.getKey(1);
+			int vehicleType = (int) mk.getKey(2);
+
+			//for each trip
+			int flow = freightMatrix.getFlow(origin, destination, (int)mk.getKey(2));
+			counterTotalFlow += flow;
+
+			for (int i=0; i<flow; i++) {
+
+				Integer originNode = null, destinationNode = null;
+
+				/*
+				//choose random start and end nodes
+				if ((int)mk.getKey(0) <= 1032) { //origin freight zone is a LAD
+					//choose random trip start node within the origin zone
+					String originZone = roadNetwork.getFreightZoneToLAD().get((int)mk.getKey(0)); 
+					List listOfOriginNodes = roadNetwork.getZoneToNodes().get(originZone);
+					int numberOriginNodes = listOfOriginNodes.size();
+					int indexOrigin = rng.nextInt(numberOriginNodes);
+					originNode = (int) listOfOriginNodes.get(indexOrigin);
+				} else {// freight zone is a point (port, airport or distribution centre)
+					originNode = roadNetwork.getFreightZoneToNearestNode().get((int)mk.getKey(0));
+				}
+
+				if ((int)mk.getKey(1) <= 1032) { //destination freight zone is a LAD
+					//choose random trip end node within the destination zone
+					String destinationZone = roadNetwork.getFreightZoneToLAD().get((int)mk.getKey(1)); 
+					List listOfDestinationNodes = roadNetwork.getZoneToNodes().get(destinationZone);
+					int numberDestinationNodes = listOfDestinationNodes.size();
+					int indexDestination = rng.nextInt(numberDestinationNodes);
+					destinationNode = (int) listOfDestinationNodes.get(indexDestination);
+				} else {// freight zone is a point (port, airport or distribution centre)
+					destinationNode = roadNetwork.getFreightZoneToNearestNode().get((int)mk.getKey(1));
+				}
+				 */
+
+				/*
+				//chose origin node based on the population in workplace zones
+				if ((int)mk.getKey(0) <= 1032) { //origin freight zone is a LAD
+
+					//choose origin workplace zone within the LAD
+					String originZone = roadNetwork.getFreightZoneToLAD().get((int)mk.getKey(0)); 
+					List<String> listOfOriginWorkplaceCodes = roadNetwork.getZoneToWorkplaceCodes().get(originZone);
+					double cumulativeProbability = 0.0;
+					String originWorkplaceCode = null;
+					double random = rng.nextDouble();
+					for (String workplaceCode: listOfOriginWorkplaceCodes) {
+						cumulativeProbability += workplaceZoneProbabilities.get(workplaceCode);
+						if (Double.compare(cumulativeProbability, random) > 0) {
+							originWorkplaceCode = workplaceCode;
+							break;
+						}
+					}
+					if (originWorkplaceCode == null) System.err.println("Origin output area was not selected.");
+					else { //increase the number of tips starting at originWorkplaceCode
+						Integer number = this.workplaceZoneNoTripStarts.get(originWorkplaceCode);
+						if (number == null) number = 0;
+						this.workplaceZoneNoTripStarts.put(originWorkplaceCode, ++number);
+					}
+
+					//use the network node nearest to the workplace zone (population-weighted) centroid
+					originNode = roadNetwork.getWorkplaceZoneToNearestNode().get(originWorkplaceCode);
+
+				} else {// freight zone is a point (port, airport or distribution centre)
+					originNode = roadNetwork.getFreightZoneToNearestNode().get((int)mk.getKey(0));
+				}
+
+				//choose destination node based on the population in workplace zones
+				if ((int)mk.getKey(1) <= 1032) { //destination freight zone is a LAD
+
+					//choose destination workplace zone within the LAD
+					String destinationZone = roadNetwork.getFreightZoneToLAD().get((int)mk.getKey(1)); 
+					List<String> listOfDestinationWorkplaceCodes = roadNetwork.getZoneToWorkplaceCodes().get(destinationZone);
+					double cumulativeProbability = 0.0;
+					String destinationWorkplaceCode = null;
+					double random = rng.nextDouble();
+					for (String workplaceCode: listOfDestinationWorkplaceCodes) {
+						cumulativeProbability += workplaceZoneProbabilities.get(workplaceCode);
+						if (Double.compare(cumulativeProbability, random) > 0) {
+							destinationWorkplaceCode = workplaceCode;
+							break;
+						}
+					}
+					if (destinationWorkplaceCode == null) System.err.println("Destination output area was not selected.");
+					else { //increase the number of tips starting at originWorkplaceCode
+						Integer number = this.workplaceZoneNoTripEnds.get(destinationWorkplaceCode);
+						if (number == null) number = 0;
+						this.workplaceZoneNoTripEnds.put(destinationWorkplaceCode, ++number);
+					}
+
+					//use the network node nearest to the workplace zone (population-weighted) centroid
+					destinationNode = roadNetwork.getWorkplaceZoneToNearestNode().get(destinationWorkplaceCode);
+
+				} else {// freight zone is a point (port, airport or distribution centre)
+					destinationNode = roadNetwork.getFreightZoneToNearestNode().get((int)mk.getKey(1));
+				}
+				 */
+
+				//choose origin node based on the gravitating population
+				if (origin <= 1032) { //origin freight zone is a LAD
+
+					//choose origin node based on the gravitating population
+					//the choice with replacement means that possibly: destination node = origin node
+					//the choice without replacement means that destination node has to be different from origin node
+
+					//map freight zone number to LAD code
+					String originLAD = roadNetwork.getFreightZoneToLAD().get(origin);
+					//List<Integer> listOfOriginNodes = roadNetwork.getZoneToNodes().get(originLAD); //the list is already sorted
+					List<Integer> listOfOriginNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(originLAD)); //the list is already sorted
+
+					//removing blacklisted nodes
+					for (Integer node: roadNetwork.getZoneToNodes().get(originLAD))
+						//check if any of the nodes is blacklisted
+						if (this.roadNetwork.isBlacklistedAsStartNode(node)) 
+							listOfOriginNodes.remove(node);
+
+					//choose origin node
+					double cumulativeProbability = 0.0;
+					double random = rng.nextDouble();
+					for (int node: listOfOriginNodes) {
+						cumulativeProbability += startNodeProbabilitiesFreight.get(node);
+						if (Double.compare(cumulativeProbability, random) > 0) {
+							originNode = node;
+							break;
+						}
+					}
+
+				} else {// freight zone is a point (port, airport or distribution centre)
+					originNode = roadNetwork.getFreightZoneToNearestNode().get(origin);
+				}
+
+				//choose destination node based on the gravitating population
+				if (destination <= 1032) { //destination freight zone is a LAD
+
+					//choose origin/destination nodes based on the gravitating population
+					//the choice with replacement means that possibly: destination node = origin node
+					//the choice without replacement means that destination node has to be different from origin node
+
+					//map freight zone number to LAD code
+					String destinationLAD = roadNetwork.getFreightZoneToLAD().get(destination);
+					//List<Integer> listOfDestinationNodes = roadNetwork.getZoneToNodes().get(destinationLAD); //the list is already sorted
+					List<Integer> listOfDestinationNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(destinationLAD)); //the list is already sorted
+
+					//removing blacklisted nodes
+					for (Integer node: roadNetwork.getZoneToNodes().get(destinationLAD))
+						//check if any of the nodes is blacklisted
+						if (this.roadNetwork.isBlacklistedAsEndNode(node)) 
+							listOfDestinationNodes.remove(node);
+
+					//choose origin node
+					double cumulativeProbability = 0.0;
+					double random = rng.nextDouble();
+					//if intrazonal trip and replacement is not allowed, the probability of the originNode should be 0 so it cannot be chosen again
+					//also, in that case it is important to rescale other node probabilities (now that the originNode is removed) by dividing with (1.0 - p(originNode))!
+					if (!FLAG_INTRAZONAL_ASSIGNMENT_REPLACEMENT && origin == destination && listOfDestinationNodes.contains(originNode)) { //no replacement and intra-zonal trip
+						for (int node: listOfDestinationNodes) {
+							if (node == originNode.intValue()) continue; //skip if the node is the same as origin
+							cumulativeProbability += endNodeProbabilitiesFreight.get(node) / (1.0 - endNodeProbabilitiesFreight.get(originNode));
+							if (Double.compare(cumulativeProbability, random) > 0) {
+								destinationNode = node;
+								break;
+							}
+						}
+					} else	{ //inter-zonal trip (or intra-zonal with replacement)
+						for (int node: listOfDestinationNodes) {
+							cumulativeProbability += endNodeProbabilitiesFreight.get(node);
+							if (Double.compare(cumulativeProbability, random) > 0) {
+								destinationNode = node;
+								break;
+							}
+						}
+					}
+
+				} else {// freight zone is a point (port, airport or distribution centre)
+					destinationNode = roadNetwork.getFreightZoneToNearestNode().get(destination);
+				}
+
+				if (originNode == null) System.err.println("Could not find origin node for a freight trip!");
+				if (destinationNode == null) System.err.println("Could not find destination node for a freight trip!");
+
+				Route chosenRoute = null;
+				RouteSet fetchedRouteSet = rsg.getRouteSet(originNode.intValue(), destinationNode.intValue());
+				if (fetchedRouteSet == null) {
+					System.err.printf("Can't fetch the route set between nodes %d and %d! %s", originNode, destinationNode, System.lineSeparator());
+
+					if (!FLAG_ASTAR_IF_EMPTY_ROUTE_SET)	continue;
+					else { //try finding a path with aStar
+						System.err.println("Trying the astar!");
+
+						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(originNode);
+						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(destinationNode);
+
+						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTime);
+						if (fastestPath == null) {
+							System.err.println("Not even aStar could find a route!");
+							continue;
+						}
+						chosenRoute = new Route(fastestPath);
+						if (chosenRoute.isEmpty()) {
+							System.err.printf("Empty route between nodes %d and %d! %s", originNode, destinationNode, System.lineSeparator());
+							continue;
+						}
+
+						//store generated route into the rsg!
+						rsg.addRoute(chosenRoute);
+					}
+				} else { //there is a route set
+
+					if (fetchedRouteSet.getProbabilities() == null) {
+						//probabilities need to be calculated for this route set before a choice can be made
+						fetchedRouteSet.setLinkTravelTime(this.linkTravelTime);
+						fetchedRouteSet.setParameters(routeChoiceParameters);
+						fetchedRouteSet.calculateUtilities(this.linkTravelTime, routeChoiceParameters);
+						fetchedRouteSet.calculateProbabilities(this.linkTravelTime, routeChoiceParameters);
+						fetchedRouteSet.sortRoutesOnUtility();
+					}
+
+					//choose the route
+					chosenRoute = fetchedRouteSet.choose(routeChoiceParameters);
+					if (chosenRoute == null) {
+						System.err.printf("No chosen route between nodes %d and %d! %s", originNode, destinationNode, System.lineSeparator());
+						continue;
+					}
+				}
+
+				if (chosenRoute.isEmpty()) {
+					System.err.println("The chosen route is empty, skipping this trip!");
+					continue;
+				}
+
+				//there is a chosenRoute
+				counterAssignedTrips++;
+
+				//check to which LAD chosen origin and destination nodes belong to!
+				String originLAD = roadNetwork.getNodeToZone().get(originNode);
+				String destinationLAD = roadNetwork.getNodeToZone().get(destinationNode);
+
+				//increase the number of freight trips starting at origin LAD
+				Integer number = this.LADnoTripStartsFreight.get(originLAD);
+				if (number == null) number = 0;
+				this.LADnoTripStartsFreight.put(originLAD, ++number);
+				//increase the number of trips ending at destination LAD
+				Integer number2 = this.LADnoTripEndsFreight.get(destinationLAD);
+				if (number2 == null) number2 = 0;
+				this.LADnoTripEndsFreight.put(destinationLAD, ++number2);
+
+				List listOfEdges = chosenRoute.getEdges();
+				//System.out.println("The path as a list of edges: " + listOfEdges);
+				//System.out.println("Path size in the number of nodes: " + aStarPath.size());
+				//System.out.println("Path size in the number of edges: " + listOfEdges.size());
+
+				VehicleType vht = VehicleType.values()[vehicleType];
+
+				double sum = 0;
+				List<Route> list;
+				for (Object o: listOfEdges) {
+					//DirectedEdge e = (DirectedEdge) o;
+					Edge e = (Edge) o;
+
+					//increase volume count for that edge (in PCU)
+					Double volumeInPCU = linkVolumesInPCU.get(e.getID());
+					if (volumeInPCU == null) volumeInPCU = 0.0;
+					volumeInPCU += this.vehicleTypeToPCU.get(vht);
+					linkVolumesInPCU.put(e.getID(), volumeInPCU);
+
+					//increase volume count for that edge and for that vehicle type
+					Integer volume = linkVolumesPerVehicleType.get(vht).get(e.getID());
+					if (volume == null) volume = 0;
+					volume++;
+					linkVolumesPerVehicleType.get(vht).put(e.getID(), volume);
+				}
+				//System.out.printf("Sum of edge lengths: %.3f\n\n", sum);
+
+				//store route in route storage
+				if (routeStorageFreight.get(vht).containsKey(origin, destination)) 
+					list = (List<Route>) routeStorageFreight.get(vht).get(origin, destination);
+				else {
+					list = new ArrayList<Route>();
+					routeStorageFreight.get(vht).put(origin, destination, list);
+				}
+				list.add(chosenRoute);
+
+			}//for each trip
+		}//for each OD pair
+
+		System.out.println("Total flow: " + counterTotalFlow);
+		System.out.println("Total assigned trips: " + counterAssignedTrips);
+		System.out.println("Assignment percentage: " + 100.0* counterAssignedTrips / counterTotalFlow);
+	}
+
 
 	/**
 	 * Updates link travel times.
