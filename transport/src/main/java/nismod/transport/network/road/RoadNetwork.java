@@ -765,38 +765,45 @@ public class RoadNetwork {
 		if (linkTravelTime == null) linkTravelTime = new HashMap<Integer, Double>();
 		//if (linkTravelTime == null) linkTravelTime = this.freeFlowTravelTime;
 		RoadPath path;
-		//find the shortest path using AStar algorithm
-		try {
-			//System.out.printf("Finding the shortest path from %d to %d using astar: \n", from.getID(), to.getID());
-			MyAStarShortestPathFinder aStarPathFinder = new MyAStarShortestPathFinder(this.network, from, to, this.getAstarFunctionsTime(to, linkTravelTime));
-			aStarPathFinder.calculate();
-			Path aStarPath;
-			aStarPath = aStarPathFinder.getPath();
-			if (aStarPath != null) {
-				aStarPath.reverse();
-				//System.out.println(aStarPath);
-				//System.out.println("The path as a list of nodes: " + aStarPath);
-				//List listOfEdges = aStarPath.getEdges();
-				//System.out.println("The path as a list of edges: " + listOfEdges);
-				//System.out.println("Path size in the number of nodes: " + aStarPath.size());
-				//System.out.println("Path size in the number of edges: " + listOfEdges.size());
-				path = new RoadPath(aStarPath);
-				//System.out.println("RoadPath: " + path.toString());
-				//System.out.println("RoadPath edges: " + path.getEdges());
-				//path.buildEdges();
-				//System.out.println("RoadPath edges: " + path.getEdges());
-			} else {
-				//System.err.println("Could not find the shortest path using astar.");
-				return null;
-			}
-		} catch (WrongPathException e) {
-			System.err.println("Could not find the shortest path using astar.");
-			path = null;
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.err.println("Could not find the shortest path using astar.");
-			path = null;
-		} 
+
+		//if from and to nodes are the same, return a single node path
+		if (from.getID() == to.getID()) {
+			path = new RoadPath();
+			path.add(from);
+		} else
+			//find the shortest path using AStar algorithm
+			try {
+				//System.out.printf("Finding the shortest path from %d to %d using astar: \n", from.getID(), to.getID());
+				MyAStarShortestPathFinder aStarPathFinder = new MyAStarShortestPathFinder(this.network, from, to, this.getAstarFunctionsTime(to, linkTravelTime));
+				aStarPathFinder.calculate();
+				Path aStarPath;
+				aStarPath = aStarPathFinder.getPath();
+				if (aStarPath != null) {
+					aStarPath.reverse();
+					//System.out.println(aStarPath);
+					//System.out.println("The path as a list of nodes: " + aStarPath);
+					//List listOfEdges = aStarPath.getEdges();
+					//System.out.println("The path as a list of edges: " + listOfEdges);
+					//System.out.println("Path size in the number of nodes: " + aStarPath.size());
+					//System.out.println("Path size in the number of edges: " + listOfEdges.size());
+					path = new RoadPath(aStarPath);
+					//System.out.println("RoadPath: " + path.toString());
+					//System.out.println("RoadPath edges: " + path.getEdges());
+					//path.buildEdges();
+					//System.out.println("RoadPath edges: " + path.getEdges());
+				} else {
+					//System.err.println("Could not find the shortest path using astar.");
+					return null;
+				}
+			} catch (WrongPathException e) {
+				System.err.println("Could not find the shortest path using astar.");
+				path = null;
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.err.println("Could not find the shortest path using astar.");
+				path = null;
+			} 
+
 		if (path != null && !path.isValid()) {
 			System.err.printf("Fastest path from %d to %d exists, but is not valid! %n", from.getID(), to.getID());
 			return null;

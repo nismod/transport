@@ -99,8 +99,11 @@ public class RoadNetworkAssignment {
 	private HashMap<String, Double> areaCodeProbabilities;
 	//the probability of trip starting/ending in the workplace zone
 	private HashMap<String, Double> workplaceZoneProbabilities;
-	//the probability of trip starting/ending at a node
-	private HashMap<Integer, Double> nodeProbabilities;
+	//the probability of trip starting at a node
+	private HashMap<Integer, Double> startNodeProbabilities;
+	//the probability of trip ending at a node
+	private HashMap<Integer, Double> endNodeProbabilities;
+	
 	//the probability of freight trip starting/ending at a node
 	private HashMap<Integer, Double> nodeProbabilitiesFreight;
 
@@ -218,20 +221,25 @@ public class RoadNetworkAssignment {
 		//System.out.println("Probabilities for workplace zones:");
 		//System.out.println(this.workplaceZoneProbabilities);
 
-		//calculate node probabilities from gravitating population
-		nodeProbabilities = new HashMap<Integer, Double>();
+		//calculate node probabilities from gravitating population (ignores blacklisted nodes)
+		this.startNodeProbabilities = new HashMap<Integer, Double>();
+		this.endNodeProbabilities = new HashMap<Integer, Double>();
 		//System.out.println(roadNetwork.getZoneToNodes().keySet());
 		for (String zone: roadNetwork.getZoneToNodes().keySet()) {
-			double sum = 0;
+			double sumStart = 0.0, sumEnd = 0.0;
 			//System.out.println(roadNetwork.getZoneToNodes().get(zone));
-			for (Integer node: roadNetwork.getZoneToNodes().get(zone)) sum += roadNetwork.getGravitatingPopulation(node);
 			for (Integer node: roadNetwork.getZoneToNodes().get(zone)) {
-				double probability = roadNetwork.getGravitatingPopulation(node) / sum;
-				nodeProbabilities.put(node, probability);
+				if (!roadNetwork.isBlacklistedAsStartNode(node)) sumStart += roadNetwork.getGravitatingPopulation(node);
+				if (!roadNetwork.isBlacklistedAsEndNode(node))   sumEnd += roadNetwork.getGravitatingPopulation(node);
+			}
+			for (Integer node: roadNetwork.getZoneToNodes().get(zone)) {
+				if (!roadNetwork.isBlacklistedAsStartNode(node)) startNodeProbabilities.put(node, roadNetwork.getGravitatingPopulation(node) / sumStart);
+				if (!roadNetwork.isBlacklistedAsEndNode(node))   endNodeProbabilities.put(node, roadNetwork.getGravitatingPopulation(node) / sumEnd);
 			}
 		}
 		System.out.println("Probabilities for nodes:");
-		System.out.println(this.nodeProbabilities);
+		System.out.println(this.startNodeProbabilities);
+		System.out.println(this.endNodeProbabilities);
 
 		//calculate node probabilities from gravitating workplace population
 		nodeProbabilitiesFreight = new HashMap<Integer, Double>();
@@ -319,25 +327,25 @@ public class RoadNetworkAssignment {
 			//removing blacklisted nodes
 			for (Integer originNode: roadNetwork.getZoneToNodes().get(originZone))
 				//check if any of the nodes is blacklisted
-				if (this.roadNetwork.getStartNodeBlacklist().contains(originNode)) 
+				if (this.roadNetwork.isBlacklistedAsStartNode(originNode)) 
 					listOfOriginNodes.remove(originNode);
 
 			//removing blacklisted nodes
 			for (Integer destinationNode: roadNetwork.getZoneToNodes().get(destinationZone))
 				//check if any of the nodes is blacklisted
-				if (this.roadNetwork.getEndNodeBlacklist().contains(destinationNode)) 
+				if (this.roadNetwork.isBlacklistedAsEndNode(destinationNode)) 
 					listOfDestinationNodes.remove(destinationNode);
 
-			//normalise probabilities
-			HashMap<Integer, Double> originNodeProbabilities = new HashMap<Integer, Double>();
-			HashMap<Integer, Double> destinationNodeProbabilities = new HashMap<Integer, Double>();
-			double sumation = 0.0;
-			for (Integer originNode: listOfOriginNodes) sumation += this.nodeProbabilities.get(originNode);
-			for (Integer originNode: listOfOriginNodes) originNodeProbabilities.put(originNode, this.nodeProbabilities.get(originNode) / sumation);
-			sumation = 0.0;
-			for (Integer destinationNode: listOfDestinationNodes) sumation += this.nodeProbabilities.get(destinationNode);
-			for (Integer destinationNode: listOfDestinationNodes) destinationNodeProbabilities.put(destinationNode, this.nodeProbabilities.get(destinationNode) / sumation);
-			
+//			//normalise probabilities
+//			HashMap<Integer, Double> originNodeProbabilities = new HashMap<Integer, Double>();
+//			HashMap<Integer, Double> destinationNodeProbabilities = new HashMap<Integer, Double>();
+//			double sumation = 0.0;
+//			for (Integer originNode: listOfOriginNodes) sumation += this.nodeProbabilities.get(originNode);
+//			for (Integer originNode: listOfOriginNodes) originNodeProbabilities.put(originNode, this.nodeProbabilities.get(originNode) / sumation);
+//			sumation = 0.0;
+//			for (Integer destinationNode: listOfDestinationNodes) sumation += this.nodeProbabilities.get(destinationNode);
+//			for (Integer destinationNode: listOfDestinationNodes) destinationNodeProbabilities.put(destinationNode, this.nodeProbabilities.get(destinationNode) / sumation);
+//			
 			//for each trip
 			int flow = passengerODM.getFlow(originZone, destinationZone);
 			counterTotalFlow += flow;
@@ -430,7 +438,7 @@ public class RoadNetworkAssignment {
 				Integer originNode = null;
 				double random = rng.nextDouble();
 				for (Integer node: listOfOriginNodes) {
-					cumulativeProbability += originNodeProbabilities.get(node);
+					cumulativeProbability += startNodeProbabilities.get(node);
 					if (Double.compare(cumulativeProbability, random) > 0) {
 						originNode = node;
 						break;
@@ -448,7 +456,7 @@ public class RoadNetworkAssignment {
 				if (!FLAG_INTRAZONAL_ASSIGNMENT_REPLACEMENT && originZone.equals(destinationZone) && listOfDestinationNodes.contains(originNode)) { //no replacement and intra-zonal trip
 					for (Integer node: listOfDestinationNodes) {
 						if (node.intValue() == originNode.intValue()) continue; //skip if the node is the same as origin
-						cumulativeProbability += destinationNodeProbabilities.get(node) / (1.0 - destinationNodeProbabilities.get(originNode));
+						cumulativeProbability += endNodeProbabilities.get(node) / (1.0 - endNodeProbabilities.get(originNode));
 						if (Double.compare(cumulativeProbability, random) > 0) {
 							destinationNode = node;
 							break;
@@ -456,7 +464,7 @@ public class RoadNetworkAssignment {
 					}
 				} else	{ //inter-zonal trip (or intra-zonal with replacement)
 					for (Integer node: listOfDestinationNodes) {
-						cumulativeProbability += destinationNodeProbabilities.get(node);
+						cumulativeProbability += endNodeProbabilities.get(node);
 						if (Double.compare(cumulativeProbability, random) > 0) {
 							destinationNode = node;
 							break;
@@ -611,15 +619,15 @@ public class RoadNetworkAssignment {
 				if (this.roadNetwork.getEndNodeBlacklist().contains(destinationNode)) 
 					listOfDestinationNodes.remove(destinationNode);
 			
-			//normalise probabilities
-			HashMap<Integer, Double> originNodeProbabilities = new HashMap<Integer, Double>();
-			HashMap<Integer, Double> destinationNodeProbabilities = new HashMap<Integer, Double>();
-			double sumation = 0.0;
-			for (Integer originNode: listOfOriginNodes) sumation += this.nodeProbabilities.get(originNode);
-			for (Integer originNode: listOfOriginNodes) originNodeProbabilities.put(originNode, this.nodeProbabilities.get(originNode) / sumation);
-			sumation = 0.0;
-			for (Integer destinationNode: listOfDestinationNodes) sumation += this.nodeProbabilities.get(destinationNode);
-			for (Integer destinationNode: listOfDestinationNodes) destinationNodeProbabilities.put(destinationNode, this.nodeProbabilities.get(destinationNode) / sumation);
+//			//normalise probabilities
+//			HashMap<Integer, Double> originNodeProbabilities = new HashMap<Integer, Double>();
+//			HashMap<Integer, Double> destinationNodeProbabilities = new HashMap<Integer, Double>();
+//			double sumation = 0.0;
+//			for (Integer originNode: listOfOriginNodes) sumation += this.nodeProbabilities.get(originNode);
+//			for (Integer originNode: listOfOriginNodes) originNodeProbabilities.put(originNode, this.nodeProbabilities.get(originNode) / sumation);
+//			sumation = 0.0;
+//			for (Integer destinationNode: listOfDestinationNodes) sumation += this.nodeProbabilities.get(destinationNode);
+//			for (Integer destinationNode: listOfDestinationNodes) destinationNodeProbabilities.put(destinationNode, this.nodeProbabilities.get(destinationNode) / sumation);
 						
 			//for each trip
 			int flow = passengerODM.getFlow(origin, destination);
@@ -640,7 +648,7 @@ public class RoadNetworkAssignment {
 					double cumulativeProbability = 0.0;
 					double random = rng.nextDouble();
 					for (Integer node: listOfOriginNodes) {
-						cumulativeProbability += originNodeProbabilities.get(node);
+						cumulativeProbability += startNodeProbabilities.get(node);
 						if (Double.compare(cumulativeProbability, random) > 0) {
 							originNode = node;
 							break;
@@ -657,7 +665,7 @@ public class RoadNetworkAssignment {
 					if (!FLAG_INTRAZONAL_ASSIGNMENT_REPLACEMENT && listOfDestinationNodes.contains(originNode)) { //no replacement
 						for (Integer node: listOfDestinationNodes) {
 							if (node.intValue() == originNode.intValue()) continue; //skip if the node is the same as origin
-							cumulativeProbability += destinationNodeProbabilities.get(node) / (1.0 - destinationNodeProbabilities.get(originNode));
+							cumulativeProbability += endNodeProbabilities.get(node) / (1.0 - endNodeProbabilities.get(originNode));
 							if (Double.compare(cumulativeProbability, random) > 0) {
 								destinationNode = node;
 								break;
@@ -665,7 +673,7 @@ public class RoadNetworkAssignment {
 						}
 					} else	{ //with replacement
 						for (Integer node: listOfDestinationNodes) {
-							cumulativeProbability += destinationNodeProbabilities.get(node);
+							cumulativeProbability += endNodeProbabilities.get(node);
 							if (Double.compare(cumulativeProbability, random) > 0) {
 								destinationNode = node;
 								break;
@@ -2322,11 +2330,20 @@ public class RoadNetworkAssignment {
 	 * Getter method for node probabilities.
 	 * @return Node probabilities.
 	 */
-	public HashMap<Integer, Double> getNodeProbabilities() {
+	public HashMap<Integer, Double> getStartNodeProbabilities() {
 
-		return this.nodeProbabilities;
+		return this.startNodeProbabilities;
 	}
 
+	/**
+	 * Getter method for node probabilities.
+	 * @return Node probabilities.
+	 */
+	public HashMap<Integer, Double> getEndNodeProbabilities() {
+
+		return this.endNodeProbabilities;
+	}
+	
 	/**
 	 * Getter method for the number of trips starting in an output area.
 	 * @return Number of trips.
