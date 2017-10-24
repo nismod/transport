@@ -403,15 +403,33 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("\n\n*** Testing node probabilities ***");
 		
 		//test the probability of one node from one LAD
-		assertEquals("The probability of node 60 is correct", (double)1656/234671, rna.getNodeProbabilities().get(60), EPSILON);
+		//assertEquals("The probability of node 60 is correct", (double)1656/234671, rna.getNodeProbabilities().get(60), EPSILON);
+		assertEquals("The probability of node 60 is correct", (double)1656/234671, rna.getStartNodeProbabilities().get(60), EPSILON);
+		assertEquals("The probability of node 60 is correct", (double)1656/234671, rna.getEndNodeProbabilities().get(60), EPSILON);
 
 		//test that the sum of probabilities of nodes in each LAD zone is 1.0
 		for (String zone: roadNetwork.getZoneToNodes().keySet()) {
 
+//			double probabilitySum = 0.0;
+//			for(Iterator<Integer> iter = roadNetwork.getZoneToNodes().get(zone).iterator(); iter.hasNext(); ) {
+//				Integer node = iter.next();
+//				probabilitySum += rna.getNodeProbabilities().get(node);
+//			}
+//			System.out.printf("The sum of probabilites for zone %s is: %.12f.\n", zone, probabilitySum);
+//			assertEquals("The sum of probabilities for zone " + zone + " is 1.0", 1.0, probabilitySum, EPSILON);
+			
 			double probabilitySum = 0.0;
 			for(Iterator<Integer> iter = roadNetwork.getZoneToNodes().get(zone).iterator(); iter.hasNext(); ) {
 				Integer node = iter.next();
-				probabilitySum += rna.getNodeProbabilities().get(node);
+				probabilitySum += rna.getStartNodeProbabilities().get(node);
+			}
+			System.out.printf("The sum of probabilites for zone %s is: %.12f.\n", zone, probabilitySum);
+			assertEquals("The sum of probabilities for zone " + zone + " is 1.0", 1.0, probabilitySum, EPSILON);
+			
+			probabilitySum = 0.0;
+			for(Iterator<Integer> iter = roadNetwork.getZoneToNodes().get(zone).iterator(); iter.hasNext(); ) {
+				Integer node = iter.next();
+				probabilitySum += rna.getEndNodeProbabilities().get(node);
 			}
 			System.out.printf("The sum of probabilites for zone %s is: %.12f.\n", zone, probabilitySum);
 			assertEquals("The sum of probabilities for zone " + zone + " is 1.0", 1.0, probabilitySum, EPSILON);

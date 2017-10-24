@@ -155,6 +155,9 @@ public class RouteSetGenerator {
 
 		RandomSingleton rng = RandomSingleton.getInstance();
 
+		//do not generate route set if origin or destination node is blacklisted as no routes are possible
+		if (this.roadNetwork.isBlacklistedAsStartNode(origin) || this.roadNetwork.isBlacklistedAsEndNode(destination)) return;
+		
 		//System.out.printf("Generating route set between nodes %d and %d with random link elimination.\n", origin, destination);
 
 		DirectedNode originNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(origin);
