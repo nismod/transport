@@ -97,16 +97,11 @@ public class RoadNetworkAssignmentTest {
 		ODMatrix passengerODM = new ODMatrix("./src/main/resources/data/balancedODMatrix.csv");
 		passengerODM.printMatrix();
 
-/*
-		FreightMatrix freightMatrix = new FreightMatrix("./src/main/resources/data/freightMatrix.csv");	
-		freightMatrix.printMatrixFormatted();
-*/
-		
 		//read routes
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork2);
 		//rsg.readRoutes("completeRoutesNewest.txt");
 		//rsg.readRoutes("./src/main/resources/data/all5routestop10/all5routestop10.txt");
-//		rsg.readRoutes("./src/main/resources/data/5routes10nodesnew/all5routestop10new.txt");
+		//rsg.readRoutes("./src/main/resources/data/5routes10nodesnew/all5routestop10new.txt");
 		rsg.printStatistics();
 		
 		//set route choice parameters
@@ -117,19 +112,23 @@ public class RoadNetworkAssignmentTest {
 		
 		//assign passenger flows
 		long timeNow = System.currentTimeMillis();
-		roadNetworkAssignment.assignPassengerFlows(passengerODM);
+		//roadNetworkAssignment.assignPassengerFlows(passengerODM);
 		//roadNetworkAssignment.assignPassengerFlowsRouteChoice(passengerODM, rsg, params);
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Passenger flows assigned in %d seconds.\n", timeNow / 1000);
-/*
+
+
+		FreightMatrix freightMatrix = new FreightMatrix("./src/main/resources/data/freightMatrix.csv");	
+		freightMatrix.printMatrixFormatted();
+		
  		//assign freight flows
 		timeNow = System.currentTimeMillis();
 		roadNetworkAssignment.assignFreightFlows(freightMatrix);
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Freight flows assigned in %d seconds.\n", timeNow / 1000);
 		
-		roadNetworkAssignment.saveAssignmentResults(2015, "assignment2015passengerAndFreigh.csv");
-*/
+		//roadNetworkAssignment.saveAssignmentResults(2015, "assignment2015passengerAndFreigh.csv");
+
 		
 //		//for (int i = 0; i < 5; i++) {
 //		for (int i = 0; i < 1; i++) {
@@ -314,7 +313,7 @@ public class RoadNetworkAssignmentTest {
 		//rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null);
 		
 		rna.resetLinkVolumes();
-		rna.resetPathStorages();
+		rna.resetRouteStorages();
 		rna.resetRouteStorages();
 		rna.resetTripStartEndCounters();
 		
@@ -561,7 +560,7 @@ public class RoadNetworkAssignmentTest {
 		//TEST ASSIGNMENT WITH ROUTE CHOICE
 		System.out.println("\n\n*** Testing assignment with route choice ***");
 		rna.resetLinkVolumes();
-		rna.resetPathStorages();
+		rna.resetRouteStorages();
 		rna.resetTripStartEndCounters();
 		
 		//set route choice parameters
@@ -668,11 +667,11 @@ public class RoadNetworkAssignmentTest {
 			assertEquals("The sum of probabilities for zone " + zone + " is 1.0", 1.0, probabilitySum, EPSILON);
 		}
 		
-		//TEST PATH STORAGE FOR FREIGHT
-		System.out.println("\n\n*** Testing path storage for freight ***");
+		//TEST ROUTE STORAGE FOR FREIGHT
+		System.out.println("\n\n*** Testing route storage for freight ***");
 		
 		//check that the number of paths for a given OD equals the flow (the number of trips in the OD matrix).
-		//System.out.println(rna.getPathStorageFreight());
+		//System.out.println(rna.getRouteStorageFreight());
 				
 		//for each OD
 		for (MultiKey mk: fm.getKeySet()) {
@@ -680,7 +679,7 @@ public class RoadNetworkAssignmentTest {
 					int originFreightZone = (int) mk.getKey(0);
 					int destinationFreightZone = (int) mk.getKey(1);
 					VehicleType vht = VehicleType.values()[(int)mk.getKey(2)]; 
-					List<Path> pathList = rna.getPathStorageFreight().get(vht).get(originFreightZone, destinationFreightZone);
+					List<Route> routeList = rna.getRouteStorageFreight().get(vht).get(originFreightZone, destinationFreightZone);
 					
 //					int flow = 0;
 //					//sum flows for each vehicle type
@@ -689,7 +688,7 @@ public class RoadNetworkAssignmentTest {
 					//get flow for that vehicle type
 					int flow = fm.getFlow(originFreightZone, destinationFreightZone, vht.ordinal());
 	
-					assertEquals("The number of paths equals the flow", flow, pathList.size());
+					assertEquals("The number of routes equals the flow", flow, routeList.size());
 		}
 		
 		//TEST COUNTERS OF TRIP STARTS/ENDS
