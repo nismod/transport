@@ -4,7 +4,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.closeTo;
 import static org.junit.Assert.*;
 
+import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URL;
@@ -15,6 +17,7 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
+import org.apache.commons.io.FileUtils;
 import org.geotools.graph.path.Path;
 import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedGraph;
@@ -23,13 +26,11 @@ import org.geotools.graph.structure.Edge;
 import org.junit.Test;
 import org.opengis.feature.simple.SimpleFeature;
 
+import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.ODMatrix;
+import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 
 public class RouteSetGeneratorTest {
-
-	public RouteSetGeneratorTest() {
-		// TODO Auto-generated constructor stub
-	}
 
 	public static void main(String[] args) throws IOException {
 
@@ -213,6 +214,8 @@ public class RouteSetGeneratorTest {
 		//create a road network
 		RoadNetwork roadNetwork3 = new RoadNetwork(zonesUrl3, networkUrl3, nodesUrl3, AADFurl3, areaCodeFileName3, areaCodeNearestNodeFile3, workplaceZoneFileName3, workplaceZoneNearestNodeFile3, freightZoneToLADfile3, freightZoneNearestNodeFile3);
 		roadNetwork3.replaceNetworkEdgeIDs(networkUrl3New);
+		
+		roadNetwork3.sortGravityNodes();
 
 		//visualise the shapefiles
 		//roadNetwork2.visualise("Test Area");
@@ -241,27 +244,43 @@ public class RouteSetGeneratorTest {
 		//routes5.readRoutes("completeRoutesNewest.txt");
 		//routes5.readRoutes("./src/main/resources/data/routes5of190top10.txt");
 
-
-
 		long timeNow = System.currentTimeMillis();
 
-		for (int i = 1; i <= 190; i++) {
-			StringBuilder path = new StringBuilder(60);
-			path.append("./src/main/resources/data/5routes10nodes/routes");
-			path.append(i);
-			path.append("of190top10.txt");
-
-			System.out.print(i + ":");
-			routes5.readRoutes(path.toString());
-		}
-
+//		FilenameFilter filter = new FilenameFilter() {
+//		    public boolean accept(File dir, String name) {
+//		        return name.endsWith(".txt");
+//		    }
+//		};
+//
+//		File folder = new File("./src/main/resources/data/routes");
+//		File[] listOfFiles = folder.listFiles(filter);
+//
+//		for (int i = 0; i < listOfFiles.length; i++) {
+//		    File file = listOfFiles[i];
+//		    if (file.isFile() && file.getName().endsWith("top10.txt")) {
+//		    	System.out.print(i + ":");
+//		    	routes5.readRoutes(file.getPath());
+//		    }
+//		}
+		
 		//	routes5.readRoutes("./src/main/resources/data/all5routestop10/all5routestop10.txt");
+		//	routes5.readRoutes("./src/main/resources/data/routesCombined/routesCombined.txt");
 
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Routes loaded into memory in %d seconds.\n", timeNow / 1000);
 
 		routes5.printStatistics();
 		//		routes5.printChoiceSets();
+		
+		
+		timeNow = System.currentTimeMillis();
+		
+		FreightMatrix freightMatrix = new FreightMatrix("./src/main/resources/data/freightMatrix.csv");	
+		routes5.generateRouteSet(freightMatrix, 10);
+		routes5.saveRoutes("freightRoutes.txt", false);
+		
+		timeNow = System.currentTimeMillis() - timeNow;
+		System.out.printf("Freight routes generated in %d seconds.\n", timeNow / 1000);
 	}
 
 	@Test
@@ -316,6 +335,10 @@ public class RouteSetGeneratorTest {
 		
 		//generate all route sets
 		routes.clearRoutes();
+		
+		//has to be sorted!
+		roadNetwork.sortGravityNodes();
+		
 		routes.generateRouteSet(passengerODM, 1, 1, 3);
 		routes.printStatistics();
 		int totalRouteSets = routes.getNumberOfRouteSets();
@@ -407,7 +430,67 @@ public class RouteSetGeneratorTest {
 			System.err.println("Could not find the shortest path using astar.");
 		}
 	}
+	
+	@Test
+	public void testFreight() throws IOException {
 
+		final URL zonesUrl = new URL("file://src/test/resources/testdata/zones.shp");
+		final URL networkUrl = new URL("file://src/test/resources/testdata/network.shp");
+		final URL networkUrlNew = new URL("file://src/test/resources/testdata/testOutputNetwork.shp");
+		final URL nodesUrl = new URL("file://src/test/resources/testdata/nodes.shp");
+		final URL AADFurl = new URL("file://src/test/resources/testdata/AADFdirected.shp");
+		final String areaCodeFileName = "./src/test/resources/testdata/nomisPopulation.csv";
+		final String areaCodeNearestNodeFile = "./src/test/resources/testdata/areaCodeToNearestNode.csv";
+		final String workplaceZoneFileName = "./src/test/resources/testdata/workplacePopulation.csv";
+		final String workplaceZoneNearestNodeFile = "./src/test/resources/testdata/workplaceZoneToNearestNode.csv";
+		final String freightZoneToLADfile = "./src/test/resources/testdata/freightZoneToLAD.csv";
+		final String freightZoneNearestNodeFile = "./src/test/resources/testdata/freightZoneToNearestNode.csv";
+		final String baseYearODMatrixFile = "./src/test/resources/testdata/passengerODM.csv";
+		final String freightMatrixFile = "./src/test/resources/testdata/freightMatrix.csv";
+		
+		//create a road network
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
+		roadNetwork.replaceNetworkEdgeIDs(networkUrlNew);
+		
+		roadNetwork.makeEdgesAdmissible();
+		roadNetwork.sortGravityNodesFreight(); //must!
+		
+		System.out.println("Start node blacklist: " + roadNetwork.getStartNodeBlacklist());
+		System.out.println("End node blacklist: " + roadNetwork.getEndNodeBlacklist());
+
+		System.out.println(roadNetwork.getZoneToNodes());
+		
+		
+		//create a road network assignment
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null);
+
+		FreightMatrix fm = new FreightMatrix(freightMatrixFile);
+		
+		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
+		rsg.generateRouteSetWithRandomLinkEliminationRestricted(48, 67);
+		rsg.printChoiceSets();
+		rsg.printStatistics();
+			
+		rsg.clearRoutes();
+		rsg.generateRouteSet(fm, 10);
+		rsg.printChoiceSets();
+		rsg.printStatistics();
+				
+		//set route choice parameters
+		Properties params = new Properties();
+		params.setProperty("TIME", "-1.5");
+		params.setProperty("LENGTH", "-1.0");
+		params.setProperty("INTERSECTIONS", "-0.1");
+
+		//assign freight flows
+		rna.assignFreightFlowsRouteChoice(fm, rsg, params);
+	
+		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforFreightCounts());
+		
+		//rna.saveAssignmentResults(2015, "testAssignmentResultsWithFreight.csv");
+	
+	}
+	
 	//@Test
 	public void fullTest() throws IOException {
 

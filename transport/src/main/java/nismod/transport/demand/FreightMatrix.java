@@ -47,8 +47,8 @@ public class FreightMatrix {
 		//System.out.println("keySet = " + keySet);
 		int origin, destination, vehicleType, flow;
 		for (CSVRecord record : parser) {
-			destination  = Integer.parseInt(record.get(0));
-			origin = Integer.parseInt(record.get(1));
+			destination  = Integer.parseInt(record.get(0)); //destination is first in DfT's matrix!
+			origin = Integer.parseInt(record.get(1)); //origin is second in DfT's matrix!
 			vehicleType = Integer.parseInt(record.get(2));
 			flow = Integer.parseInt(record.get(3));
 			this.setFlow(origin, destination, vehicleType, flow);			

@@ -43,7 +43,6 @@ public class RoadExpansion extends Intervention {
 	 */
 	@Override
 	public void install(Object o) {
-		// TODO Auto-generated method stub
 		
 		System.out.println("Implementing road expansion.");
 		RoadNetwork rn = null;
@@ -70,8 +69,7 @@ public class RoadExpansion extends Intervention {
 	 */
 	@Override
 	public void uninstall(Object o) {
-		// TODO Auto-generated method stub
-		
+
 		System.out.println("Removing road expansion.");
 		RoadNetwork rn = null;
 		if (o instanceof RoadNetwork) {
