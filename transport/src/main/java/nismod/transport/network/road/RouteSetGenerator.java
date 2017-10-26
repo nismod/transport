@@ -22,6 +22,7 @@ import org.geotools.graph.build.line.BasicDirectedLineGraphBuilder;
 import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedNode;
 
+import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.ODMatrix;
 import nismod.transport.utility.RandomSingleton;
 
@@ -58,10 +59,11 @@ public class RouteSetGenerator {
 	 */
 	public void addRoute(Route route) {
 		
-		if (route.isEmpty()) {
-			System.err.println("Cannot add empty route!");
-			return;
-		}
+		//NOTE this is commented, as single node routes are empty but still valid!
+//		if (route.isEmpty()) {
+//			System.err.println("Cannot add empty route!");
+//			return;
+//		}
 		
 		if (!route.isValid()) {
 			System.err.println("Route is not valid. Not adding the route!");
@@ -160,6 +162,15 @@ public class RouteSetGenerator {
 		
 		//System.out.printf("Generating route set between nodes %d and %d with random link elimination.\n", origin, destination);
 
+		//if they are the same, create a single node path
+		if (origin == destination) {
+			RoadPath rp = new RoadPath();
+			rp.add(roadNetwork.getNodeIDtoNode().get(origin));
+			Route route = new Route(rp);
+			this.addRoute(route);
+			return;
+		}
+		
 		DirectedNode originNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(origin);
 		DirectedNode destinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(destination);
 		//RouteSet rs = new RouteSet(originNode, destinationNode);
@@ -300,7 +311,7 @@ public class RouteSetGenerator {
 		if (originLAD.equals(destinationLAD)) this.generateRouteSet(originLAD, destinationLAD);
 		else { //if inter-zonal, use only top nodes
 		
-		//assume pre-sorted
+		//assume pre-sorted (sortGravityNodes method must be used!)
 		List<Integer> originNodes = this.roadNetwork.getZoneToNodes().get(originLAD);
 		//System.out.println("origin nodes: " + originNodes);
 		List<Integer> destinationNodes = this.roadNetwork.getZoneToNodes().get(destinationLAD);
@@ -410,7 +421,119 @@ public class RouteSetGenerator {
 			}
 		}
 	}
+	
+	/**
+	 * Generates routes for all non-zero OD flows in the freight OD matrix.
+	 * Zone ID ranges from the BYFM DfT model:
+	 * <ul>
+	 * 		<li>England: 1 - 867</li>
+	 * 		<li>Wales: 901 - 922</li>
+	 * 		<li>Scotland: 1001 - 1032</li>
+	 * 		<li>Freight airports: 1111 - 1115</li>
+	 * 		<li>Major distribution centres: 1201 - 1256</li>
+	 * 		<li>Freight ports: 1301 - 1388</li>
+	 * </ul> 
+	 * @param freightMatrix Freight matrix.
+	 * @param topNodes
+	 */
+	public void generateRouteSet(FreightMatrix freightMatrix, int topNodes) {
+
+		for (MultiKey mk: freightMatrix.getKeySet()) {
+			int origin = (int) mk.getKey(0);
+			int destination = (int) mk.getKey(1);
+			int vehicleType = (int) mk.getKey(2);
+
+			int flow = freightMatrix.getFlow(origin, destination, vehicleType);
+			if (flow != 0) {
+
+				System.out.printf("Flow(%d, %d, %d) = %d %n", origin, destination, vehicleType, flow);
+				
+				String originLAD = null, destinationLAD = null;
+				Integer originNode = null, destinationNode = null;
+
+				if (origin <= 1032) { 
+					//origin freight zone is a LAD
+					originLAD = roadNetwork.getFreightZoneToLAD().get(origin);
+				} else {
+					//freight zone is a point/node
+					originNode = roadNetwork.getFreightZoneToNearestNode().get(origin);
+				}
+				System.out.println("originLAD = " + originLAD + " originNode = " + originNode);
+				
+				if (destination <= 1032) { 
+					//destination freight zone is a LAD
+					destinationLAD = roadNetwork.getFreightZoneToLAD().get(destination);
+				} else {
+					//freight zone is a point/node
+					destinationNode = roadNetwork.getFreightZoneToNearestNode().get(destination);
+				}
+				System.out.println("destinationLAD = " + destinationLAD + " destinationNode = " + destinationNode);
+				
+				//generate routes depending if it is node-to-node, LAD-to-LAD, node-to-LAD or LAD-to-node
+				if (originNode != null && destinationNode != null) 						this.generateRouteSetWithChecking(originNode, destinationNode);
+				else if (originLAD != null && destinationLAD != null) 					this.generateRouteSetWithChecking(originLAD, destinationLAD, topNodes);
+				else if (originNode != null && destinationLAD != null) {
+					//assume pre-sorted (sortGravityNodesFreight method must be used!)
+					List<Integer> destinationNodes = 
+							this.roadNetwork.getZoneToNodes().get(destinationLAD);
+					for (int j= 0; j < topNodes && j < destinationNodes.size(); j++)	this.generateRouteSetWithChecking(originNode, destinationNodes.get(j));
+				}
+				else if (originLAD != null && destinationNode != null) {
+					//assume pre-sorted (sortGravityNodesFreight method must be used!)
+					List<Integer> originNodes = 
+							this.roadNetwork.getZoneToNodes().get(originLAD);
+					for (int i= 0; i < topNodes && i < originNodes.size(); i++)			this.generateRouteSetWithChecking(originNodes.get(i), destinationNode);
+				} else System.err.println("Problem in generating route set for freight!");
+			}
+		}
+	}
+	
+	/**
+	 * Generates a route set between two nodes only if the route set does not already exist
+	 * @param origin
+	 * @param destination
+	 */
+	private void generateRouteSetWithChecking(int origin, int destination) {
 		
+		RouteSet fetchedRouteSet = this.getRouteSet(origin, destination);
+		//generate only if it does not already exist
+		if (fetchedRouteSet == null)
+			generateRouteSetWithRandomLinkEliminationRestricted(origin, destination);
+
+	}
+	
+	/**
+	 * Generates routes between top N nodes (sorted by gravitating population) from two LAD zones.
+	 * If origin and destination LAD are the same (i.e., intra-zonal), then use all the nodes
+	 * Generate only between those node pairs for which the route set does not already exist.
+	 * @param originLAD
+	 * @param destinationLAD
+	 * @param topNodes
+	 */
+	private void generateRouteSetWithChecking(String originLAD, String destinationLAD, int topNodes) {
+		
+		//if intra-zonal, use all node combinations:
+		if (originLAD.equals(destinationLAD)) this.generateRouteSet(originLAD, destinationLAD);
+		else { //if inter-zonal, use only top nodes
+		
+		//assume pre-sorted (sortGravityNodes method must be used!)
+		List<Integer> originNodes = this.roadNetwork.getZoneToNodes().get(originLAD);
+		//System.out.println("origin nodes: " + originNodes);
+		List<Integer> destinationNodes = this.roadNetwork.getZoneToNodes().get(destinationLAD);
+		//System.out.println("destination nodes: " + destinationNodes);
+				
+		System.out.printf("Generating routes between top %d nodes from %s to %s %n", topNodes, originLAD, destinationLAD);
+		for (int i = 0; i < topNodes && i < originNodes.size(); i++)
+			for (int j = 0; j < topNodes && j < destinationNodes.size(); j++)	{
+				
+				int origin = originNodes.get(i);
+				int destination = destinationNodes.get(j);
+				//System.out.printf("Generating routes between nodes %d and %d \n", origin, destination);
+				this.generateRouteSetWithChecking(origin, destination);
+			}
+		}
+	}
+
 	/**
 	 * Getter method for a route set between a specific origin and a destination.
 	 * @param origin Origin node ID.

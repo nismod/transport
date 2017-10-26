@@ -101,7 +101,8 @@ public class RoadNetworkAssignmentTest {
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork2);
 		//rsg.readRoutes("completeRoutesNewest.txt");
 		//rsg.readRoutes("./src/main/resources/data/all5routestop10/all5routestop10.txt");
-		rsg.readRoutes("./src/main/resources/data/5routes10nodesnew/all5routestop10new.txt");
+		//rsg.readRoutes("./src/main/resources/data/5routes10nodesnew/all5routestop10new.txt");
+		rsg.readRoutes("./src/main/resources/data/routesCombined/routesCombined.txt");
 		rsg.printStatistics();
 		
 		//set route choice parameters
@@ -117,7 +118,9 @@ public class RoadNetworkAssignmentTest {
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Passenger flows assigned in %d seconds.\n", timeNow / 1000);
 
-
+		//sort nodes based on workplace zone population!
+		roadNetwork2.sortGravityNodesFreight();
+		
 		FreightMatrix freightMatrix = new FreightMatrix("./src/main/resources/data/freightMatrix.csv");	
 		freightMatrix.printMatrixFormatted();
 		
@@ -642,7 +645,6 @@ public class RoadNetworkAssignmentTest {
 		//assign freight flows
 		FreightMatrix fm = new FreightMatrix(freightMatrixFile);
 		rna.assignFreightFlows(fm);
-		
 		//rna.saveAssignmentResults(2015, "testAssignmentResultsWithFreight.csv");
 		
 		//TEST OUTPUT AREA PROBABILITIES

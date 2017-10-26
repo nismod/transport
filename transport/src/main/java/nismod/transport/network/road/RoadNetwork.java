@@ -1181,6 +1181,8 @@ public class RoadNetwork {
 		
 		System.out.println("Populating blacklists with unallowed starting/ending node IDs...");
 		createNodeBlacklists();
+		System.out.println("Start node blacklist: " + this.startNodeBlacklist);
+		System.out.println("End node blacklist: " + this.endNodeBlacklist);
 		
 		System.out.println("Determining the number of lanes...");
 		
