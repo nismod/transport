@@ -276,7 +276,7 @@ public class RouteSetGeneratorTest {
 		timeNow = System.currentTimeMillis();
 		
 		FreightMatrix freightMatrix = new FreightMatrix("./src/main/resources/data/freightMatrix.csv");	
-		routes5.generateRouteSet(freightMatrix, 10);
+		routes5.generateRouteSetForFreightMatrix(freightMatrix, 10);
 		routes5.saveRoutes("freightRoutes.txt", false);
 		
 		timeNow = System.currentTimeMillis() - timeNow;
@@ -329,7 +329,7 @@ public class RouteSetGeneratorTest {
 		routes.printStatistics();
 		
 		routes.clearRoutes();
-		routes.generateRouteSet(passengerODM, 10);
+		routes.generateRouteSetForODMatrix(passengerODM, 10);
 		routes.printChoiceSets();
 		routes.printStatistics();
 		
@@ -339,28 +339,28 @@ public class RouteSetGeneratorTest {
 		//has to be sorted!
 		roadNetwork.sortGravityNodes();
 		
-		routes.generateRouteSet(passengerODM, 1, 1, 3);
+		routes.generateRouteSetForODMatrix(passengerODM, 1, 1, 3);
 		routes.printStatistics();
 		int totalRouteSets = routes.getNumberOfRouteSets();
 		int totalRoutes = routes.getNumberOfRoutes();
 
 		//generate first slice
 		routes.clearRoutes();
-		routes.generateRouteSet(passengerODM, 1, 3, 3);
+		routes.generateRouteSetForODMatrix(passengerODM, 1, 3, 3);
 		routes.printStatistics();
 		int routeSets1 = routes.getNumberOfRouteSets();
 		int routes1 = routes.getNumberOfRoutes();
 
 		//generate second slice
 		routes.clearRoutes();
-		routes.generateRouteSet(passengerODM, 2, 3, 3);
+		routes.generateRouteSetForODMatrix(passengerODM, 2, 3, 3);
 		routes.printStatistics();
 		int routeSets2 = routes.getNumberOfRouteSets();
 		int routes2 = routes.getNumberOfRoutes();
 
 		//generate third slice
 		routes.clearRoutes();
-		routes.generateRouteSet(passengerODM, 3, 3, 3);
+		routes.generateRouteSetForODMatrix(passengerODM, 3, 3, 3);
 		routes.printStatistics();
 		int routeSets3 = routes.getNumberOfRouteSets();
 		int routes3 = routes.getNumberOfRoutes();
@@ -468,14 +468,48 @@ public class RouteSetGeneratorTest {
 		
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
 		rsg.generateRouteSetWithRandomLinkEliminationRestricted(48, 67);
-		rsg.printChoiceSets();
+		//rsg.printChoiceSets();
 		rsg.printStatistics();
+		
+		rsg.clearRoutes();
+		rsg.generateRouteSetForFreightMatrix(fm, 10);
+		//rsg.printChoiceSets();
+		rsg.printStatistics();
+
+		System.out.println("Origins: " + fm.getOrigins().size());
+		System.out.println(fm.getOrigins());
+		System.out.println("Destinations: " + fm.getDestinations().size());
+		System.out.println(fm.getDestinations());
+		System.out.println("Vehicles: " + fm.getVehicleTypes().size());
+		System.out.println(fm.getVehicleTypes());
 			
 		rsg.clearRoutes();
-		rsg.generateRouteSet(fm, 10);
-		rsg.printChoiceSets();
+		rsg.generateRouteSetForFreightMatrix(fm, 1, 1, 10);
+		rsg.printStatistics();
+		int totalRouteSets = rsg.getNumberOfRouteSets();
+		int totalRoutes = rsg.getNumberOfRoutes();
+
+		//generate first slice
+		rsg.clearRoutes();
+		rsg.generateRouteSetForFreightMatrix(fm, 1, 3, 10);
 		rsg.printStatistics();
 				
+		//generate second slice
+		rsg.generateRouteSetForFreightMatrix(fm, 2, 3, 10);
+		rsg.printStatistics();
+				
+		//generate third slice
+		rsg.generateRouteSetForFreightMatrix(fm, 3, 3, 10);
+		rsg.printStatistics();
+		int totalRouteSetsFromSlices = rsg.getNumberOfRouteSets();
+		int totalRoutesFromSlices = rsg.getNumberOfRoutes();
+		
+				
+		System.out.printf("%d route sets, %d routes \n", totalRouteSets, totalRoutes);
+		System.out.printf("%d route sets from slices, %d routes from slices \n", totalRouteSetsFromSlices, totalRoutesFromSlices);
+		
+		assertEquals("The number of route sets generated across freight matrix slices is equal to the total number of route sets", totalRouteSets, totalRouteSetsFromSlices);
+		
 		//set route choice parameters
 		Properties params = new Properties();
 		params.setProperty("TIME", "-1.5");
@@ -520,6 +554,7 @@ public class RouteSetGeneratorTest {
 		System.out.printf("Node %d edges to node %d: %s \n", node1.getID(), node2.getID(), node1.getEdges(node2));
 		
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdges);
+		roadNetwork.makeEdgesAdmissible();
 		
 		System.out.println("After replacement:");
 		System.out.printf("Node %d out edges: %s \n", node1.getID(), node1.getOutEdges());
@@ -538,7 +573,7 @@ public class RouteSetGeneratorTest {
 		rsg.printStatistics();
 
 		rsg.clearRoutes();
-		rsg.generateRouteSet("E07000202", "E07000203", 10);
+		rsg.generateRouteSetZoneToZone("E07000202", "E07000203", 10);
 		
 		//assign passenger flows
 		ODMatrix odm = new ODMatrix();
@@ -559,7 +594,5 @@ public class RouteSetGeneratorTest {
 		rna.assignPassengerFlows(odm);
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Passenger flows assigned in %d seconds.\n", timeNow / 1000);
-		
-		
 	}
 }

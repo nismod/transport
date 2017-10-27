@@ -131,6 +131,66 @@ public class FreightMatrix {
 	}
 	
 	/**
+	 * Gets the sorted list of origins.
+	 * @return List of origins.
+	 */
+	public List<Integer> getOrigins() {
+		
+		Set<Integer> firstKey = new HashSet<Integer>();
+		
+		//extract row keysets
+		for (Object mk: matrix.keySet()) {
+			int origin = (int) ((MultiKey)mk).getKey(0);
+			firstKey.add(origin);
+		}
+		//put them into a list and sort them
+		List<Integer> firstKeyList = new ArrayList(firstKey);
+		Collections.sort(firstKeyList);
+	
+		return firstKeyList;
+	}
+	
+	/**
+	 * Gets the sorted list of destinations.
+	 * @return List of destinations.
+	 */
+	public List<Integer> getDestinations() {
+		
+		Set<Integer> secondKey = new HashSet<Integer>();
+		
+		//extract column keysets
+		for (Object mk: matrix.keySet()) {
+			int destination = (int) ((MultiKey)mk).getKey(1);
+			secondKey.add(destination);
+		}
+		//put them into a list and sort them
+		List<Integer> secondKeyList = new ArrayList(secondKey);
+		Collections.sort(secondKeyList);
+		
+		return secondKeyList;
+	}
+	
+	/**
+	 * Gets the sorted list of vehicle types.
+	 * @return List of vehicle types.
+	 */
+	public List<Integer> getVehicleTypes() {
+		
+		Set<Integer> thirdKey = new HashSet<Integer>();
+		
+		//extract column keysets
+		for (Object mk: matrix.keySet()) {
+			int vehicle = (int) ((MultiKey)mk).getKey(2);
+			thirdKey.add(vehicle);
+		}
+		//put them into a list and sort them
+		List<Integer> thirdKeyList = new ArrayList(thirdKey);
+		Collections.sort(thirdKeyList);
+		
+		return thirdKeyList;
+	}
+	
+	/**
 	 * Gets the keyset of the multimap.
 	 * @return Key set.
 	 */
