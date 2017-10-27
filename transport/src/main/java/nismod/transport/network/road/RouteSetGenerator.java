@@ -82,14 +82,18 @@ public class RouteSetGenerator {
 	}
 	
 	/**
-	 * Generates a route set between two nodes
+	 * Generates a route set between two nodes (if it does not already exist in the route set).
 	 * @param origin
 	 * @param destination
 	 */
-	public void generateRouteSet(int origin, int destination) {
+	public void generateRouteSetNodeToNode(int origin, int destination) {
 		
-		generateRouteSetWithRandomLinkEliminationRestricted(origin, destination);
-
+		//if (origin == destination) System.err.println("Origin and destination node are the same.");
+				
+		RouteSet fetchedRouteSet = this.getRouteSet(origin, destination);
+		//generate only if it does not already exist
+		if (fetchedRouteSet == null)
+			generateRouteSetWithRandomLinkEliminationRestricted(origin, destination);
 	}
 	
 	/**
@@ -287,15 +291,15 @@ public class RouteSetGenerator {
 	 * @param originLAD
 	 * @param destinationLAD
 	 */
-	public void generateRouteSet(String originLAD, String destinationLAD) {
+	public void generateRouteSetZoneToZone(String originLAD, String destinationLAD) {
 		
 		List<Integer> originNodes = this.roadNetwork.getZoneToNodes().get(originLAD);
 		List<Integer> destinationNodes = this.roadNetwork.getZoneToNodes().get(destinationLAD);
-		System.out.printf("Generating routes from %s (%d nodes) to %s (%d nodes) %n", originLAD, originNodes.size(), destinationLAD, destinationNodes.size());
+		//System.out.printf("Generating routes from %s (%d nodes) to %s (%d nodes) %n", originLAD, originNodes.size(), destinationLAD, destinationNodes.size());
 		for (Integer origin: originNodes)
 			for (Integer destination: destinationNodes)
 				if (origin != destination) 					
-					this.generateRouteSet(origin, destination);
+					this.generateRouteSetNodeToNode(origin, destination);
 	}
 	
 	/**
@@ -305,10 +309,10 @@ public class RouteSetGenerator {
 	 * @param destinationLAD
 	 * @param topNodes
 	 */
-	public void generateRouteSet(String originLAD, String destinationLAD, int topNodes) {
+	public void generateRouteSetZoneToZone(String originLAD, String destinationLAD, int topNodes) {
 		
 		//if intra-zonal, use all node combinations:
-		if (originLAD.equals(destinationLAD)) this.generateRouteSet(originLAD, destinationLAD);
+		if (originLAD.equals(destinationLAD)) this.generateRouteSetZoneToZone(originLAD, destinationLAD);
 		else { //if inter-zonal, use only top nodes
 		
 		//assume pre-sorted (sortGravityNodes method must be used!)
@@ -317,14 +321,14 @@ public class RouteSetGenerator {
 		List<Integer> destinationNodes = this.roadNetwork.getZoneToNodes().get(destinationLAD);
 		//System.out.println("destination nodes: " + destinationNodes);
 				
-		System.out.printf("Generating routes between top %d nodes from %s to %s %n", topNodes, originLAD, destinationLAD);
+		//System.out.printf("Generating routes between top %d nodes from %s to %s %n", topNodes, originLAD, destinationLAD);
 		for (int i = 0; i < topNodes && i < originNodes.size(); i++)
 			for (int j = 0; j < topNodes && j < destinationNodes.size(); j++)	{
 				
 				int origin = originNodes.get(i);
 				int destination = destinationNodes.get(j);
 				//System.out.printf("Generating routes between nodes %d and %d \n", origin, destination);
-				this.generateRouteSet(origin, destination);
+				this.generateRouteSetNodeToNode(origin, destination);
 			}
 		}
 	}
@@ -335,13 +339,13 @@ public class RouteSetGenerator {
 	 * @param matrix
 	 * @param topNodes
 	 */
-	public void generateRouteSet(ODMatrix matrix, int topNodes) {
+	public void generateRouteSetForODMatrix(ODMatrix matrix, int topNodes) {
 		
 		for (MultiKey mk: matrix.getKeySet()) {
 				String originLAD = (String) ((MultiKey)mk).getKey(0);
 				String destinationLAD = (String) ((MultiKey)mk).getKey(1);
 				if (matrix.getFlow(originLAD, destinationLAD) != 0)
-					this.generateRouteSet(originLAD, destinationLAD, topNodes);
+					this.generateRouteSetZoneToZone(originLAD, destinationLAD, topNodes);
 		}
 	}
 	
@@ -349,13 +353,13 @@ public class RouteSetGenerator {
 	 * Generates routes for all non-zero OD flows in the OD matrix.
 	 * @param matrix
 	 */
-	public void generateRouteSet(ODMatrix matrix) {
+	public void generateRouteSetForODMatrix(ODMatrix matrix) {
 		
 		for (MultiKey mk: matrix.getKeySet()) {
 				String originLAD = (String) ((MultiKey)mk).getKey(0);
 				String destinationLAD = (String) ((MultiKey)mk).getKey(1);
 				if (matrix.getFlow(originLAD, destinationLAD) != 0)
-					this.generateRouteSet(originLAD, destinationLAD);
+					this.generateRouteSetZoneToZone(originLAD, destinationLAD);
 		}
 	}
 	
@@ -365,7 +369,7 @@ public class RouteSetGenerator {
 	 * @param sliceIndex Index of the OD matrix slice for which to generate routes [1..N].
 	 * @param sliceNumber Number of slices to divide matrix into (N).
 	 */
-	public void generateRouteSet(ODMatrix matrix, int sliceIndex, int sliceNumber) {
+	public void generateRouteSetForODMatrix(ODMatrix matrix, int sliceIndex, int sliceNumber) {
 		
 		List<String> origins = matrix.getOrigins();
 		List<String> destinations = matrix.getDestinations();
@@ -378,14 +382,14 @@ public class RouteSetGenerator {
 				String originLAD = origins.get(i);
 				for (String destinationLAD: destinations) 
 					if (matrix.getFlow(originLAD, destinationLAD) != 0)
-						this.generateRouteSet(originLAD, destinationLAD);
+						this.generateRouteSetZoneToZone(originLAD, destinationLAD);
 			}
 		} else { //for the last slice there may be more origins, so go all the way to the end of the list
 			for (int i = (sliceIndex - 1) * originsPerSlice; i < origins.size(); i++) {
 				String originLAD = origins.get(i);
 				for (String destinationLAD: destinations) 
 					if (matrix.getFlow(originLAD, destinationLAD) != 0)
-						this.generateRouteSet(originLAD, destinationLAD);
+						this.generateRouteSetZoneToZone(originLAD, destinationLAD);
 			}
 		}
 	}
@@ -397,7 +401,7 @@ public class RouteSetGenerator {
 	 * @param sliceNumber Number of slices to divide matrix into (N).
 	 * @param topNodes Number of topNodes to consider for inter-zonal routes.
 	 */
-	public void generateRouteSet(ODMatrix matrix, int sliceIndex, int sliceNumber, int topNodes) {
+	public void generateRouteSetForODMatrix(ODMatrix matrix, int sliceIndex, int sliceNumber, int topNodes) {
 		
 		List<String> origins = matrix.getOrigins();
 		List<String> destinations = matrix.getDestinations();
@@ -410,20 +414,143 @@ public class RouteSetGenerator {
 				String originLAD = origins.get(i);
 				for (String destinationLAD: destinations) 
 					if (matrix.getFlow(originLAD, destinationLAD) != 0)
-						this.generateRouteSet(originLAD, destinationLAD, topNodes);
+						this.generateRouteSetZoneToZone(originLAD, destinationLAD, topNodes);
 			}
 		} else { //for the last slice there may be more origins, so go all the way to the end of the list
 			for (int i = (sliceIndex - 1) * originsPerSlice; i < origins.size(); i++) {
 				String originLAD = origins.get(i);
 				for (String destinationLAD: destinations) 
 					if (matrix.getFlow(originLAD, destinationLAD) != 0)
-						this.generateRouteSet(originLAD, destinationLAD, topNodes);
+						this.generateRouteSetZoneToZone(originLAD, destinationLAD, topNodes);
 			}
 		}
 	}
 	
 	/**
 	 * Generates routes for all non-zero OD flows in the freight OD matrix.
+	 * Zone ID ranges from the BYFM DfT model:
+	 * @param freightMatrix Freight matrix.
+	 * @param topNodes
+	 */
+	public void generateRouteSetForFreightMatrix(FreightMatrix freightMatrix, int topNodes) {
+		
+		List<Integer> origins = freightMatrix.getOrigins();
+		List<Integer> destinations = freightMatrix.getDestinations();
+		List<Integer> vehicles = freightMatrix.getVehicleTypes();
+		
+		for (Integer originFreightZone: origins)
+			for (Integer destinationFreightZone: destinations)
+				for (Integer vehicleType: vehicles) 
+					if (freightMatrix.getFlow(originFreightZone, destinationFreightZone, vehicleType) != 0) {
+						this.generateRouteSetBetweenFreightZones(originFreightZone, destinationFreightZone, topNodes);
+						continue; //no need to repeat if there is flow for a different vehicle type!
+					}
+	}
+	
+	/*
+	public void generateRouteSetForFreightMatrix2(FreightMatrix freightMatrix, int topNodes) {
+		
+		List<Integer> origins = freightMatrix.getOrigins();
+		List<Integer> destinations = freightMatrix.getDestinations();
+		List<Integer> vehicles = freightMatrix.getVehicleTypes();
+		
+		for (MultiKey mk: freightMatrix.getKeySet()) {
+			int origin = (int) mk.getKey(0);
+			int destination = (int) mk.getKey(1);
+			int vehicleType = (int) mk.getKey(2);
+
+			int flow = freightMatrix.getFlow(origin, destination, vehicleType);
+			if (flow != 0) {
+				generateRouteSetBetweenFreightZones(origin, destination, topNodes);
+			}
+		}
+	}
+	*/
+	
+	/**
+	 * Generates routes for a slice of the OD matrix (useful for cluster computing), for topNodes only.
+	 * There might still be some overlap between the slices as some nodes (to which point freight zones 
+	 * are assigned appear again in LAD freight zones).
+	 * @param matrix Origin-destination matrix.
+	 * @param sliceIndex Index of the OD matrix slice for which to generate routes [1..N].
+	 * @param sliceNumber Number of slices to divide matrix into (N).
+	 */
+	public void generateRouteSetForFreightMatrix(FreightMatrix freightMatrix, int sliceIndex, int sliceNumber) {
+		
+		List<Integer> origins = freightMatrix.getOrigins();
+		List<Integer> destinations = freightMatrix.getDestinations();
+		List<Integer> vehicles = freightMatrix.getVehicleTypes();
+		
+		int originsPerSlice = (int) Math.floor(1.0 * origins.size() / sliceNumber); //the last slice may have a different number of origins
+		//int originsInLastSlice = origins.size() - (sliceNumber - 1) * originsPerSlice;
+		
+		if (sliceIndex < sliceNumber) {
+			for (int i = (sliceIndex - 1) * originsPerSlice; i < sliceIndex * originsPerSlice && i < origins.size(); i++) {
+				Integer originFreightZone = origins.get(i);
+				for (Integer destinationFreightZone: destinations)
+					for (Integer vehicleType: vehicles) 
+						if (freightMatrix.getFlow(originFreightZone, destinationFreightZone, vehicleType) != 0) {
+							this.generateRouteSetBetweenFreightZones(originFreightZone, destinationFreightZone);
+							continue; //no need to repeat if there is a flow for a different vehicle type!
+						}
+			}
+		} else { //for the last slice there may be more origins, so go all the way to the end of the list
+			for (int i = (sliceIndex - 1) * originsPerSlice; i < origins.size(); i++) {
+				Integer originFreightZone = origins.get(i);
+				for (Integer destinationFreightZone: destinations)
+					for (Integer vehicleType: vehicles)
+						if (freightMatrix.getFlow(originFreightZone, destinationFreightZone, vehicleType) != 0) {
+							this.generateRouteSetBetweenFreightZones(originFreightZone, destinationFreightZone);
+							continue; //no need to repeat if there is a flow for a different vehicle type!
+						}
+			}
+		}
+	}
+	
+	/**
+	 * Generates routes for a slice of the OD matrix (useful for cluster computing), for topNodes only.
+	 * There might still be some overlap between the slices as some nodes (to which point freight zones 
+	 * are assigned appear again in LAD freight zones).
+	 * @param matrix Origin-destination matrix.
+	 * @param sliceIndex Index of the OD matrix slice for which to generate routes [1..N].
+	 * @param sliceNumber Number of slices to divide matrix into (N).
+	 * @param topNodes Number of topNodes to consider for inter-zonal routes.
+	 */
+	public void generateRouteSetForFreightMatrix(FreightMatrix freightMatrix, int sliceIndex, int sliceNumber, int topNodes) {
+		
+		List<Integer> origins = freightMatrix.getOrigins();
+		List<Integer> destinations = freightMatrix.getDestinations();
+		List<Integer> vehicles = freightMatrix.getVehicleTypes();
+		
+		int originsPerSlice = (int) Math.floor(1.0 * origins.size() / sliceNumber); //the last slice may have a different number of origins
+		//int originsInLastSlice = origins.size() - (sliceNumber - 1) * originsPerSlice;
+		
+		if (sliceIndex < sliceNumber) {
+			for (int i = (sliceIndex - 1) * originsPerSlice; i < sliceIndex * originsPerSlice && i < origins.size(); i++) {
+				Integer originFreightZone = origins.get(i);
+				for (Integer destinationFreightZone: destinations)
+					for (Integer vehicleType: vehicles) 
+						if (freightMatrix.getFlow(originFreightZone, destinationFreightZone, vehicleType) != 0) {
+							this.generateRouteSetBetweenFreightZones(originFreightZone, destinationFreightZone, topNodes);
+							continue; //no need to repeat if there is a flow for a different vehicle type!
+						}
+			}
+		} else { //for the last slice there may be more origins, so go all the way to the end of the list
+			for (int i = (sliceIndex - 1) * originsPerSlice; i < origins.size(); i++) {
+				Integer originFreightZone = origins.get(i);
+				for (Integer destinationFreightZone: destinations)
+					for (Integer vehicleType: vehicles)
+						if (freightMatrix.getFlow(originFreightZone, destinationFreightZone, vehicleType) != 0) {
+							this.generateRouteSetBetweenFreightZones(originFreightZone, destinationFreightZone, topNodes);
+							continue; //no need to repeat if there is a flow for a different vehicle type!
+						}
+			}
+		}
+	}
+	
+	/**
+	 * Generates routes between two freight zones.
+	 * A freight zone can be either an LAD (<= 1032) or a point.
 	 * Zone ID ranges from the BYFM DfT model:
 	 * <ul>
 	 * 		<li>England: 1 - 867</li>
@@ -433,107 +560,105 @@ public class RouteSetGenerator {
 	 * 		<li>Major distribution centres: 1201 - 1256</li>
 	 * 		<li>Freight ports: 1301 - 1388</li>
 	 * </ul> 
-	 * @param freightMatrix Freight matrix.
-	 * @param topNodes
+	 * @param originFreightZone
+	 * @param destinationFreightZone
 	 */
-	public void generateRouteSet(FreightMatrix freightMatrix, int topNodes) {
+	public void generateRouteSetBetweenFreightZones(int originFreightZone, int destinationFreightZone) {
+		
+		String originLAD = null, destinationLAD = null;
+		Integer originNode = null, destinationNode = null;
 
-		for (MultiKey mk: freightMatrix.getKeySet()) {
-			int origin = (int) mk.getKey(0);
-			int destination = (int) mk.getKey(1);
-			int vehicleType = (int) mk.getKey(2);
-
-			int flow = freightMatrix.getFlow(origin, destination, vehicleType);
-			if (flow != 0) {
-
-				System.out.printf("Flow(%d, %d, %d) = %d %n", origin, destination, vehicleType, flow);
-				
-				String originLAD = null, destinationLAD = null;
-				Integer originNode = null, destinationNode = null;
-
-				if (origin <= 1032) { 
-					//origin freight zone is a LAD
-					originLAD = roadNetwork.getFreightZoneToLAD().get(origin);
-				} else {
-					//freight zone is a point/node
-					originNode = roadNetwork.getFreightZoneToNearestNode().get(origin);
-				}
-				System.out.println("originLAD = " + originLAD + " originNode = " + originNode);
-				
-				if (destination <= 1032) { 
-					//destination freight zone is a LAD
-					destinationLAD = roadNetwork.getFreightZoneToLAD().get(destination);
-				} else {
-					//freight zone is a point/node
-					destinationNode = roadNetwork.getFreightZoneToNearestNode().get(destination);
-				}
-				System.out.println("destinationLAD = " + destinationLAD + " destinationNode = " + destinationNode);
-				
-				//generate routes depending if it is node-to-node, LAD-to-LAD, node-to-LAD or LAD-to-node
-				if (originNode != null && destinationNode != null) 						this.generateRouteSetWithChecking(originNode, destinationNode);
-				else if (originLAD != null && destinationLAD != null) 					this.generateRouteSetWithChecking(originLAD, destinationLAD, topNodes);
-				else if (originNode != null && destinationLAD != null) {
-					//assume pre-sorted (sortGravityNodesFreight method must be used!)
-					List<Integer> destinationNodes = 
-							this.roadNetwork.getZoneToNodes().get(destinationLAD);
-					for (int j= 0; j < topNodes && j < destinationNodes.size(); j++)	this.generateRouteSetWithChecking(originNode, destinationNodes.get(j));
-				}
-				else if (originLAD != null && destinationNode != null) {
-					//assume pre-sorted (sortGravityNodesFreight method must be used!)
-					List<Integer> originNodes = 
-							this.roadNetwork.getZoneToNodes().get(originLAD);
-					for (int i= 0; i < topNodes && i < originNodes.size(); i++)			this.generateRouteSetWithChecking(originNodes.get(i), destinationNode);
-				} else System.err.println("Problem in generating route set for freight!");
-			}
+		if (originFreightZone <= 1032) { 
+			//origin freight zone is a LAD
+			originLAD = roadNetwork.getFreightZoneToLAD().get(originFreightZone);
+		} else {
+			//freight zone is a point/node
+			originNode = roadNetwork.getFreightZoneToNearestNode().get(originFreightZone);
 		}
+		//System.out.println("originLAD = " + originLAD + " originNode = " + originNode);
+		
+		if (destinationFreightZone <= 1032) { 
+			//destination freight zone is a LAD
+			destinationLAD = roadNetwork.getFreightZoneToLAD().get(destinationFreightZone);
+		} else {
+			//freight zone is a point/node
+			destinationNode = roadNetwork.getFreightZoneToNearestNode().get(destinationFreightZone);
+		}
+		//System.out.println("destinationLAD = " + destinationLAD + " destinationNode = " + destinationNode);
+		
+		//generate routes depending if it is node-to-node, LAD-to-LAD, node-to-LAD or LAD-to-node
+		if (originNode != null && destinationNode != null) 						this.generateRouteSetNodeToNode(originNode, destinationNode);
+		else if (originLAD != null && destinationLAD != null) 					this.generateRouteSetZoneToZone(originLAD, destinationLAD);
+		else if (originNode != null && destinationLAD != null) {
+			//assume pre-sorted (sortGravityNodesFreight method must be used!)
+			List<Integer> destinationNodes = 
+					this.roadNetwork.getZoneToNodes().get(destinationLAD);
+			for (int j= 0; j < destinationNodes.size(); j++)	this.generateRouteSetNodeToNode(originNode, destinationNodes.get(j));
+		}
+		else if (originLAD != null && destinationNode != null) {
+			//assume pre-sorted (sortGravityNodesFreight method must be used!)
+			List<Integer> originNodes = 
+					this.roadNetwork.getZoneToNodes().get(originLAD);
+			for (int i= 0; i < originNodes.size(); i++)			this.generateRouteSetNodeToNode(originNodes.get(i), destinationNode);
+		} else System.err.println("Problem in generating route set for freight!");
 	}
 	
 	/**
-	 * Generates a route set between two nodes only if the route set does not already exist
-	 * @param origin
-	 * @param destination
+	 * Generates routes between two freight zones.
+	 * A freight zone can be either an LAD (<= 1032) or a point.
+	 * Zone ID ranges from the BYFM DfT model:
+	 * <ul>
+	 * 		<li>England: 1 - 867</li>
+	 * 		<li>Wales: 901 - 922</li>
+	 * 		<li>Scotland: 1001 - 1032</li>
+	 * 		<li>Freight airports: 1111 - 1115</li>
+	 * 		<li>Major distribution centres: 1201 - 1256</li>
+	 * 		<li>Freight ports: 1301 - 1388</li>
+	 * </ul> 
+	 * @param originFreightZone
+	 * @param destinationFreightZone
+	 * @param topNodes Number of topNodes to consider for inter-zonal routes.
 	 */
-	private void generateRouteSetWithChecking(int origin, int destination) {
+	public void generateRouteSetBetweenFreightZones(int originFreightZone, int destinationFreightZone, int topNodes) {
 		
-		RouteSet fetchedRouteSet = this.getRouteSet(origin, destination);
-		//generate only if it does not already exist
-		if (fetchedRouteSet == null)
-			generateRouteSetWithRandomLinkEliminationRestricted(origin, destination);
+		String originLAD = null, destinationLAD = null;
+		Integer originNode = null, destinationNode = null;
 
+		if (originFreightZone <= 1032) { 
+			//origin freight zone is a LAD
+			originLAD = roadNetwork.getFreightZoneToLAD().get(originFreightZone);
+		} else {
+			//freight zone is a point/node
+			originNode = roadNetwork.getFreightZoneToNearestNode().get(originFreightZone);
+		}
+		//System.out.println("originLAD = " + originLAD + " originNode = " + originNode);
+		
+		if (destinationFreightZone <= 1032) { 
+			//destination freight zone is a LAD
+			destinationLAD = roadNetwork.getFreightZoneToLAD().get(destinationFreightZone);
+		} else {
+			//freight zone is a point/node
+			destinationNode = roadNetwork.getFreightZoneToNearestNode().get(destinationFreightZone);
+		}
+		//System.out.println("destinationLAD = " + destinationLAD + " destinationNode = " + destinationNode);
+		
+		//generate routes depending if it is node-to-node, LAD-to-LAD, node-to-LAD or LAD-to-node
+		if (originNode != null && destinationNode != null) 						this.generateRouteSetNodeToNode(originNode, destinationNode);
+		else if (originLAD != null && destinationLAD != null) 					this.generateRouteSetZoneToZone(originLAD, destinationLAD, topNodes);
+		else if (originNode != null && destinationLAD != null) {
+			//assume pre-sorted (sortGravityNodesFreight method must be used!)
+			List<Integer> destinationNodes = 
+					this.roadNetwork.getZoneToNodes().get(destinationLAD);
+			for (int j= 0; j < topNodes && j < destinationNodes.size(); j++)	this.generateRouteSetNodeToNode(originNode, destinationNodes.get(j));
+		}
+		else if (originLAD != null && destinationNode != null) {
+			//assume pre-sorted (sortGravityNodesFreight method must be used!)
+			List<Integer> originNodes = 
+					this.roadNetwork.getZoneToNodes().get(originLAD);
+			for (int i= 0; i < topNodes && i < originNodes.size(); i++)			this.generateRouteSetNodeToNode(originNodes.get(i), destinationNode);
+		} else System.err.println("Problem in generating route set for freight!");
 	}
 	
-	/**
-	 * Generates routes between top N nodes (sorted by gravitating population) from two LAD zones.
-	 * If origin and destination LAD are the same (i.e., intra-zonal), then use all the nodes
-	 * Generate only between those node pairs for which the route set does not already exist.
-	 * @param originLAD
-	 * @param destinationLAD
-	 * @param topNodes
-	 */
-	private void generateRouteSetWithChecking(String originLAD, String destinationLAD, int topNodes) {
-		
-		//if intra-zonal, use all node combinations:
-		if (originLAD.equals(destinationLAD)) this.generateRouteSet(originLAD, destinationLAD);
-		else { //if inter-zonal, use only top nodes
-		
-		//assume pre-sorted (sortGravityNodes method must be used!)
-		List<Integer> originNodes = this.roadNetwork.getZoneToNodes().get(originLAD);
-		//System.out.println("origin nodes: " + originNodes);
-		List<Integer> destinationNodes = this.roadNetwork.getZoneToNodes().get(destinationLAD);
-		//System.out.println("destination nodes: " + destinationNodes);
-				
-		System.out.printf("Generating routes between top %d nodes from %s to %s %n", topNodes, originLAD, destinationLAD);
-		for (int i = 0; i < topNodes && i < originNodes.size(); i++)
-			for (int j = 0; j < topNodes && j < destinationNodes.size(); j++)	{
-				
-				int origin = originNodes.get(i);
-				int destination = destinationNodes.get(j);
-				//System.out.printf("Generating routes between nodes %d and %d \n", origin, destination);
-				this.generateRouteSetWithChecking(origin, destination);
-			}
-		}
-	}
-
 	/**
 	 * Getter method for a route set between a specific origin and a destination.
 	 * @param origin Origin node ID.

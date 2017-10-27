@@ -322,7 +322,7 @@ public class RoadNetworkAssignmentTest {
 		rna.resetTripStartEndCounters();
 		
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
-		rsg.generateRouteSet(odm);
+		rsg.generateRouteSetForODMatrix(odm);
 		//rsg.generateRouteSet(31, 82);
 		//rsg.generateRouteSetWithRandomLinkEliminationRestricted(31, 82);
 		//rsg.printChoiceSets();

@@ -60,6 +60,7 @@ public class RoadNetworkAssignment {
 	public static final boolean FLAG_ASTAR_IF_EMPTY_ROUTE_SET = false; //if there is no pre-generated route set for a node pair, try finding a route with aStar
 	public static final int INTERZONAL_TOP_NODES = 10; //how many top nodes (based on gravitated population size) to considers as trip origin/destination
 
+	private Properties params;
 
 	private static RandomSingleton rng = RandomSingleton.getInstance();
 

@@ -14,6 +14,7 @@ import nismod.transport.decision.Intervention;
 import nismod.transport.decision.RoadExpansion;
 import nismod.transport.decision.VehicleElectrification;
 import nismod.transport.demand.DemandModel;
+import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.ODMatrix;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RouteSetGenerator;
@@ -85,7 +86,8 @@ public class App {
 			//create a road network
 			RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
 			roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
-			
+			roadNetwork.makeEdgesAdmissible();
+						
 			if (args.length == 1) {//run the demand model
 
 				//load interventions
@@ -103,36 +105,63 @@ public class App {
 			} else {//there are additional parameters
 				
 				final String flag = args[1]; //read the flag
+				final String sliceIndex;
+				final String sliceNumber;
+				String topNodes = "";
+				RouteSetGenerator routes;
 				
 				if (flag.charAt(0) == '-') { 
 					switch (flag.charAt(1)) { 
 						case 'r': 
-								  final String sliceIndex;
-								  final String sliceNumber;
 								  if (args.length < 4) throw new IllegalArgumentException();
 								  else {
 									  sliceIndex = args[2];
 								  	  sliceNumber = args[3];
 									} 
-								  
-								  String topNodes = "";
+															
 								  if (args.length == 5) topNodes = args[4];
 								  
-								  RouteSetGenerator routes = new RouteSetGenerator(roadNetwork);
+								  roadNetwork.sortGravityNodes();
+								  routes = new RouteSetGenerator(roadNetwork);
 								  ODMatrix passengerODM = new ODMatrix(baseYearODMatrixFile);
 									
 								  if (!topNodes.isEmpty()) {
 									  //generate only between top nodes
 									  System.out.printf("Generating routes for slice %s out of %s for %s top nodes \n", sliceIndex, sliceNumber, topNodes);
-									  routes.generateRouteSet(passengerODM, Integer.parseInt(sliceIndex), Integer.parseInt(sliceNumber), Integer.parseInt(topNodes));
+									  routes.generateRouteSetForODMatrix(passengerODM, Integer.parseInt(sliceIndex), Integer.parseInt(sliceNumber), Integer.parseInt(topNodes));
 									  routes.saveRoutes("routes" + sliceIndex + "of" + sliceNumber + "top" + topNodes + ".txt", false);
 								  } else { 
 									  //generate between all nodes
 									  System.out.printf("Generating routes for slice %s out of %s \n", sliceIndex, sliceNumber);
-									  routes.generateRouteSet(passengerODM, Integer.parseInt(sliceIndex), Integer.parseInt(sliceNumber));
+									  routes.generateRouteSetForODMatrix(passengerODM, Integer.parseInt(sliceIndex), Integer.parseInt(sliceNumber));
 									  routes.saveRoutes("routes" + sliceIndex + "of" + sliceNumber + ".txt", false);
 								  }
 								  break;
+						case 'f': 
+							  if (args.length < 4) throw new IllegalArgumentException();
+							  else {
+								  sliceIndex = args[2];
+							  	  sliceNumber = args[3];
+								} 
+							  
+							  if (args.length == 5) topNodes = args[4];
+							  
+							  roadNetwork.sortGravityNodesFreight();
+							  routes = new RouteSetGenerator(roadNetwork);
+							  FreightMatrix freightMatrix = new FreightMatrix(baseYearFreightMatrixFile);
+								
+							  if (!topNodes.isEmpty()) {
+								  //generate only between top nodes
+								  System.out.printf("Generating routes for slice %s out of %s for %s top nodes \n", sliceIndex, sliceNumber, topNodes);
+								  routes.generateRouteSetForFreightMatrix(freightMatrix, Integer.parseInt(sliceIndex), Integer.parseInt(sliceNumber), Integer.parseInt(topNodes));
+								  routes.saveRoutes("freightRoutes" + sliceIndex + "of" + sliceNumber + "top" + topNodes + ".txt", false);
+							  } else { 
+								  //generate between all nodes
+								  System.out.printf("Generating routes for slice %s out of %s \n", sliceIndex, sliceNumber);
+								  routes.generateRouteSetForFreightMatrix(freightMatrix, Integer.parseInt(sliceIndex), Integer.parseInt(sliceNumber));
+								  routes.saveRoutes("freightRoutes" + sliceIndex + "of" + sliceNumber + ".txt", false);
+							  }
+							  break;
 						default:  throw new IllegalArgumentException();
 					}
 				}	else throw new IllegalArgumentException();
