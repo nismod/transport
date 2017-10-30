@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
@@ -82,7 +83,7 @@ public class RoadNetworkAssignment {
 
 	private RoadNetwork roadNetwork;
 
-	private HashMap<Integer, Double> linkVolumesInPCU;
+	private Map<Integer, Double> linkVolumesInPCU;
 	private HashMap<VehicleType, HashMap<Integer, Integer>> linkVolumesPerVehicleType;
 	private HashMap<Integer, Double> linkFreeFlowTravelTime;
 	private HashMap<Integer, Double> linkTravelTime;
@@ -147,14 +148,14 @@ public class RoadNetworkAssignment {
 			MultiKeyMap<Integer, List<Route>> map = new MultiKeyMap<Integer, List<Route>>();
 			routeStorageFreight.put(vht, map);
 		}
-		areaCodeNoTripStarts = new HashMap<String, Integer>();
-		areaCodeNoTripEnds = new HashMap<String, Integer>();
-		workplaceZoneNoTripStarts = new HashMap<String, Integer>();
-		workplaceZoneNoTripEnds = new HashMap<String, Integer>();
-		LADnoTripStarts = new HashMap<String, Integer>();
-		LADnoTripEnds = new HashMap<String, Integer>();
-		LADnoTripStartsFreight = new HashMap<String, Integer>();
-		LADnoTripEndsFreight = new HashMap<String, Integer>();
+		this.areaCodeNoTripStarts = new HashMap<String, Integer>();
+		this.areaCodeNoTripEnds = new HashMap<String, Integer>();
+		this.workplaceZoneNoTripStarts = new HashMap<String, Integer>();
+		this.workplaceZoneNoTripEnds = new HashMap<String, Integer>();
+		this.LADnoTripStarts = new HashMap<String, Integer>();
+		this.LADnoTripEnds = new HashMap<String, Integer>();
+		this.LADnoTripStartsFreight = new HashMap<String, Integer>();
+		this.LADnoTripEndsFreight = new HashMap<String, Integer>();
 
 		//calculate link travel time
 		Iterator edgesIterator = roadNetwork.getNetwork().getEdges().iterator();
@@ -2611,7 +2612,7 @@ public class RoadNetworkAssignment {
 	 * Getter method for daily link volumes in PCU.
 	 * @return Link volumes in PCU
 	 */   
-	public HashMap<Integer, Double> getLinkVolumesInPCU() {
+	public Map<Integer, Double> getLinkVolumesInPCU() {
 
 		return this.linkVolumesInPCU;
 	}
@@ -2752,7 +2753,7 @@ public class RoadNetworkAssignment {
 
 		return totalLADnoTripStarts;
 	}
-
+	
 	/**
 	 * Calculates the number of trips ending in a LAD.
 	 * @return Number of trips.
@@ -2832,6 +2833,37 @@ public class RoadNetworkAssignment {
 		}
 
 		return totalLADnoTripEndsFreight;
+	}
+	
+	/**
+	 * Calculates vehicle kilometres in each LAD.
+	 * Ignores access and egress.
+	 * @return Vehicle kilometres.
+	 */
+	public Map<String, Double> calculateVehicleKilometres() {
+	
+		Map<String, Double> vehicleKilometres = new HashMap<String, Double>();
+			
+		for (Map.Entry<Integer, Double> pair: linkVolumesInPCU.entrySet()) {
+			Integer edgeID = pair.getKey();
+			Double volume = pair.getValue();
+			String zone = this.roadNetwork.getEdgeToZone().get(edgeID);
+			if (zone != null) {
+				//fetch current value
+				Double vehkm = vehicleKilometres.get(zone);
+				if (vehkm == null) vehkm = 0.0;
+				//get edge length
+				DirectedEdge edge = (DirectedEdge)this.roadNetwork.getEdgeIDtoEdge().get(edgeID);
+				SimpleFeature sf = (SimpleFeature)edge.getObject();
+				Double length = (Double)sf.getAttribute("LenNet");
+				vehkm += volume * length;
+				//store new value
+				vehicleKilometres.put(zone,  vehkm);
+				continue;
+			}
+		}
+		
+		return vehicleKilometres;
 	}
 
 	/**

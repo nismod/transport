@@ -644,6 +644,7 @@ public class RoadNetworkTest {
 
 		final URL zonesUrl = new URL("file://src/test/resources/testdata/zones.shp");
 		final URL networkUrl = new URL("file://src/test/resources/testdata/network.shp");
+		final URL networkUrlfixedEdgeIDs = new URL("file://src/test/resources/testdata/testOutputNetwork.shp");
 		final URL nodesUrl = new URL("file://src/test/resources/testdata/nodes.shp");
 		final URL AADFurl = new URL("file://src/test/resources/testdata/AADFdirected.shp");
 		final String areaCodeFileName = "./src/test/resources/testdata/nomisPopulation.csv";
@@ -655,6 +656,7 @@ public class RoadNetworkTest {
 
 		//create a road network
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
+		roadNetwork.replaceNetworkEdgeIDs(networkUrlfixedEdgeIDs);
 		DirectedGraph rn = roadNetwork.getNetwork();
 
 		//TEST NODE AND EDGE CREATION
@@ -883,7 +885,20 @@ public class RoadNetworkTest {
 		Arrays.sort(array);
 		Arrays.sort(expectedArray4);
 		assertTrue("Nodes are correctly mapped to zone E07000086", Arrays.equals(expectedArray4, array));
-
+		
+		//TEST EDGE TO ZONE MAPPING
+		
+		System.out.println("\n\n*** Testing edge to zone mapping ***");
+		HashMap<Integer, String> map = roadNetwork.getEdgeToZone();
+		
+		for (Integer edgeID: map.keySet())
+			System.out.printf("Edge %d is in zone %s %n", edgeID, map.get(edgeID));
+	
+		assertEquals("Edge is correctly mapped to zone", "E07000091", map.get(537));
+		assertEquals("Edge is correctly mapped to zone", "E06000046", map.get(610));
+		assertEquals("Edge is correctly mapped to zone", "E06000045", map.get(701));
+		assertEquals("Edge is correctly mapped to zone", "E07000086", map.get(752));
+		
 		//TEST NODE GRAVITATING POPULATION
 		System.out.println("\n\n*** Testing node gravitating population ***");
 
