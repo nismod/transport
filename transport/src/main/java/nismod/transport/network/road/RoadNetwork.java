@@ -96,6 +96,7 @@ public class RoadNetwork {
 	private DijkstraIterator.EdgeWeighter dijkstraTimeWeighter;
 	private HashMap<Integer, Integer> numberOfLanes;
 	private HashMap<Integer, String> nodeToZone;
+	private HashMap<Integer, String> edgeToZone;
 	private HashMap<String, List<Integer>> zoneToNodes;
 	private HashMap<String, List<String>> zoneToAreaCodes;
 	private HashMap<String, Integer> areaCodeToNearestNodeID;
@@ -262,6 +263,11 @@ public class RoadNetwork {
 			//feature iterator is a live connection that must be closed
 			iter.close();
 		}
+		
+		//edges must be remapped
+		CachingFeatureSource cache = new CachingFeatureSource(zonesShapefile.getFeatureSource());
+		SimpleFeatureCollection zonesFeatureCollection = cache.getFeatures();
+		this.mapEdgesToZones(zonesFeatureCollection);
 	}
 	
 	/**
@@ -575,6 +581,11 @@ public class RoadNetwork {
 		
 		this.calculateFreeFlowTravelTime(); //could be just for new edge
 		
+		//TODO determine to which zone this road link belong and set mapping here:
+		//this.edgeToZone.put(directedEdge.getID(), zone)
+		//TODO or alternatively, make sure the edge object contains a point geometry and then call this method:
+		//this.mapEdgesToZones(zonesFeatureCollection);
+		
 		return directedEdge;
 	}
 	
@@ -878,6 +889,15 @@ public class RoadNetwork {
 	}
 	
 	/**
+	 * Getter method for the edge to zone mapping.
+	 * @return Node to zone mapping.
+	 */
+	public HashMap<Integer, String> getEdgeToZone() {
+
+		return this.edgeToZone;
+	}
+	
+	/**
 	 * Getter method for the zone to nodes mapping.
 	 * @return Zone to nodes mapping.
 	 */
@@ -1095,11 +1115,27 @@ public class RoadNetwork {
 		return (this.endNodeBlacklist.contains(nodeId)); 
 	}
 	
+	/**
+	 * Getter method for free flow travel time.
+	 * @return Free flow travel time.
+	 */
 	public HashMap<Integer, Double> getFreeFlowTravelTime() {
 		
 		return this.freeFlowTravelTime;
 	}
 	
+	/**
+	 * Gets edge length for a given edge ID.
+	 * @param edgeID
+	 * @return Edge length.
+	 */
+	public double getEdgeLength(int edgeID) {
+		
+		DirectedEdge edge = (DirectedEdge) this.getEdgeIDtoEdge().get(edgeID);
+		SimpleFeature sf = (SimpleFeature) edge.getObject();
+		double length = (double) sf.getAttribute("LenNet");
+		return length;
+	}
 	
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
@@ -1173,6 +1209,11 @@ public class RoadNetwork {
 		
 		//map the nodes to zones
 		mapNodesToZones(zonesFeatureCollection);
+		
+		System.out.println("Mapping edges to LAD zones...");
+		
+		//map the edges to zones
+		mapEdgesToZones(zonesFeatureCollection);
 		
 		System.out.println("Creating direct access maps for nodes and edges...");
 		createDirectAccessNodeMap();
@@ -1402,9 +1443,47 @@ public class RoadNetwork {
 								zoneToNodes.put((String) sf.getAttribute("CODE"), listOfNodes);
 							}
 							listOfNodes.add(node.getID());
+							
+							continue;
 						}
 				}
 			} 
+		} finally {
+			//feature iterator is a live connection that must be closed
+			iter.close();
+		}
+	}
+	
+	/**
+	 * Maps the edges of the graph to the zone codes.
+	 * @param zonesFeatureCollection Feature collection with the zones.
+	 */
+	private void mapEdgesToZones(SimpleFeatureCollection zonesFeatureCollection) {
+
+		this.edgeToZone = new HashMap<Integer, String>();
+
+		SimpleFeatureIterator iter = zonesFeatureCollection.features();
+		try {
+			//iterate over zones
+			while (iter.hasNext()) {
+				SimpleFeature featureZone = iter.next();
+				MultiPolygon polygon = (MultiPolygon) featureZone.getDefaultGeometry();	
+
+				//iterate over edges	
+				for (Object o: this.network.getEdges()) {
+					Edge edge = (Edge) o;
+					SimpleFeature sf = (SimpleFeature)edge.getObject();
+
+					if (sf.getDefaultGeometry() instanceof Point) { //TODO this will ignore ferries, but also new road links!
+						Point countPoint = (Point) sf.getDefaultGeometry();
+
+						if (polygon.contains(countPoint)) {
+							this.edgeToZone.put(edge.getID(), (String) featureZone.getAttribute("CODE"));
+							continue;
+						}
+					}
+				} 
+			}
 		} finally {
 			//feature iterator is a live connection that must be closed
 			iter.close();
@@ -1907,6 +1986,9 @@ public class RoadNetwork {
 		SimpleFeatureTypeBuilder builder = new SimpleFeatureTypeBuilder();
 
 		builder.setName("New road link");
+		
+		//TODO A point might be added as a geometry type to mimic a count point
+		//and to help determine where the road link is located (e.g. which zone)
 		
 		//add attributes in order
 		builder.add("CP", Long.class);

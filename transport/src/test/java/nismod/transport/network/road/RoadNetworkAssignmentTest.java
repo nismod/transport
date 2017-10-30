@@ -350,6 +350,25 @@ public class RoadNetworkAssignmentTest {
 		
 		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
 		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforCounts());
+		
+		//TEST VEHICLE KILOMETRES
+		System.out.println("\n\n*** Testing vehicle kilometres ***");
+		
+		System.out.println("Vehicle kilometres:");
+		System.out.println(rna.calculateVehicleKilometres());
+		
+		System.out.println("Link volumes in PCU:");
+		System.out.println(rna.getLinkVolumesInPCU());
+		
+		double vehicleKilometres = 0.0;
+		for (int edgeID: roadNetwork.getEdgeIDtoEdge().keySet()) {
+			
+			double volume  = rna.getLinkVolumesInPCU().get(edgeID);
+			double length = roadNetwork.getEdgeLength(edgeID);
+			vehicleKilometres += volume * length; 
+		}
+		System.out.println("Total vehicle-kilometres: " + vehicleKilometres);
+		assertEquals("Vehicle kilometres are correct", vehicleKilometres, rna.calculateVehicleKilometres().get("E06000045"), EPSILON);
 	}
 
 	@Test
@@ -555,6 +574,9 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("Total energy consumptions:");
 		System.out.println(rna.calculateEnergyConsumptions());
 		
+		System.out.println("Vehicle kilometres:");
+		System.out.println(rna.calculateVehicleKilometres());
+		
 		//rna.saveZonalCarEnergyConsumptions(2015, 0.85 , "testZonalCarEnergyConsumptions.csv");
 		//rna.saveAssignmentResults(2015, "testAssignmentResults.csv");
 		
@@ -601,6 +623,37 @@ public class RoadNetworkAssignmentTest {
 		rna.calculateTotalTravelledDistanceMatrixFromRouteStorage().printMatrixFormatted();
 				
 		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforCounts());
+		
+		//TEST VEHICLE KILOMETRES
+		System.out.println("\n\n*** Testing vehicle kilometres ***");
+
+		System.out.println("Vehicle kilometres:");
+		System.out.println(rna.calculateVehicleKilometres());
+
+		System.out.println("Link volumes in PCU:");
+		System.out.println(rna.getLinkVolumesInPCU());
+
+		for (String zone: roadNetwork.getZoneToNodes().keySet()) {
+
+			double zonalVehicleKilometres = 0.0;
+			for (int edgeID: roadNetwork.getEdgeIDtoEdge().keySet()) {
+
+				String fetchedZone = roadNetwork.getEdgeToZone().get(edgeID);
+				if (fetchedZone != null && fetchedZone.equals(zone)) {
+
+					Double volume  = rna.getLinkVolumesInPCU().get(edgeID);
+					if (volume == null) {
+						System.out.println("No volume for edge " + edgeID);
+						volume = 0.0;
+					}
+					double length = roadNetwork.getEdgeLength(edgeID);
+					zonalVehicleKilometres += volume * length;
+					continue;
+				}
+			}
+			System.out.printf("Total vehicle-kilometres for zone %s: %f %n", zone, zonalVehicleKilometres);
+			assertEquals("Zonal vehicle kilometres are correct", zonalVehicleKilometres, rna.calculateVehicleKilometres().get(zone), EPSILON);
+		}
 	}
 	
 	@Test
