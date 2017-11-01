@@ -131,7 +131,6 @@ public class RoadNetwork {
 	 * @param workplaceZoneNearestNodeFile Path to the file with nearest nodes to workplace zone centroids
 	 * @param freightZoneToLADfile Path to the file with freight zone to LAD mapping
 	 * @param freightZoneNearestNodeFile Path to the file with nearest nodes to freight zones that are points
-	 * @throws IOException
 	 */
 	public RoadNetwork(URL zonesUrl, URL networkUrl, URL nodesUrl, URL AADFurl, String areaCodeFileName, String areaCodeNearestNodeFile, String workplaceZoneFileName, String workplaceZoneNearestNodeFile, String freightZoneToLADfile, String freightZoneNearestNodeFile) throws IOException {
 
@@ -301,7 +300,6 @@ public class RoadNetwork {
 	/**
 	 * Visualises the road network as loaded from shapefiles.
 	 * @param mapTitle Map title for the window.
-	 * @throws IOException
 	 */
 	public void visualise(String mapTitle) throws IOException {
 
@@ -390,8 +388,7 @@ public class RoadNetwork {
 	/**
 	 * Exports a directed multigraph representation of the network as a shapefile.
 	 * @param fileName The name of the output shapefile.
-	 * @throws IOException
-	 */
+	*/
 	public void exportToShapefile(String fileName) throws IOException {
 
 		if (network == null) {
@@ -626,6 +623,7 @@ public class RoadNetwork {
 	
 	/**
 	 * Getter method for the Dijkstra edge weighter with time.
+	 * @param linkTravelTime Link travel times to use for edge weighting.
 	 * @return Dijkstra edge weighter with time.
 	 */
 	public DijkstraIterator.EdgeWeighter getDijkstraTimeWeighter(HashMap<Integer, Double> linkTravelTime) {
@@ -664,7 +662,7 @@ public class RoadNetwork {
 	}
 
 	/** Getter method for the AStar functions (edge cost and heuristic function) based on distance.
-	 * @param to Destination node.
+	 * @param destinationNode Destination node.
 	 * @return AStar functions.
 	 */
 	public MyAStarIterator.AStarFunctions getAstarFunctions(Node destinationNode) {
@@ -703,8 +701,8 @@ public class RoadNetwork {
 	}
 	
 	/** Getter method for the AStar functions (edge cost and heuristic function) based on travel time.
-	 * @param to Destination node.
-	 * @param linkTravelTime Link travel times.
+	 * @param destinationNode Destination node.
+	 * @param linkTravelTime Link travel times to use for edge weighting.
 	 * @return AStar functions.
 	 */
 	public MyAStarIterator.AStarFunctions getAstarFunctionsTime(Node destinationNode, HashMap<Integer, Double> linkTravelTime) {
@@ -1097,8 +1095,8 @@ public class RoadNetwork {
 	
 	/**
 	 * Finds out if the node is blacklisted as a path start node.
-	 * @param nodeId
-	 * @return whether nodes is blacklisted
+	 * @param nodeId Node ID.
+	 * @return Whether nodes is blacklisted or not.
 	 */
 	public boolean isBlacklistedAsStartNode(int nodeId) {
 		
@@ -1107,8 +1105,8 @@ public class RoadNetwork {
 	
 	/**
 	 * Finds out if the node is blacklisted as a path end node.
-	 * @param nodeId
-	 * @return whether nodes is blacklisted
+	 * @param nodeId Node ID.
+	 * @return Whether nodes is blacklisted or not.
 	 */
 	public boolean isBlacklistedAsEndNode(int nodeId) {
 		
@@ -1126,7 +1124,7 @@ public class RoadNetwork {
 	
 	/**
 	 * Gets edge length for a given edge ID.
-	 * @param edgeID
+	 * @param edgeID Edge ID.
 	 * @return Edge length.
 	 */
 	public double getEdgeLength(int edgeID) {
@@ -1162,7 +1160,6 @@ public class RoadNetwork {
 
 	/**
 	 * Builds a directed graph representation of the road network
-	 * @throws IOException 
 	 */
 	private void build() throws IOException {
 
@@ -1605,7 +1602,6 @@ public class RoadNetwork {
 	/**
 	 * Loads code area population data.
 	 * @param areaCodeFileName File with area code population data.
-	 * @throws IOException 
 	 */
 	private void loadAreaCodePopulationData(String areaCodeFileName) throws IOException {
 
@@ -1637,7 +1633,6 @@ public class RoadNetwork {
 	/**
 	 * Loads workplace zone population data.
 	 * @param workplaceZoneFileName File with workplace zone population data.
-	 * @throws IOException 
 	 */
 	private void loadWorkplaceZonePopulationData(String workplaceZoneFileName) throws IOException {
 
@@ -1669,7 +1664,6 @@ public class RoadNetwork {
 	/**
 	 * Loads code area to nearest node mapping.
 	 * @param areaCodeNearestNodeFile File with area code nearest neighbour.
-	 * @throws IOException 
 	 */
 	private void loadAreaCodeNearestNodeAndDistance(String areaCodeNearestNodeFile) throws IOException {
 
@@ -1694,7 +1688,6 @@ public class RoadNetwork {
 	/**
 	 * Loads workplace zone to nearest node mapping.
 	 * @param workplaceZoneNearestNodeFile File with workplace zone nearest neighbours.
-	 * @throws IOException 
 	 */
 	private void loadWorkplaceZoneNearestNodeAndDistance(String workplaceZoneNearestNodeFile) throws IOException {
 
@@ -1719,7 +1712,6 @@ public class RoadNetwork {
 	/**
 	 * Loads freight zone to LAD zone mapping (for freight zone that are LADs).
 	 * @param freightZoneToLADfile File with freight zone to LAD mapping.
-	 * @throws IOException 
 	 */
 	private void loadFreightZoneToLAD(String freightZoneToLADfile) throws IOException {
 
@@ -1741,7 +1733,6 @@ public class RoadNetwork {
 	/**
 	 * Loads freight zone to nearest node mapping (for freight zones that are points: airports, distribution centres, ports).
 	 * @param freightZoneNearestNodeFile File with area code nearest neighbour.
-	 * @throws IOException 
 	 */
 	private void loadFreightZoneNearestNodeAndDistance(String freightZoneNearestNodeFile) throws IOException {
 

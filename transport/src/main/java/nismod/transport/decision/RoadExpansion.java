@@ -91,12 +91,12 @@ public class RoadExpansion extends Intervention {
 	}
 	
 	/**
-	 * @param dm
+	 * @param roadNetwork Road network
 	 * @return Edge ID which should be expanded.
 	 */
-	public Integer getExpandedEdgeID(RoadNetwork rn) {
+	public Integer getExpandedEdgeID(RoadNetwork roadNetwork) {
 		
-		DirectedGraph network = rn.getNetwork();
+		DirectedGraph network = roadNetwork.getNetwork();
 		
 		int fromNode = Integer.parseInt(this.props.getProperty("fromNode"));
 		int toNode = Integer.parseInt(this.props.getProperty("toNode"));

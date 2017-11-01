@@ -35,9 +35,7 @@ public class SkimMatrixFreight {
 	
 	/**
 	 * Constructor that reads freight skim matrix from an input csv file.
-	 * @param filePath Path to the input file
-	 * @throws IOException 
-	 * @throws FileNotFoundException 
+	 * @param fileName Path to the input file.
 	 */
 	public SkimMatrixFreight(String fileName) throws FileNotFoundException, IOException {
 		

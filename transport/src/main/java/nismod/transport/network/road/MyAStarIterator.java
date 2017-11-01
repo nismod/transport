@@ -158,7 +158,10 @@ public class MyAStarIterator extends SourceGraphIterator{
                 //do nothing  
         }
 
-        /** */
+        /**
+         * @param n Node.
+         * @return Parent Node.
+         */
         public Node getParent(Node n) {
                 AStarNode asn = (AStarNode) m_nodemap.get(n);
                 return (asn == null ? null : asn.getParent() == null ? null : asn.getParent().getNode());

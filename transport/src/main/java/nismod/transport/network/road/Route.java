@@ -37,23 +37,24 @@ public class Route {
 		this.id = ++Route.counter;
 	}
 	
+	/**
+	 * Construtor from a given path.
+	 * @param path A path from which to construct a route.
+	 */
 	public Route(RoadPath path) {
 
 		if (path == null) {
 			System.err.println("Route constructur: Path is null!");
 			return;
 		}
-		
 		if (!path.isValid()) {
 			System.err.println("Route constructor: Path is not valid!");
 			return;
 		}
-		
 		if (path.getEdges() == null) {
 			System.err.println("Route constructor: Edge list is null!");
 			return;
 		}
-
 		if (path.getEdges().isEmpty()) {
 			if (path.getFirst().equals(path.getLast()))
 				this.singleNode = path.getFirst(); 	//single node path can be accepted
@@ -62,13 +63,10 @@ public class Route {
 				return;
 			}
 		}
-		
 		this.edges = new ArrayList<DirectedEdge>();
 		this.id = ++Route.counter;
-		
 		//System.out.println("Constructing a route from path (nodes): " + path.toString());
 		//System.out.println("Constructing a route from path (edges): " + path.getEdges());
-				
 		for (Object o: path.getEdges()) {
 			DirectedEdge edge = (DirectedEdge) o;
 			this.addEdge(edge);
@@ -100,19 +98,6 @@ public class Route {
 		return true;
 	}
 	
-//	/**
-//	 * Adds a directed edge to the end of the current route.
-//	 * @param edge Directed edge to be added.
-//	 */
-//	public void addEdge(DirectedEdge edge) {
-//		
-//		this.edges.add(edge);
-//		if (!this.isValid()) {
-//			System.err.println("Added edge that makes route invalid. Removing!");
-//			this.edges.remove(edge);
-//		}
-//	}
-	
 	/**
 	 * Calculates the route travel time based on link travel times.
 	 * @param linkTravelTime Link travel times.
@@ -143,6 +128,8 @@ public class Route {
 	
 	/**
 	 * Calculates the utility of the route.
+	 * @param linkTravelTime Link travel times.
+	 * @param params Route choice parameters.
 	 */
 	public void calculateUtility(HashMap<Integer, Double> linkTravelTime, Properties params) {
 		
@@ -193,9 +180,8 @@ public class Route {
 	
 	public Double getUtility() {
 		
-//		if (this.utility == null) {
-//			System.err.println("Route utility needs to be first calculated using link travel time and other variables!");
-//			}
+		//if (this.utility == null) 
+		//	System.err.println("Route utility needs to be first calculated using link travel time and other variables!");
 		return utility;
 	}
 	
@@ -231,22 +217,6 @@ public class Route {
 		}
 		return true;
 	}
-	
-//	@Override
-//	public String toString() {
-//		
-//		
-//		if (edges.isEmpty()) return null;
-//		
-//		StringBuilder sb = new StringBuilder();
-//		for (DirectedEdge edge: edges) {
-//			sb.append(edge.getID());
-//			sb.append("->");
-//		}
-//		sb.delete(sb.length()-2, sb.length()); //delete last arrow
-//		
-//		return sb.toString();
-//	}
 	
 	@Override
 	public boolean equals(Object obj) {

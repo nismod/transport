@@ -61,8 +61,12 @@ public class DemandModel {
 	/**
 	 * The constructor for the demand prediction model.
 	 * @param roadNetwork Road network for assignment.
-	 * @throws FileNotFoundException
-	 * @throws IOException
+	 * @param baseYearODMatrixFile Base-year origin-destination matrix file name.
+	 * @param baseYearFreightMatrixFile Base-year freight matrix file name.
+	 * @param populationFile Population file name.
+	 * @param GVAFile GVA file name.
+	 * @param energyUnitCostsFile Energy unit costs file name.
+	 * @param interventions List of interventions.
 	 */
 	public DemandModel(RoadNetwork roadNetwork, String baseYearODMatrixFile, String baseYearFreightMatrixFile, String populationFile, String GVAFile, String energyUnitCostsFile, List<Intervention> interventions) throws FileNotFoundException, IOException {
 
@@ -445,8 +449,8 @@ public class DemandModel {
 
 	/**
 	 * Saves energy consumptions into a csv file.
-	 * @param year
-	 * @param outputFile
+	 * @param year Year of the data.
+	 * @param outputFile Output file name.
 	 */
 	public void saveEnergyConsumptions (int year, String outputFile) {
 
@@ -455,8 +459,8 @@ public class DemandModel {
 	
 	/**
 	 * Setter method for engine type fractions in a given year.
-	 * @param year
-	 * @param engineTypeFractions
+	 * @param year Year of the data.
+	 * @param engineTypeFractions Map with engine type fractions.
 	 */
 	public void setEngineTypeFractions(int year, HashMap<EngineType, Double> engineTypeFractions) {
 		
@@ -465,8 +469,8 @@ public class DemandModel {
 	
 	/**
 	 * Saves road network assignment results into a csv file.
-	 * @param year
-	 * @param outputFile
+	 * @param year Year of the data.
+	 * @param outputFile Output file name.
 	 */
 	public void saveAssignmentResults (int year, String outputFile) {
 
@@ -476,7 +480,8 @@ public class DemandModel {
 	
 	/**
 	 * Getter method for engine type fractions in a given year.
-	 * @param year
+	 * @param year Year of the data.
+	 * @return Map with engine type fractions.
 	 */
 	public HashMap<EngineType, Double> getEngineTypeFractions(int year) {
 		
@@ -493,10 +498,9 @@ public class DemandModel {
 	}
 		
 	/**
-	 * @param fileName
-	 * @return
-	 * @throws FileNotFoundException
-	 * @throws IOException
+	 * Reads population file.
+	 * @param fileName File name.
+	 * @return Map with population data.
 	 */
 	private HashMap<Integer, HashMap<String, Integer>> readPopulationFile (String fileName) throws FileNotFoundException, IOException {
 
@@ -522,10 +526,9 @@ public class DemandModel {
 	}
 
 	/**
-	 * @param fileName
-	 * @return
-	 * @throws FileNotFoundException
-	 * @throws IOException
+	 * Reads GVA file.
+	 * @param fileName File name.
+	 * @return Map with GVA data.
 	 */
 	private HashMap<Integer, HashMap<String, Double>> readGVAFile (String fileName) throws FileNotFoundException, IOException {
 
@@ -552,10 +555,9 @@ public class DemandModel {
 	}
 	
 	/**
-	 * @param fileName
-	 * @return
-	 * @throws FileNotFoundException
-	 * @throws IOException
+	 * Reads energy unit costs file.
+	 * @param fileName File name.
+	 * @return Map with energy unit costs.
 	 */
 	private HashMap<Integer, HashMap<EngineType, Double>> readEnergyUnitCostsFile (String fileName) throws FileNotFoundException, IOException {
 

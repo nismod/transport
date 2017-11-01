@@ -37,9 +37,7 @@ public class RealODMatrix {
 	
 	/**
 	 * Constructor that reads OD matrix from an input csv file.
-	 * @param filePath Path to the input file
-	 * @throws IOException 
-	 * @throws FileNotFoundException 
+	 * @param fileName Path to the input file.
 	 */
 	public RealODMatrix(String fileName) throws FileNotFoundException, IOException {
 		
