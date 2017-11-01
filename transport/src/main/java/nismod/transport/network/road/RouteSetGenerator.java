@@ -1,10 +1,19 @@
 package nismod.transport.network.road;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.EOFException;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -753,24 +762,70 @@ public class RouteSetGenerator {
 	public void saveRoutes(String fileName, boolean append) {
 		
 		FileWriter fileWriter = null;
+		BufferedWriter bufferedWriter = null;
 		try {
 			fileWriter = new FileWriter(fileName, append);
+			bufferedWriter = new BufferedWriter(fileWriter);
 			//iterate over all route sets
 			for (Object value: routes.values()) {
 				RouteSet rs = (RouteSet)value;
 				//iterate over all routes
 				for (Route route: rs.getChoiceSet()) 
-					fileWriter.write(route.getFormattedString() + System.getProperty("line.separator"));
+					bufferedWriter.write(route.getFormattedString() + System.getProperty("line.separator"));
 			}
 		} catch (Exception e) {
 			System.err.println("Error in fileWriter!");
 			e.printStackTrace();
 		} finally {
 			try {
+				bufferedWriter.flush();
+				bufferedWriter.close();
 				fileWriter.flush();
 				fileWriter.close();
 			} catch (IOException e) {
 				System.err.println("Error while flushing/closing fileWriter!");
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	/**
+	 * Saves all route sets into a binary file.
+	 * @param fileName File name.
+	 * @param append Whether to append to an existing file.
+	 */
+	public void saveRoutesBinary(String fileName, boolean append) {
+		
+        FileOutputStream outputStream = null;
+        BufferedOutputStream bufferedStream = null;
+        DataOutputStream dataStream = null;
+		try {
+			outputStream = new FileOutputStream(fileName, append);
+			bufferedStream = new BufferedOutputStream(outputStream);
+			dataStream = new DataOutputStream(bufferedStream);
+			//iterate over all route sets
+			for (Object value: routes.values()) {
+				RouteSet rs = (RouteSet)value;
+				//iterate over all routes and save only edges (start/end nodes are redundant information)
+				for (Route route: rs.getChoiceSet()) {
+					for (DirectedEdge edge: route.getEdges())
+						dataStream.writeInt(edge.getID());
+					dataStream.writeInt(0);
+				}
+			}
+		} catch (Exception e) {
+			System.err.println("Error in outputStream!");
+			e.printStackTrace();
+		} finally {
+			try {
+				dataStream.flush();
+				dataStream.close();
+				bufferedStream.flush();
+				bufferedStream.close();
+				outputStream.flush();
+				outputStream.close();
+			} catch (IOException e) {
+				System.err.println("Error while flushing/closing outputStream!");
 				e.printStackTrace();
 			}
 		}
@@ -792,19 +847,20 @@ public class RouteSetGenerator {
 		    while (line != null) {
 		    	String splitLine[] = line.split(":");
 		    	//System.out.println(Arrays.toString(splitLine));
-		    	int originID = Integer.parseInt(splitLine[0]);
-		    	int destinationID = Integer.parseInt(splitLine[1]);
-		    	String edges[] = splitLine[2].split("-");
-		    	//System.out.println(Arrays.toString(edges));
-		    	
-		    	Route route = new Route();
-		    	boolean success = false;
-		    	for (String edge: edges) {
-		    		success = route.addEdge((DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(Integer.parseInt(edge)));
-		    		if (!success) break;
+		    	//int originID = Integer.parseInt(splitLine[0]); //nodes not needed
+		    	//int destinationID = Integer.parseInt(splitLine[1]); //nodes not needed
+		    	if (splitLine.length > 2) { //only if there are edges
+		    		String edges[] = splitLine[2].split("-");
+		    		//System.out.println(Arrays.toString(edges));
+		    		Route route = new Route();
+		    		boolean success = false;
+		    		for (String edge: edges) {
+		    			success = route.addEdge((DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(Integer.parseInt(edge)));
+		    			if (!success) break;
+		    		}
+		    		//System.out.println(route.getFormattedString());
+		    		if (success) this.addRoute(route); //add route only if fine;
 		    	}
-		    	//System.out.println(route.getFormattedString());
-		    	if (success) this.addRoute(route); //add route only if fine;
 		    	line = br.readLine();
 		    	//System.out.println(line);
 		    }
@@ -816,6 +872,56 @@ public class RouteSetGenerator {
 				br.close();
 			} catch (IOException e) {
 				System.err.println("Error while closing BufferedReader!");
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	/**
+	 * Reads route sets from a text file.
+	 * @param fileName File name.
+	 */
+	public void readRoutesBinary(String fileName) {
+		
+		System.out.println("Reading pre-generated routes...");
+		FileInputStream input = null;
+		BufferedInputStream buff = null;
+		DataInputStream data = null;
+		int counterBadRoutes = 0;
+		try {
+			input = new FileInputStream(fileName);
+			buff = new BufferedInputStream(input);
+			data = new DataInputStream(buff);
+			
+			Route route = new Route();
+			boolean success = true;
+			while (true) { 
+				int edgeID = data.readInt();
+				if (edgeID != 0) { //keep adding edge to the route
+					success = success && route.addEdge((DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(edgeID));
+				} else {
+					//add route to the route set if all edge additions have been successful
+					if (success) this.addRoute(route);
+					else counterBadRoutes++;
+					//create new route if there are more bytes
+					//if (data.available() > 0) route = new Route();
+					route = new Route();
+					success = true;
+				}
+			}
+		} catch (EOFException e) {
+			System.out.print("End of the binary route file reached. ");
+			System.out.println(counterBadRoutes + " bad routes ignored.");
+		} catch (Exception e) {
+			System.err.println("Error in fileReader!");
+			e.printStackTrace();
+		} finally {
+			try {
+				input.close();
+				buff.close();
+				data.close();
+			} catch (IOException e) {
+				System.err.println("Error while closing input stream!");
 				e.printStackTrace();
 			}
 		}

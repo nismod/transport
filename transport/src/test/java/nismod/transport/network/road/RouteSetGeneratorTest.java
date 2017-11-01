@@ -51,9 +51,8 @@ public class RouteSetGeneratorTest {
 		final String freightZoneNearestNodeFile = "./src/test/resources/testdata/freightZoneToNearestNode.csv";
 
 		//create a road network
-		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
-
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null);
+		//RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
+		//RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null);
 
 		final URL zonesUrl2 = new URL("file://src/test/resources/testdata/zones.shp");
 		final URL networkUrl2 = new URL("file://src/test/resources/testdata/network.shp");
@@ -243,7 +242,6 @@ public class RouteSetGeneratorTest {
 
 		//routes5.readRoutes("completeRoutesNewest.txt");
 		//routes5.readRoutes("./src/main/resources/data/routes5of190top10.txt");
-
 		long timeNow = System.currentTimeMillis();
 
 //		FilenameFilter filter = new FilenameFilter() {
@@ -263,21 +261,25 @@ public class RouteSetGeneratorTest {
 //		    }
 //		}
 		
-		//	routes5.readRoutes("./src/main/resources/data/all5routestop10/all5routestop10.txt");
-		//	routes5.readRoutes("./src/main/resources/data/routesCombined/routesCombined.txt");
-
+		//routes5.readRoutes("./src/main/resources/data/all5routestop10/all5routestop10.txt");
+		//routes5.readRoutes("./src/main/resources/data/routesCombined/routesCombined.txt");
+		routes5.readRoutesBinary("./src/main/resources/data/routesCombined/routesCombined.dat");
+	
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Routes loaded into memory in %d seconds.\n", timeNow / 1000);
 
 		routes5.printStatistics();
-		//		routes5.printChoiceSets();
+		//routes5.printChoiceSets();
+		
+		//routes5.saveRoutesBinary("routesCombined.dat", false);
+		
 		
 		
 		timeNow = System.currentTimeMillis();
 		
-		FreightMatrix freightMatrix = new FreightMatrix("./src/main/resources/data/freightMatrix.csv");	
-		routes5.generateRouteSetForFreightMatrix(freightMatrix, 10);
-		routes5.saveRoutes("freightRoutes.txt", false);
+//		FreightMatrix freightMatrix = new FreightMatrix("./src/main/resources/data/freightMatrix.csv");	
+//		routes5.generateRouteSetForFreightMatrix(freightMatrix, 10);
+//		routes5.saveRoutes("freightRoutes.txt", false);
 		
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Freight routes generated in %d seconds.\n", timeNow / 1000);
@@ -374,6 +376,21 @@ public class RouteSetGeneratorTest {
 		assertEquals("The sum of route sets generated across OD matrix slices is equal to the total number of route sets", totalRouteSets, routeSets1 + routeSets2 + routeSets3);
 		//however, due to randomness in the link elimination generation, the total number of routes will typically not be the same!
 		//assertEquals("The sum of routes generated across OD matrix slices is equal to the total", totalRoutes, routes1 + routes2 + routes3);
+		
+		rsg.printChoiceSets();
+		rsg.saveRoutes("testRoutesASCII.txt",  false);
+		rsg.saveRoutesBinary("testRoutesBinary.dat",  false);
+				
+		RouteSetGenerator rsg2 = new RouteSetGenerator(roadNetwork);
+		rsg2.readRoutes("testRoutesASCII.txt");
+		rsg2.printChoiceSets();
+		
+		rsg2.clearRoutes();
+		rsg2.readRoutesBinary("testRoutesBinary.dat");
+		rsg2.printChoiceSets();
+		
+		routes.saveRoutes("testRoutesASCII.txt", false);
+		routes.saveRoutesBinary("testRoutesBinary.dat", false);
 	}
 
 	@Test
@@ -507,6 +524,8 @@ public class RouteSetGeneratorTest {
 				
 		System.out.printf("%d route sets, %d routes \n", totalRouteSets, totalRoutes);
 		System.out.printf("%d route sets from slices, %d routes from slices \n", totalRouteSetsFromSlices, totalRoutesFromSlices);
+		
+		rsg.printChoiceSets();
 		
 		assertEquals("The number of route sets generated across freight matrix slices is equal to the total number of route sets", totalRouteSets, totalRouteSetsFromSlices);
 		

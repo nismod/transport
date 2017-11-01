@@ -81,7 +81,7 @@ public class App {
 			final String vehicleElectrificationFileName = props.getProperty("vehicleElectrificationFileName");
 
 			final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
-			final String energyConsumptionsFile = props.getProperty("energyConsumptionsFile");
+			final String energyConsumptionsFile = props.getProperty("energyConsumptionsFile"); //output
 			
 			//create a road network
 			RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
@@ -129,12 +129,12 @@ public class App {
 									  //generate only between top nodes
 									  System.out.printf("Generating routes for slice %s out of %s for %s top nodes \n", sliceIndex, sliceNumber, topNodes);
 									  routes.generateRouteSetForODMatrix(passengerODM, Integer.parseInt(sliceIndex), Integer.parseInt(sliceNumber), Integer.parseInt(topNodes));
-									  routes.saveRoutes("routes" + sliceIndex + "of" + sliceNumber + "top" + topNodes + ".txt", false);
+									  routes.saveRoutesBinary("routes" + sliceIndex + "of" + sliceNumber + "top" + topNodes + ".dat", false);
 								  } else { 
 									  //generate between all nodes
 									  System.out.printf("Generating routes for slice %s out of %s \n", sliceIndex, sliceNumber);
 									  routes.generateRouteSetForODMatrix(passengerODM, Integer.parseInt(sliceIndex), Integer.parseInt(sliceNumber));
-									  routes.saveRoutes("routes" + sliceIndex + "of" + sliceNumber + ".txt", false);
+									  routes.saveRoutesBinary("routes" + sliceIndex + "of" + sliceNumber + ".dat", false);
 								  }
 								  break;
 						case 'f': 
@@ -154,12 +154,12 @@ public class App {
 								  //generate only between top nodes
 								  System.out.printf("Generating routes for slice %s out of %s for %s top nodes \n", sliceIndex, sliceNumber, topNodes);
 								  routes.generateRouteSetForFreightMatrix(freightMatrix, Integer.parseInt(sliceIndex), Integer.parseInt(sliceNumber), Integer.parseInt(topNodes));
-								  routes.saveRoutes("freightRoutes" + sliceIndex + "of" + sliceNumber + "top" + topNodes + ".txt", false);
+								  routes.saveRoutesBinary("freightRoutes" + sliceIndex + "of" + sliceNumber + "top" + topNodes + ".dat", false);
 							  } else { 
 								  //generate between all nodes
 								  System.out.printf("Generating routes for slice %s out of %s \n", sliceIndex, sliceNumber);
 								  routes.generateRouteSetForFreightMatrix(freightMatrix, Integer.parseInt(sliceIndex), Integer.parseInt(sliceNumber));
-								  routes.saveRoutes("freightRoutes" + sliceIndex + "of" + sliceNumber + ".txt", false);
+								  routes.saveRoutes("freightRoutes" + sliceIndex + "of" + sliceNumber + ".dat", false);
 							  }
 							  break;
 						default:  throw new IllegalArgumentException();
