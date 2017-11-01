@@ -102,8 +102,8 @@ public class RoadNetworkAssignmentTest {
 		//rsg.readRoutes("completeRoutesNewest.txt");
 		//rsg.readRoutes("./src/main/resources/data/all5routestop10/all5routestop10.txt");
 		//rsg.readRoutes("./src/main/resources/data/5routes10nodesnew/all5routestop10new.txt");
-		rsg.readRoutes("./src/main/resources/data/routesCombined/routesCombined.txt");
-		rsg.printStatistics();
+		//rsg.readRoutes("./src/main/resources/data/routesCombined/routesCombined.txt");
+		//rsg.printStatistics();
 		
 		//set route choice parameters
 		Properties params = new Properties();
@@ -114,7 +114,7 @@ public class RoadNetworkAssignmentTest {
 		//assign passenger flows
 		long timeNow = System.currentTimeMillis();
 		//roadNetworkAssignment.assignPassengerFlows(passengerODM);
-		roadNetworkAssignment.assignPassengerFlowsRouteChoice(passengerODM, rsg, params);
+		//roadNetworkAssignment.assignPassengerFlowsRouteChoice(passengerODM, rsg, params);
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Passenger flows assigned in %d seconds.\n", timeNow / 1000);
 
@@ -123,7 +123,8 @@ public class RoadNetworkAssignmentTest {
 		
 		FreightMatrix freightMatrix = new FreightMatrix("./src/main/resources/data/freightMatrix.csv");	
 		freightMatrix.printMatrixFormatted();
-		
+		rsg.readRoutes("./src/main/resources/data/routesFreight/routesFreight.txt");
+				
  		//assign freight flows
 		timeNow = System.currentTimeMillis();
 		//roadNetworkAssignment.assignFreightFlows(freightMatrix);
