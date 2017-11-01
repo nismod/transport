@@ -47,7 +47,7 @@ public class MyAStarShortestPathFinder implements GraphWalker {
         * @param graph Graph where we will perform the search.
         * @param source Node to calculate path from.
         * @param target Node to calculate path to.
-        * @param weighter Associates weights with edges in the graph.
+        * @param afuncs Functions of the A Star.
         */
         public MyAStarShortestPathFinder (
                             Graph graph, Node source, Node target, AStarFunctions afuncs
@@ -89,7 +89,6 @@ public class MyAStarShortestPathFinder implements GraphWalker {
         * @see Path#reverse()
         *
         * @return A path from the target to the source.
-        * @throws WrongPathException 
         */
         public Path getPath() throws WrongPathException {
                 Path path = new Path();

@@ -1123,7 +1123,7 @@ public class RoadNetworkAssignment {
 	 * 		<li>Major distribution centres: 1201 - 1256</li>
 	 * 		<li>Freight ports: 1301 - 1388</li>
 	 * </ul>   
-	 * @param freightODM Freight origin-destination matrix.
+	 * @param freightMatrix Freight origin-destination matrix.
 	 * @param rsg Route set generator containing the routes.
 	 * @param routeChoiceParameters Route choice parameters.
 	 */
@@ -1926,7 +1926,7 @@ public class RoadNetworkAssignment {
 
 	/**
 	 * Updates cost skim matrix (zone-to-zone financial costs) for freight.
-	 * @param costSkimMatrix Inter-zonal skim matrix (cost).
+	 * @param costSkimMatrixFreight Inter-zonal skim matrix (cost) for freight.
 	 */
 	public void updateCostSkimMatrixFreight(SkimMatrixFreight costSkimMatrixFreight) {
 
@@ -2187,7 +2187,8 @@ public class RoadNetworkAssignment {
 	}
 
 	/**
-	 * Calculate peak-hour link densities (PCU/lane/km/hr)
+	 * Calculate peak-hour link densities (PCU/lane/km/hr).
+	 * @return Peak-hour link densities.
 	 */
 	public HashMap<Integer, Double> calculatePeakLinkDensities() {
 
@@ -2256,8 +2257,8 @@ public class RoadNetworkAssignment {
 
 	/**
 	 * Saves assignment results to output file.
-	 * @param year
-	 * @param outputFile
+	 * @param year Year of the assignment.
+	 * @param outputFile Output file name (with path).
 	 */
 	public void saveAssignmentResults(int year, String outputFile) {
 
@@ -2395,6 +2396,8 @@ public class RoadNetworkAssignment {
 
 	/**
 	 * Saves total electricity consumption to an output file.
+	 * @param year Year of the assignment.
+	 * @param outputFile Output file name (with path).
 	 */
 	public void saveTotalEnergyConsumptions(int year, String outputFile) {
 
@@ -2488,8 +2491,8 @@ public class RoadNetworkAssignment {
 
 	/**
 	 * Saves peak link point capacities into a file.
-	 * @param year
-	 * @param outputFile
+	 * @param year Year of the assignment.
+	 * @param outputFile Output file name (with path).
 	 */
 	public void savePeakLinkPointCapacities (int year, String outputFile) {
 
@@ -2537,8 +2540,8 @@ public class RoadNetworkAssignment {
 
 	/**
 	 * Saves travel times into a file.
-	 * @param year
-	 * @param outputFile
+	 * @param year Year of the assignment.
+	 * @param outputFile Output file name (with path).
 	 */
 	public void saveLinkTravelTimes (int year, String outputFile) {
 
@@ -2896,9 +2899,9 @@ public class RoadNetworkAssignment {
 	}
 
 	/**
-	 * Setter method for the energy type fractions.
+	 * Setter method for energy type fractions.
 	 * @param engineType The type of a car engine.
-	 * @param engineTypeFractions Engine type fractions.
+	 * @param engineTypeFraction Engine type fraction.
 	 */
 	public void setEngineTypeFractions (EngineType engineType, double engineTypeFraction) {
 

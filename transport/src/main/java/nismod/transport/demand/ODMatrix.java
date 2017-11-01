@@ -35,9 +35,7 @@ public class ODMatrix {
 	
 	/**
 	 * Constructor that reads OD matrix from an input csv file.
-	 * @param filePath Path to the input file
-	 * @throws IOException 
-	 * @throws FileNotFoundException 
+	 * @param fileName Path to the input file.
 	 */
 	public ODMatrix(String fileName) throws FileNotFoundException, IOException {
 		

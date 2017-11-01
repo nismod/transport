@@ -63,22 +63,20 @@ public class RouteSetGenerator {
 	}
 	
 	/**
-	 * Adds a route to the set of routes.
-	 * @param route
+	 * Adds a route to the route set.
+	 * @param route Route to be added.
 	 */
 	public void addRoute(Route route) {
 		
 		//NOTE this is commented, as single node routes are empty but still valid!
-//		if (route.isEmpty()) {
-//			System.err.println("Cannot add empty route!");
-//			return;
-//		}
-		
+		//if (route.isEmpty()) {
+		//	System.err.println("Cannot add empty route!");
+		//	return;
+		//}
 		if (!route.isValid()) {
 			System.err.println("Route is not valid. Not adding the route!");
 			return;
 		}
-		
 		int origin = route.getOriginNode().getID();
 		int destination = route.getDestinationNode().getID();
 		
@@ -92,8 +90,8 @@ public class RouteSetGenerator {
 	
 	/**
 	 * Generates a route set between two nodes (if it does not already exist in the route set).
-	 * @param origin
-	 * @param destination
+	 * @param origin Origin node ID.
+	 * @param destination Destination node ID.
 	 */
 	public void generateRouteSetNodeToNode(int origin, int destination) {
 		
@@ -108,8 +106,8 @@ public class RouteSetGenerator {
 	/**
 	 * Generates a route set between two nodes using the link elimination method -
 	 * It first finds the fastest path and then blocks each of its links and tries to find an alternative path.
-	 * @param origin
-	 * @param destination
+	 * @param origin Origin node ID.
+	 * @param destination Destination node ID.
 	 */
 	public void generateRouteSetWithLinkElimination(int origin, int destination) {
 		
@@ -163,8 +161,8 @@ public class RouteSetGenerator {
 	 * Generates a route set between two nodes using the random link elimination method -
 	 * It first finds the fastest path and then blocks random links within the fastest path and tries to find an alternative path.
 	 * The search is limited by the total number of path finding calls and the required number of generated paths.
-	 * @param origin
-	 * @param destination
+	 * @param origin Origin node ID.
+	 * @param destination Destination node ID.
 	 */
 	public void generateRouteSetWithRandomLinkEliminationRestricted(int origin, int destination) {
 
@@ -297,8 +295,8 @@ public class RouteSetGenerator {
 
 	/**
 	 * Generates routes between all combinations of nodes from two LAD zones
-	 * @param originLAD
-	 * @param destinationLAD
+	 * @param originLAD Origin LAD.
+	 * @param destinationLAD Destination LAD.
 	 */
 	public void generateRouteSetZoneToZone(String originLAD, String destinationLAD) {
 		
@@ -314,9 +312,9 @@ public class RouteSetGenerator {
 	/**
 	 * Generates routes between top N nodes (sorted by gravitating population) from two LAD zones.
 	 * If origin and destination LAD are the same (i.e., intra-zonal), then use all the nodes
-	 * @param originLAD
-	 * @param destinationLAD
-	 * @param topNodes
+	 * @param originLAD Origin LAD.
+	 * @param destinationLAD Destination LAD.
+	 * @param topNodes Number of top nodes within LAD to consider.
 	 */
 	public void generateRouteSetZoneToZone(String originLAD, String destinationLAD, int topNodes) {
 		
@@ -345,8 +343,8 @@ public class RouteSetGenerator {
 	/**
 	 * Generates routes for all non-zero OD flows in the OD matrix.
 	 * For inter-zonal flows generates routes only between top N nodes.
-	 * @param matrix
-	 * @param topNodes
+	 * @param matrix Origin-destination matrix.
+	 * @param topNodes Number of topNodes to consider for inter-zonal routes.
 	 */
 	public void generateRouteSetForODMatrix(ODMatrix matrix, int topNodes) {
 		
@@ -360,7 +358,7 @@ public class RouteSetGenerator {
 	
 	/**
 	 * Generates routes for all non-zero OD flows in the OD matrix.
-	 * @param matrix
+	 * @param matrix Origin-destination matrix.
 	 */
 	public void generateRouteSetForODMatrix(ODMatrix matrix) {
 		
@@ -439,7 +437,7 @@ public class RouteSetGenerator {
 	 * Generates routes for all non-zero OD flows in the freight OD matrix.
 	 * Zone ID ranges from the BYFM DfT model:
 	 * @param freightMatrix Freight matrix.
-	 * @param topNodes
+	 * @param topNodes Number of topNodes to consider for inter-zonal routes.
 	 */
 	public void generateRouteSetForFreightMatrix(FreightMatrix freightMatrix, int topNodes) {
 		
@@ -480,7 +478,7 @@ public class RouteSetGenerator {
 	 * Generates routes for a slice of the OD matrix (useful for cluster computing), for topNodes only.
 	 * There might still be some overlap between the slices as some nodes (to which point freight zones 
 	 * are assigned appear again in LAD freight zones).
-	 * @param matrix Origin-destination matrix.
+	 * @param freightMatrix Freight matrix.
 	 * @param sliceIndex Index of the OD matrix slice for which to generate routes [1..N].
 	 * @param sliceNumber Number of slices to divide matrix into (N).
 	 */
@@ -520,7 +518,7 @@ public class RouteSetGenerator {
 	 * Generates routes for a slice of the OD matrix (useful for cluster computing), for topNodes only.
 	 * There might still be some overlap between the slices as some nodes (to which point freight zones 
 	 * are assigned appear again in LAD freight zones).
-	 * @param matrix Origin-destination matrix.
+	 * @param freightMatrix Freight matrix.
 	 * @param sliceIndex Index of the OD matrix slice for which to generate routes [1..N].
 	 * @param sliceNumber Number of slices to divide matrix into (N).
 	 * @param topNodes Number of topNodes to consider for inter-zonal routes.
@@ -569,8 +567,8 @@ public class RouteSetGenerator {
 	 * 		<li>Major distribution centres: 1201 - 1256</li>
 	 * 		<li>Freight ports: 1301 - 1388</li>
 	 * </ul> 
-	 * @param originFreightZone
-	 * @param destinationFreightZone
+	 * @param originFreightZone Origin freight zone.
+	 * @param destinationFreightZone Destination freight zone.
 	 */
 	public void generateRouteSetBetweenFreightZones(int originFreightZone, int destinationFreightZone) {
 		
@@ -624,8 +622,8 @@ public class RouteSetGenerator {
 	 * 		<li>Major distribution centres: 1201 - 1256</li>
 	 * 		<li>Freight ports: 1301 - 1388</li>
 	 * </ul> 
-	 * @param originFreightZone
-	 * @param destinationFreightZone
+	 * @param originFreightZone Origin freight zone.
+	 * @param destinationFreightZone Destination freight zone.
 	 * @param topNodes Number of topNodes to consider for inter-zonal routes.
 	 */
 	public void generateRouteSetBetweenFreightZones(int originFreightZone, int destinationFreightZone, int topNodes) {
@@ -672,7 +670,7 @@ public class RouteSetGenerator {
 	 * Getter method for a route set between a specific origin and a destination.
 	 * @param origin Origin node ID.
 	 * @param destination Destination node ID.
-	 * @return
+	 * @return Route set.
 	 */
 	public RouteSet getRouteSet(int origin, int destination) {
 		
@@ -739,8 +737,8 @@ public class RouteSetGenerator {
 
 	/**
 	 * Calculates utilities for all the routes in all the route sets.
-	 * @param linkTravelTime
-	 * @param params
+	 * @param linkTravelTime Link travel times.
+	 * @param params Parameters of the route choice model.
 	 */
 	public void calculateAllUtilities(HashMap<Integer, Double> linkTravelTime, Properties params) {
 

@@ -131,7 +131,6 @@ public class RoadDevelopment extends Intervention {
 	}
 	
 	/**
-	 * @param dm
 	 * @return Edge ID of the developed road link.
 	 */
 	public Integer getDevelopedEdgeID() {
@@ -144,7 +143,6 @@ public class RoadDevelopment extends Intervention {
 	}
 	
 	/**
-	 * @param dm
 	 * @return Edge ID of the developed road link (in other direction)
 	 */
 	public Integer getDevelopedEdgeID2() {

@@ -79,12 +79,10 @@ public class EstimatedODMAtrix extends RealODMatrix {
 	
 	/**
 	 * Constructor for estimated OD matrix that reads productions and attractions from an input csv file.
-	 * @param filePath Path to the input file with productions and attractions
+	 * @param fileName Path to the input file with productions and attractions
 	 * @param distanceSkimMatrix Distance skim matrix
 	 * @param binLimitsKm Bin limits in km
 	 * @param observedTripLengthDistribution Observed trip length distribution (normalised).
-	 * @throws IOException 
-	 * @throws FileNotFoundException 
 	 */
 	public EstimatedODMAtrix(String fileName, SkimMatrix distanceSkimMatrix, final double[] binLimitsKm, final double[] observedTripLengthDistribution) throws FileNotFoundException, IOException {
 
@@ -347,8 +345,8 @@ public class EstimatedODMAtrix extends RealODMatrix {
 	}
 	
 	/**
-	 * Deletes all interzonal flows to/from a particular zone (leaving only intrazonal flows)
-	 * @param zone
+	 * Deletes all inter-zonal flows to/from a particular zone (leaving only intra-zonal flows)
+	 * @param zone Zone for which inter-zonal flows need to be deleted from the origin-destination matrix.
 	 */
 	public void deleteInterzonalFlows(String zone) {
 		

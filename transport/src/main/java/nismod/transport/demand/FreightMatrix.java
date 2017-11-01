@@ -33,10 +33,8 @@ public class FreightMatrix {
 	}
 	
 	/**
-	 * Constructor that reads OD matrix from an input csv file
-	 * @param filePath Path to the input file
-	 * @throws IOException 
-	 * @throws FileNotFoundException 
+	 * Constructor that reads OD matrix from an input csv file.
+	 * @param fileName Path to the input file.
 	 */
 	public FreightMatrix(String fileName) throws FileNotFoundException, IOException {
 		
@@ -219,6 +217,7 @@ public class FreightMatrix {
 	
 	/**
 	 * Multiplies each value of the matrix with a scaling factor.
+	 * @param scale Scaling factor.
 	 * @return Scaled freight matrix.
 	 */
 	public FreightMatrix getScaledMatrix(double scale) {
