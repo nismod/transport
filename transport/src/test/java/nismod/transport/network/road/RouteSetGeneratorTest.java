@@ -244,27 +244,37 @@ public class RouteSetGeneratorTest {
 		//routes5.readRoutes("./src/main/resources/data/routes5of190top10.txt");
 		long timeNow = System.currentTimeMillis();
 
-//		FilenameFilter filter = new FilenameFilter() {
-//		    public boolean accept(File dir, String name) {
-//		        return name.endsWith(".txt");
-//		    }
-//		};
-//
-//		File folder = new File("./src/main/resources/data/routes");
-//		File[] listOfFiles = folder.listFiles(filter);
-//
-//		for (int i = 0; i < listOfFiles.length; i++) {
-//		    File file = listOfFiles[i];
-//		    if (file.isFile() && file.getName().endsWith("top10.txt")) {
-//		    	System.out.print(i + ":");
-//		    	routes5.readRoutes(file.getPath());
-//		    }
-//		}
+		/*
+		FilenameFilter filter = new FilenameFilter() {
+		    public boolean accept(File dir, String name) {
+		        //return name.endsWith(".txt");
+		    	return name.endsWith(".dat");
+		    }
+		};
+
+		//File folder = new File("./src/main/resources/data/routes");
+		File folder = new File("./src/main/resources/data/freightRoutes");
+		File[] listOfFiles = folder.listFiles(filter);
+
+		for (int i = 0; i < listOfFiles.length; i++) {
+		    File file = listOfFiles[i];
+		    if (file.isFile() && file.getName().endsWith("top10.dat")) {
+		    	System.out.print(i + ":");
+		    	routes5.readRoutesBinary(file.getPath());
+		    }
+		}
+		*/
 		
 		//routes5.readRoutes("./src/main/resources/data/all5routestop10/all5routestop10.txt");
 		//routes5.readRoutes("./src/main/resources/data/routesCombined/routesCombined.txt");
-		routes5.readRoutesBinary("./src/main/resources/data/routesCombined/routesCombined.dat");
+		//routes5.readRoutesBinary("./src/main/resources/data/routesCombined/routesCombined.dat");
 	
+		//routes5.readRoutesBinary("./src/main/resources/data/freightRoutes/freightRoutes130of176top10.dat");
+		routes5.readRoutesBinaryWithoutValidityCheck("./src/main/resources/data/freightRoutes/freightRoutes26of176top10.dat");
+		//routes5.readRoutesBinary("./src/main/resources/data/freightRoutes/freightRoutes130and134.dat");
+		//routes5.readRoutesBinary("./src/main/resources/data/freightRoutes/freightRoutes.dat");
+		
+		
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Routes loaded into memory in %d seconds.\n", timeNow / 1000);
 
@@ -283,6 +293,9 @@ public class RouteSetGeneratorTest {
 		
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Freight routes generated in %d seconds.\n", timeNow / 1000);
+		
+		f.flush();
+		f.close();
 	}
 
 	@Test
@@ -382,11 +395,13 @@ public class RouteSetGeneratorTest {
 		rsg.saveRoutesBinary("testRoutesBinary.dat",  false);
 				
 		RouteSetGenerator rsg2 = new RouteSetGenerator(roadNetwork);
-		rsg2.readRoutes("testRoutesASCII.txt");
+		//rsg2.readRoutes("testRoutesASCII.txt");
+		rsg2.readRoutesWithoutValidityCheck("testRoutesASCII.txt");
 		rsg2.printChoiceSets();
 		
 		rsg2.clearRoutes();
-		rsg2.readRoutesBinary("testRoutesBinary.dat");
+		//rsg2.readRoutesBinary("testRoutesBinary.dat");
+		rsg2.readRoutesBinaryWithoutValidityCheck("testRoutesBinary.dat");
 		rsg2.printChoiceSets();
 		
 		routes.saveRoutes("testRoutesASCII.txt", false);

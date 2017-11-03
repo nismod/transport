@@ -22,10 +22,13 @@ public class Route {
 	public static final double PARAM_TIME = -1.5;
 	public static final double PARAM_LENGTH = -1.0;
 	public static final double PARAM_INTERSECTIONS = -0.1;
+	
+	//initial route size for arraylist
+	public static final int INITIAL_ROUTE_SIZE = 10;
 
 	private static int counter = 0;
 	private int id;
-	private ArrayList<DirectedEdge> edges;
+	private List<DirectedEdge> edges;
 	private Double length;
 	private Double time;
 	private Double utility;
@@ -33,7 +36,7 @@ public class Route {
 	
 	public Route() {
 	
-		this.edges = new ArrayList<DirectedEdge>();
+		this.edges = new ArrayList<DirectedEdge>(INITIAL_ROUTE_SIZE);
 		this.id = ++Route.counter;
 	}
 	
@@ -47,15 +50,19 @@ public class Route {
 			System.err.println("Route constructur: Path is null!");
 			return;
 		}
+		
 		if (!path.isValid()) {
 			System.err.println("Route constructor: Path is not valid!");
 			return;
 		}
-		if (path.getEdges() == null) {
+		
+		List<DirectedEdge> builtEdges = (List<DirectedEdge>) path.getEdges(); //builds edges
+		
+		if (builtEdges == null) {
 			System.err.println("Route constructor: Edge list is null!");
 			return;
 		}
-		if (path.getEdges().isEmpty()) {
+		if (builtEdges.isEmpty()) {
 			if (path.getFirst().equals(path.getLast()))
 				this.singleNode = path.getFirst(); 	//single node path can be accepted
 			else {
@@ -63,14 +70,18 @@ public class Route {
 				return;
 			}
 		}
-		this.edges = new ArrayList<DirectedEdge>();
+		
+		this.edges = builtEdges; //store reference to the already built list
+			
 		this.id = ++Route.counter;
 		//System.out.println("Constructing a route from path (nodes): " + path.toString());
 		//System.out.println("Constructing a route from path (edges): " + path.getEdges());
-		for (Object o: path.getEdges()) {
-			DirectedEdge edge = (DirectedEdge) o;
-			this.addEdge(edge);
-		}
+		
+		//this.edges = new ArrayList<DirectedEdge>(INITIAL_ROUTE_SIZE);
+		//for (Object o: path.getEdges()) {
+		//	DirectedEdge edge = (DirectedEdge) o;
+		//	this.addEdge(edge);
+		//}
 	}
 	
 	public List<DirectedEdge> getEdges() {
@@ -81,7 +92,7 @@ public class Route {
 	/**
 	 * Adds a directed edge to the end of the current route.
 	 * @param edge Directed edge to be added.
-	 * @return true if edge addition was sucessful, false otherwise.
+	 * @return true if edge addition was successful, false otherwise.
 	 */
 	public boolean addEdge(DirectedEdge edge) {
 
@@ -96,6 +107,15 @@ public class Route {
 				this.edges.add(edge);
 		}
 		return true;
+	}
+	
+	/**
+	 * Adds a directed edge to the end of the current route.
+	 * @param edge Directed edge to be added.
+	 */
+	public void addEdgeWithoutValidityCheck(DirectedEdge edge) {
+
+		this.edges.add(edge);
 	}
 	
 	/**
