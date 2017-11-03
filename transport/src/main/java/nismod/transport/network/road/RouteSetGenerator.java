@@ -69,10 +69,10 @@ public class RouteSetGenerator {
 	public void addRoute(Route route) {
 		
 		//NOTE this is commented, as single node routes are empty but still valid!
-		//if (route.isEmpty()) {
-		//	System.err.println("Cannot add empty route!");
-		//	return;
-		//}
+		if (route.isEmpty()) {
+//			System.err.println("Cannot add empty route!");
+			return;
+		}
 		if (!route.isValid()) {
 			System.err.println("Route is not valid. Not adding the route!");
 			return;
@@ -86,6 +86,29 @@ public class RouteSetGenerator {
 			routes.put(origin, destination, set);
 		}
 		set.addRoute(route);
+	}
+	
+	/**
+	 * Adds a route to the route set.
+	 * @param route Route to be added.
+	 */
+	public void addRouteWithoutValidityCheck(Route route) {
+		
+		//NOTE this is commented, as single node routes are empty but still valid!
+		if (route.isEmpty()) {
+//			System.err.println("Cannot add empty route!");
+			return;
+		}
+
+		int origin = route.getOriginNode().getID();
+		int destination = route.getDestinationNode().getID();
+		
+		RouteSet set = getRouteSet(origin, destination);
+		if (set == null) {
+			set = new RouteSet(route.getOriginNode(),route.getDestinationNode());
+			routes.put(origin, destination, set);
+		}
+		set.addRouteWithoutValidityCheck(route);
 	}
 	
 	/**
@@ -778,8 +801,8 @@ public class RouteSetGenerator {
 			try {
 				bufferedWriter.flush();
 				bufferedWriter.close();
-				fileWriter.flush();
-				fileWriter.close();
+				//fileWriter.flush();
+				//fileWriter.close();
 			} catch (IOException e) {
 				System.err.println("Error while flushing/closing fileWriter!");
 				e.printStackTrace();
@@ -876,12 +899,55 @@ public class RouteSetGenerator {
 	}
 	
 	/**
+	 * Reads route sets from a text file without checking whether the routes are valid.
+	 * @param fileName File name.
+	 */
+	public void readRoutesWithoutValidityCheck(String fileName) {
+		
+		System.out.println("Reading pre-generated routes...");
+		BufferedReader br = null;
+		try {
+			br = new BufferedReader(new FileReader(fileName));
+		    String line = br.readLine();
+		    //System.out.println(line);
+		    
+		    while (line != null) {
+		    	String splitLine[] = line.split(":");
+		    	//System.out.println(Arrays.toString(splitLine));
+		    	//int originID = Integer.parseInt(splitLine[0]); //nodes not needed
+		    	//int destinationID = Integer.parseInt(splitLine[1]); //nodes not needed
+		    	if (splitLine.length > 2) { //only if there are edges
+		    		String edges[] = splitLine[2].split("-");
+		    		//System.out.println(Arrays.toString(edges));
+		    		Route route = new Route();
+		    		for (String edge: edges)
+		    			route.addEdgeWithoutValidityCheck((DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(Integer.parseInt(edge)));
+		    		//System.out.println(route.getFormattedString());
+		    		this.addRouteWithoutValidityCheck(route);
+		    	}
+		    	line = br.readLine();
+		    	//System.out.println(line);
+		    }
+		} catch (Exception e) {
+			System.err.println("Error in fileReader!");
+			e.printStackTrace();
+		} finally {
+			try {
+				br.close();
+			} catch (IOException e) {
+				System.err.println("Error while closing BufferedReader!");
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	/**
 	 * Reads route sets from a text file.
 	 * @param fileName File name.
 	 */
 	public void readRoutesBinary(String fileName) {
 		
-		System.out.println("Reading pre-generated routes...");
+		System.out.println("Reading pre-generated routes from " + fileName);
 		FileInputStream input = null;
 		BufferedInputStream buff = null;
 		DataInputStream data = null;
@@ -892,24 +958,71 @@ public class RouteSetGenerator {
 			data = new DataInputStream(buff);
 			
 			Route route = new Route();
-			boolean success = true;
+			//boolean success = true;
 			while (true) { 
 				int edgeID = data.readInt();
 				if (edgeID != 0) { //keep adding edge to the route
-					success = success && route.addEdge((DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(edgeID));
+					//success = success && route.addEdge((DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(edgeID));
+					route.addEdgeWithoutValidityCheck((DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(edgeID));
 				} else {
 					//add route to the route set if all edge additions have been successful
-					if (success) this.addRoute(route);
+					//if (success) this.addRoute(route);
+					if (route.isValid()) this.addRouteWithoutValidityCheck(route);
 					else counterBadRoutes++;
 					//create new route if there are more bytes
 					//if (data.available() > 0) route = new Route();
 					route = new Route();
-					success = true;
+					//success = true;
 				}
 			}
 		} catch (EOFException e) {
 			System.out.print("End of the binary route file reached. ");
 			System.out.println(counterBadRoutes + " bad routes ignored.");
+		} catch (Exception e) {
+			System.err.println("Error in fileReader!");
+			e.printStackTrace();
+		} finally {
+			try {
+				input.close();
+				buff.close();
+				data.close();
+			} catch (IOException e) {
+				System.err.println("Error while closing input stream!");
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	/**
+	 * Reads route sets from a text file.
+	 * @param fileName File name.
+	 */
+	public void readRoutesBinaryWithoutValidityCheck(String fileName) {
+		
+		System.out.println("Reading pre-generated routes from " + fileName);
+		FileInputStream input = null;
+		BufferedInputStream buff = null;
+		DataInputStream data = null;
+		try {
+			input = new FileInputStream(fileName);
+			buff = new BufferedInputStream(input);
+			data = new DataInputStream(buff);
+			
+			Route route = new Route();
+			while (true) { 
+				int edgeID = data.readInt();
+				if (edgeID != 0) { //keep adding edge to the route
+					route.addEdgeWithoutValidityCheck((DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(edgeID));
+				} else {
+					//add route to the route set if all edge additions have been successful
+					this.addRouteWithoutValidityCheck(route);
+					//create new route if there are more bytes
+					//if (data.available() > 0) route = new Route();
+					route = new Route();
+				}
+			}
+		} catch (EOFException e) {
+			System.out.print("End of the binary route file reached. ");
 		} catch (Exception e) {
 			System.err.println("Error in fileReader!");
 			e.printStackTrace();

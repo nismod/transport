@@ -78,6 +78,27 @@ public class RouteSet {
 		//add route to the choice set
 		choiceSet.add(route);
 	}
+	
+	/**
+	 * Adds a route to the choice set.
+	 * @param route Route to be added.
+	 */
+	public void addRouteWithoutValidityCheck(Route route) {
+		
+		//TODO
+		//test that origin and destination nodes match the first and the last node of the route
+		if (!route.getOriginNode().equals(this.originNode) || !route.getDestinationNode().equals(this.destinationNode)) {
+			//System.err.println("Trying to add a route with wrong origin/destination node to the choice set. Ignoring request.");
+			return;
+		}
+		for (Route r: choiceSet)
+			if (r.equals(route)) {
+				//System.err.println("Trying to add a duplicate route to the choice set. Ignoring request.");
+				return;
+			}
+		//add route to the choice set
+		choiceSet.add(route);
+	}
 		
 	/**
 	 * Sorts routes on their utility in a descending order.
