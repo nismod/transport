@@ -24,11 +24,11 @@ public class Route {
 	public static final double PARAM_INTERSECTIONS = -0.1;
 	
 	//initial route size for arraylist
-	public static final int INITIAL_ROUTE_SIZE = 10;
+	public static final int INITIAL_ROUTE_CAPACITY = 10;
 
-	private static int counter = 0;
-	private int id;
-	private List<DirectedEdge> edges;
+//	private static int counter = 0;
+//	private int id;
+	private ArrayList<DirectedEdge> edges;
 	private Double length;
 	private Double time;
 	private Double utility;
@@ -36,8 +36,8 @@ public class Route {
 	
 	public Route() {
 	
-		this.edges = new ArrayList<DirectedEdge>(INITIAL_ROUTE_SIZE);
-		this.id = ++Route.counter;
+		this.edges = new ArrayList<DirectedEdge>(INITIAL_ROUTE_CAPACITY);
+//		this.id = ++Route.counter;
 	}
 	
 	/**
@@ -71,9 +71,9 @@ public class Route {
 			}
 		}
 		
-		this.edges = builtEdges; //store reference to the already built list
+		this.edges = (ArrayList<DirectedEdge>) builtEdges; //store reference to the already built list
 			
-		this.id = ++Route.counter;
+//		this.id = ++Route.counter;
 		//System.out.println("Constructing a route from path (nodes): " + path.toString());
 		//System.out.println("Constructing a route from path (edges): " + path.getEdges());
 		
@@ -84,9 +84,22 @@ public class Route {
 		//}
 	}
 	
+	/**
+	 * Getter method for the list of edges.
+	 * @return List of edges.
+	 */
 	public List<DirectedEdge> getEdges() {
 		
 		return	this.edges;
+	}
+	
+	
+	/**
+	 * Trims edges list to size.
+	 */
+	public void trimToSize() {
+		
+		this.edges.trimToSize();
 	}
 	
 	/**
@@ -100,7 +113,7 @@ public class Route {
 		else {
 			DirectedEdge lastEdge = this.edges.get(this.edges.size()-1);
 			if (!lastEdge.getOutNode().equals(edge.getInNode())) {
-				System.err.printf("Trying to add an edge %d that is not connected to the last edge %d in the route (id = %d)\n", edge.getID(), lastEdge.getID(), this.getID());
+//				System.err.printf("Trying to add an edge %d that is not connected to the last edge %d in the route (id = %d)\n", edge.getID(), lastEdge.getID(), this.getID());
 				System.err.printf("(%d)-%d->(%d), (%d)-%d->(%d)", lastEdge.getInNode().getID(), lastEdge.getID(), lastEdge.getOutNode().getID(), edge.getInNode().getID(), edge.getID(), edge.getOutNode().getID());
 				return false;
 			} else
@@ -221,10 +234,10 @@ public class Route {
 		else					return this.edges.get(edges.size() - 1).getOutNode();	
 	}
 	
-	public int getID() {
-		
-		return id;
-	}
+//	public int getID() {
+//		
+//		return id;
+//	}
 	
 	public boolean isValid() {
 		
@@ -239,7 +252,7 @@ public class Route {
 	}
 	
 	@Override
-	public boolean equals(Object obj) {
+	public boolean equals(Object obj) { //TODO override hashCode too
 	    if (obj == null) {
 	        return false;
 	    }

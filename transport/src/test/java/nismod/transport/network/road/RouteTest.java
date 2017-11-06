@@ -57,10 +57,10 @@ public class RouteTest {
 		r1.addEdge(e2);
 		r1.addEdge(e3);
 
-		System.out.println("Route " + r1.getID() + " is valid: " + r1.isValid());
-		System.out.println("Route " + r1.getID() + ": " + r1.getEdges());
-		System.out.println("Route " + r1.getID() + ": " + r1.toString());
-		System.out.println("Route " + r1.getID() + ": " + r1.getFormattedString());
+//		System.out.println("Route " + r1.getID() + " is valid: " + r1.isValid());
+//		System.out.println("Route " + r1.getID() + ": " + r1.getEdges());
+//		System.out.println("Route " + r1.getID() + ": " + r1.toString());
+//		System.out.println("Route " + r1.getID() + ": " + r1.getFormattedString());
 				
 		//set route choice parameters
 		Properties params = new Properties();
@@ -94,10 +94,10 @@ public class RouteTest {
 		r2.addEdge(e4);
 		r2.addEdge(e5);
 		
-		System.out.println("Route " + r2.getID() + " is valid: " + r2.isValid());
-		System.out.println("Route " + r2.getID() + ": " + r2.getEdges());
-		System.out.println("Route " + r2.getID() + ": " + r2.toString());
-		System.out.println("Route " + r2.getID() + ": " + r2.getFormattedString());
+//		System.out.println("Route " + r2.getID() + " is valid: " + r2.isValid());
+//		System.out.println("Route " + r2.getID() + ": " + r2.getEdges());
+//		System.out.println("Route " + r2.getID() + ": " + r2.toString());
+//		System.out.println("Route " + r2.getID() + ": " + r2.getFormattedString());
 				
 		//set route choice parameters
 		params = new Properties();
@@ -130,10 +130,10 @@ public class RouteTest {
 		r3.addEdge(e3);
 		r3.calculateUtility(roadNetwork.getFreeFlowTravelTime(), null);
 		
-		System.out.println("Route " + r3.getID() + " is valid: " + r3.isValid());
-		System.out.println("Route " + r3.getID() + ": " + r3.getEdges());
-		System.out.println("Route " + r3.getID() + ": " + r3.toString());
-		System.out.println("Route " + r3.getID() + ": " + r3.getFormattedString());
+//		System.out.println("Route " + r3.getID() + " is valid: " + r3.isValid());
+//		System.out.println("Route " + r3.getID() + ": " + r3.getEdges());
+//		System.out.println("Route " + r3.getID() + ": " + r3.toString());
+//		System.out.println("Route " + r3.getID() + ": " + r3.getFormattedString());
 				
 		//set route choice parameters
 		params = new Properties();
@@ -166,10 +166,10 @@ public class RouteTest {
 		r4.addEdge(e4);
 		r4.addEdge(e5);
 
-		System.out.println("Route " + r4.getID() + " is valid: " + r4.isValid());
-		System.out.println("Route " + r4.getID() + ": " + r4.getEdges());
-		System.out.println("Route " + r4.getID() + ": " + r4.toString());
-		System.out.println("Route " + r4.getID() + ": " + r4.getFormattedString());
+//		System.out.println("Route " + r4.getID() + " is valid: " + r4.isValid());
+//		System.out.println("Route " + r4.getID() + ": " + r4.getEdges());
+//		System.out.println("Route " + r4.getID() + ": " + r4.toString());
+//		System.out.println("Route " + r4.getID() + ": " + r4.getFormattedString());
 				
 		//set route choice parameters
 		params = new Properties();

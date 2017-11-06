@@ -923,6 +923,8 @@ public class RouteSetGenerator {
 		    		for (String edge: edges)
 		    			route.addEdgeWithoutValidityCheck((DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(Integer.parseInt(edge)));
 		    		//System.out.println(route.getFormattedString());
+					//trim to size
+					route.trimToSize();
 		    		this.addRouteWithoutValidityCheck(route);
 		    	}
 		    	line = br.readLine();
@@ -965,6 +967,8 @@ public class RouteSetGenerator {
 					//success = success && route.addEdge((DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(edgeID));
 					route.addEdgeWithoutValidityCheck((DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(edgeID));
 				} else {
+					//trim to size
+					route.trimToSize();
 					//add route to the route set if all edge additions have been successful
 					//if (success) this.addRoute(route);
 					if (route.isValid()) this.addRouteWithoutValidityCheck(route);
@@ -1014,6 +1018,8 @@ public class RouteSetGenerator {
 				if (edgeID != 0) { //keep adding edge to the route
 					route.addEdgeWithoutValidityCheck((DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(edgeID));
 				} else {
+					//trim to size
+					route.trimToSize();
 					//add route to the route set if all edge additions have been successful
 					this.addRouteWithoutValidityCheck(route);
 					//create new route if there are more bytes

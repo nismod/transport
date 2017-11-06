@@ -229,7 +229,7 @@ public class RouteSetGeneratorTest {
 		//ODMatrix passengerODM = new ODMatrix("./src/test/resources/testdata/passengerODM.csv");
 		//ODMatrix passengerODM = new ODMatrix("./src/main/resources/data/passengerODMfull.csv");
 		//ODMatrix passengerODM = new ODMatrix("./src/main/resources/data/passengerODMtempro.csv");
-		ODMatrix passengerODM = new ODMatrix("./src/main/resources/data/balancedODMatrixOldLengths.csv");
+		//ODMatrix passengerODM = new ODMatrix("./src/main/resources/data/balancedODMatrixOldLengths.csv");
 
 		RouteSetGenerator routes5 = new RouteSetGenerator(roadNetwork3);
 		//routes5.generateRouteSetWithLinkElimination(19, 79);
@@ -242,6 +242,7 @@ public class RouteSetGeneratorTest {
 
 		//routes5.readRoutes("completeRoutesNewest.txt");
 		//routes5.readRoutes("./src/main/resources/data/routes5of190top10.txt");
+		
 		long timeNow = System.currentTimeMillis();
 
 		/*
@@ -268,11 +269,13 @@ public class RouteSetGeneratorTest {
 		//routes5.readRoutes("./src/main/resources/data/all5routestop10/all5routestop10.txt");
 		//routes5.readRoutes("./src/main/resources/data/routesCombined/routesCombined.txt");
 		//routes5.readRoutesBinary("./src/main/resources/data/routesCombined/routesCombined.dat");
+		//routes5.readRoutesBinaryWithoutValidityCheck("./src/main/resources/data/routesCombined/routesCombined.dat");
 	
 		//routes5.readRoutesBinary("./src/main/resources/data/freightRoutes/freightRoutes130of176top10.dat");
-		routes5.readRoutesBinaryWithoutValidityCheck("./src/main/resources/data/freightRoutes/freightRoutes26of176top10.dat");
+		//routes5.readRoutesBinaryWithoutValidityCheck("./src/main/resources/data/freightRoutes/freightRoutes26of176top10.dat");
 		//routes5.readRoutesBinary("./src/main/resources/data/freightRoutes/freightRoutes130and134.dat");
 		//routes5.readRoutesBinary("./src/main/resources/data/freightRoutes/freightRoutes.dat");
+		routes5.readRoutesBinaryWithoutValidityCheck("./src/main/resources/data/freightRoutes/freightRoutes.dat");
 		
 		
 		timeNow = System.currentTimeMillis() - timeNow;
@@ -282,17 +285,18 @@ public class RouteSetGeneratorTest {
 		//routes5.printChoiceSets();
 		
 		//routes5.saveRoutesBinary("routesCombined.dat", false);
-		
-		
-		
-		timeNow = System.currentTimeMillis();
-		
+	
 //		FreightMatrix freightMatrix = new FreightMatrix("./src/main/resources/data/freightMatrix.csv");	
 //		routes5.generateRouteSetForFreightMatrix(freightMatrix, 10);
 //		routes5.saveRoutes("freightRoutes.txt", false);
 		
-		timeNow = System.currentTimeMillis() - timeNow;
-		System.out.printf("Freight routes generated in %d seconds.\n", timeNow / 1000);
+//		timeNow = System.currentTimeMillis() - timeNow;
+//		System.out.printf("Freight routes generated in %d seconds.\n", timeNow / 1000);
+	
+		
+		
+		
+		
 		
 		f.flush();
 		f.close();
