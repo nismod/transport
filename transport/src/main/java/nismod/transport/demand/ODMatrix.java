@@ -206,6 +206,22 @@ public class ODMatrix {
 	}
 	
 	/**
+	 * Gets sum of all the flows in the matrix.
+	 * @return Sum of all the flows in the matrix (i.e. number of trips).
+	 */
+	public int getTotalFlow() {
+		
+		int totalFlow = 0;
+		for (MultiKey mk: this.getKeySet()) {
+			String origin = (String) mk.getKey(0);
+			String destination = (String) mk.getKey(1);
+			totalFlow += this.getFlow(origin, destination);
+		}
+	
+		return totalFlow;
+	}
+	
+	/**
 	 * Gets sum of absolute differences between elements of two matrices.
 	 * @param other The other matrix.
 	 * @return Sum of absolute differences.
