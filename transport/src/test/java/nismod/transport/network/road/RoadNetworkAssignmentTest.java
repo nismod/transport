@@ -11,12 +11,16 @@ import static org.hamcrest.Matchers.closeTo;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
+import org.apache.commons.math3.stat.Frequency;
 import org.geotools.graph.path.Path;
 import org.geotools.graph.structure.DirectedNode;
 import org.geotools.graph.structure.Edge;
@@ -52,14 +56,25 @@ public class RoadNetworkAssignmentTest {
 		final String workplaceZoneNearestNodeFile = "./src/test/resources/minitestdata/workplaceZoneToNearestNode.csv";
 		final String freightZoneToLADfile = "./src/test/resources/minitestdata/freightZoneToLAD.csv";
 		final String freightZoneNearestNodeFile = "./src/test/resources/minitestdata/freightZoneToNearestNode.csv";
-		
+
+		/*
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
 
 		//visualise the shapefiles
 		//roadNetwork.visualise("Mini Test Area");
 		
 		//export to shapefile
-		//roadNetwork.exportToShapefile("miniOutputNetwork");
+		//roadNetwork.exportToShapefile("miniOutputNetwork")
+
+
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null);
+		ODMatrix odm = new ODMatrix("./src/test/resources/minitestdata/passengerODM.csv");
+		rna.assignPassengerFlows(odm);
+		Map<Integer, Double> dailyVolume = rna.getLinkVolumesInPCU();
+		roadNetwork.visualise("regular");
+		roadNetwork.exportToShapefile("bla");
+		roadNetwork.visualise2("Visualisation", dailyVolume);
+		*/
 
 //		final URL zonesUrl2 = new URL("file://src/test/resources/testdata/zones.shp");
 //		final URL networkUrl2 = new URL("file://src/test/resources/testdata/network.shp");
@@ -103,7 +118,8 @@ public class RoadNetworkAssignmentTest {
 		//rsg.readRoutes("./src/main/resources/data/all5routestop10/all5routestop10.txt");
 		//rsg.readRoutes("./src/main/resources/data/5routes10nodesnew/all5routestop10new.txt");
 		//rsg.readRoutes("./src/main/resources/data/routesCombined/routesCombined.txt");
-		//rsg.printStatistics();
+		rsg.readRoutesBinaryWithoutValidityCheck("./src/main/resources/data/routesCombined/routesCombined.dat");
+		rsg.printStatistics();
 		
 		//set route choice parameters
 		Properties params = new Properties();
@@ -114,26 +130,37 @@ public class RoadNetworkAssignmentTest {
 		//assign passenger flows
 		long timeNow = System.currentTimeMillis();
 		//roadNetworkAssignment.assignPassengerFlows(passengerODM);
-		//roadNetworkAssignment.assignPassengerFlowsRouteChoice(passengerODM, rsg, params);
+		roadNetworkAssignment.assignPassengerFlowsRouteChoice(passengerODM, rsg, params);
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Passenger flows assigned in %d seconds.\n", timeNow / 1000);
 
+		
+		/*
 		//sort nodes based on workplace zone population!
 		roadNetwork2.sortGravityNodesFreight();
 		
 		FreightMatrix freightMatrix = new FreightMatrix("./src/main/resources/data/freightMatrix.csv");	
 		freightMatrix.printMatrixFormatted();
-		rsg.readRoutes("./src/main/resources/data/routesFreight/routesFreight.txt");
+		
+		
+		timeNow = System.currentTimeMillis();
+		//rsg.readRoutes("./src/main/resources/data/routesFreight/routesFreight.txt");
+		//rsg.readRoutesBinary("./src/main/resources/data/freightRoutes/freightRoutes.dat");
+		//rsg.printStatistics();
+		timeNow = System.currentTimeMillis() - timeNow;
+		System.out.printf("Freight routes read in %d seconds.\n", timeNow / 1000);
+		
 				
  		//assign freight flows
 		timeNow = System.currentTimeMillis();
 		//roadNetworkAssignment.assignFreightFlows(freightMatrix);
-		roadNetworkAssignment.assignFreightFlowsRouteChoice(freightMatrix, rsg, params);
+		//roadNetworkAssignment.assignFreightFlowsRouteChoice(freightMatrix, rsg, params);
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Freight flows assigned in %d seconds.\n", timeNow / 1000);
 		
 		//roadNetworkAssignment.saveAssignmentResults(2015, "assignment2015passengerAndFreigh.csv");
 
+		 */
 		
 //		//for (int i = 0; i < 5; i++) {
 //		for (int i = 0; i < 1; i++) {
@@ -156,6 +183,8 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("Zone to nodes mapping: ");
 		System.out.println(roadNetwork2.getZoneToNodes());
 		
+		/*
+		
 		System.out.println("Route storage: ");
 		//System.out.println(roadNetworkAssigment.getPathStorage());
 		System.out.println(roadNetworkAssignment.getRouteStorage().keySet());
@@ -166,7 +195,19 @@ public class RoadNetworkAssignmentTest {
 			List list = (List) roadNetworkAssignment.getRouteStorage().get((String)((MultiKey)mk).getKey(0), (String)((MultiKey)mk).getKey(1));
 			System.out.println("number of paths = " + list.size());
 		}
-	
+		
+		*/
+		
+		System.out.println("Trip list: ");
+		ArrayList<Trip> tripList = roadNetworkAssignment.getTripList();
+		Frequency freq = new Frequency();
+		for (Trip trip: tripList) {
+			//System.out.println(trip.toString());
+			freq.addValue(trip.getEngine());
+		}
+		System.out.println("Frequencies: ");
+		System.out.println(freq);
+		
 		System.out.println("Link volumes in PCU: ");
 		System.out.println(roadNetworkAssignment.getLinkVolumesInPCU());	
 		
@@ -198,7 +239,7 @@ public class RoadNetworkAssignmentTest {
 		System.out.println(roadNetworkAssignment.calculateEnergyConsumptions());
 		
 		System.out.println("Total travelled distance matrix:");
-		roadNetworkAssignment.calculateTotalTravelledDistanceMatrixFromRouteStorage().printMatrixFormatted();
+		roadNetworkAssignment.calculateTotalTravelledDistanceMatrixFromTripStorage().printMatrixFormatted();
 		
 		System.out.println("Zonal car energy consumptions:");
 		System.out.println(roadNetworkAssignment.calculateZonalCarEnergyConsumptions(0.5));
@@ -272,19 +313,19 @@ public class RoadNetworkAssignmentTest {
 		rna.setEnergyUnitCost(RoadNetworkAssignment.EngineType.ELECTRICITY, 0.20);
 		assertEquals("asdf", 0.20, (double) rna.getEnergyUnitCosts().get(RoadNetworkAssignment.EngineType.ELECTRICITY), EPSILON);
 
-		//TEST ROUTE STORAGE
-		System.out.println("\n\n*** Testing route storage ***");
+		//TEST TRIP STORAGE
+		System.out.println("\n\n*** Testing trip storage ***");
 
-		//check that the number of routes for a given OD equals the flow (the number of trips in the OD matrix).
-		System.out.println("Route storage: " + rna.getRouteStorage());
+		//check that the number of trips for a given OD equals the flow (the number of trips in the OD matrix).
+		System.out.println("Trip storage: " + rna.getTripStorage());
 		
 		//for each OD
 		for (MultiKey mk: odm.getKeySet()) {
 			String originZone = (String) mk.getKey(0);
 			String destinationZone = (String) mk.getKey(1);
-			List<Route> routeList = rna.getRouteStorage().get(originZone, destinationZone);
+			List<Trip> tripList = rna.getTripStorage().get(originZone, destinationZone);
 			int flow = odm.getFlow(originZone, destinationZone);
-			assertEquals("The number of paths equals the flow", flow, routeList.size());
+			assertEquals("The number of paths equals the flow", flow, tripList.size());
 		}
 
 		//TEST LINK TRAVEL TIMES
@@ -318,10 +359,8 @@ public class RoadNetworkAssignmentTest {
 		//rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null);
 		
 		rna.resetLinkVolumes();
-		rna.resetRouteStorages();
-		rna.resetRouteStorages();
-		rna.resetTripStartEndCounters();
-		
+		rna.resetTripStorages();
+
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
 		rsg.generateRouteSetForODMatrix(odm);
 		//rsg.generateRouteSet(31, 82);
@@ -469,23 +508,22 @@ public class RoadNetworkAssignmentTest {
 		
 		assertEquals("asdf", 0.20, (double) rna.getEnergyUnitCosts().get(RoadNetworkAssignment.EngineType.ELECTRICITY), EPSILON);
 		
-		//TEST ROUTE STORAGE
-		System.out.println("\n\n*** Testing route storage ***");
+		//TEST TRIP STORAGE
+		System.out.println("\n\n*** Testing trip storage ***");
 
 		//check that the number of routes for a given OD equals the flow (the number of trips in the OD matrix).
-		System.out.println("Route storage: " + rna.getRouteStorage());
+		System.out.println("Trip storage: " + rna.getTripStorage());
 		
 		double totalDistance = 0.0;
 		//for each OD
 		for (MultiKey mk: odm.getKeySet()) {
 			String originZone = (String) mk.getKey(0);
 			String destinationZone = (String) mk.getKey(1);
-			List<Route> routeList = rna.getRouteStorage().get(originZone, destinationZone);
+			List<Trip> tripList = rna.getTripStorage().get(originZone, destinationZone);
 			int flow = odm.getFlow(originZone, destinationZone);
-			assertEquals("The number of routes equals the flow", flow, routeList.size());
-			for (Route r: routeList) {
-				r.calculateLength();
-				totalDistance += r.getLength();
+			assertEquals("The number of routes equals the flow", flow, tripList.size());
+			for (Trip t: tripList) {
+				totalDistance += t.getTotalTripLength(roadNetwork.getNodeToAverageAccessEgressDistance());
 			}
 		}
 		System.out.println("Total distance = " + totalDistance);
@@ -563,8 +601,8 @@ public class RoadNetworkAssignmentTest {
 		rna.calculateDistanceSkimMatrix().printMatrixFormatted();
 		
 		System.out.println("Total travelled distance matrix from route storage:");
-		rna.calculateTotalTravelledDistanceMatrixFromRouteStorage().printMatrixFormatted();
-		System.out.println("Sum of all distances: " + rna.calculateTotalTravelledDistanceMatrixFromRouteStorage().getSumOfCosts());
+		rna.calculateTotalTravelledDistanceMatrixFromTripStorage().printMatrixFormatted();
+		System.out.println("Sum of all distances: " + rna.calculateTotalTravelledDistanceMatrixFromTripStorage().getSumOfCosts());
 		
 		System.out.println("Zonal car energy consumptions:");
 		System.out.println(rna.calculateZonalCarEnergyConsumptions(0.85));
@@ -587,8 +625,7 @@ public class RoadNetworkAssignmentTest {
 		//TEST ASSIGNMENT WITH ROUTE CHOICE
 		System.out.println("\n\n*** Testing assignment with route choice ***");
 		rna.resetLinkVolumes();
-		rna.resetRouteStorages();
-		rna.resetTripStartEndCounters();
+		rna.resetTripStorages();
 		
 		//set route choice parameters
 		Properties params = new Properties();
@@ -605,12 +642,10 @@ public class RoadNetworkAssignmentTest {
 		
 		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforCounts());
 		
-		
 		//TEST ASSIGNMENT WITH ROUTE CHOICE
 		System.out.println("\n\n*** Testing assignment with route choice ***");
 		rna.resetLinkVolumes();
-		rna.resetRouteStorages();
-		rna.resetTripStartEndCounters();
+		rna.resetTripStorages();
 		
 		//set route choice parameters
 		params.setProperty("TIME", "-1.0");
@@ -621,7 +656,7 @@ public class RoadNetworkAssignmentTest {
 		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
 		
 		System.out.println("Total travelled distance from route storage: ");
-		rna.calculateTotalTravelledDistanceMatrixFromRouteStorage().printMatrixFormatted();
+		rna.calculateTotalTravelledDistanceMatrixFromTripStorage().printMatrixFormatted();
 				
 		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforCounts());
 		
@@ -655,6 +690,21 @@ public class RoadNetworkAssignmentTest {
 			System.out.printf("Total vehicle-kilometres for zone %s: %f %n", zone, zonalVehicleKilometres);
 			assertEquals("Zonal vehicle kilometres are correct", zonalVehicleKilometres, rna.calculateVehicleKilometres().get(zone), EPSILON);
 		}
+		
+		//TEST TRIP LIST
+		System.out.println("\n\n*** Testing trip list ***");
+		
+		System.out.println("Trip list: ");
+		ArrayList<Trip> tripList = rna.getTripList();
+		Frequency freq = new Frequency();
+		for (Trip trip: tripList) {
+			System.out.println(trip.toString());
+			
+			freq.addValue(trip.getEngine());
+		}
+		
+		System.out.println("Frequencies: ");
+		System.out.println(freq);
 	}
 	
 	@Test
@@ -736,7 +786,7 @@ public class RoadNetworkAssignmentTest {
 					int originFreightZone = (int) mk.getKey(0);
 					int destinationFreightZone = (int) mk.getKey(1);
 					VehicleType vht = VehicleType.values()[(int)mk.getKey(2)]; 
-					List<Route> routeList = rna.getRouteStorageFreight().get(vht).get(originFreightZone, destinationFreightZone);
+					List<Trip> tripList = rna.getTripStorageFreight().get(vht).get(originFreightZone, destinationFreightZone);
 					
 //					int flow = 0;
 //					//sum flows for each vehicle type
@@ -745,7 +795,7 @@ public class RoadNetworkAssignmentTest {
 					//get flow for that vehicle type
 					int flow = fm.getFlow(originFreightZone, destinationFreightZone, vht.ordinal());
 	
-					assertEquals("The number of routes equals the flow", flow, routeList.size());
+					assertEquals("The number of routes equals the flow", flow, tripList.size());
 		}
 		
 		//TEST COUNTERS OF TRIP STARTS/ENDS
@@ -861,22 +911,21 @@ public class RoadNetworkAssignmentTest {
 		assertEquals("asdf", 0.20, (double) rna.getEnergyUnitCosts().get(RoadNetworkAssignment.EngineType.ELECTRICITY), EPSILON);
 		
 		//TEST ROUTE STORAGE
-		System.out.println("\n\n*** Testing route storage ***");
+		System.out.println("\n\n*** Testing trip storage ***");
 
-		//check that the number of routes for a given OD equals the flow (the number of trips in the OD matrix).
-		System.out.println("Route storage: " + rna.getRouteStorage());
+		//check that the number of trips for a given OD equals the flow (the number of trips in the OD matrix).
+		System.out.println("Trip storage: " + rna.getTripStorage());
 		
 		double totalDistance = 0.0;
 		//for each OD
 		for (MultiKey mk: odm.getKeySet()) {
 			String originZone = (String) mk.getKey(0);
 			String destinationZone = (String) mk.getKey(1);
-			List<Route> routeList = rna.getRouteStorage().get(originZone, destinationZone);
+			List<Trip> tripList = rna.getTripStorage().get(originZone, destinationZone);
 			int flow = odm.getFlow(originZone, destinationZone);
-			assertEquals("The number of routes equals the flow", flow, routeList.size());
-			for (Route r: routeList) {
-				r.calculateLength();
-				totalDistance += r.getLength();
+			assertEquals("The number of routes equals the flow", flow, tripList.size());
+			for (Trip t: tripList) {
+				totalDistance += t.getTotalTripLength(roadNetwork.getNodeToAverageAccessEgressDistance());
 			}
 		}
 		System.out.println("Total distance = " + totalDistance);
