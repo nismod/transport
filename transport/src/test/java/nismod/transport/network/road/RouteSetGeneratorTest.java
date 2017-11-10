@@ -231,7 +231,11 @@ public class RouteSetGeneratorTest {
 		//ODMatrix passengerODM = new ODMatrix("./src/main/resources/data/passengerODMtempro.csv");
 		//ODMatrix passengerODM = new ODMatrix("./src/main/resources/data/balancedODMatrixOldLengths.csv");
 
-		RouteSetGenerator routes5 = new RouteSetGenerator(roadNetwork3);
+		//set route generation parameters
+		Properties params = new Properties();
+		params.setProperty("ROUTE_LIMIT", "5");
+		params.setProperty("GENERATION_LIMIT", "10");
+		RouteSetGenerator routes5 = new RouteSetGenerator(roadNetwork3, params);
 		//routes5.generateRouteSetWithLinkElimination(19, 79);
 		//routes5.generateRouteSetWithLinkElimination("E06000046", "E06000046");
 		//routes5.generateRouteSetWithLinkElimination("E06000045", "E06000046", 3);
@@ -323,12 +327,16 @@ public class RouteSetGeneratorTest {
 		DirectedGraph rn = roadNetwork.getNetwork();
 		ODMatrix passengerODM = new ODMatrix("./src/test/resources/testdata/passengerODM.csv");
 
-		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
+		//set route generation parameters
+		Properties params = new Properties();
+		params.setProperty("ROUTE_LIMIT", "5");
+		params.setProperty("GENERATION_LIMIT", "10");
+		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, params);
 		rsg.generateRouteSetWithRandomLinkEliminationRestricted(83, 31);
 		rsg.printChoiceSets();
 		rsg.printStatistics();
 		
-		RouteSetGenerator routes = new RouteSetGenerator(roadNetwork);
+		RouteSetGenerator routes = new RouteSetGenerator(roadNetwork, params);
 
 		/*
 		//routes.generateRouteSetWithLinkElimination(7, 40);
@@ -398,7 +406,7 @@ public class RouteSetGeneratorTest {
 		rsg.saveRoutes("testRoutesASCII.txt",  false);
 		rsg.saveRoutesBinary("testRoutesBinary.dat",  false);
 				
-		RouteSetGenerator rsg2 = new RouteSetGenerator(roadNetwork);
+		RouteSetGenerator rsg2 = new RouteSetGenerator(roadNetwork, params);
 		//rsg2.readRoutes("testRoutesASCII.txt");
 		rsg2.readRoutesWithoutValidityCheck("testRoutesASCII.txt");
 		rsg2.printChoiceSets();
@@ -436,7 +444,11 @@ public class RouteSetGeneratorTest {
 		//TEST ROUTE SET GENERATION
 		System.out.println("\n\n*** Testing route set generation ***");
 
-		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
+		//set route generation parameters
+		Properties params = new Properties();
+		params.setProperty("ROUTE_LIMIT", "5");
+		params.setProperty("GENERATION_LIMIT", "10");
+		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, params);
 		//rsg.generateRouteSet(odm);
 		//rsg.generateRouteSet(31, 82);
 		rsg.generateRouteSetWithRandomLinkEliminationRestricted(31, 82);
@@ -502,7 +514,11 @@ public class RouteSetGeneratorTest {
 
 		FreightMatrix fm = new FreightMatrix(freightMatrixFile);
 		
-		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
+		//set route generation parameters
+		Properties params = new Properties();
+		params.setProperty("ROUTE_LIMIT", "5");
+		params.setProperty("GENERATION_LIMIT", "10");
+		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, params);
 		rsg.generateRouteSetWithRandomLinkEliminationRestricted(48, 67);
 		//rsg.printChoiceSets();
 		rsg.printStatistics();
@@ -549,7 +565,6 @@ public class RouteSetGeneratorTest {
 		assertEquals("The number of route sets generated across freight matrix slices is equal to the total number of route sets", totalRouteSets, totalRouteSetsFromSlices);
 		
 		//set route choice parameters
-		Properties params = new Properties();
 		params.setProperty("TIME", "-1.5");
 		params.setProperty("LENGTH", "-1.0");
 		params.setProperty("INTERSECTIONS", "-0.1");
@@ -603,7 +618,11 @@ public class RouteSetGeneratorTest {
 		//create a road network assignment
 		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null);
 
-		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
+		//set route generation parameters
+		Properties params = new Properties();
+		params.setProperty("ROUTE_LIMIT", "5");
+		params.setProperty("GENERATION_LIMIT", "10");
+		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, params);
 		//rsg.generateRouteSet(odm);
 		//rsg.generateRouteSet(31, 82);
 		rsg.generateRouteSetWithRandomLinkEliminationRestricted(7293, 11913);
@@ -618,7 +637,6 @@ public class RouteSetGeneratorTest {
 		odm.setFlow("E07000202", "E07000203", 1000000);
 		odm.printMatrixFormatted();
 
-		Properties params = new Properties();
 		params.setProperty("TIME", "-1.5");
 		params.setProperty("LENGTH", "-1.5");
 		params.setProperty("INTERSECTIONS", "-0.1");

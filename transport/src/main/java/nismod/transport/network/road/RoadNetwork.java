@@ -20,10 +20,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+
 import org.geotools.data.collection.ListFeatureCollection;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.geotools.brewer.color.BrewerPalette;
+import org.geotools.brewer.color.ColorBrewer;
+import org.geotools.brewer.color.StyleGenerator;
 import org.geotools.data.CachingFeatureSource;
 import org.geotools.data.DefaultTransaction;
 import org.geotools.data.Transaction;
@@ -33,8 +39,11 @@ import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.data.simple.SimpleFeatureStore;
+import org.geotools.factory.CommonFactoryFinder;
+import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
+import org.geotools.filter.function.Classifier;
 import org.geotools.geometry.jts.JTSFactoryFinder;
 import org.geotools.graph.build.feature.FeatureGraphGenerator;
 import org.geotools.graph.build.line.BasicDirectedLineGraphBuilder;
@@ -57,16 +66,24 @@ import org.geotools.referencing.CRS;
 import org.geotools.renderer.GTRenderer;
 import org.geotools.styling.FeatureTypeStyle;
 import org.geotools.styling.Font;
+import org.geotools.styling.LineSymbolizer;
 import org.geotools.styling.PolygonSymbolizer;
+import org.geotools.styling.Rule;
 import org.geotools.styling.SLD;
+import org.geotools.styling.Stroke;
 import org.geotools.styling.Style;
 import org.geotools.styling.StyleBuilder;
+import org.geotools.styling.StyleFactory;
 import org.geotools.styling.Symbolizer;
 import org.geotools.styling.TextSymbolizer;
 import org.geotools.swing.JMapFrame;
 import org.geotools.swing.data.JFileDataStoreChooser;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
+import org.opengis.filter.FilterFactory;
+import org.opengis.filter.FilterFactory2;
+import org.opengis.filter.expression.Function;
+import org.opengis.filter.expression.PropertyName;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.NoSuchAuthorityCodeException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
@@ -77,6 +94,8 @@ import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.MultiLineString;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Point;
+
+import nismod.transport.visualisation.MyStyleGenerator;
 
 /**
  * A routable road network built from the shapefiles.
@@ -298,94 +317,6 @@ public class RoadNetwork {
 	}
 		
 	/**
-	 * Visualises the road network as loaded from shapefiles.
-	 * @param mapTitle Map title for the window.
-	 */
-	public void visualise(String mapTitle) throws IOException {
-
-		//create a map
-		MapContent map = new MapContent();
-		//set windows title
-		map.setTitle(mapTitle);
-
-		//create style for zones
-		StyleBuilder styleBuilder = new StyleBuilder();
-		
-		//create fonts
-		Font font1 = styleBuilder.createFont("Lucida Sans", false, false, 10);
-		Font font2 = styleBuilder.createFont("Arial", false, false, 10);
-		Font zonesFont = styleBuilder.createFont("Arial", false, true, 14);
-				
-		PolygonSymbolizer symbolizer = styleBuilder.createPolygonSymbolizer(Color.DARK_GRAY, Color.BLACK, 1);
-		symbolizer.getFill().setOpacity(styleBuilder.literalExpression(0.5));
-		org.geotools.styling.Style zonesStyle = styleBuilder.createStyle(symbolizer);
-		
-		TextSymbolizer textSymbolizer = styleBuilder.createTextSymbolizer(Color.DARK_GRAY, zonesFont, "NAME");
-		Symbolizer[] syms = new Symbolizer[2];
-		syms[0] = symbolizer; syms[1] = textSymbolizer;
-	
-		Style zonesStyle4 = styleBuilder.createStyle(textSymbolizer);		
-		Style zonesStyle2 = SLD.createPolygonStyle(Color.DARK_GRAY, Color.DARK_GRAY, 0.5f);
-		Style zonesStyle3 = SLD.createPolygonStyle(Color.DARK_GRAY, Color.DARK_GRAY, 0.5f, "NAME", zonesFont);
-		
-		//add zones layer to the map     
-		FeatureLayer zonesLayer = new FeatureLayer(this.zonesShapefile.getFeatureSource(), (Style) zonesStyle3);
-		map.addLayer(zonesLayer);
-
-		//create style for road network
-		Style networkStyle = SLD.createLineStyle(Color.GREEN, 4.0f, "RoadNumber", font2);
-
-		//add network layer to the map
-		FeatureLayer networkLayer;
-		if (newNetworkShapefile != null)
-			networkLayer = new FeatureLayer(this.newNetworkShapefile.getFeatureSource(), networkStyle);
-		else
-			networkLayer = new FeatureLayer(this.networkShapefile.getFeatureSource(), networkStyle);
-		map.addLayer(networkLayer);
-
-		//create style for nodes
-		Style nodesStyle = SLD.createPointStyle("Circle", Color.DARK_GRAY, Color.BLUE, 1, 5, "nodeID", font2);
-
-		//add nodes layer to the map     
-		FeatureLayer nodesLayer = new FeatureLayer(nodesShapefile.getFeatureSource(), nodesStyle);
-		map.addLayer(nodesLayer);					
-
-		//create style for AADF counts
-		Style AADFstyle = SLD.createPointStyle("Circle", Color.DARK_GRAY, Color.YELLOW, 1, 4, null, font2);
-
-		//add counts layer to the map     
-		FeatureLayer AADFlayer = new FeatureLayer(this.AADFshapefile.getFeatureSource(), AADFstyle);
-		map.addLayer(AADFlayer);
-
-		//show the map in JMapFrame
-		JMapFrame show = new JMapFrame(map);
-		
-	  	//list layers and set them as visible + selected
-		show.enableLayerTable(true);
-		//zoom in, zoom out, pan, show all
-		show.enableToolBar(true);
-		//location of cursor and bounds of current
-		show.enableStatusBar(true);
-		//display
-		show.setVisible(true);
-		//maximise window
-		show.setExtendedState(JMapFrame.MAXIMIZED_BOTH);
-
-		//improve rendering
-		GTRenderer     renderer = show.getMapPane().getRenderer();
-		RenderingHints hints    = new RenderingHints(RenderingHints.KEY_ANTIALIASING,
-		                                  RenderingHints.VALUE_ANTIALIAS_ON);    
-	    hints.put(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-	    hints.put(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-	    hints.put(RenderingHints.KEY_DITHERING, RenderingHints.VALUE_DITHER_ENABLE);
-	    hints.put(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-	    hints.put(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-	    hints.put(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
-	    renderer.setJava2DHints(hints);
-	    show.getMapPane().setRenderer(renderer);
-	}
-	
-	/**
 	 * Exports a directed multigraph representation of the network as a shapefile.
 	 * @param fileName The name of the output shapefile.
 	*/
@@ -407,7 +338,7 @@ public class RoadNetwork {
 
 		//dynamically creates a feature type to describe the shapefile contents
 		SimpleFeatureType type = createFeatureType();
-
+		
 		//List<SimpleFeatureType> features = new ArrayList<>();
 		List features = new ArrayList<>();
 
@@ -516,6 +447,150 @@ public class RoadNetwork {
 		} else {
 			System.err.println(typeName + " does not support read/write access");
 		}
+	}
+	
+	/**
+	 * Creates a custom feature collection for the network.
+	*/
+	public SimpleFeatureCollection createNetworkFeatureCollection(Map<Integer, Double> dailyVolume) throws IOException {
+
+		if (network == null) {
+			System.err.println("The network is empty.");
+			return null;
+		}
+		
+		//get an output file name and create the new shapefile
+		//File newFile = getNewShapeFile("networkWithDailyVolume");
+		File newFile = new File("./networkWithDailyVolume.shp");
+
+		ShapefileDataStoreFactory dataStoreFactory = new ShapefileDataStoreFactory();
+		Map<String, Serializable> params = new HashMap<>();
+		params.put("url", newFile.toURI().toURL());
+		params.put("create spatial index", Boolean.TRUE);
+		this.newNetworkShapefile = (ShapefileDataStore) dataStoreFactory.createNewDataStore(params);
+
+		//dynamically creates a feature type to describe the shapefile contents
+		SimpleFeatureType type = createCustomFeatureType();
+		
+		//List<SimpleFeatureType> features = new ArrayList<>();
+		//List features = new ArrayList<>();
+		List<SimpleFeature> features = new ArrayList<>();
+
+		//GeometryFactory will be used to create the geometry attribute of each feature,
+		//using a LineString object for the road link
+		GeometryFactory geometryFactory = JTSFactoryFinder.getGeometryFactory();
+		SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(type);
+
+		Iterator<DirectedEdge> iter = (Iterator<DirectedEdge>) network.getEdges().iterator();
+		while (iter.hasNext()) {
+
+			featureBuilder.reset();
+
+			//create LineString geometry
+			DirectedEdge edge = (DirectedEdge) iter.next();
+			SimpleFeature featA = (SimpleFeature) edge.getNodeA().getObject();
+			SimpleFeature featB = (SimpleFeature) edge.getNodeB().getObject();
+			Point pointA = (Point) featA.getDefaultGeometry();
+			Point pointB = (Point) featB.getDefaultGeometry();
+			Coordinate coordA = pointA.getCoordinate(); 
+			Coordinate coordB = pointB.getCoordinate();
+			Coordinate[] coordinates = {coordA, coordB};
+			LineString roadLink = geometryFactory.createLineString(coordinates);
+
+			//build feature
+			List<Object> objList = new ArrayList();
+			objList.add(roadLink);
+			objList.add(edge.getID());
+			objList.add(edge.getNodeA().getID());
+			objList.add(edge.getNodeB().getID());
+			SimpleFeature feat = (SimpleFeature) edge.getObject();
+			if (feat != null) { //has an object (e.g. count point)
+				objList.add(feat.getAttribute("CP"));
+				objList.add(feat.getAttribute("RoadNumber"));
+				objList.add(feat.getAttribute("iDir"));
+				objList.add(feat.getAttribute("S Ref E"));
+				objList.add(feat.getAttribute("S Ref N"));
+				objList.add(feat.getAttribute("LenNet"));
+				String roadNumber = (String) feat.getAttribute("RoadNumber");
+				if (roadNumber.charAt(0) == 'M') {//motorway
+					objList.add(RoadNetworkAssignment.FREE_FLOW_SPEED_M_ROAD);
+					Double freeFlowTime = (double)feat.getAttribute("LenNet") / RoadNetworkAssignment.FREE_FLOW_SPEED_M_ROAD * 60; //in minutes
+					objList.add(freeFlowTime);
+					objList.add(false); //not a ferry
+				} else if (roadNumber.charAt(0) == 'A') {//A road
+					objList.add(RoadNetworkAssignment.FREE_FLOW_SPEED_A_ROAD);
+					Double freeFlowTime = (double)feat.getAttribute("LenNet") / RoadNetworkAssignment.FREE_FLOW_SPEED_A_ROAD * 60; //in minutes
+					objList.add(freeFlowTime);
+					objList.add(false); //not a ferry
+				} else if (roadNumber.charAt(0) == 'F') {//ferry
+					objList.add(RoadNetworkAssignment.AVERAGE_SPEED_FERRY);
+					Double freeFlowTime = (double)feat.getAttribute("LenNet") / RoadNetworkAssignment.AVERAGE_SPEED_FERRY * 60; //in minutes
+					objList.add(freeFlowTime);
+					objList.add(true); //ferry
+				} else {
+					System.err.println("Unknown road category for edge " + edge.getID());
+					objList.add(null);
+					objList.add(null);
+					objList.add(null);
+				}
+				objList.add(dailyVolume.get(edge.getID()));
+			} else {
+				System.err.println("No object assigned to the edge " + edge.getID());
+			}
+			//SimpleFeature feature = featureBuilder.build(type, objList, Integer.toString(edge.getID()));
+			SimpleFeature feature = SimpleFeatureBuilder.build(type,  objList, Integer.toString(edge.getID()));
+			//System.out.println(feature.toString());
+			features.add(feature);
+		}
+
+//		SimpleFeatureCollection collection = new ListFeatureCollection(type, features);
+//		
+//		return collection;
+		
+		
+		this.newNetworkShapefile.createSchema(type);
+
+		//Write the features to the shapefile using a Transaction
+		Transaction transaction = new DefaultTransaction("create");
+
+		String typeName = this.newNetworkShapefile.getTypeNames()[0];
+		SimpleFeatureSource featureSource = this.newNetworkShapefile.getFeatureSource(typeName);
+		SimpleFeatureType SHAPE_TYPE = featureSource.getSchema();
+		/*
+		 * The Shapefile format has a couple limitations:
+		 * - "the_geom" is always first, and used for the geometry attribute name
+		 * - "the_geom" must be of type Point, MultiPoint, MuiltiLineString, MultiPolygon
+		 * - Attribute names are limited in length 
+		 * - Not all data types are supported (example Timestamp represented as Date)
+		 * 
+		 * Each data store has different limitations so check the resulting SimpleFeatureType.
+		 */
+		System.out.println("SHAPE:"+SHAPE_TYPE);
+
+		if (featureSource instanceof SimpleFeatureStore) {
+			SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;
+			/*
+			 * SimpleFeatureStore has a method to add features from a
+			 * SimpleFeatureCollection object, so the ListFeatureCollection
+			 * class is used to wrap the list of features.
+			 */
+			SimpleFeatureCollection collection = new ListFeatureCollection(type, features);
+			featureStore.setTransaction(transaction);
+			try {
+				featureStore.addFeatures(collection);
+				transaction.commit();
+			} catch (Exception problem) {
+				problem.printStackTrace();
+				transaction.rollback();
+			} finally {
+				transaction.close();
+			}
+		} else {
+			System.err.println(typeName + " does not support read/write access");
+		}
+		
+		return featureSource.getFeatures();
+		
 	}
 	
 	/**
@@ -1133,6 +1208,31 @@ public class RoadNetwork {
 		SimpleFeature sf = (SimpleFeature) edge.getObject();
 		double length = (double) sf.getAttribute("LenNet");
 		return length;
+	}
+	
+	public ShapefileDataStore getZonesShapefile () {
+		
+		return this.zonesShapefile;
+	}
+	
+	public ShapefileDataStore getAADFShapefile () {
+		
+		return this.AADFshapefile;
+	}
+	
+	public ShapefileDataStore getNetworkShapefile () {
+		
+		return this.networkShapefile;
+	}
+	
+	public ShapefileDataStore getNewNetworkShapefile () {
+		
+		return this.newNetworkShapefile;
+	}
+	
+	public ShapefileDataStore getNodesShapefile () {
+		
+		return this.nodesShapefile;
 	}
 	
 	/* (non-Javadoc)
@@ -1949,9 +2049,9 @@ public class RoadNetwork {
 
 		//add attributes in order
 		builder.add("the_geom", LineString.class);
-		builder.add("EdgeID",Integer.class);
-		builder.add("Anode",Integer.class);
-		builder.add("Bnode",Integer.class);
+		builder.add("EdgeID", Integer.class);
+		builder.add("Anode", Integer.class);
+		builder.add("Bnode", Integer.class);
 		builder.add("CP", Integer.class);
 		builder.add("RoadNumber", String.class);
 		builder.length(1).add("iDir", String.class);
@@ -1961,6 +2061,51 @@ public class RoadNetwork {
 		builder.add("FFspeed", Double.class);
 		builder.add("FFtime", Double.class);
 		builder.add("IsFerry", Boolean.class);
+
+		//build the type
+		final SimpleFeatureType SIMPLE_FEATURE_TYPE = builder.buildFeatureType();
+		//return the type
+		return SIMPLE_FEATURE_TYPE;
+	}
+	
+	/**
+	 * Creates a custom schema for the network.
+	 * @return SimpleFeature type.
+	 */
+	public static SimpleFeatureType createCustomFeatureType() {
+
+		SimpleFeatureTypeBuilder builder = new SimpleFeatureTypeBuilder();
+		
+		CoordinateReferenceSystem crs;
+		try {
+			//British National Grid
+			crs = CRS.decode("EPSG:27700", false);
+			//builder.setCRS(DefaultGeographicCRS.WGS84);
+			builder.setCRS(crs);
+		} catch (NoSuchAuthorityCodeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (FactoryException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		builder.setName("Location");
+
+		//add attributes in order
+		builder.add("the_geom", LineString.class);
+		builder.add("EdgeID", Integer.class);
+		builder.add("Anode", Integer.class);
+		builder.add("Bnode", Integer.class);
+		builder.add("CP", Integer.class);
+		builder.add("RoadNumber", String.class);
+		builder.length(1).add("iDir", String.class);
+		builder.add("SRefE", Integer.class);
+		builder.add("SRefN", Integer.class);
+		builder.add("Distance", Double.class);
+		builder.add("FFspeed", Double.class);
+		builder.add("FFtime", Double.class);
+		builder.add("IsFerry", Boolean.class);
+		builder.add("DayVolume", Double.class);
 
 		//build the type
 		final SimpleFeatureType SIMPLE_FEATURE_TYPE = builder.buildFeatureType();

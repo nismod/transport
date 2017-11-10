@@ -59,7 +59,7 @@ public class RoadNetworkAssignment {
 	public static final double BETA_A_ROAD = 4;
 	public static final boolean FLAG_INTRAZONAL_ASSIGNMENT_REPLACEMENT = false; //true means that origin and destination nodes can be the same
 	public static final boolean FLAG_ASTAR_IF_EMPTY_ROUTE_SET = false; //if there is no pre-generated route set for a node pair, try finding a route with aStar
-	public static final int INTERZONAL_TOP_NODES = 10; //how many top nodes (based on gravitated population size) to considers as trip origin/destination
+	public static final int INTERZONAL_TOP_NODES = 5; //how many top nodes (based on gravitated population size) to considers as trip origin/destination
 
 	private Properties params;
 
