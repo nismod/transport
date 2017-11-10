@@ -5,22 +5,57 @@ package nismod.transport.decision;
 
 import static org.junit.Assert.*;
 
+import java.awt.Color;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import javax.swing.BorderFactory;
+import javax.swing.JFrame;
+
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.data.general.DefaultPieDataset;
 import org.junit.Test;
 
 import nismod.transport.demand.DemandModel;
 import nismod.transport.network.road.RoadNetwork;
+import nismod.transport.visualisation.PieChartVisualiser;
 
 /**
  * @author Milan Lovric
  *
  */
 public class VehicleElectrificationTest {
+	
+	public static void main( String[] args ) throws IOException	{
+		
+		Properties props = new Properties();
+		props.setProperty("startYear", "2016");
+		props.setProperty("endYear", "2025");
+		props.setProperty("PETROL", "0.40");
+		props.setProperty("DIESEL", "0.30");
+		props.setProperty("LPG", "0.1");
+		props.setProperty("ELECTRICITY", "0.15");
+		props.setProperty("HYDROGEN", "0.025");
+		props.setProperty("HYBRID", "0.025");
+		VehicleElectrification ve = new VehicleElectrification(props);
+		
+		String title = "Engine Type Fractions (" + ve.getStartYear() + "-" + ve.getEndYear() + ")";
+		DefaultPieDataset pieDataset = ve.getPieDataSet();
+		
+		//visualise intervention as a pie chart
+		PieChartVisualiser pie = new PieChartVisualiser(pieDataset, title, "Set3", false);
+		pie.setVisible(true);
+		pie.saveToPNG("VehicleElectrification2D.png");
+		
+		PieChartVisualiser pie2 = new PieChartVisualiser(pieDataset, title, "BrBG", true);
+		pie2.setVisible(true);
+		pie2.saveToPNG("VehicleElectrification3D.png");
+	}
 	
 	@Test
 	public void test() throws IOException {

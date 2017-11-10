@@ -50,16 +50,29 @@ import nismod.transport.utility.RandomSingleton;
  */
 public class RouteSetGenerator {
 	
-	public static final int ROUTE_LIMIT = 5;
-	public static final int GENERATION_LIMIT = 10;
+	//public static final int ROUTE_LIMIT = 5;
+	//public static final int GENERATION_LIMIT = 10;
 
 	private MultiKeyMap routes;
 	private RoadNetwork roadNetwork;
+	private Properties params;
 	
 	public RouteSetGenerator(RoadNetwork roadNetwork) {
 		
 		this.roadNetwork = roadNetwork;
 		this.routes = new MultiKeyMap();
+	}
+	
+	public RouteSetGenerator(RoadNetwork roadNetwork, Properties params) {
+		
+		this.roadNetwork = roadNetwork;
+		this.params = params;
+		this.routes = new MultiKeyMap();
+	}
+	
+	public void setParams(Properties params) {
+		
+		this.params = params;
 	}
 	
 	/**
@@ -190,6 +203,14 @@ public class RouteSetGenerator {
 	public void generateRouteSetWithRandomLinkEliminationRestricted(int origin, int destination) {
 
 		RandomSingleton rng = RandomSingleton.getInstance();
+		
+		if (params == null) {
+			System.err.println("Route set generator does not have required parameters!");
+			return;
+		}
+		
+		final Integer routeLimit = Integer.parseInt(params.getProperty("ROUTE_LIMIT"));
+		final Integer generationLimit = Integer.parseInt(params.getProperty("GENERATION_LIMIT"));
 
 		//do not generate route set if origin or destination node is blacklisted as no routes are possible
 		if (this.roadNetwork.isBlacklistedAsStartNode(origin) || this.roadNetwork.isBlacklistedAsEndNode(destination)) return;
@@ -237,7 +258,7 @@ public class RouteSetGenerator {
 
 		//if the number of links in the fastest path is smaller than the ROUTE_LIMIT,
 		//then block each link successively (this will generate up to ROUTE_LIMIT routes using less calculations than the random method)
-		if (pathSizeInLinks < ROUTE_LIMIT) {
+		if (pathSizeInLinks < routeLimit) {
 
 			for (Object o: fastestPath.getEdges()) {
 
@@ -275,7 +296,7 @@ public class RouteSetGenerator {
 			}
 		} else { //otherwise use the actual random link elimination method 
 
-			for (int i = 0; i < GENERATION_LIMIT; i++) {
+			for (int i = 0; i < generationLimit; i++) {
 
 				int randomIndex = rng.nextInt(pathSizeInLinks);
 				Object o = fastestPath.getEdges().get(randomIndex); //pick random edge
@@ -311,7 +332,7 @@ public class RouteSetGenerator {
 						System.err.println("Route generated with link elimination does not contain correct origin and destination nodes! Skipping this route.");
 				}
 				RouteSet rs = (RouteSet)routes.get(origin, destination);
-				if (rs.getSize() >= ROUTE_LIMIT) break; //stop if sufficient number of routes has been generated 
+				if (rs.getSize() >= routeLimit) break; //stop if sufficient number of routes has been generated 
 			}
 		}
 	}

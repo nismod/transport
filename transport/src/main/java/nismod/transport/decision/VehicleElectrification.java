@@ -6,8 +6,9 @@ package nismod.transport.decision;
 import java.util.HashMap;
 import java.util.Properties;
 
+import org.jfree.data.general.DefaultPieDataset;
+
 import nismod.transport.demand.DemandModel;
-import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
 
 /**
@@ -100,5 +101,21 @@ public class VehicleElectrification extends Intervention {
 		}
 		
 		this.installed = false;
+	}
+	
+	/**
+	 * Gets engine fractions as a pie dataset to be used for pie charting.
+	 * @return Pie dataset with engine fractions.
+	 */
+	public DefaultPieDataset getPieDataSet() {
+	
+		DefaultPieDataset pieDataset = new DefaultPieDataset();
+				
+		for (RoadNetworkAssignment.EngineType et: RoadNetworkAssignment.EngineType.values()) {
+			double fraction = Double.parseDouble(this.props.getProperty(et.name()));
+			pieDataset.setValue(et.name(), fraction);
+		}
+		
+		return pieDataset;
 	}
 }

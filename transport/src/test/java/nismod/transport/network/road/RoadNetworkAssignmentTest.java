@@ -35,6 +35,7 @@ import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.ODMatrix;
 import nismod.transport.demand.SkimMatrix;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
+import nismod.transport.visualisation.NetworkVisualiser;
 
 /**
  * Tests for the RoadNetworkAssignment class
@@ -57,7 +58,7 @@ public class RoadNetworkAssignmentTest {
 		final String freightZoneToLADfile = "./src/test/resources/minitestdata/freightZoneToLAD.csv";
 		final String freightZoneNearestNodeFile = "./src/test/resources/minitestdata/freightZoneToNearestNode.csv";
 
-		/*
+		
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
 
 		//visualise the shapefiles
@@ -71,10 +72,10 @@ public class RoadNetworkAssignmentTest {
 		ODMatrix odm = new ODMatrix("./src/test/resources/minitestdata/passengerODM.csv");
 		rna.assignPassengerFlows(odm);
 		Map<Integer, Double> dailyVolume = rna.getLinkVolumesInPCU();
-		roadNetwork.visualise("regular");
-		roadNetwork.exportToShapefile("bla");
-		roadNetwork.visualise2("Visualisation", dailyVolume);
-		*/
+		NetworkVisualiser.visualise(roadNetwork, "Network from shapefiles");
+//		roadNetwork.exportToShapefile("bla");
+		NetworkVisualiser.visualise(roadNetwork, "Traffic volume", dailyVolume);
+		
 
 //		final URL zonesUrl2 = new URL("file://src/test/resources/testdata/zones.shp");
 //		final URL networkUrl2 = new URL("file://src/test/resources/testdata/network.shp");
@@ -129,13 +130,14 @@ public class RoadNetworkAssignmentTest {
 		
 		//assign passenger flows
 		long timeNow = System.currentTimeMillis();
-		//roadNetworkAssignment.assignPassengerFlows(passengerODM);
+//		roadNetworkAssignment.assignPassengerFlows(passengerODM);
 		roadNetworkAssignment.assignPassengerFlowsRouteChoice(passengerODM, rsg, params);
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Passenger flows assigned in %d seconds.\n", timeNow / 1000);
 
-		
-		/*
+		//clear the routes
+		rsg.clearRoutes();
+				
 		//sort nodes based on workplace zone population!
 		roadNetwork2.sortGravityNodesFreight();
 		
@@ -146,6 +148,7 @@ public class RoadNetworkAssignmentTest {
 		timeNow = System.currentTimeMillis();
 		//rsg.readRoutes("./src/main/resources/data/routesFreight/routesFreight.txt");
 		//rsg.readRoutesBinary("./src/main/resources/data/freightRoutes/freightRoutes.dat");
+		rsg.readRoutesBinaryWithoutValidityCheck("./src/main/resources/data/freightRoutesTop5/freightRoutesTop5.dat");
 		//rsg.printStatistics();
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Freight routes read in %d seconds.\n", timeNow / 1000);
@@ -153,14 +156,14 @@ public class RoadNetworkAssignmentTest {
 				
  		//assign freight flows
 		timeNow = System.currentTimeMillis();
-		//roadNetworkAssignment.assignFreightFlows(freightMatrix);
-		//roadNetworkAssignment.assignFreightFlowsRouteChoice(freightMatrix, rsg, params);
+//		roadNetworkAssignment.assignFreightFlows(freightMatrix);
+		roadNetworkAssignment.assignFreightFlowsRouteChoice(freightMatrix, rsg, params);
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Freight flows assigned in %d seconds.\n", timeNow / 1000);
 		
 		//roadNetworkAssignment.saveAssignmentResults(2015, "assignment2015passengerAndFreigh.csv");
 
-		 */
+		
 		
 //		//for (int i = 0; i < 5; i++) {
 //		for (int i = 0; i < 1; i++) {
@@ -251,8 +254,8 @@ public class RoadNetworkAssignmentTest {
 		System.out.println(roadNetworkAssignment.calculatePeakLinkDensities());
 		
 		//roadNetworkAssignment.saveAssignmentResults(2015, "assignment2015balanced.csv");
-		roadNetworkAssignment.saveZonalCarEnergyConsumptions(2015, 0.85, "zonalCarEnergyConsumption85.csv");
-		roadNetworkAssignment.saveZonalCarEnergyConsumptions(2015, 0.5, "zonalCarEnergyConsumption50.csv");
+		//roadNetworkAssignment.saveZonalCarEnergyConsumptions(2015, 0.85, "zonalCarEnergyConsumption85.csv");
+		//roadNetworkAssignment.saveZonalCarEnergyConsumptions(2015, 0.5, "zonalCarEnergyConsumption50.csv");
 		
 		System.out.printf("RMSN for counts: %.2f%%", roadNetworkAssignment.calculateRMSNforCounts());
 		System.out.printf("RMSN for freight: %.2f%%", roadNetworkAssignment.calculateRMSNforFreightCounts());
@@ -361,7 +364,12 @@ public class RoadNetworkAssignmentTest {
 		rna.resetLinkVolumes();
 		rna.resetTripStorages();
 
-		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
+		//set route generation parameters
+		Properties params = new Properties();
+		params.setProperty("ROUTE_LIMIT", "5");
+		params.setProperty("GENERATION_LIMIT", "10");
+			
+		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, params);
 		rsg.generateRouteSetForODMatrix(odm);
 		//rsg.generateRouteSet(31, 82);
 		//rsg.generateRouteSetWithRandomLinkEliminationRestricted(31, 82);
@@ -383,7 +391,6 @@ public class RoadNetworkAssignmentTest {
 //		System.out.println(route.getFormattedString());
 		
 		//set route choice parameters
-		Properties params = new Properties();
 		params.setProperty("TIME", "-1.5");
 		params.setProperty("LENGTH", "-1.5");
 		params.setProperty("INTERSECTIONS", "-0.1");

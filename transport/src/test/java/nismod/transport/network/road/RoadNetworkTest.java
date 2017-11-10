@@ -26,6 +26,8 @@ import org.geotools.graph.structure.Node;
 import org.junit.Test;
 import org.opengis.feature.simple.SimpleFeature;
 
+import nismod.transport.visualisation.NetworkVisualiser;
+
 /**
  * Tests for the RoadNetworkAssignment class
  * @author Milan Lovric
@@ -50,14 +52,14 @@ public class RoadNetworkTest {
 		final String freightZoneNearestNodeFile = "./src/test/resources/testdata/freightZoneToNearestNode.csv";
 
 
-		//create a road network
-		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
-
-		//visualise the shapefiles
-		roadNetwork.visualise("Mini Test Area");
-
-		//export to shapefile
-		roadNetwork.exportToShapefile("miniOutputNetwork");
+//		//create a road network
+//		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
+//
+//		//visualise the shapefiles
+//		roadNetwork.visualise("Mini Test Area");
+//
+//		//export to shapefile
+//		roadNetwork.exportToShapefile("miniOutputNetwork");
 
 		final URL zonesUrl2 = new URL("file://src/test/resources/testdata/zones.shp");
 		final URL networkUrl2 = new URL("file://src/test/resources/testdata/network.shp");
@@ -68,7 +70,7 @@ public class RoadNetworkTest {
 		RoadNetwork roadNetwork2 = new RoadNetwork(zonesUrl2, networkUrl2, nodesUrl2, AADFurl2, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
 
 		//visualise the shapefiles
-		roadNetwork2.visualise("Midi Test Area");
+		NetworkVisualiser.visualise(roadNetwork2, "Midi Test Area");
 
 		//create new road link
 		Node fromNode = roadNetwork2.getNodeIDtoNode().get(86);
@@ -80,26 +82,26 @@ public class RoadNetworkTest {
 		roadNetwork2.exportToShapefile("midiOutputNetwork");
 
 		//visualise updated network 
-		roadNetwork2.visualise("Midi Test Area");
+		NetworkVisualiser.visualise(roadNetwork2, "Midi Test Area With New Road Link");
 
-		final URL zonesUrl3 = new URL("file://src/main/resources/data/zones.shp");
-		final URL networkUrl3 = new URL("file://src/main/resources/data/network.shp");
-		final URL nodesUrl3 = new URL("file://src/main/resources/data/nodes.shp");
-		final URL AADFurl3 = new URL("file://src/main/resources/data/AADFdirected2015.shp");
-
-		long timeNow = System.currentTimeMillis();
-
-		//create a road network
-		RoadNetwork roadNetwork3 = new RoadNetwork(zonesUrl3, networkUrl3, nodesUrl3, AADFurl3, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
-
-		timeNow = System.currentTimeMillis() - timeNow;
-		System.out.printf("Road network built in %d seconds.\n", timeNow / 1000);
-
-		//visualise the shapefiles
-		roadNetwork3.visualise("Major Road Network");
-
-		//export to shapefile
-		roadNetwork3.exportToShapefile("fullOutputNetwork");
+//		final URL zonesUrl3 = new URL("file://src/main/resources/data/zones.shp");
+//		final URL networkUrl3 = new URL("file://src/main/resources/data/network.shp");
+//		final URL nodesUrl3 = new URL("file://src/main/resources/data/nodes.shp");
+//		final URL AADFurl3 = new URL("file://src/main/resources/data/AADFdirected2015.shp");
+//
+//		long timeNow = System.currentTimeMillis();
+//
+//		//create a road network
+//		RoadNetwork roadNetwork3 = new RoadNetwork(zonesUrl3, networkUrl3, nodesUrl3, AADFurl3, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
+//
+//		timeNow = System.currentTimeMillis() - timeNow;
+//		System.out.printf("Road network built in %d seconds.\n", timeNow / 1000);
+//
+//		//visualise the shapefiles
+//		NetworkVisualiser.visualise(roadNetwork3, "Major Road Network");
+//
+//		//export to shapefile
+//		roadNetwork3.exportToShapefile("fullOutputNetwork");
 	}
 
 	@Test
