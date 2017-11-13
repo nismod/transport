@@ -10,6 +10,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -459,6 +460,7 @@ public class RouteSetGeneratorTest {
 		DirectedNode node1 = (DirectedNode)roadNetwork.getNodeIDtoNode().get(48);
 		DirectedNode node2 = (DirectedNode)roadNetwork.getNodeIDtoNode().get(82);
 		DirectedEdge edge = (DirectedEdge) node1.getOutEdge(node2);
+		System.out.println(edge.getID());
 		
 		//linkTravelTimes.put(edge.getID(), Double.POSITIVE_INFINITY); //setting maximum travel time does not block or aStar!
 		roadNetwork.removeRoadLink(edge);
@@ -477,6 +479,17 @@ public class RouteSetGeneratorTest {
 		} else {
 			System.err.println("Could not find the shortest path using astar.");
 		}
+		
+		assertNull("RoadPath should be null after removing important edge", rp);
+			
+		rsg.printChoiceSets();
+		//remove routes
+		List<Route> removedRoutes = new ArrayList<Route>();
+		rsg.removeRoutesWithEdge(90, removedRoutes);
+		rsg.printChoiceSets();
+		System.out.println("Removed routes:");
+		System.out.println(removedRoutes);
+		assertTrue("Choice set should be empty", rsg.getRouteSet(31, 82).getChoiceSet().isEmpty());
 	}
 	
 	@Test

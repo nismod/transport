@@ -460,8 +460,8 @@ public class RoadNetwork {
 		}
 		
 		//get an output file name and create the new shapefile
-		//File newFile = getNewShapeFile("networkWithDailyVolume");
-		File newFile = new File("./networkWithDailyVolume.shp");
+		File newFile = getNewShapeFile("networkWithDailyVolume");
+		//File newFile = new File("./networkWithDailyVolume.shp");
 
 		ShapefileDataStoreFactory dataStoreFactory = new ShapefileDataStoreFactory();
 		Map<String, Serializable> params = new HashMap<>();
@@ -661,6 +661,37 @@ public class RoadNetwork {
 		return directedEdge;
 	}
 	
+	
+	/**
+	 * This adds edge (including its object) to the network - useful for restoring from a list of removed edges (e.g. during disruption).
+	 * @param edge
+	 */
+	public void addRoadLink(Edge edge) {
+		
+		int edgeID = edge.getID();
+		
+		BasicDirectedLineGraphBuilder graphBuilder = new BasicDirectedLineGraphBuilder();
+		graphBuilder.importGraph(this.network);
+		
+		graphBuilder.addEdge(edge);
+		edge.setID(edgeID); //override with exact ID
+		
+		this.network = (DirectedGraph) graphBuilder.getGraph();
+		
+		//update
+		this.edgeIDtoEdge.put(edgeID, edge);
+		this.createEdgeToOtherDirectionEdgeMap();
+		
+		//this.addNumberOfLanes(); //this would overwrite edges with unusual number of lanes!
+		//TODO
+		//calculate number of lanes -> this should be stored in edge object 
+		
+		this.calculateFreeFlowTravelTime(); //could be just for new edge
+				
+		//update node blacklists
+		this.createNodeBlacklists();
+	}
+	
 	public void removeRoadLink(Edge edge) {
 		
 		BasicDirectedLineGraphBuilder graphBuilder = new BasicDirectedLineGraphBuilder();
@@ -672,7 +703,7 @@ public class RoadNetwork {
 		
 		//update
 		this.edgeIDtoEdge.remove(edge.getID());
-		this.numberOfLanes.remove(edge.getID());
+		//this.numberOfLanes.remove(edge.getID()); //TODO leave it for now, until edge object contains this information
 		
 		//update node blacklists
 		this.createNodeBlacklists();
