@@ -193,6 +193,18 @@ public class Route {
 		return this.edges.isEmpty();
 	}
 	
+	public boolean contains(Edge edge) {
+		
+		return this.edges.contains(edge);
+	}
+	
+	public boolean contains(int edgeID) {
+		
+		for (Edge edge: this.edges)
+			if (edge.getID() == edgeID) return true;
+		return false;
+	}
+
 	public Double getLength() {
 		
 		return length;

@@ -17,6 +17,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -122,6 +123,45 @@ public class RouteSetGenerator {
 			routes.put(origin, destination, set);
 		}
 		set.addRouteWithoutValidityCheck(route);
+	}
+	
+	/**
+	 * Removes all the routes that contain a given edge (used for disruption).
+	 * @param edgeID Edge ID.
+	 */
+	public void removeRoutesWithEdge(int edgeID) {
+		
+		for (Object value: routes.values()) {
+			RouteSet rs = (RouteSet)value;
+			//iterate over all routes using iterator (to allow concurrent modification)
+			Iterator<Route> iter = rs.getChoiceSet().iterator();
+			while (iter.hasNext()) {
+			    Route route = iter.next();
+			    if (route.contains(edgeID)) iter.remove();
+			}
+			//rs.getChoiceSet().removeIf(route -> route.contains(edgeID)); //or alternatively, with Java 8
+		}
+	}
+	
+	/**
+	 * Removes all the routes that contain a given edge and store in the list.
+	 * @param edgeID Edge ID.
+	 * @param removedRoutes List of removed routes.
+	 */
+	public void removeRoutesWithEdge(int edgeID, List<Route> removedRoutes) {
+		
+		for (Object value: routes.values()) {
+			RouteSet rs = (RouteSet)value;
+			//iterate over all routes using iterator (to allow concurrent modification)
+			Iterator<Route> iter = rs.getChoiceSet().iterator();
+			while (iter.hasNext()) {
+			    Route route = iter.next();
+			    if (route.contains(edgeID)) {
+			    	removedRoutes.add(route);
+			    	iter.remove();
+			    }
+			}
+		}
 	}
 	
 	/**
@@ -778,6 +818,14 @@ public class RouteSetGenerator {
 		return totalRoutes;
 	}
 	
+	/**
+	 * Getter method for the road network.
+	 * @return Road network.
+	 */
+	public RoadNetwork getRoadNetwork() {
+		
+		return this.roadNetwork;
+	}
 
 	/**
 	 * Calculates utilities for all the routes in all the route sets.
