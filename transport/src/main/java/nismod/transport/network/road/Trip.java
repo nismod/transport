@@ -6,6 +6,7 @@ import java.util.Map;
 import org.geotools.graph.structure.DirectedNode;
 
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
+import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 
 /**
@@ -18,6 +19,7 @@ public class Trip {
 	private VehicleType vehicle;
 	private EngineType engine;
 	private Route route;
+	private TimeOfDay hour;
 	
 	public Trip() {
 		// TODO Auto-generated constructor stub
@@ -29,11 +31,12 @@ public class Trip {
 	 * @param engine Engine type.
 	 * @param route Route.
 	 */
-	public Trip(VehicleType vehicle, EngineType engine, Route route) {
+	public Trip(VehicleType vehicle, EngineType engine, Route route, TimeOfDay hour) {
 		
 		this.vehicle = vehicle;
 		this.engine = engine;
 		this.route = route;
+		this.hour = hour;
 	}
 	
 	/**
@@ -103,6 +106,15 @@ public class Trip {
 		return this.route;
 	}
 	
+	/**
+	 * Getter method for the time of day.
+	 * @return Time of day.
+	 */
+	public TimeOfDay getTimeOfDay() {
+		
+		return this.hour;
+	}
+	
 	public double getTotalTripLength(HashMap<Integer, Double> averageAccessEgressMap) {
 
 		Double length = this.route.getLength();
@@ -139,6 +151,8 @@ public class Trip {
 	public String toString() {
 		
 		StringBuilder sb = new StringBuilder();
+		sb.append(this.hour);
+		sb.append(", ");
 		sb.append(this.vehicle);
 		sb.append(", ");
 		sb.append(this.engine);

@@ -72,15 +72,24 @@ public class RoadNetworkAssignment {
 	public static enum VehicleType {
 		CAR(0), ARTIC(1), RIGID(2), VAN(3);
 		private int value; 
-		private VehicleType(int value) { this.value = value;} 
+		private VehicleType(int value) { this.value = value; } 
 	};
-
+		
+	public static enum TimeOfDay {
+		MIDNIGHT(0), ONEAM(1), TWOAM(2), THREEAM(3), FOURAM(4), FIVEAM(5), SIXAM(6), SEVENAM(7), EIGHTAM(8), NINEAM(9), TENAM(10), ELEVENAM(11),
+		NOON (12), ONEPM(13), TWOPM(14), THREEPM(15), FOURPM(16), FIVEPM(17), SIXPM(18), SEVENPM(19), EIGHTPM(20), NINEPM(21), TENPM(22), ELEVENPM(23);
+		private int value; 
+		private TimeOfDay(int value) { this.value = value; }
+	}
+	
 	private HashMap<VehicleType, Double> vehicleTypeToPCU;
 
 	private HashMap<EngineType, Double> energyUnitCosts;
 	private HashMap<EngineType, Double> energyConsumptionsPer100km;
 	private HashMap<EngineType, Double> engineTypeFractions;
 
+	private HashMap<TimeOfDay, Double> timeOfDayDistribution;
+	
 	private RoadNetwork roadNetwork;
 
 	private Map<Integer, Double> linkVolumesInPCU;
@@ -117,7 +126,7 @@ public class RoadNetworkAssignment {
 	 * @param areaCodeProbabilities Probabilities of trips starting/ending in each census output area.
 	 * @param workplaceZoneProbabilities Probabilities of freight trips starting/ending in each census output area.
 	 */
-	public RoadNetworkAssignment(RoadNetwork roadNetwork, HashMap<EngineType, Double> energyUnitCosts, HashMap<EngineType, Double> engineTypeFractions, HashMap<Integer, Double> defaultLinkTravelTime, HashMap<String, Double> areaCodeProbabilities, HashMap<String, Double> workplaceZoneProbabilities) {
+	public RoadNetworkAssignment(RoadNetwork roadNetwork, HashMap<EngineType, Double> energyUnitCosts, HashMap<EngineType, Double> engineTypeFractions, HashMap<TimeOfDay, Double> timeOfDayDistribution, HashMap<Integer, Double> defaultLinkTravelTime, HashMap<String, Double> areaCodeProbabilities, HashMap<String, Double> workplaceZoneProbabilities) {
 
 		this.roadNetwork = roadNetwork;
 		this.linkVolumesInPCU = new HashMap<Integer, Double>();
@@ -272,6 +281,35 @@ public class RoadNetworkAssignment {
 			this.engineTypeFractions.put(EngineType.HYDROGEN, 0.025);
 			this.engineTypeFractions.put(EngineType.HYBRID, 0.025);
 		}
+		
+		if (timeOfDayDistribution != null) this.timeOfDayDistribution = timeOfDayDistribution; //TODO check it adds up to one!
+		else {
+			this.timeOfDayDistribution = new HashMap<TimeOfDay, Double>();
+			this.timeOfDayDistribution.put(TimeOfDay.MIDNIGHT, 0.0015);
+			this.timeOfDayDistribution.put(TimeOfDay.ONEAM, 0.0006);
+			this.timeOfDayDistribution.put(TimeOfDay.TWOAM, 0.0005);
+			this.timeOfDayDistribution.put(TimeOfDay.THREEAM, 0.0005);
+			this.timeOfDayDistribution.put(TimeOfDay.FOURAM, 0.0017);
+			this.timeOfDayDistribution.put(TimeOfDay.FIVEAM, 0.0087);
+			this.timeOfDayDistribution.put(TimeOfDay.SIXAM, 0.0236);
+			this.timeOfDayDistribution.put(TimeOfDay.SEVENAM, 0.0636);
+			this.timeOfDayDistribution.put(TimeOfDay.EIGHTAM, 0.1046);
+			this.timeOfDayDistribution.put(TimeOfDay.NINEAM, 0.0679);
+			this.timeOfDayDistribution.put(TimeOfDay.TENAM, 0.0587);
+			this.timeOfDayDistribution.put(TimeOfDay.ELEVENAM, 0.0589);
+			this.timeOfDayDistribution.put(TimeOfDay.NOON, 0.0570);
+			this.timeOfDayDistribution.put(TimeOfDay.ONEPM, 0.0549);
+			this.timeOfDayDistribution.put(TimeOfDay.TWOPM, 0.0581);
+			this.timeOfDayDistribution.put(TimeOfDay.THREEPM, 0.0774);
+			this.timeOfDayDistribution.put(TimeOfDay.FOURPM, 0.0834);
+			this.timeOfDayDistribution.put(TimeOfDay.FIVEPM, 0.0942);
+			this.timeOfDayDistribution.put(TimeOfDay.SIXPM, 0.0708);
+			this.timeOfDayDistribution.put(TimeOfDay.SEVENPM, 0.0456);
+			this.timeOfDayDistribution.put(TimeOfDay.EIGHTPM, 0.0284);
+			this.timeOfDayDistribution.put(TimeOfDay.NINEPM, 0.0187);
+			this.timeOfDayDistribution.put(TimeOfDay.TENPM, 0.0136);
+			this.timeOfDayDistribution.put(TimeOfDay.ELEVENPM, 0.0071);
+		}
 	}
 
 	/** 
@@ -323,9 +361,23 @@ public class RoadNetworkAssignment {
 
 			for (int i=0; i<flow; i++) {
 				
-				//choose vehicle
+				//choose time of day
 				double cumulativeProbability = 0.0;
 				double random = rng.nextDouble();
+				TimeOfDay hour = null;
+				for (Map.Entry<TimeOfDay, Double> entry : timeOfDayDistribution.entrySet()) {
+					TimeOfDay key = entry.getKey();
+					Double value = entry.getValue();	
+					cumulativeProbability += value;
+					if (Double.compare(cumulativeProbability, random) > 0) {
+						hour = key;
+						break;
+					}
+				}
+				
+				//choose vehicle
+				cumulativeProbability = 0.0;
+				random = rng.nextDouble();
 				EngineType engine = null;
 				for (Map.Entry<EngineType, Double> entry : engineTypeFractions.entrySet()) {
 					EngineType key = entry.getKey();
@@ -444,7 +496,7 @@ public class RoadNetworkAssignment {
 					//System.out.printf("Sum of edge lengths: %.3f\n\n", sum);
 
 					//store trip in trip list
-					Trip trip = new Trip(VehicleType.CAR, engine, foundRoute);
+					Trip trip = new Trip(VehicleType.CAR, engine, foundRoute, hour);
 					this.tripList.add(trip);
 			
 					//store trip in trip storage
@@ -521,9 +573,23 @@ public class RoadNetworkAssignment {
 
 			for (int i=0; i<flow; i++) {
 				
-				//choose vehicle
+				//choose time of day
 				double cumulativeProbability = 0.0;
 				double random = rng.nextDouble();
+				TimeOfDay hour = null;
+				for (Map.Entry<TimeOfDay, Double> entry : timeOfDayDistribution.entrySet()) {
+					TimeOfDay key = entry.getKey();
+					Double value = entry.getValue();	
+					cumulativeProbability += value;
+					if (Double.compare(cumulativeProbability, random) > 0) {
+						hour = key;
+						break;
+					}
+				}
+				
+				//choose vehicle
+				cumulativeProbability = 0.0;
+				random = rng.nextDouble();
 				EngineType engine = null;
 				for (Map.Entry<EngineType, Double> entry : engineTypeFractions.entrySet()) {
 					EngineType key = entry.getKey();
@@ -682,7 +748,7 @@ public class RoadNetworkAssignment {
 				}
 
 				//store trip in trip list
-				Trip trip = new Trip(VehicleType.CAR, engine, chosenRoute);
+				Trip trip = new Trip(VehicleType.CAR, engine, chosenRoute, hour);
 				this.tripList.add(trip);
 				
 				//store trip in trip storage
@@ -749,9 +815,23 @@ public class RoadNetworkAssignment {
 
 			for (int i=0; i<flow; i++) {
 				
-				//choose vehicle
+				//choose time of day
 				double cumulativeProbability = 0.0;
 				double random = rng.nextDouble();
+				TimeOfDay hour = null;
+				for (Map.Entry<TimeOfDay, Double> entry : timeOfDayDistribution.entrySet()) {
+					TimeOfDay key = entry.getKey();
+					Double value = entry.getValue();	
+					cumulativeProbability += value;
+					if (Double.compare(cumulativeProbability, random) > 0) {
+						hour = key;
+						break;
+					}
+				}
+				
+				//choose vehicle
+				cumulativeProbability = 0.0;
+				random = rng.nextDouble();
 				EngineType engine = null;
 				for (Map.Entry<EngineType, Double> entry : engineTypeFractions.entrySet()) {
 					EngineType key = entry.getKey();
@@ -920,7 +1000,7 @@ public class RoadNetworkAssignment {
 					//System.out.printf("Sum of edge lengths: %.3f\n\n", sum);
 
 					//store trip in trip list
-					Trip trip = new Trip(vht, engine, foundRoute);
+					Trip trip = new Trip(vht, engine, foundRoute, hour);
 					this.tripList.add(trip);
 					
 					//store trip in trip storage
@@ -987,9 +1067,23 @@ public class RoadNetworkAssignment {
 
 			for (int i=0; i<flow; i++) {
 				
-				//choose vehicle
+				//choose time of day
 				double cumulativeProbability = 0.0;
 				double random = rng.nextDouble();
+				TimeOfDay hour = null;
+				for (Map.Entry<TimeOfDay, Double> entry : timeOfDayDistribution.entrySet()) {
+					TimeOfDay key = entry.getKey();
+					Double value = entry.getValue();	
+					cumulativeProbability += value;
+					if (Double.compare(cumulativeProbability, random) > 0) {
+						hour = key;
+						break;
+					}
+				}
+				
+				//choose vehicle
+				cumulativeProbability = 0.0;
+				random = rng.nextDouble();
 				EngineType engine = null;
 				for (Map.Entry<EngineType, Double> entry : engineTypeFractions.entrySet()) {
 					EngineType key = entry.getKey();
@@ -1259,7 +1353,7 @@ public class RoadNetworkAssignment {
 				}
 			
 				//store trip in trip list
-				Trip trip = new Trip(vht, engine, chosenRoute);
+				Trip trip = new Trip(vht, engine, chosenRoute, hour);
 				this.tripList.add(trip);
 				
 				//store trip in trip storage

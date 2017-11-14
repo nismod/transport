@@ -165,7 +165,7 @@ public class DemandModel {
 				System.out.printf("%d year has not been assigned to the network, so assigning it now.\n", fromYear);
 				
 				//create a network assignment and assign the demand
-				rna = new RoadNetworkAssignment(this.roadNetwork, this.yearToEnergyUnitCosts.get(fromYear), this.yearToEngineTypeFractions.get(fromYear), null, null, null);
+				rna = new RoadNetworkAssignment(this.roadNetwork, this.yearToEnergyUnitCosts.get(fromYear), this.yearToEngineTypeFractions.get(fromYear), null, null, null, null);
 				rna.assignFlowsAndUpdateLinkTravelTimesIterated(this.yearToPassengerODMatrix.get(fromYear), this.yearToFreightODMatrix.get(fromYear), LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);
 				yearToRoadNetworkAssignment.put(fromYear, rna);
 	
@@ -279,10 +279,10 @@ public class DemandModel {
 
 				if (predictedRna == null)
 					//assign predicted year - using link travel times from fromYear
-					predictedRna = new RoadNetworkAssignment(this.roadNetwork, this.yearToEnergyUnitCosts.get(predictedYear), this.yearToEngineTypeFractions.get(predictedYear), rna.getLinkTravelTimes(), rna.getAreaCodeProbabilities(), rna.getWorkplaceZoneProbabilities());
+					predictedRna = new RoadNetworkAssignment(this.roadNetwork, this.yearToEnergyUnitCosts.get(predictedYear), this.yearToEngineTypeFractions.get(predictedYear), null, rna.getLinkTravelTimes(), rna.getAreaCodeProbabilities(), rna.getWorkplaceZoneProbabilities());
 				else
 					//using latest link travel times
-					predictedRna = new RoadNetworkAssignment(this.roadNetwork, this.yearToEnergyUnitCosts.get(predictedYear), this.yearToEngineTypeFractions.get(predictedYear), predictedRna.getLinkTravelTimes(), predictedRna.getAreaCodeProbabilities(), predictedRna.getWorkplaceZoneProbabilities());
+					predictedRna = new RoadNetworkAssignment(this.roadNetwork, this.yearToEnergyUnitCosts.get(predictedYear), this.yearToEngineTypeFractions.get(predictedYear), null, predictedRna.getLinkTravelTimes(), predictedRna.getAreaCodeProbabilities(), predictedRna.getWorkplaceZoneProbabilities());
 
 				predictedRna.assignFlowsAndUpdateLinkTravelTimesIterated(predictedPassengerODMatrix, predictedFreightODMatrix, LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);
 				
@@ -336,7 +336,7 @@ public class DemandModel {
 				predictedFreightODMatrix.printMatrixFormatted();
 				
 				//assign predicted year again using latest link travel times
-				predictedRna = new RoadNetworkAssignment(this.roadNetwork, this.yearToEnergyUnitCosts.get(predictedYear), this.yearToEngineTypeFractions.get(predictedYear), predictedRna.getLinkTravelTimes(), predictedRna.getAreaCodeProbabilities(), predictedRna.getWorkplaceZoneProbabilities());
+				predictedRna = new RoadNetworkAssignment(this.roadNetwork, this.yearToEnergyUnitCosts.get(predictedYear), this.yearToEngineTypeFractions.get(predictedYear), null, predictedRna.getLinkTravelTimes(), predictedRna.getAreaCodeProbabilities(), predictedRna.getWorkplaceZoneProbabilities());
 				//predictedRna.resetLinkVolumes();
 				//predictedRna.assignPassengerFlows(predictedPassengerODMatrix);
 				//predictedRna.updateLinkTravelTimes(ALPHA_LINK_TRAVEL_TIME_AVERAGING);

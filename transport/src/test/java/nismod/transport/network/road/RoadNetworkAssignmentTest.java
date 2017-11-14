@@ -59,7 +59,6 @@ public class RoadNetworkAssignmentTest {
 		final String freightZoneToLADfile = "./src/test/resources/minitestdata/freightZoneToLAD.csv";
 		final String freightZoneNearestNodeFile = "./src/test/resources/minitestdata/freightZoneToNearestNode.csv";
 
-		
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
 
 		//visualise the shapefiles
@@ -95,7 +94,7 @@ public class RoadNetworkAssignmentTest {
 		//export to shapefile
 		//roadNetwork2.exportToShapefile("outputNetwork");
 		
-		RoadNetworkAssignment roadNetworkAssignment = new RoadNetworkAssignment(roadNetwork2, null, null, null, null, null);
+		RoadNetworkAssignment roadNetworkAssignment = new RoadNetworkAssignment(roadNetwork2, null, null, null, null, null, null);
 		
 		//ODMatrix passengerODM = new ODMatrix("./src/test/resources/testdata/passengerODM.csv");
 		//ODMatrix passengerODM = new ODMatrix("./src/main/resources/data/passengerODMfull.csv");
@@ -147,7 +146,8 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("The number of petrol trips with Java streams: " + countOfPetrolTrips2);
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Parallel stream processing in %d milliseconds.\n", timeNow);
-		
+
+
 		//clear the routes
 		rsg.clearRoutes();
 				
@@ -176,7 +176,7 @@ public class RoadNetworkAssignmentTest {
 		
 		//roadNetworkAssignment.saveAssignmentResults(2015, "assignment2015passengerAndFreigh.csv");
 
-		
+
 		
 //		//for (int i = 0; i < 5; i++) {
 //		for (int i = 0; i < 1; i++) {
@@ -209,6 +209,14 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("Frequencies: ");
 		System.out.println(freq);
 		
+		freq = new Frequency();
+		for (Trip trip: tripList) {
+			//System.out.println(trip.toString());
+			freq.addValue(trip.getTimeOfDay());
+		}
+		System.out.println("Frequencies: ");
+		System.out.println(freq);
+				
 		System.out.println("Link volumes in PCU: ");
 		System.out.println(roadNetworkAssignment.getLinkVolumesInPCU());	
 		
@@ -280,7 +288,7 @@ public class RoadNetworkAssignmentTest {
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlfixedEdgeIDs);	
 		
 		//create a road network assignment
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null);
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null);
 		
 		//assign passenger flows
 		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
@@ -437,7 +445,7 @@ public class RoadNetworkAssignmentTest {
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlfixedEdgeIDs);
 		
 		//create a road network assignment
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null);
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null);
 
 		//assign passenger flows
 		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
@@ -756,7 +764,7 @@ public class RoadNetworkAssignmentTest {
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
 
 		//create a road network assignment
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null);
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null);
 
 		//assign passenger flows
 		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
@@ -880,7 +888,7 @@ public class RoadNetworkAssignmentTest {
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
 
 		//create a road network assignment
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null);
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null);
 
 		//assign passenger flows
 		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
