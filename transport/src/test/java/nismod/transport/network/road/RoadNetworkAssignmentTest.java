@@ -34,6 +34,7 @@ import com.google.inject.matcher.Matchers;
 import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.ODMatrix;
 import nismod.transport.demand.SkimMatrix;
+import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.visualisation.NetworkVisualiser;
 
@@ -66,16 +67,6 @@ public class RoadNetworkAssignmentTest {
 		
 		//export to shapefile
 		//roadNetwork.exportToShapefile("miniOutputNetwork")
-
-
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null);
-		ODMatrix odm = new ODMatrix("./src/test/resources/minitestdata/passengerODM.csv");
-		rna.assignPassengerFlows(odm);
-		Map<Integer, Double> dailyVolume = rna.getLinkVolumesInPCU();
-		NetworkVisualiser.visualise(roadNetwork, "Network from shapefiles");
-//		roadNetwork.exportToShapefile("bla");
-		NetworkVisualiser.visualise(roadNetwork, "Traffic volume", dailyVolume);
-		
 
 //		final URL zonesUrl2 = new URL("file://src/test/resources/testdata/zones.shp");
 //		final URL networkUrl2 = new URL("file://src/test/resources/testdata/network.shp");
@@ -135,6 +126,28 @@ public class RoadNetworkAssignmentTest {
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Passenger flows assigned in %d seconds.\n", timeNow / 1000);
 
+		//do some trip list processing
+		timeNow = System.currentTimeMillis();
+		ArrayList<Trip> tripList = roadNetworkAssignment.getTripList();
+		int count = 0;
+		for (Trip t: tripList) 
+			if (t.getEngine() == EngineType.PETROL) count++;
+		System.out.println("The number of petrol trips: " + count);
+		timeNow = System.currentTimeMillis() - timeNow;
+		System.out.printf("Collection processing in %d milliseconds.\n", timeNow);
+		
+		timeNow = System.currentTimeMillis();
+		Long countOfPetrolTrips = tripList.stream().filter(t -> t.getEngine() == EngineType.PETROL).count();
+		System.out.println("The number of petrol trips with Java streams: " + countOfPetrolTrips);
+		timeNow = System.currentTimeMillis() - timeNow;
+		System.out.printf("Stream processing in %d milliseconds.\n", timeNow);
+		
+		timeNow = System.currentTimeMillis();
+		Long countOfPetrolTrips2 = tripList.parallelStream().filter(t -> t.getEngine() == EngineType.PETROL).count();
+		System.out.println("The number of petrol trips with Java streams: " + countOfPetrolTrips2);
+		timeNow = System.currentTimeMillis() - timeNow;
+		System.out.printf("Parallel stream processing in %d milliseconds.\n", timeNow);
+		
 		//clear the routes
 		rsg.clearRoutes();
 				
@@ -186,23 +199,8 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("Zone to nodes mapping: ");
 		System.out.println(roadNetwork2.getZoneToNodes());
 		
-		/*
-		
-		System.out.println("Route storage: ");
-		//System.out.println(roadNetworkAssigment.getPathStorage());
-		System.out.println(roadNetworkAssignment.getRouteStorage().keySet());
-		for (Object mk: roadNetworkAssignment.getRouteStorage().keySet()) {
-			System.out.println(mk);
-			System.out.println("origin = " + ((MultiKey)mk).getKey(0));
-			System.out.println("destination = " + ((MultiKey)mk).getKey(1));
-			List list = (List) roadNetworkAssignment.getRouteStorage().get((String)((MultiKey)mk).getKey(0), (String)((MultiKey)mk).getKey(1));
-			System.out.println("number of paths = " + list.size());
-		}
-		
-		*/
-		
 		System.out.println("Trip list: ");
-		ArrayList<Trip> tripList = roadNetworkAssignment.getTripList();
+		tripList = roadNetworkAssignment.getTripList();
 		Frequency freq = new Frequency();
 		for (Trip trip: tripList) {
 			//System.out.println(trip.toString());
@@ -526,10 +524,10 @@ public class RoadNetworkAssignmentTest {
 		for (MultiKey mk: odm.getKeySet()) {
 			String originZone = (String) mk.getKey(0);
 			String destinationZone = (String) mk.getKey(1);
-			List<Trip> tripList = rna.getTripStorage().get(originZone, destinationZone);
+			List<Trip> tripListOD = rna.getTripStorage().get(originZone, destinationZone);
 			int flow = odm.getFlow(originZone, destinationZone);
-			assertEquals("The number of routes equals the flow", flow, tripList.size());
-			for (Trip t: tripList) {
+			assertEquals("The number of routes equals the flow", flow, tripListOD.size());
+			for (Trip t: tripListOD) {
 				totalDistance += t.getTotalTripLength(roadNetwork.getNodeToAverageAccessEgressDistance());
 			}
 		}
@@ -712,6 +710,17 @@ public class RoadNetworkAssignmentTest {
 		
 		System.out.println("Frequencies: ");
 		System.out.println(freq);
+		
+		int count = 0;
+		for (Trip t: tripList) 
+			if (t.getEngine() == EngineType.PETROL) count++;
+		System.out.println("The number of petrol trips: " + count);
+		
+		Long countOfPetrolTrips = tripList.stream().filter(t -> t.getEngine() == EngineType.PETROL).count();
+		System.out.println("The number of petrol trips with Java streams: " + countOfPetrolTrips);
+		
+		Long countOfPetrolTrips2 = tripList.parallelStream().filter(t -> t.getEngine() == EngineType.PETROL).count();
+		System.out.println("The number of petrol trips with parallel Java streams: " + countOfPetrolTrips2);
 	}
 	
 	@Test

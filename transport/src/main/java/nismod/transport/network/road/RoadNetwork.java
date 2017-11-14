@@ -533,7 +533,9 @@ public class RoadNetwork {
 					objList.add(null);
 					objList.add(null);
 				}
-				objList.add(dailyVolume.get(edge.getID()));
+				Double volume = dailyVolume.get(edge.getID());
+				if (volume == null) volume = 0.0;
+				objList.add(volume);
 			} else {
 				System.err.println("No object assigned to the edge " + edge.getID());
 			}

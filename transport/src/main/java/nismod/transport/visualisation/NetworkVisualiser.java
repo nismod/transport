@@ -121,7 +121,7 @@ public class NetworkVisualiser {
 		show.setIconImage(icon.getImage());
 		
 		show.setDefaultCloseOperation(JMapFrame.EXIT_ON_CLOSE);
-
+		
 		//improve rendering
 		GTRenderer renderer = show.getMapPane().getRenderer();
 		RenderingHints hints = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);    

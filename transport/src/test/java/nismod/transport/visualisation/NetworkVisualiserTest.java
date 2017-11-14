@@ -37,5 +37,6 @@ public class NetworkVisualiserTest {
 		Map<Integer, Double> dailyVolume = rna.getLinkVolumesInPCU();
 		NetworkVisualiser.visualise(roadNetwork, "Network from shapefiles");
 		NetworkVisualiser.visualise(roadNetwork, "Network with traffic volume", dailyVolume);
+		NetworkVisualiser.visualise(roadNetwork, "Network with count comparison", rna.calculateAbsDifferenceCarCounts());
 	}
 }

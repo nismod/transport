@@ -2031,7 +2031,16 @@ public class RoadNetworkAssignment {
 
 		return difference;
 	}
-
+	
+	/**
+	 * Getter method for the road network.
+	 * @return Road network.
+	 */
+	public RoadNetwork getRoadNetwork() {
+		
+		return this.roadNetwork;
+	}
+	
 	/**
 	 * Saves assignment results to output file.
 	 * @param year Year of the assignment.
@@ -2652,6 +2661,69 @@ public class RoadNetworkAssignment {
 			MultiKeyMap<Integer, List<Trip>> map = new MultiKeyMap<Integer, List<Trip>>();
 			this.tripStorageFreight.put(vht, map);
 		}
+	}
+	
+	/**
+	 * Calculates absolute differences between car volumes and traffic counts.
+	 * For combined counts, takes the average of two absolute differences.
+	 * @return Absolute differences between car volumes and traffic counts.
+	 */
+	public HashMap<Integer, Double> calculateAbsDifferenceCarCounts () {
+		
+		HashMap<Integer, Double> absoluteDifferences = new HashMap<Integer, Double>();
+		
+		Iterator iter = this.roadNetwork.getNetwork().getEdges().iterator();
+		ArrayList<Long> checkedCP = new ArrayList<Long>(); 
+
+		while (iter.hasNext()) {
+			DirectedEdge edge = (DirectedEdge) iter.next();
+			SimpleFeature sf = (SimpleFeature) edge.getObject(); 
+			String roadNumber = (String) sf.getAttribute("RoadNumber");
+
+			if (roadNumber.charAt(0) != 'M' && roadNumber.charAt(0) != 'A') continue; //ferry
+
+			Long countPoint = (long) sf.getAttribute("CP");
+
+			String direction = (String) sf.getAttribute("iDir");
+			char dir = direction.charAt(0);
+
+			//ignore combined counts 'C' for now
+			if (dir == 'N' || dir == 'S' || dir == 'W' || dir == 'E') {
+
+				long carCount = (long) sf.getAttribute("FdCar");
+				long carVolume;
+				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edge.getID());
+				if (carVolumeFetch == null) carVolume = 0;
+				else 						carVolume = carVolumeFetch;
+
+				absoluteDifferences.put(edge.getID(), 1.0 * Math.abs(carCount - carVolume));
+			}
+
+			if (dir == 'C' && !checkedCP.contains(countPoint)) { //for combined counts check if this countPoint has been processed already
+
+				//get combined count
+				long carCount = (long) sf.getAttribute("FdCar");
+
+				//get volumes for this direction
+				long carVolume;
+				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edge.getID());
+				if (carVolumeFetch == null) carVolume = 0;
+				else 						carVolume = carVolumeFetch;
+
+				//get volumes for other direction (if exists)
+				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(edge.getID());
+				long carVolume2;
+				Integer carVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edge2);
+				if (carVolumeFetch2 == null) carVolume2 = 0;
+				else 						 carVolume2 = carVolumeFetch2;
+
+				long absoluteDifference = Math.abs(carCount - carVolume - carVolume2) / 2;
+				checkedCP.add(countPoint);
+				absoluteDifferences.put(edge.getID(), 1.0 * absoluteDifference);
+			}
+		}
+
+		return absoluteDifferences;
 	}
 
 	/**
