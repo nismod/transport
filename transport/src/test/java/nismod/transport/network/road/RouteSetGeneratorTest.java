@@ -523,7 +523,7 @@ public class RouteSetGeneratorTest {
 		
 		
 		//create a road network assignment
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null);
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null);
 
 		FreightMatrix fm = new FreightMatrix(freightMatrixFile);
 		
@@ -629,7 +629,7 @@ public class RouteSetGeneratorTest {
 		System.out.printf("Node %d edges to node %d: %s \n", node1.getID(), node2.getID(), node1.getEdges(node2));
 
 		//create a road network assignment
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null);
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null);
 
 		//set route generation parameters
 		Properties params = new Properties();
