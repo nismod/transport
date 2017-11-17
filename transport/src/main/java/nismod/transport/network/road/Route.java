@@ -3,6 +3,7 @@ package nismod.transport.network.road;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import org.geotools.graph.structure.DirectedEdge;
@@ -21,6 +22,7 @@ public class Route {
 	//default route-choice parameters
 	public static final double PARAM_TIME = -1.5;
 	public static final double PARAM_LENGTH = -1.0;
+	public static final double PARAM_COST = -3.6;
 	public static final double PARAM_INTERSECTIONS = -0.1;
 	
 	//initial route size for arraylist
@@ -31,6 +33,7 @@ public class Route {
 	private ArrayList<DirectedEdge> edges;
 	private Double length;
 	private Double time;
+	private Double cost;
 	private Double utility;
 	private Node singleNode;
 	
@@ -135,7 +138,7 @@ public class Route {
 	 * Calculates the route travel time based on link travel times.
 	 * @param linkTravelTime Link travel times.
 	 */
-	public void calculateTravelTime(HashMap<Integer, Double> linkTravelTime) {
+	public void calculateTravelTime(Map<Integer, Double> linkTravelTime) {
 		
 		double travelTime = 0.0;
 		for (DirectedEdge edge: edges) {
@@ -146,7 +149,7 @@ public class Route {
 	}
 	
 	/**
-	 * Calculates the lenght of the route.
+	 * Calculates the length of the route.
 	 */
 	public void calculateLength(){
 	
@@ -160,11 +163,25 @@ public class Route {
 	}
 	
 	/**
+	 * Calculates the cost of the route.
+	 */
+	public void calculateCost(double consumptionPer100km, double unitCost){
+	
+		double cost = 0.0;
+		for (DirectedEdge edge: edges) {
+			SimpleFeature sf = (SimpleFeature) edge.getObject();
+			double len = (double) sf.getAttribute("LenNet"); //in [km]
+			cost += len / 100 * consumptionPer100km * unitCost ;
+		}
+		this.cost = cost;
+	}
+	
+	/**
 	 * Calculates the utility of the route.
 	 * @param linkTravelTime Link travel times.
 	 * @param params Route choice parameters.
 	 */
-	public void calculateUtility(HashMap<Integer, Double> linkTravelTime, Properties params) {
+	public void calculateUtility(Map<Integer, Double> linkTravelTime, Properties params) {
 		
 		if (this.length == null) this.calculateLength();
 		if (this.time == null) this.calculateTravelTime(linkTravelTime);

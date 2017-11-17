@@ -64,11 +64,12 @@ public class SkimMatrixFreight {
 	 * @param vehicleType Vehicle type.
 	 * @return Origin-destination cost.
 	 */
-	public double getCost(int originZone, int destinationZone, int vehicleType) {
+	public Double getCost(int originZone, int destinationZone, int vehicleType) {
 		
 		Double cost = (Double) matrix.get(originZone, destinationZone, vehicleType);
-		if (cost == null) return 0.0;
-		else return cost;
+		//if (cost == null) return 0.0;
+		//else return cost;
+		return cost;
 	}
 	
 	/**
@@ -120,7 +121,7 @@ public class SkimMatrixFreight {
 		for (int o: firstKeyList)
 			for (int d: secondKeyList)
 				for (int v=1; v<=3; v++)
-					if (this.getCost(o, d, v) > 0.0) //print only if there is a cost
+					if (this.getCost(o, d, v) != null && this.getCost(o, d, v) > 0.0) //print only if there is a cost
 						System.out.printf("%6d%12d%12d%7.2f\n", o, d, v, this.getCost(o, d, v));
 	}
 		

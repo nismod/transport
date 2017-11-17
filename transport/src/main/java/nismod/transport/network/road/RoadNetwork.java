@@ -813,7 +813,7 @@ public class RoadNetwork {
 	 * @param linkTravelTime Link travel times to use for edge weighting.
 	 * @return AStar functions.
 	 */
-	public MyAStarIterator.AStarFunctions getAstarFunctionsTime(Node destinationNode, HashMap<Integer, Double> linkTravelTime) {
+	public MyAStarIterator.AStarFunctions getAstarFunctionsTime(Node destinationNode, Map<Integer, Double> linkTravelTime) {
 
 		MyAStarIterator.AStarFunctions aStarFunctions = new  MyAStarIterator.AStarFunctions(destinationNode){
 			
@@ -877,7 +877,7 @@ public class RoadNetwork {
 	 * @param linkTravelTime The map with link travel times.
 	 * @return Fastest path.
 	 */
-	public RoadPath getFastestPath(DirectedNode from, DirectedNode to, HashMap<Integer, Double> linkTravelTime) {
+	public RoadPath getFastestPath(DirectedNode from, DirectedNode to, Map<Integer, Double> linkTravelTime) {
 
 		if (linkTravelTime == null) linkTravelTime = new HashMap<Integer, Double>();
 		//if (linkTravelTime == null) linkTravelTime = this.freeFlowTravelTime;
