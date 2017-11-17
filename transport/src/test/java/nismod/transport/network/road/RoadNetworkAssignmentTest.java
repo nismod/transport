@@ -34,7 +34,9 @@ import com.google.inject.matcher.Matchers;
 import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.ODMatrix;
 import nismod.transport.demand.SkimMatrix;
+import nismod.transport.demand.SkimMatrixFreight;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
+import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.visualisation.NetworkVisualiser;
 
@@ -223,8 +225,8 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("Free-flow travel times: ");
 		System.out.println(roadNetworkAssignment.getLinkFreeFlowTravelTimes());	
 		
-		System.out.println("Travel times: ");
-		System.out.println(roadNetworkAssignment.getLinkTravelTimes());	
+		System.out.println("Peak-hour travel times: ");
+		System.out.println(roadNetworkAssignment.getLinkTravelTimes().get(TimeOfDay.EIGHTAM));	
 		
 		System.out.println("Time skim matrix:");
 		SkimMatrix timeSkimMatrix = new SkimMatrix();
@@ -239,16 +241,13 @@ public class RoadNetworkAssignmentTest {
 		distanceSkimMatrix.printMatrixFormatted();
 		//distanceSkimMatrix.saveMatrixFormatted("distanceSkimMatrix.csv");
 		
-		System.out.println("Distance skim matrix from routes:");
-		distanceSkimMatrix = roadNetworkAssignment.calculateDistanceSkimMatrixFromRoutes();
-		distanceSkimMatrix.printMatrixFormatted();
+		System.out.println("Distance skim matrix for freight:");
+		SkimMatrixFreight distanceSkimMatrixFreight = roadNetworkAssignment.calculateDistanceSkimMatrixFreight();
+		distanceSkimMatrixFreight.printMatrixFormatted();
 		//distanceSkimMatrix.saveMatrixFormatted("distanceSkimMatrix.csv");
 				
 		System.out.println("Total energy consumptions:");
 		System.out.println(roadNetworkAssignment.calculateEnergyConsumptions());
-		
-		System.out.println("Total travelled distance matrix:");
-		roadNetworkAssignment.calculateTotalTravelledDistanceMatrixFromTripStorage().printMatrixFormatted();
 		
 		System.out.println("Zonal car energy consumptions:");
 		System.out.println(roadNetworkAssignment.calculateZonalCarEnergyConsumptions(0.5));
@@ -326,31 +325,35 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("\n\n*** Testing trip storage ***");
 
 		//check that the number of trips for a given OD equals the flow (the number of trips in the OD matrix).
-		System.out.println("Trip storage: " + rna.getTripStorage());
-		
 		//for each OD
 		for (MultiKey mk: odm.getKeySet()) {
 			String originZone = (String) mk.getKey(0);
 			String destinationZone = (String) mk.getKey(1);
-			List<Trip> tripList = rna.getTripStorage().get(originZone, destinationZone);
+			List<Trip> tripList = rna.getTripList();
+			int counter = 0;
+			for (Trip trip: tripList) {
+				String originLAD = trip.getOriginLAD(roadNetwork.getNodeToZone());
+				String destinationLAD = trip.getDestinationLAD(roadNetwork.getNodeToZone());
+				if (originZone.equals(originLAD) && destinationZone.equals(destinationLAD)) counter++;
+			}
 			int flow = odm.getFlow(originZone, destinationZone);
-			assertEquals("The number of paths equals the flow", flow, tripList.size());
+			assertEquals("The number of paths equals the flow", flow, counter);
 		}
-
+		
 		//TEST LINK TRAVEL TIMES
 		System.out.println("\n\n*** Testing link travel times ***");
 
 		//before assignment link travel times should be equal to free flow travel times
 		System.out.println(rna.getLinkFreeFlowTravelTimes());
-		System.out.println(rna.getLinkTravelTimes());
-		assertTrue(rna.getLinkFreeFlowTravelTimes().equals(rna.getLinkTravelTimes()));
+		System.out.println(rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM)); //get times for the peak hour
+		assertTrue(rna.getLinkFreeFlowTravelTimes().equals(rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM)));
 
 		//after assignment the link travel times should be greater or equal than the free flow travel times.
 		rna.updateLinkTravelTimes();
 		System.out.println(rna.getLinkFreeFlowTravelTimes());
-		System.out.println(rna.getLinkTravelTimes());
-		for (int key: rna.getLinkTravelTimes().keySet()) {
-			double actual = rna.getLinkTravelTimes().get(key);
+		System.out.println(rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM));
+		for (int key: rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM).keySet()) {
+			double actual = rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM).get(key);
 			double freeFlow = rna.getLinkFreeFlowTravelTimes().get(key);
 			//assertTrue(actual >= freeFlow);
 			//assertThat(actual, greaterThanOrEqualTo(freeFlow));
@@ -422,6 +425,52 @@ public class RoadNetworkAssignmentTest {
 		}
 		System.out.println("Total vehicle-kilometres: " + vehicleKilometres);
 		assertEquals("Vehicle kilometres are correct", vehicleKilometres, rna.calculateVehicleKilometres().get("E06000045"), EPSILON);
+		
+		System.out.println("Trip list: ");
+		ArrayList<Trip> tripList = rna.getTripList();
+		Frequency freq = new Frequency();
+		for (Trip trip: tripList) {
+			System.out.println(trip.toString());
+			freq.addValue(trip.getEngine());
+		}
+		
+		System.out.println("Frequencies for engine type: ");
+		System.out.println(freq);
+		
+		//frequencies per time of day
+		freq = new Frequency();
+		for (Trip trip: tripList) {
+			freq.addValue(trip.getTimeOfDay());
+		}
+		System.out.println("Frequencies for time of day: ");
+		System.out.println(freq);
+		
+		System.out.println("Link volumes in PCU per time of day: ");
+		Map<TimeOfDay, Map<Integer, Double>> map = rna.calculateLinkVolumeInPCUPerTimeOfDay(tripList);
+		System.out.println(map);
+		
+		rna.updateLinkTravelTimes();
+	
+		System.out.println("Link travel times per time of day: ");
+		Map<TimeOfDay, Map<Integer, Double>> times = rna.getLinkTravelTimes();
+		System.out.println(times);
+		for (TimeOfDay hour: TimeOfDay.values()) {
+			System.out.println(hour);
+			System.out.println(times.get(hour));
+		}
+	
+		//compare volumes in PCU calculated during the assignment with those calculated from the trip list
+		Map<Integer, Double> linkVolumesInPCU = rna.getLinkVolumesInPCU();
+		for (Integer edgeID: linkVolumesInPCU.keySet()) {
+			double sum = 0.0;
+			for (TimeOfDay hour: map.keySet()) {
+				Map<Integer, Double> hourlyMap = map.get(hour);
+				Double volume = hourlyMap.get(edgeID);
+				if (volume == null) volume = 0.0;
+				sum += volume;
+			}
+		assertEquals("PCU flows for each edge are correct", linkVolumesInPCU.get(edgeID), sum, EPSILON);
+		}
 	}
 
 	@Test
@@ -521,31 +570,21 @@ public class RoadNetworkAssignmentTest {
 		
 		assertEquals("asdf", 0.20, (double) rna.getEnergyUnitCosts().get(RoadNetworkAssignment.EngineType.ELECTRICITY), EPSILON);
 		
-		//TEST TRIP STORAGE
-		System.out.println("\n\n*** Testing trip storage ***");
-
-		//check that the number of routes for a given OD equals the flow (the number of trips in the OD matrix).
-		System.out.println("Trip storage: " + rna.getTripStorage());
-		
-		double totalDistance = 0.0;
+		//check that the number of trips for a given OD equals the flow (the number of trips in the OD matrix).
 		//for each OD
 		for (MultiKey mk: odm.getKeySet()) {
 			String originZone = (String) mk.getKey(0);
 			String destinationZone = (String) mk.getKey(1);
-			List<Trip> tripListOD = rna.getTripStorage().get(originZone, destinationZone);
-			int flow = odm.getFlow(originZone, destinationZone);
-			assertEquals("The number of routes equals the flow", flow, tripListOD.size());
-			for (Trip t: tripListOD) {
-				totalDistance += t.getTotalTripLength(roadNetwork.getNodeToAverageAccessEgressDistance());
+			List<Trip> tripList = rna.getTripList();
+			int counter = 0;
+			for (Trip trip: tripList) {
+				String originLAD = trip.getOriginLAD(roadNetwork.getNodeToZone());
+				String destinationLAD = trip.getDestinationLAD(roadNetwork.getNodeToZone());
+				if (originZone.equals(originLAD) && destinationZone.equals(destinationLAD)) counter++;
 			}
+			int flow = odm.getFlow(originZone, destinationZone);
+			assertEquals("The number of paths equals the flow", flow, counter);
 		}
-		System.out.println("Total distance = " + totalDistance);
-
-		System.out.println("Distance skim matrix: ");
-		rna.calculateDistanceSkimMatrix().printMatrixFormatted();
-		
-		System.out.println("Time skim matrix: ");
-		rna.calculateTimeSkimMatrix().printMatrixFormatted();
 		
 		//TEST COUNTERS OF TRIP STARTS/ENDS
 		System.out.println("\n\n*** Testing trip starts/ends ***");
@@ -574,31 +613,32 @@ public class RoadNetworkAssignmentTest {
 
 		//before assignment link travel times should be equal to free flow travel times
 		System.out.println(rna.getLinkFreeFlowTravelTimes());
-		System.out.println(rna.getLinkTravelTimes());
-		assertTrue(rna.getLinkFreeFlowTravelTimes().equals(rna.getLinkTravelTimes()));
+		System.out.println(rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM)); //get times for the peak hour
+		assertTrue(rna.getLinkFreeFlowTravelTimes().equals(rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM)));
 
 		//check weighted averaging for travel times
 		rna.updateLinkTravelTimes(0.9);
-		HashMap<Integer, Double> averagedTravelTimes = rna.getCopyOfLinkTravelTimes();
+		Map<TimeOfDay, Map<Integer, Double>> averagedTravelTimes = rna.getCopyOfLinkTravelTimes();
 		rna.updateLinkTravelTimes();
-		for (int key: averagedTravelTimes.keySet()) {
-			double freeFlow = rna.getLinkFreeFlowTravelTimes().get(key);
-			double updated = rna.getLinkTravelTimes().get(key);
-			double averaged = averagedTravelTimes.get(key);
-			assertEquals("Averaged travel time should be correct", 0.9*updated + 0.1*freeFlow, averaged, EPSILON);
+		for (TimeOfDay hour: TimeOfDay.values())
+			for (int key: averagedTravelTimes.get(hour).keySet()) {
+				double freeFlow = rna.getLinkFreeFlowTravelTimes().get(key);
+				double updated = rna.getLinkTravelTimes().get(hour).get(key);
+				double averaged = averagedTravelTimes.get(hour).get(key);
+				assertEquals("Averaged travel time should be correct", 0.9*updated + 0.1*freeFlow, averaged, EPSILON);
 		}
 		
 		//after assignment and update the link travel times should be greater or equal than the free flow travel times.
 		System.out.println(rna.getLinkFreeFlowTravelTimes());
-		System.out.println(rna.getLinkTravelTimes());
-		for (int key: rna.getLinkTravelTimes().keySet()) {
-			if (rna.getLinkTravelTimes().get(key) < rna.getLinkFreeFlowTravelTimes().get(key)) {
+		System.out.println(rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM));
+		for (int key: rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM).keySet()) {
+			if (rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM).get(key) < rna.getLinkFreeFlowTravelTimes().get(key)) {
 				System.err.println("For link id = " + key);
 				System.err.println("Link volume in PCU: " + rna.getLinkVolumesInPCU().get(key));
 				System.err.println("Link travel time " + rna.getLinkTravelTimes().get(key));
 				System.err.println("Free-flow Link travel time " + rna.getLinkFreeFlowTravelTimes().get(key));
 			}
-			double actual = rna.getLinkTravelTimes().get(key);
+			double actual = rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM).get(key);
 			double freeFlow = rna.getLinkFreeFlowTravelTimes().get(key);
 			//assertTrue(actual >= freeFlow);
 			//assertThat(actual, greaterThanOrEqualTo(freeFlow));
@@ -606,16 +646,12 @@ public class RoadNetworkAssignmentTest {
 			//if freeFlow time is larger, it is only due to calculation error, so it has to be very close:
 			if (freeFlow > actual)	assertThat(actual, closeTo(freeFlow, PRECISION));
 		}
-						
+		
 		System.out.println("Time skim matrix: ");
 		rna.calculateTimeSkimMatrix().printMatrixFormatted();
 		
 		System.out.println("Distance skim matrix:");
 		rna.calculateDistanceSkimMatrix().printMatrixFormatted();
-		
-		System.out.println("Total travelled distance matrix from route storage:");
-		rna.calculateTotalTravelledDistanceMatrixFromTripStorage().printMatrixFormatted();
-		System.out.println("Sum of all distances: " + rna.calculateTotalTravelledDistanceMatrixFromTripStorage().getSumOfCosts());
 		
 		System.out.println("Zonal car energy consumptions:");
 		System.out.println(rna.calculateZonalCarEnergyConsumptions(0.85));
@@ -667,10 +703,7 @@ public class RoadNetworkAssignmentTest {
 		
 		//rsg.calculateAllUtilities(rna.getLinkTravelTimes(), params);
 		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
-		
-		System.out.println("Total travelled distance from route storage: ");
-		rna.calculateTotalTravelledDistanceMatrixFromTripStorage().printMatrixFormatted();
-				
+
 		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforCounts());
 		
 		//TEST VEHICLE KILOMETRES
@@ -729,6 +762,17 @@ public class RoadNetworkAssignmentTest {
 		
 		Long countOfPetrolTrips2 = tripList.parallelStream().filter(t -> t.getEngine() == EngineType.PETROL).count();
 		System.out.println("The number of petrol trips with parallel Java streams: " + countOfPetrolTrips2);
+		
+		//frequencies per time of day
+		freq = new Frequency();
+		for (Trip trip: tripList) {
+			freq.addValue(trip.getTimeOfDay());
+		}
+		System.out.println("Frequencies per time of day: ");
+		System.out.println(freq);
+		
+		System.out.println("Link volumes in PCU per time of day: ");
+		System.out.println(rna.calculateLinkVolumeInPCUPerTimeOfDay(tripList));
 	}
 	
 	@Test
@@ -798,30 +842,6 @@ public class RoadNetworkAssignmentTest {
 			assertEquals("The sum of probabilities for zone " + zone + " is 1.0", 1.0, probabilitySum, EPSILON);
 		}
 		
-		//TEST ROUTE STORAGE FOR FREIGHT
-		System.out.println("\n\n*** Testing route storage for freight ***");
-		
-		//check that the number of paths for a given OD equals the flow (the number of trips in the OD matrix).
-		//System.out.println(rna.getRouteStorageFreight());
-				
-		//for each OD
-		for (MultiKey mk: fm.getKeySet()) {
-					//System.out.println(mk);
-					int originFreightZone = (int) mk.getKey(0);
-					int destinationFreightZone = (int) mk.getKey(1);
-					VehicleType vht = VehicleType.values()[(int)mk.getKey(2)]; 
-					List<Trip> tripList = rna.getTripStorageFreight().get(vht).get(originFreightZone, destinationFreightZone);
-					
-//					int flow = 0;
-//					//sum flows for each vehicle type
-//					for (RoadNetworkAssignment.VehicleType vehType: RoadNetworkAssignment.VehicleType.values())
-//						flow += fm.getFlow(originFreightZone, destinationFreightZone, vehType.ordinal());
-					//get flow for that vehicle type
-					int flow = fm.getFlow(originFreightZone, destinationFreightZone, vht.ordinal());
-	
-					assertEquals("The number of routes equals the flow", flow, tripList.size());
-		}
-		
 		//TEST COUNTERS OF TRIP STARTS/ENDS
 		System.out.println("\n\n*** Testing freight trip starts/ends ***");
 		System.out.println(rna.calculateFreightLADTripStarts());
@@ -832,25 +852,25 @@ public class RoadNetworkAssignmentTest {
 
 		//before assignment link travel times should be equal to free flow travel times
 		System.out.println(rna.getLinkFreeFlowTravelTimes());
-		System.out.println(rna.getLinkTravelTimes());
-		assertTrue(rna.getLinkFreeFlowTravelTimes().equals(rna.getLinkTravelTimes()));
+		System.out.println(rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM));
+		assertTrue(rna.getLinkFreeFlowTravelTimes().equals(rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM)));
 
 		//check weighted averaging for travel times
 		rna.updateLinkTravelTimes(0.9);
-		HashMap<Integer, Double> averagedTravelTimes = rna.getCopyOfLinkTravelTimes();
+		Map<Integer, Double> averagedTravelTimes = rna.getCopyOfLinkTravelTimes().get(TimeOfDay.EIGHTAM);
 		rna.updateLinkTravelTimes();
 		for (int key: averagedTravelTimes.keySet()) {
 			double freeFlow = rna.getLinkFreeFlowTravelTimes().get(key);
-			double updated = rna.getLinkTravelTimes().get(key);
+			double updated = rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM).get(key);
 			double averaged = averagedTravelTimes.get(key);
 			assertEquals("Averaged travel time should be correct", 0.9*updated + 0.1*freeFlow, averaged, EPSILON);
 		}
 		
 		//after assignment and update the link travel times should be greater or equal than the free flow travel times.
 		System.out.println(rna.getLinkFreeFlowTravelTimes());
-		System.out.println(rna.getLinkTravelTimes());
-		for (int key: rna.getLinkTravelTimes().keySet()) {			
-			double actual = rna.getLinkTravelTimes().get(key);
+		System.out.println(rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM));
+		for (int key: rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM).keySet()) {			
+			double actual = rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM).get(key);
 			double freeFlow = rna.getLinkFreeFlowTravelTimes().get(key);
 			//assertTrue(actual >= freeFlow);
 			//assertThat(actual, greaterThanOrEqualTo(freeFlow));
@@ -865,8 +885,43 @@ public class RoadNetworkAssignmentTest {
 		rna.calculateCostSkimMatrixFreight().printMatrixFormatted();
 		System.out.println("Time skim matrix for freight (in min):");
 		rna.calculateTimeSkimMatrixFreight().printMatrixFormatted();
+		System.out.println("Distance skim matrix for freight:");
+		SkimMatrixFreight distanceSkimMatrixFreight = rna.calculateDistanceSkimMatrixFreight();
+		distanceSkimMatrixFreight.printMatrixFormatted();
 		
 		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforFreightCounts());
+		
+		//TEST TRIP LIST
+		System.out.println("\n\n*** Testing trip list ***");
+		
+		System.out.println("Trip list: ");
+		ArrayList<Trip> tripList = rna.getTripList();
+		Frequency freq = new Frequency();
+		for (Trip trip: tripList) {
+			System.out.println(trip.toString());
+			freq.addValue(trip.getVehicle());
+		}
+		
+		System.out.println("Frequencies: ");
+		System.out.println(freq);
+		
+		//check that the number of trips for a given OD equals the flow (the number of trips in the OD matrix).
+		//for each OD
+		for (MultiKey mk: fm.getKeySet()) {
+			int origin = (int) mk.getKey(0);
+			int destination = (int) mk.getKey(1);
+			int vehicle = (int) mk.getKey(2);
+			
+			int counter = 0;
+			for (Trip trip: tripList) {
+				int originZone = trip.getFreightOriginZone();
+				int destinationZone = trip.getFreightDestinationZone();
+				VehicleType vht = trip.getVehicle(); 
+				if (originZone == origin && destinationZone == destination && vehicle == vht.getValue()) counter++;
+			}
+			int flow = fm.getFlow(origin, destination, vehicle);
+			assertEquals("The number of paths equals the flow", flow, counter);
+		}
 	}
 	
 	//@Test
@@ -934,26 +989,6 @@ public class RoadNetworkAssignmentTest {
 		
 		assertEquals("asdf", 0.20, (double) rna.getEnergyUnitCosts().get(RoadNetworkAssignment.EngineType.ELECTRICITY), EPSILON);
 		
-		//TEST ROUTE STORAGE
-		System.out.println("\n\n*** Testing trip storage ***");
-
-		//check that the number of trips for a given OD equals the flow (the number of trips in the OD matrix).
-		System.out.println("Trip storage: " + rna.getTripStorage());
-		
-		double totalDistance = 0.0;
-		//for each OD
-		for (MultiKey mk: odm.getKeySet()) {
-			String originZone = (String) mk.getKey(0);
-			String destinationZone = (String) mk.getKey(1);
-			List<Trip> tripList = rna.getTripStorage().get(originZone, destinationZone);
-			int flow = odm.getFlow(originZone, destinationZone);
-			assertEquals("The number of routes equals the flow", flow, tripList.size());
-			for (Trip t: tripList) {
-				totalDistance += t.getTotalTripLength(roadNetwork.getNodeToAverageAccessEgressDistance());
-			}
-		}
-		System.out.println("Total distance = " + totalDistance);
-		
 		//TEST COUNTERS OF TRIP STARTS/ENDS
 		System.out.println("\n\n*** Testing trip starts/ends ***");
 		
@@ -981,25 +1016,32 @@ public class RoadNetworkAssignmentTest {
 
 		//before assignment link travel times should be equal to free flow travel times
 		System.out.println(rna.getLinkFreeFlowTravelTimes());
-		System.out.println(rna.getLinkTravelTimes());
-		assertTrue(rna.getLinkFreeFlowTravelTimes().equals(rna.getLinkTravelTimes()));
+		System.out.println(rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM)); //get times for the peak hour
+		assertTrue(rna.getLinkFreeFlowTravelTimes().equals(rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM)));
 
 		//check weighted averaging for travel times
 		rna.updateLinkTravelTimes(0.9);
-		HashMap<Integer, Double> averagedTravelTimes = rna.getCopyOfLinkTravelTimes();
+		Map<TimeOfDay, Map<Integer, Double>> averagedTravelTimes = rna.getCopyOfLinkTravelTimes();
 		rna.updateLinkTravelTimes();
-		for (int key: averagedTravelTimes.keySet()) {
-			double freeFlow = rna.getLinkFreeFlowTravelTimes().get(key);
-			double updated = rna.getLinkTravelTimes().get(key);
-			double averaged = averagedTravelTimes.get(key);
-			assertEquals("Averaged travel time should be correct", 0.9*updated + 0.1*freeFlow, averaged, EPSILON);
+		for (TimeOfDay hour: TimeOfDay.values())
+			for (int key: averagedTravelTimes.get(hour).keySet()) {
+				double freeFlow = rna.getLinkFreeFlowTravelTimes().get(key);
+				double updated = rna.getLinkTravelTimes().get(hour).get(key);
+				double averaged = averagedTravelTimes.get(hour).get(key);
+				assertEquals("Averaged travel time should be correct", 0.9*updated + 0.1*freeFlow, averaged, EPSILON);
 		}
 		
 		//after assignment and update the link travel times should be greater or equal than the free flow travel times.
 		System.out.println(rna.getLinkFreeFlowTravelTimes());
-		System.out.println(rna.getLinkTravelTimes());
-		for (int key: rna.getLinkTravelTimes().keySet()) {			
-			double actual = rna.getLinkTravelTimes().get(key);
+		System.out.println(rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM));
+		for (int key: rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM).keySet()) {
+			if (rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM).get(key) < rna.getLinkFreeFlowTravelTimes().get(key)) {
+				System.err.println("For link id = " + key);
+				System.err.println("Link volume in PCU: " + rna.getLinkVolumesInPCU().get(key));
+				System.err.println("Link travel time " + rna.getLinkTravelTimes().get(key));
+				System.err.println("Free-flow Link travel time " + rna.getLinkFreeFlowTravelTimes().get(key));
+			}
+			double actual = rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM).get(key);
 			double freeFlow = rna.getLinkFreeFlowTravelTimes().get(key);
 			//assertTrue(actual >= freeFlow);
 			//assertThat(actual, greaterThanOrEqualTo(freeFlow));

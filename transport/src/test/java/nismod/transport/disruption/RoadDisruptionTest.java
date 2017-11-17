@@ -84,7 +84,7 @@ public class RoadDisruptionTest {
 		rsg.calculateAllUtilities(roadNetwork.getFreeFlowTravelTime(), params);
 		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
 
-		System.out.println(rna.getTripStorage());
+		System.out.println(rna.getTripList());
 		
 		Map<Integer, Double> dailyVolume = rna.getLinkVolumesInPCU();
 		System.out.println(dailyVolume);

@@ -10,7 +10,7 @@ import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 
 /**
- * This class stores information about a trip (what kind of vehicle was used and which route was taken). 
+ * This class stores information about a trip. 
  * @author Milan Lovric
  *
  */
@@ -20,23 +20,29 @@ public class Trip {
 	private EngineType engine;
 	private Route route;
 	private TimeOfDay hour;
-	
-	public Trip() {
-		// TODO Auto-generated constructor stub
-	}
-	
+	private Integer origin; //for freight trips
+	private Integer destination; //for freight trips
+		
 	/**
-	 * Constructor.
+	 * Constructor for a trip. Origin and destination are used for freight trips (according to DfT's BYFM zonal coding).
+	 * Origin and destination for passenger car trips are 0 as their correct origin and destination zone can be 
+	 * obtained using the first and the last node of the route.
 	 * @param vehicle Vehicle type.
 	 * @param engine Engine type.
 	 * @param route Route.
 	 */
-	public Trip(VehicleType vehicle, EngineType engine, Route route, TimeOfDay hour) {
+	public Trip(VehicleType vehicle, EngineType engine, Route route, TimeOfDay hour, Integer origin, Integer destination) {
 		
 		this.vehicle = vehicle;
 		this.engine = engine;
 		this.route = route;
 		this.hour = hour;
+		this.origin = origin;
+		this.destination = destination;
+		
+		if (vehicle == VehicleType.CAR)
+			if (origin != 0 || destination != 0)
+				System.err.println("Origin and destination for non-freight trips must be 0 as their ODs should be fetched from the route.");
 	}
 	
 	/**
@@ -62,7 +68,7 @@ public class Trip {
 	 * @param nodeToZoneMap Mapping from nodes to zones.
 	 * @return Trip origin zone.
 	 */
-	public String getTripOriginZone(Map<Integer, String> nodeToZoneMap) {
+	public String getOriginLAD(Map<Integer, String> nodeToZoneMap) {
 		
 		int originNode = this.getOriginNode().getID();
 		return nodeToZoneMap.get(originNode);
@@ -73,10 +79,28 @@ public class Trip {
 	 * @param nodeToZoneMap Mapping from nodes to zones.
 	 * @return Trip destination zone.
 	 */
-	public String getTripDestinationZone(Map<Integer, String> nodeToZoneMap) {
+	public String getDestinationLAD(Map<Integer, String> nodeToZoneMap) {
 		
 		int destinationNode = this.getDestinationNode().getID();
 		return nodeToZoneMap.get(destinationNode);
+	}
+	
+	/**
+	 * Gets freight trip origin zone (using DfT BYFM zone coding).
+	 * @return Freight trip origin zone.
+	 */
+	public int getFreightOriginZone() {
+
+		return origin;
+	}
+	
+	/**
+	 * Gets freight trip destination zone (using DfT BYFM zone coding).
+	 * @return Freight trip destination zone.
+	 */
+	public int getFreightDestinationZone() {
+
+		return destination;
 	}
 	
 	/**
@@ -115,9 +139,9 @@ public class Trip {
 		return this.hour;
 	}
 	
-	public double getTotalTripLength(HashMap<Integer, Double> averageAccessEgressMap) {
+	public double getLength(HashMap<Integer, Double> averageAccessEgressMap) {
 
-		Double length = this.route.getLength();
+		Double length = this.route.getLength(); //route lenght is not changing so if can be calculated only once and stored
 		if (length == null) {
 			this.route.calculateLength();
 			length = this.route.getLength();
@@ -130,13 +154,13 @@ public class Trip {
 		return length + access / 1000 + egress / 1000;
 	}
 	
-	public double getTotalTravelTime(HashMap<Integer, Double> linkTravelTime, HashMap<Integer, Double> averageAccessEgressMap, double averageAccessEgressSpeed) {
+	public double getTravelTime(Map<Integer, Double> linkTravelTime, HashMap<Integer, Double> averageAccessEgressMap, double averageAccessEgressSpeed) {
 		
-		Double time = this.route.getTime();
-		if (time == null) {
-			this.route.calculateTravelTime(linkTravelTime);
-			time = this.route.getTime();
-		}
+		//Double time = this.route.getTime();
+		//if (time == null) {
+			this.route.calculateTravelTime(linkTravelTime); //route travel time needs to be recalculated every time (as it depends on time of day).
+			Double time = this.route.getTime();
+		//}
 		Double access = averageAccessEgressMap.get(this.getOriginNode().getID());
 		if (access == null) access = 0.0; //TODO use some default access/egress distances?
 		Double egress = averageAccessEgressMap.get(this.getDestinationNode().getID());
@@ -145,6 +169,22 @@ public class Trip {
 		double averageEgressTime = egress / 1000 / averageAccessEgressSpeed * 60;
 		
 		return time + averageAccessTime + averageEgressTime;
+	}
+	
+	public double getCost(Map<Integer, Double> linkTravelTime, HashMap<Integer, Double> averageAccessEgressMap, double averageAccessEgressSpeed, HashMap<EngineType, Double> energyUnitCosts, HashMap<EngineType, Double> energyConsumptionsPer100km) {
+		
+		double distance = this.getLength(averageAccessEgressMap);
+		double cost = distance / 100 * energyConsumptionsPer100km.get(this.engine) * energyUnitCosts.get(this.engine);
+		
+		return cost;
+	}
+	
+	public double getConsumption(Map<Integer, Double> linkTravelTime, HashMap<Integer, Double> averageAccessEgressMap, double averageAccessEgressSpeed, HashMap<EngineType, Double> energyConsumptionsPer100km) {
+		
+		double distance = this.getLength(averageAccessEgressMap);
+		double consumption = distance / 100 * energyConsumptionsPer100km.get(this.engine);
+		
+		return consumption;
 	}
 	
 	@Override
@@ -156,6 +196,10 @@ public class Trip {
 		sb.append(this.vehicle);
 		sb.append(", ");
 		sb.append(this.engine);
+		sb.append(", ");
+		sb.append(this.origin);
+		sb.append(", ");
+		sb.append(this.destination);
 		sb.append(", ");
 		sb.append(this.route.toString());
 

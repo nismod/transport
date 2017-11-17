@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import org.geotools.graph.structure.DirectedEdge;
@@ -25,7 +26,7 @@ public class RouteSet {
 	private DirectedNode destinationNode;
 	private List<Route> choiceSet;
 	private ArrayList<Double> probabilities;
-	private HashMap<Integer, Double> linkTravelTime;
+	private Map<Integer, Double> linkTravelTime;
 	private Properties params;
 	
 	/**
@@ -134,7 +135,7 @@ public class RouteSet {
 	 * @param linkTravelTime Link travel times.
 	 * @param params Route choice parameters.
 	 */
-	public void calculateProbabilities(HashMap<Integer, Double> linkTravelTime, Properties params) {
+	public void calculateProbabilities(Map<Integer, Double> linkTravelTime, Properties params) {
 		
 		//store arguments into instance fields
 		this.linkTravelTime = linkTravelTime;
@@ -171,7 +172,7 @@ public class RouteSet {
 	 * @param linkTravelTime Link travel times.
 	 * @param params Route choice parameters.
 	 */
-	public void calculateUtilities(HashMap<Integer, Double> linkTravelTime, Properties params) {
+	public void calculateUtilities(Map<Integer, Double> linkTravelTime, Properties params) {
 		
 		//store arguments into instance fields
 		this.linkTravelTime = linkTravelTime;
@@ -367,7 +368,7 @@ public class RouteSet {
 	 * Setter method for link travel times.
 	 * @param linkTravelTime Link travel times.
 	 */
-	public void setLinkTravelTime(HashMap<Integer, Double> linkTravelTime) {
+	public void setLinkTravelTime(Map<Integer, Double> linkTravelTime) {
 		
 		this.linkTravelTime = linkTravelTime;
 	}
