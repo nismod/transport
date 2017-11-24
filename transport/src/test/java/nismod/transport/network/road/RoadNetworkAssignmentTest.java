@@ -127,6 +127,16 @@ public class RoadNetworkAssignmentTest {
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Passenger flows assigned in %d seconds.\n", timeNow / 1000);
 
+		roadNetworkAssignment.updateLinkVolumeInPCUPerTimeOfDay();
+		//roadNetworkAssignment.saveHourlyCarVolumes(2015, "hourlyCarVolumesAstar.csv");
+		//roadNetworkAssignment.saveHourlyCarVolumes(2015, "hourlyCarVolumes.csv");
+		
+		roadNetworkAssignment.updateLinkTravelTimes();
+		//roadNetworkAssignment.saveAssignmentResults(2015, "assignmentResultsAstar.csv");
+		//roadNetworkAssignment.saveAssignmentResults(2015, "assignmentResults.csv");
+		
+		//roadNetworkAssignment.saveZonalVehicleKilometres(2015, "zonalVehicleKilometres.csv");
+		
 		//do some trip list processing
 		timeNow = System.currentTimeMillis();
 		ArrayList<Trip> tripList = roadNetworkAssignment.getTripList();
@@ -471,6 +481,8 @@ public class RoadNetworkAssignmentTest {
 			}
 		assertEquals("PCU flows for each edge are correct", linkVolumesInPCU.get(edgeID), sum, EPSILON);
 		}
+		
+		rna.saveHourlyCarVolumes(2015, "minitestHourlyVolumes.csv");
 	}
 
 	@Test
@@ -772,7 +784,35 @@ public class RoadNetworkAssignmentTest {
 		System.out.println(freq);
 		
 		System.out.println("Link volumes in PCU per time of day: ");
-		System.out.println(rna.calculateLinkVolumeInPCUPerTimeOfDay(tripList));
+		rna.updateLinkVolumeInPCUPerTimeOfDay();
+		Map<TimeOfDay, Map<Integer, Double>> map = rna.getLinkVolumeInPCUPerTimeOfDay();
+		
+		System.out.println(map);
+		
+		//compare volumes in PCU calculated during the assignment with those calculated from the trip list
+		Map<Integer, Double> linkVolumesInPCU = rna.getLinkVolumesInPCU();
+				
+		for (Integer edgeID: linkVolumesInPCU.keySet()) {
+			double sum = 0.0;
+			for (TimeOfDay hour: map.keySet()) {
+				Map<Integer, Double> hourlyMap = map.get(hour);
+				Double volume = hourlyMap.get(edgeID);
+				if (volume == null) volume = 0.0;
+				sum += volume;
+			}
+		assertEquals("PCU flows for each edge are correct", linkVolumesInPCU.get(edgeID), sum, EPSILON);
+		}
+		
+		//rna.saveHourlyCarVolumes(2015, "hourlyCarVolumes.csv");
+		
+		System.out.println("Time skim matrix: ");
+		rna.calculateTimeSkimMatrix().printMatrixFormatted();
+		
+		System.out.println("Distance skim matrix:");
+		rna.calculateDistanceSkimMatrix().printMatrixFormatted();
+		
+		System.out.println("Cost skim matrix: ");
+		rna.calculateCostSkimMatrix().printMatrixFormatted();
 	}
 	
 	@Test
@@ -883,8 +923,10 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("\n\n*** Testing skim matrices for freight ***");
 		System.out.println("Cost skim matrix for freight (in £):");
 		rna.calculateCostSkimMatrixFreight().printMatrixFormatted();
+		
 		System.out.println("Time skim matrix for freight (in min):");
 		rna.calculateTimeSkimMatrixFreight().printMatrixFormatted();
+		
 		System.out.println("Distance skim matrix for freight:");
 		SkimMatrixFreight distanceSkimMatrixFreight = rna.calculateDistanceSkimMatrixFreight();
 		distanceSkimMatrixFreight.printMatrixFormatted();

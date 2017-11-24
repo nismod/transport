@@ -19,6 +19,7 @@ public class NetworkVisualiserTest {
 
 		final URL zonesUrl = new URL("file://src/test/resources/minitestdata/zones.shp");
 		final URL networkUrl = new URL("file://src/test/resources/minitestdata/network.shp");
+		final URL networkUrlfixedEdgeIDs = new URL("file://src/test/resources/minitestdata/miniOutputNetwork.shp");
 		final URL nodesUrl = new URL("file://src/test/resources/minitestdata/nodes.shp");
 		final URL AADFurl = new URL("file://src/test/resources/minitestdata/AADFdirected.shp");
 		
@@ -30,7 +31,7 @@ public class NetworkVisualiserTest {
 		final String freightZoneNearestNodeFile = "./src/test/resources/minitestdata/freightZoneToNearestNode.csv";
 	
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
-
+		roadNetwork.replaceNetworkEdgeIDs(networkUrlfixedEdgeIDs);
 		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null);
 		ODMatrix odm = new ODMatrix("./src/test/resources/minitestdata/passengerODM.csv");
 		rna.assignPassengerFlows(odm);
