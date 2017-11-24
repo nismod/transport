@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 
@@ -654,6 +655,7 @@ public class RoadNetworkAssignment {
 
 				} else { //inter-zonal
 
+					/*
 					//for (int nodeIndex=0; nodeIndex < INTERZONAL_TOP_NODES && listOfOriginNodes.size(); nodeIndex++)
 					//choose random from top_nodes regardless of population size
 					int indexOrigin = rng.nextInt(INTERZONAL_TOP_NODES<listOfOriginNodes.size()?INTERZONAL_TOP_NODES:listOfOriginNodes.size());
@@ -662,7 +664,39 @@ public class RoadNetworkAssignment {
 					//System.out.println("Index of destination node: " + indexDestination);
 					originNode = listOfOriginNodes.get(indexOrigin);					
 					destinationNode = listOfDestinationNodes.get(indexDestination);
-
+					*/
+					
+					//make a choice based on the gravitating population size
+					int originNodesToConsider = INTERZONAL_TOP_NODES<listOfOriginNodes.size()?INTERZONAL_TOP_NODES:listOfOriginNodes.size();
+					int destinationNodesToConsider = INTERZONAL_TOP_NODES<listOfDestinationNodes.size()?INTERZONAL_TOP_NODES:listOfDestinationNodes.size();
+					//sums of gravitating population
+					
+					double sum = 0.0;
+					for (int j=0; j<originNodesToConsider; j++) sum += startNodeProbabilities.get(listOfOriginNodes.get(j)); 
+					//choose origin node
+					cumulativeProbability = 0.0;
+					random = rng.nextDouble();
+					for (Integer node: listOfOriginNodes) {
+						cumulativeProbability += startNodeProbabilities.get(node) / sum; //scale with sum
+						if (Double.compare(cumulativeProbability, random) > 0) {
+							originNode = node;
+							break;
+						}
+					}
+					
+					sum = 0.0;
+					for (int j=0; j<destinationNodesToConsider; j++) sum += endNodeProbabilities.get(listOfDestinationNodes.get(j)); 
+					//choose destination node
+					cumulativeProbability = 0.0;
+					random = rng.nextDouble();
+					for (Integer node: listOfDestinationNodes) {
+						cumulativeProbability += endNodeProbabilities.get(node) / sum; //scale with sum
+						if (Double.compare(cumulativeProbability, random) > 0) {
+							destinationNode = node;
+							break;
+						}
+					}
+					
 					if (originNode == null) System.err.println("Origin node for inter-zonal trip was not chosen!");
 					if (destinationNode == null) System.err.println("Destination node for inter-zonal trip was not chosen!");
 				}
@@ -1155,11 +1189,40 @@ public class RoadNetworkAssignment {
 
 					} else { //inter-zonal trip!
 
-						//choose random from top_nodes regardless of population size
-						int indexOrigin = rng.nextInt(INTERZONAL_TOP_NODES<listOfOriginNodes.size()?INTERZONAL_TOP_NODES:listOfOriginNodes.size());
-						int indexDestination = rng.nextInt(INTERZONAL_TOP_NODES<listOfDestinationNodes.size()?INTERZONAL_TOP_NODES:listOfDestinationNodes.size());
-						originNode = listOfOriginNodes.get(indexOrigin);					
-						destinationNode = listOfDestinationNodes.get(indexDestination);
+						//make a choice based on the gravitating workzone population size
+						int originNodesToConsider = INTERZONAL_TOP_NODES<listOfOriginNodes.size()?INTERZONAL_TOP_NODES:listOfOriginNodes.size();
+						int destinationNodesToConsider = INTERZONAL_TOP_NODES<listOfDestinationNodes.size()?INTERZONAL_TOP_NODES:listOfDestinationNodes.size();
+						//sums of gravitating population
+						
+						double sum = 0.0;
+						for (int j=0; j<originNodesToConsider; j++) sum += startNodeProbabilitiesFreight.get(listOfOriginNodes.get(j)); 
+						//choose origin node
+						cumulativeProbability = 0.0;
+						random = rng.nextDouble();
+						for (Integer node: listOfOriginNodes) {
+							cumulativeProbability += startNodeProbabilitiesFreight.get(node) / sum; //scale with sum
+							if (Double.compare(cumulativeProbability, random) > 0) {
+								originNode = node;
+								break;
+							}
+						}
+						
+						sum = 0.0;
+						for (int j=0; j<destinationNodesToConsider; j++) sum += endNodeProbabilitiesFreight.get(listOfDestinationNodes.get(j)); 
+						//choose destination node
+						cumulativeProbability = 0.0;
+						random = rng.nextDouble();
+						for (Integer node: listOfDestinationNodes) {
+							cumulativeProbability += endNodeProbabilitiesFreight.get(node) / sum; //scale with sum
+							if (Double.compare(cumulativeProbability, random) > 0) {
+								destinationNode = node;
+								break;
+							}
+						}
+											
+						if (originNode == null) System.err.println("Origin node for inter-zonal freight trip was not chosen!");
+						if (destinationNode == null) System.err.println("Destination node for inter-zonal freight trip was not chosen!");
+						
 					}
 
 				} else if (originNode != null && destinationLAD != null) { //point to LAD
@@ -1510,6 +1573,21 @@ public class RoadNetworkAssignment {
 		this.assignFreightFlows(freightODM);
 		this.updateLinkTravelTimes(weight);
 	}
+	
+	/** 
+	 * Assigns passenger and freight origin-destination matrix to the road network
+	 * using the fastest path based on the current values in the linkTravelTime field.
+	 * Then updates link travel times using weighted averaging.
+	 * @param passengerODM Passenger origin-destination matrix.
+	 * @param freightODM Freight origin-destination matrix.
+	 * @param weight Weighting parameter.
+	 */
+	public void assignFlowsAndUpdateLinkTravelTimes(ODMatrix passengerODM, FreightMatrix freightODM, RouteSetGenerator rsg, Properties params, double weight) {
+
+		this.assignPassengerFlowsRouteChoice(passengerODM, rsg, params);
+		this.assignFreightFlowsRouteChoice(freightODM, rsg, params);
+		this.updateLinkTravelTimes(weight);
+	}
 
 	/** 
 	 * Iterates assignment and travel time update a fixed number of times.
@@ -1524,6 +1602,22 @@ public class RoadNetworkAssignment {
 			this.resetLinkVolumes(); //link volumes must be reset or they would compound across all iterations
 			this.resetTripStorages(); //clear route storages
 			this.assignFlowsAndUpdateLinkTravelTimes(passengerODM, freightODM, weight);
+		}
+	}
+	
+	/** 
+	 * Iterates assignment and travel time update a fixed number of times.
+	 * @param passengerODM Passenger origin-destination matrix.
+	 * @param freightODM Freight origin-destination matrix.
+	 * @param weight Weighting parameter.
+	 * @param iterations Number of iterations.
+	 */
+	public void assignFlowsAndUpdateLinkTravelTimesIterated(ODMatrix passengerODM, FreightMatrix freightODM, RouteSetGenerator rsg, Properties params, double weight, int iterations) {
+
+		for (int i=0; i<iterations; i++) {
+			this.resetLinkVolumes(); //link volumes must be reset or they would compound across all iterations
+			this.resetTripStorages(); //clear route storages
+			this.assignFlowsAndUpdateLinkTravelTimes(passengerODM, freightODM, rsg, params, weight);
 		}
 	}
 
@@ -1589,7 +1683,7 @@ public class RoadNetworkAssignment {
 		for (Trip trip: this.tripList) {
 			
 			VehicleType vht = trip.getVehicle();
-			if (vht != VehicleType.ARTIC || vht != VehicleType.RIGID || vht != VehicleType.VAN) continue; //skip non-freight vehicles
+			if ( ! (vht == VehicleType.ARTIC || vht == VehicleType.RIGID || vht == VehicleType.VAN)) continue; //skip non-freight vehicles
 			
 			int origin = trip.getFreightOriginZone();
 			int destination = trip.getFreightDestinationZone();
@@ -1725,7 +1819,7 @@ public class RoadNetworkAssignment {
 		for (Trip trip: this.tripList) {
 			
 			VehicleType vht = trip.getVehicle();
-			if (vht != VehicleType.ARTIC || vht != VehicleType.RIGID || vht != VehicleType.VAN) continue; //skip non-freight vehicles
+			if ( ! (vht == VehicleType.ARTIC || vht == VehicleType.RIGID || vht == VehicleType.VAN)) continue; //skip non-freight vehicles
 			
 			int origin = trip.getFreightOriginZone();
 			int destination = trip.getFreightDestinationZone();
@@ -1760,24 +1854,26 @@ public class RoadNetworkAssignment {
 	public void updateCostSkimMatrixFreight(SkimMatrixFreight costSkimMatrixFreight) {
 
 		//this.updateLinkTravelTimes();
-		
 		SkimMatrixFreight counter = new SkimMatrixFreight();
+		
+		if (this.tripList == null || this.tripList.size() == 0) System.err.println("TripList is empty!");
 		
 		for (Trip trip: this.tripList) {
 			
 			VehicleType vht = trip.getVehicle();
-			if (vht != VehicleType.ARTIC || vht != VehicleType.RIGID || vht != VehicleType.VAN) continue; //skip non-freight vehicles
+			if ( ! (vht == VehicleType.ARTIC || vht == VehicleType.RIGID || vht == VehicleType.VAN)) continue; //skip non-freight vehicles
 			
 			int origin = trip.getFreightOriginZone();
 			int destination = trip.getFreightDestinationZone();
-								
+							
 			Double count = counter.getCost(origin, destination, vht.value);
 			if (count == null) count = 0.0;
 			counter.setCost(origin, destination, vht.value, count + 1);
 			
 			Double sum = costSkimMatrixFreight.getCost(origin, destination, vht.value);
 			if (sum == null) sum = 0.0;
-			double tripFuelCost = trip.getCost(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistance(), AVERAGE_ACCESS_EGRESS_SPEED_CAR, this.energyUnitCosts, this.energyConsumptionsPer100km);
+			double tripFuelCost = trip.getCost(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), AVERAGE_ACCESS_EGRESS_SPEED_FREIGHT, this.energyUnitCosts, this.energyConsumptionsPer100km);
+			
 			costSkimMatrixFreight.setCost(origin, destination, vht.value, sum + tripFuelCost);
 		}
 		
@@ -1786,8 +1882,8 @@ public class RoadNetworkAssignment {
 			int destination = (int) mk.getKey(1);
 			int vehicle = (int) mk.getKey(2);
 						
-			double averageODtraveltime = costSkimMatrixFreight.getCost(origin, destination, vehicle) / counter.getCost(origin, destination, vehicle);
-			costSkimMatrixFreight.setCost(origin, destination, vehicle, averageODtraveltime);
+			double averageODcost = costSkimMatrixFreight.getCost(origin, destination, vehicle) / counter.getCost(origin, destination, vehicle);
+			costSkimMatrixFreight.setCost(origin, destination, vehicle, averageODcost);
 		}
 	}
 
@@ -1796,7 +1892,7 @@ public class RoadNetworkAssignment {
 	 * @return Inter-zonal skim matrix (cost).
 	 */
 	public SkimMatrixFreight calculateCostSkimMatrixFreight() {
-
+		
 		SkimMatrixFreight costSkimMatrixFreight = new SkimMatrixFreight();
 		this.updateCostSkimMatrixFreight(costSkimMatrixFreight);
 
@@ -1883,7 +1979,7 @@ public class RoadNetworkAssignment {
 		for (Trip trip: this.tripList) {
 			
 			VehicleType vht = trip.getVehicle();
-			if (vht != VehicleType.ARTIC || vht != VehicleType.RIGID || vht != VehicleType.VAN) continue; //skip non-freight vehicles
+			if ( ! (vht == VehicleType.ARTIC || vht == VehicleType.RIGID || vht == VehicleType.VAN)) continue; //skip non-freight vehicles
 			
 			EngineType et = trip.getEngine();
 			double consumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), AVERAGE_ACCESS_EGRESS_SPEED_FREIGHT, this.energyConsumptionsPer100km);
@@ -2215,6 +2311,84 @@ public class RoadNetworkAssignment {
 			}
 		}
 	}
+	
+	
+	/**
+	 * Saves hourly car volumes to output file.
+	 * @param year Year of the assignment.
+	 * @param outputFile Output file name (with path).
+	 */
+	public void saveHourlyCarVolumes(int year, String outputFile) {
+
+		String NEW_LINE_SEPARATOR = "\n";
+		ArrayList<String> header = new ArrayList<String>();
+		header.add("year");
+		header.add("edgeID");
+		header.add("roadNumber");
+		header.add("CP");
+		header.add("direction");
+		header.add("countCar");
+		header.add("dailyVolume");
+		for (TimeOfDay hour: TimeOfDay.values()) header.add(hour.toString());
+		
+		FileWriter fileWriter = null;
+		CSVPrinter csvFilePrinter = null;
+		CSVFormat csvFileFormat = CSVFormat.DEFAULT.withRecordSeparator(NEW_LINE_SEPARATOR);
+		try {
+			fileWriter = new FileWriter(outputFile);
+			csvFilePrinter = new CSVPrinter(fileWriter, csvFileFormat);
+			csvFilePrinter.printRecord(header);
+			ArrayList<String> record = new ArrayList<String>();
+			Iterator<DirectedEdge> iter = (Iterator<DirectedEdge>) this.roadNetwork.getNetwork().getEdges().iterator();
+			while (iter.hasNext()) {
+				DirectedEdge edge = (DirectedEdge) iter.next();
+				record.clear();
+				record.add(Integer.toString(year));
+				record.add(Integer.toString(edge.getID()));
+				SimpleFeature feature = (SimpleFeature)edge.getObject();
+				String roadNumber = (String) feature.getAttribute("RoadNumber");
+				record.add(roadNumber);
+				Object countPointObject = feature.getAttribute("CP");
+				long countPoint;
+				if (countPointObject instanceof Double) countPoint = (long) Math.round((double)countPointObject);
+				else countPoint = (long) countPointObject;
+				record.add(Long.toString(countPoint));
+				if (countPoint != 0) { //not a ferry nor a newly developed road with no count point
+					String direction = (String) feature.getAttribute("iDir");
+					record.add(direction);
+					long carCount = (long) feature.getAttribute("FdCar");
+					record.add(Long.toString(carCount));
+				}
+				else //ferry or a newly developed road with no count point
+					record.add("N/A");
+					
+				//Integer linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edge.getID());
+				Double linkVolume = this.linkVolumesInPCU.get(edge.getID());
+				
+				if (linkVolume == null) record.add(Integer.toString(0));
+				else 					record.add(Integer.toString((int)Math.round(linkVolume)));
+			
+				for (TimeOfDay hour: TimeOfDay.values()) {
+					Double linkVolumeInPCU = this.linkVolumesInPCUPerTimeOfDay.get(hour).get(edge.getID()); //TODO there should be one per vehicle type
+					if (linkVolumeInPCU == null) record.add(Integer.toString(0));
+					else 					record.add(Integer.toString((int)Math.round(linkVolumeInPCU)));
+				}
+				csvFilePrinter.printRecord(record);
+			}
+		} catch (Exception e) {
+			System.err.println("Error in CsvFileWriter!");
+			e.printStackTrace();
+		} finally {
+			try {
+				fileWriter.flush();
+				fileWriter.close();
+				csvFilePrinter.close();
+			} catch (IOException e) {
+				System.err.println("Error while flushing/closing fileWriter/csvPrinter!");
+				e.printStackTrace();
+			}
+		}
+	}
 
 	/**
 	 * Saves total electricity consumption to an output file.
@@ -2311,6 +2485,51 @@ public class RoadNetworkAssignment {
 		}
 	}
 
+	/**
+	 * Saves zonal vehicle-kilometres.
+	 * @param year Assignment year.
+	 * @param outputFile Output file name (with path).
+	 */
+	public void saveZonalVehicleKilometres(int year, String outputFile) {
+
+		Map<String, Double> vehicleKilometres = this.calculateVehicleKilometres();
+	
+		String NEW_LINE_SEPARATOR = "\n";
+		ArrayList<String> header = new ArrayList<String>();
+		header.add("year");
+		header.add("zone");
+		header.add("vehicleKm");
+
+		FileWriter fileWriter = null;
+		CSVPrinter csvFilePrinter = null;
+		CSVFormat csvFileFormat = CSVFormat.DEFAULT.withRecordSeparator(NEW_LINE_SEPARATOR);
+		try {
+			fileWriter = new FileWriter(outputFile);
+			csvFilePrinter = new CSVPrinter(fileWriter, csvFileFormat);
+			csvFilePrinter.printRecord(header);
+			ArrayList<String> record = new ArrayList<String>();
+			for (Entry<String, Double> entry: vehicleKilometres.entrySet()) {
+				record.clear();
+				record.add(Integer.toString(year));
+				record.add(entry.getKey());
+				record.add(String.format("%.2f", entry.getValue()));
+				csvFilePrinter.printRecord(record);
+			}	
+		} catch (Exception e) {
+			System.err.println("Error in CsvFileWriter!");
+			e.printStackTrace();
+		} finally {
+			try {
+				fileWriter.flush();
+				fileWriter.close();
+				csvFilePrinter.close();
+			} catch (IOException e) {
+				System.err.println("Error while flushing/closing fileWriter/csvPrinter!");
+				e.printStackTrace();
+			}
+		}
+	}
+	
 	/**
 	 * Saves peak link point capacities into a file.
 	 * @param year Year of the assignment.
@@ -2675,6 +2894,13 @@ public class RoadNetworkAssignment {
 			HashMap<Integer, Integer> map = new HashMap<Integer, Integer>();
 			this.linkVolumesPerVehicleType.put(vht, map);
 		}
+		
+		//reset link volumes per time of day
+		this.linkVolumesInPCUPerTimeOfDay = new HashMap<TimeOfDay, Map<Integer, Double>>();
+		for (TimeOfDay hour: TimeOfDay.values()) {
+			Map<Integer, Double> hourlyMap = new HashMap<Integer, Double>();
+			this.linkVolumesInPCUPerTimeOfDay.put(hour, hourlyMap);
+		}
 	}
 
 	/**
@@ -2713,6 +2939,23 @@ public class RoadNetworkAssignment {
 		}
 		
 		return map;
+	}
+	
+	/**
+	 * Updates link volumes in PCU per time of day from object's trip list and stores into instance variable.
+	 */
+	public void updateLinkVolumeInPCUPerTimeOfDay() {
+		
+		this.linkVolumesInPCUPerTimeOfDay = this.calculateLinkVolumeInPCUPerTimeOfDay(this.tripList);
+	}
+	
+	/**
+	 * Getter method for link volumes in PCU per time of day.
+	 * @return Link volumes in PCU per time of day.
+	 */
+	public Map<TimeOfDay, Map<Integer, Double>> getLinkVolumeInPCUPerTimeOfDay() {
+		
+		return this.linkVolumesInPCUPerTimeOfDay;
 	}
 	
 	/**

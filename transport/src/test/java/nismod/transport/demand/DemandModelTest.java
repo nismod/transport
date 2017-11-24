@@ -20,6 +20,7 @@ import nismod.transport.decision.RoadExpansion;
 import nismod.transport.decision.VehicleElectrification;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
+import nismod.transport.network.road.RouteSetGenerator;
 
 /**
  * @author Milan Lovric
@@ -177,8 +178,17 @@ public class DemandModelTest {
 		VehicleElectrification ve = new VehicleElectrification(props);
 		interventions.add(ve);
 		
+		//set route choice parameters
+		Properties params = new Properties();
+		params.setProperty("TIME", "-1.5");
+		params.setProperty("LENGTH", "-1.0");
+		params.setProperty("INTERSECTIONS", "-0.1");
+		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork2);
+		//rsg.readRoutes("./src/test/resources/testdata/testRoutes.txt");
+		rsg.readRoutes("./src/test/resources/testdata/allRoutes.txt");
+		
 		//the main demand model
-		DemandModel dm = new DemandModel(roadNetwork2, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, energyUnitCostsFile, interventions);
+		DemandModel dm = new DemandModel(roadNetwork2, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, energyUnitCostsFile, interventions, rsg, params);
 		
 		dm.predictHighwayDemand(2025, 2015);
 		RoadNetworkAssignment rna2015 = dm.getRoadNetworkAssignment(2015);

@@ -98,7 +98,7 @@ public class App {
 				interventions.add(ve);
 
 				//the main demand model
-				DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, energyUnitCostsFile, interventions);
+				DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, energyUnitCostsFile, interventions, null, null);
 				dm.predictHighwayDemand(Integer.parseInt(predictedYear), Integer.parseInt(baseYear));
 				dm.saveEnergyConsumptions(Integer.parseInt(predictedYear), energyConsumptionsFile);
 				

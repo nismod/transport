@@ -4,6 +4,7 @@
 package nismod.transport.demand;
 
 import java.util.List;
+import java.util.Properties;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -22,6 +23,7 @@ import nismod.transport.decision.Intervention;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
+import nismod.transport.network.road.RouteSetGenerator;
 
 /**
  * Demand prediction model.
@@ -54,6 +56,9 @@ public class DemandModel {
 	private HashMap<Integer, HashMap<EngineType, Double>> yearToEngineTypeFractions;
 	//private SkimMatrix baseYearTimeSkimMatrix,	baseYearCostSkimMatrix;
 	
+	private RouteSetGenerator rsg;
+	private Properties params;
+	
 	private List<Intervention> interventions;
 	
 	private RoadNetwork roadNetwork;
@@ -67,8 +72,10 @@ public class DemandModel {
 	 * @param GVAFile GVA file name.
 	 * @param energyUnitCostsFile Energy unit costs file name.
 	 * @param interventions List of interventions.
+	 * @param rsg Route Set Generator with routes for both cars and freight.
+	 * @param params Route-choice parameters.
 	 */
-	public DemandModel(RoadNetwork roadNetwork, String baseYearODMatrixFile, String baseYearFreightMatrixFile, String populationFile, String GVAFile, String energyUnitCostsFile, List<Intervention> interventions) throws FileNotFoundException, IOException {
+	public DemandModel(RoadNetwork roadNetwork, String baseYearODMatrixFile, String baseYearFreightMatrixFile, String populationFile, String GVAFile, String energyUnitCostsFile, List<Intervention> interventions, RouteSetGenerator rsg, Properties params) throws FileNotFoundException, IOException {
 
 		yearToPassengerODMatrix = new HashMap<Integer, ODMatrix>();
 		yearToFreightODMatrix = new HashMap<Integer, FreightMatrix>();
@@ -81,6 +88,9 @@ public class DemandModel {
 		yearToRoadNetworkAssignment = new HashMap<Integer, RoadNetworkAssignment>();
 		yearToEnergyUnitCosts = new HashMap<Integer, HashMap<EngineType, Double>>();
 		yearToEngineTypeFractions = new HashMap<Integer, HashMap<EngineType, Double>>();
+		
+		this.rsg = rsg;
+		this.params = params;
 		
 		this.roadNetwork = roadNetwork;
 		
@@ -172,7 +182,7 @@ public class DemandModel {
 												null, 
 												null, 
 												null);
-				rna.assignFlowsAndUpdateLinkTravelTimesIterated(this.yearToPassengerODMatrix.get(fromYear), this.yearToFreightODMatrix.get(fromYear), LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);
+				rna.assignFlowsAndUpdateLinkTravelTimesIterated(this.yearToPassengerODMatrix.get(fromYear), this.yearToFreightODMatrix.get(fromYear), this.rsg, this.params, LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);
 				yearToRoadNetworkAssignment.put(fromYear, rna);
 	
 				//calculate skim matrices
@@ -302,7 +312,7 @@ public class DemandModel {
 															 predictedRna.getAreaCodeProbabilities(), 
 															 predictedRna.getWorkplaceZoneProbabilities());
 
-				predictedRna.assignFlowsAndUpdateLinkTravelTimesIterated(predictedPassengerODMatrix, predictedFreightODMatrix, LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);
+				predictedRna.assignFlowsAndUpdateLinkTravelTimesIterated(predictedPassengerODMatrix, predictedFreightODMatrix, this.rsg, this.params, LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);
 				
 				//update skim matrices for predicted year after the assignment
 				tsm = predictedRna.calculateTimeSkimMatrix();
@@ -364,7 +374,7 @@ public class DemandModel {
 				//predictedRna.resetLinkVolumes();
 				//predictedRna.assignPassengerFlows(predictedPassengerODMatrix);
 				//predictedRna.updateLinkTravelTimes(ALPHA_LINK_TRAVEL_TIME_AVERAGING);
-				predictedRna.assignFlowsAndUpdateLinkTravelTimesIterated(predictedPassengerODMatrix, predictedFreightODMatrix, LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);				
+				predictedRna.assignFlowsAndUpdateLinkTravelTimesIterated(predictedPassengerODMatrix, predictedFreightODMatrix, this.rsg, this.params, LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);				
 				
 				//store skim matrices into hashmaps
 				yearToTimeSkimMatrix.put(predictedYear, tsm);

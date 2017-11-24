@@ -23,6 +23,7 @@ import org.junit.Test;
 
 import nismod.transport.demand.DemandModel;
 import nismod.transport.network.road.RoadNetwork;
+import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.visualisation.PieChartVisualiser;
 
 /**
@@ -100,7 +101,7 @@ public class VehicleElectrificationTest {
 		List<Intervention> interventions = new ArrayList<Intervention>();
 		interventions.add(ve2);
 		
-		DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, energyUnitCostsFile, interventions);
+		DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, energyUnitCostsFile, interventions, null, null);
 		
 		System.out.println("Base-year engine type fractions: ");
 		System.out.println(dm.getEngineTypeFractions(2015));
