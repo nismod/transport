@@ -181,27 +181,33 @@ public class Route {
 	 * @param linkTravelTime Link travel times.
 	 * @param params Route choice parameters.
 	 */
-	public void calculateUtility(Map<Integer, Double> linkTravelTime, Properties params) {
+	public void calculateUtility(Map<Integer, Double> linkTravelTime, double consumptionPer100km, double unitCost, Properties params) {
 		
-		if (this.length == null) this.calculateLength();
-		if (this.time == null) this.calculateTravelTime(linkTravelTime);
+		if (this.length == null) this.calculateLength(); //calculate only once (length is not going to change)
+		//if (this.time == null) this.calculateTravelTime(linkTravelTime);
+		this.calculateTravelTime(linkTravelTime); //always (re)calculate
+		//if (this.cost == null) this.calculateCost(consumptionPer100km, unitCost);
+		this.calculateCost(consumptionPer100km, unitCost); //always (re)calculate
 		
 		double length = this.getLength();
 		double time = this.getTime();
+		double cost = this.getCost();
 		int intersec = this.getNumberOfIntersections();
 		
-		double paramTime, paramLength, paramIntersections;
+		double paramTime, paramLength, paramCost, paramIntersections;
 		if (params == null) { //use default parameters
 			paramTime = this.PARAM_TIME;
 			paramLength = this.PARAM_LENGTH;
+			paramCost = this.PARAM_COST;
 			paramIntersections = this.PARAM_INTERSECTIONS;			
 		} else {
 			paramTime = Double.parseDouble(params.getProperty("TIME"));
 			paramLength = Double.parseDouble(params.getProperty("LENGTH"));
+			paramCost = Double.parseDouble(params.getProperty("COST"));
 			paramIntersections = Double.parseDouble(params.getProperty("INTERSECTIONS"));			
 		}
 		
-		double utility = paramTime * time + paramLength * length + paramIntersections * intersec;  
+		double utility = paramTime * time + paramLength * length + paramCost * cost + paramIntersections * intersec;  
 		this.utility = utility;
 	}
 	
@@ -230,6 +236,11 @@ public class Route {
 	public Double getTime() {
 	
 		return time;
+	}
+	
+	public Double getCost() {
+		
+		return cost;
 	}
 	
 	public int getNumberOfIntersections() {

@@ -733,7 +733,7 @@ public class RoadNetworkAssignment {
 						//probabilities need to be calculated for this route set before a choice can be made
 						fetchedRouteSet.setLinkTravelTime(this.linkTravelTimePerTimeOfDay.get(hour));
 						fetchedRouteSet.setParameters(routeChoiceParameters);
-						fetchedRouteSet.calculateUtilities(this.linkTravelTimePerTimeOfDay.get(hour), routeChoiceParameters);
+						fetchedRouteSet.calculateUtilities(this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptionsPer100km.get(engine), this.energyUnitCosts.get(engine), routeChoiceParameters);
 						fetchedRouteSet.calculateProbabilities(this.linkTravelTimePerTimeOfDay.get(hour), routeChoiceParameters);
 						fetchedRouteSet.sortRoutesOnUtility();
 					//}
@@ -1349,7 +1349,7 @@ public class RoadNetworkAssignment {
 						//probabilities need to be calculated for this route set before a choice can be made
 						fetchedRouteSet.setLinkTravelTime(this.linkTravelTimePerTimeOfDay.get(hour));
 						fetchedRouteSet.setParameters(routeChoiceParameters);
-						fetchedRouteSet.calculateUtilities(this.linkTravelTimePerTimeOfDay.get(hour), routeChoiceParameters);
+						fetchedRouteSet.calculateUtilities(this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptionsPer100km.get(engine), this.energyUnitCosts.get(engine), routeChoiceParameters);
 						fetchedRouteSet.calculateProbabilities(this.linkTravelTimePerTimeOfDay.get(hour), routeChoiceParameters);
 						fetchedRouteSet.sortRoutesOnUtility();
 					//}

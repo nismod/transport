@@ -79,9 +79,13 @@ public class RoadDisruptionTest {
 		params = new Properties();
 		params.setProperty("TIME", "-1.5");
 		params.setProperty("LENGTH", "-1.0");
+		params.setProperty("COST", "-3.6");
 		params.setProperty("INTERSECTIONS", "-0.1");
+		
+		double consumption = 5.4;
+		double unitCost = 1.17;
 
-		rsg.calculateAllUtilities(roadNetwork.getFreeFlowTravelTime(), params);
+		rsg.calculateAllUtilities(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, params);
 		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
 
 		System.out.println(rna.getTripList());
@@ -97,7 +101,7 @@ public class RoadDisruptionTest {
 		
 		rna.resetLinkVolumes();
 		rna.resetTripStorages();
-		rsg.calculateAllUtilities(roadNetwork.getFreeFlowTravelTime(), params);
+		rsg.calculateAllUtilities(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, params);
 		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
 		
 		dailyVolume = rna.getLinkVolumesInPCU();
@@ -227,9 +231,13 @@ public class RoadDisruptionTest {
 		params = new Properties();
 		params.setProperty("TIME", "-1.5");
 		params.setProperty("LENGTH", "-1.0");
+		params.setProperty("COST", "-3.6");
 		params.setProperty("INTERSECTIONS", "-0.1");
+		
+		double consumption = 5.4;
+		double unitCost = 1.17;
 
-		rsg.calculateAllUtilities(roadNetwork.getFreeFlowTravelTime(), params);
+		rsg.calculateAllUtilities(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, params);
 		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
 
 		assertNull("There should be no traffic volume for the removed link", rna.getLinkVolumesInPCU().get(561));

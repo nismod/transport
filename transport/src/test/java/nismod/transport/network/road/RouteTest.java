@@ -66,24 +66,31 @@ public class RouteTest {
 		Properties params = new Properties();
 		params.setProperty("TIME", "-1.5");
 		params.setProperty("LENGTH", "-1.5");
+		params.setProperty("COST", "-3.6");
 		params.setProperty("INTERSECTIONS", "-1.0");
 		
-		r1.calculateUtility(roadNetwork.getFreeFlowTravelTime(), params);
+		double consumption = 5.4;
+		double unitCost = 1.17;
+		
+		r1.calculateUtility(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, params);
 		
 		double time = r1.getTime();
 		double length = r1.getLength();
+		double cost = r1.getCost();
 		double intersections = r1.getNumberOfIntersections();
 		double utility = r1.getUtility();
 		
 		System.out.println("Time: " + time);
 		System.out.println("Length: " + length);
+		System.out.println("Cost: " + cost);
 		System.out.println("Intersections: " + intersections);
 		System.out.println("Utility: " + utility);
 		
 		double paramTime = Double.parseDouble(params.getProperty("TIME"));
 		double paramLength = Double.parseDouble(params.getProperty("LENGTH"));
+		double paramCost = Double.parseDouble(params.getProperty("COST"));
 		double paramIntersections = Double.parseDouble(params.getProperty("INTERSECTIONS"));
-		double calculatedUtility = paramTime * time + paramLength * length + paramIntersections * intersections;
+		double calculatedUtility = paramTime * time + paramLength * length + paramCost * cost + paramIntersections * intersections;
 		
 		final double EPSILON = 1e-11; //may fail for higher accuracy
 		
@@ -103,12 +110,14 @@ public class RouteTest {
 		params = new Properties();
 		params.setProperty("TIME", "-1.5");
 		params.setProperty("LENGTH", "-1.5");
+		params.setProperty("COST", "-3.6");
 		params.setProperty("INTERSECTIONS", "-0.1");
 		
-		r2.calculateUtility(roadNetwork.getFreeFlowTravelTime(), params);
+		r2.calculateUtility(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, params);
 		
 		time = r2.getTime();
 		length = r2.getLength();
+		cost = r2.getCost();
 		intersections = r2.getNumberOfIntersections();
 		utility = r2.getUtility();
 		
@@ -119,8 +128,9 @@ public class RouteTest {
 		
 		paramTime = Double.parseDouble(params.getProperty("TIME"));
 		paramLength = Double.parseDouble(params.getProperty("LENGTH"));
+		paramCost = Double.parseDouble(params.getProperty("COST"));
 		paramIntersections = Double.parseDouble(params.getProperty("INTERSECTIONS"));
-		calculatedUtility = paramTime * time + paramLength * length + paramIntersections * intersections;
+		calculatedUtility = paramTime * time + paramLength * length + paramCost * cost + paramIntersections * intersections;
 		
 		assertEquals("Utility should be correctly calculated", utility, calculatedUtility, EPSILON);
 			
@@ -128,7 +138,7 @@ public class RouteTest {
 		r3.addEdge(e7);
 		r3.addEdge(e2);
 		r3.addEdge(e3);
-		r3.calculateUtility(roadNetwork.getFreeFlowTravelTime(), null);
+		r3.calculateUtility(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, null);
 		
 //		System.out.println("Route " + r3.getID() + " is valid: " + r3.isValid());
 //		System.out.println("Route " + r3.getID() + ": " + r3.getEdges());
@@ -139,12 +149,14 @@ public class RouteTest {
 		params = new Properties();
 		params.setProperty("TIME", "-2.5");
 		params.setProperty("LENGTH", "-1.5");
+		params.setProperty("COST", "-3.6");
 		params.setProperty("INTERSECTIONS", "-0.1");
 		
-		r3.calculateUtility(roadNetwork.getFreeFlowTravelTime(), params);
+		r3.calculateUtility(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, params);
 		
 		time = r3.getTime();
 		length = r3.getLength();
+		cost = r3.getCost();
 		intersections = r3.getNumberOfIntersections();
 		utility = r3.getUtility();
 		
@@ -155,8 +167,9 @@ public class RouteTest {
 		
 		paramTime = Double.parseDouble(params.getProperty("TIME"));
 		paramLength = Double.parseDouble(params.getProperty("LENGTH"));
+		paramCost = Double.parseDouble(params.getProperty("COST"));
 		paramIntersections = Double.parseDouble(params.getProperty("INTERSECTIONS"));
-		calculatedUtility = paramTime * time + paramLength * length + paramIntersections * intersections;
+		calculatedUtility = paramTime * time + paramLength * length + paramCost * cost + paramIntersections * intersections;
 		
 		assertEquals("Utility should be correctly calculated", utility, calculatedUtility, EPSILON);
 			
@@ -175,24 +188,28 @@ public class RouteTest {
 		params = new Properties();
 		params.setProperty("TIME", "-1.5");
 		params.setProperty("LENGTH", "-1.0");
+		params.setProperty("COST", "-3.6");
 		params.setProperty("INTERSECTIONS", "-0.1");
 		
-		r4.calculateUtility(roadNetwork.getFreeFlowTravelTime(), params);
+		r4.calculateUtility(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, params);
 		
 		time = r4.getTime();
 		length = r4.getLength();
+		cost = r4.getCost();
 		intersections = r4.getNumberOfIntersections();
 		utility = r4.getUtility();
 		
 		System.out.println("Time: " + time);
 		System.out.println("Length: " + length);
+		System.out.println("Cost: " + cost);
 		System.out.println("Intersections: " + intersections);
 		System.out.println("Utility: " + utility);
 		
 		paramTime = Double.parseDouble(params.getProperty("TIME"));
 		paramLength = Double.parseDouble(params.getProperty("LENGTH"));
+		paramCost = Double.parseDouble(params.getProperty("COST"));
 		paramIntersections = Double.parseDouble(params.getProperty("INTERSECTIONS"));
-		calculatedUtility = paramTime * time + paramLength * length + paramIntersections * intersections;
+		calculatedUtility = paramTime * time + paramLength * length + paramCost * cost + paramIntersections * intersections;
 		
 		assertEquals("Utility should be correctly calculated", utility, calculatedUtility, EPSILON);
 		
@@ -211,17 +228,16 @@ public class RouteTest {
 		
 		r5.calculateLength();
 		r5.calculateTravelTime(roadNetwork.getFreeFlowTravelTime());
+		r5.calculateCost(consumption, unitCost);
 		System.out.println("Intersections: " + r5.getNumberOfIntersections());
-		r5.calculateUtility(roadNetwork.getFreeFlowTravelTime(), params);
+		r5.calculateUtility(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, params);
 		System.out.println("Length: " + r5.getLength());
 		System.out.println("Time: " + r5.getTime());
+		System.out.println("Cost: " + r5.getCost());
 		System.out.println("Utility: " + r5.getUtility());
 		
 		System.out.println("First node: " + r5.getOriginNode());
 		System.out.println("Last node: " + r5.getDestinationNode());
-		
-		
-		
-		
+			
 	}
 }
