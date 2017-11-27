@@ -118,6 +118,7 @@ public class RoadNetworkAssignmentTest {
 		Properties params = new Properties();
 		params.setProperty("TIME", "-1.5");
 		params.setProperty("LENGTH", "-1.0");
+		params.setProperty("COST", "-3.6");
 		params.setProperty("INTERSECTIONS", "-0.1");
 		
 		//assign passenger flows
@@ -159,7 +160,6 @@ public class RoadNetworkAssignmentTest {
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Parallel stream processing in %d milliseconds.\n", timeNow);
 
-
 		//clear the routes
 		rsg.clearRoutes();
 				
@@ -169,7 +169,6 @@ public class RoadNetworkAssignmentTest {
 		FreightMatrix freightMatrix = new FreightMatrix("./src/main/resources/data/freightMatrix.csv");	
 		freightMatrix.printMatrixFormatted();
 		
-		
 		timeNow = System.currentTimeMillis();
 		//rsg.readRoutes("./src/main/resources/data/routesFreight/routesFreight.txt");
 		//rsg.readRoutesBinary("./src/main/resources/data/freightRoutes/freightRoutes.dat");
@@ -177,7 +176,6 @@ public class RoadNetworkAssignmentTest {
 		//rsg.printStatistics();
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Freight routes read in %d seconds.\n", timeNow / 1000);
-		
 				
  		//assign freight flows
 		timeNow = System.currentTimeMillis();
@@ -187,8 +185,6 @@ public class RoadNetworkAssignmentTest {
 		System.out.printf("Freight flows assigned in %d seconds.\n", timeNow / 1000);
 		
 		//roadNetworkAssignment.saveAssignmentResults(2015, "assignment2015passengerAndFreigh.csv");
-
-
 		
 //		//for (int i = 0; i < 5; i++) {
 //		for (int i = 0; i < 1; i++) {
@@ -412,6 +408,7 @@ public class RoadNetworkAssignmentTest {
 		//set route choice parameters
 		params.setProperty("TIME", "-1.5");
 		params.setProperty("LENGTH", "-1.5");
+		params.setProperty("COST", "-3.6");
 		params.setProperty("INTERSECTIONS", "-0.1");
 		
 		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
@@ -692,6 +689,7 @@ public class RoadNetworkAssignmentTest {
 		Properties params = new Properties();
 		params.setProperty("TIME", "-1.5");
 		params.setProperty("LENGTH", "-1.0");
+		params.setProperty("COST", "-3.6");
 		params.setProperty("INTERSECTIONS", "-0.1");
 		
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
@@ -711,6 +709,7 @@ public class RoadNetworkAssignmentTest {
 		//set route choice parameters
 		params.setProperty("TIME", "-1.0");
 		params.setProperty("LENGTH", "-1.5");
+		params.setProperty("COST", "-3.6");
 		params.setProperty("INTERSECTIONS", "-3.1");
 		
 		//rsg.calculateAllUtilities(rna.getLinkTravelTimes(), params);

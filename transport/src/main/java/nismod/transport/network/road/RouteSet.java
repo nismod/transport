@@ -172,7 +172,7 @@ public class RouteSet {
 	 * @param linkTravelTime Link travel times.
 	 * @param params Route choice parameters.
 	 */
-	public void calculateUtilities(Map<Integer, Double> linkTravelTime, Properties params) {
+	public void calculateUtilities(Map<Integer, Double> linkTravelTime, double consumptionPer100km, double unitCost, Properties params) {
 		
 		//store arguments into instance fields
 		this.linkTravelTime = linkTravelTime;
@@ -180,24 +180,24 @@ public class RouteSet {
 		
 		//re-calculate utility for all the routes
 		for (Route r: choiceSet)
-			r.calculateUtility(linkTravelTime, params);
+			r.calculateUtility(linkTravelTime, consumptionPer100km, unitCost, params);
 		
 		//correct for correlation with path-size
 		this.correctUtilitiesWithPathSize();
 	}
 	
-	/**
-	 * Re-calculates utilities for all the routes.
-	 */
-	public void calculateUtilities() {
-		
-		//re-calculate utility for all the routes
-		for (Route r: choiceSet)
-			r.calculateUtility(this.linkTravelTime, this.params);
-		
-		//correct for correlation with path-size
-		this.correctUtilitiesWithPathSize();
-	}
+//	/**
+//	 * Re-calculates utilities for all the routes.
+//	 */
+//	public void calculateUtilities() {
+//		
+//		//re-calculate utility for all the routes
+//		for (Route r: choiceSet)
+//			r.calculateUtility(this.linkTravelTime, consumptionPer100km, unitCost, this.params);
+//		
+//		//correct for correlation with path-size
+//		this.correctUtilitiesWithPathSize();
+//	}
 	
 	/**
 	 * Calculates choice probabilities using logit formula.

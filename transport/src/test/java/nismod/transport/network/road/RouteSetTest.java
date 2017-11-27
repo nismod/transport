@@ -92,7 +92,11 @@ public class RouteSetTest {
 		Properties params = new Properties();
 		params.setProperty("TIME", "-1.5");
 		params.setProperty("LENGTH", "-1.0");
+		params.setProperty("COST", "-3.6");
 		params.setProperty("INTERSECTIONS", "-0.1");
+		
+		double consumption = 5.4;
+		double unitCost = 1.17;
 		
 		//rs.addRoute(r1);
 		rs.addRoute(r4);
@@ -105,7 +109,7 @@ public class RouteSetTest {
 		//rs.calculateUtilities(roadNetwork.getFreeFlowTravelTime(), params);
 		rs.setLinkTravelTime(roadNetwork.getFreeFlowTravelTime());
 		rs.setParameters(params);
-		rs.calculateUtilities();
+		rs.calculateUtilities(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, params);
 		rs.printUtilities();
 	
 		for (double utility: rs.getUtilities())
@@ -164,7 +168,7 @@ public class RouteSetTest {
 		rs.printChoiceSet();
 		rs.printStatistics();
 		//all routes need to have re-calculated utility and path size after the new route is added!
-		rs.calculateUtilities(roadNetwork.getFreeFlowTravelTime(), params);
+		rs.calculateUtilities(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, params);
 		rs.printUtilities();
 		rs.calculateProbabilities(roadNetwork.getFreeFlowTravelTime(), params);
 		rs.printProbabilities();

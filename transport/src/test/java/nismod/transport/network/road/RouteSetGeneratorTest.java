@@ -580,6 +580,7 @@ public class RouteSetGeneratorTest {
 		//set route choice parameters
 		params.setProperty("TIME", "-1.5");
 		params.setProperty("LENGTH", "-1.0");
+		params.setProperty("COST", "-3.6");
 		params.setProperty("INTERSECTIONS", "-0.1");
 
 		//assign freight flows
