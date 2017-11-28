@@ -154,11 +154,11 @@ public class Trip {
 		return length + access / 1000 + egress / 1000;
 	}
 	
-	public double getTravelTime(Map<Integer, Double> linkTravelTime, HashMap<Integer, Double> averageAccessEgressMap, double averageAccessEgressSpeed) {
+	public double getTravelTime(Map<Integer, Double> linkTravelTime, double avgIntersectionDelay, HashMap<Integer, Double> averageAccessEgressMap, double averageAccessEgressSpeed) {
 		
 		//Double time = this.route.getTime();
 		//if (time == null) {
-			this.route.calculateTravelTime(linkTravelTime); //route travel time needs to be recalculated every time (as it depends on time of day).
+			this.route.calculateTravelTime(linkTravelTime, avgIntersectionDelay); //route travel time needs to be recalculated every time (as it depends on time of day).
 			Double time = this.route.getTime();
 		//}
 		Double access = averageAccessEgressMap.get(this.getOriginNode().getID());

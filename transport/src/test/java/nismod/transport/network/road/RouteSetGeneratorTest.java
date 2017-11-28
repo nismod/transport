@@ -297,11 +297,6 @@ public class RouteSetGeneratorTest {
 		
 //		timeNow = System.currentTimeMillis() - timeNow;
 //		System.out.printf("Freight routes generated in %d seconds.\n", timeNow / 1000);
-	
-		
-		
-		
-		
 		
 		f.flush();
 		f.close();
@@ -582,6 +577,7 @@ public class RouteSetGeneratorTest {
 		params.setProperty("LENGTH", "-1.0");
 		params.setProperty("COST", "-3.6");
 		params.setProperty("INTERSECTIONS", "-0.1");
+		params.setProperty("AVG_INTERSECTION_DELAY", "0.8");
 
 		//assign freight flows
 		rna.assignFreightFlowsRouteChoice(fm, rsg, params);

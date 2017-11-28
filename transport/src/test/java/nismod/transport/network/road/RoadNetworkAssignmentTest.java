@@ -120,6 +120,7 @@ public class RoadNetworkAssignmentTest {
 		params.setProperty("LENGTH", "-1.0");
 		params.setProperty("COST", "-3.6");
 		params.setProperty("INTERSECTIONS", "-0.1");
+		params.setProperty("AVG_INTERSECTION_DELAY", "0.8");
 		
 		//assign passenger flows
 		long timeNow = System.currentTimeMillis();
@@ -410,6 +411,7 @@ public class RoadNetworkAssignmentTest {
 		params.setProperty("LENGTH", "-1.5");
 		params.setProperty("COST", "-3.6");
 		params.setProperty("INTERSECTIONS", "-0.1");
+		params.setProperty("AVG_INTERSECTION_DELAY", "0.8");
 		
 		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
 		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforCounts());
@@ -691,6 +693,7 @@ public class RoadNetworkAssignmentTest {
 		params.setProperty("LENGTH", "-1.0");
 		params.setProperty("COST", "-3.6");
 		params.setProperty("INTERSECTIONS", "-0.1");
+		params.setProperty("AVG_INTERSECTION_DELAY", "0.8");
 		
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
 		//rsg.readRoutes("./src/test/resources/testdata/testRoutes.txt");
@@ -711,6 +714,7 @@ public class RoadNetworkAssignmentTest {
 		params.setProperty("LENGTH", "-1.5");
 		params.setProperty("COST", "-3.6");
 		params.setProperty("INTERSECTIONS", "-3.1");
+		params.setProperty("AVG_INTERSECTION_DELAY", "0.8");
 		
 		//rsg.calculateAllUtilities(rna.getLinkTravelTimes(), params);
 		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);

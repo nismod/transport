@@ -24,6 +24,8 @@ public class Route {
 	public static final double PARAM_LENGTH = -1.0;
 	public static final double PARAM_COST = -3.6;
 	public static final double PARAM_INTERSECTIONS = -0.1;
+
+	public static final double AVERAGE_INTERSECTION_DELAY = 0.8; //[min] 
 	
 	//initial route size for arraylist
 	public static final int INITIAL_ROUTE_CAPACITY = 10;
@@ -138,13 +140,14 @@ public class Route {
 	 * Calculates the route travel time based on link travel times.
 	 * @param linkTravelTime Link travel times.
 	 */
-	public void calculateTravelTime(Map<Integer, Double> linkTravelTime) {
+	public void calculateTravelTime(Map<Integer, Double> linkTravelTime, double avgIntersectionDelay) {
 		
 		double travelTime = 0.0;
 		for (DirectedEdge edge: edges) {
 			double time = linkTravelTime.get(edge.getID());
 			travelTime += time;
 		}
+		travelTime += this.getNumberOfIntersections() * avgIntersectionDelay;
 		this.time = travelTime;
 	}
 	
@@ -179,14 +182,24 @@ public class Route {
 	/**
 	 * Calculates the utility of the route.
 	 * @param linkTravelTime Link travel times.
+	 * @param avgIntersectionDelay Average intersection delay.
+	 * @param consumptionPer100km Fuel consumption per 100 km.
+	 * @param unitCost Unit cost of fuel.
 	 * @param params Route choice parameters.
 	 */
 	public void calculateUtility(Map<Integer, Double> linkTravelTime, double consumptionPer100km, double unitCost, Properties params) {
 		
 		if (this.length == null) this.calculateLength(); //calculate only once (length is not going to change)
-		//if (this.time == null) this.calculateTravelTime(linkTravelTime);
-		this.calculateTravelTime(linkTravelTime); //always (re)calculate
-		//if (this.cost == null) this.calculateCost(consumptionPer100km, unitCost);
+				
+		double avgIntersectionDelay;
+		if (params == null) { //use default parameters
+			avgIntersectionDelay = AVERAGE_INTERSECTION_DELAY;
+		} else {
+			avgIntersectionDelay = Double.parseDouble(params.getProperty("AVG_INTERSECTION_DELAY"));
+		}
+	
+		this.calculateTravelTime(linkTravelTime, avgIntersectionDelay); //always (re)calculate
+		
 		this.calculateCost(consumptionPer100km, unitCost); //always (re)calculate
 		
 		double length = this.getLength();
@@ -196,15 +209,17 @@ public class Route {
 		
 		double paramTime, paramLength, paramCost, paramIntersections;
 		if (params == null) { //use default parameters
-			paramTime = this.PARAM_TIME;
-			paramLength = this.PARAM_LENGTH;
-			paramCost = this.PARAM_COST;
-			paramIntersections = this.PARAM_INTERSECTIONS;			
+			paramTime = PARAM_TIME;
+			paramLength = PARAM_LENGTH;
+			paramCost = PARAM_COST;
+			paramIntersections = PARAM_INTERSECTIONS;
+			avgIntersectionDelay = AVERAGE_INTERSECTION_DELAY;
 		} else {
 			paramTime = Double.parseDouble(params.getProperty("TIME"));
 			paramLength = Double.parseDouble(params.getProperty("LENGTH"));
 			paramCost = Double.parseDouble(params.getProperty("COST"));
-			paramIntersections = Double.parseDouble(params.getProperty("INTERSECTIONS"));			
+			paramIntersections = Double.parseDouble(params.getProperty("INTERSECTIONS"));
+			avgIntersectionDelay = Double.parseDouble(params.getProperty("AVG_INTERSECTION_DELAY"));
 		}
 		
 		double utility = paramTime * time + paramLength * length + paramCost * cost + paramIntersections * intersec;  

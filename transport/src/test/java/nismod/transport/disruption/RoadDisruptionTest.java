@@ -81,6 +81,7 @@ public class RoadDisruptionTest {
 		params.setProperty("LENGTH", "-1.0");
 		params.setProperty("COST", "-3.6");
 		params.setProperty("INTERSECTIONS", "-0.1");
+		params.setProperty("AVG_INTERSECTION_DELAY", "0.8");
 		
 		double consumption = 5.4;
 		double unitCost = 1.17;
@@ -233,6 +234,7 @@ public class RoadDisruptionTest {
 		params.setProperty("LENGTH", "-1.0");
 		params.setProperty("COST", "-3.6");
 		params.setProperty("INTERSECTIONS", "-0.1");
+		params.setProperty("AVG_INTERSECTION_DELAY", "0.8");
 		
 		double consumption = 5.4;
 		double unitCost = 1.17;

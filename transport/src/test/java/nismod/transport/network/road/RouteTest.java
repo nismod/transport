@@ -68,6 +68,7 @@ public class RouteTest {
 		params.setProperty("LENGTH", "-1.5");
 		params.setProperty("COST", "-3.6");
 		params.setProperty("INTERSECTIONS", "-1.0");
+		params.setProperty("AVG_INTERSECTION_DELAY", "0.8");
 		
 		double consumption = 5.4;
 		double unitCost = 1.17;
@@ -112,6 +113,7 @@ public class RouteTest {
 		params.setProperty("LENGTH", "-1.5");
 		params.setProperty("COST", "-3.6");
 		params.setProperty("INTERSECTIONS", "-0.1");
+		params.setProperty("AVG_INTERSECTION_DELAY", "0.8");
 		
 		r2.calculateUtility(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, params);
 		
@@ -151,6 +153,7 @@ public class RouteTest {
 		params.setProperty("LENGTH", "-1.5");
 		params.setProperty("COST", "-3.6");
 		params.setProperty("INTERSECTIONS", "-0.1");
+		params.setProperty("AVG_INTERSECTION_DELAY", "0.8");
 		
 		r3.calculateUtility(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, params);
 		
@@ -190,6 +193,7 @@ public class RouteTest {
 		params.setProperty("LENGTH", "-1.0");
 		params.setProperty("COST", "-3.6");
 		params.setProperty("INTERSECTIONS", "-0.1");
+		params.setProperty("AVG_INTERSECTION_DELAY", "0.8");
 		
 		r4.calculateUtility(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, params);
 		
@@ -227,7 +231,7 @@ public class RouteTest {
 		System.out.println(r5.getFormattedString());
 		
 		r5.calculateLength();
-		r5.calculateTravelTime(roadNetwork.getFreeFlowTravelTime());
+		r5.calculateTravelTime(roadNetwork.getFreeFlowTravelTime(), 0.8);
 		r5.calculateCost(consumption, unitCost);
 		System.out.println("Intersections: " + r5.getNumberOfIntersections());
 		r5.calculateUtility(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, params);

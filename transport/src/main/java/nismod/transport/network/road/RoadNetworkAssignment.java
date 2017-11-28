@@ -61,7 +61,8 @@ public class RoadNetworkAssignment {
 	public static final boolean FLAG_INTRAZONAL_ASSIGNMENT_REPLACEMENT = false; //true means that origin and destination nodes can be the same
 	public static final boolean FLAG_ASTAR_IF_EMPTY_ROUTE_SET = false; //if there is no pre-generated route set for a node pair, try finding a route with aStar
 	public static final int INTERZONAL_TOP_NODES = 5; //how many top nodes (based on gravitated population size) to considers as trip origin/destination
-
+	public static final double AVERAGE_INTERSECTION_DELAY = 0.8; //[min]
+	
 	private Properties params;
 
 	private static RandomSingleton rng = RandomSingleton.getInstance();
@@ -146,28 +147,7 @@ public class RoadNetworkAssignment {
 			HashMap<Integer, Double> map = new HashMap<Integer, Double>();
 			linkTravelTimePerTimeOfDay.put(hour, map);
 		}
-		
 		this.tripList = new ArrayList<Trip>();
-
-		/*
-		//calculate link travel time
-		Iterator edgesIterator = roadNetwork.getNetwork().getEdges().iterator();
-		while (edgesIterator.hasNext()) {
-			DirectedEdge edge = (DirectedEdge) edgesIterator.next();
-			//calculate free-flow travel time
-			SimpleFeature feature = (SimpleFeature)edge.getObject();
-			String roadNumber = (String) feature.getAttribute("RoadNumber");
-			double travelTime = 0;
-			if (roadNumber.charAt(0) == 'M') //motorway
-				travelTime = (double) feature.getAttribute("LenNet") / RoadNetworkAssignment.FREE_FLOW_SPEED_M_ROAD * 60;  //travel time in minutes
-			else if (roadNumber.charAt(0) == 'A') //A road
-				travelTime = (double) feature.getAttribute("LenNet") / RoadNetworkAssignment.FREE_FLOW_SPEED_A_ROAD * 60;  //travel time in minutes
-			else //ferry
-				travelTime = (double) feature.getAttribute("LenNet") / RoadNetworkAssignment.AVERAGE_SPEED_FERRY * 60;  //travel time in minutes
-			linkFreeFlowTravelTime.put(edge.getID(), travelTime);
-		}
-		*/
-		
 		this.linkFreeFlowTravelTime = roadNetwork.getFreeFlowTravelTime();
 		
 		if (defaultLinkTravelTime == null) //use free flow
@@ -1644,7 +1624,7 @@ public class RoadNetworkAssignment {
 			
 			Double sum = timeSkimMatrix.getCost(originLAD, destinationLAD);
 			if (sum == null) sum = 0.0;
-			double tripTravelTime = trip.getTravelTime(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistance(), this.AVERAGE_ACCESS_EGRESS_SPEED_CAR);
+			double tripTravelTime = trip.getTravelTime(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), AVERAGE_INTERSECTION_DELAY, this.roadNetwork.getNodeToAverageAccessEgressDistance(), AVERAGE_ACCESS_EGRESS_SPEED_CAR);
 			timeSkimMatrix.setCost(originLAD, destinationLAD, sum + tripTravelTime);
 		}
 		
@@ -1694,7 +1674,7 @@ public class RoadNetworkAssignment {
 			
 			Double sum = timeSkimMatrixFreight.getCost(origin, destination, vht.value);
 			if (sum == null) sum = 0.0;
-			double tripTravelTime = trip.getTravelTime(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), AVERAGE_ACCESS_EGRESS_SPEED_FREIGHT);
+			double tripTravelTime = trip.getTravelTime(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), AVERAGE_INTERSECTION_DELAY, this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), AVERAGE_ACCESS_EGRESS_SPEED_FREIGHT);
 			timeSkimMatrixFreight.setCost(origin, destination, vht.value, sum + tripTravelTime);
 		}
 		
