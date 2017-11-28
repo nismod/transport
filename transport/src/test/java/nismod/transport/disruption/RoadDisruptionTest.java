@@ -73,7 +73,7 @@ public class RoadDisruptionTest {
 		System.out.println("Removed routes: " + rd3.getListOfRemovedRoutes());
 
 		//create a road network assignment
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null);
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null);
 
 		//set route choice parameters
 		params = new Properties();
@@ -86,7 +86,7 @@ public class RoadDisruptionTest {
 		double consumption = 5.4;
 		double unitCost = 1.17;
 
-		rsg.calculateAllUtilities(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, params);
+		rsg.calculateAllUtilities(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, null, params);
 		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
 
 		System.out.println(rna.getTripList());
@@ -102,7 +102,7 @@ public class RoadDisruptionTest {
 		
 		rna.resetLinkVolumes();
 		rna.resetTripStorages();
-		rsg.calculateAllUtilities(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, params);
+		rsg.calculateAllUtilities(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, null, params);
 		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
 		
 		dailyVolume = rna.getLinkVolumesInPCU();
@@ -226,7 +226,7 @@ public class RoadDisruptionTest {
 		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
 	
 		//create a road network assignment
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null);
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null);
 
 		//set route choice parameters
 		params = new Properties();
@@ -239,7 +239,7 @@ public class RoadDisruptionTest {
 		double consumption = 5.4;
 		double unitCost = 1.17;
 
-		rsg.calculateAllUtilities(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, params);
+		rsg.calculateAllUtilities(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, null, params);
 		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
 
 		assertNull("There should be no traffic volume for the removed link", rna.getLinkVolumesInPCU().get(561));
