@@ -834,14 +834,14 @@ public class RouteSetGenerator {
 	 * @param unitCost Unit cost of fuel.
 	 * @param params Parameters of the route choice model.
 	 */
-	public void calculateAllUtilities(HashMap<Integer, Double> linkTravelTime, double consumption, double unitCost, Properties params) {
+	public void calculateAllUtilities(HashMap<Integer, Double> linkTravelTime, double consumption, double unitCost, HashMap<Integer, Double> linkCharges, Properties params) {
 
 		for (Object mk: routes.keySet()) {
 			int origin = (int) ((MultiKey)mk).getKey(0);
 			int destination = (int) ((MultiKey)mk).getKey(1);
 		
 			RouteSet rs = (RouteSet)routes.get(origin, destination);
-			rs.calculateUtilities(linkTravelTime, consumption, unitCost, params);
+			rs.calculateUtilities(linkTravelTime, consumption, unitCost, linkCharges, params);
 			rs.sortRoutesOnUtility(); //will update probabilities as well
 		}
 	}

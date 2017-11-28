@@ -54,6 +54,7 @@ public class DemandModel {
 	private HashMap<Integer, RoadNetworkAssignment> yearToRoadNetworkAssignment;
 	private HashMap<Integer, HashMap<EngineType, Double>> yearToEnergyUnitCosts;
 	private HashMap<Integer, HashMap<EngineType, Double>> yearToEngineTypeFractions;
+	private HashMap<Integer, HashMap<Integer, Double>> yearToCongestionCharges;
 	//private SkimMatrix baseYearTimeSkimMatrix,	baseYearCostSkimMatrix;
 	
 	private RouteSetGenerator rsg;
@@ -88,12 +89,11 @@ public class DemandModel {
 		yearToRoadNetworkAssignment = new HashMap<Integer, RoadNetworkAssignment>();
 		yearToEnergyUnitCosts = new HashMap<Integer, HashMap<EngineType, Double>>();
 		yearToEngineTypeFractions = new HashMap<Integer, HashMap<EngineType, Double>>();
+		yearToCongestionCharges = new HashMap<Integer, HashMap<Integer, Double>>();
 		
 		this.rsg = rsg;
 		this.params = params;
-		
 		this.roadNetwork = roadNetwork;
-		
 		this.interventions = interventions;
 
 		//read base-year passenger matrix
@@ -181,7 +181,8 @@ public class DemandModel {
 												null, 
 												null, 
 												null, 
-												null);
+												null,
+												this.yearToCongestionCharges.get(fromYear));
 				rna.assignFlowsAndUpdateLinkTravelTimesIterated(this.yearToPassengerODMatrix.get(fromYear), this.yearToFreightODMatrix.get(fromYear), this.rsg, this.params, LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);
 				yearToRoadNetworkAssignment.put(fromYear, rna);
 	
@@ -301,7 +302,8 @@ public class DemandModel {
 															 null, 
 															 rna.getLinkTravelTimes(), 
 															 rna.getAreaCodeProbabilities(), 
-															 rna.getWorkplaceZoneProbabilities());
+															 rna.getWorkplaceZoneProbabilities(),
+															 this.yearToCongestionCharges.get(predictedYear));
 				else
 					//using latest link travel times
 					predictedRna = new RoadNetworkAssignment(this.roadNetwork, 
@@ -310,7 +312,8 @@ public class DemandModel {
 															 null, 
 															 predictedRna.getLinkTravelTimes(), 
 															 predictedRna.getAreaCodeProbabilities(), 
-															 predictedRna.getWorkplaceZoneProbabilities());
+															 predictedRna.getWorkplaceZoneProbabilities(),
+															 this.yearToCongestionCharges.get(predictedYear));
 
 				predictedRna.assignFlowsAndUpdateLinkTravelTimesIterated(predictedPassengerODMatrix, predictedFreightODMatrix, this.rsg, this.params, LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);
 				
@@ -370,7 +373,8 @@ public class DemandModel {
 														 null, 
 														 predictedRna.getLinkTravelTimes(), 
 														 predictedRna.getAreaCodeProbabilities(), 
-														 predictedRna.getWorkplaceZoneProbabilities());
+														 predictedRna.getWorkplaceZoneProbabilities(),
+														 this.yearToCongestionCharges.get(predictedYear));
 				//predictedRna.resetLinkVolumes();
 				//predictedRna.assignPassengerFlows(predictedPassengerODMatrix);
 				//predictedRna.updateLinkTravelTimes(ALPHA_LINK_TRAVEL_TIME_AVERAGING);
@@ -499,6 +503,16 @@ public class DemandModel {
 	public void setEngineTypeFractions(int year, HashMap<EngineType, Double> engineTypeFractions) {
 		
 		this.yearToEngineTypeFractions.put(year, engineTypeFractions);
+	}
+	
+	public void setCongestionCharges(int year, HashMap<Integer, Double> linkCharges) {
+		
+		this.yearToCongestionCharges.put(year, linkCharges);
+	}
+	
+	public HashMap<Integer, Double> getCongestionCharges(int year) {
+		
+		return this.yearToCongestionCharges.get(year);
 	}
 	
 	/**

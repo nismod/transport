@@ -168,13 +168,17 @@ public class Route {
 	/**
 	 * Calculates the cost of the route.
 	 */
-	public void calculateCost(double consumptionPer100km, double unitCost){
+	public void calculateCost(double consumptionPer100km, double unitCost, HashMap<Integer, Double> linkCharges){
 	
 		double cost = 0.0;
 		for (DirectedEdge edge: edges) {
 			SimpleFeature sf = (SimpleFeature) edge.getObject();
 			double len = (double) sf.getAttribute("LenNet"); //in [km]
 			cost += len / 100 * consumptionPer100km * unitCost ;
+			
+			//if congestion charged
+			if (linkCharges != null && linkCharges.containsKey(edge.getID())) 
+					cost += linkCharges.get(edge.getID());
 		}
 		this.cost = cost;
 	}
@@ -187,7 +191,7 @@ public class Route {
 	 * @param unitCost Unit cost of fuel.
 	 * @param params Route choice parameters.
 	 */
-	public void calculateUtility(Map<Integer, Double> linkTravelTime, double consumptionPer100km, double unitCost, Properties params) {
+	public void calculateUtility(Map<Integer, Double> linkTravelTime, double consumptionPer100km, double unitCost, HashMap<Integer, Double> linkCharges, Properties params) {
 		
 		if (this.length == null) this.calculateLength(); //calculate only once (length is not going to change)
 				
@@ -200,7 +204,7 @@ public class Route {
 	
 		this.calculateTravelTime(linkTravelTime, avgIntersectionDelay); //always (re)calculate
 		
-		this.calculateCost(consumptionPer100km, unitCost); //always (re)calculate
+		this.calculateCost(consumptionPer100km, unitCost, linkCharges); //always (re)calculate
 		
 		double length = this.getLength();
 		double time = this.getTime();
