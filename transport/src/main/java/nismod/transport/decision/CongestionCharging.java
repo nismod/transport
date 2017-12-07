@@ -1,11 +1,31 @@
 package nismod.transport.decision;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Properties;
+import java.util.Set;
+
+import org.apache.commons.collections4.keyvalue.MultiKey;
+import org.apache.commons.collections4.map.MultiKeyMap;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+
+import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
+import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 
 import nismod.transport.demand.DemandModel;
 
+/**
+ * Intervention that implements link-based congestion charge
+ * that depends on vehicle type and time of day.
+ * @author Milan Lovric
+ */
 public class CongestionCharging extends Intervention {
+	
+	private MultiKeyMap storedCongestionCharges = null;
 
 	/**
 	 * @param props
@@ -26,7 +46,9 @@ public class CongestionCharging extends Intervention {
 	@Override
 	public void install(Object o) {
 	
-		System.out.println("Implementing congestion charging.");
+		String name = props.getProperty("name");
+		
+		System.out.println("Implementing congestion charging: " + name);
 		
 		DemandModel dm = null;
 		if (o instanceof DemandModel) {
@@ -44,23 +66,54 @@ public class CongestionCharging extends Intervention {
 		System.out.println(listOfCongestionChargedEdgeIDsNoTabs);
 		String[] edgeIDs = listOfCongestionChargedEdgeIDsNoTabs.split(",");
 		
-		double congestionCharge = Double.parseDouble(this.props.getProperty("congestionCharge"));
+		//double congestionCharge = Double.parseDouble(this.props.getProperty("congestionCharge"));
+		String congestionChargeFile = this.props.getProperty("congestionChargeFile");
+
+		MultiKeyMap congestionCharge = null; 
 		
 		int startYear = Integer.parseInt(props.getProperty("startYear"));
 		int endYear = Integer.parseInt(props.getProperty("endYear"));
 
+		try {
+			congestionCharge = this.readCongestionChargeFile(congestionChargeFile);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		System.out.println(congestionCharge.toString());
+		
+		this.storedCongestionCharges = new MultiKeyMap();
+		
 		//set congestion charge for all years from startYear to endYear
 		for (int y = startYear; y <= endYear; y++) {
 
-			HashMap<Integer, Double> linkCharges = new HashMap<Integer, Double>();
-			for (String edgeString: edgeIDs) {
-				int edgeID = Integer.parseInt(edgeString);
-				linkCharges.put(edgeID, congestionCharge);
+			MultiKeyMap congestionCharges = new MultiKeyMap();
+
+			for (Object mk: congestionCharge.keySet()) {
+
+				VehicleType vht = (VehicleType) ((MultiKey)mk).getKey(0);
+				TimeOfDay hour = (TimeOfDay) ((MultiKey)mk).getKey(1);
+
+				double charge = (double) congestionCharge.get(vht, hour);
+
+				HashMap<Integer, Double> linkCharges = new HashMap<Integer, Double>();
+				for (String edgeString: edgeIDs) {
+					int edgeID = Integer.parseInt(edgeString);
+					linkCharges.put(edgeID, charge);
+				}
+
+				congestionCharges.put(vht,  hour, linkCharges);
+				this.storedCongestionCharges.put(vht,  hour, linkCharges);
 			}
 
-			dm.setCongestionCharges(y, linkCharges);
+			//dm.setCongestionCharges(y, congestionCharges);
+			dm.addCongestionCharges(y, congestionCharges);
 		}
-	
+
 		this.installed = true;
 	}
 
@@ -82,10 +135,47 @@ public class CongestionCharging extends Intervention {
 		int startYear = Integer.parseInt(props.getProperty("startYear"));
 		int endYear = Integer.parseInt(props.getProperty("endYear"));
 
-		//set no charge for all years from startYear to endYear
+		
+		
+		//remove (subtract) congestion charges for all years from startYear to endYear
 		for (int y = startYear; y <= endYear; y++)
-			dm.setCongestionCharges(y, null);
+			//dm.setCongestionCharges(y, null);
+			dm.removeCongestionCharges(y, this.storedCongestionCharges);
+		
+		this.storedCongestionCharges = null;
 		
 		this.installed = false;
+	}
+	
+	
+	/**
+	 * Reads congestion charge file which contains charges that depend on vehicle type and time of day (hour).
+	 * @param fileName File name.
+	 * @return Map with congestion charges.
+	 */
+	public MultiKeyMap readCongestionChargeFile (String fileName) throws FileNotFoundException, IOException {
+
+		//HashMap<Integer, HashMap<String, Double>> map = new HashMap<Integer, HashMap<String, Double>>();
+		MultiKeyMap map = new MultiKeyMap();
+		
+		CSVParser parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
+		//System.out.println(parser.getHeaderMap().toString());
+		Set<String> keySet = parser.getHeaderMap().keySet();
+		keySet.remove("vehicleType");
+		//System.out.println("keySet = " + keySet);
+		Double charge;
+		for (CSVRecord record : parser) {
+			//System.out.println(record);
+			VehicleType vht = VehicleType.valueOf(record.get(0));
+			for (String time: keySet) {
+				//System.out.println("Time of day = " + time);
+				charge = Double.parseDouble(record.get(time));  
+				map.put(vht, TimeOfDay.valueOf(time), charge);			
+			}
+		}
+		
+		parser.close(); 
+
+		return map;
 	}
 }

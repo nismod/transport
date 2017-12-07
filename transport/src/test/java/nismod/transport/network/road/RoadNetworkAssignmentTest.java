@@ -174,10 +174,10 @@ public class RoadNetworkAssignmentTest {
 		//rsg.readRoutes("./src/main/resources/data/routesFreight/routesFreight.txt");
 		//rsg.readRoutesBinary("./src/main/resources/data/freightRoutes/freightRoutes.dat");
 		rsg.readRoutesBinaryWithoutValidityCheck("./src/main/resources/data/freightRoutesTop5/freightRoutesTop5.dat");
-		//rsg.printStatistics();
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Freight routes read in %d seconds.\n", timeNow / 1000);
-				
+		rsg.printStatistics();
+		
  		//assign freight flows
 		timeNow = System.currentTimeMillis();
 //		roadNetworkAssignment.assignFreightFlows(freightMatrix);

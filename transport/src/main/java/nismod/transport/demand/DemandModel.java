@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
 
+import org.apache.commons.collections4.map.MultiKeyMap;
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -23,6 +24,8 @@ import nismod.transport.decision.Intervention;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
+import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
+import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.network.road.RouteSetGenerator;
 
 /**
@@ -54,7 +57,8 @@ public class DemandModel {
 	private HashMap<Integer, RoadNetworkAssignment> yearToRoadNetworkAssignment;
 	private HashMap<Integer, HashMap<EngineType, Double>> yearToEnergyUnitCosts;
 	private HashMap<Integer, HashMap<EngineType, Double>> yearToEngineTypeFractions;
-	private HashMap<Integer, HashMap<Integer, Double>> yearToCongestionCharges;
+	//private HashMap<Integer, HashMap<Integer, Double>> yearToCongestionCharges;
+	private HashMap<Integer, MultiKeyMap> yearToCongestionCharges;
 	//private SkimMatrix baseYearTimeSkimMatrix,	baseYearCostSkimMatrix;
 	
 	private RouteSetGenerator rsg;
@@ -89,7 +93,7 @@ public class DemandModel {
 		yearToRoadNetworkAssignment = new HashMap<Integer, RoadNetworkAssignment>();
 		yearToEnergyUnitCosts = new HashMap<Integer, HashMap<EngineType, Double>>();
 		yearToEngineTypeFractions = new HashMap<Integer, HashMap<EngineType, Double>>();
-		yearToCongestionCharges = new HashMap<Integer, HashMap<Integer, Double>>();
+		yearToCongestionCharges = new HashMap<Integer, MultiKeyMap>();
 		
 		this.rsg = rsg;
 		this.params = params;
@@ -505,15 +509,93 @@ public class DemandModel {
 		this.yearToEngineTypeFractions.put(year, engineTypeFractions);
 	}
 	
-	public void setCongestionCharges(int year, HashMap<Integer, Double> linkCharges) {
+	/**
+	 * Setter method for congestion charges (overrides them).
+	 * @param year
+	 * @param congestionCharges
+	 */
+	public void setCongestionCharges(int year, MultiKeyMap congestionCharges) {
 		
-		this.yearToCongestionCharges.put(year, linkCharges);
+		this.yearToCongestionCharges.put(year, congestionCharges);
 	}
-	
-	public HashMap<Integer, Double> getCongestionCharges(int year) {
+
+	public MultiKeyMap getCongestionCharges(int year) {
 		
 		return this.yearToCongestionCharges.get(year);
 	}
+	
+	/**
+	 * Adds congestion charges on top of the existing ones.
+	 * @param year
+	 * @param congestionCharges
+	 */
+	public void addCongestionCharges(int year, MultiKeyMap congestionCharges) {
+		
+		MultiKeyMap map = this.yearToCongestionCharges.get(year);
+		//if there is no existing congestion charge, simply set
+		if (map == null)
+				this.yearToCongestionCharges.put(year, congestionCharges);
+		else { //add to the existing ones
+			for (Object mk: congestionCharges.keySet()) {
+				VehicleType vht = (VehicleType) ((MultiKey)mk).getKey(0);
+				TimeOfDay hour = (TimeOfDay) ((MultiKey)mk).getKey(1);
+				
+				HashMap<Integer, Double> linkCharges = (HashMap<Integer, Double>) congestionCharges.get(vht, hour);
+				HashMap<Integer, Double> existingLinkCharges = (HashMap<Integer, Double>) map.get(vht, hour);
+				
+				if (existingLinkCharges == null) { //if they do not exist for this combination, create them and add to the existing map 
+					existingLinkCharges = new HashMap<Integer, Double>();
+					for (Integer edgeID: linkCharges.keySet()) existingLinkCharges.put(edgeID, linkCharges.get(edgeID));
+					map.put(vht,  hour, existingLinkCharges);
+				} else { //add charges on top
+					for (Integer edgeID: linkCharges.keySet()) {
+						Double existing = existingLinkCharges.get(edgeID);
+						if (existing == null) existing = 0.0;
+						existing += linkCharges.get(edgeID);
+						existingLinkCharges.put(edgeID, existing);
+					}
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Removes congestion charges from the existing ones.
+	 * @param year
+	 * @param congestionCharges
+	 */
+	public void removeCongestionCharges(int year, MultiKeyMap congestionCharges) {
+		
+		MultiKeyMap map = this.yearToCongestionCharges.get(year);
+		//if there is no existing congestion charge, there is nothing to remove
+		if (map == null) 
+				return;
+		else { //remove the existing ones
+			for (Object mk: congestionCharges.keySet()) {
+				VehicleType vht = (VehicleType) ((MultiKey)mk).getKey(0);
+				TimeOfDay hour = (TimeOfDay) ((MultiKey)mk).getKey(1);
+				
+				HashMap<Integer, Double> linkCharges = (HashMap<Integer, Double>) congestionCharges.get(vht, hour);
+				HashMap<Integer, Double> existingLinkCharges = (HashMap<Integer, Double>) map.get(vht, hour);
+				
+				if (existingLinkCharges == null) { //if they do not exist for this combination, skip
+					continue;
+				} else { //remove charges from the existing ones
+					for (Integer edgeID: linkCharges.keySet()) {
+						Double existing = existingLinkCharges.get(edgeID);
+						if (existing == null) continue;
+						existing -= linkCharges.get(edgeID);
+						if (existing < 0) {
+							System.err.println("Removing the congestion charge would result in a negative value. Setting zero charge.");
+							existing = 0.0;
+						}
+						existingLinkCharges.put(edgeID, existing);
+					}
+				}
+			}
+		}
+	}
+
 	
 	/**
 	 * Saves road network assignment results into a csv file.

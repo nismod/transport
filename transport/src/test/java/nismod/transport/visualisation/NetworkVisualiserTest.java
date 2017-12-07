@@ -32,7 +32,7 @@ public class NetworkVisualiserTest {
 	
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlfixedEdgeIDs);
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null);
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null);
 		ODMatrix odm = new ODMatrix("./src/test/resources/minitestdata/passengerODM.csv");
 		rna.assignPassengerFlows(odm);
 		Map<Integer, Double> dailyVolume = rna.getLinkVolumesInPCU();
