@@ -118,7 +118,7 @@ public class RoadNetworkAssignment {
 	//the probability of freight trip ending at a node
 	private HashMap<Integer, Double> endNodeProbabilitiesFreight;
 	
-	private HashMap<Integer, Double> linkCharges; //for congestion charging
+	private MultiKeyMap congestionCharges; //for congestion charging
 
 	/**
 	 * @param roadNetwork Road network.
@@ -135,7 +135,7 @@ public class RoadNetworkAssignment {
 								 Map<TimeOfDay, Map<Integer, Double>> defaultLinkTravelTime, 
 								 HashMap<String, Double> areaCodeProbabilities, 
 								 HashMap<String, Double> workplaceZoneProbabilities,
-								 HashMap<Integer, Double> linkCharges) {
+								 MultiKeyMap congestionCharges) {
 
 		this.roadNetwork = roadNetwork;
 		this.linkVolumesInPCU = new HashMap<Integer, Double>();
@@ -308,7 +308,7 @@ public class RoadNetworkAssignment {
 			this.timeOfDayDistribution.put(TimeOfDay.ELEVENPM, 0.0071);
 		}
 		
-		this.linkCharges = linkCharges;
+		this.congestionCharges = congestionCharges;
 	}
 
 	/** 
@@ -718,7 +718,13 @@ public class RoadNetworkAssignment {
 						//probabilities need to be calculated for this route set before a choice can be made
 						fetchedRouteSet.setLinkTravelTime(this.linkTravelTimePerTimeOfDay.get(hour));
 						fetchedRouteSet.setParameters(routeChoiceParameters);
-						fetchedRouteSet.calculateUtilities(this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptionsPer100km.get(engine), this.energyUnitCosts.get(engine), this.linkCharges, routeChoiceParameters);
+						
+						//fetch congestion charge
+						VehicleType vht = VehicleType.CAR;
+						HashMap<Integer, Double> linkCharges = null;
+						if (this.congestionCharges != null) linkCharges = (HashMap<Integer, Double>) this.congestionCharges.get(vht, hour);
+						
+						fetchedRouteSet.calculateUtilities(this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptionsPer100km.get(engine), this.energyUnitCosts.get(engine), linkCharges, routeChoiceParameters);
 						fetchedRouteSet.calculateProbabilities(this.linkTravelTimePerTimeOfDay.get(hour), routeChoiceParameters);
 						fetchedRouteSet.sortRoutesOnUtility();
 					//}
@@ -1334,7 +1340,13 @@ public class RoadNetworkAssignment {
 						//probabilities need to be calculated for this route set before a choice can be made
 						fetchedRouteSet.setLinkTravelTime(this.linkTravelTimePerTimeOfDay.get(hour));
 						fetchedRouteSet.setParameters(routeChoiceParameters);
-						fetchedRouteSet.calculateUtilities(this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptionsPer100km.get(engine), this.energyUnitCosts.get(engine), this.linkCharges, routeChoiceParameters);
+						
+						//fetch congestion charge
+						VehicleType vht = VehicleType.values()[vehicleType];
+						HashMap<Integer, Double> linkCharges = null;
+						if (this.congestionCharges != null) linkCharges = (HashMap<Integer, Double>) this.congestionCharges.get(vht, hour);
+						
+						fetchedRouteSet.calculateUtilities(this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptionsPer100km.get(engine), this.energyUnitCosts.get(engine), linkCharges, routeChoiceParameters);
 						fetchedRouteSet.calculateProbabilities(this.linkTravelTimePerTimeOfDay.get(hour), routeChoiceParameters);
 						fetchedRouteSet.sortRoutesOnUtility();
 					//}
@@ -2721,12 +2733,11 @@ public class RoadNetworkAssignment {
 
 	/**
 	 * Setter method for congestion charged links.
-	 * @param chargedLinks List of road links with congestion charge
-	 * @param congestionCharge Amount of congestion charge
+	 * @param congestionCharges The structure with congestion charges
 	 */
-	public void setChargedLinks(HashMap<Integer, Double> linkCharges) {
+	public void setChargedLinks(MultiKeyMap congestionCharges) {
 		
-		this.linkCharges = linkCharges;
+		this.congestionCharges = congestionCharges;
 	}
 
 	/**

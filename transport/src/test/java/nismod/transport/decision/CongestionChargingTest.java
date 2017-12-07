@@ -3,28 +3,18 @@
  */
 package nismod.transport.decision;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
-import java.awt.Color;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import javax.swing.BorderFactory;
-import javax.swing.JFrame;
-
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
-import org.jfree.data.general.DefaultPieDataset;
 import org.junit.Test;
 
 import nismod.transport.demand.DemandModel;
 import nismod.transport.network.road.RoadNetwork;
-import nismod.transport.network.road.RouteSetGenerator;
-import nismod.transport.visualisation.PieChartVisualiser;
 
 /**
  * @author Milan Lovric
@@ -53,6 +43,8 @@ public class CongestionChargingTest {
 		final String GVAFile = "./src/test/resources/testdata/GVA.csv";
 		final String energyUnitCostsFile = "./src/test/resources/testdata/energyUnitCosts.csv";
 		
+		final String congestionChargeFile = "./src/test/resources/testdata/congestionCharges.csv";
+		
 		//create a road network
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl2, networkUrl2, nodesUrl2, AADFurl2, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
 	
@@ -60,7 +52,7 @@ public class CongestionChargingTest {
 		props.setProperty("startYear", "2016");
 		props.setProperty("endYear", "2025");
 		props.setProperty("listOfCongestionChargedEdgeIDs", "561, 562,	574"); //space and tab added on purpose
-		props.setProperty("congestionCharge", "1.25");
+		props.setProperty("congestionChargeFile", congestionChargeFile);
 	
 		CongestionCharging cg = new CongestionCharging(props);
 		System.out.println("Congestion charging intervention: " + cg.toString());
