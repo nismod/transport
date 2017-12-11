@@ -25,7 +25,7 @@ import nismod.transport.demand.DemandModel;
  */
 public class CongestionCharging extends Intervention {
 	
-	private MultiKeyMap storedCongestionCharges = null;
+	private String name = null;
 
 	/**
 	 * @param props
@@ -47,6 +47,7 @@ public class CongestionCharging extends Intervention {
 	public void install(Object o) {
 	
 		String name = props.getProperty("name");
+		this.name = name;
 		
 		System.out.println("Implementing congestion charging: " + name);
 		
@@ -86,8 +87,6 @@ public class CongestionCharging extends Intervention {
 		
 		System.out.println(congestionCharge.toString());
 		
-		this.storedCongestionCharges = new MultiKeyMap();
-		
 		//set congestion charge for all years from startYear to endYear
 		for (int y = startYear; y <= endYear; y++) {
 
@@ -107,11 +106,10 @@ public class CongestionCharging extends Intervention {
 				}
 
 				congestionCharges.put(vht,  hour, linkCharges);
-				this.storedCongestionCharges.put(vht,  hour, linkCharges);
 			}
 
 			//dm.setCongestionCharges(y, congestionCharges);
-			dm.addCongestionCharges(y, congestionCharges);
+			dm.addCongestionCharges(y, name, congestionCharges);
 		}
 
 		this.installed = true;
@@ -135,14 +133,10 @@ public class CongestionCharging extends Intervention {
 		int startYear = Integer.parseInt(props.getProperty("startYear"));
 		int endYear = Integer.parseInt(props.getProperty("endYear"));
 
-		
-		
-		//remove (subtract) congestion charges for all years from startYear to endYear
+		//remove congestion charges for all years from startYear to endYear
 		for (int y = startYear; y <= endYear; y++)
 			//dm.setCongestionCharges(y, null);
-			dm.removeCongestionCharges(y, this.storedCongestionCharges);
-		
-		this.storedCongestionCharges = null;
+			dm.removeCongestionCharges(y, this.name);
 		
 		this.installed = false;
 	}

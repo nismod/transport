@@ -172,7 +172,7 @@ public class RouteSet {
 	 * @param linkTravelTime Link travel times.
 	 * @param params Route choice parameters.
 	 */
-	public void calculateUtilities(Map<Integer, Double> linkTravelTime, double consumptionPer100km, double unitCost, HashMap<Integer, Double> linkCharges, Properties params) {
+	public void calculateUtilities(Map<Integer, Double> linkTravelTime, double consumptionPer100km, double unitCost, HashMap<String, HashMap<Integer, Double>> linkCharges, Properties params) {
 		
 		//store arguments into instance fields
 		this.linkTravelTime = linkTravelTime;

@@ -168,18 +168,30 @@ public class Route {
 	/**
 	 * Calculates the cost of the route.
 	 */
-	public void calculateCost(double consumptionPer100km, double unitCost, HashMap<Integer, Double> linkCharges){
-	
+	public void calculateCost(double consumptionPer100km, double unitCost, HashMap<String, HashMap<Integer, Double>> linkCharges) {
+
+		//temporary map to check if a charging policy has already been applied
+		HashMap<String, Boolean> flags = new HashMap<String, Boolean>();
+		if (linkCharges != null)
+			for (String policyName: linkCharges.keySet()) flags.put(policyName, false);
+
 		double cost = 0.0;
 		for (DirectedEdge edge: edges) {
 			SimpleFeature sf = (SimpleFeature) edge.getObject();
 			double len = (double) sf.getAttribute("LenNet"); //in [km]
 			cost += len / 100 * consumptionPer100km * unitCost ;
-			
-			//if congestion charged
-			if (linkCharges != null && linkCharges.containsKey(edge.getID())) 
-					cost += linkCharges.get(edge.getID());
+
+			if (linkCharges != null)
+				for (String policyName: linkCharges.keySet()) {
+					if (flags.get(policyName)) continue; //skip if policy already applied
+					HashMap<Integer, Double> charges = linkCharges.get(policyName);
+					if (charges.containsKey(edge.getID())) {
+						cost += charges.get(edge.getID());
+						flags.put(policyName, true);
+					}
+				}
 		}
+		
 		this.cost = cost;
 	}
 	
@@ -191,7 +203,7 @@ public class Route {
 	 * @param unitCost Unit cost of fuel.
 	 * @param params Route choice parameters.
 	 */
-	public void calculateUtility(Map<Integer, Double> linkTravelTime, double consumptionPer100km, double unitCost, HashMap<Integer, Double> linkCharges, Properties params) {
+	public void calculateUtility(Map<Integer, Double> linkTravelTime, double consumptionPer100km, double unitCost, HashMap<String, HashMap<Integer, Double>> linkCharges, Properties params) {
 		
 		if (this.length == null) this.calculateLength(); //calculate only once (length is not going to change)
 				
