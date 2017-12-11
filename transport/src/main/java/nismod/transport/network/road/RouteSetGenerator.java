@@ -834,7 +834,7 @@ public class RouteSetGenerator {
 	 * @param unitCost Unit cost of fuel.
 	 * @param params Parameters of the route choice model.
 	 */
-	public void calculateAllUtilities(HashMap<Integer, Double> linkTravelTime, double consumption, double unitCost, HashMap<Integer, Double> linkCharges, Properties params) {
+	public void calculateAllUtilities(HashMap<Integer, Double> linkTravelTime, double consumption, double unitCost, HashMap<String, HashMap<Integer, Double>> linkCharges, Properties params) {
 
 		for (Object mk: routes.keySet()) {
 			int origin = (int) ((MultiKey)mk).getKey(0);
