@@ -25,7 +25,7 @@ public class Trip {
 		
 	/**
 	 * Constructor for a trip. Origin and destination are used for freight trips (according to DfT's BYFM zonal coding).
-	 * Origin and destination for passenger car trips are 0 as their correct origin and destination zone can be 
+	 * Origin and destination for passenger car/AV trips are 0 as their correct origin and destination zone can be 
 	 * obtained using the first and the last node of the route.
 	 * @param vehicle Vehicle type.
 	 * @param engine Engine type.
@@ -40,7 +40,7 @@ public class Trip {
 		this.origin = origin;
 		this.destination = destination;
 		
-		if (vehicle == VehicleType.CAR)
+		if (vehicle == VehicleType.CAR || vehicle == VehicleType.AV)
 			if (origin != 0 || destination != 0)
 				System.err.println("Origin and destination for non-freight trips must be 0 as their ODs should be fetched from the route.");
 	}
@@ -141,7 +141,7 @@ public class Trip {
 	
 	public double getLength(HashMap<Integer, Double> averageAccessEgressMap) {
 
-		Double length = this.route.getLength(); //route lenght is not changing so if can be calculated only once and stored
+		Double length = this.route.getLength(); //route length is not changing so if can be calculated only once and stored
 		if (length == null) {
 			this.route.calculateLength();
 			length = this.route.getLength();
