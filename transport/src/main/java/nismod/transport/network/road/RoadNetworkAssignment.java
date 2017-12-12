@@ -62,6 +62,7 @@ public class RoadNetworkAssignment {
 	public static final boolean FLAG_ASTAR_IF_EMPTY_ROUTE_SET = false; //if there is no pre-generated route set for a node pair, try finding a route with aStar
 	public static final int INTERZONAL_TOP_NODES = 5; //how many top nodes (based on gravitated population size) to considers as trip origin/destination
 	public static final double AVERAGE_INTERSECTION_DELAY = 0.8; //[min]
+	public static final double FRACTION_AV = 0.01;
 	
 	private Properties params;
 
@@ -72,7 +73,7 @@ public class RoadNetworkAssignment {
 	}
 
 	public static enum VehicleType {
-		CAR(0), ARTIC(1), RIGID(2), VAN(3);
+		CAR(0), ARTIC(1), RIGID(2), VAN(3), AV(4);
 		private int value; 
 		private VehicleType(int value) { this.value = value; } 
 		public int getValue() { return this.value; } 
@@ -246,6 +247,7 @@ public class RoadNetworkAssignment {
 		vehicleTypeToPCU.put(VehicleType.ARTIC, 2.0);
 		vehicleTypeToPCU.put(VehicleType.RIGID, 2.0);
 		vehicleTypeToPCU.put(VehicleType.VAN, 1.0);
+		vehicleTypeToPCU.put(VehicleType.AV, 0.5);
 
 		//set default values for energy consumption of different car engine types
 		//for petrol/diesel/lpg this is in £/l, for hydrogen in £/kg, for electricity in £/kWh.
@@ -375,6 +377,14 @@ public class RoadNetworkAssignment {
 				}
 				
 				//choose vehicle
+				random  = rng.nextDouble();
+				VehicleType vht = null;
+				if (Double.compare(1.0 - FRACTION_AV, random) > 0)
+					vht = VehicleType.CAR;
+				else 
+					vht = VehicleType.AV;
+								
+				//choose engine
 				cumulativeProbability = 0.0;
 				random = rng.nextDouble();
 				EngineType engine = null;
@@ -484,19 +494,19 @@ public class RoadNetworkAssignment {
 						//increase volume count (in PCU) for that edge
 						Double volumeInPCU = linkVolumesInPCU.get(e.getID());
 						if (volumeInPCU == null) volumeInPCU = 0.0;
-						volumeInPCU++;
+						volumeInPCU += 	this.vehicleTypeToPCU.get(vht);
 						linkVolumesInPCU.put(e.getID(), volumeInPCU);
 
-						//increase volume count for that edge and for a car vehicle type
-						Integer volume = linkVolumesPerVehicleType.get(VehicleType.CAR).get(e.getID());
+						//increase volume count for that edge and for the right vehicle type (CAR or AV)
+						Integer volume = linkVolumesPerVehicleType.get(vht).get(e.getID());
 						if (volume == null) volume = 0;
 						volume++;
-						linkVolumesPerVehicleType.get(VehicleType.CAR).put(e.getID(), volume);
+						linkVolumesPerVehicleType.get(vht).put(e.getID(), volume);
 					}
 					//System.out.printf("Sum of edge lengths: %.3f\n\n", sum);
 
 					//store trip in trip list
-					Trip trip = new Trip(VehicleType.CAR, engine, foundRoute, hour, 0, 0);
+					Trip trip = new Trip(vht, engine, foundRoute, hour, 0, 0);
 					this.tripList.add(trip);
 
 				} catch (Exception e) {
@@ -577,6 +587,14 @@ public class RoadNetworkAssignment {
 				}
 				
 				//choose vehicle
+				random  = rng.nextDouble();
+				VehicleType vht = null;
+				if (Double.compare(1.0 - FRACTION_AV, random) > 0)
+					vht = VehicleType.CAR;
+				else 
+					vht = VehicleType.AV;
+				
+				//choose engine
 				cumulativeProbability = 0.0;
 				random = rng.nextDouble();
 				EngineType engine = null;
@@ -719,8 +737,7 @@ public class RoadNetworkAssignment {
 						fetchedRouteSet.setLinkTravelTime(this.linkTravelTimePerTimeOfDay.get(hour));
 						fetchedRouteSet.setParameters(routeChoiceParameters);
 						
-						//fetch congestion charge
-						VehicleType vht = VehicleType.CAR;
+						//fetch congestion charge for the vehicle type
 						HashMap<String, HashMap<Integer, Double>> linkCharges = null;
 						if (this.congestionCharges != null) 
 							for (String policyName: this.congestionCharges.keySet())
@@ -768,18 +785,18 @@ public class RoadNetworkAssignment {
 					//increase volume count (in PCU) for that edge
 					Double volumeInPCU = linkVolumesInPCU.get(e.getID());
 					if (volumeInPCU == null) volumeInPCU = 0.0;
-					volumeInPCU++;
+					volumeInPCU += this.vehicleTypeToPCU.get(vht);
 					linkVolumesInPCU.put(e.getID(), volumeInPCU);
 
-					//increase volume count for that edge and for a car vehicle type
-					Integer volume = linkVolumesPerVehicleType.get(VehicleType.CAR).get(e.getID());
+					//increase volume count for that edge and for the right vehicle type (CAR or AV)
+					Integer volume = linkVolumesPerVehicleType.get(vht).get(e.getID());
 					if (volume == null) volume = 0;
 					volume++;
-					linkVolumesPerVehicleType.get(VehicleType.CAR).put(e.getID(), volume);
+					linkVolumesPerVehicleType.get(vht).put(e.getID(), volume);
 				}
 
 				//store trip in trip list
-				Trip trip = new Trip(VehicleType.CAR, engine, chosenRoute, hour, 0, 0);
+				Trip trip = new Trip(vht, engine, chosenRoute, hour, 0, 0);
 				this.tripList.add(trip);
 				
 			}//for each trip
@@ -2745,7 +2762,7 @@ public class RoadNetworkAssignment {
 //	}
 
 	/**
-	 * Calculates the number of car trips starting in a LAD.
+	 * Calculates the number of passenger (car/AV) trips starting in a LAD.
 	 * @return Number of trips.
 	 */
 	public HashMap<String, Integer> calculateLADTripStarts() {
@@ -2753,7 +2770,7 @@ public class RoadNetworkAssignment {
 		HashMap<String, Integer> totalLADnoTripStarts = new HashMap<String, Integer>();
 		
 		for (Trip trip: this.tripList)
-			if (trip.getVehicle() == VehicleType.CAR) {
+			if (trip.getVehicle() == VehicleType.CAR || trip.getVehicle() == VehicleType.AV) {
 				String originZone = trip.getOriginLAD(this.roadNetwork.getNodeToZone());
 				Integer tripStarts = totalLADnoTripStarts.get(originZone);
 				if (tripStarts == null) tripStarts = 0;
@@ -2764,7 +2781,7 @@ public class RoadNetworkAssignment {
 	}
 	
 	/**
-	 * Calculates the number of car trips ending in a LAD.
+	 * Calculates the number of passenger (car/AV) trips ending in a LAD.
 	 * @return Number of trips.
 	 */
 	public HashMap<String, Integer> calculateLADTripEnds() {
@@ -2772,7 +2789,7 @@ public class RoadNetworkAssignment {
 		HashMap<String, Integer> totalLADnoTripEnds = new HashMap<String, Integer>();
 		
 		for (Trip trip: this.tripList) 
-			if (trip.getVehicle() == VehicleType.CAR) {
+			if (trip.getVehicle() == VehicleType.CAR || trip.getVehicle() == VehicleType.AV) {
 				String destinationZone = trip.getDestinationLAD(this.roadNetwork.getNodeToZone());
 				Integer tripEnds = totalLADnoTripEnds.get(destinationZone);
 				if (tripEnds == null) tripEnds = 0;
@@ -2791,7 +2808,7 @@ public class RoadNetworkAssignment {
 		HashMap<String, Integer> totalLADnoTripStarts = new HashMap<String, Integer>();
 		
 		for (Trip trip: this.tripList)
-			if (trip.getVehicle() != VehicleType.CAR) {
+			if (trip.getVehicle() == VehicleType.VAN || trip.getVehicle() == VehicleType.RIGID || trip.getVehicle() == VehicleType.ARTIC) {
 				String originZone = trip.getOriginLAD(this.roadNetwork.getNodeToZone());
 				Integer tripStarts = totalLADnoTripStarts.get(originZone);
 				if (tripStarts == null) tripStarts = 0;
@@ -2810,7 +2827,7 @@ public class RoadNetworkAssignment {
 		HashMap<String, Integer> totalLADnoTripEnds = new HashMap<String, Integer>();
 		
 		for (Trip trip: this.tripList) 
-			if (trip.getVehicle() != VehicleType.CAR) {
+			if (trip.getVehicle() == VehicleType.VAN || trip.getVehicle() == VehicleType.RIGID || trip.getVehicle() == VehicleType.ARTIC) {
 				String destinationZone = trip.getDestinationLAD(this.roadNetwork.getNodeToZone());
 				Integer tripEnds = totalLADnoTripEnds.get(destinationZone);
 				if (tripEnds == null) tripEnds = 0;
