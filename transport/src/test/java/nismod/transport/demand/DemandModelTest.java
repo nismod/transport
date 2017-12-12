@@ -182,7 +182,9 @@ public class DemandModelTest {
 		Properties params = new Properties();
 		params.setProperty("TIME", "-1.5");
 		params.setProperty("LENGTH", "-1.0");
+		params.setProperty("COST", "-3.6");
 		params.setProperty("INTERSECTIONS", "-0.1");
+		params.setProperty("AVG_INTERSECTION_DELAY", "0.8");
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork2);
 		//rsg.readRoutes("./src/test/resources/testdata/testRoutes.txt");
 		rsg.readRoutes("./src/test/resources/testdata/allRoutes.txt");

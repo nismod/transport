@@ -237,10 +237,8 @@ public class DemandModel {
 				double newGVAOriginZone = this.yearToZoneToGVA.get(predictedYear).get(originZone);
 				double newGVADestinationZone = this.yearToZoneToGVA.get(predictedYear).get(destinationZone);
 
-				double predictedFlow = oldFlow * Math.pow(newPopulationOriginZone / oldPopulationOriginZone, elasticities.get(ElasticityTypes.POPULATION)) *
-						Math.pow(newGVAOriginZone / oldGVAOriginZone, elasticities.get(ElasticityTypes.GVA)) *
-						Math.pow(newPopulationDestinationZone / oldPopulationDestinationZone, elasticities.get(ElasticityTypes.POPULATION)) *
-						Math.pow(newGVADestinationZone / oldGVADestinationZone, elasticities.get(ElasticityTypes.GVA));
+				double predictedFlow = oldFlow * Math.pow((newPopulationOriginZone + newPopulationDestinationZone) / (oldPopulationOriginZone + oldPopulationDestinationZone), elasticities.get(ElasticityTypes.POPULATION)) *
+						Math.pow((newGVAOriginZone + newGVADestinationZone) / (oldGVAOriginZone + oldGVADestinationZone), elasticities.get(ElasticityTypes.GVA));
 				//System.out.printf("%d = %d * (%.0f / %.0f) ^ %.2f * (%.1f / %.1f) ^ %.2f * (%.0f / %.0f) ^ %.2f * (%.1f / %.1f) ^ %.2f\n", (int) Math.round(predictedFlow), (int) Math.round(oldFlow),
 				//newPopulationOriginZone, oldPopulationOriginZone, elasticities.get(ElasticityTypes.POPULATION),
 				//newGVAOriginZone, oldGVAOriginZone, elasticities.get(ElasticityTypes.GVA),
@@ -248,7 +246,7 @@ public class DemandModel {
 				//newGVADestinationZone, oldGVADestinationZone, elasticities.get(ElasticityTypes.GVA));
 				
 				predictedPassengerODMatrix.setFlow(originZone, destinationZone, (int) Math.round(predictedFlow));
-			}
+			} 
 			
 			System.out.println("First stage prediction passenger matrix (from population and GVA):");
 			predictedPassengerODMatrix.printMatrixFormatted();
@@ -263,7 +261,7 @@ public class DemandModel {
 				double predictedFlow = oldFlow;
 
 				//if origin is a LAD (<= 1032, according to the DfT BYFM model)
-				if (origin <= 1032) {
+				if (origin <= 1032 && destination > 1032) {
 
 					String originZone = roadNetwork.getFreightZoneToLAD().get(origin); 
 					double oldPopulationOriginZone = this.yearToZoneToPopulation.get(fromYear).get(originZone);
@@ -275,7 +273,7 @@ public class DemandModel {
 							Math.pow(newGVAOriginZone / oldGVAOriginZone, elasticitiesFreight.get(ElasticityTypes.GVA));
 				}
 				//if destination is a LAD (<= 1032, according to the DfT BYFM model)
-				if (destination <= 1032) {
+				else if (destination <= 1032 && origin > 1032) {
 
 					String destinationZone = roadNetwork.getFreightZoneToLAD().get(destination); 
 					double oldPopulationDestinationZone = this.yearToZoneToPopulation.get(fromYear).get(destinationZone);
@@ -286,6 +284,25 @@ public class DemandModel {
 					predictedFlow = predictedFlow *	Math.pow(newPopulationDestinationZone / oldPopulationDestinationZone, elasticitiesFreight.get(ElasticityTypes.POPULATION)) *
 							Math.pow(newGVADestinationZone / oldGVADestinationZone, elasticitiesFreight.get(ElasticityTypes.GVA));
 				}
+				//if both origin and destination zone are LADs
+				else if (origin <= 1032 && destination <= 1032) {
+					
+					String originZone = roadNetwork.getFreightZoneToLAD().get(origin); 
+					double oldPopulationOriginZone = this.yearToZoneToPopulation.get(fromYear).get(originZone);
+					double newPopulationOriginZone = this.yearToZoneToPopulation.get(predictedYear).get(originZone);
+					double oldGVAOriginZone = this.yearToZoneToGVA.get(fromYear).get(originZone);
+					double newGVAOriginZone = this.yearToZoneToGVA.get(predictedYear).get(originZone);
+					String destinationZone = roadNetwork.getFreightZoneToLAD().get(destination); 
+					double oldPopulationDestinationZone = this.yearToZoneToPopulation.get(fromYear).get(destinationZone);
+					double newPopulationDestinationZone = this.yearToZoneToPopulation.get(predictedYear).get(destinationZone);
+					double oldGVADestinationZone = this.yearToZoneToGVA.get(fromYear).get(destinationZone);
+					double newGVADestinationZone = this.yearToZoneToGVA.get(predictedYear).get(destinationZone);
+					
+					predictedFlow = predictedFlow *	Math.pow((newPopulationOriginZone + newPopulationDestinationZone) / (oldPopulationOriginZone + oldPopulationDestinationZone), elasticitiesFreight.get(ElasticityTypes.POPULATION)) *
+							Math.pow((newGVAOriginZone + newGVADestinationZone) / (oldGVAOriginZone + oldGVADestinationZone), elasticitiesFreight.get(ElasticityTypes.GVA));
+					
+				}
+					
 				predictedFreightODMatrix.setFlow(origin, destination, vehicleType, (int) Math.round(predictedFlow));
 			}
 
