@@ -10,6 +10,7 @@ import org.jfree.data.general.DefaultPieDataset;
 
 import nismod.transport.demand.DemandModel;
 import nismod.transport.network.road.RoadNetworkAssignment;
+import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 
 /**
  * @author Milan Lovric
@@ -53,6 +54,7 @@ public class VehicleElectrification extends Intervention {
 		
 		int startYear = Integer.parseInt(props.getProperty("startYear"));
 		int endYear = Integer.parseInt(props.getProperty("endYear"));
+		VehicleType vht = VehicleType.valueOf(props.getProperty("vehicleType"));
 
 		//set fractions for all years from startYear to endYear
 		for (int y = startYear; y <= endYear; y++) {
@@ -62,7 +64,8 @@ public class VehicleElectrification extends Intervention {
 				double fraction = Double.parseDouble(this.props.getProperty(et.name()));
 				engineTypeFractions.put(et, fraction);
 			}
-			dm.setEngineTypeFractions(y, engineTypeFractions);
+			
+			dm.setEngineTypeFractions(y, vht, engineTypeFractions);
 		}
 		
 		this.installed = true;
@@ -88,16 +91,17 @@ public class VehicleElectrification extends Intervention {
 		
 		int startYear = Integer.parseInt(props.getProperty("startYear"));
 		int endYear = Integer.parseInt(props.getProperty("endYear"));
+		VehicleType vht = VehicleType.valueOf(props.getProperty("vehicleType"));
 		
 		//set base-year fractions for all years from startYear to endYear
 		for (int y = startYear; y <= endYear; y++) {
 			HashMap<RoadNetworkAssignment.EngineType, Double> engineTypeFractions = new HashMap<RoadNetworkAssignment.EngineType, Double>();
 			//read fractions from the base-year fractions
 			for (RoadNetworkAssignment.EngineType et: RoadNetworkAssignment.EngineType.values()) {
-				double fraction = dm.getEngineTypeFractions(DemandModel.BASE_YEAR).get(et);
+				double fraction = dm.getEngineTypeFractions(DemandModel.BASE_YEAR).get(vht).get(et);
 				engineTypeFractions.put(et, fraction);
 			}
-			dm.setEngineTypeFractions(y, engineTypeFractions);
+			dm.setEngineTypeFractions(y, vht, engineTypeFractions);
 		}
 		
 		this.installed = false;

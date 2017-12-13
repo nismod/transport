@@ -19,6 +19,8 @@ import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.map.MultiKeyMap;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.apache.commons.lang3.tuple.Pair;
+
 import org.geotools.graph.path.AStarShortestPathFinder;
 import org.geotools.graph.path.DijkstraShortestPathFinder;
 import org.geotools.graph.path.Path;
@@ -69,7 +71,7 @@ public class RoadNetworkAssignment {
 	private static RandomSingleton rng = RandomSingleton.getInstance();
 
 	public static enum EngineType {
-		PETROL, DIESEL, LPG, ELECTRICITY, HYBRID, HYDROGEN
+		PETROL, DIESEL, LPG, ELECTRICITY, HYDROGEN, HYBRID
 	}
 
 	public static enum VehicleType {
@@ -89,8 +91,8 @@ public class RoadNetworkAssignment {
 	private HashMap<VehicleType, Double> vehicleTypeToPCU;
 
 	private HashMap<EngineType, Double> energyUnitCosts;
-	private HashMap<EngineType, Double> energyConsumptionsPer100km;
-	private HashMap<EngineType, Double> engineTypeFractions;
+	private HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptions;
+	private HashMap<VehicleType, HashMap<EngineType, Double>> engineTypeFractions;
 
 	private HashMap<TimeOfDay, Double> timeOfDayDistribution;
 	
@@ -119,7 +121,7 @@ public class RoadNetworkAssignment {
 	//the probability of freight trip ending at a node
 	private HashMap<Integer, Double> endNodeProbabilitiesFreight;
 	
-	private HashMap<String, MultiKeyMap> congestionCharges; //for congestion charging
+	private HashMap<String, MultiKeyMap> congestionCharges; //String is the policy name, MultiKeyMap is (VehicleType, TimeOfDay) -> list of link charges
 
 	/**
 	 * @param roadNetwork Road network.
@@ -131,7 +133,9 @@ public class RoadNetworkAssignment {
 	 */
 	public RoadNetworkAssignment(RoadNetwork roadNetwork, 
 								 HashMap<EngineType, Double> energyUnitCosts, 
-								 HashMap<EngineType, Double> engineTypeFractions, 
+								 HashMap<VehicleType, HashMap<EngineType, Double>> engineTypeFractions,
+								 HashMap<VehicleType, Double> vehicleTypeToPCU,
+								 HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptions, 
 								 HashMap<TimeOfDay, Double> timeOfDayDistribution, 
 								 Map<TimeOfDay, Map<Integer, Double>> defaultLinkTravelTime, 
 								 HashMap<String, Double> areaCodeProbabilities, 
@@ -241,13 +245,16 @@ public class RoadNetworkAssignment {
 		System.out.println(this.startNodeProbabilitiesFreight);
 		System.out.println(this.endNodeProbabilitiesFreight);
 
-		//set default values for vehicle type to PCU conversion
-		vehicleTypeToPCU = new HashMap<VehicleType, Double>();
-		vehicleTypeToPCU.put(VehicleType.CAR, 1.0);
-		vehicleTypeToPCU.put(VehicleType.ARTIC, 2.0);
-		vehicleTypeToPCU.put(VehicleType.RIGID, 2.0);
-		vehicleTypeToPCU.put(VehicleType.VAN, 1.0);
-		vehicleTypeToPCU.put(VehicleType.AV, 0.5);
+		if (vehicleTypeToPCU != null) this.vehicleTypeToPCU = vehicleTypeToPCU;
+		else {
+			//set default values for vehicle type to PCU conversion
+			this.vehicleTypeToPCU = new HashMap<VehicleType, Double>();
+			this.vehicleTypeToPCU.put(VehicleType.CAR, 1.0);
+			this.vehicleTypeToPCU.put(VehicleType.ARTIC, 2.3);
+			this.vehicleTypeToPCU.put(VehicleType.RIGID, 2.0);
+			this.vehicleTypeToPCU.put(VehicleType.VAN, 1.0);
+			this.vehicleTypeToPCU.put(VehicleType.AV, 0.5);
+		}
 
 		//set default values for energy consumption of different car engine types
 		//for petrol/diesel/lpg this is in £/l, for hydrogen in £/kg, for electricity in £/kWh.
@@ -260,25 +267,110 @@ public class RoadNetworkAssignment {
 			this.energyUnitCosts.put(EngineType.ELECTRICITY, 0.1);
 			this.energyUnitCosts.put(EngineType.HYDROGEN, 4.19);
 			this.energyUnitCosts.put(EngineType.HYBRID, 1.17);
-
 		}
-		energyConsumptionsPer100km = new HashMap<EngineType, Double>();
-		energyConsumptionsPer100km.put(EngineType.PETROL, 5.4);
-		energyConsumptionsPer100km.put(EngineType.DIESEL, 4.6);
-		energyConsumptionsPer100km.put(EngineType.LPG, 6.75);
-		energyConsumptionsPer100km.put(EngineType.ELECTRICITY, 20.0);
-		energyConsumptionsPer100km.put(EngineType.HYDROGEN, 0.95);
-		energyConsumptionsPer100km.put(EngineType.HYBRID, 7.4);
+		
+		if (energyConsumptions != null) this.energyConsumptions = energyConsumptions;
+		else {
+		
+			this.energyConsumptions = new HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>>();
+			HashMap<String, Double> parameters = new HashMap<String, Double>();
+			parameters.put("A", 1.11932239320862);
+			parameters.put("B", 0.0440047704089497);
+			parameters.put("C", -0.0000813834474888197);
+			parameters.put("D", 2.44908328418021E-06);
+			this.energyConsumptions.put(Pair.of(VehicleType.CAR, EngineType.PETROL), parameters);
+			this.energyConsumptions.put(Pair.of(VehicleType.AV, EngineType.PETROL), parameters);
+			parameters = new HashMap<String, Double>();
+			parameters.put("A", 0.492145560354439);
+			parameters.put("B", 0.0621819673117346);
+			parameters.put("C", -0.000590984065596694);
+			parameters.put("D", 4.64689042740593E-06);
+			this.energyConsumptions.put(Pair.of(VehicleType.CAR, EngineType.DIESEL), parameters);
+			this.energyConsumptions.put(Pair.of(VehicleType.AV, EngineType.DIESEL), parameters);
+			parameters = new HashMap<String, Double>();
+			parameters.put("A", 1.9508327694036);
+			parameters.put("B", 0.0345279785832351);
+			parameters.put("C", 0.0000679867603539223);
+			parameters.put("D", 3.71489958706489E-06);
+			this.energyConsumptions.put(Pair.of(VehicleType.VAN, EngineType.PETROL), parameters);
+			parameters = new HashMap<String, Double>();
+			parameters.put("A", 1.39688349613763);
+			parameters.put("B", 0.0334774003427366);
+			parameters.put("C", -0.000229977888526145);
+			parameters.put("D", 7.67319942399065E-06);
+			this.energyConsumptions.put(Pair.of(VehicleType.VAN, EngineType.DIESEL), parameters);
+			parameters = new HashMap<String, Double>();
+			parameters.put("A", 1.81290336211856);
+			parameters.put("B", 0.326784427957389);
+			parameters.put("C", -0.00494782507508988);
+			parameters.put("D", 0.0000425842233266921);
+			this.energyConsumptions.put(Pair.of(VehicleType.RIGID, EngineType.DIESEL), parameters);
+			parameters = new HashMap<String, Double>();
+			parameters.put("A", 2.89329150710372);
+			parameters.put("B", 0.603481016828657);
+			parameters.put("C", -0.00863692643386338);
+			parameters.put("D", 0.0000651027867897036);
+			this.energyConsumptions.put(Pair.of(VehicleType.ARTIC, EngineType.DIESEL), parameters);
+			parameters = new HashMap<String, Double>();
+			parameters.put("A", 0.0);
+			parameters.put("B", 0.12564236);
+			parameters.put("C", 0.0);
+			parameters.put("D", 0.0);
+			this.energyConsumptions.put(Pair.of(VehicleType.CAR, EngineType.ELECTRICITY), parameters);
+			this.energyConsumptions.put(Pair.of(VehicleType.AV, EngineType.ELECTRICITY), parameters);
+			parameters = new HashMap<String, Double>();
+			parameters.put("A", 0.0);
+			parameters.put("B", 0.0675);
+			parameters.put("C", 0.0);
+			parameters.put("D", 0.0);
+			this.energyConsumptions.put(Pair.of(VehicleType.CAR, EngineType.LPG), parameters);
+			this.energyConsumptions.put(Pair.of(VehicleType.AV, EngineType.LPG), parameters);
+			parameters = new HashMap<String, Double>();
+			parameters.put("A", 0.0);
+			parameters.put("B",  0.0095);
+			parameters.put("C", 0.0);
+			parameters.put("D", 0.0);
+			this.energyConsumptions.put(Pair.of(VehicleType.CAR, EngineType.HYDROGEN), parameters);
+			this.energyConsumptions.put(Pair.of(VehicleType.AV, EngineType.HYDROGEN), parameters);
+			parameters = new HashMap<String, Double>();
+			parameters.put("A", 0.0);
+			parameters.put("B", 0.074);
+			parameters.put("C", 0.0);
+			parameters.put("D", 0.0);
+			this.energyConsumptions.put(Pair.of(VehicleType.CAR, EngineType.HYBRID), parameters);
+			this.energyConsumptions.put(Pair.of(VehicleType.AV, EngineType.HYBRID), parameters);
+		}
 
 		if (engineTypeFractions != null) this.engineTypeFractions = engineTypeFractions;
 		else {
-			this.engineTypeFractions = new HashMap<EngineType, Double>();
-			this.engineTypeFractions.put(EngineType.PETROL, 0.45);
-			this.engineTypeFractions.put(EngineType.DIESEL, 0.35);
-			this.engineTypeFractions.put(EngineType.LPG, 0.1);
-			this.engineTypeFractions.put(EngineType.ELECTRICITY, 0.05);
-			this.engineTypeFractions.put(EngineType.HYDROGEN, 0.025);
-			this.engineTypeFractions.put(EngineType.HYBRID, 0.025);
+			this.engineTypeFractions = new HashMap<VehicleType, HashMap<EngineType, Double>>();
+			
+			HashMap<EngineType, Double> map = new HashMap<EngineType, Double>();
+			map.put(EngineType.PETROL, 0.45);
+			map.put(EngineType.DIESEL, 0.35);
+			map.put(EngineType.LPG, 0.1);
+			map.put(EngineType.ELECTRICITY, 0.05);
+			map.put(EngineType.HYDROGEN, 0.025);
+			map.put(EngineType.HYBRID, 0.025);
+			this.engineTypeFractions.put(VehicleType.CAR, map);
+			this.engineTypeFractions.put(VehicleType.AV, map);
+			map = new HashMap<EngineType, Double>();
+			map.put(EngineType.PETROL, 0.45);
+			map.put(EngineType.DIESEL, 0.55);
+			map.put(EngineType.LPG, 0.0);
+			map.put(EngineType.ELECTRICITY, 0.0);
+			map.put(EngineType.HYDROGEN, 0.0);
+			map.put(EngineType.HYBRID, 0.0);
+			this.engineTypeFractions.put(VehicleType.VAN, map);
+			map = new HashMap<EngineType, Double>();
+			map.put(EngineType.PETROL, 0.0);
+			map.put(EngineType.DIESEL, 1.00);
+			map.put(EngineType.LPG, 0.0);
+			map.put(EngineType.ELECTRICITY, 0.0);
+			map.put(EngineType.HYDROGEN, 0.0);
+			map.put(EngineType.HYBRID, 0.0);
+			this.engineTypeFractions.put(VehicleType.RIGID, map);
+			this.engineTypeFractions.put(VehicleType.ARTIC, map);
 		}
 		
 		if (timeOfDayDistribution != null) this.timeOfDayDistribution = timeOfDayDistribution; //TODO check it adds up to one!
@@ -375,6 +467,7 @@ public class RoadNetworkAssignment {
 						break;
 					}
 				}
+				if (hour == null) System.err.println("Time of day not chosen!");
 				
 				//choose vehicle
 				random  = rng.nextDouble();
@@ -383,12 +476,13 @@ public class RoadNetworkAssignment {
 					vht = VehicleType.CAR;
 				else 
 					vht = VehicleType.AV;
+				if (vht == null) System.err.println("Vehicle type not chosen!");
 								
 				//choose engine
 				cumulativeProbability = 0.0;
 				random = rng.nextDouble();
 				EngineType engine = null;
-				for (Map.Entry<EngineType, Double> entry : engineTypeFractions.entrySet()) {
+				for (Map.Entry<EngineType, Double> entry : engineTypeFractions.get(vht).entrySet()) {
 					EngineType key = entry.getKey();
 					Double value = entry.getValue();	
 					cumulativeProbability += value;
@@ -397,6 +491,7 @@ public class RoadNetworkAssignment {
 						break;
 					}
 				}
+				if (engine == null) System.err.println("Engine type not chosen!");
 				
 				//choose origin/destination nodes based on the gravitating population
 				//the choice with replacement means that possibly: destination node = origin node
@@ -494,6 +589,7 @@ public class RoadNetworkAssignment {
 						//increase volume count (in PCU) for that edge
 						Double volumeInPCU = linkVolumesInPCU.get(e.getID());
 						if (volumeInPCU == null) volumeInPCU = 0.0;
+					
 						volumeInPCU += 	this.vehicleTypeToPCU.get(vht);
 						linkVolumesInPCU.put(e.getID(), volumeInPCU);
 
@@ -585,6 +681,7 @@ public class RoadNetworkAssignment {
 						break;
 					}
 				}
+				if (hour == null) System.err.println("Time of day not chosen!");
 				
 				//choose vehicle
 				random  = rng.nextDouble();
@@ -593,12 +690,13 @@ public class RoadNetworkAssignment {
 					vht = VehicleType.CAR;
 				else 
 					vht = VehicleType.AV;
+				if (vht == null) System.err.println("Vehicle type not chosen!");
 				
 				//choose engine
 				cumulativeProbability = 0.0;
 				random = rng.nextDouble();
 				EngineType engine = null;
-				for (Map.Entry<EngineType, Double> entry : engineTypeFractions.entrySet()) {
+				for (Map.Entry<EngineType, Double> entry : engineTypeFractions.get(vht).entrySet()) {
 					EngineType key = entry.getKey();
 					Double value = entry.getValue();	
 					cumulativeProbability += value;
@@ -607,6 +705,7 @@ public class RoadNetworkAssignment {
 						break;
 					}
 				}
+				if (engine == null) System.err.println("Engine type not chosen!");
 	
 				//choose origin/destination nodes based on the gravitating population
 				//the choice with replacement means that possibly: destination node = origin node
@@ -743,7 +842,7 @@ public class RoadNetworkAssignment {
 							for (String policyName: this.congestionCharges.keySet())
 								linkCharges.put(policyName, (HashMap<Integer, Double>) this.congestionCharges.get(policyName).get(vht, hour));
 						
-						fetchedRouteSet.calculateUtilities(this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptionsPer100km.get(engine), this.energyUnitCosts.get(engine), linkCharges, routeChoiceParameters);
+						fetchedRouteSet.calculateUtilities(this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions.get(Pair.of(vht, engine)), this.energyUnitCosts.get(engine), linkCharges, routeChoiceParameters);
 						fetchedRouteSet.calculateProbabilities(this.linkTravelTimePerTimeOfDay.get(hour), routeChoiceParameters);
 						fetchedRouteSet.sortRoutesOnUtility();
 					//}
@@ -865,12 +964,15 @@ public class RoadNetworkAssignment {
 						break;
 					}
 				}
+				if (hour == null) System.err.println("Time of day not chosen!");
 				
-				//choose vehicle
+				VehicleType vht = VehicleType.values()[vehicleType];
+				
+				//choose engine
 				cumulativeProbability = 0.0;
 				random = rng.nextDouble();
 				EngineType engine = null;
-				for (Map.Entry<EngineType, Double> entry : engineTypeFractions.entrySet()) {
+				for (Map.Entry<EngineType, Double> entry : engineTypeFractions.get(vht).entrySet()) {
 					EngineType key = entry.getKey();
 					Double value = entry.getValue();	
 					cumulativeProbability += value;
@@ -879,6 +981,7 @@ public class RoadNetworkAssignment {
 						break;
 					}
 				}
+				if (engine == null) System.err.println("Engine type not chosen!");
 
 				Integer originNode = null, destinationNode = null;
 
@@ -1015,8 +1118,6 @@ public class RoadNetworkAssignment {
 					//System.out.println("The path as a list of edges: " + listOfEdges);
 					//System.out.println("Path size in the number of nodes: " + aStarPath.size());
 					//System.out.println("Path size in the number of edges: " + listOfEdges.size());
-
-					VehicleType vht = VehicleType.values()[vehicleType];
 					
 					for (Object o: listOfEdges) {
 						//DirectedEdge e = (DirectedEdge) o;
@@ -1107,12 +1208,15 @@ public class RoadNetworkAssignment {
 						break;
 					}
 				}
+				if (hour == null) System.err.println("Time of day not chosen!");
 				
-				//choose vehicle
+				VehicleType vht = VehicleType.values()[vehicleType];
+				
+				//choose engine
 				cumulativeProbability = 0.0;
 				random = rng.nextDouble();
 				EngineType engine = null;
-				for (Map.Entry<EngineType, Double> entry : engineTypeFractions.entrySet()) {
+				for (Map.Entry<EngineType, Double> entry : engineTypeFractions.get(vht).entrySet()) {
 					EngineType key = entry.getKey();
 					Double value = entry.getValue();	
 					cumulativeProbability += value;
@@ -1121,6 +1225,7 @@ public class RoadNetworkAssignment {
 						break;
 					}
 				}
+				if (engine == null) System.err.println("Engine type not chosen!");
 
 				Integer originNode = null, destinationNode = null;
 				String originLAD = null, destinationLAD = null;
@@ -1360,14 +1465,13 @@ public class RoadNetworkAssignment {
 						fetchedRouteSet.setLinkTravelTime(this.linkTravelTimePerTimeOfDay.get(hour));
 						fetchedRouteSet.setParameters(routeChoiceParameters);
 						
-						//fetch congestion charge
-						VehicleType vht = VehicleType.CAR;
+						//fetch congestion charge for the vehicle type
 						HashMap<String, HashMap<Integer, Double>> linkCharges = null;
 						if (this.congestionCharges != null) 
 							for (String policyName: this.congestionCharges.keySet())
 								linkCharges.put(policyName, (HashMap<Integer, Double>) this.congestionCharges.get(policyName).get(vht, hour));
 						
-						fetchedRouteSet.calculateUtilities(this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptionsPer100km.get(engine), this.energyUnitCosts.get(engine), linkCharges, routeChoiceParameters);
+						fetchedRouteSet.calculateUtilities(this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions.get(Pair.of(vht, engine)), this.energyUnitCosts.get(engine), linkCharges, routeChoiceParameters);
 						fetchedRouteSet.calculateProbabilities(this.linkTravelTimePerTimeOfDay.get(hour), routeChoiceParameters);
 						fetchedRouteSet.sortRoutesOnUtility();
 					//}
@@ -1396,8 +1500,6 @@ public class RoadNetworkAssignment {
 				//System.out.println("The path as a list of edges: " + listOfEdges);
 				//System.out.println("Path size in the number of nodes: " + aStarPath.size());
 				//System.out.println("Path size in the number of edges: " + listOfEdges.size());
-
-				VehicleType vht = VehicleType.values()[vehicleType];
 
 				for (Object o: listOfEdges) {
 					//DirectedEdge e = (DirectedEdge) o;
@@ -1761,7 +1863,7 @@ public class RoadNetworkAssignment {
 			
 			Double sum = costSkimMatrix.getCost(originLAD, destinationLAD);
 			if (sum == null) sum = 0.0;
-			double tripFuelCost = trip.getCost(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistance(), AVERAGE_ACCESS_EGRESS_SPEED_CAR, this.energyUnitCosts, this.energyConsumptionsPer100km);
+			double tripFuelCost = trip.getCost(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistance(), AVERAGE_ACCESS_EGRESS_SPEED_CAR, this.energyUnitCosts, this.energyConsumptions, this.congestionCharges);
 			costSkimMatrix.setCost(originLAD, destinationLAD, sum + tripFuelCost);
 		}
 		
@@ -1890,7 +1992,7 @@ public class RoadNetworkAssignment {
 			
 			Double sum = costSkimMatrixFreight.getCost(origin, destination, vht.value);
 			if (sum == null) sum = 0.0;
-			double tripFuelCost = trip.getCost(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), AVERAGE_ACCESS_EGRESS_SPEED_FREIGHT, this.energyUnitCosts, this.energyConsumptionsPer100km);
+			double tripFuelCost = trip.getCost(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), AVERAGE_ACCESS_EGRESS_SPEED_FREIGHT, this.energyUnitCosts, this.energyConsumptions, this.congestionCharges);
 			
 			costSkimMatrixFreight.setCost(origin, destination, vht.value, sum + tripFuelCost);
 		}
@@ -1932,7 +2034,7 @@ public class RoadNetworkAssignment {
 			
 			if (trip.getVehicle() != VehicleType.CAR) continue; //skip freight vehicles
 			EngineType et = trip.getEngine();
-			double consumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistance(), AVERAGE_ACCESS_EGRESS_SPEED_CAR, this.energyConsumptionsPer100km);
+			double consumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistance(), AVERAGE_ACCESS_EGRESS_SPEED_CAR, this.energyConsumptions);
 
 			Double currentConsumption = consumptions.get(et);
 			if (currentConsumption == null) currentConsumption = 0.0;
@@ -1962,7 +2064,7 @@ public class RoadNetworkAssignment {
 			if (trip.getVehicle() != VehicleType.CAR) continue; //skip freight vehicles
 			
 			EngineType et = trip.getEngine();
-			double tripConsumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), AVERAGE_ACCESS_EGRESS_SPEED_FREIGHT, this.energyConsumptionsPer100km);
+			double tripConsumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), AVERAGE_ACCESS_EGRESS_SPEED_FREIGHT, this.energyConsumptions);
 
 			String originLAD = trip.getOriginLAD(this.roadNetwork.getNodeToZone());
 			String destinationLAD = trip.getDestinationLAD(this.roadNetwork.getNodeToZone());
@@ -2000,7 +2102,7 @@ public class RoadNetworkAssignment {
 			if ( ! (vht == VehicleType.ARTIC || vht == VehicleType.RIGID || vht == VehicleType.VAN)) continue; //skip non-freight vehicles
 			
 			EngineType et = trip.getEngine();
-			double consumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), AVERAGE_ACCESS_EGRESS_SPEED_FREIGHT, this.energyConsumptionsPer100km);
+			double consumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), AVERAGE_ACCESS_EGRESS_SPEED_FREIGHT, this.energyConsumptions);
 
 			Double currentConsumption = consumptions.get(et);
 			if (currentConsumption == null) currentConsumption = 0.0;
@@ -2654,19 +2756,19 @@ public class RoadNetworkAssignment {
 	}
 
 	/**
-	 * Getter method for energy consumptions per 100 km.
-	 * @return Energy consumptions per 100 km.
+	 * Getter method for energy consumptions.
+	 * @return Energy consumptions.
 	 */   
-	public HashMap<EngineType, Double> getEnergyConsumptionsPer100km() {
+	public HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> getEnergyConsumptions() {
 
-		return this.energyConsumptionsPer100km;
+		return this.energyConsumptions;
 	}
 
 	/**
 	 * Getter method for engine type fractions.
 	 * @return Engine type fractions.
 	 */   
-	public HashMap<EngineType, Double> getEngineTypeFractions() {
+	public HashMap<VehicleType, HashMap<EngineType, Double>> getEngineTypeFractions() {
 
 		return this.engineTypeFractions;
 	}
@@ -2888,23 +2990,24 @@ public class RoadNetworkAssignment {
 	}
 
 	/**
-	 * Setter method for the energy consumption per 100 km.
-	 * @param engineType The type of a car engine.
-	 * @param energyConsumptionPer100km Energy consumption per 100 km (in L for fuel and kWh for electricity).
+	 * Setter method for the energy consumption parameters.
+	 * @param vehicleType Vehicle type
+	 * @param engineType Engine type
+	 * @param parameters Energy consumptions parameters (A, B, C, D)
 	 */
-	public void setEnergyConsumptionPer100km (EngineType engineType, double energyConsumptionPer100km) {
+	public void setEnergyConsumptionParameters (VehicleType vehicleType, EngineType engineType, HashMap<String, Double> parameters) {
 
-		this.energyConsumptionsPer100km.put(engineType, energyConsumptionPer100km);
+		this.energyConsumptions.put(Pair.of(vehicleType, engineType), parameters);
 	}
 
 	/**
 	 * Setter method for energy type fractions.
-	 * @param engineType The type of a car engine.
-	 * @param engineTypeFraction Engine type fraction.
+	 * @param vht Vehicle type
+	 * @param engineTypeFractions Map with engine type fractions.
 	 */
-	public void setEngineTypeFractions (EngineType engineType, double engineTypeFraction) {
+	public void setEngineTypeFractions (VehicleType vht, HashMap<EngineType, Double> engineTypeFractions) {
 
-		this.engineTypeFractions.put(engineType, engineTypeFraction);
+		this.engineTypeFractions.put(vht, engineTypeFractions);
 	}
 
 	/**

@@ -57,7 +57,7 @@ public class DemandModel {
 	private HashMap<Integer, HashMap<String, Double>> yearToZoneToGVA;
 	private HashMap<Integer, RoadNetworkAssignment> yearToRoadNetworkAssignment;
 	private HashMap<Integer, HashMap<EngineType, Double>> yearToEnergyUnitCosts;
-	private HashMap<Integer, HashMap<EngineType, Double>> yearToEngineTypeFractions;
+	private HashMap<Integer, HashMap<VehicleType, HashMap<EngineType, Double>>> yearToEngineTypeFractions;
 	//private HashMap<Integer, HashMap<Integer, Double>> yearToCongestionCharges;
 	private HashMap<Integer, HashMap<String, MultiKeyMap>> yearToCongestionCharges;
 	//private SkimMatrix baseYearTimeSkimMatrix,	baseYearCostSkimMatrix;
@@ -93,7 +93,7 @@ public class DemandModel {
 		yearToZoneToGVA = new HashMap<Integer, HashMap<String, Double>>();
 		yearToRoadNetworkAssignment = new HashMap<Integer, RoadNetworkAssignment>();
 		yearToEnergyUnitCosts = new HashMap<Integer, HashMap<EngineType, Double>>();
-		yearToEngineTypeFractions = new HashMap<Integer, HashMap<EngineType, Double>>();
+		yearToEngineTypeFractions = new HashMap<Integer, HashMap<VehicleType, HashMap<EngineType, Double>>>();
 		yearToCongestionCharges = new HashMap<Integer, HashMap<String, MultiKeyMap>>();
 		
 		this.rsg = rsg;
@@ -136,13 +136,34 @@ public class DemandModel {
 		elasticitiesFreight.put(ElasticityTypes.COST, -0.1);
 		
 		//base-year engine type fractions
-		HashMap<EngineType, Double> engineTypeFractions = new HashMap<EngineType, Double>();
-		engineTypeFractions.put(EngineType.PETROL, 0.45);
-		engineTypeFractions.put(EngineType.DIESEL, 0.35);
-		engineTypeFractions.put(EngineType.LPG, 0.1);
-		engineTypeFractions.put(EngineType.ELECTRICITY, 0.05);
-		engineTypeFractions.put(EngineType.HYDROGEN, 0.025);
-		engineTypeFractions.put(EngineType.HYBRID, 0.025);
+		HashMap<VehicleType, HashMap<EngineType, Double>> engineTypeFractions = new HashMap<VehicleType, HashMap<EngineType, Double>>();
+		HashMap<EngineType, Double> map = new HashMap<EngineType, Double>();
+		map.put(EngineType.PETROL, 0.45);
+		map.put(EngineType.DIESEL, 0.35);
+		map.put(EngineType.LPG, 0.1);
+		map.put(EngineType.ELECTRICITY, 0.05);
+		map.put(EngineType.HYDROGEN, 0.025);
+		map.put(EngineType.HYBRID, 0.025);
+		engineTypeFractions.put(VehicleType.CAR, map);
+		engineTypeFractions.put(VehicleType.AV, map);
+		map = new HashMap<EngineType, Double>();
+		map.put(EngineType.PETROL, 0.45);
+		map.put(EngineType.DIESEL, 0.55);
+		map.put(EngineType.LPG, 0.0);
+		map.put(EngineType.ELECTRICITY, 0.0);
+		map.put(EngineType.HYDROGEN, 0.0);
+		map.put(EngineType.HYBRID, 0.0);
+		engineTypeFractions.put(VehicleType.VAN, map);
+		map = new HashMap<EngineType, Double>();
+		map.put(EngineType.PETROL, 0.0);
+		map.put(EngineType.DIESEL, 1.00);
+		map.put(EngineType.LPG, 0.0);
+		map.put(EngineType.ELECTRICITY, 0.0);
+		map.put(EngineType.HYDROGEN, 0.0);
+		map.put(EngineType.HYBRID, 0.0);
+		engineTypeFractions.put(VehicleType.RIGID, map);
+		engineTypeFractions.put(VehicleType.ARTIC, map);
+		
 		this.yearToEngineTypeFractions.put(BASE_YEAR, engineTypeFractions);
 	}
 
@@ -183,10 +204,12 @@ public class DemandModel {
 				rna = new RoadNetworkAssignment(this.roadNetwork, 
 												this.yearToEnergyUnitCosts.get(fromYear), 
 												this.yearToEngineTypeFractions.get(fromYear), 
-												null, 
-												null, 
+												null,
+												null,
+												null,
 												null, 
 												null,
+												null, 
 												this.yearToCongestionCharges.get(fromYear));
 				rna.assignFlowsAndUpdateLinkTravelTimesIterated(this.yearToPassengerODMatrix.get(fromYear), this.yearToFreightODMatrix.get(fromYear), this.rsg, this.params, LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);
 				yearToRoadNetworkAssignment.put(fromYear, rna);
@@ -321,7 +344,9 @@ public class DemandModel {
 					predictedRna = new RoadNetworkAssignment(this.roadNetwork, 
 															 this.yearToEnergyUnitCosts.get(predictedYear), 
 															 this.yearToEngineTypeFractions.get(predictedYear), 
-															 null, 
+															 null,
+															 null,
+															 null,
 															 rna.getLinkTravelTimes(), 
 															 rna.getAreaCodeProbabilities(), 
 															 rna.getWorkplaceZoneProbabilities(),
@@ -331,7 +356,9 @@ public class DemandModel {
 					predictedRna = new RoadNetworkAssignment(this.roadNetwork, 
 															 this.yearToEnergyUnitCosts.get(predictedYear), 
 															 this.yearToEngineTypeFractions.get(predictedYear), 
-															 null, 
+															 null,
+															 null,
+															 null,
 															 predictedRna.getLinkTravelTimes(), 
 															 predictedRna.getAreaCodeProbabilities(), 
 															 predictedRna.getWorkplaceZoneProbabilities(),
@@ -392,7 +419,9 @@ public class DemandModel {
 				predictedRna = new RoadNetworkAssignment(this.roadNetwork, 
 														 this.yearToEnergyUnitCosts.get(predictedYear), 
 														 this.yearToEngineTypeFractions.get(predictedYear), 
-														 null, 
+														 null,
+														 null,
+														 null,
 														 predictedRna.getLinkTravelTimes(), 
 														 predictedRna.getAreaCodeProbabilities(), 
 														 predictedRna.getWorkplaceZoneProbabilities(),
@@ -522,9 +551,20 @@ public class DemandModel {
 	 * @param year Year of the data.
 	 * @param engineTypeFractions Map with engine type fractions.
 	 */
-	public void setEngineTypeFractions(int year, HashMap<EngineType, Double> engineTypeFractions) {
+	public void setEngineTypeFractions(int year, HashMap<VehicleType, HashMap<EngineType, Double>> engineTypeFractions) {
 		
 		this.yearToEngineTypeFractions.put(year, engineTypeFractions);
+	}
+	
+	/**
+	 * Setter method for engine type fractions in a given year for a specific vehicle type.
+	 * @param year Year of the data.
+	 * @param vht Vehicle type.
+	 * @param engineTypeFractions Map with engine type fractions.
+	 */
+	public void setEngineTypeFractions(int year, VehicleType vht, HashMap<EngineType, Double> engineTypeFractions) {
+		
+		this.yearToEngineTypeFractions.get(year).put(vht, engineTypeFractions);
 	}
 	
 	/**
@@ -606,7 +646,7 @@ public class DemandModel {
 	 * @param year Year of the data.
 	 * @return Map with engine type fractions.
 	 */
-	public HashMap<EngineType, Double> getEngineTypeFractions(int year) {
+	public HashMap<VehicleType, HashMap<EngineType, Double>> getEngineTypeFractions(int year) {
 		
 		return this.yearToEngineTypeFractions.get(year);
 	}

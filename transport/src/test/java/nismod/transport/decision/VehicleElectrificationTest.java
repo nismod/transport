@@ -9,6 +9,7 @@ import java.awt.Color;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 
@@ -24,6 +25,8 @@ import org.junit.Test;
 import nismod.transport.demand.DemandModel;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RouteSetGenerator;
+import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
+import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.visualisation.PieChartVisualiser;
 
 /**
@@ -105,6 +108,14 @@ public class VehicleElectrificationTest {
 		
 		System.out.println("Base-year engine type fractions: ");
 		System.out.println(dm.getEngineTypeFractions(2015));
+	
+		//copy base-year fractions
+		for (int year = 2015; year < 2026; year++) {
+			
+			HashMap<VehicleType, HashMap<EngineType, Double>> map = new HashMap<VehicleType, HashMap<EngineType, Double>>();
+			map.putAll(dm.getEngineTypeFractions(2015));
+			dm.setEngineTypeFractions(year, map);
+		}
 		
 		int currentYear = 2014;
 		//check if correct interventions have been installed

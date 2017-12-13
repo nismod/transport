@@ -3,6 +3,8 @@ package nismod.transport.network.road;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.collections4.map.MultiKeyMap;
+import org.apache.commons.lang3.tuple.Pair;
 import org.geotools.graph.structure.DirectedNode;
 
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
@@ -171,18 +173,33 @@ public class Trip {
 		return time + averageAccessTime + averageEgressTime;
 	}
 	
-	public double getCost(Map<Integer, Double> linkTravelTime, HashMap<Integer, Double> averageAccessEgressMap, double averageAccessEgressSpeed, HashMap<EngineType, Double> energyUnitCosts, HashMap<EngineType, Double> energyConsumptionsPer100km) {
+	public double getCost(Map<Integer, Double> linkTravelTime, HashMap<Integer, Double> averageAccessEgressMap, double averageAccessEgressSpeed, HashMap<EngineType, Double> energyUnitCosts, HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptions, HashMap<String, MultiKeyMap> congestionCharges) {
 		
-		double distance = this.getLength(averageAccessEgressMap);
-		double cost = distance / 100 * energyConsumptionsPer100km.get(this.engine) * energyUnitCosts.get(this.engine);
+		//double distance = this.getLength(averageAccessEgressMap);
+		//double cost = distance / 100 * energyConsumptionsPer100km.get(this.engine) * energyUnitCosts.get(this.engine);
 		
-		return cost;
+		//fetch congestion charge for the vehicle type
+		HashMap<String, HashMap<Integer, Double>> linkCharges = null;
+		if (congestionCharges != null) 
+			for (String policyName: congestionCharges.keySet())
+				linkCharges.put(policyName, (HashMap<Integer, Double>) congestionCharges.get(policyName).get(this.vehicle, this.hour));
+				
+		this.route.calculateCost(linkTravelTime, energyConsumptions.get(Pair.of(this.vehicle, this.engine)), energyUnitCosts.get(this.engine), linkCharges);
+		double tripCost = this.route.getCost();
+		
+		//TODO add access/egress cost
+				
+		return tripCost;
 	}
 	
-	public double getConsumption(Map<Integer, Double> linkTravelTime, HashMap<Integer, Double> averageAccessEgressMap, double averageAccessEgressSpeed, HashMap<EngineType, Double> energyConsumptionsPer100km) {
+	public double getConsumption(Map<Integer, Double> linkTravelTime, HashMap<Integer, Double> averageAccessEgressMap, double averageAccessEgressSpeed, HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptions) {
 		
-		double distance = this.getLength(averageAccessEgressMap);
-		double consumption = distance / 100 * energyConsumptionsPer100km.get(this.engine);
+		//double distance = this.getLength(averageAccessEgressMap);
+		//double consumption = distance / 100 * energyConsumptionsPer100km.get(this.engine);
+		
+		double consumption = this.route.calculateConsumption(linkTravelTime, energyConsumptions.get(Pair.of(this.vehicle, this.engine)));
+		
+		//TODO add access/egress consumption
 		
 		return consumption;
 	}

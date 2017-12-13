@@ -168,7 +168,7 @@ public class Route {
 	/**
 	 * Calculates the cost of the route.
 	 */
-	public void calculateCost(double consumptionPer100km, double unitCost, HashMap<String, HashMap<Integer, Double>> linkCharges) {
+	public void calculateCost(Map<Integer, Double> linkTravelTime, HashMap<String, Double> energyConsumptionParameters, double unitCost, HashMap<String, HashMap<Integer, Double>> linkCharges) {
 
 		//temporary map to check if a charging policy has already been applied
 		HashMap<String, Boolean> flags = new HashMap<String, Boolean>();
@@ -179,7 +179,10 @@ public class Route {
 		for (DirectedEdge edge: edges) {
 			SimpleFeature sf = (SimpleFeature) edge.getObject();
 			double len = (double) sf.getAttribute("LenNet"); //in [km]
-			cost += len / 100 * consumptionPer100km * unitCost ;
+			double time = linkTravelTime.get(edge.getID()); //in [min]
+			double speed = len / (time / 60);
+			double consumption = energyConsumptionParameters.get("A") / speed + energyConsumptionParameters.get("B") + energyConsumptionParameters.get("C") * speed + energyConsumptionParameters.get("D") * speed  * speed;
+			cost += consumption * unitCost;
 
 			if (linkCharges != null)
 				for (String policyName: linkCharges.keySet()) {
@@ -196,14 +199,34 @@ public class Route {
 	}
 	
 	/**
+	 * Calculates energy consumption of the route.
+	 */
+	public double calculateConsumption(Map<Integer, Double> linkTravelTime, HashMap<String, Double> energyConsumptionParameters) {
+
+		double routeConsumption = 0.0;
+		for (DirectedEdge edge: edges) {
+			SimpleFeature sf = (SimpleFeature) edge.getObject();
+			double len = (double) sf.getAttribute("LenNet"); //in [km]
+			double time = linkTravelTime.get(edge.getID()); //in [min]
+			double speed = len / (time / 60);
+			double consumption = energyConsumptionParameters.get("A") / speed + energyConsumptionParameters.get("B") + energyConsumptionParameters.get("C") * speed + energyConsumptionParameters.get("D") * speed  * speed;
+			routeConsumption += consumption;
+		}
+		
+		return routeConsumption;
+	}
+	
+	
+	
+	/**
 	 * Calculates the utility of the route.
 	 * @param linkTravelTime Link travel times.
 	 * @param avgIntersectionDelay Average intersection delay.
-	 * @param consumptionPer100km Fuel consumption per 100 km.
+	 * @param energyConsumptionParameters Energy consumption parameters (A, B, C, D).
 	 * @param unitCost Unit cost of fuel.
 	 * @param params Route choice parameters.
 	 */
-	public void calculateUtility(Map<Integer, Double> linkTravelTime, double consumptionPer100km, double unitCost, HashMap<String, HashMap<Integer, Double>> linkCharges, Properties params) {
+	public void calculateUtility(Map<Integer, Double> linkTravelTime, HashMap<String, Double> energyConsumptionParameters, double unitCost, HashMap<String, HashMap<Integer, Double>> linkCharges, Properties params) {
 		
 		if (this.length == null) this.calculateLength(); //calculate only once (length is not going to change)
 				
@@ -216,7 +239,7 @@ public class Route {
 	
 		this.calculateTravelTime(linkTravelTime, avgIntersectionDelay); //always (re)calculate
 		
-		this.calculateCost(consumptionPer100km, unitCost, linkCharges); //always (re)calculate
+		this.calculateCost(linkTravelTime, energyConsumptionParameters, unitCost, linkCharges); //always (re)calculate
 		
 		double length = this.getLength();
 		double time = this.getTime();

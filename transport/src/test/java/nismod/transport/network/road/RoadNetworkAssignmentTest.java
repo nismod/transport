@@ -96,7 +96,7 @@ public class RoadNetworkAssignmentTest {
 		//export to shapefile
 		//roadNetwork2.exportToShapefile("outputNetwork");
 		
-		RoadNetworkAssignment roadNetworkAssignment = new RoadNetworkAssignment(roadNetwork2, null, null, null, null, null, null, null);
+		RoadNetworkAssignment roadNetworkAssignment = new RoadNetworkAssignment(roadNetwork2, null, null, null, null, null, null, null, null, null);
 		
 		//ODMatrix passengerODM = new ODMatrix("./src/test/resources/testdata/passengerODM.csv");
 		//ODMatrix passengerODM = new ODMatrix("./src/main/resources/data/passengerODMfull.csv");
@@ -294,7 +294,7 @@ public class RoadNetworkAssignmentTest {
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlfixedEdgeIDs);	
 		
 		//create a road network assignment
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null);
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null);
 		
 		//assign passenger flows
 		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
@@ -323,7 +323,7 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("\n\n*** Testing the setter for the electricity unit cost ***");
 
 		System.out.println("Energy unit costs:\t\t" + rna.getEnergyUnitCosts());
-		System.out.println("Energy consumptions per 100 km:\t" + rna.getEnergyConsumptionsPer100km());
+		System.out.println("Energy consumptions:\t" + rna.getEnergyConsumptions());
 		System.out.println("Engine type fractions:\t\t" + rna.getEngineTypeFractions());
 		rna.setEnergyUnitCost(RoadNetworkAssignment.EngineType.ELECTRICITY, 0.20);
 		assertEquals("asdf", 0.20, (double) rna.getEnergyUnitCosts().get(RoadNetworkAssignment.EngineType.ELECTRICITY), EPSILON);
@@ -505,7 +505,7 @@ public class RoadNetworkAssignmentTest {
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlfixedEdgeIDs);
 		
 		//create a road network assignment
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null);
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null);
 
 		//assign passenger flows
 		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
@@ -574,7 +574,7 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("\n\n*** Testing the setter for the electricity unit cost ***");
 		
 		System.out.println("Energy unit costs:\t\t" + rna.getEnergyUnitCosts());
-		System.out.println("Energy consumptions per 100 km:\t" + rna.getEnergyConsumptionsPer100km());
+		System.out.println("Energy consumptions:\t" + rna.getEnergyConsumptions());
 		System.out.println("Engine type fractions:\t\t" + rna.getEngineTypeFractions());
 		
 		rna.setEnergyUnitCost(RoadNetworkAssignment.EngineType.ELECTRICITY, 0.20);
@@ -851,7 +851,7 @@ public class RoadNetworkAssignmentTest {
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
 
 		//create a road network assignment
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null);
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null);
 
 		//assign passenger flows
 		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
@@ -988,7 +988,7 @@ public class RoadNetworkAssignmentTest {
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
 
 		//create a road network assignment
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null);
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null);
 
 		//assign passenger flows
 		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
@@ -1027,7 +1027,7 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("\n\n*** Testing the setter for the electricity unit cost ***");
 		
 		System.out.println("Energy unit costs:\t\t" + rna.getEnergyUnitCosts());
-		System.out.println("Energy consumptions per 100 km:\t" + rna.getEnergyConsumptionsPer100km());
+		System.out.println("Energy consumptions:\t" + rna.getEnergyConsumptions());
 		System.out.println("Engine type fractions:\t\t" + rna.getEngineTypeFractions());
 		
 		rna.setEnergyUnitCost(RoadNetworkAssignment.EngineType.ELECTRICITY, 0.20);
