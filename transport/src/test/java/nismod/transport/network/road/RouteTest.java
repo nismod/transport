@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.Properties;
 
 import org.geotools.graph.structure.DirectedEdge;
@@ -70,7 +71,12 @@ public class RouteTest {
 		params.setProperty("INTERSECTIONS", "-1.0");
 		params.setProperty("AVG_INTERSECTION_DELAY", "0.8");
 		
-		double consumption = 5.4;
+		HashMap<String, Double> consumption = new HashMap<String, Double>();
+		consumption.put("A", 1.11932239320862);
+		consumption.put("B", 0.0440047704089497);
+		consumption.put("C", -0.0000813834474888197);
+		consumption.put("D", 2.44908328418021E-06);
+		
 		double unitCost = 1.17;
 		
 		r1.calculateUtility(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, null, params);
@@ -232,7 +238,7 @@ public class RouteTest {
 		
 		r5.calculateLength();
 		r5.calculateTravelTime(roadNetwork.getFreeFlowTravelTime(), 0.8);
-		r5.calculateCost(consumption, unitCost, null);
+		r5.calculateCost(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, null);
 		System.out.println("Intersections: " + r5.getNumberOfIntersections());
 		r5.calculateUtility(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, null, params);
 		System.out.println("Length: " + r5.getLength());

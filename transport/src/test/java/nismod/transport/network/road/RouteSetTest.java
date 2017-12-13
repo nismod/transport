@@ -9,6 +9,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Properties;
 
@@ -96,7 +97,11 @@ public class RouteSetTest {
 		params.setProperty("INTERSECTIONS", "-0.1");
 		params.setProperty("AVG_INTERSECTION_DELAY", "0.8");
 		
-		double consumption = 5.4;
+		HashMap<String, Double> consumption = new HashMap<String, Double>();
+		consumption.put("A", 1.11932239320862);
+		consumption.put("B", 0.0440047704089497);
+		consumption.put("C", -0.0000813834474888197);
+		consumption.put("D", 2.44908328418021E-06);
 		double unitCost = 1.17;
 		
 		//rs.addRoute(r1);

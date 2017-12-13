@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -73,7 +74,7 @@ public class RoadDisruptionTest {
 		System.out.println("Removed routes: " + rd3.getListOfRemovedRoutes());
 
 		//create a road network assignment
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null);
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null);
 
 		//set route choice parameters
 		params = new Properties();
@@ -83,7 +84,12 @@ public class RoadDisruptionTest {
 		params.setProperty("INTERSECTIONS", "-0.1");
 		params.setProperty("AVG_INTERSECTION_DELAY", "0.8");
 		
-		double consumption = 5.4;
+		HashMap<String, Double> consumption = new HashMap<String, Double>();
+		consumption.put("A", 1.11932239320862);
+		consumption.put("B", 0.0440047704089497);
+		consumption.put("C", -0.0000813834474888197);
+		consumption.put("D", 2.44908328418021E-06);
+		
 		double unitCost = 1.17;
 
 		rsg.calculateAllUtilities(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, null, params);
@@ -226,7 +232,7 @@ public class RoadDisruptionTest {
 		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
 	
 		//create a road network assignment
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null);
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null);
 
 		//set route choice parameters
 		params = new Properties();
@@ -236,7 +242,12 @@ public class RoadDisruptionTest {
 		params.setProperty("INTERSECTIONS", "-0.1");
 		params.setProperty("AVG_INTERSECTION_DELAY", "0.8");
 		
-		double consumption = 5.4;
+		HashMap<String, Double> consumption = new HashMap<String, Double>();
+		consumption.put("A", 1.11932239320862);
+		consumption.put("B", 0.0440047704089497);
+		consumption.put("C", -0.0000813834474888197);
+		consumption.put("D", 2.44908328418021E-06);
+		
 		double unitCost = 1.17;
 
 		rsg.calculateAllUtilities(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, null, params);
