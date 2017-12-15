@@ -81,6 +81,7 @@ public class App {
 			final String vehicleElectrificationFileName = props.getProperty("vehicleElectrificationFileName");
 
 			final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
+			final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
 			final String energyConsumptionsFile = props.getProperty("energyConsumptionsFile"); //output
 			
 			//create a road network
@@ -98,7 +99,7 @@ public class App {
 				interventions.add(ve);
 
 				//the main demand model
-				DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, energyUnitCostsFile, interventions, null, null);
+				DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, energyUnitCostsFile, engineTypeFractionsFile, interventions, null, null);
 				dm.predictHighwayDemand(Integer.parseInt(predictedYear), Integer.parseInt(baseYear));
 				dm.saveEnergyConsumptions(Integer.parseInt(predictedYear), energyConsumptionsFile);
 				
@@ -202,6 +203,7 @@ public class App {
 		props.setProperty("GVAFile", "./src/test/resources/testdata/GVA.csv");
 		
 		props.setProperty("energyUnitCostsFile", "./src/test/resources/testdata/energyUnitCosts.csv");
+		props.setProperty("engineTypeFractionsFile", "./src/test/resources/testdata/engineTypeFractionsFile.csv");
 		props.setProperty("energyConsumptionsFile", "./energyConsumptions.csv");
 		
 		props.setProperty("roadExpansionFileName", "./src/test/resources/testdata/roadExpansion.properties");

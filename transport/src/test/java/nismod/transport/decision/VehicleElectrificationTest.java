@@ -81,6 +81,7 @@ public class VehicleElectrificationTest {
 		final String populationFile = "./src/test/resources/testdata/population.csv";
 		final String GVAFile = "./src/test/resources/testdata/GVA.csv";
 		final String energyUnitCostsFile = "./src/test/resources/testdata/energyUnitCosts.csv";
+		final String engineTypeFractionsFile = "./src/test/resources/testdata/engineTypeFractions.csv";
 		
 		//create a road network
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl2, networkUrl2, nodesUrl2, AADFurl2, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
@@ -104,7 +105,7 @@ public class VehicleElectrificationTest {
 		List<Intervention> interventions = new ArrayList<Intervention>();
 		interventions.add(ve2);
 		
-		DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, energyUnitCostsFile, interventions, null, null);
+		DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, energyUnitCostsFile, engineTypeFractionsFile, interventions, null, null);
 		
 		System.out.println("Base-year engine type fractions: ");
 		System.out.println(dm.getEngineTypeFractions(2015));
