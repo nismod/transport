@@ -42,6 +42,7 @@ public class CongestionChargingTest {
 		final String populationFile = "./src/test/resources/testdata/population.csv";
 		final String GVAFile = "./src/test/resources/testdata/GVA.csv";
 		final String energyUnitCostsFile = "./src/test/resources/testdata/energyUnitCosts.csv";
+		final String engineTypeFractionsFile = "./src/test/resources/testdata/engineTypeFractions.csv";
 		
 		final String congestionChargeFile = "./src/test/resources/testdata/congestionCharges.csv";
 		
@@ -64,7 +65,7 @@ public class CongestionChargingTest {
 		List<Intervention> interventions = new ArrayList<Intervention>();
 		interventions.add(cg2);
 		
-		DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, energyUnitCostsFile, interventions, null, null);
+		DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, energyUnitCostsFile, engineTypeFractionsFile, interventions, null, null);
 		
 		System.out.println("Base-year congestion charging: ");
 		System.out.println(dm.getCongestionCharges(2015));

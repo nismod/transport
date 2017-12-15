@@ -81,7 +81,7 @@ public class DemandModel {
 	 * @param rsg Route Set Generator with routes for both cars and freight.
 	 * @param params Route-choice parameters.
 	 */
-	public DemandModel(RoadNetwork roadNetwork, String baseYearODMatrixFile, String baseYearFreightMatrixFile, String populationFile, String GVAFile, String energyUnitCostsFile, List<Intervention> interventions, RouteSetGenerator rsg, Properties params) throws FileNotFoundException, IOException {
+	public DemandModel(RoadNetwork roadNetwork, String baseYearODMatrixFile, String baseYearFreightMatrixFile, String populationFile, String GVAFile, String energyUnitCostsFile, String engineTypeFractionsFile, List<Intervention> interventions, RouteSetGenerator rsg, Properties params) throws FileNotFoundException, IOException {
 
 		yearToPassengerODMatrix = new HashMap<Integer, ODMatrix>();
 		yearToFreightODMatrix = new HashMap<Integer, FreightMatrix>();
@@ -122,6 +122,8 @@ public class DemandModel {
 		
 		yearToEnergyUnitCosts = readEnergyUnitCostsFile(energyUnitCostsFile);
 		
+		this.yearToEngineTypeFractions = readEngineTypeFractionsFile(engineTypeFractionsFile);
+		
 		//default elasticity values
 		elasticities = new HashMap<ElasticityTypes, Double>();
 		elasticities.put(ElasticityTypes.POPULATION, 1.0);
@@ -135,6 +137,7 @@ public class DemandModel {
 		elasticitiesFreight.put(ElasticityTypes.TIME, -0.41);
 		elasticitiesFreight.put(ElasticityTypes.COST, -0.1);
 		
+		/*
 		//base-year engine type fractions
 		HashMap<VehicleType, HashMap<EngineType, Double>> engineTypeFractions = new HashMap<VehicleType, HashMap<EngineType, Double>>();
 		HashMap<EngineType, Double> map = new HashMap<EngineType, Double>();
@@ -165,6 +168,7 @@ public class DemandModel {
 		engineTypeFractions.put(VehicleType.ARTIC, map);
 		
 		this.yearToEngineTypeFractions.put(BASE_YEAR, engineTypeFractions);
+		*/
 	}
 
 	/**
@@ -747,5 +751,50 @@ public class DemandModel {
 		System.out.println(map);
 
 		return map;
+	}
+	
+	
+	/**
+	 * Reads engine type fractions file.
+	 * @param fileName File name.
+	 * @return Map with engine type fractions.
+	 */
+	private HashMap<Integer, HashMap<VehicleType, HashMap<EngineType, Double>>> readEngineTypeFractionsFile (String fileName) throws FileNotFoundException, IOException {
+		
+		HashMap<Integer, HashMap<VehicleType, HashMap<EngineType, Double>>> yearToVehicleToEngineTypeFractions = new HashMap<Integer, HashMap<VehicleType, HashMap<EngineType, Double>>>();
+
+		CSVParser parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
+		//System.out.println(parser.getHeaderMap().toString());
+		Set<String> keySet = parser.getHeaderMap().keySet();
+		keySet.remove("year");
+		keySet.remove("vehicle");
+		//System.out.println("keySet = " + keySet);
+		double fraction;
+		for (CSVRecord record : parser) {
+			//System.out.println(record);
+			int year = Integer.parseInt(record.get(0));
+			
+			HashMap<VehicleType, HashMap<EngineType, Double>> vehicleToEngineTypeFractions = yearToVehicleToEngineTypeFractions.get(year);
+			if (vehicleToEngineTypeFractions == null) { vehicleToEngineTypeFractions = new HashMap<VehicleType, HashMap<EngineType, Double>>();
+			yearToVehicleToEngineTypeFractions.put(year, vehicleToEngineTypeFractions);
+			}
+						
+			VehicleType vht = VehicleType.valueOf(record.get(1));
+			HashMap<EngineType, Double> engineTypeFractions = vehicleToEngineTypeFractions.get(vht);
+			if (engineTypeFractions == null) { engineTypeFractions = new HashMap<EngineType, Double>();
+			vehicleToEngineTypeFractions.put(vht, engineTypeFractions);
+			}
+			
+			for (String et: keySet) {
+				//System.out.println("Destination zone = " + destination);
+				EngineType engineType = EngineType.valueOf(et);
+				fraction = Double.parseDouble(record.get(engineType));
+				engineTypeFractions.put(engineType, fraction);			
+			}
+		} parser.close();
+		
+		System.out.println(yearToVehicleToEngineTypeFractions);
+		
+		return yearToVehicleToEngineTypeFractions;
 	}
 }

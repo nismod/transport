@@ -51,6 +51,7 @@ public class DemandModelTest {
 		final String populationFile = "./src/test/resources/testdata/population.csv";
 		final String GVAFile = "./src/test/resources/testdata/GVA.csv";
 		final String energyUnitCostsFile = "./src/test/resources/testdata/energyUnitCosts.csv";
+		final String engineTypeFractionsFile = "./src/test/resources/testdata/engineTypeFractions.csv";
 		
 		
 //		final URL zonesUrl2 = new URL("file://src/main/resources/data/zones.shp");
@@ -172,6 +173,7 @@ public class DemandModelTest {
 		Properties props = new Properties();
 		props.setProperty("startYear", "2016");
 		props.setProperty("endYear", "2025");
+		props.setProperty("vehicleType", "CAR");
 		props.setProperty("PETROL", "0.40");
 		props.setProperty("DIESEL", "0.30");
 		props.setProperty("LPG", "0.1");
@@ -193,7 +195,7 @@ public class DemandModelTest {
 		rsg.readRoutes("./src/test/resources/testdata/allRoutes.txt");
 		
 		//the main demand model
-		DemandModel dm = new DemandModel(roadNetwork2, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, energyUnitCostsFile, interventions, rsg, params);
+		DemandModel dm = new DemandModel(roadNetwork2, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, energyUnitCostsFile, engineTypeFractionsFile, interventions, rsg, params);
 		
 		//copy base-year engine fractions
 		for (int year = 2015; year < 2025; year++) {
