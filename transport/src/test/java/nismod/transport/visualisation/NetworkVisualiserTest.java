@@ -1,8 +1,11 @@
 package nismod.transport.visualisation;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.Map;
+import java.util.Properties;
 
 import nismod.transport.demand.ODMatrix;
 import nismod.transport.network.road.RoadNetwork;
@@ -29,10 +32,29 @@ public class NetworkVisualiserTest {
 		final String workplaceZoneNearestNodeFile = "./src/test/resources/minitestdata/workplaceZoneToNearestNode.csv";
 		final String freightZoneToLADfile = "./src/test/resources/minitestdata/freightZoneToLAD.csv";
 		final String freightZoneNearestNodeFile = "./src/test/resources/minitestdata/freightZoneToNearestNode.csv";
+		
+		final String assignmentParamsFile = "./src/test/resources/testdata/assignment.properties";
+		Properties props = new Properties();
+		InputStream input = null;
+		try {
+			input = new FileInputStream(assignmentParamsFile);
+			// load properties file
+			props.load(input);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		} finally {
+			if (input != null) {
+				try {
+					input.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 	
-		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlfixedEdgeIDs);
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null);
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, props);
 		ODMatrix odm = new ODMatrix("./src/test/resources/minitestdata/passengerODM.csv");
 		rna.assignPassengerFlows(odm);
 		Map<Integer, Double> dailyVolume = rna.getLinkVolumesInPCU();

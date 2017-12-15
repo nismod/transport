@@ -9,7 +9,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.closeTo;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -60,8 +62,27 @@ public class RoadNetworkAssignmentTest {
 		final String workplaceZoneNearestNodeFile = "./src/test/resources/minitestdata/workplaceZoneToNearestNode.csv";
 		final String freightZoneToLADfile = "./src/test/resources/minitestdata/freightZoneToLAD.csv";
 		final String freightZoneNearestNodeFile = "./src/test/resources/minitestdata/freightZoneToNearestNode.csv";
-
-		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
+		
+		final String assignmentParamsFile = "./src/test/resources/testdata/assignment.properties";
+		Properties props = new Properties();
+		InputStream input = null;
+		try {
+			input = new FileInputStream(assignmentParamsFile);
+			// load properties file
+			props.load(input);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		} finally {
+			if (input != null) {
+				try {
+					input.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 
 		//visualise the shapefiles
 		//roadNetwork.visualise("Mini Test Area");
@@ -88,7 +109,7 @@ public class RoadNetworkAssignmentTest {
 		final String freightZoneNearestNodeFile2 = "./src/main/resources/data/freightZoneToNearestNode.csv";
 
 		//create a road network
-		RoadNetwork roadNetwork2 = new RoadNetwork(zonesUrl2, networkUrl2, nodesUrl2, AADFurl2, areaCodeFileName2, areaCodeNearestNodeFile2, workplaceZoneFileName2, workplaceZoneNearestNodeFile2, freightZoneToLADfile2, freightZoneNearestNodeFile2);
+		RoadNetwork roadNetwork2 = new RoadNetwork(zonesUrl2, networkUrl2, nodesUrl2, AADFurl2, areaCodeFileName2, areaCodeNearestNodeFile2, workplaceZoneFileName2, workplaceZoneNearestNodeFile2, freightZoneToLADfile2, freightZoneNearestNodeFile2, props);
 		roadNetwork2.replaceNetworkEdgeIDs(networkUrl2New);
 		//visualise the shapefiles
 		//roadNetwork2.visualise("Test Area");
@@ -96,7 +117,7 @@ public class RoadNetworkAssignmentTest {
 		//export to shapefile
 		//roadNetwork2.exportToShapefile("outputNetwork");
 		
-		RoadNetworkAssignment roadNetworkAssignment = new RoadNetworkAssignment(roadNetwork2, null, null, null, null, null, null, null, null, null);
+		RoadNetworkAssignment roadNetworkAssignment = new RoadNetworkAssignment(roadNetwork2, null, null, null, null, null, null, null, null, null, props);
 		
 		//ODMatrix passengerODM = new ODMatrix("./src/test/resources/testdata/passengerODM.csv");
 		//ODMatrix passengerODM = new ODMatrix("./src/main/resources/data/passengerODMfull.csv");
@@ -120,7 +141,7 @@ public class RoadNetworkAssignmentTest {
 		params.setProperty("LENGTH", "-1.0");
 		params.setProperty("COST", "-3.6");
 		params.setProperty("INTERSECTIONS", "-0.1");
-		params.setProperty("AVG_INTERSECTION_DELAY", "0.8");
+		params.setProperty("AVERAGE_INTERSECTION_DELAY", "0.8");
 		
 		//assign passenger flows
 		long timeNow = System.currentTimeMillis();
@@ -289,12 +310,31 @@ public class RoadNetworkAssignmentTest {
 		final String freightZoneNearestNodeFile = "./src/test/resources/testdata/freightZoneToNearestNode.csv";
 		final String baseYearODMatrixFile = "./src/test/resources/minitestdata/passengerODM.csv";
 		
+		final String assignmentParamsFile = "./src/test/resources/testdata/assignment.properties";
+		Properties props = new Properties();
+		InputStream input = null;
+		try {
+			input = new FileInputStream(assignmentParamsFile);
+			// load properties file
+			props.load(input);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		} finally {
+			if (input != null) {
+				try {
+					input.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
 		//create a road network
-		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlfixedEdgeIDs);	
 		
 		//create a road network assignment
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null);
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, props);
 		
 		//assign passenger flows
 		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
@@ -411,7 +451,7 @@ public class RoadNetworkAssignmentTest {
 		params.setProperty("LENGTH", "-1.5");
 		params.setProperty("COST", "-3.6");
 		params.setProperty("INTERSECTIONS", "-0.1");
-		params.setProperty("AVG_INTERSECTION_DELAY", "0.8");
+		params.setProperty("AVERAGE_INTERSECTION_DELAY", "0.8");
 		
 		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
 		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforCounts());
@@ -499,13 +539,32 @@ public class RoadNetworkAssignmentTest {
 		final String freightZoneToLADfile = "./src/test/resources/testdata/freightZoneToLAD.csv";
 		final String freightZoneNearestNodeFile = "./src/test/resources/testdata/freightZoneToNearestNode.csv";
 		final String baseYearODMatrixFile = "./src/test/resources/testdata/passengerODM.csv";
+		
+		final String assignmentParamsFile = "./src/test/resources/testdata/assignment.properties";
+		Properties props = new Properties();
+		InputStream input = null;
+		try {
+			input = new FileInputStream(assignmentParamsFile);
+			// load properties file
+			props.load(input);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		} finally {
+			if (input != null) {
+				try {
+					input.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 
 		//create a road network
-		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlfixedEdgeIDs);
 		
 		//create a road network assignment
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null);
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, props);
 
 		//assign passenger flows
 		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
@@ -693,7 +752,7 @@ public class RoadNetworkAssignmentTest {
 		params.setProperty("LENGTH", "-1.0");
 		params.setProperty("COST", "-3.6");
 		params.setProperty("INTERSECTIONS", "-0.1");
-		params.setProperty("AVG_INTERSECTION_DELAY", "0.8");
+		params.setProperty("AVERAGE_INTERSECTION_DELAY", "0.8");
 		
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
 		//rsg.readRoutes("./src/test/resources/testdata/testRoutes.txt");
@@ -714,7 +773,7 @@ public class RoadNetworkAssignmentTest {
 		params.setProperty("LENGTH", "-1.5");
 		params.setProperty("COST", "-3.6");
 		params.setProperty("INTERSECTIONS", "-3.1");
-		params.setProperty("AVG_INTERSECTION_DELAY", "0.8");
+		params.setProperty("AVERAGE_INTERSECTION_DELAY", "0.8");
 		
 		//rsg.calculateAllUtilities(rna.getLinkTravelTimes(), params);
 		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
@@ -834,6 +893,25 @@ public class RoadNetworkAssignmentTest {
 		final String baseYearODMatrixFile = "./src/test/resources/testdata/passengerODM.csv";
 		final String freightMatrixFile = "./src/test/resources/testdata/freightMatrix.csv";
 		
+		final String assignmentParamsFile = "./src/test/resources/testdata/assignment.properties";
+		Properties props = new Properties();
+		InputStream input = null;
+		try {
+			input = new FileInputStream(assignmentParamsFile);
+			// load properties file
+			props.load(input);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		} finally {
+			if (input != null) {
+				try {
+					input.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
 //		final URL zonesUrl = new URL("file://src/main/resources/data/zones.shp");
 //		final URL networkUrl = new URL("file://src/main/resources/data/network.shp");
 //		final URL nodesUrl = new URL("file://src/main/resources/data/nodes.shp");
@@ -848,10 +926,10 @@ public class RoadNetworkAssignmentTest {
 //		final String freightMatrixFile = "./src/main/resources/data/freightMatrix.csv";
 
 		//create a road network
-		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 
 		//create a road network assignment
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null);
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, props);
 
 		//assign passenger flows
 		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
@@ -983,12 +1061,31 @@ public class RoadNetworkAssignmentTest {
 		final String freightZoneToLADfile = "./src/main/resources/data/freightZoneToLAD.csv";
 		final String freightZoneNearestNodeFile = "./src/main/resources/data/freightZoneToNearestNode.csv";
 		final String baseYearODMatrixFile = "./src/main/resources/data/passengerODMfull.csv";
+		
+		final String assignmentParamsFile = "./src/test/resources/testdata/assignment.properties";
+		Properties props = new Properties();
+		InputStream input = null;
+		try {
+			input = new FileInputStream(assignmentParamsFile);
+			// load properties file
+			props.load(input);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		} finally {
+			if (input != null) {
+				try {
+					input.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 
 		//create a road network
-		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 
 		//create a road network assignment
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null);
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, props);
 
 		//assign passenger flows
 		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);

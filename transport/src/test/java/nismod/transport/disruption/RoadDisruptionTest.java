@@ -2,7 +2,9 @@ package nismod.transport.disruption;
 
 import static org.junit.Assert.*;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,8 +41,27 @@ public class RoadDisruptionTest {
 		final URL nodesUrl2 = new URL("file://src/test/resources/testdata/nodes.shp");
 		final URL AADFurl2 = new URL("file://src/test/resources/testdata/AADFdirected.shp");
 		
+		final String assignmentParamsFile = "./src/test/resources/testdata/assignment.properties";
+		Properties assignmentProperties = new Properties();
+		InputStream input = null;
+		try {
+			input = new FileInputStream(assignmentParamsFile);
+			// load properties file
+			assignmentProperties.load(input);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		} finally {
+			if (input != null) {
+				try {
+					input.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
 		//create a road network
-		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl2, networkUrl2, nodesUrl2, AADFurl2, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl2, networkUrl2, nodesUrl2, AADFurl2, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, assignmentProperties);
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlfixedEdgeIDs);
 		
 		Properties props = new Properties();
@@ -74,7 +95,7 @@ public class RoadDisruptionTest {
 		System.out.println("Removed routes: " + rd3.getListOfRemovedRoutes());
 
 		//create a road network assignment
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null);
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, assignmentProperties);
 
 		//set route choice parameters
 		params = new Properties();
@@ -82,7 +103,7 @@ public class RoadDisruptionTest {
 		params.setProperty("LENGTH", "-1.0");
 		params.setProperty("COST", "-3.6");
 		params.setProperty("INTERSECTIONS", "-0.1");
-		params.setProperty("AVG_INTERSECTION_DELAY", "0.8");
+		params.setProperty("AVERAGE_INTERSECTION_DELAY", "0.8");
 		
 		HashMap<String, Double> consumption = new HashMap<String, Double>();
 		consumption.put("A", 1.11932239320862);
@@ -131,8 +152,27 @@ public class RoadDisruptionTest {
 		final URL nodesUrl2 = new URL("file://src/test/resources/testdata/nodes.shp");
 		final URL AADFurl2 = new URL("file://src/test/resources/testdata/AADFdirected.shp");
 		
+		final String assignmentParamsFile = "./src/test/resources/testdata/assignment.properties";
+		Properties assignmentProperties = new Properties();
+		InputStream input = null;
+		try {
+			input = new FileInputStream(assignmentParamsFile);
+			// load properties file
+			assignmentProperties.load(input);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		} finally {
+			if (input != null) {
+				try {
+					input.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
 		//create a road network
-		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl2, networkUrl2, nodesUrl2, AADFurl2, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl2, networkUrl2, nodesUrl2, AADFurl2, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, assignmentProperties);
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlfixedEdgeIDs);
 		
 		Properties props = new Properties();
@@ -232,7 +272,7 @@ public class RoadDisruptionTest {
 		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
 	
 		//create a road network assignment
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null);
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, assignmentProperties);
 
 		//set route choice parameters
 		params = new Properties();
@@ -240,7 +280,7 @@ public class RoadDisruptionTest {
 		params.setProperty("LENGTH", "-1.0");
 		params.setProperty("COST", "-3.6");
 		params.setProperty("INTERSECTIONS", "-0.1");
-		params.setProperty("AVG_INTERSECTION_DELAY", "0.8");
+		params.setProperty("AVERAGE_INTERSECTION_DELAY", "0.8");
 		
 		HashMap<String, Double> consumption = new HashMap<String, Double>();
 		consumption.put("A", 1.11932239320862);

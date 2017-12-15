@@ -84,8 +84,27 @@ public class App {
 			final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
 			final String energyConsumptionsFile = props.getProperty("energyConsumptionsFile"); //output
 			
+			final String assignmentParamsFile = props.getProperty("assignmentParamsFile");
+			Properties params = new Properties();
+			InputStream input = null;
+			try {
+				input = new FileInputStream(assignmentParamsFile);
+				// load properties file
+				params.load(input);
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			} finally {
+				if (input != null) {
+					try {
+						input.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+			
 			//create a road network
-			RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
+			RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, params);
 			roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
 			roadNetwork.makeEdgesAdmissible();
 						
