@@ -7,13 +7,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 
 import org.geotools.graph.path.AStarShortestPathFinder;
 import org.geotools.graph.path.DijkstraShortestPathFinder;
@@ -51,6 +54,24 @@ public class RoadNetworkTest {
 		final String freightZoneToLADfile = "./src/test/resources/testdata/freightZoneToLAD.csv";
 		final String freightZoneNearestNodeFile = "./src/test/resources/testdata/freightZoneToNearestNode.csv";
 
+		final String assignmentParamsFile = "./src/test/resources/testdata/assignment.properties";
+		Properties props = new Properties();
+		InputStream input = null;
+		try {
+			input = new FileInputStream(assignmentParamsFile);
+			// load properties file
+			props.load(input);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		} finally {
+			if (input != null) {
+				try {
+					input.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 
 //		//create a road network
 //		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
@@ -67,7 +88,7 @@ public class RoadNetworkTest {
 		final URL AADFurl2 = new URL("file://src/test/resources/testdata/AADFdirected.shp");
 
 		//create a road network
-		RoadNetwork roadNetwork2 = new RoadNetwork(zonesUrl2, networkUrl2, nodesUrl2, AADFurl2, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
+		RoadNetwork roadNetwork2 = new RoadNetwork(zonesUrl2, networkUrl2, nodesUrl2, AADFurl2, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 
 		//visualise the shapefiles
 		NetworkVisualiser.visualise(roadNetwork2, "Midi Test Area");
@@ -119,8 +140,27 @@ public class RoadNetworkTest {
 		final String freightZoneToLADfile = "./src/test/resources/testdata/freightZoneToLAD.csv";
 		final String freightZoneNearestNodeFile = "./src/test/resources/testdata/freightZoneToNearestNode.csv";
 
+		final String assignmentParamsFile = "./src/test/resources/testdata/assignment.properties";
+		Properties props = new Properties();
+		InputStream input = null;
+		try {
+			input = new FileInputStream(assignmentParamsFile);
+			// load properties file
+			props.load(input);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		} finally {
+			if (input != null) {
+				try {
+					input.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
 		//create network
-		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl,  areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl,  areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 		//replace edge IDs with persistent ones
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlNew);
 		DirectedGraph rn = roadNetwork.getNetwork();
@@ -614,11 +654,11 @@ public class RoadNetworkTest {
 			double time;
 			String roadNumber = (String) sf.getAttribute("RoadNumber");
 			if (roadNumber.charAt(0) == 'M') //motorway
-				time = length / RoadNetworkAssignment.FREE_FLOW_SPEED_M_ROAD * 60;  //travel time in minutes
+				time = length / roadNetwork.getFreeFlowSpeedMRoad() * 60;  //travel time in minutes
 			else if (roadNumber.charAt(0) == 'A') //A road
-				time = length / RoadNetworkAssignment.FREE_FLOW_SPEED_A_ROAD * 60;  //travel time in minutes
+				time = length / roadNetwork.getFreeFlowSpeedARoad() * 60;  //travel time in minutes
 			else if (roadNumber.charAt(0) == 'F') //ferry
-				time = length / RoadNetworkAssignment.AVERAGE_SPEED_FERRY * 60;  //travel time in minutes
+				time = length / roadNetwork.getAverageSpeedFerry() * 60;  //travel time in minutes
 			else { //unknown road type
 				System.err.println("Uknown road type for link " + e.getID());
 				time = Double.NaN;
@@ -656,8 +696,26 @@ public class RoadNetworkTest {
 		final String freightZoneToLADfile = "./src/test/resources/testdata/freightZoneToLAD.csv";
 		final String freightZoneNearestNodeFile = "./src/test/resources/testdata/freightZoneToNearestNode.csv";
 
+		final String assignmentParamsFile = "./src/test/resources/testdata/assignment.properties";
+		Properties props = new Properties();
+		InputStream input = null;
+		try {
+			input = new FileInputStream(assignmentParamsFile);
+			// load properties file
+			props.load(input);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		} finally {
+			if (input != null) {
+				try {
+					input.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 		//create a road network
-		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlfixedEdgeIDs);
 		DirectedGraph rn = roadNetwork.getNetwork();
 
@@ -947,9 +1005,9 @@ public class RoadNetworkTest {
 			SimpleFeature sf = (SimpleFeature) edge.getObject(); 
 			String roadNumber = (String) sf.getAttribute("RoadNumber");
 			if (roadNumber.charAt(0) == 'M') {//motorway
-				assertEquals("The number of lanes is correct for the road type", RoadNetworkAssignment.NUMBER_OF_LANES_M_ROAD, (int)roadNetwork.getNumberOfLanes().get(edge.getID()));
+				assertEquals("The number of lanes is correct for the road type", roadNetwork.getNumberOfLanesMRoad(), (int)roadNetwork.getNumberOfLanes().get(edge.getID()));
 			} else if (roadNumber.charAt(0) == 'A') {//A road
-				assertEquals("The number of lanes is correct for the road type", RoadNetworkAssignment.NUMBER_OF_LANES_A_ROAD, (int)roadNetwork.getNumberOfLanes().get(edge.getID()));
+				assertEquals("The number of lanes is correct for the road type", roadNetwork.getNumberOfLanesARoad(), (int)roadNetwork.getNumberOfLanes().get(edge.getID()));
 			} else {//ferry
 				assertNull("The number of lanes for ferries is not defined", roadNetwork.getNumberOfLanes().get(edge.getID()));
 			}
@@ -1084,8 +1142,27 @@ public class RoadNetworkTest {
 		final String workplaceZoneNearestNodeFile = "./src/main/resources/data/nearest_node_WZ_GB_fakeSC.csv";
 		final String freightZoneToLADfile = "./src/main/resources/data/freightZoneToLAD.csv";
 		final String freightZoneNearestNodeFile = "./src/main/resources/data/freightZoneToNearestNode.csv";
+		
+		final String assignmentParamsFile = "./src/test/resources/testdata/assignment.properties";
+		Properties props = new Properties();
+		InputStream input = null;
+		try {
+			input = new FileInputStream(assignmentParamsFile);
+			// load properties file
+			props.load(input);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		} finally {
+			if (input != null) {
+				try {
+					input.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 
-		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl,  areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl,  areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 		DirectedGraph rn = roadNetwork.getNetwork();
 
 		//TEST NODE AND EDGE CREATION

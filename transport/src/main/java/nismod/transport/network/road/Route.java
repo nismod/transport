@@ -234,7 +234,7 @@ public class Route {
 		if (params == null) { //use default parameters
 			avgIntersectionDelay = AVERAGE_INTERSECTION_DELAY;
 		} else {
-			avgIntersectionDelay = Double.parseDouble(params.getProperty("AVG_INTERSECTION_DELAY"));
+			avgIntersectionDelay = Double.parseDouble(params.getProperty("AVERAGE_INTERSECTION_DELAY"));
 		}
 	
 		this.calculateTravelTime(linkTravelTime, avgIntersectionDelay); //always (re)calculate
@@ -258,7 +258,7 @@ public class Route {
 			paramLength = Double.parseDouble(params.getProperty("LENGTH"));
 			paramCost = Double.parseDouble(params.getProperty("COST"));
 			paramIntersections = Double.parseDouble(params.getProperty("INTERSECTIONS"));
-			avgIntersectionDelay = Double.parseDouble(params.getProperty("AVG_INTERSECTION_DELAY"));
+			avgIntersectionDelay = Double.parseDouble(params.getProperty("AVERAGE_INTERSECTION_DELAY"));
 		}
 		
 		double utility = paramTime * time + paramLength * length + paramCost * cost + paramIntersections * intersec;  

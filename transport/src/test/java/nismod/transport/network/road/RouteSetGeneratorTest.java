@@ -5,9 +5,11 @@ import static org.hamcrest.Matchers.closeTo;
 import static org.junit.Assert.*;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.net.URL;
 import java.util.ArrayList;
@@ -60,6 +62,25 @@ public class RouteSetGeneratorTest {
 		final URL networkUrlNew = new URL("file://src/test/resources/testdata/testOutputNetwork.shp");
 		final URL nodesUrl2 = new URL("file://src/test/resources/testdata/nodes.shp");
 		final URL AADFurl2 = new URL("file://src/test/resources/testdata/AADFdirected.shp");
+		
+		final String assignmentParamsFile = "./src/test/resources/testdata/assignment.properties";
+		Properties props = new Properties();
+		InputStream input = null;
+		try {
+			input = new FileInputStream(assignmentParamsFile);
+			// load properties file
+			props.load(input);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		} finally {
+			if (input != null) {
+				try {
+					input.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 
 
 		/*
@@ -212,7 +233,7 @@ public class RouteSetGeneratorTest {
 		final String freightZoneNearestNodeFile3 = "./src/main/resources/data/freightZoneToNearestNode.csv";
 
 		//create a road network
-		RoadNetwork roadNetwork3 = new RoadNetwork(zonesUrl3, networkUrl3, nodesUrl3, AADFurl3, areaCodeFileName3, areaCodeNearestNodeFile3, workplaceZoneFileName3, workplaceZoneNearestNodeFile3, freightZoneToLADfile3, freightZoneNearestNodeFile3);
+		RoadNetwork roadNetwork3 = new RoadNetwork(zonesUrl3, networkUrl3, nodesUrl3, AADFurl3, areaCodeFileName3, areaCodeNearestNodeFile3, workplaceZoneFileName3, workplaceZoneNearestNodeFile3, freightZoneToLADfile3, freightZoneNearestNodeFile3, props);
 		roadNetwork3.replaceNetworkEdgeIDs(networkUrl3New);
 		
 		roadNetwork3.sortGravityNodes();
@@ -316,9 +337,28 @@ public class RouteSetGeneratorTest {
 		final String workplaceZoneNearestNodeFile = "./src/test/resources/testdata/workplaceZoneToNearestNode.csv";
 		final String freightZoneToLADfile = "./src/test/resources/testdata/freightZoneToLAD.csv";
 		final String freightZoneNearestNodeFile = "./src/test/resources/testdata/freightZoneToNearestNode.csv";
+		
+		final String assignmentParamsFile = "./src/test/resources/testdata/assignment.properties";
+		Properties props = new Properties();
+		InputStream input = null;
+		try {
+			input = new FileInputStream(assignmentParamsFile);
+			// load properties file
+			props.load(input);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		} finally {
+			if (input != null) {
+				try {
+					input.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 
 		//create a road network
-		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlNew);
 		DirectedGraph rn = roadNetwork.getNetwork();
 		ODMatrix passengerODM = new ODMatrix("./src/test/resources/testdata/passengerODM.csv");
@@ -431,9 +471,28 @@ public class RouteSetGeneratorTest {
 		final String freightZoneToLADfile = "./src/test/resources/testdata/freightZoneToLAD.csv";
 		final String freightZoneNearestNodeFile = "./src/test/resources/testdata/freightZoneToNearestNode.csv";
 		final String baseYearODMatrixFile = "./src/test/resources/minitestdata/passengerODM.csv";
+		
+		final String assignmentParamsFile = "./src/test/resources/testdata/assignment.properties";
+		Properties props = new Properties();
+		InputStream input = null;
+		try {
+			input = new FileInputStream(assignmentParamsFile);
+			// load properties file
+			props.load(input);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		} finally {
+			if (input != null) {
+				try {
+					input.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 
 		//create a road network
-		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlfixedEdgeIDs);	
 		roadNetwork.makeEdgesAdmissible();
 
@@ -504,8 +563,27 @@ public class RouteSetGeneratorTest {
 		final String baseYearODMatrixFile = "./src/test/resources/testdata/passengerODM.csv";
 		final String freightMatrixFile = "./src/test/resources/testdata/freightMatrix.csv";
 		
+		final String assignmentParamsFile = "./src/test/resources/testdata/assignment.properties";
+		Properties props = new Properties();
+		InputStream input = null;
+		try {
+			input = new FileInputStream(assignmentParamsFile);
+			// load properties file
+			props.load(input);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		} finally {
+			if (input != null) {
+				try {
+					input.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
 		//create a road network
-		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlNew);
 		
 		roadNetwork.makeEdgesAdmissible();
@@ -518,7 +596,7 @@ public class RouteSetGeneratorTest {
 		
 		
 		//create a road network assignment
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null);
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, props);
 
 		FreightMatrix fm = new FreightMatrix(freightMatrixFile);
 		
@@ -577,7 +655,7 @@ public class RouteSetGeneratorTest {
 		params.setProperty("LENGTH", "-1.0");
 		params.setProperty("COST", "-3.6");
 		params.setProperty("INTERSECTIONS", "-0.1");
-		params.setProperty("AVG_INTERSECTION_DELAY", "0.8");
+		params.setProperty("AVERAGE_INTERSECTION_DELAY", "0.8");
 
 		//assign freight flows
 		rna.assignFreightFlowsRouteChoice(fm, rsg, params);
@@ -603,9 +681,28 @@ public class RouteSetGeneratorTest {
 		final String freightZoneToLADfile = "./src/main/resources/data/freightZoneToLAD.csv";
 		final String freightZoneNearestNodeFile = "./src/main/resources/data/freightZoneToNearestNode.csv";
 		final String baseYearODMatrixFile = "./src/main/resources/data/balancedODMatrix.csv";
+		
+		final String assignmentParamsFile = "./src/test/resources/testdata/assignment.properties";
+		Properties props = new Properties();
+		InputStream input = null;
+		try {
+			input = new FileInputStream(assignmentParamsFile);
+			// load properties file
+			props.load(input);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		} finally {
+			if (input != null) {
+				try {
+					input.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 
 		//create a road network
-		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 		
 		DirectedNode  node1 = (DirectedNode) roadNetwork.getNodeIDtoNode().get(7293);
 		DirectedNode  node2 = (DirectedNode) roadNetwork.getNodeIDtoNode().get(12175);
@@ -626,7 +723,7 @@ public class RouteSetGeneratorTest {
 		System.out.printf("Node %d edges to node %d: %s \n", node1.getID(), node2.getID(), node1.getEdges(node2));
 
 		//create a road network assignment
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null);
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, props);
 
 		//set route generation parameters
 		Properties params = new Properties();

@@ -79,7 +79,7 @@ public class DemandModel {
 	 * @param energyUnitCostsFile Energy unit costs file name.
 	 * @param interventions List of interventions.
 	 * @param rsg Route Set Generator with routes for both cars and freight.
-	 * @param params Route-choice parameters.
+	 * @param params Assignment and route-choice parameters
 	 */
 	public DemandModel(RoadNetwork roadNetwork, String baseYearODMatrixFile, String baseYearFreightMatrixFile, String populationFile, String GVAFile, String energyUnitCostsFile, String engineTypeFractionsFile, List<Intervention> interventions, RouteSetGenerator rsg, Properties params) throws FileNotFoundException, IOException {
 
@@ -214,7 +214,8 @@ public class DemandModel {
 												null, 
 												null,
 												null, 
-												this.yearToCongestionCharges.get(fromYear));
+												this.yearToCongestionCharges.get(fromYear),
+												this.params);
 				rna.assignFlowsAndUpdateLinkTravelTimesIterated(this.yearToPassengerODMatrix.get(fromYear), this.yearToFreightODMatrix.get(fromYear), this.rsg, this.params, LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);
 				yearToRoadNetworkAssignment.put(fromYear, rna);
 	
@@ -354,7 +355,8 @@ public class DemandModel {
 															 rna.getLinkTravelTimes(), 
 															 rna.getAreaCodeProbabilities(), 
 															 rna.getWorkplaceZoneProbabilities(),
-															 this.yearToCongestionCharges.get(predictedYear));
+															 this.yearToCongestionCharges.get(predictedYear),
+															 this.params);
 				else
 					//using latest link travel times
 					predictedRna = new RoadNetworkAssignment(this.roadNetwork, 
@@ -366,7 +368,8 @@ public class DemandModel {
 															 predictedRna.getLinkTravelTimes(), 
 															 predictedRna.getAreaCodeProbabilities(), 
 															 predictedRna.getWorkplaceZoneProbabilities(),
-															 this.yearToCongestionCharges.get(predictedYear));
+															 this.yearToCongestionCharges.get(predictedYear),
+															 this.params);
 
 				predictedRna.assignFlowsAndUpdateLinkTravelTimesIterated(predictedPassengerODMatrix, predictedFreightODMatrix, this.rsg, this.params, LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);
 				
@@ -429,7 +432,8 @@ public class DemandModel {
 														 predictedRna.getLinkTravelTimes(), 
 														 predictedRna.getAreaCodeProbabilities(), 
 														 predictedRna.getWorkplaceZoneProbabilities(),
-														 this.yearToCongestionCharges.get(predictedYear));
+														 this.yearToCongestionCharges.get(predictedYear),
+														 this.params);
 				//predictedRna.resetLinkVolumes();
 				//predictedRna.assignPassengerFlows(predictedPassengerODMatrix);
 				//predictedRna.updateLinkTravelTimes(ALPHA_LINK_TRAVEL_TIME_AVERAGING);

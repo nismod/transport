@@ -4,7 +4,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.junit.Assert.assertEquals;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,9 +36,28 @@ public class RouteSetTest {
 		final URL networkUrlNew = new URL("file://src/test/resources/testdata/testOutputNetwork.shp");
 		final URL nodesUrl = new URL("file://src/test/resources/testdata/nodes.shp");
 		final URL AADFurl = new URL("file://src/test/resources/testdata/AADFdirected.shp");
+		
+		final String assignmentParamsFile = "./src/test/resources/testdata/assignment.properties";
+		Properties props = new Properties();
+		InputStream input = null;
+		try {
+			input = new FileInputStream(assignmentParamsFile);
+			// load properties file
+			props.load(input);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		} finally {
+			if (input != null) {
+				try {
+					input.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 
 		//create a road network
-		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlNew);
 		
 		//create routes
@@ -95,7 +116,7 @@ public class RouteSetTest {
 		params.setProperty("LENGTH", "-1.0");
 		params.setProperty("COST", "-3.6");
 		params.setProperty("INTERSECTIONS", "-0.1");
-		params.setProperty("AVG_INTERSECTION_DELAY", "0.8");
+		params.setProperty("AVERAGE_INTERSECTION_DELAY", "0.8");
 		
 		HashMap<String, Double> consumption = new HashMap<String, Double>();
 		consumption.put("A", 1.11932239320862);

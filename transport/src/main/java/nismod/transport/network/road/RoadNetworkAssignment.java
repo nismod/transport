@@ -41,33 +41,26 @@ import nismod.transport.utility.RandomSingleton;
 /**
  * Network assignment of origin-destination flows
  * @author Milan Lovric
- *
  */
 public class RoadNetworkAssignment {
 
-	//public static final double SPEED_LIMIT_M_ROAD = 112.65; //70mph = 31.29mps = 112.65kph
-	//public static final double SPEED_LIMIT_A_ROAD = 96.56; //60mph = 26.82mps = 96.56kph
-	public static final double FREE_FLOW_SPEED_M_ROAD = 115.7923; //71.95mph = 32.16mps = 115.79kph
-	public static final double FREE_FLOW_SPEED_A_ROAD = 90.203731; //56.05mph = 25.05mps = 90.20kph
-	public static final int MAXIMUM_CAPACITY_M_ROAD = 2330; //PCU per lane per hour
-	public static final int MAXIMUM_CAPACITY_A_ROAD = 1380; //PCU per lane per hour
-	public static final int NUMBER_OF_LANES_M_ROAD = 3; //for one direction
-	public static final int NUMBER_OF_LANES_A_ROAD = 1; //for one direction
-	public static final double AVERAGE_SPEED_FERRY = 20.0; //kph
-	public static final double AVERAGE_ACCESS_EGRESS_SPEED_CAR = 48.0; //30mph = 48kph  
-	public static final double AVERAGE_ACCESS_EGRESS_SPEED_FREIGHT = 48.0; //30mph = 48kph 
-	public static final double PEAK_HOUR_PERCENTAGE = 0.10322;
-	public static final double ALPHA = 0.15;
-	public static final double BETA_M_ROAD = 5.55;
-	public static final double BETA_A_ROAD = 4;
-	public static final boolean FLAG_INTRAZONAL_ASSIGNMENT_REPLACEMENT = false; //true means that origin and destination nodes can be the same
-	public static final boolean FLAG_ASTAR_IF_EMPTY_ROUTE_SET = false; //if there is no pre-generated route set for a node pair, try finding a route with aStar
-	public static final int INTERZONAL_TOP_NODES = 5; //how many top nodes (based on gravitated population size) to considers as trip origin/destination
-	public static final double AVERAGE_INTERSECTION_DELAY = 0.8; //[min]
-	public static final double FRACTION_AV = 0.01;
-	
-	private Properties params;
+//	//public static final double SPEED_LIMIT_M_ROAD = 112.65; //70mph = 31.29mps = 112.65kph
+//	//public static final double SPEED_LIMIT_A_ROAD = 96.56; //60mph = 26.82mps = 96.56kph
 
+	public int maximumCapacityMRoad; //PCU per lane per hour
+	public int maximumCapacityARoad; //PCU per lane per hour
+	public double averageAccessEgressSpeedCar; //kph  
+	public double averageAccessEgressSpeedFreight; //kph 
+	public double peakHourPercentage;
+	public double alpha;
+	public double betaMRoad;
+	public double betaARoad;
+	public boolean flagIntrazonalAssignmentReplacement; //true means that origin and destination nodes can be the same
+	public boolean flagAStarIfEmptyRouteSet; //if there is no pre-generated route set for a node pair, try finding a route with aStar
+	public int interzonalTopNodes; //how many top nodes (based on gravitated population size) to considers as trip origin/destination
+	public double averageIntersectionDelay; //[min]
+	public double fractionAV;
+	
 	private static RandomSingleton rng = RandomSingleton.getInstance();
 
 	public static enum EngineType {
@@ -140,7 +133,8 @@ public class RoadNetworkAssignment {
 								 Map<TimeOfDay, Map<Integer, Double>> defaultLinkTravelTime, 
 								 HashMap<String, Double> areaCodeProbabilities, 
 								 HashMap<String, Double> workplaceZoneProbabilities,
-								 HashMap<String, MultiKeyMap> congestionCharges) {
+								 HashMap<String, MultiKeyMap> congestionCharges,
+								 Properties params) {
 
 		this.roadNetwork = roadNetwork;
 		this.linkVolumesInPCU = new HashMap<Integer, Double>();
@@ -403,6 +397,21 @@ public class RoadNetworkAssignment {
 		}
 		
 		this.congestionCharges = congestionCharges;
+		
+		//read the parameters
+		this.maximumCapacityMRoad = Integer.parseInt(params.getProperty("MAXIMUM_CAPACITY_M_ROAD"));
+		this.maximumCapacityARoad = Integer.parseInt(params.getProperty("MAXIMUM_CAPACITY_A_ROAD"));
+		this.averageAccessEgressSpeedCar = Double.parseDouble(params.getProperty("AVERAGE_ACCESS_EGRESS_SPEED_CAR"));  
+		this.averageAccessEgressSpeedFreight = Double.parseDouble(params.getProperty("AVERAGE_ACCESS_EGRESS_SPEED_FREIGHT")); 
+		this.peakHourPercentage = Double.parseDouble(params.getProperty("PEAK_HOUR_PERCENTAGE"));
+		this.alpha = Double.parseDouble(params.getProperty("ALPHA"));
+		this.betaMRoad = Double.parseDouble(params.getProperty("BETA_M_ROAD"));
+		this.betaARoad = Double.parseDouble(params.getProperty("BETA_A_ROAD"));
+		this.flagIntrazonalAssignmentReplacement = Boolean.parseBoolean(params.getProperty("FLAG_INTRAZONAL_ASSIGNMENT_REPLACEMENT"));
+		this.flagAStarIfEmptyRouteSet = Boolean.parseBoolean(params.getProperty("FLAG_ASTAR_IF_EMPTY_ROUTE_SET")); //if there is no pre-generated route set for a node pair, try finding a route with aStar
+		this.interzonalTopNodes = Integer.parseInt(params.getProperty("INTERZONAL_TOP_NODES")); //how many top nodes (based on gravitated population size) to considers as trip origin/destination
+		this.averageIntersectionDelay = Double.parseDouble(params.getProperty("AVERAGE_INTERSECTION_DELAY"));
+		this.fractionAV = Double.parseDouble(params.getProperty("FRACTION_AV"));
 	}
 
 	/** 
@@ -472,7 +481,7 @@ public class RoadNetworkAssignment {
 				//choose vehicle
 				random  = rng.nextDouble();
 				VehicleType vht = null;
-				if (Double.compare(1.0 - FRACTION_AV, random) > 0)
+				if (Double.compare(1.0 - fractionAV, random) > 0)
 					vht = VehicleType.CAR;
 				else 
 					vht = VehicleType.AV;
@@ -517,7 +526,7 @@ public class RoadNetworkAssignment {
 				random = rng.nextDouble();
 				//if intrazonal trip and replacement is not allowed, the probability of the originNode should be 0 so it cannot be chosen again
 				//also, in that case it is important to rescale other node probabilities (now that the originNode is removed) by dividing with (1.0 - p(originNode))!
-				if (!FLAG_INTRAZONAL_ASSIGNMENT_REPLACEMENT && originZone.equals(destinationZone) && listOfDestinationNodes.contains(originNode)) { //no replacement and intra-zonal trip
+				if (!flagIntrazonalAssignmentReplacement && originZone.equals(destinationZone) && listOfDestinationNodes.contains(originNode)) { //no replacement and intra-zonal trip
 					for (Integer node: listOfDestinationNodes) {
 						if (node.intValue() == originNode.intValue()) continue; //skip if the node is the same as origin
 						cumulativeProbability += endNodeProbabilities.get(node) / (1.0 - endNodeProbabilities.get(originNode));
@@ -686,7 +695,7 @@ public class RoadNetworkAssignment {
 				//choose vehicle
 				random  = rng.nextDouble();
 				VehicleType vht = null;
-				if (Double.compare(1.0 - FRACTION_AV, random) > 0)
+				if (Double.compare(1.0 - fractionAV, random) > 0)
 					vht = VehicleType.CAR;
 				else 
 					vht = VehicleType.AV;
@@ -734,7 +743,7 @@ public class RoadNetworkAssignment {
 					random = rng.nextDouble();
 					//if intrazonal trip and replacement is not allowed, the probability of the originNode should be 0 so it cannot be chosen again
 					//also, in that case it is important to rescale other node probabilities (now that the originNode is removed) by dividing with (1.0 - p(originNode))!
-					if (!FLAG_INTRAZONAL_ASSIGNMENT_REPLACEMENT && listOfDestinationNodes.contains(originNode)) { //no replacement
+					if (!flagIntrazonalAssignmentReplacement && listOfDestinationNodes.contains(originNode)) { //no replacement
 						for (Integer node: listOfDestinationNodes) {
 							if (node.intValue() == originNode.intValue()) continue; //skip if the node is the same as origin
 							cumulativeProbability += endNodeProbabilities.get(node) / (1.0 - endNodeProbabilities.get(originNode));
@@ -769,8 +778,8 @@ public class RoadNetworkAssignment {
 					*/
 					
 					//make a choice based on the gravitating population size
-					int originNodesToConsider = INTERZONAL_TOP_NODES<listOfOriginNodes.size()?INTERZONAL_TOP_NODES:listOfOriginNodes.size();
-					int destinationNodesToConsider = INTERZONAL_TOP_NODES<listOfDestinationNodes.size()?INTERZONAL_TOP_NODES:listOfDestinationNodes.size();
+					int originNodesToConsider = interzonalTopNodes<listOfOriginNodes.size()?interzonalTopNodes:listOfOriginNodes.size();
+					int destinationNodesToConsider = interzonalTopNodes<listOfDestinationNodes.size()?interzonalTopNodes:listOfDestinationNodes.size();
 					//sums of gravitating population
 					
 					double sum = 0.0;
@@ -808,7 +817,7 @@ public class RoadNetworkAssignment {
 				if (fetchedRouteSet == null) {
 					System.err.printf("Can't fetch the route set between nodes %d and %d! %s", originNode, destinationNode, System.lineSeparator());
 
-					if (!FLAG_ASTAR_IF_EMPTY_ROUTE_SET)	continue;
+					if (!flagAStarIfEmptyRouteSet)	continue;
 					else { //try finding a path with aStar
 						System.err.println("Trying the astar!");
 
@@ -1041,7 +1050,7 @@ public class RoadNetworkAssignment {
 					random = rng.nextDouble();
 					//if intrazonal trip and replacement is not allowed, the probability of the originNode should be 0 so it cannot be chosen again
 					//also, in that case it is important to rescale other node probabilities (now that the originNode is removed) by dividing with (1.0 - p(originNode))!
-					if (!FLAG_INTRAZONAL_ASSIGNMENT_REPLACEMENT && origin == destination && listOfDestinationNodes.contains(originNode)) { //no replacement and intra-zonal trip
+					if (!flagIntrazonalAssignmentReplacement && origin == destination && listOfDestinationNodes.contains(originNode)) { //no replacement and intra-zonal trip
 						for (int node: listOfDestinationNodes) {
 							if (node == originNode.intValue()) continue; //skip if the node is the same as origin
 							cumulativeProbability += endNodeProbabilitiesFreight.get(node) / (1.0 - endNodeProbabilitiesFreight.get(originNode));
@@ -1283,7 +1292,7 @@ public class RoadNetworkAssignment {
 						random = rng.nextDouble();
 						//if intrazonal trip and replacement is not allowed, the probability of the originNode should be 0 so it cannot be chosen again
 						//also, in that case it is important to rescale other node probabilities (now that the originNode is removed) by dividing with (1.0 - p(originNode))!
-						if (!FLAG_INTRAZONAL_ASSIGNMENT_REPLACEMENT && listOfDestinationNodes.contains(originNode)) { //no replacement and intra-zonal trip
+						if (!flagIntrazonalAssignmentReplacement && listOfDestinationNodes.contains(originNode)) { //no replacement and intra-zonal trip
 							for (int node: listOfDestinationNodes) {
 								if (node == originNode.intValue()) continue; //skip if the node is the same as origin
 								cumulativeProbability += endNodeProbabilitiesFreight.get(node) / (1.0 - endNodeProbabilitiesFreight.get(originNode));
@@ -1305,8 +1314,8 @@ public class RoadNetworkAssignment {
 					} else { //inter-zonal trip!
 
 						//make a choice based on the gravitating workzone population size
-						int originNodesToConsider = INTERZONAL_TOP_NODES<listOfOriginNodes.size()?INTERZONAL_TOP_NODES:listOfOriginNodes.size();
-						int destinationNodesToConsider = INTERZONAL_TOP_NODES<listOfDestinationNodes.size()?INTERZONAL_TOP_NODES:listOfDestinationNodes.size();
+						int originNodesToConsider = interzonalTopNodes<listOfOriginNodes.size()?interzonalTopNodes:listOfOriginNodes.size();
+						int destinationNodesToConsider = interzonalTopNodes<listOfDestinationNodes.size()?interzonalTopNodes:listOfDestinationNodes.size();
 						//sums of gravitating population
 						
 						double sum = 0.0;
@@ -1356,7 +1365,7 @@ public class RoadNetworkAssignment {
 						//choose destination node
 						cumulativeProbability = 0.0;
 						random = rng.nextDouble();
-						if (!FLAG_INTRAZONAL_ASSIGNMENT_REPLACEMENT && listOfDestinationNodes.contains(originNode)) { //no replacement and intra-zonal trip
+						if (!flagIntrazonalAssignmentReplacement && listOfDestinationNodes.contains(originNode)) { //no replacement and intra-zonal trip
 							for (int node: listOfDestinationNodes) {
 								if (node == originNode.intValue()) continue; //skip if the node is the same as origin
 								cumulativeProbability += endNodeProbabilitiesFreight.get(node) / (1.0 - endNodeProbabilitiesFreight.get(originNode));
@@ -1377,7 +1386,7 @@ public class RoadNetworkAssignment {
 
 						//if they are from different LADs, consider only top nodes from destination LAD		
 					} else {
-						int indexDestination = rng.nextInt(INTERZONAL_TOP_NODES<listOfDestinationNodes.size()?INTERZONAL_TOP_NODES:listOfDestinationNodes.size());
+						int indexDestination = rng.nextInt(interzonalTopNodes<listOfDestinationNodes.size()?interzonalTopNodes:listOfDestinationNodes.size());
 						destinationNode = listOfDestinationNodes.get(indexDestination);
 					}
 
@@ -1397,7 +1406,7 @@ public class RoadNetworkAssignment {
 						//choose destination node
 						cumulativeProbability = 0.0;
 						random = rng.nextDouble();
-						if (!FLAG_INTRAZONAL_ASSIGNMENT_REPLACEMENT && listOfOriginNodes.contains(destinationNode)) { //no replacement and intra-zonal trip
+						if (!flagIntrazonalAssignmentReplacement && listOfOriginNodes.contains(destinationNode)) { //no replacement and intra-zonal trip
 							for (int node: listOfOriginNodes) {
 								if (node == destinationNode.intValue()) continue; //skip if the node is the same as destination
 								cumulativeProbability += startNodeProbabilitiesFreight.get(node) / (1.0 - startNodeProbabilitiesFreight.get(destinationNode));
@@ -1418,14 +1427,14 @@ public class RoadNetworkAssignment {
 
 						//if they are from different LADs, consider only top nodes from destination LAD		
 					} else {
-						int indexOrigin = rng.nextInt(INTERZONAL_TOP_NODES<listOfOriginNodes.size()?INTERZONAL_TOP_NODES:listOfOriginNodes.size());
+						int indexOrigin = rng.nextInt(interzonalTopNodes<listOfOriginNodes.size()?interzonalTopNodes:listOfOriginNodes.size());
 						originNode = listOfOriginNodes.get(indexOrigin);
 					}
 
 
 				} else if (originNode != null && destinationNode != null) { //point to point
 
-					if (!FLAG_INTRAZONAL_ASSIGNMENT_REPLACEMENT && originNode == destinationNode) 
+					if (!flagIntrazonalAssignmentReplacement && originNode == destinationNode) 
 						System.err.println("Origin and destination node are the same, but there is no replacement!");
 				}
 
@@ -1437,7 +1446,7 @@ public class RoadNetworkAssignment {
 				if (fetchedRouteSet == null) {
 					System.err.printf("Can't fetch the route set between nodes %d and %d! %s", originNode, destinationNode, System.lineSeparator());
 
-					if (!FLAG_ASTAR_IF_EMPTY_ROUTE_SET)	continue;
+					if (!flagAStarIfEmptyRouteSet)	continue;
 					else { //try finding a path with aStar
 						System.err.println("Trying the astar!");
 
@@ -1764,7 +1773,7 @@ public class RoadNetworkAssignment {
 			
 			Double sum = timeSkimMatrix.getCost(originLAD, destinationLAD);
 			if (sum == null) sum = 0.0;
-			double tripTravelTime = trip.getTravelTime(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), AVERAGE_INTERSECTION_DELAY, this.roadNetwork.getNodeToAverageAccessEgressDistance(), AVERAGE_ACCESS_EGRESS_SPEED_CAR);
+			double tripTravelTime = trip.getTravelTime(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), averageIntersectionDelay, this.roadNetwork.getNodeToAverageAccessEgressDistance(), averageAccessEgressSpeedCar);
 			timeSkimMatrix.setCost(originLAD, destinationLAD, sum + tripTravelTime);
 		}
 		
@@ -1814,7 +1823,7 @@ public class RoadNetworkAssignment {
 			
 			Double sum = timeSkimMatrixFreight.getCost(origin, destination, vht.value);
 			if (sum == null) sum = 0.0;
-			double tripTravelTime = trip.getTravelTime(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), AVERAGE_INTERSECTION_DELAY, this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), AVERAGE_ACCESS_EGRESS_SPEED_FREIGHT);
+			double tripTravelTime = trip.getTravelTime(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.averageIntersectionDelay, this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), this.averageAccessEgressSpeedFreight);
 			timeSkimMatrixFreight.setCost(origin, destination, vht.value, sum + tripTravelTime);
 		}
 		
@@ -1863,7 +1872,7 @@ public class RoadNetworkAssignment {
 			
 			Double sum = costSkimMatrix.getCost(originLAD, destinationLAD);
 			if (sum == null) sum = 0.0;
-			double tripFuelCost = trip.getCost(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistance(), AVERAGE_ACCESS_EGRESS_SPEED_CAR, this.energyUnitCosts, this.energyConsumptions, this.congestionCharges);
+			double tripFuelCost = trip.getCost(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistance(), averageAccessEgressSpeedCar, this.energyUnitCosts, this.energyConsumptions, this.congestionCharges);
 			costSkimMatrix.setCost(originLAD, destinationLAD, sum + tripFuelCost);
 		}
 		
@@ -1992,7 +2001,7 @@ public class RoadNetworkAssignment {
 			
 			Double sum = costSkimMatrixFreight.getCost(origin, destination, vht.value);
 			if (sum == null) sum = 0.0;
-			double tripFuelCost = trip.getCost(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), AVERAGE_ACCESS_EGRESS_SPEED_FREIGHT, this.energyUnitCosts, this.energyConsumptions, this.congestionCharges);
+			double tripFuelCost = trip.getCost(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyUnitCosts, this.energyConsumptions, this.congestionCharges);
 			
 			costSkimMatrixFreight.setCost(origin, destination, vht.value, sum + tripFuelCost);
 		}
@@ -2034,7 +2043,7 @@ public class RoadNetworkAssignment {
 			
 			if (trip.getVehicle() != VehicleType.CAR) continue; //skip freight vehicles
 			EngineType et = trip.getEngine();
-			double consumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistance(), AVERAGE_ACCESS_EGRESS_SPEED_CAR, this.energyConsumptions);
+			double consumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistance(), averageAccessEgressSpeedCar, this.energyConsumptions);
 
 			Double currentConsumption = consumptions.get(et);
 			if (currentConsumption == null) currentConsumption = 0.0;
@@ -2064,7 +2073,7 @@ public class RoadNetworkAssignment {
 			if (trip.getVehicle() != VehicleType.CAR) continue; //skip freight vehicles
 			
 			EngineType et = trip.getEngine();
-			double tripConsumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), AVERAGE_ACCESS_EGRESS_SPEED_FREIGHT, this.energyConsumptions);
+			double tripConsumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyConsumptions);
 
 			String originLAD = trip.getOriginLAD(this.roadNetwork.getNodeToZone());
 			String destinationLAD = trip.getDestinationLAD(this.roadNetwork.getNodeToZone());
@@ -2102,7 +2111,7 @@ public class RoadNetworkAssignment {
 			if ( ! (vht == VehicleType.ARTIC || vht == VehicleType.RIGID || vht == VehicleType.VAN)) continue; //skip non-freight vehicles
 			
 			EngineType et = trip.getEngine();
-			double consumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), AVERAGE_ACCESS_EGRESS_SPEED_FREIGHT, this.energyConsumptions);
+			double consumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyConsumptions);
 
 			Double currentConsumption = consumptions.get(et);
 			if (currentConsumption == null) currentConsumption = 0.0;
@@ -2150,11 +2159,11 @@ public class RoadNetworkAssignment {
 			double capacity = 0.0;
 			String roadNumber = (String) sf.getAttribute("RoadNumber");
 			if (roadNumber.charAt(0) == 'M') //motorway
-				capacity = PEAK_HOUR_PERCENTAGE * linkVolumeInPCU / numberOfLanes.get(edge.getID());
+				capacity = peakHourPercentage * linkVolumeInPCU / numberOfLanes.get(edge.getID());
 			else if (roadNumber.charAt(0) == 'A') //A-road
-				capacity = PEAK_HOUR_PERCENTAGE * linkVolumeInPCU / numberOfLanes.get(edge.getID());
+				capacity = peakHourPercentage * linkVolumeInPCU / numberOfLanes.get(edge.getID());
 			else //ferry
-				capacity = PEAK_HOUR_PERCENTAGE * linkVolumeInPCU;
+				capacity = peakHourPercentage * linkVolumeInPCU;
 
 			linkPointCapacities.put(edge.getID(), capacity);
 		}
@@ -2232,11 +2241,11 @@ public class RoadNetworkAssignment {
 			String roadNumber = (String) sf.getAttribute("RoadNumber");
 			double length = (double) sf.getAttribute("LenNet");
 			if (roadNumber.charAt(0) == 'M') //motorway
-				density = PEAK_HOUR_PERCENTAGE * linkVol / numberOfLanes.get(edge.getID()) / length;
+				density = peakHourPercentage * linkVol / numberOfLanes.get(edge.getID()) / length;
 			else if (roadNumber.charAt(0) == 'A') //A-road
-				density = PEAK_HOUR_PERCENTAGE * linkVol / numberOfLanes.get(edge.getID()) / length;
+				density = peakHourPercentage * linkVol / numberOfLanes.get(edge.getID()) / length;
 			else //ferry
-				density = PEAK_HOUR_PERCENTAGE * linkVol / length;
+				density = peakHourPercentage * linkVol / length;
 
 			linkDensities.put(edge.getID(), density);
 		}
@@ -2368,21 +2377,21 @@ public class RoadNetworkAssignment {
 				record.add(Double.toString(densities.get(edge.getID())));
 				//get max capacity from road type
 				if (roadNumber.charAt(0) == 'M') { //motorway
-					record.add(Integer.toString(RoadNetworkAssignment.MAXIMUM_CAPACITY_M_ROAD));
-					double utilisation = capacities.get(edge.getID()) / RoadNetworkAssignment.MAXIMUM_CAPACITY_M_ROAD;
+					record.add(Integer.toString(maximumCapacityMRoad));
+					double utilisation = capacities.get(edge.getID()) / maximumCapacityMRoad;
 					record.add(Double.toString(utilisation));
-					double averageUtilisation = averageCapacities.get(edge.getID()) / RoadNetworkAssignment.MAXIMUM_CAPACITY_M_ROAD;
+					double averageUtilisation = averageCapacities.get(edge.getID()) / maximumCapacityMRoad;
 					record.add(Double.toString(averageUtilisation));
-					double maximumUtilisation = maximumCapacities.get(edge.getID()) / RoadNetworkAssignment.MAXIMUM_CAPACITY_M_ROAD;
+					double maximumUtilisation = maximumCapacities.get(edge.getID()) / maximumCapacityMRoad;
 					record.add(Double.toString(maximumUtilisation));
 				}	
 				else if (roadNumber.charAt(0) == 'A') { //A road
-					record.add(Integer.toString(RoadNetworkAssignment.MAXIMUM_CAPACITY_A_ROAD));
-					double utilisation = capacities.get(edge.getID()) / RoadNetworkAssignment.MAXIMUM_CAPACITY_A_ROAD;
+					record.add(Integer.toString(maximumCapacityARoad));
+					double utilisation = capacities.get(edge.getID()) / maximumCapacityARoad;
 					record.add(Double.toString(utilisation));
-					double averageUtilisation = averageCapacities.get(edge.getID()) / RoadNetworkAssignment.MAXIMUM_CAPACITY_A_ROAD;
+					double averageUtilisation = averageCapacities.get(edge.getID()) / maximumCapacityARoad;
 					record.add(Double.toString(averageUtilisation));
-					double maximumUtilisation = maximumCapacities.get(edge.getID()) / RoadNetworkAssignment.MAXIMUM_CAPACITY_A_ROAD;
+					double maximumUtilisation = maximumCapacities.get(edge.getID()) / maximumCapacityARoad;
 					record.add(Double.toString(maximumUtilisation));
 				}
 				else { //ferry

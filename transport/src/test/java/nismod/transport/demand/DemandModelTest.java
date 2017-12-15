@@ -5,7 +5,9 @@ package nismod.transport.demand;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -53,6 +55,24 @@ public class DemandModelTest {
 		final String energyUnitCostsFile = "./src/test/resources/testdata/energyUnitCosts.csv";
 		final String engineTypeFractionsFile = "./src/test/resources/testdata/engineTypeFractions.csv";
 		
+		final String assignmentParamsFile = "./src/test/resources/testdata/assignment.properties";
+		Properties assignmentProperties = new Properties();
+		InputStream input = null;
+		try {
+			input = new FileInputStream(assignmentParamsFile);
+			// load properties file
+			assignmentProperties.load(input);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		} finally {
+			if (input != null) {
+				try {
+					input.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 		
 //		final URL zonesUrl2 = new URL("file://src/main/resources/data/zones.shp");
 //		final URL networkUrl2 = new URL("file://src/main/resources/data/network.shp");
@@ -73,7 +93,7 @@ public class DemandModelTest {
 //		final String energyUnitCostsFile = "./src/main/resources/data/energyUnitCosts.csv";
 		
 		//create a road network
-		RoadNetwork roadNetwork2 = new RoadNetwork(zonesUrl2, networkUrl2, nodesUrl2, AADFurl2, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile);
+		RoadNetwork roadNetwork2 = new RoadNetwork(zonesUrl2, networkUrl2, nodesUrl2, AADFurl2, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, assignmentProperties);
 		roadNetwork2.replaceNetworkEdgeIDs(networkUrlfixedEdgeIDs);
 		
 		//visualise the shapefiles
@@ -183,19 +203,12 @@ public class DemandModelTest {
 		VehicleElectrification ve = new VehicleElectrification(props);
 		interventions.add(ve);
 		
-		//set route choice parameters
-		Properties params = new Properties();
-		params.setProperty("TIME", "-1.5");
-		params.setProperty("LENGTH", "-1.0");
-		params.setProperty("COST", "-3.6");
-		params.setProperty("INTERSECTIONS", "-0.1");
-		params.setProperty("AVG_INTERSECTION_DELAY", "0.8");
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork2);
 		//rsg.readRoutes("./src/test/resources/testdata/testRoutes.txt");
 		rsg.readRoutes("./src/test/resources/testdata/allRoutes.txt");
 		
 		//the main demand model
-		DemandModel dm = new DemandModel(roadNetwork2, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, energyUnitCostsFile, engineTypeFractionsFile, interventions, rsg, params);
+		DemandModel dm = new DemandModel(roadNetwork2, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, energyUnitCostsFile, engineTypeFractionsFile, interventions, rsg, assignmentProperties);
 		
 		//copy base-year engine fractions
 		for (int year = 2015; year < 2025; year++) {
