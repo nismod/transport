@@ -51,23 +51,11 @@ public class RoadNetworkAssignmentTest {
 
 	public static void main( String[] args ) throws IOException	{
 
-		final URL zonesUrl = new URL("file://src/test/resources/minitestdata/zones.shp");
-		final URL networkUrl = new URL("file://src/test/resources/minitestdata/network.shp");
-		final URL nodesUrl = new URL("file://src/test/resources/minitestdata/nodes.shp");
-		final URL AADFurl = new URL("file://src/test/resources/minitestdata/AADFdirected.shp");
-		
-		final String areaCodeFileName = "./src/test/resources/minitestdata/nomisPopulation.csv";
-		final String areaCodeNearestNodeFile = "./src/test/resources/minitestdata/areaCodeToNearestNode.csv";
-		final String workplaceZoneFileName = "./src/test/resources/minitestdata/workplacePopulation.csv";
-		final String workplaceZoneNearestNodeFile = "./src/test/resources/minitestdata/workplaceZoneToNearestNode.csv";
-		final String freightZoneToLADfile = "./src/test/resources/minitestdata/freightZoneToLAD.csv";
-		final String freightZoneNearestNodeFile = "./src/test/resources/minitestdata/freightZoneToNearestNode.csv";
-		
-		final String assignmentParamsFile = "./src/test/resources/testdata/assignment.properties";
+		final String configFile = "./src/test/resources/testdata/config.properties";
 		Properties props = new Properties();
 		InputStream input = null;
 		try {
-			input = new FileInputStream(assignmentParamsFile);
+			input = new FileInputStream(configFile);
 			// load properties file
 			props.load(input);
 		} catch (IOException ex) {
@@ -81,6 +69,28 @@ public class RoadNetworkAssignmentTest {
 				}
 			}
 		}
+		
+		final String baseYear = props.getProperty("baseYear");
+		final String predictedYear = props.getProperty("predictedYear");
+		
+		final String areaCodeFileName = props.getProperty("areaCodeFileName");
+		final String areaCodeNearestNodeFile = props.getProperty("areaCodeNearestNodeFile");
+		final String workplaceZoneFileName = props.getProperty("workplaceZoneFileName");
+		final String workplaceZoneNearestNodeFile = props.getProperty("workplaceZoneNearestNodeFile");
+		final String freightZoneToLADfile = props.getProperty("freightZoneToLADfile");
+		final String freightZoneNearestNodeFile = props.getProperty("freightZoneNearestNodeFile");
+
+		final URL zonesUrl = new URL(props.getProperty("zonesUrl"));
+		final URL networkUrl = new URL(props.getProperty("networkUrl"));
+		final URL networkUrlFixedEdgeIDs = new URL(props.getProperty("networkUrlFixedEdgeIDs"));
+		final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
+		final URL AADFurl = new URL(props.getProperty("AADFurl"));
+
+		final String baseYearODMatrixFile = props.getProperty("baseYearODMatrixFile");
+		final String baseYearFreightMatrixFile = props.getProperty("baseYearFreightMatrixFile");
+		final String populationFile = props.getProperty("populationFile");
+		final String GVAFile = props.getProperty("GVAFile");
+		
 		
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 

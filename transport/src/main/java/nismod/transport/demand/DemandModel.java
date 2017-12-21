@@ -76,12 +76,14 @@ public class DemandModel {
 	 * @param baseYearFreightMatrixFile Base-year freight matrix file name.
 	 * @param populationFile Population file name.
 	 * @param GVAFile GVA file name.
+	 * @param elasticitiesFile Elasticities file name.
+	 * @param elasticitiesFreightFile Elasticities freight file name.
 	 * @param energyUnitCostsFile Energy unit costs file name.
 	 * @param interventions List of interventions.
 	 * @param rsg Route Set Generator with routes for both cars and freight.
 	 * @param params Assignment and route-choice parameters
 	 */
-	public DemandModel(RoadNetwork roadNetwork, String baseYearODMatrixFile, String baseYearFreightMatrixFile, String populationFile, String GVAFile, String energyUnitCostsFile, String engineTypeFractionsFile, List<Intervention> interventions, RouteSetGenerator rsg, Properties params) throws FileNotFoundException, IOException {
+	public DemandModel(RoadNetwork roadNetwork, String baseYearODMatrixFile, String baseYearFreightMatrixFile, String populationFile, String GVAFile, String elasticitiesFile, String elasticitiesFreightFile, String energyUnitCostsFile, String engineTypeFractionsFile, List<Intervention> interventions, RouteSetGenerator rsg, Properties params) throws FileNotFoundException, IOException {
 
 		yearToPassengerODMatrix = new HashMap<Integer, ODMatrix>();
 		yearToFreightODMatrix = new HashMap<Integer, FreightMatrix>();
@@ -124,6 +126,10 @@ public class DemandModel {
 		
 		this.yearToEngineTypeFractions = readEngineTypeFractionsFile(engineTypeFractionsFile);
 		
+		this.elasticities = readElasticitiesFile(elasticitiesFile);
+		this.elasticitiesFreight = readElasticitiesFile(elasticitiesFreightFile);
+		
+		/*
 		//default elasticity values
 		elasticities = new HashMap<ElasticityTypes, Double>();
 		elasticities.put(ElasticityTypes.POPULATION, 1.0);
@@ -136,6 +142,7 @@ public class DemandModel {
 		elasticitiesFreight.put(ElasticityTypes.GVA, 0.7);
 		elasticitiesFreight.put(ElasticityTypes.TIME, -0.41);
 		elasticitiesFreight.put(ElasticityTypes.COST, -0.1);
+		*/
 		
 		/*
 		//base-year engine type fractions
@@ -676,22 +683,27 @@ public class DemandModel {
 	private HashMap<Integer, HashMap<String, Integer>> readPopulationFile (String fileName) throws FileNotFoundException, IOException {
 
 		HashMap<Integer, HashMap<String, Integer>> map = new HashMap<Integer, HashMap<String, Integer>>();
+
 		CSVParser parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
-		//System.out.println(parser.getHeaderMap().toString());
-		Set<String> keySet = parser.getHeaderMap().keySet();
-		//System.out.println("keySet = " + keySet);
-		int population;
-		for (CSVRecord record : parser) {
-			//System.out.println(record);
-			int year = Integer.parseInt(record.get(0));
-			HashMap<String, Integer> zoneToPopulation = new HashMap<String, Integer>();
-			for (String zone: keySet) {
-				//System.out.println("Destination zone = " + destination);
-				population = Integer.parseInt(record.get(zone));
-				zoneToPopulation.put(zone, population);			
+		try {
+			//System.out.println(parser.getHeaderMap().toString());
+			Set<String> keySet = parser.getHeaderMap().keySet();
+			//System.out.println("keySet = " + keySet);
+			int population;
+			for (CSVRecord record : parser) {
+				//System.out.println(record);
+				int year = Integer.parseInt(record.get(0));
+				HashMap<String, Integer> zoneToPopulation = new HashMap<String, Integer>();
+				for (String zone: keySet) {
+					//System.out.println("Destination zone = " + destination);
+					population = Integer.parseInt(record.get(zone));
+					zoneToPopulation.put(zone, population);			
+				}
+				map.put(year, zoneToPopulation);
 			}
-			map.put(year, zoneToPopulation);
-		} parser.close(); 
+		} finally {
+			parser.close();
+		}
 
 		return map;
 	}
@@ -705,22 +717,52 @@ public class DemandModel {
 
 		HashMap<Integer, HashMap<String, Double>> map = new HashMap<Integer, HashMap<String, Double>>();
 		CSVParser parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
-		//System.out.println(parser.getHeaderMap().toString());
-		Set<String> keySet = parser.getHeaderMap().keySet();
-		keySet.remove("year");
-		//System.out.println("keySet = " + keySet);
-		double GVA;
-		for (CSVRecord record : parser) {
-			//System.out.println(record);
-			int year = Integer.parseInt(record.get(0));
-			HashMap<String, Double> zoneToGVA = new HashMap<String, Double>();
-			for (String zone: keySet) {
-				//System.out.println("Destination zone = " + destination);
-				GVA = Double.parseDouble(record.get(zone));
-				zoneToGVA.put(zone, GVA);			
+		try {
+			//System.out.println(parser.getHeaderMap().toString());
+			Set<String> keySet = parser.getHeaderMap().keySet();
+			keySet.remove("year");
+			//System.out.println("keySet = " + keySet);
+			double GVA;
+			for (CSVRecord record : parser) {
+				//System.out.println(record);
+				int year = Integer.parseInt(record.get(0));
+				HashMap<String, Double> zoneToGVA = new HashMap<String, Double>();
+				for (String zone: keySet) {
+					//System.out.println("Destination zone = " + destination);
+					GVA = Double.parseDouble(record.get(zone));
+					zoneToGVA.put(zone, GVA);			
+				}
+				map.put(year, zoneToGVA);
 			}
-			map.put(year, zoneToGVA);
-		} parser.close(); 
+		} finally {
+			parser.close();
+		}
+
+		return map;
+	}
+	
+	/**
+	 * Reads population file.
+	 * @param fileName File name.
+	 * @return Map with elasticity parameters.
+	 */
+	private HashMap<ElasticityTypes, Double> readElasticitiesFile (String fileName) throws FileNotFoundException, IOException {
+
+		HashMap<ElasticityTypes, Double> map = new HashMap<ElasticityTypes, Double>();
+		CSVParser parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
+		try {
+			//System.out.println(parser.getHeaderMap().toString());
+			Set<String> keySet = parser.getHeaderMap().keySet();
+			//System.out.println("keySet = " + keySet);
+			for (CSVRecord record : parser) {
+				//System.out.println(record);
+				ElasticityTypes et = ElasticityTypes.valueOf(record.get(0));
+				Double elasticity = Double.parseDouble(record.get(1));		
+				map.put(et, elasticity);
+			}
+		} finally {
+			parser.close();
+		}
 
 		return map;
 	}
@@ -734,24 +776,28 @@ public class DemandModel {
 
 		HashMap<Integer, HashMap<EngineType, Double>> map = new HashMap<Integer, HashMap<EngineType, Double>>();
 		CSVParser parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
-		//System.out.println(parser.getHeaderMap().toString());
-		Set<String> keySet = parser.getHeaderMap().keySet();
-		keySet.remove("year");
-		//System.out.println("keySet = " + keySet);
-		double unitPrice;
-		for (CSVRecord record : parser) {
-			//System.out.println(record);
-			int year = Integer.parseInt(record.get(0));
-			HashMap<EngineType, Double> engineTypeToPrice = new HashMap<EngineType, Double>();
-			for (String et: keySet) {
-				//System.out.println("Destination zone = " + destination);
-				EngineType engineType = EngineType.valueOf(et);
-				unitPrice = Double.parseDouble(record.get(engineType));
-				engineTypeToPrice.put(engineType, unitPrice);			
+		try {
+			//System.out.println(parser.getHeaderMap().toString());
+			Set<String> keySet = parser.getHeaderMap().keySet();
+			keySet.remove("year");
+			//System.out.println("keySet = " + keySet);
+			double unitPrice;
+			for (CSVRecord record : parser) {
+				//System.out.println(record);
+				int year = Integer.parseInt(record.get(0));
+				HashMap<EngineType, Double> engineTypeToPrice = new HashMap<EngineType, Double>();
+				for (String et: keySet) {
+					//System.out.println("Destination zone = " + destination);
+					EngineType engineType = EngineType.valueOf(et);
+					unitPrice = Double.parseDouble(record.get(engineType));
+					engineTypeToPrice.put(engineType, unitPrice);			
+				}
+				map.put(year, engineTypeToPrice);
 			}
-			map.put(year, engineTypeToPrice);
-		} parser.close();
-		
+		} finally {
+			parser.close();
+		}
+
 		System.out.println(map);
 
 		return map;
@@ -768,35 +814,39 @@ public class DemandModel {
 		HashMap<Integer, HashMap<VehicleType, HashMap<EngineType, Double>>> yearToVehicleToEngineTypeFractions = new HashMap<Integer, HashMap<VehicleType, HashMap<EngineType, Double>>>();
 
 		CSVParser parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
-		//System.out.println(parser.getHeaderMap().toString());
-		Set<String> keySet = parser.getHeaderMap().keySet();
-		keySet.remove("year");
-		keySet.remove("vehicle");
-		//System.out.println("keySet = " + keySet);
-		double fraction;
-		for (CSVRecord record : parser) {
-			//System.out.println(record);
-			int year = Integer.parseInt(record.get(0));
-			
-			HashMap<VehicleType, HashMap<EngineType, Double>> vehicleToEngineTypeFractions = yearToVehicleToEngineTypeFractions.get(year);
-			if (vehicleToEngineTypeFractions == null) { vehicleToEngineTypeFractions = new HashMap<VehicleType, HashMap<EngineType, Double>>();
-			yearToVehicleToEngineTypeFractions.put(year, vehicleToEngineTypeFractions);
-			}
-						
-			VehicleType vht = VehicleType.valueOf(record.get(1));
-			HashMap<EngineType, Double> engineTypeFractions = vehicleToEngineTypeFractions.get(vht);
-			if (engineTypeFractions == null) { engineTypeFractions = new HashMap<EngineType, Double>();
-			vehicleToEngineTypeFractions.put(vht, engineTypeFractions);
-			}
-			
-			for (String et: keySet) {
-				//System.out.println("Destination zone = " + destination);
-				EngineType engineType = EngineType.valueOf(et);
-				fraction = Double.parseDouble(record.get(engineType));
-				engineTypeFractions.put(engineType, fraction);			
-			}
-		} parser.close();
-		
+		try {
+			//System.out.println(parser.getHeaderMap().toString());
+			Set<String> keySet = parser.getHeaderMap().keySet();
+			keySet.remove("year");
+			keySet.remove("vehicle");
+			//System.out.println("keySet = " + keySet);
+			double fraction;
+			for (CSVRecord record : parser) {
+				//System.out.println(record);
+				int year = Integer.parseInt(record.get(0));
+
+				HashMap<VehicleType, HashMap<EngineType, Double>> vehicleToEngineTypeFractions = yearToVehicleToEngineTypeFractions.get(year);
+				if (vehicleToEngineTypeFractions == null) { vehicleToEngineTypeFractions = new HashMap<VehicleType, HashMap<EngineType, Double>>();
+				yearToVehicleToEngineTypeFractions.put(year, vehicleToEngineTypeFractions);
+				}
+
+				VehicleType vht = VehicleType.valueOf(record.get(1));
+				HashMap<EngineType, Double> engineTypeFractions = vehicleToEngineTypeFractions.get(vht);
+				if (engineTypeFractions == null) { engineTypeFractions = new HashMap<EngineType, Double>();
+				vehicleToEngineTypeFractions.put(vht, engineTypeFractions);
+				}
+
+				for (String et: keySet) {
+					//System.out.println("Destination zone = " + destination);
+					EngineType engineType = EngineType.valueOf(et);
+					fraction = Double.parseDouble(record.get(engineType));
+					engineTypeFractions.put(engineType, fraction);			
+				}
+			} 
+		} finally {
+			parser.close();
+		}
+
 		System.out.println(yearToVehicleToEngineTypeFractions);
 		
 		return yearToVehicleToEngineTypeFractions;

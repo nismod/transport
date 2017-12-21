@@ -52,6 +52,8 @@ public class DemandModelTest {
 		final String baseYearFreightMatrixFile = "./src/test/resources/testdata/freightMatrix.csv";
 		final String populationFile = "./src/test/resources/testdata/population.csv";
 		final String GVAFile = "./src/test/resources/testdata/GVA.csv";
+		final String elasticitiesFile = "./src/test/resources/testdata/elasticities.csv";
+		final String elasticitiesFreightFile = "./src/test/resources/testdata/elasticitiesFreight.csv";
 		final String energyUnitCostsFile = "./src/test/resources/testdata/energyUnitCosts.csv";
 		final String engineTypeFractionsFile = "./src/test/resources/testdata/engineTypeFractions.csv";
 		
@@ -208,7 +210,7 @@ public class DemandModelTest {
 		rsg.readRoutes("./src/test/resources/testdata/allRoutes.txt");
 		
 		//the main demand model
-		DemandModel dm = new DemandModel(roadNetwork2, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, energyUnitCostsFile, engineTypeFractionsFile, interventions, rsg, assignmentProperties);
+		DemandModel dm = new DemandModel(roadNetwork2, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, engineTypeFractionsFile, interventions, rsg, assignmentProperties);
 		
 		//copy base-year engine fractions
 		for (int year = 2015; year < 2025; year++) {

@@ -76,6 +76,8 @@ public class App {
 			final String baseYearFreightMatrixFile = props.getProperty("baseYearFreightMatrixFile");
 			final String populationFile = props.getProperty("populationFile");
 			final String GVAFile = props.getProperty("GVAFile");
+			final String elasticitiesFile = props.getProperty("elasticitiesFile");
+			final String elasticitiesFreightFile = props.getProperty("elasticitiesFreightFile");
 	
 			final String roadExpansionFileName = props.getProperty("roadExpansionFileName");
 			final String vehicleElectrificationFileName = props.getProperty("vehicleElectrificationFileName");
@@ -118,7 +120,7 @@ public class App {
 				interventions.add(ve);
 
 				//the main demand model
-				DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, energyUnitCostsFile, engineTypeFractionsFile, interventions, null, null);
+				DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, engineTypeFractionsFile, interventions, null, null);
 				dm.predictHighwayDemand(Integer.parseInt(predictedYear), Integer.parseInt(baseYear));
 				dm.saveEnergyConsumptions(Integer.parseInt(predictedYear), energyConsumptionsFile);
 				

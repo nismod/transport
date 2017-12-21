@@ -120,9 +120,14 @@ public class RoadNetworkAssignment {
 	 * @param roadNetwork Road network.
 	 * @param energyUnitCosts Energy unit costs.
 	 * @param engineTypeFractions Market shares of different engine/fuel types.
+	 * @param vehicleTypeToPCU Vehicle to PCU conversion.
+	 * @param energyConsumptions Fuel efficiency parameters.
+	 * @param timeOfDayDistribution Time of day distribution.
 	 * @param defaultLinkTravelTime Default link travel times.
 	 * @param areaCodeProbabilities Probabilities of trips starting/ending in each census output area.
 	 * @param workplaceZoneProbabilities Probabilities of freight trips starting/ending in each census output area.
+	 * @param congestionCharges Congestion charges.
+	 * @param params Assignment parameters.
 	 */
 	public RoadNetworkAssignment(RoadNetwork roadNetwork, 
 								 HashMap<EngineType, Double> energyUnitCosts, 
