@@ -19,46 +19,32 @@ import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedNode;
 import org.junit.Test;
 
+import nismod.transport.utility.ConfigReader;
+
 public class RouteSetTest {
 
 	@Test
 	public void test() throws IOException	{
 
-		final String areaCodeFileName = "./src/test/resources/testdata/nomisPopulation.csv";
-		final String areaCodeNearestNodeFile = "./src/test/resources/testdata/areaCodeToNearestNode.csv";
-		final String workplaceZoneFileName = "./src/test/resources/testdata/workplacePopulation.csv";
-		final String workplaceZoneNearestNodeFile = "./src/test/resources/testdata/workplaceZoneToNearestNode.csv";
-		final String freightZoneToLADfile = "./src/test/resources/testdata/freightZoneToLAD.csv";
-		final String freightZoneNearestNodeFile = "./src/test/resources/testdata/freightZoneToNearestNode.csv";
+		final String configFile = "./src/test/resources/testdata/config.properties";
+		Properties props = ConfigReader.getProperties(configFile);
 		
-		final URL zonesUrl = new URL("file://src/test/resources/testdata/zones.shp");
-		final URL networkUrl = new URL("file://src/test/resources/testdata/network.shp");
-		final URL networkUrlNew = new URL("file://src/test/resources/testdata/testOutputNetwork.shp");
-		final URL nodesUrl = new URL("file://src/test/resources/testdata/nodes.shp");
-		final URL AADFurl = new URL("file://src/test/resources/testdata/AADFdirected.shp");
-		
-		final String assignmentParamsFile = "./src/test/resources/testdata/assignment.properties";
-		Properties props = new Properties();
-		InputStream input = null;
-		try {
-			input = new FileInputStream(assignmentParamsFile);
-			// load properties file
-			props.load(input);
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		} finally {
-			if (input != null) {
-				try {
-					input.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}
+		final String areaCodeFileName = props.getProperty("areaCodeFileName");
+		final String areaCodeNearestNodeFile = props.getProperty("areaCodeNearestNodeFile");
+		final String workplaceZoneFileName = props.getProperty("workplaceZoneFileName");
+		final String workplaceZoneNearestNodeFile = props.getProperty("workplaceZoneNearestNodeFile");
+		final String freightZoneToLADfile = props.getProperty("freightZoneToLADfile");
+		final String freightZoneNearestNodeFile = props.getProperty("freightZoneNearestNodeFile");
+
+		final URL zonesUrl = new URL(props.getProperty("zonesUrl"));
+		final URL networkUrl = new URL(props.getProperty("networkUrl"));
+		final URL networkUrlFixedEdgeIDs = new URL(props.getProperty("networkUrlFixedEdgeIDs"));
+		final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
+		final URL AADFurl = new URL(props.getProperty("AADFurl"));
 
 		//create a road network
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
-		roadNetwork.replaceNetworkEdgeIDs(networkUrlNew);
+		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
 		
 		//create routes
 		Route r1 = new Route();

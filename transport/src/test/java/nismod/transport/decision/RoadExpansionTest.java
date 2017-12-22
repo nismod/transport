@@ -16,6 +16,7 @@ import java.util.Properties;
 import org.junit.Test;
 
 import nismod.transport.network.road.RoadNetwork;
+import nismod.transport.utility.ConfigReader;
 
 /**
  * @author Milan Lovric
@@ -26,51 +27,37 @@ public class RoadExpansionTest {
 	@Test
 	public void test() throws IOException {
 
-		final String areaCodeFileName = "./src/test/resources/testdata/nomisPopulation.csv";
-		final String areaCodeNearestNodeFile = "./src/test/resources/testdata/areaCodeToNearestNode.csv";
-		final String workplaceZoneFileName = "./src/test/resources/testdata/workplacePopulation.csv";
-		final String workplaceZoneNearestNodeFile = "./src/test/resources/testdata/workplaceZoneToNearestNode.csv";
-		final String freightZoneToLADfile = "./src/test/resources/testdata/freightZoneToLAD.csv";
-		final String freightZoneNearestNodeFile = "./src/test/resources/testdata/freightZoneToNearestNode.csv";
+		final String configFile = "./src/test/resources/testdata/config.properties";
+		Properties props = ConfigReader.getProperties(configFile);
 		
-		final URL zonesUrl2 = new URL("file://src/test/resources/testdata/zones.shp");
-		final URL networkUrl2 = new URL("file://src/test/resources/testdata/network.shp");
-		final URL nodesUrl2 = new URL("file://src/test/resources/testdata/nodes.shp");
-		final URL AADFurl2 = new URL("file://src/test/resources/testdata/AADFdirected.shp");
-		
-		final String assignmentParamsFile = "./src/test/resources/testdata/assignment.properties";
-		Properties params = new Properties();
-		InputStream input = null;
-		try {
-			input = new FileInputStream(assignmentParamsFile);
-			// load properties file
-			params.load(input);
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		} finally {
-			if (input != null) {
-				try {
-					input.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}
+		final String areaCodeFileName = props.getProperty("areaCodeFileName");
+		final String areaCodeNearestNodeFile = props.getProperty("areaCodeNearestNodeFile");
+		final String workplaceZoneFileName = props.getProperty("workplaceZoneFileName");
+		final String workplaceZoneNearestNodeFile = props.getProperty("workplaceZoneNearestNodeFile");
+		final String freightZoneToLADfile = props.getProperty("freightZoneToLADfile");
+		final String freightZoneNearestNodeFile = props.getProperty("freightZoneNearestNodeFile");
+
+		final URL zonesUrl = new URL(props.getProperty("zonesUrl"));
+		final URL networkUrl = new URL(props.getProperty("networkUrl"));
+		final URL networkUrlFixedEdgeIDs = new URL(props.getProperty("networkUrlFixedEdgeIDs"));
+		final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
+		final URL AADFurl = new URL(props.getProperty("AADFurl"));
+
+		final String roadExpansionFileName = props.getProperty("roadExpansionFile");
 		
 		//create a road network
-		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl2, networkUrl2, nodesUrl2, AADFurl2, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, params);
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 	
 		List<Intervention> interventions = new ArrayList<Intervention>();
-		Properties props = new Properties();
-		props.setProperty("startYear", "2016");
-		props.setProperty("endYear", "2025");
-		props.setProperty("fromNode", "57");
-		props.setProperty("toNode", "39");
-		props.setProperty("CP", "26042");
-		props.setProperty("number", "2");
-		RoadExpansion re = new RoadExpansion(props);
+		Properties props2 = new Properties();
+		props2.setProperty("startYear", "2016");
+		props2.setProperty("endYear", "2025");
+		props2.setProperty("fromNode", "57");
+		props2.setProperty("toNode", "39");
+		props2.setProperty("CP", "26042");
+		props2.setProperty("number", "2");
+		RoadExpansion re = new RoadExpansion(props2);
 								
-		final String roadExpansionFileName = "./src/test/resources/testdata/roadExpansion.properties";
 		RoadExpansion re2 = new RoadExpansion(roadExpansionFileName);
 		System.out.println("Road expansion intervention: " + re2.toString());
 		

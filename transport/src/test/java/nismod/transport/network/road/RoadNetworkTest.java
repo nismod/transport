@@ -29,6 +29,7 @@ import org.geotools.graph.structure.Node;
 import org.junit.Test;
 import org.opengis.feature.simple.SimpleFeature;
 
+import nismod.transport.utility.ConfigReader;
 import nismod.transport.visualisation.NetworkVisualiser;
 
 /**
@@ -128,41 +129,25 @@ public class RoadNetworkTest {
 	@Test
 	public void miniTest() throws IOException {
 
-		final URL zonesUrl = new URL("file://src/test/resources/minitestdata/zones.shp");
-		final URL networkUrl = new URL("file://src/test/resources/minitestdata/network.shp");
-		final URL networkUrlNew = new URL("file://src/test/resources/minitestdata/miniOutputNetwork.shp");
-		final URL nodesUrl = new URL("file://src/test/resources/minitestdata/nodes.shp");
-		final URL AADFurl = new URL("file://src/test/resources/minitestdata/AADFdirected.shp");
-		final String areaCodeFileName = "./src/test/resources/testdata/nomisPopulation.csv";
-		final String areaCodeNearestNodeFile = "./src/test/resources/testdata/areaCodeToNearestNode.csv";
-		final String workplaceZoneFileName = "./src/test/resources/testdata/workplacePopulation.csv";
-		final String workplaceZoneNearestNodeFile = "./src/test/resources/testdata/workplaceZoneToNearestNode.csv";
-		final String freightZoneToLADfile = "./src/test/resources/testdata/freightZoneToLAD.csv";
-		final String freightZoneNearestNodeFile = "./src/test/resources/testdata/freightZoneToNearestNode.csv";
-
-		final String assignmentParamsFile = "./src/test/resources/testdata/assignment.properties";
-		Properties props = new Properties();
-		InputStream input = null;
-		try {
-			input = new FileInputStream(assignmentParamsFile);
-			// load properties file
-			props.load(input);
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		} finally {
-			if (input != null) {
-				try {
-					input.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}
+		final String configFile = "./src/test/resources/minitestdata/config.properties";
+		Properties props = ConfigReader.getProperties(configFile);
 		
-		//create network
-		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl,  areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
-		//replace edge IDs with persistent ones
-		roadNetwork.replaceNetworkEdgeIDs(networkUrlNew);
+		final String areaCodeFileName = props.getProperty("areaCodeFileName");
+		final String areaCodeNearestNodeFile = props.getProperty("areaCodeNearestNodeFile");
+		final String workplaceZoneFileName = props.getProperty("workplaceZoneFileName");
+		final String workplaceZoneNearestNodeFile = props.getProperty("workplaceZoneNearestNodeFile");
+		final String freightZoneToLADfile = props.getProperty("freightZoneToLADfile");
+		final String freightZoneNearestNodeFile = props.getProperty("freightZoneNearestNodeFile");
+
+		final URL zonesUrl = new URL(props.getProperty("zonesUrl"));
+		final URL networkUrl = new URL(props.getProperty("networkUrl"));
+		final URL networkUrlFixedEdgeIDs = new URL(props.getProperty("networkUrlFixedEdgeIDs"));
+		final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
+		final URL AADFurl = new URL(props.getProperty("AADFurl"));
+
+		//create a road network
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
+		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
 		DirectedGraph rn = roadNetwork.getNetwork();
 
 		//TEST NODE AND EDGE CREATION
@@ -365,9 +350,9 @@ public class RoadNetworkTest {
 
 		System.out.println(roadNetwork.getNodeToGravitatingPopulation());
 
-		//node 60 -> area codes (population): E00086593(281), E00086587(402), E00086591(389), E00086592(290), E00086627(294)
-		assertEquals("Gravitating population is correct", (281 + 402 + 389 + 290 + 294) , (int) roadNetwork.getGravitatingPopulation(60));
-
+		//node 9 -> area code (population): E00087214(488), E00086616(416), E00087213(299), E00086589(324), E00087208(388)
+		assertEquals("Gravitating population is correct", (488 + 416 + 299 + 324 + 388) , (int) roadNetwork.getGravitatingPopulation(9));
+		
 		System.out.println("Zone to sorted nodes: " + roadNetwork.getZoneToNodes());
 
 		//find the node with maximum gravitating population
@@ -392,8 +377,8 @@ public class RoadNetworkTest {
 		System.out.println("Node to average access/egress distance:");
 		System.out.println(roadNetwork.getNodeToAverageAccessEgressDistance());
 
-		//node 60 -> area codes (population): E00086593(281), E00086587(402), E00086591(389), E00086592(290), E00086627(294)
-		assertEquals("Average access/egress distance is correct", (281*898.5662589 + 402*505.6027418 + 389*258.6423605 + 290*499.6014909 + 294*206.1543577) / (281+402+389+290+294) , (double) roadNetwork.getAverageAcessEgressDistance(60), 1e-5);
+		//node 9 -> area code (population): E00087214(488), E00086616(416), E00087213(299), E00086589(324), E00087208(388)
+		assertEquals("Average access/egress distance is correct", (488 * 1086.68018 + 416 * 331.586619 + 299 * 968.4972698 + 324 * 125.6523948 + 388 * 1401.943333) / (488 + 416 + 299 + 324 + 388) , (double) roadNetwork.getAverageAcessEgressDistance(9), 1e-5);
 
 		//TEST SHORTEST PATH ALGORITHMS
 		System.out.println("\n\n*** Testing the shortest path algorithms ***");
@@ -684,39 +669,25 @@ public class RoadNetworkTest {
 	@Test
 	public void test() throws IOException {
 
-		final URL zonesUrl = new URL("file://src/test/resources/testdata/zones.shp");
-		final URL networkUrl = new URL("file://src/test/resources/testdata/network.shp");
-		final URL networkUrlfixedEdgeIDs = new URL("file://src/test/resources/testdata/testOutputNetwork.shp");
-		final URL nodesUrl = new URL("file://src/test/resources/testdata/nodes.shp");
-		final URL AADFurl = new URL("file://src/test/resources/testdata/AADFdirected.shp");
-		final String areaCodeFileName = "./src/test/resources/testdata/nomisPopulation.csv";
-		final String areaCodeNearestNodeFile = "./src/test/resources/testdata/areaCodeToNearestNode.csv";
-		final String workplaceZoneFileName = "./src/test/resources/testdata/workplacePopulation.csv";
-		final String workplaceZoneNearestNodeFile = "./src/test/resources/testdata/workplaceZoneToNearestNode.csv";
-		final String freightZoneToLADfile = "./src/test/resources/testdata/freightZoneToLAD.csv";
-		final String freightZoneNearestNodeFile = "./src/test/resources/testdata/freightZoneToNearestNode.csv";
+		final String configFile = "./src/test/resources/testdata/config.properties";
+		Properties props = ConfigReader.getProperties(configFile);
+		
+		final String areaCodeFileName = props.getProperty("areaCodeFileName");
+		final String areaCodeNearestNodeFile = props.getProperty("areaCodeNearestNodeFile");
+		final String workplaceZoneFileName = props.getProperty("workplaceZoneFileName");
+		final String workplaceZoneNearestNodeFile = props.getProperty("workplaceZoneNearestNodeFile");
+		final String freightZoneToLADfile = props.getProperty("freightZoneToLADfile");
+		final String freightZoneNearestNodeFile = props.getProperty("freightZoneNearestNodeFile");
 
-		final String assignmentParamsFile = "./src/test/resources/testdata/assignment.properties";
-		Properties props = new Properties();
-		InputStream input = null;
-		try {
-			input = new FileInputStream(assignmentParamsFile);
-			// load properties file
-			props.load(input);
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		} finally {
-			if (input != null) {
-				try {
-					input.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}
+		final URL zonesUrl = new URL(props.getProperty("zonesUrl"));
+		final URL networkUrl = new URL(props.getProperty("networkUrl"));
+		final URL networkUrlFixedEdgeIDs = new URL(props.getProperty("networkUrlFixedEdgeIDs"));
+		final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
+		final URL AADFurl = new URL(props.getProperty("AADFurl"));
+
 		//create a road network
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
-		roadNetwork.replaceNetworkEdgeIDs(networkUrlfixedEdgeIDs);
+		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
 		DirectedGraph rn = roadNetwork.getNetwork();
 
 		//TEST NODE AND EDGE CREATION
@@ -1074,8 +1045,7 @@ public class RoadNetworkTest {
 
 		System.out.println("Directed graph representation of the road network before replacement:");
 		System.out.println(roadNetwork.getNetwork());
-		final URL networkUrlNew = new URL("file://src/test/resources/testdata/testOutputNetwork.shp");
-		roadNetwork.replaceNetworkEdgeIDs(networkUrlNew);
+		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
 		System.out.println("Directed graph representation of the road network after replacement:");
 		System.out.println(roadNetwork.getNetwork());
 

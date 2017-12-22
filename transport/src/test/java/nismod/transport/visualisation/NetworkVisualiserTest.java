@@ -10,6 +10,7 @@ import java.util.Properties;
 import nismod.transport.demand.ODMatrix;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
+import nismod.transport.utility.ConfigReader;
 
 /**
  * Test for the NetworkVisualizer class
@@ -20,40 +21,24 @@ public class NetworkVisualiserTest {
 
 	public static void main( String[] args ) throws IOException	{
 
-		final URL zonesUrl = new URL("file://src/test/resources/minitestdata/zones.shp");
-		final URL networkUrl = new URL("file://src/test/resources/minitestdata/network.shp");
-		final URL networkUrlfixedEdgeIDs = new URL("file://src/test/resources/minitestdata/miniOutputNetwork.shp");
-		final URL nodesUrl = new URL("file://src/test/resources/minitestdata/nodes.shp");
-		final URL AADFurl = new URL("file://src/test/resources/minitestdata/AADFdirected.shp");
+		final String configFile = "./src/test/resources/testdata/config.properties";
+		Properties props = ConfigReader.getProperties(configFile);
 		
-		final String areaCodeFileName = "./src/test/resources/minitestdata/nomisPopulation.csv";
-		final String areaCodeNearestNodeFile = "./src/test/resources/minitestdata/areaCodeToNearestNode.csv";
-		final String workplaceZoneFileName = "./src/test/resources/minitestdata/workplacePopulation.csv";
-		final String workplaceZoneNearestNodeFile = "./src/test/resources/minitestdata/workplaceZoneToNearestNode.csv";
-		final String freightZoneToLADfile = "./src/test/resources/minitestdata/freightZoneToLAD.csv";
-		final String freightZoneNearestNodeFile = "./src/test/resources/minitestdata/freightZoneToNearestNode.csv";
-		
-		final String assignmentParamsFile = "./src/test/resources/testdata/assignment.properties";
-		Properties props = new Properties();
-		InputStream input = null;
-		try {
-			input = new FileInputStream(assignmentParamsFile);
-			// load properties file
-			props.load(input);
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		} finally {
-			if (input != null) {
-				try {
-					input.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-	
+		final String areaCodeFileName = props.getProperty("areaCodeFileName");
+		final String areaCodeNearestNodeFile = props.getProperty("areaCodeNearestNodeFile");
+		final String workplaceZoneFileName = props.getProperty("workplaceZoneFileName");
+		final String workplaceZoneNearestNodeFile = props.getProperty("workplaceZoneNearestNodeFile");
+		final String freightZoneToLADfile = props.getProperty("freightZoneToLADfile");
+		final String freightZoneNearestNodeFile = props.getProperty("freightZoneNearestNodeFile");
+
+		final URL zonesUrl = new URL(props.getProperty("zonesUrl"));
+		final URL networkUrl = new URL(props.getProperty("networkUrl"));
+		final URL networkUrlFixedEdgeIDs = new URL(props.getProperty("networkUrlFixedEdgeIDs"));
+		final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
+		final URL AADFurl = new URL(props.getProperty("AADFurl"));
+
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
-		roadNetwork.replaceNetworkEdgeIDs(networkUrlfixedEdgeIDs);
+		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
 		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, props);
 		ODMatrix odm = new ODMatrix("./src/test/resources/minitestdata/passengerODM.csv");
 		rna.assignPassengerFlows(odm);

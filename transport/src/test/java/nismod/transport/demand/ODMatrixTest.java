@@ -83,7 +83,7 @@ public class ODMatrixTest {
 		System.out.println("Trip starts: " + passengerODMatrix.calculateTripStarts());
 		System.out.println("Trip ends: " + passengerODMatrix.calculateTripEnds());
 		
-		ODMatrix passengerODMatrix2 = new ODMatrix("./src/test/resources/testdata/passengerODM.csv");
+		ODMatrix passengerODMatrix2 = new ODMatrix("./src/test/resources/testdata/csvfiles/passengerODM.csv");
 		passengerODMatrix2.printMatrixFormatted();
 //		System.out.println(passengerODMatrix2.getKeySet());
 //		for (MultiKey mk: passengerODMatrix2.getKeySet()) {

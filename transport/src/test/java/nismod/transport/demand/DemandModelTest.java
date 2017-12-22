@@ -26,6 +26,7 @@ import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
+import nismod.transport.utility.ConfigReader;
 
 /**
  * @author Milan Lovric
@@ -35,68 +36,44 @@ public class DemandModelTest {
 	
 	public static void main( String[] args ) throws IOException	{
 
-		final String areaCodeFileName = "./src/test/resources/testdata/nomisPopulation.csv";
-		final String areaCodeNearestNodeFile = "./src/test/resources/testdata/areaCodeToNearestNode.csv";
-		final String workplaceZoneFileName = "./src/test/resources/testdata/workplacePopulation.csv";
-		final String workplaceZoneNearestNodeFile = "./src/test/resources/testdata/workplaceZoneToNearestNode.csv";
-		final String freightZoneToLADfile = "./src/test/resources/testdata/freightZoneToLAD.csv";
-		final String freightZoneNearestNodeFile = "./src/test/resources/testdata/freightZoneToNearestNode.csv";
+		final String configFile = "./src/test/resources/testdata/config.properties";
+		Properties props = ConfigReader.getProperties(configFile);
+		
+		final String baseYear = props.getProperty("baseYear");
+		final String predictedYear = props.getProperty("predictedYear");
+		
+		final String areaCodeFileName = props.getProperty("areaCodeFileName");
+		final String areaCodeNearestNodeFile = props.getProperty("areaCodeNearestNodeFile");
+		final String workplaceZoneFileName = props.getProperty("workplaceZoneFileName");
+		final String workplaceZoneNearestNodeFile = props.getProperty("workplaceZoneNearestNodeFile");
+		final String freightZoneToLADfile = props.getProperty("freightZoneToLADfile");
+		final String freightZoneNearestNodeFile = props.getProperty("freightZoneNearestNodeFile");
 
-		final URL zonesUrl2 = new URL("file://src/test/resources/testdata/zones.shp");
-		final URL networkUrl2 = new URL("file://src/test/resources/testdata/network.shp");
-		final URL networkUrlfixedEdgeIDs = new URL("file://src/test/resources/testdata/testOutputNetwork.shp");
-		final URL nodesUrl2 = new URL("file://src/test/resources/testdata/nodes.shp");
-		final URL AADFurl2 = new URL("file://src/test/resources/testdata/AADFdirected.shp");
-		
-		final String baseYearODMatrixFile = "./src/test/resources/testdata/passengerODM.csv";
-		final String baseYearFreightMatrixFile = "./src/test/resources/testdata/freightMatrix.csv";
-		final String populationFile = "./src/test/resources/testdata/population.csv";
-		final String GVAFile = "./src/test/resources/testdata/GVA.csv";
-		final String elasticitiesFile = "./src/test/resources/testdata/elasticities.csv";
-		final String elasticitiesFreightFile = "./src/test/resources/testdata/elasticitiesFreight.csv";
-		final String energyUnitCostsFile = "./src/test/resources/testdata/energyUnitCosts.csv";
-		final String engineTypeFractionsFile = "./src/test/resources/testdata/engineTypeFractions.csv";
-		
-		final String assignmentParamsFile = "./src/test/resources/testdata/assignment.properties";
-		Properties assignmentProperties = new Properties();
-		InputStream input = null;
-		try {
-			input = new FileInputStream(assignmentParamsFile);
-			// load properties file
-			assignmentProperties.load(input);
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		} finally {
-			if (input != null) {
-				try {
-					input.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-		
-//		final URL zonesUrl2 = new URL("file://src/main/resources/data/zones.shp");
-//		final URL networkUrl2 = new URL("file://src/main/resources/data/network.shp");
-//		final URL nodesUrl2 = new URL("file://src/main/resources/data/nodes.shp");
-//		final URL AADFurl2 = new URL("file://src/main/resources/data/AADFdirected2015.shp");
-//		
-//		final String areaCodeFileName = "./src/main/resources/data/population_OA_GB.csv";
-//		final String areaCodeNearestNodeFile = "./src/main/resources/data/nearest_node_OA_GB.csv";
-//		final String workplaceZoneFileName = "./src/main/resources/data/workplacePopulationFakeSC.csv";
-//		final String workplaceZoneNearestNodeFile = "./src/main/resources/data/nearest_node_WZ_GB_fakeSC.csv";
-//		final String freightZoneToLADfile = "./src/main/resources/data/freightZoneToLAD.csv";
-//		final String freightZoneNearestNodeFile = "./src/main/resources/data/freightZoneToNearestNode.csv";
-//		
-//		final String baseYearODMatrixFile = "./src/main/resources/data/balancedODMatrixOldLengths.csv";
-//		final String baseYearFreightMatrixFile = "./src/main/resources/data/freightMatrix.csv";
-//		final String populationFile = "./src/main/resources/data/populationfull.csv";
-//		final String GVAFile = "./src/main/resources/data/GVAperHeadFull.csv";
-//		final String energyUnitCostsFile = "./src/main/resources/data/energyUnitCosts.csv";
+		final URL zonesUrl = new URL(props.getProperty("zonesUrl"));
+		final URL networkUrl = new URL(props.getProperty("networkUrl"));
+		final URL networkUrlFixedEdgeIDs = new URL(props.getProperty("networkUrlFixedEdgeIDs"));
+		final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
+		final URL AADFurl = new URL(props.getProperty("AADFurl"));
+
+		final String baseYearODMatrixFile = props.getProperty("baseYearODMatrixFile");
+		final String baseYearFreightMatrixFile = props.getProperty("baseYearFreightMatrixFile");
+		final String populationFile = props.getProperty("populationFile");
+		final String GVAFile = props.getProperty("GVAFile");
+		final String elasticitiesFile = props.getProperty("elasticitiesFile");
+		final String elasticitiesFreightFile = props.getProperty("elasticitiesFreightFile");
+
+		final String roadExpansionFileName = props.getProperty("roadExpansionFile");
+		final String roadDevelopmentFileName = props.getProperty("roadDevelopmentFile");
+		final String vehicleElectrificationFileName = props.getProperty("vehicleElectrificationFile");
+		final String congestionChargeFile = props.getProperty("congestionChargingFile");
+
+		final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
+		final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
+		final String energyConsumptionsFile = props.getProperty("energyConsumptionsFile"); //output
 		
 		//create a road network
-		RoadNetwork roadNetwork2 = new RoadNetwork(zonesUrl2, networkUrl2, nodesUrl2, AADFurl2, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, assignmentProperties);
-		roadNetwork2.replaceNetworkEdgeIDs(networkUrlfixedEdgeIDs);
+		RoadNetwork roadNetwork2 = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
+		roadNetwork2.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
 		
 		//visualise the shapefiles
 		//roadNetwork2.visualise("Test Area");
@@ -192,17 +169,17 @@ public class DemandModelTest {
 		interventions.add(rd);
 		*/
 			
-		Properties props = new Properties();
-		props.setProperty("startYear", "2016");
-		props.setProperty("endYear", "2025");
-		props.setProperty("vehicleType", "CAR");
-		props.setProperty("PETROL", "0.40");
-		props.setProperty("DIESEL", "0.30");
-		props.setProperty("LPG", "0.1");
-		props.setProperty("ELECTRICITY", "0.15");
-		props.setProperty("HYDROGEN", "0.025");
-		props.setProperty("HYBRID", "0.025");
-		VehicleElectrification ve = new VehicleElectrification(props);
+		Properties props2 = new Properties();
+		props2.setProperty("startYear", "2016");
+		props2.setProperty("endYear", "2025");
+		props2.setProperty("vehicleType", "CAR");
+		props2.setProperty("PETROL", "0.40");
+		props2.setProperty("DIESEL", "0.30");
+		props2.setProperty("LPG", "0.1");
+		props2.setProperty("ELECTRICITY", "0.15");
+		props2.setProperty("HYDROGEN", "0.025");
+		props2.setProperty("HYBRID", "0.025");
+		VehicleElectrification ve = new VehicleElectrification(props2);
 		interventions.add(ve);
 		
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork2);
@@ -210,7 +187,7 @@ public class DemandModelTest {
 		rsg.readRoutes("./src/test/resources/testdata/allRoutes.txt");
 		
 		//the main demand model
-		DemandModel dm = new DemandModel(roadNetwork2, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, engineTypeFractionsFile, interventions, rsg, assignmentProperties);
+		DemandModel dm = new DemandModel(roadNetwork2, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, engineTypeFractionsFile, interventions, rsg, props);
 		
 		//copy base-year engine fractions
 		for (int year = 2015; year < 2025; year++) {
