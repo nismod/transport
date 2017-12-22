@@ -68,7 +68,7 @@ public class CongestionCharging extends Intervention {
 		String[] edgeIDs = listOfCongestionChargedEdgeIDsNoTabs.split(",");
 		
 		//double congestionCharge = Double.parseDouble(this.props.getProperty("congestionCharge"));
-		String congestionChargeFile = this.props.getProperty("congestionChargeFile");
+		String congestionChargingPricing = this.props.getProperty("congestionChargingPricing");
 
 		MultiKeyMap congestionCharge = null; 
 		
@@ -76,7 +76,7 @@ public class CongestionCharging extends Intervention {
 		int endYear = Integer.parseInt(props.getProperty("endYear"));
 
 		try {
-			congestionCharge = this.readCongestionChargeFile(congestionChargeFile);
+			congestionCharge = this.readCongestionChargeFile(congestionChargingPricing);
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
