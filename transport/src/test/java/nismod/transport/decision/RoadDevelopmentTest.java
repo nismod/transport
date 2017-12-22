@@ -17,6 +17,7 @@ import org.geotools.graph.structure.DirectedEdge;
 import org.junit.Test;
 
 import nismod.transport.network.road.RoadNetwork;
+import nismod.transport.utility.ConfigReader;
 
 /**
  * @author Milan Lovric
@@ -27,53 +28,39 @@ public class RoadDevelopmentTest {
 	@Test
 	public void test() throws IOException {
 
-		final String areaCodeFileName = "./src/test/resources/testdata/nomisPopulation.csv";
-		final String areaCodeNearestNodeFile = "./src/test/resources/testdata/areaCodeToNearestNode.csv";
-		final String workplaceZoneFileName = "./src/test/resources/testdata/workplacePopulation.csv";
-		final String workplaceZoneNearestNodeFile = "./src/test/resources/testdata/workplaceZoneToNearestNode.csv";
-		final String freightZoneToLADfile = "./src/test/resources/testdata/freightZoneToLAD.csv";
-		final String freightZoneNearestNodeFile = "./src/test/resources/testdata/freightZoneToNearestNode.csv";
-
-		final URL zonesUrl2 = new URL("file://src/test/resources/testdata/zones.shp");
-		final URL networkUrl2 = new URL("file://src/test/resources/testdata/network.shp");
-		final URL nodesUrl2 = new URL("file://src/test/resources/testdata/nodes.shp");
-		final URL AADFurl2 = new URL("file://src/test/resources/testdata/AADFdirected.shp");
+		final String configFile = "./src/test/resources/testdata/config.properties";
+		Properties props = ConfigReader.getProperties(configFile);
 		
-		final String assignmentParamsFile = "./src/test/resources/testdata/assignment.properties";
-		Properties params = new Properties();
-		InputStream input = null;
-		try {
-			input = new FileInputStream(assignmentParamsFile);
-			// load properties file
-			params.load(input);
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		} finally {
-			if (input != null) {
-				try {
-					input.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}
+		final String areaCodeFileName = props.getProperty("areaCodeFileName");
+		final String areaCodeNearestNodeFile = props.getProperty("areaCodeNearestNodeFile");
+		final String workplaceZoneFileName = props.getProperty("workplaceZoneFileName");
+		final String workplaceZoneNearestNodeFile = props.getProperty("workplaceZoneNearestNodeFile");
+		final String freightZoneToLADfile = props.getProperty("freightZoneToLADfile");
+		final String freightZoneNearestNodeFile = props.getProperty("freightZoneNearestNodeFile");
+
+		final URL zonesUrl = new URL(props.getProperty("zonesUrl"));
+		final URL networkUrl = new URL(props.getProperty("networkUrl"));
+		final URL networkUrlFixedEdgeIDs = new URL(props.getProperty("networkUrlFixedEdgeIDs"));
+		final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
+		final URL AADFurl = new URL(props.getProperty("AADFurl"));
+
+		final String roadDevelopmentFileName = props.getProperty("roadDevelopmentFile");
 		
 		//create a road network
-		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl2, networkUrl2, nodesUrl2, AADFurl2, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, params);
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 	
 		List<Intervention> interventions = new ArrayList<Intervention>();
-		Properties props = new Properties();
-		props.setProperty("startYear", "2016");
-		props.setProperty("endYear", "2025");
-		props.setProperty("fromNode", "63");
-		props.setProperty("toNode", "23");
-		props.setProperty("biDirectional", "true");
-		props.setProperty("lanesPerDirection", "2");
-		props.setProperty("length", "10.23");
-		props.setProperty("roadCategory", "A");
-		RoadDevelopment rd = new RoadDevelopment(props);
+		Properties props2 = new Properties();
+		props2.setProperty("startYear", "2016");
+		props2.setProperty("endYear", "2025");
+		props2.setProperty("fromNode", "63");
+		props2.setProperty("toNode", "23");
+		props2.setProperty("biDirectional", "true");
+		props2.setProperty("lanesPerDirection", "2");
+		props2.setProperty("length", "10.23");
+		props2.setProperty("roadCategory", "A");
+		RoadDevelopment rd = new RoadDevelopment(props2);
 		
-		final String roadDevelopmentFileName = "./src/test/resources/testdata/roadDevelopment.properties";
 		RoadDevelopment rd2 = new RoadDevelopment(roadDevelopmentFileName);
 		System.out.println("Road development intervention: " + rd2.toString());
 		
@@ -92,8 +79,8 @@ public class RoadDevelopmentTest {
 		assertEquals("The number of road lanes should be correct", (int) Integer.parseInt(rd.getProperty("lanesPerDirection")), (int) roadNetwork.getNumberOfLanes().get(rd.getDevelopedEdgeID()));
 
 		DirectedEdge newEdge = (DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(rd.getDevelopedEdgeID());
-		assertEquals("From node ID is correct", newEdge.getNodeA().getID(), Integer.parseInt(props.getProperty("fromNode")));
-		assertEquals("To node ID is correct", newEdge.getNodeB().getID(), Integer.parseInt(props.getProperty("toNode")));
+		assertEquals("From node ID is correct", newEdge.getNodeA().getID(), Integer.parseInt(props2.getProperty("fromNode")));
+		assertEquals("To node ID is correct", newEdge.getNodeB().getID(), Integer.parseInt(props2.getProperty("toNode")));
 		
 		DirectedEdge newEdge2 = (DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(rd.getDevelopedEdgeID2());
 		assertEquals("Edge ID from other direction is correct", newEdge2.getID(), (int) roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(newEdge.getID()));
