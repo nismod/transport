@@ -121,7 +121,7 @@ public class RoadNetworkAssignment {
 	 * @param energyUnitCosts Energy unit costs.
 	 * @param engineTypeFractions Market shares of different engine/fuel types.
 	 * @param vehicleTypeToPCU Vehicle to PCU conversion.
-	 * @param energyConsumptions Fuel efficiency parameters.
+	 * @param energyConsumptionParams Fuel efficiency parameters.
 	 * @param timeOfDayDistribution Time of day distribution.
 	 * @param defaultLinkTravelTime Default link travel times.
 	 * @param areaCodeProbabilities Probabilities of trips starting/ending in each census output area.
@@ -133,7 +133,7 @@ public class RoadNetworkAssignment {
 								 HashMap<EngineType, Double> energyUnitCosts, 
 								 HashMap<VehicleType, HashMap<EngineType, Double>> engineTypeFractions,
 								 HashMap<VehicleType, Double> vehicleTypeToPCU,
-								 HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptions, 
+								 HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParams, 
 								 HashMap<TimeOfDay, Double> timeOfDayDistribution, 
 								 Map<TimeOfDay, Map<Integer, Double>> defaultLinkTravelTime, 
 								 HashMap<String, Double> areaCodeProbabilities, 
@@ -268,7 +268,7 @@ public class RoadNetworkAssignment {
 			this.energyUnitCosts.put(EngineType.HYBRID, 1.17);
 		}
 		
-		if (energyConsumptions != null) this.energyConsumptions = energyConsumptions;
+		if (energyConsumptionParams != null) this.energyConsumptions = energyConsumptionParams;
 		else {
 		
 			this.energyConsumptions = new HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>>();
@@ -642,7 +642,7 @@ public class RoadNetworkAssignment {
 	public void assignPassengerFlowsRouteChoice(ODMatrix passengerODM, RouteSetGenerator rsg, Properties routeChoiceParameters) {
 
 		System.out.println("Assigning the passenger flows from the passenger matrix...");
-		
+	
 		final int totalExpectedFlow = passengerODM.getTotalFlow();
 		this.tripList = new ArrayList<Trip>(totalExpectedFlow); //use expected flow as array list initial capacity
 

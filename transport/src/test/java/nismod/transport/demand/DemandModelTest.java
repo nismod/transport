@@ -39,7 +39,7 @@ public class DemandModelTest {
 		final String configFile = "./src/test/resources/testdata/config.properties";
 		Properties props = ConfigReader.getProperties(configFile);
 		
-		final String baseYear = props.getProperty("baseYear");
+		final String fromYear = props.getProperty("fromYear");
 		final String predictedYear = props.getProperty("predictedYear");
 		
 		final String areaCodeFileName = props.getProperty("areaCodeFileName");

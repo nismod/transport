@@ -56,7 +56,7 @@ public class App {
 				}
 			}
 			
-			final String baseYear = props.getProperty("baseYear");
+			final String fromYear = props.getProperty("fromYear");
 			final String predictedYear = props.getProperty("predictedYear");
 			
 			final String areaCodeFileName = props.getProperty("areaCodeFileName");
@@ -79,34 +79,19 @@ public class App {
 			final String elasticitiesFile = props.getProperty("elasticitiesFile");
 			final String elasticitiesFreightFile = props.getProperty("elasticitiesFreightFile");
 	
-			final String roadExpansionFileName = props.getProperty("roadExpansionFileName");
-			final String vehicleElectrificationFileName = props.getProperty("vehicleElectrificationFileName");
+			final String roadExpansionFileName = props.getProperty("roadExpansionFile");
+			final String vehicleElectrificationFileName = props.getProperty("vehicleElectrificationFile");
 
 			final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
 			final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
 			final String energyConsumptionsFile = props.getProperty("energyConsumptionsFile"); //output
 			
-			final String assignmentParamsFile = props.getProperty("assignmentParamsFile");
-			Properties params = new Properties();
-			InputStream input = null;
-			try {
-				input = new FileInputStream(assignmentParamsFile);
-				// load properties file
-				params.load(input);
-			} catch (IOException ex) {
-				ex.printStackTrace();
-			} finally {
-				if (input != null) {
-					try {
-						input.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-			}
+			final String passengerRoutesFile = props.getProperty("passengerRoutesFile");
+			final String freightRoutesFile = props.getProperty("freightRoutesFile");
+			
 			
 			//create a road network
-			RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, params);
+			RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 			roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
 			roadNetwork.makeEdgesAdmissible();
 						
@@ -118,10 +103,14 @@ public class App {
 				VehicleElectrification ve = new VehicleElectrification(vehicleElectrificationFileName);
 				interventions.add(re);
 				interventions.add(ve);
+				
+				RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, props);
+				rsg.readRoutesBinary(passengerRoutesFile);
+				rsg.readRoutesBinary(freightRoutesFile);
 
 				//the main demand model
-				DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, engineTypeFractionsFile, interventions, null, null);
-				dm.predictHighwayDemand(Integer.parseInt(predictedYear), Integer.parseInt(baseYear));
+				DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, engineTypeFractionsFile, interventions, rsg, props);
+				dm.predictHighwayDemand(Integer.parseInt(predictedYear), Integer.parseInt(fromYear));
 				dm.saveEnergyConsumptions(Integer.parseInt(predictedYear), energyConsumptionsFile);
 				
 			} else {//there are additional parameters
@@ -134,7 +123,7 @@ public class App {
 				
 				if (flag.charAt(0) == '-') { 
 					switch (flag.charAt(1)) { 
-						case 'r': 
+						case 'r':  //generate routes for the passenger demand
 								  if (args.length < 4) throw new IllegalArgumentException();
 								  else {
 									  sliceIndex = args[2];
@@ -144,7 +133,7 @@ public class App {
 								  if (args.length == 5) topNodes = args[4];
 								  
 								  roadNetwork.sortGravityNodes();
-								  routes = new RouteSetGenerator(roadNetwork);
+								  routes = new RouteSetGenerator(roadNetwork, props);
 								  ODMatrix passengerODM = new ODMatrix(baseYearODMatrixFile);
 									
 								  if (!topNodes.isEmpty()) {
@@ -159,7 +148,7 @@ public class App {
 									  routes.saveRoutesBinary("routes" + sliceIndex + "of" + sliceNumber + ".dat", false);
 								  }
 								  break;
-						case 'f': 
+						case 'f': //generate routes for the freight demand
 							  if (args.length < 4) throw new IllegalArgumentException();
 							  else {
 								  sliceIndex = args[2];
@@ -169,7 +158,7 @@ public class App {
 							  if (args.length == 5) topNodes = args[4];
 							  
 							  roadNetwork.sortGravityNodesFreight();
-							  routes = new RouteSetGenerator(roadNetwork);
+							  routes = new RouteSetGenerator(roadNetwork, props);
 							  FreightMatrix freightMatrix = new FreightMatrix(baseYearFreightMatrixFile);
 								
 							  if (!topNodes.isEmpty()) {
@@ -181,7 +170,7 @@ public class App {
 								  //generate between all nodes
 								  System.out.printf("Generating routes for slice %s out of %s \n", sliceIndex, sliceNumber);
 								  routes.generateRouteSetForFreightMatrix(freightMatrix, Integer.parseInt(sliceIndex), Integer.parseInt(sliceNumber));
-								  routes.saveRoutes("freightRoutes" + sliceIndex + "of" + sliceNumber + ".dat", false);
+								  routes.saveRoutesBinary("freightRoutes" + sliceIndex + "of" + sliceNumber + ".dat", false);
 							  }
 							  break;
 						default:  throw new IllegalArgumentException();
@@ -193,6 +182,8 @@ public class App {
 			System.err.println("Correct arguments for route generation should be one of the following:");
 			System.err.println("<path>/config.properties -r sliceIndex sliceNumber");
 			System.err.println("<path>/config.properties -r sliceIndex sliceNumber topNumbers");
+			System.err.println("<path>/config.properties -f sliceIndex sliceNumber");
+			System.err.println("<path>/config.properties -f sliceIndex sliceNumber topNumbers");
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
