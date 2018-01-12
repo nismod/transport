@@ -29,7 +29,7 @@ public class RoadDisruptionTest {
 	
 	public static void main( String[] args ) throws IOException	{
 
-		final String configFile = "./src/test/resources/testdata/config.properties";
+		final String configFile = "./src/test/config/testConfig.properties";
 		Properties props = ConfigReader.getProperties(configFile);
 
 		final String areaCodeFileName = props.getProperty("areaCodeFileName");
@@ -125,7 +125,7 @@ public class RoadDisruptionTest {
 	@Test
 	public void test() throws IOException {
 
-		final String configFile = "./src/test/resources/testdata/config.properties";
+		final String configFile = "./src/test/config/testConfig.properties";
 		Properties props = ConfigReader.getProperties(configFile);
 		
 		final String baseYear = props.getProperty("baseYear");
