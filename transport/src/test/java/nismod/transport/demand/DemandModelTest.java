@@ -36,7 +36,7 @@ public class DemandModelTest {
 	
 	public static void main( String[] args ) throws IOException	{
 
-		final String configFile = "./src/test/resources/testdata/config.properties";
+		final String configFile = "./src/test/config/testConfig.properties";
 		Properties props = ConfigReader.getProperties(configFile);
 		
 		final String fromYear = props.getProperty("fromYear");
@@ -69,6 +69,8 @@ public class DemandModelTest {
 
 		final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
 		final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
+		final String AVFractionsFile = props.getProperty("autonomousVehiclesFile");
+		
 		final String energyConsumptionsFile = props.getProperty("energyConsumptionsFile"); //output
 		
 		//create a road network
@@ -187,7 +189,7 @@ public class DemandModelTest {
 		rsg.readRoutes("./src/test/resources/testdata/allRoutes.txt");
 		
 		//the main demand model
-		DemandModel dm = new DemandModel(roadNetwork2, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, engineTypeFractionsFile, interventions, rsg, props);
+		DemandModel dm = new DemandModel(roadNetwork2, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, engineTypeFractionsFile, AVFractionsFile, interventions, rsg, props);
 		
 		//copy base-year engine fractions
 		for (int year = 2015; year < 2025; year++) {
