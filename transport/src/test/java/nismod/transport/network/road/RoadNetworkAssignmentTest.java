@@ -52,7 +52,7 @@ public class RoadNetworkAssignmentTest {
 
 	public static void main( String[] args ) throws IOException	{
 
-		final String configFile = "./src/test/resources/testdata/config.properties";
+		final String configFile = "./src/test/config/testConfig.properties";
 		Properties props = new Properties();
 		InputStream input = null;
 		try {
@@ -308,7 +308,7 @@ public class RoadNetworkAssignmentTest {
 	@Test
 	public void miniTest() throws IOException {
 
-		final String configFile = "./src/test/resources/minitestdata/config.properties";
+		final String configFile = "./src/test/config/miniTestConfig.properties";
 		Properties props = ConfigReader.getProperties(configFile);
 		
 		final String areaCodeFileName = props.getProperty("areaCodeFileName");
@@ -524,7 +524,7 @@ public class RoadNetworkAssignmentTest {
 	@Test
 	public void test() throws IOException {
 
-		final String configFile = "./src/test/resources/testdata/config.properties";
+		final String configFile = "./src/test/config/testConfig.properties";
 		Properties props = ConfigReader.getProperties(configFile);
 		
 		final String areaCodeFileName = props.getProperty("areaCodeFileName");
@@ -863,7 +863,7 @@ public class RoadNetworkAssignmentTest {
 	@Test
 	public void testFreight() throws IOException {
 
-		final String configFile = "./src/test/resources/testdata/config.properties";
+		final String configFile = "./src/test/config/testConfig.properties";
 		Properties props = ConfigReader.getProperties(configFile);
 		
 		final String areaCodeFileName = props.getProperty("areaCodeFileName");

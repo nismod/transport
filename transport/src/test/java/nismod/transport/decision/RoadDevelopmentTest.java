@@ -28,7 +28,7 @@ public class RoadDevelopmentTest {
 	@Test
 	public void test() throws IOException {
 
-		final String configFile = "./src/test/resources/testdata/config.properties";
+		final String configFile = "./src/test/config/testConfig.properties";
 		Properties props = ConfigReader.getProperties(configFile);
 		
 		final String areaCodeFileName = props.getProperty("areaCodeFileName");
