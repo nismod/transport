@@ -55,6 +55,7 @@ public class CongestionChargingTest {
 
 		final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
 		final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
+		final String AVFractionsFile = props.getProperty("autonomousVehiclesFile");
 		
 		//create a road network
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
@@ -75,7 +76,7 @@ public class CongestionChargingTest {
 		List<Intervention> interventions = new ArrayList<Intervention>();
 		interventions.add(cg2);
 		
-		DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, engineTypeFractionsFile, interventions, null, null);
+		DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, engineTypeFractionsFile, AVFractionsFile, interventions, null, null);
 		
 		System.out.println("Base-year congestion charging: ");
 		System.out.println(dm.getCongestionCharges(2015));

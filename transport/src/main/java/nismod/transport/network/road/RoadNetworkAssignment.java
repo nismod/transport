@@ -120,6 +120,7 @@ public class RoadNetworkAssignment {
 	 * @param roadNetwork Road network.
 	 * @param energyUnitCosts Energy unit costs.
 	 * @param engineTypeFractions Market shares of different engine/fuel types.
+	 * @param fractionAV Fraction of autonomous vehicles for passenger vehicle trips.
 	 * @param vehicleTypeToPCU Vehicle to PCU conversion.
 	 * @param energyConsumptionParams Fuel efficiency parameters.
 	 * @param timeOfDayDistribution Time of day distribution.
@@ -132,6 +133,7 @@ public class RoadNetworkAssignment {
 	public RoadNetworkAssignment(RoadNetwork roadNetwork, 
 								 HashMap<EngineType, Double> energyUnitCosts, 
 								 HashMap<VehicleType, HashMap<EngineType, Double>> engineTypeFractions,
+								 Double fractionAV,
 								 HashMap<VehicleType, Double> vehicleTypeToPCU,
 								 HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParams, 
 								 HashMap<TimeOfDay, Double> timeOfDayDistribution, 
@@ -408,7 +410,7 @@ public class RoadNetworkAssignment {
 		this.maximumCapacityARoad = Integer.parseInt(params.getProperty("MAXIMUM_CAPACITY_A_ROAD"));
 		this.averageAccessEgressSpeedCar = Double.parseDouble(params.getProperty("AVERAGE_ACCESS_EGRESS_SPEED_CAR"));  
 		this.averageAccessEgressSpeedFreight = Double.parseDouble(params.getProperty("AVERAGE_ACCESS_EGRESS_SPEED_FREIGHT")); 
-		this.peakHourPercentage = Double.parseDouble(params.getProperty("PEAK_HOUR_PERCENTAGE"));
+		this.peakHourPercentage = this.timeOfDayDistribution.get(TimeOfDay.EIGHTAM);
 		this.alpha = Double.parseDouble(params.getProperty("ALPHA"));
 		this.betaMRoad = Double.parseDouble(params.getProperty("BETA_M_ROAD"));
 		this.betaARoad = Double.parseDouble(params.getProperty("BETA_A_ROAD"));
@@ -416,7 +418,9 @@ public class RoadNetworkAssignment {
 		this.flagAStarIfEmptyRouteSet = Boolean.parseBoolean(params.getProperty("FLAG_ASTAR_IF_EMPTY_ROUTE_SET")); //if there is no pre-generated route set for a node pair, try finding a route with aStar
 		this.interzonalTopNodes = Integer.parseInt(params.getProperty("INTERZONAL_TOP_NODES")); //how many top nodes (based on gravitated population size) to considers as trip origin/destination
 		this.averageIntersectionDelay = Double.parseDouble(params.getProperty("AVERAGE_INTERSECTION_DELAY"));
-		this.fractionAV = Double.parseDouble(params.getProperty("FRACTION_AV"));
+		
+		if (fractionAV != null)		this.fractionAV = fractionAV;
+		else						this.fractionAV = 0.05;
 	}
 
 	/** 
