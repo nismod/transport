@@ -9,6 +9,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.closeTo;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -53,7 +54,8 @@ public class RoadNetworkAssignmentTest {
 	public static void main( String[] args ) throws IOException	{
 		
 		
-		final String configFile = "./src/main/config/config.properties";
+		//final String configFile = "./src/main/config/config.properties";
+		final String configFile = "./src/test/config/testConfig.properties";
 		Properties props = ConfigReader.getProperties(configFile);
 		
 		final String areaCodeFileName = props.getProperty("areaCodeFileName");
@@ -70,10 +72,23 @@ public class RoadNetworkAssignmentTest {
 		final URL AADFurl = new URL(props.getProperty("AADFurl"));
 
 		final String baseYearODMatrixFile = props.getProperty("baseYearODMatrixFile");
-		final String freightMatrixFile = props.getProperty("freightMatrixFile");
+		final String freightMatrixFile = props.getProperty("baseYearFreightMatrixFile");
 		
 		final String passengerRoutesFile = props.getProperty("passengerRoutesFile");
 		final String freightRoutesFile = props.getProperty("freightRoutesFile");
+		
+		final String outputFolder = props.getProperty("outputFolder");
+		final String assignmentResultsFile = props.getProperty("assignmentResultsFile");
+		
+		//create output directory
+	     File file = new File(outputFolder);
+	        if (!file.exists()) {
+	            if (file.mkdirs()) {
+	                System.out.println("Output directory is created.");
+	            } else {
+	                System.err.println("Failed to create output directory.");
+	            }
+	        }
 
 		//create a road network
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
@@ -84,7 +99,8 @@ public class RoadNetworkAssignmentTest {
 
 		//assign passenger flows
 		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
-		odm.printMatrix();
+		//odm.scaleMatrixValue(8.0);
+		odm.printMatrixFormatted("Passenger matrix:");
 
 		//read routes
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
@@ -106,7 +122,7 @@ public class RoadNetworkAssignmentTest {
 		
 		//assign passenger flows
 		long timeNow = System.currentTimeMillis();
-//		roadNetworkAssignment.assignPassengerFlows(passengerODM);
+//		rna.assignPassengerFlows(odm);
 		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Passenger flows assigned in %d seconds.\n", timeNow / 1000);
@@ -250,12 +266,16 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("Peak-hour link densities:");
 		System.out.println(rna.calculatePeakLinkDensities());
 		
-		//roadNetworkAssignment.saveAssignmentResults(2015, "assignment2015balanced.csv");
 		//roadNetworkAssignment.saveZonalCarEnergyConsumptions(2015, 0.85, "zonalCarEnergyConsumption85.csv");
 		//roadNetworkAssignment.saveZonalCarEnergyConsumptions(2015, 0.5, "zonalCarEnergyConsumption50.csv");
+		rna.saveAssignmentResults(2015, outputFolder + assignmentResultsFile);
 		
-		System.out.printf("RMSN for counts: %.2f%%", rna.calculateRMSNforCounts());
-		System.out.printf("RMSN for freight: %.2f%%", rna.calculateRMSNforFreightCounts());
+		System.out.printf("RMSN for counts: %.2f%% %n", rna.calculateRMSNforSimulatedVolumes());
+		System.out.printf("RMSN for freight: %.2f%% %n", rna.calculateRMSNforFreightCounts());
+		
+//		for (double expansionFactor = 0.1; expansionFactor < 5.0; expansionFactor += 0.1) {
+//			System.out.printf("Expansion factor: %.2f RMSN for counts: %.2f%% %n", expansionFactor, rna.calculateRMSNforExpandedSimulatedVolumes(expansionFactor));
+//		}
 	}
 
 	@Test
@@ -359,7 +379,7 @@ public class RoadNetworkAssignmentTest {
 			if (freeFlow > actual)	assertThat(actual, closeTo(freeFlow, PRECISION));
 		}
 		
-		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforCounts());
+		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforSimulatedVolumes());
 		
 		//TEST ASSIGNMENT WITH ROUTE CHOICE
 		System.out.println("\n\n*** Testing assignment with route choice ***");
@@ -404,7 +424,7 @@ public class RoadNetworkAssignmentTest {
 		params.setProperty("AVERAGE_INTERSECTION_DELAY", "0.8");
 		
 		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
-		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforCounts());
+		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforSimulatedVolumes());
 		
 		//TEST VEHICLE KILOMETRES
 		System.out.println("\n\n*** Testing vehicle kilometres ***");
@@ -674,7 +694,7 @@ public class RoadNetworkAssignmentTest {
 		//rna.saveZonalCarEnergyConsumptions(2015, 0.85 , "testZonalCarEnergyConsumptions.csv");
 		//rna.saveAssignmentResults(2015, "testAssignmentResults.csv");
 		
-		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforCounts());
+		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforSimulatedVolumes());
 		
 		
 		//TEST ASSIGNMENT WITH ROUTE CHOICE
@@ -697,7 +717,7 @@ public class RoadNetworkAssignmentTest {
 		
 		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
 		
-		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforCounts());
+		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforSimulatedVolumes());
 		
 		//TEST ASSIGNMENT WITH ROUTE CHOICE
 		System.out.println("\n\n*** Testing assignment with route choice ***");
@@ -714,7 +734,7 @@ public class RoadNetworkAssignmentTest {
 		//rsg.calculateAllUtilities(rna.getLinkTravelTimes(), params);
 		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
 
-		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforCounts());
+		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforSimulatedVolumes());
 		
 		//TEST VEHICLE KILOMETRES
 		System.out.println("\n\n*** Testing vehicle kilometres ***");
@@ -1121,6 +1141,6 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("Distance skim matrix:");
 		rna.calculateDistanceSkimMatrix().printMatrixFormatted();
 				
-		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforCounts());
+		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforSimulatedVolumes());
 	}
 }

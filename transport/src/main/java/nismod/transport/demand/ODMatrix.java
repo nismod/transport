@@ -156,6 +156,18 @@ public class ODMatrix {
 		}
 	}
 	
+	
+	/**
+	 * Prints the matrix as a formatted table, with a print message.
+	 * @param s Print message
+	 */
+	public void printMatrixFormatted(String s) {
+				
+		System.out.println(s);
+		this.printMatrixFormatted();
+	}
+	
+	
 	/**
 	 * Gets the keyset of the multimap.
 	 * @return Key set.
@@ -238,12 +250,20 @@ public class ODMatrix {
 		return difference;
 	}
 	
-	
-	public void printMatrixFormatted(String s) {
+
+	/**
+	 * Scales (and rounds) matrix values with a scaling factor.
+	 * @param factor Scaling factor.
+	 */
+	public void scaleMatrixValue(double factor) {
 		
-		
-		System.out.println(s);
-		this.printMatrixFormatted();
+		for (MultiKey mk: this.getKeySet()) {
+			String origin = (String) mk.getKey(0);
+			String destination = (String) mk.getKey(1);
+			double flow = this.getFlow(origin, destination);
+			flow = flow * factor;
+			this.setFlow(origin, destination, (int) Math.round(flow));
+		}		
 	}
 	
 	@Override

@@ -3169,10 +3169,20 @@ public class RoadNetworkAssignment {
 	}
 
 	/**
-	 * Calculate RMSN for for counts.
+	 * Calculate prediction error (RMSN for simulated volumes and observed traffic counts).
 	 * @return Normalised root mean square error.
 	 */
-	public double calculateRMSNforCounts () {
+	public double calculateRMSNforSimulatedVolumes () {
+
+		return this.calculateRMSNforExpandedSimulatedVolumes(1.0); //do not expand simulated volumes
+	}
+
+	/**
+	 * Calculate prediction error (RMSN for expanded simulated volumes and observed traffic counts).
+	 * @param expansionFactor Expansion factor expands simulated volumes.
+	 * @return Normalised root mean square error.
+	 */
+	public double calculateRMSNforExpandedSimulatedVolumes (double expansionFactor) {
 
 		Iterator iter = this.roadNetwork.getNetwork().getEdges().iterator();
 		int countOfCounts = 0;
@@ -3200,10 +3210,13 @@ public class RoadNetworkAssignment {
 				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edge.getID());
 				if (carVolumeFetch == null) carVolume = 0;
 				else 						carVolume = carVolumeFetch;
+				
+				//expand simulated volumes with the expansion factor and round
+				carVolume = Math.round(carVolume * expansionFactor);
 
 				countOfCounts++;
 				sumOfCounts += carCount;
-				sumOfSquaredDiffs += (carCount - carVolume)^2;
+				sumOfSquaredDiffs += Math.pow(carCount - carVolume, 2);
 			}
 
 			if (dir == 'C' && !checkedCP.contains(countPoint)) { //for combined counts check if this countPoint has been processed already
@@ -3216,6 +3229,9 @@ public class RoadNetworkAssignment {
 				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edge.getID());
 				if (carVolumeFetch == null) carVolume = 0;
 				else 						carVolume = carVolumeFetch;
+				
+				//expand simulated volumes with the expansion factor and round
+				carVolume = Math.round(carVolume * expansionFactor);
 
 				//get volumes for other direction (if exists)
 				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(edge.getID());
@@ -3223,23 +3239,38 @@ public class RoadNetworkAssignment {
 				Integer carVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edge2);
 				if (carVolumeFetch2 == null) carVolume2 = 0;
 				else 						 carVolume2 = carVolumeFetch2;
+				
+				//expand simulated volumes with the expansion factor and round
+				carVolume2 = Math.round(carVolume2 * expansionFactor);
 
 				countOfCounts++;
 				sumOfCounts += carCount;
-				sumOfSquaredDiffs += (carCount - carVolume - carVolume2)^2;
+				sumOfSquaredDiffs += Math.pow(carCount - carVolume - carVolume2, 2);
 
 				checkedCP.add(countPoint);
 			}
 		}
 
+//		System.out.println("Sum of squared diffs: " + sumOfSquaredDiffs);
+		
 		double RMSE = Math.sqrt(sumOfSquaredDiffs);
 		double averageTrueCount = (double) sumOfCounts / countOfCounts;
-
+		
+//		System.out.println("Checking RMSE: ");
+//		System.out.println("Is finite: " + Double.isFinite(RMSE));
+//		System.out.println("Is infinite: " + Double.isInfinite(RMSE));
+//		System.out.println("Is NaN: " + Double.isNaN(RMSE));
+	
+//		System.out.println("RMSE = " + RMSE);
+//		System.out.println("averageTrueCount = " + averageTrueCount);
+		
+		
 		return (RMSE / averageTrueCount ) * 100;
 	}
-
+	
+	
 	/**
-	 * Calculate RMSN for for freight counts.
+	 * Calculate prediction error (RMSN for for simulated freight volumes and observed traffic counts).
 	 * @return Normalised root mean square error.
 	 */
 	public double calculateRMSNforFreightCounts () {
@@ -3286,7 +3317,7 @@ public class RoadNetworkAssignment {
 
 				countOfCounts += 3;
 				sumOfCounts += vanCount + rigidCount + articCount;
-				sumOfSquaredDiffs += (vanCount - vanVolume)^2 + (rigidCount - rigidVolume)^2 + (articCount - articVolume)^2;
+				sumOfSquaredDiffs += Math.pow(vanCount - vanVolume, 2) + Math.pow(rigidCount - rigidVolume, 2) + Math.pow(articCount - articVolume, 2);
 			}
 
 			if (dir == 'C' && !checkedCP.contains(countPoint)) { //for combined counts check if this countPoint has been processed already
@@ -3332,7 +3363,7 @@ public class RoadNetworkAssignment {
 
 				countOfCounts += 3;
 				sumOfCounts += vanCount + rigidCount + articCount;
-				sumOfSquaredDiffs += (vanCount - vanVolume - vanVolume2)^2 + (rigidCount - rigidVolume - rigidVolume2)^2 + (articCount - articVolume - articVolume2)^2;
+				sumOfSquaredDiffs += Math.pow(vanCount - vanVolume - vanVolume2, 2) + Math.pow(rigidCount - rigidVolume - rigidVolume2, 2) + Math.pow(articCount - articVolume - articVolume2, 2);
 
 				checkedCP.add(countPoint);
 			}
