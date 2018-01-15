@@ -116,5 +116,8 @@ public class ODMatrixTest {
 		System.out.println("Destinations: " + passengerODMatrix2.getDestinations());
 		System.out.println("Trip starts: " + passengerODMatrix2.calculateTripStarts());
 		System.out.println("Trip ends: " + passengerODMatrix2.calculateTripEnds());
+		
+		passengerODMatrix2.scaleMatrixValue(2.0);
+		passengerODMatrix2.printMatrixFormatted("After scaling:");
 	}
 }
