@@ -436,6 +436,9 @@ public class RoadNetworkAssignmentTest {
 		//TEST VEHICLE KILOMETRES
 		System.out.println("\n\n*** Testing vehicle kilometres ***");
 		
+		rna.updateLinkVolumeInPCU();
+		rna.updateLinkVolumePerVehicleType();
+		
 		System.out.println("Vehicle kilometres:");
 		System.out.println(rna.calculateVehicleKilometres());
 		
@@ -745,6 +748,9 @@ public class RoadNetworkAssignmentTest {
 		
 		//TEST VEHICLE KILOMETRES
 		System.out.println("\n\n*** Testing vehicle kilometres ***");
+		
+		rna.updateLinkVolumeInPCU();
+		rna.updateLinkVolumePerVehicleType();
 
 		System.out.println("Vehicle kilometres:");
 		System.out.println(rna.calculateVehicleKilometres());

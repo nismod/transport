@@ -2962,11 +2962,8 @@ public class RoadNetworkAssignment {
 		}
 	}
 
-	
-	
-	
 	/**
-	 * Expands the trip list to full demand, in case the assignment fraction was less than 1.0 (100%).
+	 * Expands the trip list to full demand, in case the assignment fraction is less than 1.0 (100%).
 	 * It increases the trip list by picking random trips from the existing trip list.
 	 */
 	private void expandTripList () {
@@ -2985,9 +2982,7 @@ public class RoadNetworkAssignment {
 		//System.out.println("Trip list size before expansion: " + currentTripListSize);
 		//System.out.println("Trip list size after expansion: " + this.tripList.size());
 	}
-	
-	
-	
+		
 	/**
 	 * Resets route storages for passengers and freight.
 	 */
