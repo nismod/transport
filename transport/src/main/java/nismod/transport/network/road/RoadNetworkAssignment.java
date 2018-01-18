@@ -62,6 +62,7 @@ public class RoadNetworkAssignment {
 	public double fractionAV;
 	public double nodesProbabilityWeighting; //manipulates probabilities of nodes for the node choice
 	public double nodesProbabilityWeightingFreight; //manipulates probabilities of nodes for the node choice
+	public double assignmentFraction; //the fraction of vehicle flows to actually assign, with later results expansion to 100%
 
 	private static RandomSingleton rng = RandomSingleton.getInstance();
 
@@ -94,7 +95,7 @@ public class RoadNetworkAssignment {
 	private RoadNetwork roadNetwork;
 
 	private Map<Integer, Double> linkVolumesInPCU;
-	private HashMap<VehicleType, HashMap<Integer, Integer>> linkVolumesPerVehicleType;
+	private Map<VehicleType, Map<Integer, Integer>> linkVolumesPerVehicleType;
 	private Map<TimeOfDay, Map<Integer, Double>> linkVolumesInPCUPerTimeOfDay;
 	private HashMap<Integer, Double> linkFreeFlowTravelTime;
 	//private HashMap<Integer, Double> linkTravelTime;
@@ -147,7 +148,7 @@ public class RoadNetworkAssignment {
 
 		this.roadNetwork = roadNetwork;
 		this.linkVolumesInPCU = new HashMap<Integer, Double>();
-		this.linkVolumesPerVehicleType = new HashMap<VehicleType, HashMap<Integer, Integer>>();
+		this.linkVolumesPerVehicleType = new HashMap<VehicleType, Map<Integer, Integer>>();
 		for (VehicleType vht: VehicleType.values()) {
 			HashMap<Integer, Integer> map = new HashMap<Integer, Integer>();
 			linkVolumesPerVehicleType.put(vht, map);
@@ -348,6 +349,8 @@ public class RoadNetworkAssignment {
 		this.averageIntersectionDelay = Double.parseDouble(params.getProperty("AVERAGE_INTERSECTION_DELAY"));
 		this.nodesProbabilityWeighting = Double.parseDouble(params.getProperty("NODES_PROBABILITY_WEIGHTING"));
 		this.nodesProbabilityWeightingFreight = Double.parseDouble(params.getProperty("NODES_PROBABILITY_WEIGHTING_FREIGHT"));
+		this.assignmentFraction = Double.parseDouble(params.getProperty("ASSIGNMENT_FRACTION"));
+		
 
 		if (fractionAV != null)		this.fractionAV = fractionAV;
 		else						this.fractionAV = 0.05;
@@ -471,7 +474,7 @@ public class RoadNetworkAssignment {
 					listOfDestinationNodes.remove(destinationNode);
 
 			//for each trip
-			int flow = passengerODM.getFlow(originZone, destinationZone);
+			int flow = (int) Math.round(passengerODM.getFlow(originZone, destinationZone) * this.assignmentFraction);
 			counterTotalFlow += flow;
 
 			for (int i=0; i<flow; i++) {
@@ -592,37 +595,6 @@ public class RoadNetworkAssignment {
 
 					counterAssignedTrips++;
 
-					List listOfEdges = foundRoute.getEdges();
-					//System.out.println("The path as a list of edges: " + listOfEdges);
-					//System.out.println("Path size in the number of nodes: " + pathFound.size());
-					//System.out.println("Path size in the number of edges: " + listOfEdges.size());
-					/*
-						DijkstraShortestPathFinder pathFinder = new DijkstraShortestPathFinder(rn, from, roadNetwork.getDijkstraTimeWeighter());
-						pathFinder.calculate();
-						Path path = pathFinder.getPath(to);
-						path.reverse();
-						List listOfEdges = path.getEdges();
-					 */
-
-					for (Object o: listOfEdges) {
-						//DirectedEdge e = (DirectedEdge) o;
-						Edge e = (Edge) o;
-
-						//increase volume count (in PCU) for that edge
-						Double volumeInPCU = linkVolumesInPCU.get(e.getID());
-						if (volumeInPCU == null) volumeInPCU = 0.0;
-
-						volumeInPCU += 	this.vehicleTypeToPCU.get(vht);
-						linkVolumesInPCU.put(e.getID(), volumeInPCU);
-
-						//increase volume count for that edge and for the right vehicle type (CAR or AV)
-						Integer volume = linkVolumesPerVehicleType.get(vht).get(e.getID());
-						if (volume == null) volume = 0;
-						volume++;
-						linkVolumesPerVehicleType.get(vht).put(e.getID(), volume);
-					}
-					//System.out.printf("Sum of edge lengths: %.3f\n\n", sum);
-
 					//store trip in trip list
 					Trip trip = new Trip(vht, engine, foundRoute, hour, 0, 0);
 					this.tripList.add(trip);
@@ -636,7 +608,10 @@ public class RoadNetworkAssignment {
 
 		System.out.println("Total flow: " + counterTotalFlow);
 		System.out.println("Total assigned trips: " + counterAssignedTrips);
-		System.out.println("Assignment percentage: " + 100.0* counterAssignedTrips / counterTotalFlow);
+		System.out.println("Succesfully assigned trips: " + 100.0* counterAssignedTrips / counterTotalFlow);
+		
+		//expand the trip list from assignmentFraction to 100%
+		this.expandTripList();
 	}
 
 	/** 
@@ -685,7 +660,7 @@ public class RoadNetworkAssignment {
 					listOfDestinationNodes.remove(destinationNode);
 
 			//for each trip
-			int flow = passengerODM.getFlow(originZone, destinationZone);
+			int flow = (int) Math.round(passengerODM.getFlow(originZone, destinationZone) * this.assignmentFraction);
 			counterTotalFlow += flow;
 
 			for (int i=0; i<flow; i++) {
@@ -885,37 +860,6 @@ public class RoadNetworkAssignment {
 				//there is a chosenRoute
 				counterAssignedTrips++;
 
-				/*
-				//increase the number of trips starting at origin LAD
-				Integer number = this.LADnoTripStarts.get(origin);
-				if (number == null) number = 0;
-				this.LADnoTripStarts.put(origin, ++number);
-				//increase the number of trips ending at destination LAD
-				Integer number2 = this.LADnoTripEnds.get(destination);
-				if (number2 == null) number2 = 0;
-				this.LADnoTripEnds.put(destination, ++number2);
-				 */
-
-				List listOfEdges = chosenRoute.getEdges();
-				//System.out.println("The path as a list of edges: " + listOfEdges);
-				//System.out.println("Path size in the number of edges: " + listOfEdges.size());
-
-				for (Object o: listOfEdges) {
-					DirectedEdge e = (DirectedEdge) o;
-
-					//increase volume count (in PCU) for that edge
-					Double volumeInPCU = linkVolumesInPCU.get(e.getID());
-					if (volumeInPCU == null) volumeInPCU = 0.0;
-					volumeInPCU += this.vehicleTypeToPCU.get(vht);
-					linkVolumesInPCU.put(e.getID(), volumeInPCU);
-
-					//increase volume count for that edge and for the right vehicle type (CAR or AV)
-					Integer volume = linkVolumesPerVehicleType.get(vht).get(e.getID());
-					if (volume == null) volume = 0;
-					volume++;
-					linkVolumesPerVehicleType.get(vht).put(e.getID(), volume);
-				}
-
 				//store trip in trip list
 				Trip trip = new Trip(vht, engine, chosenRoute, hour, 0, 0);
 				this.tripList.add(trip);
@@ -925,7 +869,10 @@ public class RoadNetworkAssignment {
 
 		System.out.println("Total flow: " + counterTotalFlow);
 		System.out.println("Total assigned trips: " + counterAssignedTrips);
-		System.out.println("Assignment percentage: " + 100.0* counterAssignedTrips / counterTotalFlow);
+		System.out.println("Succesfully assigned trips percentage: " + 100.0* counterAssignedTrips / counterTotalFlow);
+		
+		//expand the trip list from assignmentFraction to 100%
+		this.expandTripList();
 	}
 
 	/**
@@ -968,7 +915,7 @@ public class RoadNetworkAssignment {
 			int vehicleType = (int) mk.getKey(2);
 
 			//for each trip
-			int flow = freightMatrix.getFlow(origin, destination, (int)mk.getKey(2));
+			int flow = (int) Math.round(freightMatrix.getFlow(origin, destination, (int)mk.getKey(2)) * this.assignmentFraction);
 			counterTotalFlow += flow;
 
 			for (int i=0; i<flow; i++) {
@@ -1136,29 +1083,6 @@ public class RoadNetworkAssignment {
 					//trip was assigned
 					counterAssignedTrips++;
 
-					List listOfEdges = foundRoute.getEdges();
-					//System.out.println("The path as a list of edges: " + listOfEdges);
-					//System.out.println("Path size in the number of nodes: " + aStarPath.size());
-					//System.out.println("Path size in the number of edges: " + listOfEdges.size());
-
-					for (Object o: listOfEdges) {
-						//DirectedEdge e = (DirectedEdge) o;
-						Edge e = (Edge) o;
-
-						//increase volume count for that edge (in PCU)
-						Double volumeInPCU = linkVolumesInPCU.get(e.getID());
-						if (volumeInPCU == null) volumeInPCU = 0.0;
-						volumeInPCU += this.vehicleTypeToPCU.get(vht);
-						linkVolumesInPCU.put(e.getID(), volumeInPCU);
-
-						//increase volume count for that edge and for that vehicle type
-						Integer volume = linkVolumesPerVehicleType.get(vht).get(e.getID());
-						if (volume == null) volume = 0;
-						volume++;
-						linkVolumesPerVehicleType.get(vht).put(e.getID(), volume);
-					}
-					//System.out.printf("Sum of edge lengths: %.3f\n\n", sum);
-
 					//store trip in trip list
 					Trip trip = new Trip(vht, engine, foundRoute, hour, origin, destination);
 					this.tripList.add(trip);
@@ -1171,7 +1095,10 @@ public class RoadNetworkAssignment {
 
 		System.out.println("Total flow: " + counterTotalFlow);
 		System.out.println("Total assigned trips: " + counterAssignedTrips);
-		System.out.println("Assignment percentage: " + 100.0* counterAssignedTrips / counterTotalFlow);
+		System.out.println("Successfully assigned trips percentage: " + 100.0* counterAssignedTrips / counterTotalFlow);
+		
+		//expand the trip list from assignmentFraction to 100%
+		this.expandTripList();
 	}
 
 	/**
@@ -1212,7 +1139,7 @@ public class RoadNetworkAssignment {
 			int vehicleType = (int) mk.getKey(2);
 
 			//for each trip
-			int flow = freightMatrix.getFlow(origin, destination, (int)mk.getKey(2));
+			int flow = (int) Math.round(freightMatrix.getFlow(origin, destination, (int)mk.getKey(2)) * this.assignmentFraction);
 			counterTotalFlow += flow;
 
 			for (int i=0; i<flow; i++) {
@@ -1518,28 +1445,6 @@ public class RoadNetworkAssignment {
 				originLAD = roadNetwork.getNodeToZone().get(originNode);
 				destinationLAD = roadNetwork.getNodeToZone().get(destinationNode);
 
-				List listOfEdges = chosenRoute.getEdges();
-				//System.out.println("The path as a list of edges: " + listOfEdges);
-				//System.out.println("Path size in the number of nodes: " + aStarPath.size());
-				//System.out.println("Path size in the number of edges: " + listOfEdges.size());
-
-				for (Object o: listOfEdges) {
-					//DirectedEdge e = (DirectedEdge) o;
-					Edge e = (Edge) o;
-
-					//increase volume count for that edge (in PCU)
-					Double volumeInPCU = linkVolumesInPCU.get(e.getID());
-					if (volumeInPCU == null) volumeInPCU = 0.0;
-					volumeInPCU += this.vehicleTypeToPCU.get(vht);
-					linkVolumesInPCU.put(e.getID(), volumeInPCU);
-
-					//increase volume count for that edge and for that vehicle type
-					Integer volume = linkVolumesPerVehicleType.get(vht).get(e.getID());
-					if (volume == null) volume = 0;
-					volume++;
-					linkVolumesPerVehicleType.get(vht).put(e.getID(), volume);
-				}
-
 				//store trip in trip list
 				Trip trip = new Trip(vht, engine, chosenRoute, hour, origin , destination);
 				this.tripList.add(trip);
@@ -1549,7 +1454,10 @@ public class RoadNetworkAssignment {
 
 		System.out.println("Total flow: " + counterTotalFlow);
 		System.out.println("Total assigned trips: " + counterAssignedTrips);
-		System.out.println("Assignment percentage: " + 100.0* counterAssignedTrips / counterTotalFlow);
+		System.out.println("Successfully assigned trips percentage: " + 100.0* counterAssignedTrips / counterTotalFlow);
+		
+		//expand the trip list from assignmentFraction to 100%
+		this.expandTripList();
 	}
 
 	/**
@@ -3054,6 +2962,32 @@ public class RoadNetworkAssignment {
 		}
 	}
 
+	
+	
+	
+	/**
+	 * Expands the trip list to full demand, in case the assignment fraction was less than 1.0 (100%).
+	 * It increases the trip list by picking random trips from the existing trip list.
+	 */
+	private void expandTripList () {
+		
+		System.out.printf("Expanding the trip list from %d%% to 100%%. %n", (int) Math.round(this.assignmentFraction * 100));
+		
+		int currentTripListSize = this.tripList.size();
+		int expectedTripListSize = (int) Math.round(currentTripListSize / this.assignmentFraction);
+	
+		//increase the trip list with randomly picked trips from the existing trip list
+		for (int i = 0; i < (expectedTripListSize - currentTripListSize); i++) {
+			int randomTripIndex = rng.nextInt(currentTripListSize);
+			Trip randomTrip = this.tripList.get(randomTripIndex);
+			this.tripList.add(randomTrip);
+		}
+		//System.out.println("Trip list size before expansion: " + currentTripListSize);
+		//System.out.println("Trip list size after expansion: " + this.tripList.size());
+	}
+	
+	
+	
 	/**
 	 * Resets route storages for passengers and freight.
 	 */
@@ -3108,7 +3042,88 @@ public class RoadNetworkAssignment {
 
 		return this.linkVolumesInPCUPerTimeOfDay;
 	}
+	
+	/**
+	 * Calculates daily link volumes in PCU.
+	 * @param tripList Trip list.
+	 * @return Map of link volumes in PCU.
+	 */
+	public Map<Integer, Double> calculateLinkVolumeInPCU(List<Trip> tripList) {
 
+		Map<Integer, Double> map = new HashMap<Integer, Double>();
+		
+		for (Trip trip: tripList) {
+			for (Edge edge: trip.getRoute().getEdges()) {
+				Double currentCount = map.get(edge.getID());
+				if (currentCount == null) currentCount = 0.0;
+				currentCount += this.vehicleTypeToPCU.get(trip.getVehicle()); //add PCU of the vehicle
+				map.put(edge.getID(), currentCount);
+			}
+		}
+
+		return map;
+	}
+
+	/**
+	 * Updates daily link volumes in PCU from the trip list and stores it into instance variable.
+	 */
+	public void updateLinkVolumeInPCU() {
+
+		this.linkVolumesInPCU = this.calculateLinkVolumeInPCU(this.tripList);
+	}
+
+	/**
+	 * Getter method for daily link volumes in PCU.
+	 * @return Link volumes in PCU.
+	 */
+	public Map<Integer, Double> getLinkVolumeInPCU() {
+
+		return this.linkVolumesInPCU;
+	}
+	
+	/**
+	 * Calculates daily link volumes per vehicle type.
+	 * @param tripList Trip list.
+	 * @return Map of link volumes per vehicle type.
+	 */
+	public Map<VehicleType, Map<Integer, Integer>> calculateLinkVolumePerVehicleType(List<Trip> tripList) {
+
+		Map<VehicleType, Map<Integer, Integer>> map = new HashMap<VehicleType, Map<Integer, Integer>>();
+		for (VehicleType vht: VehicleType.values()) {
+			Map<Integer, Integer> vehicleMap = new HashMap<Integer, Integer>();
+			map.put(vht, vehicleMap);
+		}
+
+		for (Trip trip: tripList) {
+			Map<Integer, Integer> vehicleMap = map.get(trip.getVehicle());
+			for (Edge edge: trip.getRoute().getEdges()) {
+				Integer currentCount = vehicleMap.get(edge.getID());
+				if (currentCount == null) currentCount = 0;
+				currentCount++;
+				vehicleMap.put(edge.getID(), currentCount);
+			}
+		}
+
+		return map;
+	}
+
+	/**
+	 * Updates daily link volumes per vehicle type from trip list and stores into instance variable.
+	 */
+	public void updateLinkVolumePerVehicleType() {
+
+		this.linkVolumesPerVehicleType = this.calculateLinkVolumePerVehicleType(this.tripList);
+	}
+
+	/**
+	 * Getter method for daily link volumes per vehicle type.
+	 * @return Link volumes in PCU per time of day.
+	 */
+	public Map<VehicleType, Map<Integer, Integer>> getLinkVolumePerVehicleType() {
+
+		return this.linkVolumesPerVehicleType;
+	}
+	
 	/**
 	 * Calculates absolute differences between car volumes and traffic counts.
 	 * For combined counts, takes the average of two absolute differences.

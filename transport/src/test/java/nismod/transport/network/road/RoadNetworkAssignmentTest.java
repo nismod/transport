@@ -226,9 +226,16 @@ public class RoadNetworkAssignmentTest {
 		}
 		System.out.println("Frequencies: ");
 		System.out.println(freq);
-				
+
+		rna.updateLinkVolumeInPCU();
+		rna.updateLinkVolumePerVehicleType();
+		rna.updateLinkVolumeInPCUPerTimeOfDay();
+		
 		System.out.println("Link volumes in PCU: ");
-		System.out.println(rna.getLinkVolumesInPCU());	
+		System.out.println(rna.getLinkVolumesInPCU());
+		
+		System.out.println("Link volume per vehicle Type: ");
+		System.out.println(rna.getLinkVolumePerVehicleType());
 		
 		System.out.println("Free-flow travel times: ");
 		System.out.println(rna.getLinkFreeFlowTravelTimes());	
