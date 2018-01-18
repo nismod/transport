@@ -44,8 +44,8 @@ import nismod.transport.utility.RandomSingleton;
  */
 public class RoadNetworkAssignment {
 
-//	//public static final double SPEED_LIMIT_M_ROAD = 112.65; //70mph = 31.29mps = 112.65kph
-//	//public static final double SPEED_LIMIT_A_ROAD = 96.56; //60mph = 26.82mps = 96.56kph
+	//	//public static final double SPEED_LIMIT_M_ROAD = 112.65; //70mph = 31.29mps = 112.65kph
+	//	//public static final double SPEED_LIMIT_A_ROAD = 96.56; //60mph = 26.82mps = 96.56kph
 
 	public int maximumCapacityMRoad; //PCU per lane per hour
 	public int maximumCapacityARoad; //PCU per lane per hour
@@ -60,7 +60,9 @@ public class RoadNetworkAssignment {
 	public int interzonalTopNodes; //how many top nodes (based on gravitated population size) to considers as trip origin/destination
 	public double averageIntersectionDelay; //[min]
 	public double fractionAV;
-	
+	public double nodesProbabilityWeighting; //manipulates probabilities of nodes for the node choice
+	public double nodesProbabilityWeightingFreight; //manipulates probabilities of nodes for the node choice
+
 	private static RandomSingleton rng = RandomSingleton.getInstance();
 
 	public static enum EngineType {
@@ -73,14 +75,14 @@ public class RoadNetworkAssignment {
 		private VehicleType(int value) { this.value = value; } 
 		public int getValue() { return this.value; } 
 	};
-		
+
 	public static enum TimeOfDay {
 		MIDNIGHT(0), ONEAM(1), TWOAM(2), THREEAM(3), FOURAM(4), FIVEAM(5), SIXAM(6), SEVENAM(7), EIGHTAM(8), NINEAM(9), TENAM(10), ELEVENAM(11),
 		NOON (12), ONEPM(13), TWOPM(14), THREEPM(15), FOURPM(16), FIVEPM(17), SIXPM(18), SEVENPM(19), EIGHTPM(20), NINEPM(21), TENPM(22), ELEVENPM(23);
 		private int value; 
 		private TimeOfDay(int value) { this.value = value; }
 	}
-	
+
 	private HashMap<VehicleType, Double> vehicleTypeToPCU;
 
 	private HashMap<EngineType, Double> energyUnitCosts;
@@ -88,7 +90,7 @@ public class RoadNetworkAssignment {
 	private HashMap<VehicleType, HashMap<EngineType, Double>> engineTypeFractions;
 
 	private HashMap<TimeOfDay, Double> timeOfDayDistribution;
-	
+
 	private RoadNetwork roadNetwork;
 
 	private Map<Integer, Double> linkVolumesInPCU;
@@ -97,7 +99,7 @@ public class RoadNetworkAssignment {
 	private HashMap<Integer, Double> linkFreeFlowTravelTime;
 	//private HashMap<Integer, Double> linkTravelTime;
 	private Map<TimeOfDay, Map<Integer, Double>> linkTravelTimePerTimeOfDay;
-	
+
 	//storage of performed trips
 	private ArrayList<Trip> tripList;
 
@@ -113,7 +115,7 @@ public class RoadNetworkAssignment {
 	private HashMap<Integer, Double> startNodeProbabilitiesFreight;
 	//the probability of freight trip ending at a node
 	private HashMap<Integer, Double> endNodeProbabilitiesFreight;
-	
+
 	private HashMap<String, MultiKeyMap> congestionCharges; //String is the policy name, MultiKeyMap is (VehicleType, TimeOfDay) -> list of link charges
 
 	/**
@@ -131,17 +133,17 @@ public class RoadNetworkAssignment {
 	 * @param params Assignment parameters.
 	 */
 	public RoadNetworkAssignment(RoadNetwork roadNetwork, 
-								 HashMap<EngineType, Double> energyUnitCosts, 
-								 HashMap<VehicleType, HashMap<EngineType, Double>> engineTypeFractions,
-								 Double fractionAV,
-								 HashMap<VehicleType, Double> vehicleTypeToPCU,
-								 HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParams, 
-								 HashMap<TimeOfDay, Double> timeOfDayDistribution, 
-								 Map<TimeOfDay, Map<Integer, Double>> defaultLinkTravelTime, 
-								 HashMap<String, Double> areaCodeProbabilities, 
-								 HashMap<String, Double> workplaceZoneProbabilities,
-								 HashMap<String, MultiKeyMap> congestionCharges,
-								 Properties params) {
+			HashMap<EngineType, Double> energyUnitCosts, 
+			HashMap<VehicleType, HashMap<EngineType, Double>> engineTypeFractions,
+			Double fractionAV,
+			HashMap<VehicleType, Double> vehicleTypeToPCU,
+			HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParams, 
+			HashMap<TimeOfDay, Double> timeOfDayDistribution, 
+			Map<TimeOfDay, Map<Integer, Double>> defaultLinkTravelTime, 
+			HashMap<String, Double> areaCodeProbabilities, 
+			HashMap<String, Double> workplaceZoneProbabilities,
+			HashMap<String, MultiKeyMap> congestionCharges,
+			Properties params) {
 
 		this.roadNetwork = roadNetwork;
 		this.linkVolumesInPCU = new HashMap<Integer, Double>();
@@ -158,7 +160,7 @@ public class RoadNetworkAssignment {
 		}
 		this.tripList = new ArrayList<Trip>();
 		this.linkFreeFlowTravelTime = roadNetwork.getFreeFlowTravelTime();
-		
+
 		if (defaultLinkTravelTime == null) //use free flow
 			for (TimeOfDay hour: TimeOfDay.values()) {
 				Map<Integer, Double> hourlyMap = this.linkTravelTimePerTimeOfDay.get(hour);
@@ -171,80 +173,6 @@ public class RoadNetworkAssignment {
 				for (Integer edgeID: defaultLinkTravelTime.get(hour).keySet())
 					hourlyMap.put(edgeID, defaultLinkTravelTime.get(hour).get(edgeID));
 			}
-
-		//calculate area code choice probability
-		if (areaCodeProbabilities != null)	this.areaCodeProbabilities = areaCodeProbabilities;
-		else {
-			this.areaCodeProbabilities = new HashMap<String, Double>();
-			//for each LAD zone
-			for (String zone: roadNetwork.getZoneToAreaCodes().keySet()) {
-				int totalPopulationInZone = 0;
-				List<String> listOfAreaCodes = roadNetwork.getZoneToAreaCodes().get(zone);
-				for (String areaCode: listOfAreaCodes)
-					totalPopulationInZone += roadNetwork.getAreaCodeToPopulation().get(areaCode);
-				for (String areaCode: listOfAreaCodes)
-					this.areaCodeProbabilities.put(areaCode, (double) roadNetwork.getAreaCodeToPopulation().get(areaCode) / totalPopulationInZone);
-			}
-		}
-		//System.out.println("Probabilities for area codes:");
-		//System.out.println(this.areaCodeProbabilities);
-
-		//calculate workplace zone choice probability
-		if (workplaceZoneProbabilities != null)	this.workplaceZoneProbabilities = workplaceZoneProbabilities;
-		else {
-			this.workplaceZoneProbabilities = new HashMap<String, Double>();
-			//for each LAD zone
-			for (String zone: roadNetwork.getZoneToWorkplaceCodes().keySet()) {
-				int totalPopulationInZone = 0;
-				List<String> listOfWorkplaceCodes = roadNetwork.getZoneToWorkplaceCodes().get(zone);
-				for (String workplaceCode: listOfWorkplaceCodes)
-					totalPopulationInZone += roadNetwork.getWorkplaceCodeToPopulation().get(workplaceCode);
-				for (String workplaceCode: listOfWorkplaceCodes)
-					this.workplaceZoneProbabilities.put(workplaceCode, (double) roadNetwork.getWorkplaceCodeToPopulation().get(workplaceCode) / totalPopulationInZone);
-			}
-		}
-		//System.out.println("Probabilities for workplace zones:");
-		//System.out.println(this.workplaceZoneProbabilities);
-
-		//calculate node probabilities from gravitating population (ignores blacklisted nodes)
-		this.startNodeProbabilities = new HashMap<Integer, Double>();
-		this.endNodeProbabilities = new HashMap<Integer, Double>();
-		//System.out.println(roadNetwork.getZoneToNodes().keySet());
-		for (String zone: roadNetwork.getZoneToNodes().keySet()) {
-			double sumStart = 0.0, sumEnd = 0.0;
-			//System.out.println(roadNetwork.getZoneToNodes().get(zone));
-			for (Integer node: roadNetwork.getZoneToNodes().get(zone)) {
-				if (!roadNetwork.isBlacklistedAsStartNode(node)) sumStart += roadNetwork.getGravitatingPopulation(node);
-				if (!roadNetwork.isBlacklistedAsEndNode(node))   sumEnd += roadNetwork.getGravitatingPopulation(node);
-			}
-			for (Integer node: roadNetwork.getZoneToNodes().get(zone)) {
-				if (!roadNetwork.isBlacklistedAsStartNode(node)) startNodeProbabilities.put(node, roadNetwork.getGravitatingPopulation(node) / sumStart);
-				if (!roadNetwork.isBlacklistedAsEndNode(node))   endNodeProbabilities.put(node, roadNetwork.getGravitatingPopulation(node) / sumEnd);
-			}
-		}
-		System.out.println("Probabilities for nodes:");
-		System.out.println(this.startNodeProbabilities);
-		System.out.println(this.endNodeProbabilities);
-
-		//calculate node probabilities from gravitating workplace population (ignores blacklisted nodes)
-		startNodeProbabilitiesFreight = new HashMap<Integer, Double>();
-		endNodeProbabilitiesFreight = new HashMap<Integer, Double>();
-		//System.out.println(roadNetwork.getZoneToNodes().keySet());
-		for (String zone: roadNetwork.getZoneToNodes().keySet()) {
-			double sumStart = 0.0, sumEnd = 0.0;
-			//System.out.println(roadNetwork.getZoneToNodes().get(zone));
-			for (Integer node: roadNetwork.getZoneToNodes().get(zone)) {
-				if (!roadNetwork.isBlacklistedAsStartNode(node)) sumStart += roadNetwork.getGravitatingWorkplacePopulation(node);
-				if (!roadNetwork.isBlacklistedAsEndNode(node))   sumEnd += roadNetwork.getGravitatingWorkplacePopulation(node);
-			}
-			for (Integer node: roadNetwork.getZoneToNodes().get(zone)) {
-				if (!roadNetwork.isBlacklistedAsStartNode(node)) startNodeProbabilitiesFreight.put(node, roadNetwork.getGravitatingWorkplacePopulation(node) / sumStart);
-				if (!roadNetwork.isBlacklistedAsEndNode(node))   endNodeProbabilitiesFreight.put(node, roadNetwork.getGravitatingWorkplacePopulation(node) / sumEnd);
-			}
-		}
-		System.out.println("Node probabilities for freight:");
-		System.out.println(this.startNodeProbabilitiesFreight);
-		System.out.println(this.endNodeProbabilitiesFreight);
 
 		if (vehicleTypeToPCU != null) this.vehicleTypeToPCU = vehicleTypeToPCU;
 		else {
@@ -269,10 +197,10 @@ public class RoadNetworkAssignment {
 			this.energyUnitCosts.put(EngineType.HYDROGEN, 4.19);
 			this.energyUnitCosts.put(EngineType.HYBRID, 1.17);
 		}
-		
+
 		if (energyConsumptionParams != null) this.energyConsumptions = energyConsumptionParams;
 		else {
-		
+
 			this.energyConsumptions = new HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>>();
 			HashMap<String, Double> parameters = new HashMap<String, Double>();
 			parameters.put("A", 1.11932239320862);
@@ -345,7 +273,7 @@ public class RoadNetworkAssignment {
 		if (engineTypeFractions != null) this.engineTypeFractions = engineTypeFractions;
 		else {
 			this.engineTypeFractions = new HashMap<VehicleType, HashMap<EngineType, Double>>();
-			
+
 			HashMap<EngineType, Double> map = new HashMap<EngineType, Double>();
 			map.put(EngineType.PETROL, 0.45);
 			map.put(EngineType.DIESEL, 0.35);
@@ -373,7 +301,7 @@ public class RoadNetworkAssignment {
 			this.engineTypeFractions.put(VehicleType.RIGID, map);
 			this.engineTypeFractions.put(VehicleType.ARTIC, map);
 		}
-		
+
 		if (timeOfDayDistribution != null) this.timeOfDayDistribution = timeOfDayDistribution; //TODO check it adds up to one!
 		else {
 			this.timeOfDayDistribution = new HashMap<TimeOfDay, Double>();
@@ -402,9 +330,9 @@ public class RoadNetworkAssignment {
 			this.timeOfDayDistribution.put(TimeOfDay.TENPM, 0.0136);
 			this.timeOfDayDistribution.put(TimeOfDay.ELEVENPM, 0.0071);
 		}
-		
+
 		this.congestionCharges = congestionCharges;
-		
+
 		//read the parameters
 		this.maximumCapacityMRoad = Integer.parseInt(params.getProperty("MAXIMUM_CAPACITY_M_ROAD"));
 		this.maximumCapacityARoad = Integer.parseInt(params.getProperty("MAXIMUM_CAPACITY_A_ROAD"));
@@ -418,9 +346,85 @@ public class RoadNetworkAssignment {
 		this.flagAStarIfEmptyRouteSet = Boolean.parseBoolean(params.getProperty("FLAG_ASTAR_IF_EMPTY_ROUTE_SET")); //if there is no pre-generated route set for a node pair, try finding a route with aStar
 		this.interzonalTopNodes = Integer.parseInt(params.getProperty("INTERZONAL_TOP_NODES")); //how many top nodes (based on gravitated population size) to considers as trip origin/destination
 		this.averageIntersectionDelay = Double.parseDouble(params.getProperty("AVERAGE_INTERSECTION_DELAY"));
-		
+		this.nodesProbabilityWeighting = Double.parseDouble(params.getProperty("NODES_PROBABILITY_WEIGHTING"));
+		this.nodesProbabilityWeightingFreight = Double.parseDouble(params.getProperty("NODES_PROBABILITY_WEIGHTING_FREIGHT"));
+
 		if (fractionAV != null)		this.fractionAV = fractionAV;
 		else						this.fractionAV = 0.05;
+
+		//calculate area code choice probability
+		if (areaCodeProbabilities != null)	this.areaCodeProbabilities = areaCodeProbabilities;
+		else {
+			this.areaCodeProbabilities = new HashMap<String, Double>();
+			//for each LAD zone
+			for (String zone: roadNetwork.getZoneToAreaCodes().keySet()) {
+				int totalPopulationInZone = 0;
+				List<String> listOfAreaCodes = roadNetwork.getZoneToAreaCodes().get(zone);
+				for (String areaCode: listOfAreaCodes)
+					totalPopulationInZone += roadNetwork.getAreaCodeToPopulation().get(areaCode);
+				for (String areaCode: listOfAreaCodes)
+					this.areaCodeProbabilities.put(areaCode, (double) roadNetwork.getAreaCodeToPopulation().get(areaCode) / totalPopulationInZone);
+			}
+		}
+		//System.out.println("Probabilities for area codes:");
+		//System.out.println(this.areaCodeProbabilities);
+
+		//calculate workplace zone choice probability
+		if (workplaceZoneProbabilities != null)	this.workplaceZoneProbabilities = workplaceZoneProbabilities;
+		else {
+			this.workplaceZoneProbabilities = new HashMap<String, Double>();
+			//for each LAD zone
+			for (String zone: roadNetwork.getZoneToWorkplaceCodes().keySet()) {
+				int totalPopulationInZone = 0;
+				List<String> listOfWorkplaceCodes = roadNetwork.getZoneToWorkplaceCodes().get(zone);
+				for (String workplaceCode: listOfWorkplaceCodes)
+					totalPopulationInZone += roadNetwork.getWorkplaceCodeToPopulation().get(workplaceCode);
+				for (String workplaceCode: listOfWorkplaceCodes)
+					this.workplaceZoneProbabilities.put(workplaceCode, (double) roadNetwork.getWorkplaceCodeToPopulation().get(workplaceCode) / totalPopulationInZone);
+			}
+		}
+		//System.out.println("Probabilities for workplace zones:");
+		//System.out.println(this.workplaceZoneProbabilities);
+
+		//calculate node probabilities from gravitating population (ignores blacklisted nodes)
+		this.startNodeProbabilities = new HashMap<Integer, Double>();
+		this.endNodeProbabilities = new HashMap<Integer, Double>();
+		//System.out.println(roadNetwork.getZoneToNodes().keySet());
+		for (String zone: roadNetwork.getZoneToNodes().keySet()) {
+			double sumStart = 0.0, sumEnd = 0.0;
+			//System.out.println(roadNetwork.getZoneToNodes().get(zone));
+			for (Integer node: roadNetwork.getZoneToNodes().get(zone)) {
+				if (!roadNetwork.isBlacklistedAsStartNode(node)) sumStart += Math.pow(roadNetwork.getGravitatingPopulation(node), nodesProbabilityWeighting);
+				if (!roadNetwork.isBlacklistedAsEndNode(node))   sumEnd += Math.pow(roadNetwork.getGravitatingPopulation(node), nodesProbabilityWeighting);
+			}
+			for (Integer node: roadNetwork.getZoneToNodes().get(zone)) {
+				if (!roadNetwork.isBlacklistedAsStartNode(node)) startNodeProbabilities.put(node, Math.pow(roadNetwork.getGravitatingPopulation(node), nodesProbabilityWeighting) / sumStart);
+				if (!roadNetwork.isBlacklistedAsEndNode(node))   endNodeProbabilities.put(node, Math.pow(roadNetwork.getGravitatingPopulation(node), nodesProbabilityWeighting) / sumEnd);
+			}
+		}
+		System.out.println("Probabilities for nodes:");
+		System.out.println(this.startNodeProbabilities);
+		System.out.println(this.endNodeProbabilities);
+
+		//calculate node probabilities from gravitating workplace population (ignores blacklisted nodes)
+		startNodeProbabilitiesFreight = new HashMap<Integer, Double>();
+		endNodeProbabilitiesFreight = new HashMap<Integer, Double>();
+		//System.out.println(roadNetwork.getZoneToNodes().keySet());
+		for (String zone: roadNetwork.getZoneToNodes().keySet()) {
+			double sumStart = 0.0, sumEnd = 0.0;
+			//System.out.println(roadNetwork.getZoneToNodes().get(zone));
+			for (Integer node: roadNetwork.getZoneToNodes().get(zone)) {
+				if (!roadNetwork.isBlacklistedAsStartNode(node)) sumStart += Math.pow(roadNetwork.getGravitatingWorkplacePopulation(node), nodesProbabilityWeightingFreight);
+				if (!roadNetwork.isBlacklistedAsEndNode(node))   sumEnd += Math.pow(roadNetwork.getGravitatingWorkplacePopulation(node), nodesProbabilityWeightingFreight);
+			}
+			for (Integer node: roadNetwork.getZoneToNodes().get(zone)) {
+				if (!roadNetwork.isBlacklistedAsStartNode(node)) startNodeProbabilitiesFreight.put(node, Math.pow(roadNetwork.getGravitatingWorkplacePopulation(node), nodesProbabilityWeightingFreight) / sumStart);
+				if (!roadNetwork.isBlacklistedAsEndNode(node))   endNodeProbabilitiesFreight.put(node, Math.pow(roadNetwork.getGravitatingWorkplacePopulation(node), nodesProbabilityWeightingFreight) / sumEnd);
+			}
+		}
+		System.out.println("Node probabilities for freight:");
+		System.out.println(this.startNodeProbabilitiesFreight);
+		System.out.println(this.endNodeProbabilitiesFreight);
 	}
 
 	/** 
@@ -435,7 +439,7 @@ public class RoadNetworkAssignment {
 
 		//sort nodes based on the gravitating population
 		this.roadNetwork.sortGravityNodes();
-		
+
 		//to store routes generated during the assignment
 		RouteSetGenerator rsg = new RouteSetGenerator(this.roadNetwork);
 
@@ -471,7 +475,7 @@ public class RoadNetworkAssignment {
 			counterTotalFlow += flow;
 
 			for (int i=0; i<flow; i++) {
-				
+
 				//choose time of day
 				double cumulativeProbability = 0.0;
 				double random = rng.nextDouble();
@@ -486,7 +490,7 @@ public class RoadNetworkAssignment {
 					}
 				}
 				if (hour == null) System.err.println("Time of day not chosen!");
-				
+
 				//choose vehicle
 				random  = rng.nextDouble();
 				VehicleType vht = null;
@@ -495,7 +499,7 @@ public class RoadNetworkAssignment {
 				else 
 					vht = VehicleType.AV;
 				if (vht == null) System.err.println("Vehicle type not chosen!");
-								
+
 				//choose engine
 				cumulativeProbability = 0.0;
 				random = rng.nextDouble();
@@ -510,7 +514,7 @@ public class RoadNetworkAssignment {
 					}
 				}
 				if (engine == null) System.err.println("Engine type not chosen!");
-				
+
 				//choose origin/destination nodes based on the gravitating population
 				//the choice with replacement means that possibly: destination node = origin node
 				//the choice without replacement means that destination node has to be different from origin node
@@ -567,7 +571,7 @@ public class RoadNetworkAssignment {
 					//see if that route already exists in the route storage
 					RouteSet rs = rsg.getRouteSet(originNode, destinationNode);
 					if (rs != null) foundRoute = rs.getChoiceSet().get(0); //take the first route
-	
+
 					//if route does not already exist, get the shortest path from the origin node to the destination node using AStar algorithm
 					if (foundRoute == null) {
 						//System.out.println("The path does not exist in the path storage");
@@ -607,7 +611,7 @@ public class RoadNetworkAssignment {
 						//increase volume count (in PCU) for that edge
 						Double volumeInPCU = linkVolumesInPCU.get(e.getID());
 						if (volumeInPCU == null) volumeInPCU = 0.0;
-					
+
 						volumeInPCU += 	this.vehicleTypeToPCU.get(vht);
 						linkVolumesInPCU.put(e.getID(), volumeInPCU);
 
@@ -646,7 +650,7 @@ public class RoadNetworkAssignment {
 	public void assignPassengerFlowsRouteChoice(ODMatrix passengerODM, RouteSetGenerator rsg, Properties routeChoiceParameters) {
 
 		System.out.println("Assigning the passenger flows from the passenger matrix...");
-	
+
 		final int totalExpectedFlow = passengerODM.getTotalFlow();
 		this.tripList = new ArrayList<Trip>(totalExpectedFlow); //use expected flow as array list initial capacity
 
@@ -685,7 +689,7 @@ public class RoadNetworkAssignment {
 			counterTotalFlow += flow;
 
 			for (int i=0; i<flow; i++) {
-				
+
 				//choose time of day
 				double cumulativeProbability = 0.0;
 				double random = rng.nextDouble();
@@ -700,7 +704,7 @@ public class RoadNetworkAssignment {
 					}
 				}
 				if (hour == null) System.err.println("Time of day not chosen!");
-				
+
 				//choose vehicle
 				random  = rng.nextDouble();
 				VehicleType vht = null;
@@ -709,7 +713,7 @@ public class RoadNetworkAssignment {
 				else 
 					vht = VehicleType.AV;
 				if (vht == null) System.err.println("Vehicle type not chosen!");
-				
+
 				//choose engine
 				cumulativeProbability = 0.0;
 				random = rng.nextDouble();
@@ -724,7 +728,7 @@ public class RoadNetworkAssignment {
 					}
 				}
 				if (engine == null) System.err.println("Engine type not chosen!");
-	
+
 				//choose origin/destination nodes based on the gravitating population
 				//the choice with replacement means that possibly: destination node = origin node
 				//the choice without replacement means that destination node has to be different from origin node
@@ -784,13 +788,13 @@ public class RoadNetworkAssignment {
 					//System.out.println("Index of destination node: " + indexDestination);
 					originNode = listOfOriginNodes.get(indexOrigin);					
 					destinationNode = listOfDestinationNodes.get(indexDestination);
-					*/
-					
+					 */
+
 					//make a choice based on the gravitating population size
 					int originNodesToConsider = interzonalTopNodes<listOfOriginNodes.size()?interzonalTopNodes:listOfOriginNodes.size();
 					int destinationNodesToConsider = interzonalTopNodes<listOfDestinationNodes.size()?interzonalTopNodes:listOfDestinationNodes.size();
 					//sums of gravitating population
-					
+
 					double sum = 0.0;
 					for (int j=0; j<originNodesToConsider; j++) sum += startNodeProbabilities.get(listOfOriginNodes.get(j)); 
 					//choose origin node
@@ -803,7 +807,7 @@ public class RoadNetworkAssignment {
 							break;
 						}
 					}
-					
+
 					sum = 0.0;
 					for (int j=0; j<destinationNodesToConsider; j++) sum += endNodeProbabilities.get(listOfDestinationNodes.get(j)); 
 					//choose destination node
@@ -816,7 +820,7 @@ public class RoadNetworkAssignment {
 							break;
 						}
 					}
-					
+
 					if (originNode == null) System.err.println("Origin node for inter-zonal trip was not chosen!");
 					if (destinationNode == null) System.err.println("Destination node for inter-zonal trip was not chosen!");
 				}
@@ -850,19 +854,19 @@ public class RoadNetworkAssignment {
 				} else { //there is a route set
 
 					//if (fetchedRouteSet.getProbabilities() == null) {
-						//probabilities need to be calculated for this route set before a choice can be made
-						fetchedRouteSet.setLinkTravelTime(this.linkTravelTimePerTimeOfDay.get(hour));
-						fetchedRouteSet.setParameters(routeChoiceParameters);
-						
-						//fetch congestion charge for the vehicle type
-						HashMap<String, HashMap<Integer, Double>> linkCharges = null;
-						if (this.congestionCharges != null) 
-							for (String policyName: this.congestionCharges.keySet())
-								linkCharges.put(policyName, (HashMap<Integer, Double>) this.congestionCharges.get(policyName).get(vht, hour));
-						
-						fetchedRouteSet.calculateUtilities(this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions.get(Pair.of(vht, engine)), this.energyUnitCosts.get(engine), linkCharges, routeChoiceParameters);
-						fetchedRouteSet.calculateProbabilities(this.linkTravelTimePerTimeOfDay.get(hour), routeChoiceParameters);
-						fetchedRouteSet.sortRoutesOnUtility();
+					//probabilities need to be calculated for this route set before a choice can be made
+					fetchedRouteSet.setLinkTravelTime(this.linkTravelTimePerTimeOfDay.get(hour));
+					fetchedRouteSet.setParameters(routeChoiceParameters);
+
+					//fetch congestion charge for the vehicle type
+					HashMap<String, HashMap<Integer, Double>> linkCharges = null;
+					if (this.congestionCharges != null) 
+						for (String policyName: this.congestionCharges.keySet())
+							linkCharges.put(policyName, (HashMap<Integer, Double>) this.congestionCharges.get(policyName).get(vht, hour));
+
+					fetchedRouteSet.calculateUtilities(this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions.get(Pair.of(vht, engine)), this.energyUnitCosts.get(engine), linkCharges, routeChoiceParameters);
+					fetchedRouteSet.calculateProbabilities(this.linkTravelTimePerTimeOfDay.get(hour), routeChoiceParameters);
+					fetchedRouteSet.sortRoutesOnUtility();
 					//}
 
 					//choose the route
@@ -890,7 +894,7 @@ public class RoadNetworkAssignment {
 				Integer number2 = this.LADnoTripEnds.get(destination);
 				if (number2 == null) number2 = 0;
 				this.LADnoTripEnds.put(destination, ++number2);
-				*/
+				 */
 
 				List listOfEdges = chosenRoute.getEdges();
 				//System.out.println("The path as a list of edges: " + listOfEdges);
@@ -915,7 +919,7 @@ public class RoadNetworkAssignment {
 				//store trip in trip list
 				Trip trip = new Trip(vht, engine, chosenRoute, hour, 0, 0);
 				this.tripList.add(trip);
-				
+
 			}//for each trip
 		}//for each OD pair
 
@@ -946,7 +950,7 @@ public class RoadNetworkAssignment {
 		//counters to calculate percentage of assignment success
 		long counterAssignedTrips = 0;
 		long counterTotalFlow = 0;
-		
+
 		//to store routes generated during the assignment
 		RouteSetGenerator rsg = new RouteSetGenerator(this.roadNetwork);
 
@@ -968,7 +972,7 @@ public class RoadNetworkAssignment {
 			counterTotalFlow += flow;
 
 			for (int i=0; i<flow; i++) {
-				
+
 				//choose time of day
 				double cumulativeProbability = 0.0;
 				double random = rng.nextDouble();
@@ -983,9 +987,9 @@ public class RoadNetworkAssignment {
 					}
 				}
 				if (hour == null) System.err.println("Time of day not chosen!");
-				
+
 				VehicleType vht = VehicleType.values()[vehicleType];
-				
+
 				//choose engine
 				cumulativeProbability = 0.0;
 				random = rng.nextDouble();
@@ -1093,27 +1097,27 @@ public class RoadNetworkAssignment {
 				//					System.out.println("from " + from + " to " + to);
 				Route foundRoute = null;
 				try {
- 						//see if that route already exists in the route storage
-						RouteSet rs = rsg.getRouteSet(originNode, destinationNode);
-						if (rs != null) foundRoute = rs.getChoiceSet().get(0); //take the first route
-		
-						//if route does not already exist, get the shortest path from the origin node to the destination node using AStar algorithm
-						if (foundRoute == null) {
-							//System.out.println("The path does not exist in the path storage");
+					//see if that route already exists in the route storage
+					RouteSet rs = rsg.getRouteSet(originNode, destinationNode);
+					if (rs != null) foundRoute = rs.getChoiceSet().get(0); //take the first route
 
-							DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(originNode);
-							DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(destinationNode);
+					//if route does not already exist, get the shortest path from the origin node to the destination node using AStar algorithm
+					if (foundRoute == null) {
+						//System.out.println("The path does not exist in the path storage");
 
-							RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
-							if (fastestPath == null) {
-								System.err.println("Not even aStar could find a route!");
-								continue;
-							}
+						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(originNode);
+						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(destinationNode);
 
-							foundRoute = new Route(fastestPath);
-							rsg.addRoute(foundRoute); //add to the route set
+						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
+						if (fastestPath == null) {
+							System.err.println("Not even aStar could find a route!");
+							continue;
 						}
-					
+
+						foundRoute = new Route(fastestPath);
+						rsg.addRoute(foundRoute); //add to the route set
+					}
+
 					//if path does not already exist, get the shortest path from the origin node to the destination node using AStar algorithm
 					if (foundRoute == null) {
 
@@ -1136,11 +1140,11 @@ public class RoadNetworkAssignment {
 					//System.out.println("The path as a list of edges: " + listOfEdges);
 					//System.out.println("Path size in the number of nodes: " + aStarPath.size());
 					//System.out.println("Path size in the number of edges: " + listOfEdges.size());
-					
+
 					for (Object o: listOfEdges) {
 						//DirectedEdge e = (DirectedEdge) o;
 						Edge e = (Edge) o;
-	
+
 						//increase volume count for that edge (in PCU)
 						Double volumeInPCU = linkVolumesInPCU.get(e.getID());
 						if (volumeInPCU == null) volumeInPCU = 0.0;
@@ -1158,7 +1162,7 @@ public class RoadNetworkAssignment {
 					//store trip in trip list
 					Trip trip = new Trip(vht, engine, foundRoute, hour, origin, destination);
 					this.tripList.add(trip);
-	
+
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -1212,7 +1216,7 @@ public class RoadNetworkAssignment {
 			counterTotalFlow += flow;
 
 			for (int i=0; i<flow; i++) {
-				
+
 				//choose time of day
 				double cumulativeProbability = 0.0;
 				double random = rng.nextDouble();
@@ -1227,9 +1231,9 @@ public class RoadNetworkAssignment {
 					}
 				}
 				if (hour == null) System.err.println("Time of day not chosen!");
-				
+
 				VehicleType vht = VehicleType.values()[vehicleType];
-				
+
 				//choose engine
 				cumulativeProbability = 0.0;
 				random = rng.nextDouble();
@@ -1326,7 +1330,7 @@ public class RoadNetworkAssignment {
 						int originNodesToConsider = interzonalTopNodes<listOfOriginNodes.size()?interzonalTopNodes:listOfOriginNodes.size();
 						int destinationNodesToConsider = interzonalTopNodes<listOfDestinationNodes.size()?interzonalTopNodes:listOfDestinationNodes.size();
 						//sums of gravitating population
-						
+
 						double sum = 0.0;
 						for (int j=0; j<originNodesToConsider; j++) sum += startNodeProbabilitiesFreight.get(listOfOriginNodes.get(j)); 
 						//choose origin node
@@ -1339,7 +1343,7 @@ public class RoadNetworkAssignment {
 								break;
 							}
 						}
-						
+
 						sum = 0.0;
 						for (int j=0; j<destinationNodesToConsider; j++) sum += endNodeProbabilitiesFreight.get(listOfDestinationNodes.get(j)); 
 						//choose destination node
@@ -1352,10 +1356,10 @@ public class RoadNetworkAssignment {
 								break;
 							}
 						}
-											
+
 						if (originNode == null) System.err.println("Origin node for inter-zonal freight trip was not chosen!");
 						if (destinationNode == null) System.err.println("Destination node for inter-zonal freight trip was not chosen!");
-						
+
 					}
 
 				} else if (originNode != null && destinationLAD != null) { //point to LAD
@@ -1479,19 +1483,19 @@ public class RoadNetworkAssignment {
 				} else { //there is a route set
 
 					//if (fetchedRouteSet.getProbabilities() == null) {
-						//probabilities need to be calculated for this route set before a choice can be made
-						fetchedRouteSet.setLinkTravelTime(this.linkTravelTimePerTimeOfDay.get(hour));
-						fetchedRouteSet.setParameters(routeChoiceParameters);
-						
-						//fetch congestion charge for the vehicle type
-						HashMap<String, HashMap<Integer, Double>> linkCharges = null;
-						if (this.congestionCharges != null) 
-							for (String policyName: this.congestionCharges.keySet())
-								linkCharges.put(policyName, (HashMap<Integer, Double>) this.congestionCharges.get(policyName).get(vht, hour));
-						
-						fetchedRouteSet.calculateUtilities(this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions.get(Pair.of(vht, engine)), this.energyUnitCosts.get(engine), linkCharges, routeChoiceParameters);
-						fetchedRouteSet.calculateProbabilities(this.linkTravelTimePerTimeOfDay.get(hour), routeChoiceParameters);
-						fetchedRouteSet.sortRoutesOnUtility();
+					//probabilities need to be calculated for this route set before a choice can be made
+					fetchedRouteSet.setLinkTravelTime(this.linkTravelTimePerTimeOfDay.get(hour));
+					fetchedRouteSet.setParameters(routeChoiceParameters);
+
+					//fetch congestion charge for the vehicle type
+					HashMap<String, HashMap<Integer, Double>> linkCharges = null;
+					if (this.congestionCharges != null) 
+						for (String policyName: this.congestionCharges.keySet())
+							linkCharges.put(policyName, (HashMap<Integer, Double>) this.congestionCharges.get(policyName).get(vht, hour));
+
+					fetchedRouteSet.calculateUtilities(this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions.get(Pair.of(vht, engine)), this.energyUnitCosts.get(engine), linkCharges, routeChoiceParameters);
+					fetchedRouteSet.calculateProbabilities(this.linkTravelTimePerTimeOfDay.get(hour), routeChoiceParameters);
+					fetchedRouteSet.sortRoutesOnUtility();
 					//}
 
 					//choose the route
@@ -1535,7 +1539,7 @@ public class RoadNetworkAssignment {
 					volume++;
 					linkVolumesPerVehicleType.get(vht).put(e.getID(), volume);
 				}
-			
+
 				//store trip in trip list
 				Trip trip = new Trip(vht, engine, chosenRoute, hour, origin , destination);
 				this.tripList.add(trip);
@@ -1554,7 +1558,7 @@ public class RoadNetworkAssignment {
 	public void updateLinkTravelTimes() {
 
 		double congestedTravelTime;
-		
+
 		this.linkVolumesInPCUPerTimeOfDay = this.calculateLinkVolumeInPCUPerTimeOfDay(this.tripList); //calculate link volumes per time of day
 
 		//iterate through all the edges in the graph
@@ -1582,8 +1586,8 @@ public class RoadNetworkAssignment {
 					congestedTravelTime = linkFreeFlowTravelTime.get(edge.getID())*(1 + ALPHA * Math.pow(PEAK_HOUR_PERCENTAGE * linkVolumeInPCU / numberOfLanes.get(edge.getID()) / MAXIMUM_CAPACITY_A_ROAD, BETA_A_ROAD));
 				else //ferry
 					congestedTravelTime = linkFreeFlowTravelTime.get(edge.getID());
-				*/
-				
+				 */
+
 				//Speed-flow curves from FORGE (Department for Transport, 2005)
 				if (roadNumber.charAt(0) == 'M') {//motorway
 
@@ -1613,7 +1617,7 @@ public class RoadNetworkAssignment {
 
 				} else //ferry
 					congestedTravelTime = linkFreeFlowTravelTime.get(edge.getID()); //ferry travel time is fixed
-						
+
 				Map<Integer, Double> hourlyTimes = this.linkTravelTimePerTimeOfDay.get(hour);
 				hourlyTimes.put(edge.getID(), congestedTravelTime);
 			}
@@ -1626,9 +1630,9 @@ public class RoadNetworkAssignment {
 	 * @param weight Parameter for weighted averaging.
 	 */
 	public void updateLinkTravelTimes(double weight) {
-		
+
 		double congestedTravelTime;
-		
+
 		this.linkVolumesInPCUPerTimeOfDay = this.calculateLinkVolumeInPCUPerTimeOfDay(this.tripList); //calculate link volumes per time of day
 
 		//iterate through all the edges in the graph
@@ -1656,8 +1660,8 @@ public class RoadNetworkAssignment {
 					congestedTravelTime = linkFreeFlowTravelTime.get(edge.getID())*(1 + ALPHA * Math.pow(PEAK_HOUR_PERCENTAGE * linkVolumeInPCU / numberOfLanes.get(edge.getID()) / MAXIMUM_CAPACITY_A_ROAD, BETA_A_ROAD));
 				else //ferry
 					congestedTravelTime = linkFreeFlowTravelTime.get(edge.getID());
-				*/
-				
+				 */
+
 				//Speed-flow curves from FORGE (Department for Transport, 2005)
 				if (roadNumber.charAt(0) == 'M') {//motorway
 
@@ -1687,10 +1691,10 @@ public class RoadNetworkAssignment {
 
 				} else //ferry
 					congestedTravelTime = linkFreeFlowTravelTime.get(edge.getID()); //ferry travel time is fixed
-				
+
 				Double oldLinkTravelTime = this.linkTravelTimePerTimeOfDay.get(hour).get(edge.getID());
 				congestedTravelTime = weight * congestedTravelTime + (1 - weight) * oldLinkTravelTime;
-				
+
 				Map<Integer, Double> hourlyTimes = this.linkTravelTimePerTimeOfDay.get(hour);
 				hourlyTimes.put(edge.getID(), congestedTravelTime);
 			}
@@ -1711,7 +1715,7 @@ public class RoadNetworkAssignment {
 		this.assignFreightFlows(freightODM);
 		this.updateLinkTravelTimes(weight);
 	}
-	
+
 	/** 
 	 * Assigns passenger and freight origin-destination matrix to the road network
 	 * using the fastest path based on the current values in the linkTravelTime field.
@@ -1742,7 +1746,7 @@ public class RoadNetworkAssignment {
 			this.assignFlowsAndUpdateLinkTravelTimes(passengerODM, freightODM, weight);
 		}
 	}
-	
+
 	/** 
 	 * Iterates assignment and travel time update a fixed number of times.
 	 * @param passengerODM Passenger origin-destination matrix.
@@ -1764,34 +1768,34 @@ public class RoadNetworkAssignment {
 	 * @param timeSkimMatrix Inter-zonal skim matrix (time).
 	 */
 	public void updateTimeSkimMatrix(SkimMatrix timeSkimMatrix) {
-		
+
 		//this.updateLinkTravelTimes();
-		
+
 		SkimMatrix counter = new SkimMatrix();
-		
+
 		for (Trip trip: this.tripList) {
-			
+
 			if (trip.getVehicle() != VehicleType.CAR) continue; //skip freight vehicles
-			
+
 			String originLAD = trip.getOriginLAD(this.roadNetwork.getNodeToZone());
 			String destinationLAD = trip.getDestinationLAD(this.roadNetwork.getNodeToZone());
-			
+
 			Double count = counter.getCost(originLAD, destinationLAD);
 			if (count == null) count = 0.0;
 			counter.setCost(originLAD, destinationLAD, count + 1);
-			
+
 			Double sum = timeSkimMatrix.getCost(originLAD, destinationLAD);
 			if (sum == null) sum = 0.0;
 			double tripTravelTime = trip.getTravelTime(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), averageIntersectionDelay, this.roadNetwork.getNodeToAverageAccessEgressDistance(), averageAccessEgressSpeedCar);
 			timeSkimMatrix.setCost(originLAD, destinationLAD, sum + tripTravelTime);
 		}
-		
+
 		for (MultiKey mk: timeSkimMatrix.getKeySet()) {
 			String originLAD = (String) mk.getKey(0);
 			String destinationLAD = (String) mk.getKey(1);
-			
+
 			double averageODtraveltime = timeSkimMatrix.getCost(originLAD, destinationLAD) / counter.getCost(originLAD, destinationLAD);
-	
+
 			timeSkimMatrix.setCost(originLAD, destinationLAD, averageODtraveltime);
 		}
 	}
@@ -1815,32 +1819,32 @@ public class RoadNetworkAssignment {
 	public void updateTimeSkimMatrixFreight(SkimMatrixFreight timeSkimMatrixFreight) {
 
 		//this.updateLinkTravelTimes();
-		
+
 		SkimMatrixFreight counter = new SkimMatrixFreight();
-		
+
 		for (Trip trip: this.tripList) {
-			
+
 			VehicleType vht = trip.getVehicle();
 			if ( ! (vht == VehicleType.ARTIC || vht == VehicleType.RIGID || vht == VehicleType.VAN)) continue; //skip non-freight vehicles
-			
+
 			int origin = trip.getFreightOriginZone();
 			int destination = trip.getFreightDestinationZone();
-								
+
 			Double count = counter.getCost(origin, destination, vht.value);
 			if (count == null) count = 0.0;
 			counter.setCost(origin, destination, vht.value, count + 1);
-			
+
 			Double sum = timeSkimMatrixFreight.getCost(origin, destination, vht.value);
 			if (sum == null) sum = 0.0;
 			double tripTravelTime = trip.getTravelTime(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.averageIntersectionDelay, this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), this.averageAccessEgressSpeedFreight);
 			timeSkimMatrixFreight.setCost(origin, destination, vht.value, sum + tripTravelTime);
 		}
-		
+
 		for (MultiKey mk: timeSkimMatrixFreight.getKeySet()) {
 			int origin = (int) mk.getKey(0);
 			int destination = (int) mk.getKey(1);
 			int vehicle = (int) mk.getKey(2);
-						
+
 			double averageODtraveltime = timeSkimMatrixFreight.getCost(origin, destination, vehicle) / counter.getCost(origin, destination, vehicle);
 			timeSkimMatrixFreight.setCost(origin, destination, vehicle, averageODtraveltime);
 		}
@@ -1863,34 +1867,34 @@ public class RoadNetworkAssignment {
 	 * @param costSkimMatrix Inter-zonal skim matrix (cost).
 	 */
 	public void updateCostSkimMatrix(SkimMatrix costSkimMatrix) {
-		
+
 		//this.updateLinkTravelTimes();
-		
+
 		SkimMatrix counter = new SkimMatrix();
-		
+
 		for (Trip trip: this.tripList) {
-			
+
 			if (trip.getVehicle() != VehicleType.CAR) continue; //skip freight vehicles
-			
+
 			String originLAD = trip.getOriginLAD(this.roadNetwork.getNodeToZone());
 			String destinationLAD = trip.getDestinationLAD(this.roadNetwork.getNodeToZone());
-			
+
 			Double count = counter.getCost(originLAD, destinationLAD);
 			if (count == null) count = 0.0;
 			counter.setCost(originLAD, destinationLAD, count + 1);
-			
+
 			Double sum = costSkimMatrix.getCost(originLAD, destinationLAD);
 			if (sum == null) sum = 0.0;
 			double tripFuelCost = trip.getCost(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistance(), averageAccessEgressSpeedCar, this.energyUnitCosts, this.energyConsumptions, this.congestionCharges);
 			costSkimMatrix.setCost(originLAD, destinationLAD, sum + tripFuelCost);
 		}
-		
+
 		for (MultiKey mk: costSkimMatrix.getKeySet()) {
 			String originLAD = (String) mk.getKey(0);
 			String destinationLAD = (String) mk.getKey(1);
-			
+
 			double averageODtraveltime = costSkimMatrix.getCost(originLAD, destinationLAD) / counter.getCost(originLAD, destinationLAD);
-	
+
 			costSkimMatrix.setCost(originLAD, destinationLAD, averageODtraveltime);
 		}
 	}
@@ -1915,33 +1919,33 @@ public class RoadNetworkAssignment {
 
 		SkimMatrix distanceSkimMatrix = new SkimMatrix();
 		SkimMatrix counter = new SkimMatrix();
-		
+
 		for (Trip trip: this.tripList) {
-			
+
 			if (trip.getVehicle() != VehicleType.CAR) continue; //skip freight vehicles
-			
+
 			String originLAD = trip.getOriginLAD(this.roadNetwork.getNodeToZone());
 			String destinationLAD = trip.getDestinationLAD(this.roadNetwork.getNodeToZone());
-			
+
 			Double count = counter.getCost(originLAD, destinationLAD);
 			if (count == null) count = 0.0;
 			counter.setCost(originLAD, destinationLAD, count + 1);
-			
+
 			Double sum = distanceSkimMatrix.getCost(originLAD, destinationLAD);
 			if (sum == null) sum = 0.0;
 			double distance = trip.getLength(this.roadNetwork.getNodeToAverageAccessEgressDistance());
 			distanceSkimMatrix.setCost(originLAD, destinationLAD, sum + distance);
 		}
-		
+
 		for (MultiKey mk: distanceSkimMatrix.getKeySet()) {
 			String originLAD = (String) mk.getKey(0);
 			String destinationLAD = (String) mk.getKey(1);
-			
+
 			double averageODtraveltime = distanceSkimMatrix.getCost(originLAD, destinationLAD) / counter.getCost(originLAD, destinationLAD);
-	
+
 			distanceSkimMatrix.setCost(originLAD, destinationLAD, averageODtraveltime);
 		}
-		
+
 		return distanceSkimMatrix;
 	}
 
@@ -1955,28 +1959,28 @@ public class RoadNetworkAssignment {
 		SkimMatrixFreight counter = new SkimMatrixFreight();
 
 		for (Trip trip: this.tripList) {
-			
+
 			VehicleType vht = trip.getVehicle();
 			if ( ! (vht == VehicleType.ARTIC || vht == VehicleType.RIGID || vht == VehicleType.VAN)) continue; //skip non-freight vehicles
-			
+
 			int origin = trip.getFreightOriginZone();
 			int destination = trip.getFreightDestinationZone();
-								
+
 			Double count = counter.getCost(origin, destination, vht.value);
 			if (count == null) count = 0.0;
 			counter.setCost(origin, destination, vht.value, count + 1);
-			
+
 			Double sum = distanceSkimMatrixFreight.getCost(origin, destination, vht.value);
 			if (sum == null) sum = 0.0;
 			double distance = trip.getLength(this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight());
 			distanceSkimMatrixFreight.setCost(origin, destination, vht.value, sum + distance);
 		}
-		
+
 		for (MultiKey mk: distanceSkimMatrixFreight.getKeySet()) {
 			int origin = (int) mk.getKey(0);
 			int destination = (int) mk.getKey(1);
 			int vehicle = (int) mk.getKey(2);
-						
+
 			double averageODtraveltime = distanceSkimMatrixFreight.getCost(origin, destination, vehicle) / counter.getCost(origin, destination, vehicle);
 			distanceSkimMatrixFreight.setCost(origin, destination, vehicle, averageODtraveltime);
 		}
@@ -1993,33 +1997,33 @@ public class RoadNetworkAssignment {
 
 		//this.updateLinkTravelTimes();
 		SkimMatrixFreight counter = new SkimMatrixFreight();
-		
+
 		if (this.tripList == null || this.tripList.size() == 0) System.err.println("TripList is empty!");
-		
+
 		for (Trip trip: this.tripList) {
-			
+
 			VehicleType vht = trip.getVehicle();
 			if ( ! (vht == VehicleType.ARTIC || vht == VehicleType.RIGID || vht == VehicleType.VAN)) continue; //skip non-freight vehicles
-			
+
 			int origin = trip.getFreightOriginZone();
 			int destination = trip.getFreightDestinationZone();
-							
+
 			Double count = counter.getCost(origin, destination, vht.value);
 			if (count == null) count = 0.0;
 			counter.setCost(origin, destination, vht.value, count + 1);
-			
+
 			Double sum = costSkimMatrixFreight.getCost(origin, destination, vht.value);
 			if (sum == null) sum = 0.0;
 			double tripFuelCost = trip.getCost(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyUnitCosts, this.energyConsumptions, this.congestionCharges);
-			
+
 			costSkimMatrixFreight.setCost(origin, destination, vht.value, sum + tripFuelCost);
 		}
-		
+
 		for (MultiKey mk: costSkimMatrixFreight.getKeySet()) {
 			int origin = (int) mk.getKey(0);
 			int destination = (int) mk.getKey(1);
 			int vehicle = (int) mk.getKey(2);
-						
+
 			double averageODcost = costSkimMatrixFreight.getCost(origin, destination, vehicle) / counter.getCost(origin, destination, vehicle);
 			costSkimMatrixFreight.setCost(origin, destination, vehicle, averageODcost);
 		}
@@ -2030,7 +2034,7 @@ public class RoadNetworkAssignment {
 	 * @return Inter-zonal skim matrix (cost).
 	 */
 	public SkimMatrixFreight calculateCostSkimMatrixFreight() {
-		
+
 		SkimMatrixFreight costSkimMatrixFreight = new SkimMatrixFreight();
 		this.updateCostSkimMatrixFreight(costSkimMatrixFreight);
 
@@ -2047,19 +2051,19 @@ public class RoadNetworkAssignment {
 		for (EngineType engine: EngineType.values()) {
 			consumptions.put(engine, 0.0);
 		}
-				
+
 		for (Trip trip: this.tripList) {
-			
+
 			if (trip.getVehicle() != VehicleType.CAR) continue; //skip freight vehicles
 			EngineType et = trip.getEngine();
 			double consumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistance(), averageAccessEgressSpeedCar, this.energyConsumptions);
 
 			Double currentConsumption = consumptions.get(et);
 			if (currentConsumption == null) currentConsumption = 0.0;
-			
+
 			consumptions.put(et, currentConsumption + consumption);
 		}
-		
+
 		return consumptions;
 	}
 
@@ -2076,30 +2080,30 @@ public class RoadNetworkAssignment {
 			HashMap<String, Double> consumption = new HashMap<String, Double>();
 			zonalConsumptions.put(engine, consumption);
 		}
-		
+
 		for (Trip trip: this.tripList) {
-			
+
 			if (trip.getVehicle() != VehicleType.CAR) continue; //skip freight vehicles
-			
+
 			EngineType et = trip.getEngine();
 			double tripConsumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyConsumptions);
 
 			String originLAD = trip.getOriginLAD(this.roadNetwork.getNodeToZone());
 			String destinationLAD = trip.getDestinationLAD(this.roadNetwork.getNodeToZone());
-			
+
 			Double currentConsumptionOrigin = zonalConsumptions.get(et).get(originLAD);
 			if (currentConsumptionOrigin == null) currentConsumptionOrigin = 0.0;
-			
+
 			Double currentConsumptionDestination = zonalConsumptions.get(et).get(destinationLAD);
 			if (currentConsumptionDestination == null) currentConsumptionDestination = 0.0;
-			
+
 			currentConsumptionOrigin += originZoneEnergyWeight * tripConsumption;
 			currentConsumptionDestination += (1.0 - originZoneEnergyWeight) * tripConsumption;
-			
+
 			zonalConsumptions.get(et).put(originLAD, currentConsumptionOrigin);
 			zonalConsumptions.get(et).put(destinationLAD, currentConsumptionDestination);
 		}
-		
+
 		return zonalConsumptions;
 	}
 
@@ -2113,21 +2117,21 @@ public class RoadNetworkAssignment {
 		for (EngineType engine: EngineType.values()) {
 			consumptions.put(engine, 0.0);
 		}
-		
+
 		for (Trip trip: this.tripList) {
-			
+
 			VehicleType vht = trip.getVehicle();
 			if ( ! (vht == VehicleType.ARTIC || vht == VehicleType.RIGID || vht == VehicleType.VAN)) continue; //skip non-freight vehicles
-			
+
 			EngineType et = trip.getEngine();
 			double consumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyConsumptions);
 
 			Double currentConsumption = consumptions.get(et);
 			if (currentConsumption == null) currentConsumption = 0.0;
-			
+
 			consumptions.put(et, currentConsumption + consumption);
 		}
-		
+
 		return consumptions;
 	}
 
@@ -2261,17 +2265,17 @@ public class RoadNetworkAssignment {
 		return linkDensities;
 	}
 
-//	/**
-//	 * @return The sum of all link travel times in the network.
-//	 */
-//	public double getTotalLinkTravelTimes() {
-//
-//		double totalTravelTime = 0.0;
-//		for (Integer key: this.linkTravelTime.keySet()) totalTravelTime += linkTravelTime.get(key);
-//
-//		return totalTravelTime;
-//	}
-//
+	//	/**
+	//	 * @return The sum of all link travel times in the network.
+	//	 */
+	//	public double getTotalLinkTravelTimes() {
+	//
+	//		double totalTravelTime = 0.0;
+	//		for (Integer key: this.linkTravelTime.keySet()) totalTravelTime += linkTravelTime.get(key);
+	//
+	//		return totalTravelTime;
+	//	}
+	//
 	/**
 	 * @return The copy of all link travel times.
 	 */
@@ -2284,33 +2288,33 @@ public class RoadNetworkAssignment {
 				hourlyMap.put(edge, this.linkTravelTimePerTimeOfDay.get(hour).get(edge));
 			linkTravelTimes.put(hour, hourlyMap);
 		}
-			
+
 		return linkTravelTimes;
 	}
 
-//	/**
-//	 * Calculates the sum of absolute differences in link travel times.
-//	 * @param other Link travel times to compare with.
-//	 * @return Sum of absolute differences in link travel times.
-//	 */
-//	public double getAbsoluteDifferenceInLinkTravelTimes(HashMap<Integer, Double> other) {
-//
-//		double difference = 0.0;
-//		for (Integer key: this.linkTravelTime.keySet())
-//			difference += Math.abs(this.linkTravelTime.get(key) - other.get(key));
-//
-//		return difference;
-//	}
-	
+	//	/**
+	//	 * Calculates the sum of absolute differences in link travel times.
+	//	 * @param other Link travel times to compare with.
+	//	 * @return Sum of absolute differences in link travel times.
+	//	 */
+	//	public double getAbsoluteDifferenceInLinkTravelTimes(HashMap<Integer, Double> other) {
+	//
+	//		double difference = 0.0;
+	//		for (Integer key: this.linkTravelTime.keySet())
+	//			difference += Math.abs(this.linkTravelTime.get(key) - other.get(key));
+	//
+	//		return difference;
+	//	}
+
 	/**
 	 * Getter method for the road network.
 	 * @return Road network.
 	 */
 	public RoadNetwork getRoadNetwork() {
-		
+
 		return this.roadNetwork;
 	}
-	
+
 	/**
 	 * Saves assignment results to output file.
 	 * @param year Year of the assignment.
@@ -2449,8 +2453,8 @@ public class RoadNetworkAssignment {
 			}
 		}
 	}
-	
-	
+
+
 	/**
 	 * Saves hourly car volumes to output file.
 	 * @param year Year of the assignment.
@@ -2468,7 +2472,7 @@ public class RoadNetworkAssignment {
 		header.add("countCar");
 		header.add("dailyVolume");
 		for (TimeOfDay hour: TimeOfDay.values()) header.add(hour.toString());
-		
+
 		FileWriter fileWriter = null;
 		CSVPrinter csvFilePrinter = null;
 		CSVFormat csvFileFormat = CSVFormat.DEFAULT.withRecordSeparator(NEW_LINE_SEPARATOR);
@@ -2499,13 +2503,13 @@ public class RoadNetworkAssignment {
 				}
 				else //ferry or a newly developed road with no count point
 					record.add("N/A");
-					
+
 				//Integer linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edge.getID());
 				Double linkVolume = this.linkVolumesInPCU.get(edge.getID());
-				
+
 				if (linkVolume == null) record.add(Integer.toString(0));
 				else 					record.add(Integer.toString((int)Math.round(linkVolume)));
-			
+
 				for (TimeOfDay hour: TimeOfDay.values()) {
 					Double linkVolumeInPCU = this.linkVolumesInPCUPerTimeOfDay.get(hour).get(edge.getID()); //TODO there should be one per vehicle type
 					if (linkVolumeInPCU == null) record.add(Integer.toString(0));
@@ -2631,7 +2635,7 @@ public class RoadNetworkAssignment {
 	public void saveZonalVehicleKilometres(int year, String outputFile) {
 
 		Map<String, Double> vehicleKilometres = this.calculateVehicleKilometres();
-	
+
 		String NEW_LINE_SEPARATOR = "\n";
 		ArrayList<String> header = new ArrayList<String>();
 		header.add("year");
@@ -2667,7 +2671,7 @@ public class RoadNetworkAssignment {
 			}
 		}
 	}
-	
+
 	/**
 	 * Saves peak link point capacities into a file.
 	 * @param year Year of the assignment.
@@ -2800,14 +2804,14 @@ public class RoadNetworkAssignment {
 		return this.linkVolumesInPCU;
 	}
 
-//	/**
-//	 * Getter method for the link travel times.
-//	 * @return Link volumes
-//	 */
-//	public HashMap<Integer, Double> getLinkTravelTimes() {
-//
-//		return this.linkTravelTime;
-//	}
+	//	/**
+	//	 * Getter method for the link travel times.
+	//	 * @return Link volumes
+	//	 */
+	//	public HashMap<Integer, Double> getLinkTravelTimes() {
+	//
+	//		return this.linkTravelTime;
+	//	}
 
 	/**
 	 * Getter method for the link free-flow travel times.
@@ -2817,7 +2821,7 @@ public class RoadNetworkAssignment {
 
 		return this.linkFreeFlowTravelTime;
 	}
-	
+
 	/**
 	 * Getter method for the link travel times per time of day.
 	 * @return Link travel times per time of day.
@@ -2826,13 +2830,13 @@ public class RoadNetworkAssignment {
 
 		return this.linkTravelTimePerTimeOfDay;
 	}
-	
+
 	/**
 	 * Getter method for the trip list.
 	 * @return Trip list.
 	 */
 	public ArrayList<Trip> getTripList() {
-		
+
 		return this.tripList;
 	}
 
@@ -2872,14 +2876,14 @@ public class RoadNetworkAssignment {
 		return this.workplaceZoneProbabilities;
 	}
 
-//	/**
-//	 * Setter method for congestion charged links.
-//	 * @param congestionCharges The structure with congestion charges
-//	 */
-//	public void setChargedLinks(MultiKeyMap congestionCharges) {
-//		
-//		this.congestionCharges = congestionCharges;
-//	}
+	//	/**
+	//	 * Setter method for congestion charged links.
+	//	 * @param congestionCharges The structure with congestion charges
+	//	 */
+	//	public void setChargedLinks(MultiKeyMap congestionCharges) {
+	//		
+	//		this.congestionCharges = congestionCharges;
+	//	}
 
 	/**
 	 * Calculates the number of passenger (car/AV) trips starting in a LAD.
@@ -2888,7 +2892,7 @@ public class RoadNetworkAssignment {
 	public HashMap<String, Integer> calculateLADTripStarts() {
 
 		HashMap<String, Integer> totalLADnoTripStarts = new HashMap<String, Integer>();
-		
+
 		for (Trip trip: this.tripList)
 			if (trip.getVehicle() == VehicleType.CAR || trip.getVehicle() == VehicleType.AV) {
 				String originZone = trip.getOriginLAD(this.roadNetwork.getNodeToZone());
@@ -2899,7 +2903,7 @@ public class RoadNetworkAssignment {
 
 		return totalLADnoTripStarts;
 	}
-	
+
 	/**
 	 * Calculates the number of passenger (car/AV) trips ending in a LAD.
 	 * @return Number of trips.
@@ -2907,7 +2911,7 @@ public class RoadNetworkAssignment {
 	public HashMap<String, Integer> calculateLADTripEnds() {
 
 		HashMap<String, Integer> totalLADnoTripEnds = new HashMap<String, Integer>();
-		
+
 		for (Trip trip: this.tripList) 
 			if (trip.getVehicle() == VehicleType.CAR || trip.getVehicle() == VehicleType.AV) {
 				String destinationZone = trip.getDestinationLAD(this.roadNetwork.getNodeToZone());
@@ -2926,7 +2930,7 @@ public class RoadNetworkAssignment {
 	public HashMap<String, Integer> calculateFreightLADTripStarts() {
 
 		HashMap<String, Integer> totalLADnoTripStarts = new HashMap<String, Integer>();
-		
+
 		for (Trip trip: this.tripList)
 			if (trip.getVehicle() == VehicleType.VAN || trip.getVehicle() == VehicleType.RIGID || trip.getVehicle() == VehicleType.ARTIC) {
 				String originZone = trip.getOriginLAD(this.roadNetwork.getNodeToZone());
@@ -2945,7 +2949,7 @@ public class RoadNetworkAssignment {
 	public HashMap<String, Integer> calculateFreightLADTripEnds() {
 
 		HashMap<String, Integer> totalLADnoTripEnds = new HashMap<String, Integer>();
-		
+
 		for (Trip trip: this.tripList) 
 			if (trip.getVehicle() == VehicleType.VAN || trip.getVehicle() == VehicleType.RIGID || trip.getVehicle() == VehicleType.ARTIC) {
 				String destinationZone = trip.getDestinationLAD(this.roadNetwork.getNodeToZone());
@@ -2956,16 +2960,16 @@ public class RoadNetworkAssignment {
 
 		return totalLADnoTripEnds;
 	}
-	
+
 	/**
 	 * Calculates vehicle kilometres in each LAD.
 	 * Ignores access and egress.
 	 * @return Vehicle kilometres.
 	 */
 	public Map<String, Double> calculateVehicleKilometres() {
-	
+
 		Map<String, Double> vehicleKilometres = new HashMap<String, Double>();
-			
+
 		for (Map.Entry<Integer, Double> pair: linkVolumesInPCU.entrySet()) {
 			Integer edgeID = pair.getKey();
 			Double volume = pair.getValue();
@@ -2984,7 +2988,7 @@ public class RoadNetworkAssignment {
 				continue;
 			}
 		}
-		
+
 		return vehicleKilometres;
 	}
 
@@ -3041,7 +3045,7 @@ public class RoadNetworkAssignment {
 			HashMap<Integer, Integer> map = new HashMap<Integer, Integer>();
 			this.linkVolumesPerVehicleType.put(vht, map);
 		}
-		
+
 		//reset link volumes per time of day
 		this.linkVolumesInPCUPerTimeOfDay = new HashMap<TimeOfDay, Map<Integer, Double>>();
 		for (TimeOfDay hour: TimeOfDay.values()) {
@@ -3057,24 +3061,24 @@ public class RoadNetworkAssignment {
 
 		this.tripList = new ArrayList<Trip>();
 	}
-	
+
 	/**
 	 * Calculates link volumes in PCU per time of day.
 	 * @param tripList Trip list.
 	 * @return Map of link volumes in PCU per time of day
 	 */
 	public Map<TimeOfDay, Map<Integer, Double>> calculateLinkVolumeInPCUPerTimeOfDay(List<Trip> tripList) {
-		
+
 		//Map<Object, Long> collect = tripList.stream().collect(Collectors.groupingBy(t -> t.getTimeOfDay(), Collectors.counting()));
-		
+
 		//Long countOfPetrolTrips2 = tripList.parallelStream().filter(t -> t.getEngine() == EngineType.PETROL).count();
-		
+
 		Map<TimeOfDay, Map<Integer, Double>> map = new HashMap<TimeOfDay, Map<Integer, Double>>();
 		for (TimeOfDay hour: TimeOfDay.values()) {
 			Map<Integer, Double> hourlyMap = new HashMap<Integer, Double>();
 			map.put(hour, hourlyMap);
 		}
-			
+
 		for (Trip trip: tripList) {
 			Map<Integer, Double> hourlyMap = map.get(trip.getTimeOfDay());
 			for (Edge edge: trip.getRoute().getEdges()) {
@@ -3084,36 +3088,36 @@ public class RoadNetworkAssignment {
 				hourlyMap.put(edge.getID(), currentCount);
 			}
 		}
-		
+
 		return map;
 	}
-	
+
 	/**
 	 * Updates link volumes in PCU per time of day from object's trip list and stores into instance variable.
 	 */
 	public void updateLinkVolumeInPCUPerTimeOfDay() {
-		
+
 		this.linkVolumesInPCUPerTimeOfDay = this.calculateLinkVolumeInPCUPerTimeOfDay(this.tripList);
 	}
-	
+
 	/**
 	 * Getter method for link volumes in PCU per time of day.
 	 * @return Link volumes in PCU per time of day.
 	 */
 	public Map<TimeOfDay, Map<Integer, Double>> getLinkVolumeInPCUPerTimeOfDay() {
-		
+
 		return this.linkVolumesInPCUPerTimeOfDay;
 	}
-	
+
 	/**
 	 * Calculates absolute differences between car volumes and traffic counts.
 	 * For combined counts, takes the average of two absolute differences.
 	 * @return Absolute differences between car volumes and traffic counts.
 	 */
 	public HashMap<Integer, Double> calculateAbsDifferenceCarCounts () {
-		
+
 		HashMap<Integer, Double> absoluteDifferences = new HashMap<Integer, Double>();
-		
+
 		Iterator iter = this.roadNetwork.getNetwork().getEdges().iterator();
 		ArrayList<Long> checkedCP = new ArrayList<Long>(); 
 
@@ -3210,7 +3214,7 @@ public class RoadNetworkAssignment {
 				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edge.getID());
 				if (carVolumeFetch == null) carVolume = 0;
 				else 						carVolume = carVolumeFetch;
-				
+
 				//expand simulated volumes with the expansion factor and round
 				carVolume = Math.round(carVolume * expansionFactor);
 
@@ -3229,7 +3233,7 @@ public class RoadNetworkAssignment {
 				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edge.getID());
 				if (carVolumeFetch == null) carVolume = 0;
 				else 						carVolume = carVolumeFetch;
-				
+
 				//expand simulated volumes with the expansion factor and round
 				carVolume = Math.round(carVolume * expansionFactor);
 
@@ -3239,7 +3243,7 @@ public class RoadNetworkAssignment {
 				Integer carVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edge2);
 				if (carVolumeFetch2 == null) carVolume2 = 0;
 				else 						 carVolume2 = carVolumeFetch2;
-				
+
 				//expand simulated volumes with the expansion factor and round
 				carVolume2 = Math.round(carVolume2 * expansionFactor);
 
@@ -3251,24 +3255,24 @@ public class RoadNetworkAssignment {
 			}
 		}
 
-//		System.out.println("Sum of squared diffs: " + sumOfSquaredDiffs);
-		
+		//		System.out.println("Sum of squared diffs: " + sumOfSquaredDiffs);
+
 		double RMSE = Math.sqrt(sumOfSquaredDiffs);
 		double averageTrueCount = (double) sumOfCounts / countOfCounts;
-		
-//		System.out.println("Checking RMSE: ");
-//		System.out.println("Is finite: " + Double.isFinite(RMSE));
-//		System.out.println("Is infinite: " + Double.isInfinite(RMSE));
-//		System.out.println("Is NaN: " + Double.isNaN(RMSE));
-	
-//		System.out.println("RMSE = " + RMSE);
-//		System.out.println("averageTrueCount = " + averageTrueCount);
-		
-		
+
+		//		System.out.println("Checking RMSE: ");
+		//		System.out.println("Is finite: " + Double.isFinite(RMSE));
+		//		System.out.println("Is infinite: " + Double.isInfinite(RMSE));
+		//		System.out.println("Is NaN: " + Double.isNaN(RMSE));
+
+		//		System.out.println("RMSE = " + RMSE);
+		//		System.out.println("averageTrueCount = " + averageTrueCount);
+
+
 		return (RMSE / averageTrueCount ) * 100;
 	}
-	
-	
+
+
 	/**
 	 * Calculate prediction error (RMSN for for simulated freight volumes and observed traffic counts).
 	 * @return Normalised root mean square error.
