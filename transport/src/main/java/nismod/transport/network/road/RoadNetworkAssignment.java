@@ -609,9 +609,6 @@ public class RoadNetworkAssignment {
 		System.out.println("Total flow: " + counterTotalFlow);
 		System.out.println("Total assigned trips: " + counterAssignedTrips);
 		System.out.println("Succesfully assigned trips: " + 100.0* counterAssignedTrips / counterTotalFlow);
-		
-		//expand the trip list from assignmentFraction to 100%
-		this.expandTripList();
 	}
 
 	/** 
@@ -870,9 +867,6 @@ public class RoadNetworkAssignment {
 		System.out.println("Total flow: " + counterTotalFlow);
 		System.out.println("Total assigned trips: " + counterAssignedTrips);
 		System.out.println("Succesfully assigned trips percentage: " + 100.0* counterAssignedTrips / counterTotalFlow);
-		
-		//expand the trip list from assignmentFraction to 100%
-		this.expandTripList();
 	}
 
 	/**
@@ -1096,9 +1090,6 @@ public class RoadNetworkAssignment {
 		System.out.println("Total flow: " + counterTotalFlow);
 		System.out.println("Total assigned trips: " + counterAssignedTrips);
 		System.out.println("Successfully assigned trips percentage: " + 100.0* counterAssignedTrips / counterTotalFlow);
-		
-		//expand the trip list from assignmentFraction to 100%
-		this.expandTripList();
 	}
 
 	/**
@@ -1455,9 +1446,6 @@ public class RoadNetworkAssignment {
 		System.out.println("Total flow: " + counterTotalFlow);
 		System.out.println("Total assigned trips: " + counterAssignedTrips);
 		System.out.println("Successfully assigned trips percentage: " + 100.0* counterAssignedTrips / counterTotalFlow);
-		
-		//expand the trip list from assignmentFraction to 100%
-		this.expandTripList();
 	}
 
 	/**
@@ -1612,30 +1600,34 @@ public class RoadNetworkAssignment {
 	/** 
 	 * Assigns passenger and freight origin-destination matrix to the road network
 	 * using the fastest path based on the current values in the linkTravelTime field.
-	 * Then updates link travel times using weighted averaging.
+	 * Then expands the trip list (if fractional assignment was used).
+	 * Finally, updates link travel times using weighted averaging.
 	 * @param passengerODM Passenger origin-destination matrix.
 	 * @param freightODM Freight origin-destination matrix.
 	 * @param weight Weighting parameter.
 	 */
-	public void assignFlowsAndUpdateLinkTravelTimes(ODMatrix passengerODM, FreightMatrix freightODM, double weight) {
+	public void assignFlowsExpandTripsAndUpdateLinkTravelTimes(ODMatrix passengerODM, FreightMatrix freightODM, double weight) {
 
 		this.assignPassengerFlows(passengerODM);
 		this.assignFreightFlows(freightODM);
+		this.expandTripList();
 		this.updateLinkTravelTimes(weight);
 	}
 
 	/** 
 	 * Assigns passenger and freight origin-destination matrix to the road network
 	 * using the fastest path based on the current values in the linkTravelTime field.
-	 * Then updates link travel times using weighted averaging.
+	 * Then expands the trip list (if fractional assignment was used).
+	 * Finally, updates link travel times using weighted averaging.
 	 * @param passengerODM Passenger origin-destination matrix.
 	 * @param freightODM Freight origin-destination matrix.
 	 * @param weight Weighting parameter.
 	 */
-	public void assignFlowsAndUpdateLinkTravelTimes(ODMatrix passengerODM, FreightMatrix freightODM, RouteSetGenerator rsg, Properties params, double weight) {
+	public void assignFlowsExpandTripsAndUpdateLinkTravelTimes(ODMatrix passengerODM, FreightMatrix freightODM, RouteSetGenerator rsg, Properties params, double weight) {
 
 		this.assignPassengerFlowsRouteChoice(passengerODM, rsg, params);
 		this.assignFreightFlowsRouteChoice(freightODM, rsg, params);
+		this.expandTripList();
 		this.updateLinkTravelTimes(weight);
 	}
 
@@ -1651,7 +1643,7 @@ public class RoadNetworkAssignment {
 		for (int i=0; i<iterations; i++) {
 			this.resetLinkVolumes(); //link volumes must be reset or they would compound across all iterations
 			this.resetTripStorages(); //clear route storages
-			this.assignFlowsAndUpdateLinkTravelTimes(passengerODM, freightODM, weight);
+			this.assignFlowsExpandTripsAndUpdateLinkTravelTimes(passengerODM, freightODM, weight);
 		}
 	}
 
@@ -1667,7 +1659,7 @@ public class RoadNetworkAssignment {
 		for (int i=0; i<iterations; i++) {
 			this.resetLinkVolumes(); //link volumes must be reset or they would compound across all iterations
 			this.resetTripStorages(); //clear route storages
-			this.assignFlowsAndUpdateLinkTravelTimes(passengerODM, freightODM, rsg, params, weight);
+			this.assignFlowsExpandTripsAndUpdateLinkTravelTimes(passengerODM, freightODM, rsg, params, weight);
 		}
 	}
 
@@ -2966,21 +2958,26 @@ public class RoadNetworkAssignment {
 	 * Expands the trip list to full demand, in case the assignment fraction is less than 1.0 (100%).
 	 * It increases the trip list by picking random trips from the existing trip list.
 	 */
-	private void expandTripList () {
+	public void expandTripList () {
 		
 		System.out.printf("Expanding the trip list from %d%% to 100%%. %n", (int) Math.round(this.assignmentFraction * 100));
 		
 		int currentTripListSize = this.tripList.size();
 		int expectedTripListSize = (int) Math.round(currentTripListSize / this.assignmentFraction);
-	
+		
+		List<Trip> additionalTrips = new ArrayList<Trip>(expectedTripListSize);
+			
 		//increase the trip list with randomly picked trips from the existing trip list
 		for (int i = 0; i < (expectedTripListSize - currentTripListSize); i++) {
 			int randomTripIndex = rng.nextInt(currentTripListSize);
 			Trip randomTrip = this.tripList.get(randomTripIndex);
-			this.tripList.add(randomTrip);
+			//this.tripList.add(randomTrip);
+			additionalTrips.add(randomTrip);
 		}
-		//System.out.println("Trip list size before expansion: " + currentTripListSize);
-		//System.out.println("Trip list size after expansion: " + this.tripList.size());
+		
+		this.tripList.addAll(additionalTrips);
+		System.out.println("Trip list size before expansion: " + currentTripListSize);
+		System.out.println("Trip list size after expansion: " + this.tripList.size());
 	}
 		
 	/**
