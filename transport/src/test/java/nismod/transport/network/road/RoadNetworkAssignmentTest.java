@@ -54,8 +54,8 @@ public class RoadNetworkAssignmentTest {
 	public static void main( String[] args ) throws IOException	{
 		
 		
-		//final String configFile = "./src/main/config/config.properties";
-		final String configFile = "./src/test/config/testConfig.properties";
+		final String configFile = "./src/main/config/config.properties";
+		//final String configFile = "./src/test/config/testConfig.properties";
 		Properties props = ConfigReader.getProperties(configFile);
 		
 		final String areaCodeFileName = props.getProperty("areaCodeFileName");
@@ -126,12 +126,16 @@ public class RoadNetworkAssignmentTest {
 		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Passenger flows assigned in %d seconds.\n", timeNow / 1000);
-
+		
+		rna.expandTripList();
+		
 		rna.updateLinkVolumeInPCUPerTimeOfDay();
+		rna.updateLinkVolumePerVehicleType();
+		rna.updateLinkTravelTimes();
+		
 		//roadNetworkAssignment.saveHourlyCarVolumes(2015, "hourlyCarVolumesAstar.csv");
 		//roadNetworkAssignment.saveHourlyCarVolumes(2015, "hourlyCarVolumes.csv");
-		
-		rna.updateLinkTravelTimes();
+
 		//roadNetworkAssignment.saveAssignmentResults(2015, "assignmentResultsAstar.csv");
 		//roadNetworkAssignment.saveAssignmentResults(2015, "assignmentResults.csv");
 		
@@ -161,9 +165,17 @@ public class RoadNetworkAssignmentTest {
 
 		//clear the routes
 		rsg.clearRoutes();
-				
-		//sort nodes based on workplace zone population!
 		
+		//reset link volumes
+		rna.resetLinkVolumes();
+		
+		//clear the trip list
+		rna.resetTripStorages();
+				
+		
+		// FREIGHT ASSIGNMENT //
+		
+		//sort nodes based on workplace zone population!
 		roadNetwork.sortGravityNodesFreight();
 		
 		//FreightMatrix freightMatrix = new FreightMatrix("./src/main/resources/data/freightMatrix.csv");	
@@ -187,6 +199,10 @@ public class RoadNetworkAssignmentTest {
 		System.out.printf("Freight flows assigned in %d seconds.\n", timeNow / 1000);
 		
 		//roadNetworkAssignment.saveAssignmentResults(2015, "assignment2015passengerAndFreigh.csv");
+		
+		//expand the results if fractional assignment was used
+		rna.expandTripList();
+				
 		
 //		//for (int i = 0; i < 5; i++) {
 //		for (int i = 0; i < 1; i++) {
@@ -316,6 +332,7 @@ public class RoadNetworkAssignmentTest {
 		//assign passenger flows
 		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
 		rna.assignPassengerFlows(odm);
+		rna.expandTripList();
 		
 		//TEST OUTPUT AREA PROBABILITIES
 		System.out.println("\n\n*** Testing output area probabilities ***");
@@ -535,6 +552,7 @@ public class RoadNetworkAssignmentTest {
 		//assign passenger flows
 		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
 		rna.assignPassengerFlows(odm);
+		rna.expandTripList();
 		
 		//TEST OUTPUT AREA PROBABILITIES
 		System.out.println("\n\n*** Testing output area probabilities ***");
@@ -893,7 +911,9 @@ public class RoadNetworkAssignmentTest {
 		
 		//assign freight flows
 		FreightMatrix fm = new FreightMatrix(baseYearFreightMatrixFile);
+		fm.printMatrixFormatted();
 		rna.assignFreightFlows(fm);
+		rna.expandTripList();
 		//rna.saveAssignmentResults(2015, "testAssignmentResultsWithFreight.csv");
 		
 		//TEST OUTPUT AREA PROBABILITIES
