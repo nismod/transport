@@ -59,6 +59,20 @@ public class ODMatrix {
 	}
 	
 	/**
+	 * Constructor that rounds the flows of a real-valued OD matrix. 
+	 * @param realMatrix Origin-destination matrix with real-valued flows.
+	 */
+	public ODMatrix(RealODMatrix realMatrix) {
+		
+		matrix = new MultiKeyMap();
+		for (String o: realMatrix.getOrigins())
+			for (String d: realMatrix.getDestinations()) {
+				int flow = (int) Math.round(realMatrix.getFlow(o, d));
+				this.setFlow(o, d, flow);
+			}
+	}
+	
+	/**
 	 * Gets the flow for a given origin-destination pair.
 	 * @param originZone Origin zone.
 	 * @param destinationZone Destination zone.
