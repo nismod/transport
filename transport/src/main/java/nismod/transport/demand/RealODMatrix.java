@@ -81,11 +81,16 @@ public class RealODMatrix {
 	 */
 	public void setFlow(String originZone, String destinationZone, double flow) {
 	
+		/*
 		if (flow > 0.0)		matrix.put(originZone, destinationZone, flow);
 		//do not store zero flows into the matrix (skip zero flow or remove if already exists)
 		else // flow == 0 
 			if (this.getFlow(originZone, destinationZone) > 0.0)
 				matrix.removeMultiKey(originZone, destinationZone);
+		*/
+		
+		//we need to store all values (even 0 and negative, as this is used for deltas in the SPSA algorithm!
+		matrix.put(originZone,  destinationZone, flow);
 	}
 	
 	/**
