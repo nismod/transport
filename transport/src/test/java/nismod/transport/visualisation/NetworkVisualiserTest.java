@@ -42,6 +42,8 @@ public class NetworkVisualiserTest {
 		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, props);
 		ODMatrix odm = new ODMatrix("./src/test/resources/testdata/csvfiles/passengerODM.csv");
 		rna.assignPassengerFlows(odm);
+		
+		
 		Map<Integer, Double> dailyVolume = rna.getLinkVolumesInPCU();
 		NetworkVisualiser.visualise(roadNetwork, "Network from shapefiles");
 		NetworkVisualiser.visualise(roadNetwork, "Network with traffic volume", dailyVolume);

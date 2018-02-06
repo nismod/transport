@@ -229,6 +229,21 @@ public class RealODMatrix {
 		return difference;
 	}
 	
+	/**
+	 * Scales matrix values with a scaling factor.
+	 * @param factor Scaling factor.
+	 */
+	public void scaleMatrixValue(double factor) {
+		
+		for (MultiKey mk: this.getKeySet()) {
+			String origin = (String) mk.getKey(0);
+			String destination = (String) mk.getKey(1);
+			double flow = this.getFlow(origin, destination);
+			flow = flow * factor;
+			this.setFlow(origin, destination, (int) Math.round(flow));
+		}		
+	}
+	
 	public void printMatrixFormatted(String s) {
 		
 		

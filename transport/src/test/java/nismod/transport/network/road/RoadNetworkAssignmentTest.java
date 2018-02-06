@@ -129,6 +129,7 @@ public class RoadNetworkAssignmentTest {
 		
 		rna.expandTripList();
 		
+		rna.updateLinkVolumeInPCU();
 		rna.updateLinkVolumeInPCUPerTimeOfDay();
 		rna.updateLinkVolumePerVehicleType();
 		rna.updateLinkTravelTimes();
@@ -162,7 +163,24 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("The number of petrol trips with Java streams: " + countOfPetrolTrips2);
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Parallel stream processing in %d milliseconds.\n", timeNow);
+		
+		//
+		rna.saveAssignmentResults(2015, outputFolder + "car" + assignmentResultsFile);
+		
+		System.out.printf("RMSN for counts: %.2f%% %n", rna.calculateRMSNforSimulatedVolumes());
+		System.out.printf("RMSN for counts (2.0 expansion factor): %.2f%% %n", rna.calculateRMSNforExpandedSimulatedVolumes(2.0));
+		System.out.printf("RMSN for counts (3.0 expansion factor): %.2f%% %n", rna.calculateRMSNforExpandedSimulatedVolumes(3.0));
+		System.out.printf("RMSN for counts (4.0 expansion factor): %.2f%% %n", rna.calculateRMSNforExpandedSimulatedVolumes(4.0));
+		System.out.printf("RMSN for counts (5.0 expansion factor): %.2f%% %n", rna.calculateRMSNforExpandedSimulatedVolumes(5.0));
+		System.out.printf("RMSN for counts (6.0 expansion factor): %.2f%% %n", rna.calculateRMSNforExpandedSimulatedVolumes(6.0));
+		System.out.printf("RMSN for counts (7.0 expansion factor): %.2f%% %n", rna.calculateRMSNforExpandedSimulatedVolumes(7.0));
+		System.out.printf("RMSN for counts (8.0 expansion factor): %.2f%% %n", rna.calculateRMSNforExpandedSimulatedVolumes(8.0));
+		System.out.printf("RMSN for counts (9.0 expansion factor): %.2f%% %n", rna.calculateRMSNforExpandedSimulatedVolumes(9.0));
+		System.out.printf("RMSN for counts (10.0 expansion factor): %.2f%% %n", rna.calculateRMSNforExpandedSimulatedVolumes(10.0));
 
+		
+/*		
+		
 		//clear the routes
 		rsg.clearRoutes();
 		
@@ -292,13 +310,16 @@ public class RoadNetworkAssignmentTest {
 		//roadNetworkAssignment.saveZonalCarEnergyConsumptions(2015, 0.85, "zonalCarEnergyConsumption85.csv");
 		//roadNetworkAssignment.saveZonalCarEnergyConsumptions(2015, 0.5, "zonalCarEnergyConsumption50.csv");
 		rna.saveAssignmentResults(2015, outputFolder + assignmentResultsFile);
-		
-		System.out.printf("RMSN for counts: %.2f%% %n", rna.calculateRMSNforSimulatedVolumes());
+
 		System.out.printf("RMSN for freight: %.2f%% %n", rna.calculateRMSNforFreightCounts());
 		
 //		for (double expansionFactor = 0.1; expansionFactor < 5.0; expansionFactor += 0.1) {
 //			System.out.printf("Expansion factor: %.2f RMSN for counts: %.2f%% %n", expansionFactor, rna.calculateRMSNforExpandedSimulatedVolumes(expansionFactor));
 //		}
+  
+  
+  
+ */
 	}
 
 	@Test
@@ -421,6 +442,7 @@ public class RoadNetworkAssignmentTest {
 			
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, params);
 		rsg.generateRouteSetForODMatrix(odm);
+		//rsg.saveRoutesBinary("passengerRoutesMini.dat", false);
 		//rsg.generateRouteSet(31, 82);
 		//rsg.generateRouteSetWithRandomLinkEliminationRestricted(31, 82);
 		//rsg.printChoiceSets();
