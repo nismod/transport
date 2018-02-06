@@ -1,5 +1,7 @@
 package nismod.transport.optimisation;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
@@ -31,6 +33,8 @@ public class SPSA {
 	private RealODMatrix deltas;
 	private RealODMatrix gradientApproximation;
 	
+	private List<Double> lossFunctionValues;
+	
 	private RoadNetworkAssignment rna;
 
 	public SPSA() {
@@ -53,6 +57,8 @@ public class SPSA {
 		this.deltas = new RealODMatrix();
 		this.gradientApproximation = new RealODMatrix();
 		
+		this.lossFunctionValues = new ArrayList<Double>();
+		
 		this.a = a;
 		this.A = A;
 		this.c = c;
@@ -68,10 +74,15 @@ public class SPSA {
 		
 		int k = 1; //counter
 
-		do {		
+		do {
+			//evaluate loss function for the current theta
+			double loss = this.lossFunction(thetaEstimate);
+			//store
+			this.lossFunctionValues.add(loss);
+			
 			//calculate gain coefficients
 			double ak = a / Math.pow(A + k, alpha);
-			double ck = c / Math.pow(k, alpha);
+			double ck = c / Math.pow(k, gamma);
 			System.out.printf("ak = %.5f, ck = %.5f %n", ak, ck);
 						
 			//generate deltas	
@@ -79,10 +90,10 @@ public class SPSA {
 			deltas.printMatrixFormatted("Deltas: ");
 
 			//calculate shifted thetas
-			RealODMatrix thetaMinus = this.shiftTheta(thetaEstimate, ck, deltas);
-			RealODMatrix thetaPlus = this.shiftTheta(thetaEstimate, -1 * ck, deltas);
-			thetaMinus.printMatrixFormatted("Theta minus: ");
+			RealODMatrix thetaPlus = this.shiftTheta(thetaEstimate, ck, deltas);
+			RealODMatrix thetaMinus = this.shiftTheta(thetaEstimate, -1 * ck, deltas);
 			thetaPlus.printMatrixFormatted("Theta plus: ");
+			thetaMinus.printMatrixFormatted("Theta minus: ");
 			
 			//evaluate loss function
 			double yPlus = this.lossFunction(thetaPlus);
@@ -101,7 +112,26 @@ public class SPSA {
 
 		} while (k <= maxIterations);
 		
+		//evaluate loss function for the final theta
+		double loss = this.lossFunction(thetaEstimate);
+		//store
+		this.lossFunctionValues.add(loss);
+		
 		System.out.println("SPSA stopped. Maximum number of iterations reached");
+	}
+	
+	/**
+	 * @return Loss function evaluations for all iterations.
+	 */
+	public List<Double> getLossFunctionEvaluations() {
+		
+		return this.lossFunctionValues;
+		
+	}
+	
+	public RealODMatrix getThetaEstimate() {
+		
+		return this.thetaEstimate;
 	}
 	
 	/**
@@ -109,7 +139,7 @@ public class SPSA {
 	 * @param keySet The set of origin-destination keys for which deltas need to be generated.
 	 * @return Origin-destination matrix with random deltas.
 	 */
-	public void generateDeltas(Set<MultiKey> keySet) {
+	private void generateDeltas(Set<MultiKey> keySet) {
 		
 		RandomSingleton rng = RandomSingleton.getInstance();
 		
@@ -128,7 +158,7 @@ public class SPSA {
 	 * @param ck Gain.
 	 * @param deltas Random deltas.
 	 */
-	public RealODMatrix shiftTheta(RealODMatrix theta, double ck, RealODMatrix deltas) {
+	private RealODMatrix shiftTheta(RealODMatrix theta, double ck, RealODMatrix deltas) {
 		
 		RealODMatrix shiftedTheta = new RealODMatrix();
 		
@@ -155,7 +185,7 @@ public class SPSA {
 	 * @param theta OD matrix.
 	 * @return RMSN for the difference between volumes and traffic counts.
 	 */
-	public double lossFunction(RealODMatrix theta) {
+	private double lossFunction(RealODMatrix theta) {
 		
 		//round values
 		ODMatrix odm = new ODMatrix(theta);
@@ -176,13 +206,22 @@ public class SPSA {
 	}
 	
 	/**
+	 * Calculate the loss function of the latest theta estimate (OD matrix).
+	 * @return RMSN for the difference between volumes and traffic counts.
+	 */
+	public double lossFunction() {
+		
+		return lossFunction(this.thetaEstimate);
+	}
+	
+	/**
 	 * Approximate the gradient.
 	 * @param yPlus Loss for theta plus.
 	 * @param yMinus Loss for theta minus.
 	 * @param ck Gain.
 	 * @param deltas Random deltas.
 	 */
-	public void approximateGradient(double yPlus, double yMinus, double ck, RealODMatrix deltas) {
+	private void approximateGradient(double yPlus, double yMinus, double ck, RealODMatrix deltas) {
 		
 		for (MultiKey mk: deltas.getKeySet()) {
 			String origin = (String) mk.getKey(0);
@@ -200,7 +239,7 @@ public class SPSA {
 	 * @param ak Gain.
 	 * @param gradient Gradient.
 	 */
-	public void updateThetaEstimate(RealODMatrix theta, double ak, RealODMatrix gradient) {
+	private void updateThetaEstimate(RealODMatrix theta, double ak, RealODMatrix gradient) {
 		
 		for (MultiKey mk: theta.getKeySet()) {
 			String origin = (String) mk.getKey(0);

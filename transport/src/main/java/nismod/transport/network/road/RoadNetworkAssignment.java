@@ -63,7 +63,8 @@ public class RoadNetworkAssignment {
 	public double nodesProbabilityWeighting; //manipulates probabilities of nodes for the node choice
 	public double nodesProbabilityWeightingFreight; //manipulates probabilities of nodes for the node choice
 	public double assignmentFraction; //the fraction of vehicle flows to actually assign, with later results expansion to 100%
-
+	public boolean flagUseRouteChoiceModel; //use route-choice model (true) or routing with A-Star (false)
+	
 	private static RandomSingleton rng = RandomSingleton.getInstance();
 
 	public static enum EngineType {
@@ -350,8 +351,8 @@ public class RoadNetworkAssignment {
 		this.nodesProbabilityWeighting = Double.parseDouble(params.getProperty("NODES_PROBABILITY_WEIGHTING"));
 		this.nodesProbabilityWeightingFreight = Double.parseDouble(params.getProperty("NODES_PROBABILITY_WEIGHTING_FREIGHT"));
 		this.assignmentFraction = Double.parseDouble(params.getProperty("ASSIGNMENT_FRACTION"));
+		this.flagUseRouteChoiceModel = Boolean.parseBoolean(params.getProperty("USE_ROUTE_CHOICE_MODEL")); //use route-choice model (true) or routing with A-Star (false)
 		
-
 		if (fractionAV != null)		this.fractionAV = fractionAV;
 		else						this.fractionAV = 0.05;
 
@@ -429,6 +430,8 @@ public class RoadNetworkAssignment {
 		System.out.println(this.startNodeProbabilitiesFreight);
 		System.out.println(this.endNodeProbabilitiesFreight);
 	}
+	
+
 
 	/** 
 	 * Assigns passenger origin-destination matrix to the road network.
@@ -460,7 +463,7 @@ public class RoadNetworkAssignment {
 
 			List<Integer> listOfOriginNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(originZone)); //the list is already sorted
 			List<Integer> listOfDestinationNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(destinationZone)); //the list is already sorted
-
+			
 			//removing blacklisted nodes
 			for (Integer originNode: roadNetwork.getZoneToNodes().get(originZone))
 				//check if any of the nodes is blacklisted
@@ -472,7 +475,7 @@ public class RoadNetworkAssignment {
 				//check if any of the nodes is blacklisted
 				if (this.roadNetwork.isBlacklistedAsEndNode(destinationNode)) 
 					listOfDestinationNodes.remove(destinationNode);
-
+	
 			//for each trip
 			int flow = (int) Math.round(passengerODM.getFlow(originZone, destinationZone) * this.assignmentFraction);
 			counterTotalFlow += flow;
@@ -2214,6 +2217,15 @@ public class RoadNetworkAssignment {
 
 		return this.roadNetwork;
 	}
+	
+	/**
+	 * Getter method for the use route choice model flag.
+	 * @return Flag.
+	 */
+	public boolean getFlagUseRouteChoiceModel() {
+
+		return this.flagUseRouteChoiceModel;
+	}
 
 	/**
 	 * Saves assignment results to output file.
@@ -2766,6 +2778,24 @@ public class RoadNetworkAssignment {
 
 		return this.endNodeProbabilities;
 	}
+	
+	/**
+	 * Setter method for node probabilities.
+	 * @param Node probabilities.
+	 */
+	public void setStartNodeProbabilities(HashMap<Integer, Double> startNodeProbabilities) {
+
+		this.startNodeProbabilities = startNodeProbabilities;
+	}
+
+	/**
+	 * Setter method for node probabilities.
+	 * @param Node probabilities.
+	 */
+	public void setEndNodeProbabilities(HashMap<Integer, Double> endNodeProbabilities) {
+
+		this.endNodeProbabilities = endNodeProbabilities;
+	}
 
 	/**
 	 * Getter method for workplace zones probabilities.
@@ -3264,7 +3294,7 @@ public class RoadNetworkAssignment {
 
 		//		System.out.println("Sum of squared diffs: " + sumOfSquaredDiffs);
 
-		double RMSE = Math.sqrt(sumOfSquaredDiffs);
+		double RMSE = Math.sqrt(sumOfSquaredDiffs / countOfCounts);
 		double averageTrueCount = (double) sumOfCounts / countOfCounts;
 
 		//		System.out.println("Checking RMSE: ");
@@ -3278,7 +3308,6 @@ public class RoadNetworkAssignment {
 
 		return (RMSE / averageTrueCount ) * 100;
 	}
-
 
 	/**
 	 * Calculate prediction error (RMSN for for simulated freight volumes and observed traffic counts).
@@ -3380,9 +3409,100 @@ public class RoadNetworkAssignment {
 			}
 		}
 
-		double RMSE = Math.sqrt(sumOfSquaredDiffs);
+		double RMSE = Math.sqrt(sumOfSquaredDiffs / countOfCounts);
 		double averageTrueCount = (double) sumOfCounts / countOfCounts;
 
 		return (RMSE / averageTrueCount ) * 100;
+	}
+	
+	/**
+	 * Calculate prediction error (mean absolute deviation for expanded simulated volumes and observed traffic counts).
+	 * @param expansionFactor Expansion factor expands simulated volumes.
+	 * @return Mean absolute deviation.
+	 */
+	public double calculateMADforExpandedSimulatedVolumes (double expansionFactor) {
+
+		Iterator iter = this.roadNetwork.getNetwork().getEdges().iterator();
+		int countOfCounts = 0;
+		long sumOfCounts = 0;
+		double sumOfAbsoluteDiffs = 0.0;
+		ArrayList<Long> checkedCP = new ArrayList<Long>(); 
+
+		while (iter.hasNext()) {
+			DirectedEdge edge = (DirectedEdge) iter.next();
+			SimpleFeature sf = (SimpleFeature) edge.getObject(); 
+			String roadNumber = (String) sf.getAttribute("RoadNumber");
+
+			if (roadNumber.charAt(0) != 'M' && roadNumber.charAt(0) != 'A') continue; //ferry
+
+			Long countPoint = (long) sf.getAttribute("CP");
+
+			String direction = (String) sf.getAttribute("iDir");
+			char dir = direction.charAt(0);
+
+			//ignore combined counts 'C' for now
+			if (dir == 'N' || dir == 'S' || dir == 'W' || dir == 'E') {
+
+				long carCount = (long) sf.getAttribute("FdCar");
+				long carVolume;
+				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edge.getID());
+				if (carVolumeFetch == null) carVolume = 0;
+				else 						carVolume = carVolumeFetch;
+
+				//expand simulated volumes with the expansion factor and round
+				carVolume = Math.round(carVolume * expansionFactor);
+
+				countOfCounts++;
+				sumOfCounts += carCount;
+				sumOfAbsoluteDiffs += Math.abs(carCount - carVolume);
+			}
+
+			if (dir == 'C' && !checkedCP.contains(countPoint)) { //for combined counts check if this countPoint has been processed already
+
+				//get combined count
+				long carCount = (long) sf.getAttribute("FdCar");
+
+				//get volumes for this direction
+				long carVolume;
+				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edge.getID());
+				if (carVolumeFetch == null) carVolume = 0;
+				else 						carVolume = carVolumeFetch;
+
+				//expand simulated volumes with the expansion factor and round
+				carVolume = Math.round(carVolume * expansionFactor);
+
+				//get volumes for other direction (if exists)
+				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(edge.getID());
+				long carVolume2;
+				Integer carVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edge2);
+				if (carVolumeFetch2 == null) carVolume2 = 0;
+				else 						 carVolume2 = carVolumeFetch2;
+
+				//expand simulated volumes with the expansion factor and round
+				carVolume2 = Math.round(carVolume2 * expansionFactor);
+
+				countOfCounts++;
+				sumOfCounts += carCount;
+				sumOfAbsoluteDiffs += Math.abs(carCount - carVolume - carVolume2);
+
+				checkedCP.add(countPoint);
+			}
+		}
+
+		//		System.out.println("Sum of squared diffs: " + sumOfSquaredDiffs);
+
+		double MAD = sumOfAbsoluteDiffs / countOfCounts;
+		//double averageTrueCount = (double) sumOfCounts / countOfCounts;
+
+		//		System.out.println("Checking RMSE: ");
+		//		System.out.println("Is finite: " + Double.isFinite(RMSE));
+		//		System.out.println("Is infinite: " + Double.isInfinite(RMSE));
+		//		System.out.println("Is NaN: " + Double.isNaN(RMSE));
+
+		//		System.out.println("RMSE = " + RMSE);
+		//		System.out.println("averageTrueCount = " + averageTrueCount);
+
+
+		return MAD;
 	}
 }

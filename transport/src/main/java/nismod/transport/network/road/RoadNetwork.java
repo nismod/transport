@@ -97,6 +97,7 @@ import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 
+import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.visualisation.MyStyleGenerator;
 
 /**
@@ -1155,6 +1156,37 @@ public class RoadNetwork {
 			return null;
 		}
 		return path;
+	}
+	
+	/**
+	 * Get car traffic counts data for each link (for combined counts return 1/2 of the count per direction).
+	 * @return AADF traffic counts per link.
+	 */
+	public Map<Integer, Integer> getAADFCarTrafficCounts () {
+
+		Map<Integer, Integer> countsMap = new HashMap<Integer, Integer>();
+
+		Iterator iter = this.getNetwork().getEdges().iterator();
+		while (iter.hasNext()) {
+			DirectedEdge edge = (DirectedEdge) iter.next();
+			SimpleFeature sf = (SimpleFeature) edge.getObject(); 
+			String roadNumber = (String) sf.getAttribute("RoadNumber");
+
+			if (roadNumber.charAt(0) != 'M' && roadNumber.charAt(0) != 'A') continue; //ferry
+
+			//Long countPoint = (long) sf.getAttribute("CP");
+			String direction = (String) sf.getAttribute("iDir");
+			char dir = direction.charAt(0);
+
+			long carCount = (long) sf.getAttribute("FdCar");
+
+			//directional counts
+			if (dir == 'N' || dir == 'S' || dir == 'W' || dir == 'E')	countsMap.put(edge.getID(), (int) carCount);
+			if (dir == 'C')												countsMap.put(edge.getID(), (int) Math.round(carCount/2.0));
+
+		}
+
+		return countsMap;
 	}
 	
 	/**
