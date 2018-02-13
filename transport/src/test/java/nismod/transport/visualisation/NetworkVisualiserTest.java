@@ -44,7 +44,7 @@ public class NetworkVisualiserTest {
 		rna.assignPassengerFlows(odm);
 		
 		
-		Map<Integer, Double> dailyVolume = rna.getLinkVolumesInPCU();
+		Map<Integer, Double> dailyVolume = rna.getLinkVolumeInPCU();
 		NetworkVisualiser.visualise(roadNetwork, "Network from shapefiles");
 		NetworkVisualiser.visualise(roadNetwork, "Network with traffic volume", dailyVolume);
 		NetworkVisualiser.visualise(roadNetwork, "Network with count comparison", rna.calculateAbsDifferenceCarCounts());

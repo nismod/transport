@@ -37,6 +37,7 @@ import nismod.transport.demand.SkimMatrix;
 import nismod.transport.demand.SkimMatrixFreight;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.utility.RandomSingleton;
+import nismod.transport.zone.Zoning;
 
 /**
  * Network assignment of origin-destination flows
@@ -354,7 +355,7 @@ public class RoadNetworkAssignment {
 		this.flagUseRouteChoiceModel = Boolean.parseBoolean(params.getProperty("USE_ROUTE_CHOICE_MODEL")); //use route-choice model (true) or routing with A-Star (false)
 		
 		if (fractionAV != null)		this.fractionAV = fractionAV;
-		else						this.fractionAV = 0.05;
+		else						this.fractionAV = 0.00;
 
 		//calculate area code choice probability
 		if (areaCodeProbabilities != null)	this.areaCodeProbabilities = areaCodeProbabilities;
@@ -871,6 +872,208 @@ public class RoadNetworkAssignment {
 		System.out.println("Total assigned trips: " + counterAssignedTrips);
 		System.out.println("Succesfully assigned trips percentage: " + 100.0* counterAssignedTrips / counterTotalFlow);
 	}
+	
+
+	/** 
+	 * Assigns passenger origin-destination matrix to the road network using the Tempro zoning system.
+	 * Calculates the fastest path based on the current values in the linkTravelTime instance field.
+	 * @param passengerODM Passenger origin-destination matrix with flows to be assigned.
+	 */
+	@SuppressWarnings("unused")
+	public void assignPassengerFlowsTempro(ODMatrix passengerODM, Zoning zoning) {
+
+		System.out.println("Assigning the passenger flows from the tempro passenger matrix...");
+
+		//to store routes generated during the assignment
+		RouteSetGenerator rsg = new RouteSetGenerator(this.roadNetwork);
+
+		//counters to calculate percentage of assignment success
+		long counterAssignedTrips = 0;
+		long counterTotalFlow = 0;
+
+		//for each OD pair from the passengerODM		
+		for (MultiKey mk: passengerODM.getKeySet()) {
+			//System.out.println(mk);
+			//System.out.println("origin = " + mk.getKey(0));
+			//System.out.println("destination = " + mk.getKey(1));
+			String originZone = (String)mk.getKey(0);
+			String destinationZone = (String)mk.getKey(1);
+
+			/*
+			List<Integer> listOfOriginNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(originZone)); //the list is already sorted
+			List<Integer> listOfDestinationNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(destinationZone)); //the list is already sorted
+			
+			//removing blacklisted nodes
+			for (Integer originNode: roadNetwork.getZoneToNodes().get(originZone))
+				//check if any of the nodes is blacklisted
+				if (this.roadNetwork.isBlacklistedAsStartNode(originNode)) 
+					listOfOriginNodes.remove(originNode);
+
+			//removing blacklisted nodes
+			for (Integer destinationNode: roadNetwork.getZoneToNodes().get(destinationZone))
+				//check if any of the nodes is blacklisted
+				if (this.roadNetwork.isBlacklistedAsEndNode(destinationNode)) 
+					listOfDestinationNodes.remove(destinationNode);
+	
+			*/
+	
+	
+			//for each trip
+			int flow = (int) Math.round(passengerODM.getFlow(originZone, destinationZone) * this.assignmentFraction);
+			counterTotalFlow += flow;
+
+			for (int i=0; i<flow; i++) {
+
+				//choose time of day
+				double cumulativeProbability = 0.0;
+				double random = rng.nextDouble();
+				TimeOfDay hour = null;
+				for (Map.Entry<TimeOfDay, Double> entry : timeOfDayDistribution.entrySet()) {
+					TimeOfDay key = entry.getKey();
+					Double value = entry.getValue();	
+					cumulativeProbability += value;
+					if (Double.compare(cumulativeProbability, random) > 0) {
+						hour = key;
+						break;
+					}
+				}
+				if (hour == null) System.err.println("Time of day not chosen!");
+
+				//choose vehicle
+				random  = rng.nextDouble();
+				VehicleType vht = null;
+				if (Double.compare(1.0 - fractionAV, random) > 0)
+					vht = VehicleType.CAR;
+				else 
+					vht = VehicleType.AV;
+				if (vht == null) System.err.println("Vehicle type not chosen!");
+
+				//choose engine
+				cumulativeProbability = 0.0;
+				random = rng.nextDouble();
+				EngineType engine = null;
+				for (Map.Entry<EngineType, Double> entry : engineTypeFractions.get(vht).entrySet()) {
+					EngineType key = entry.getKey();
+					Double value = entry.getValue();	
+					cumulativeProbability += value;
+					if (Double.compare(cumulativeProbability, random) > 0) {
+						engine = key;
+						break;
+					}
+				}
+				if (engine == null) System.err.println("Engine type not chosen!");
+
+				//choose origin/destination nodes based on the gravitating population
+				//the choice with replacement means that possibly: destination node = origin node
+				//the choice without replacement means that destination node has to be different from origin node
+
+				//choose origin node
+				
+				/*
+				cumulativeProbability = 0.0;
+				Integer originNode = null;
+				random = rng.nextDouble();
+				for (Integer node: listOfOriginNodes) {
+					cumulativeProbability += startNodeProbabilities.get(node);
+					if (Double.compare(cumulativeProbability, random) > 0) {
+						originNode = node;
+						break;
+					}
+				}
+				
+				if (originNode == null) System.err.println("Origin node was not chosen!");
+				*/
+				
+				Integer originNode = zoning.getZoneToNearestNodeIDMap().get(originZone);
+				if (originNode == null) System.err.println("Origin node was not chosen for zone " + originZone);
+				
+				if (this.roadNetwork.isBlacklistedAsStartNode(originNode)) 
+					System.err.println("Origin node is blacklisted! node: " + originNode);
+				
+
+				//choose destination node
+				/*
+				cumulativeProbability = 0.0;
+				Integer destinationNode = null;
+				random = rng.nextDouble();
+				//if intrazonal trip and replacement is not allowed, the probability of the originNode should be 0 so it cannot be chosen again
+				//also, in that case it is important to rescale other node probabilities (now that the originNode is removed) by dividing with (1.0 - p(originNode))!
+				if (!flagIntrazonalAssignmentReplacement && originZone.equals(destinationZone) && listOfDestinationNodes.contains(originNode)) { //no replacement and intra-zonal trip
+					for (Integer node: listOfDestinationNodes) {
+						if (node.intValue() == originNode.intValue()) continue; //skip if the node is the same as origin
+						cumulativeProbability += endNodeProbabilities.get(node) / (1.0 - endNodeProbabilities.get(originNode));
+						if (Double.compare(cumulativeProbability, random) > 0) {
+							destinationNode = node;
+							break;
+						}
+					}
+				} else	{ //inter-zonal trip (or intra-zonal with replacement)
+					for (Integer node: listOfDestinationNodes) {
+						cumulativeProbability += endNodeProbabilities.get(node);
+						if (Double.compare(cumulativeProbability, random) > 0) {
+							destinationNode = node;
+							break;
+						}
+					}
+				}	
+
+				if (destinationNode == null) System.err.println("Destination node was not chosen!");
+				*/
+				
+				
+				Integer destinationNode = zoning.getZoneToNearestNodeIDMap().get(destinationZone);
+				if (destinationNode == null) System.err.println("Destination node was not chosen for zone " + destinationZone);
+				if (this.roadNetwork.isBlacklistedAsEndNode(destinationNode)) 
+					System.err.println("Destination node is blacklisted! node: " + destinationNode);
+				
+				DirectedGraph rn = roadNetwork.getNetwork();
+				//set source and destination node
+				Node from = roadNetwork.getNodeIDtoNode().get(originNode);
+				Node to = roadNetwork.getNodeIDtoNode().get(destinationNode);
+				//					System.out.println("from " + from + " to " + to);
+				Route foundRoute = null;
+				try {
+
+					//see if that route already exists in the route storage
+					RouteSet rs = rsg.getRouteSet(originNode, destinationNode);
+					if (rs != null) foundRoute = rs.getChoiceSet().get(0); //take the first route
+
+					//if route does not already exist, get the shortest path from the origin node to the destination node using AStar algorithm
+					if (foundRoute == null) {
+						//System.out.println("The path does not exist in the path storage");
+
+						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(originNode);
+						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(destinationNode);
+
+						//RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTime);
+						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, (HashMap<Integer, Double>)this.linkTravelTimePerTimeOfDay.get(hour));
+						if (fastestPath == null) {
+							System.err.println("Not even aStar could find a route!");
+							continue;
+						}
+
+						foundRoute = new Route(fastestPath);
+						rsg.addRoute(foundRoute); //add to the route set
+					}
+
+					counterAssignedTrips++;
+
+					//store trip in trip list
+					Trip trip = new Trip(vht, engine, foundRoute, hour, 0, 0);
+					this.tripList.add(trip);
+
+				} catch (Exception e) {
+					e.printStackTrace();
+					System.err.printf("Couldnt find path from node %d to node %d!", from.getID(), to.getID());
+				}
+			}//for each trip
+		}//for each OD pair
+
+		System.out.println("Total flow: " + counterTotalFlow);
+		System.out.println("Total assigned trips: " + counterAssignedTrips);
+		System.out.println("Succesfully assigned trips: " + 100.0* counterAssignedTrips / counterTotalFlow);
+	}
+
 
 	/**
 	 * Assigns freight origin-destination matrix to the road network.
@@ -2708,24 +2911,6 @@ public class RoadNetworkAssignment {
 	}
 
 	/**
-	 * Getter method for daily link volumes in PCU.
-	 * @return Link volumes in PCU
-	 */   
-	public Map<Integer, Double> getLinkVolumesInPCU() {
-
-		return this.linkVolumesInPCU;
-	}
-
-	//	/**
-	//	 * Getter method for the link travel times.
-	//	 * @return Link volumes
-	//	 */
-	//	public HashMap<Integer, Double> getLinkTravelTimes() {
-	//
-	//		return this.linkTravelTime;
-	//	}
-
-	/**
 	 * Getter method for the link free-flow travel times.
 	 * @return Link volumes
 	 */
@@ -3209,6 +3394,69 @@ public class RoadNetworkAssignment {
 		return absoluteDifferences;
 	}
 
+	/**
+	 * Calculates differences between car volumes and traffic counts.
+	 * For combined counts, takes the average of the two differences.
+	 * @return Differences between car volumes and traffic counts.
+	 */
+	public HashMap<Integer, Integer> calculateDifferenceCarCounts () {
+
+		HashMap<Integer, Integer> differences = new HashMap<Integer, Integer>();
+
+		Iterator iter = this.roadNetwork.getNetwork().getEdges().iterator();
+		ArrayList<Long> checkedCP = new ArrayList<Long>(); 
+
+		while (iter.hasNext()) {
+			DirectedEdge edge = (DirectedEdge) iter.next();
+			SimpleFeature sf = (SimpleFeature) edge.getObject(); 
+			String roadNumber = (String) sf.getAttribute("RoadNumber");
+
+			if (roadNumber.charAt(0) != 'M' && roadNumber.charAt(0) != 'A') continue; //ferry
+
+			Long countPoint = (long) sf.getAttribute("CP");
+
+			String direction = (String) sf.getAttribute("iDir");
+			char dir = direction.charAt(0);
+
+			//ignore combined counts 'C' for now
+			if (dir == 'N' || dir == 'S' || dir == 'W' || dir == 'E') {
+
+				long carCount = (long) sf.getAttribute("FdCar");
+				long carVolume;
+				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edge.getID());
+				if (carVolumeFetch == null) carVolume = 0;
+				else 						carVolume = carVolumeFetch;
+
+				differences.put(edge.getID(), (int) (carCount - carVolume));
+			}
+
+			if (dir == 'C' && !checkedCP.contains(countPoint)) { //for combined counts check if this countPoint has been processed already
+
+				//get combined count
+				long carCount = (long) sf.getAttribute("FdCar");
+
+				//get volumes for this direction
+				long carVolume;
+				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edge.getID());
+				if (carVolumeFetch == null) carVolume = 0;
+				else 						carVolume = carVolumeFetch;
+
+				//get volumes for other direction (if exists)
+				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(edge.getID());
+				long carVolume2;
+				Integer carVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edge2);
+				if (carVolumeFetch2 == null) carVolume2 = 0;
+				else 						 carVolume2 = carVolumeFetch2;
+
+				long difference = (carCount - carVolume - carVolume2) / 2;
+				checkedCP.add(countPoint);
+				differences.put(edge.getID(), (int) difference);
+			}
+		}
+
+		return differences;
+	}
+	
 	/**
 	 * Calculate prediction error (RMSN for simulated volumes and observed traffic counts).
 	 * @return Normalised root mean square error.
