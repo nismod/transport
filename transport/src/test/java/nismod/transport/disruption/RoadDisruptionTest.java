@@ -104,7 +104,7 @@ public class RoadDisruptionTest {
 
 		System.out.println(rna.getTripList());
 		
-		Map<Integer, Double> dailyVolume = rna.getLinkVolumesInPCU();
+		Map<Integer, Double> dailyVolume = rna.getLinkVolumeInPCU();
 		System.out.println(dailyVolume);
 		
 		NetworkVisualiser.visualise(roadNetwork, "Network with traffic volume", dailyVolume);
@@ -118,7 +118,7 @@ public class RoadDisruptionTest {
 		rsg.calculateAllUtilities(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, null, params);
 		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
 		
-		dailyVolume = rna.getLinkVolumesInPCU();
+		dailyVolume = rna.getLinkVolumeInPCU();
 		NetworkVisualiser.visualise(roadNetwork, "Network with traffic volume", dailyVolume);
 	}
 	
@@ -283,7 +283,7 @@ public class RoadDisruptionTest {
 		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
 		rna.expandTripList();
 
-		assertNull("There should be no traffic volume for the removed link", rna.getLinkVolumesInPCU().get(561));
+		assertNull("There should be no traffic volume for the removed link", rna.getLinkVolumeInPCU().get(561));
 				
 		rd3.uninstall(rsg);
 		rsg.printChoiceSets();

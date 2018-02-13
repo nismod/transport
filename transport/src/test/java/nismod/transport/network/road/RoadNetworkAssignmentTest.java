@@ -43,6 +43,7 @@ import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.utility.ConfigReader;
 import nismod.transport.visualisation.NetworkVisualiser;
+import nismod.transport.zone.Zoning;
 
 /**
  * Tests for the RoadNetworkAssignment class
@@ -266,7 +267,7 @@ public class RoadNetworkAssignmentTest {
 		rna.updateLinkVolumeInPCUPerTimeOfDay();
 		
 		System.out.println("Link volumes in PCU: ");
-		System.out.println(rna.getLinkVolumesInPCU());
+		System.out.println(rna.getLinkVolumeInPCU());
 		
 		System.out.println("Link volume per vehicle Type: ");
 		System.out.println(rna.getLinkVolumePerVehicleType());
@@ -482,12 +483,12 @@ public class RoadNetworkAssignmentTest {
 		System.out.println(rna.calculateVehicleKilometres());
 		
 		System.out.println("Link volumes in PCU:");
-		System.out.println(rna.getLinkVolumesInPCU());
+		System.out.println(rna.getLinkVolumeInPCU());
 		
 		double vehicleKilometres = 0.0;
 		for (int edgeID: roadNetwork.getEdgeIDtoEdge().keySet()) {
 			
-			double volume  = rna.getLinkVolumesInPCU().get(edgeID);
+			double volume  = rna.getLinkVolumeInPCU().get(edgeID);
 			double length = roadNetwork.getEdgeLength(edgeID);
 			vehicleKilometres += volume * length; 
 		}
@@ -528,7 +529,7 @@ public class RoadNetworkAssignmentTest {
 		}
 	
 		//compare volumes in PCU calculated during the assignment with those calculated from the trip list
-		Map<Integer, Double> linkVolumesInPCU = rna.getLinkVolumesInPCU();
+		Map<Integer, Double> linkVolumesInPCU = rna.getLinkVolumeInPCU();
 		for (Integer edgeID: linkVolumesInPCU.keySet()) {
 			double sum = 0.0;
 			for (TimeOfDay hour: map.keySet()) {
@@ -540,7 +541,36 @@ public class RoadNetworkAssignmentTest {
 		assertEquals("PCU flows for each edge are correct", linkVolumesInPCU.get(edgeID), sum, EPSILON);
 		}
 		
-		rna.saveHourlyCarVolumes(2015, "minitestHourlyVolumes.csv");
+		//rna.saveHourlyCarVolumes(2015, "minitestHourlyVolumes.csv");
+		
+		//TEST ASSIGNMENT WITH TEMPRO ZONES
+		System.out.println("\n\n*** Testing assignment with route choice ***");
+		rna.resetLinkVolumes();
+		rna.resetTripStorages();
+		
+		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
+		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
+		
+		System.out.println("Zones to nearest Nodes: " + zoning.getZoneToNearestNodeIDMap());
+		System.out.println("Zones to nearest nodes distances: " + zoning.getZoneToNearestNodeDistanceMap());
+		
+		final String temproODMatrixFile = props.getProperty("temproODMatrixFile");
+		ODMatrix temproODM = new ODMatrix(temproODMatrixFile);
+		
+		temproODM.printMatrixFormatted("Tempro OD Matrix");
+
+		rna.assignPassengerFlowsTempro(temproODM, zoning);
+		System.out.println("Trip list size: " + rna.getTripList().size());
+		rna.updateLinkVolumePerVehicleType();
+		System.out.println(rna.getLinkVolumePerVehicleType());
+		System.out.println(roadNetwork.getAADFCarTrafficCounts());
+		System.out.println(rna.calculateRMSNforSimulatedVolumes());
+		
+		int sumVolumes = rna.getLinkVolumePerVehicleType().get(VehicleType.CAR).values().stream().mapToInt(Number::intValue).sum();
+		int sumCounts = roadNetwork.getAADFCarTrafficCounts().values().stream().mapToInt(Number::intValue).sum();;
+		System.out.println("Sum of volumes : " + sumVolumes);
+		System.out.println("Sum of counts : " + sumCounts);
+		
 	}
 	
 	@Test
@@ -710,7 +740,7 @@ public class RoadNetworkAssignmentTest {
 		for (int key: rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM).keySet()) {
 			if (rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM).get(key) < rna.getLinkFreeFlowTravelTimes().get(key)) {
 				System.err.println("For link id = " + key);
-				System.err.println("Link volume in PCU: " + rna.getLinkVolumesInPCU().get(key));
+				System.err.println("Link volume in PCU: " + rna.getLinkVolumeInPCU().get(key));
 				System.err.println("Link travel time " + rna.getLinkTravelTimes().get(key));
 				System.err.println("Free-flow Link travel time " + rna.getLinkFreeFlowTravelTimes().get(key));
 			}
@@ -796,7 +826,7 @@ public class RoadNetworkAssignmentTest {
 		System.out.println(rna.calculateVehicleKilometres());
 
 		System.out.println("Link volumes in PCU:");
-		System.out.println(rna.getLinkVolumesInPCU());
+		System.out.println(rna.getLinkVolumeInPCU());
 
 		for (String zone: roadNetwork.getZoneToNodes().keySet()) {
 
@@ -806,7 +836,7 @@ public class RoadNetworkAssignmentTest {
 				String fetchedZone = roadNetwork.getEdgeToZone().get(edgeID);
 				if (fetchedZone != null && fetchedZone.equals(zone)) {
 
-					Double volume  = rna.getLinkVolumesInPCU().get(edgeID);
+					Double volume  = rna.getLinkVolumeInPCU().get(edgeID);
 					if (volume == null) {
 						System.out.println("No volume for edge " + edgeID);
 						volume = 0.0;
@@ -861,7 +891,7 @@ public class RoadNetworkAssignmentTest {
 		System.out.println(map);
 		
 		//compare volumes in PCU calculated during the assignment with those calculated from the trip list
-		Map<Integer, Double> linkVolumesInPCU = rna.getLinkVolumesInPCU();
+		Map<Integer, Double> linkVolumesInPCU = rna.getLinkVolumeInPCU();
 				
 		for (Integer edgeID: linkVolumesInPCU.keySet()) {
 			double sum = 0.0;
@@ -884,6 +914,25 @@ public class RoadNetworkAssignmentTest {
 		
 		System.out.println("Cost skim matrix: ");
 		rna.calculateCostSkimMatrix().printMatrixFormatted();
+		
+		
+		//TEST ASSIGNMENT WITH TEMPRO ZONES
+		System.out.println("\n\n*** Testing assignment with route choice ***");
+		rna.resetLinkVolumes();
+		rna.resetTripStorages();
+		
+		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
+		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
+		
+		System.out.println("Zones to nearest Nodes: " + zoning.getZoneToNearestNodeIDMap());
+		System.out.println("Zones to nearest nodes distances: " + zoning.getZoneToNearestNodeDistanceMap());
+		
+		final String temproODMatrixFile = props.getProperty("temproODMatrixFile");
+		ODMatrix temproODM = new ODMatrix(temproODMatrixFile);
+		
+		temproODM.printMatrixFormatted("Tempro OD Matrix");
+		
+		rna.assignPassengerFlowsTempro(temproODM, zoning);
 	}
 	
 	@Test
@@ -1177,7 +1226,7 @@ public class RoadNetworkAssignmentTest {
 		for (int key: rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM).keySet()) {
 			if (rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM).get(key) < rna.getLinkFreeFlowTravelTimes().get(key)) {
 				System.err.println("For link id = " + key);
-				System.err.println("Link volume in PCU: " + rna.getLinkVolumesInPCU().get(key));
+				System.err.println("Link volume in PCU: " + rna.getLinkVolumeInPCU().get(key));
 				System.err.println("Link travel time " + rna.getLinkTravelTimes().get(key));
 				System.err.println("Free-flow Link travel time " + rna.getLinkFreeFlowTravelTimes().get(key));
 			}
