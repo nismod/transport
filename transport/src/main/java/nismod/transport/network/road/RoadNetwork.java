@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
@@ -97,6 +98,7 @@ import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 
+import nismod.transport.decision.CongestionCharging;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.visualisation.MyStyleGenerator;
 
@@ -106,6 +108,8 @@ import nismod.transport.visualisation.MyStyleGenerator;
  *
  */
 public class RoadNetwork {
+	
+	private final static Logger LOGGER = Logger.getLogger(RoadNetwork.class.getName());
 
 	private DirectedGraph network;
 	//BasicDirectedLineGraphBuilder graphBuilder;
@@ -1798,6 +1802,9 @@ public class RoadNetwork {
 				while (nodeIter.hasNext()) {
 				
 						Node node = (Node) nodeIter.next();
+						//if the nodes has already been mapped to its zone, skip it
+						if (this.nodeToZone.containsKey(node.getID())) continue;
+												
 						SimpleFeature sfn = (SimpleFeature) node.getObject();
 						Point point = (Point) sfn.getDefaultGeometry();
 						//if the polygon contains the node, put that relationship into the maps
@@ -1840,6 +1847,10 @@ public class RoadNetwork {
 				//iterate over edges	
 				for (Object o: this.network.getEdges()) {
 					Edge edge = (Edge) o;
+					
+					//if edge already mapped to zone, skip that edge
+					if (this.edgeToZone.containsKey(edge.getID())) continue;
+					
 					SimpleFeature sf = (SimpleFeature)edge.getObject();
 
 					if (sf.getDefaultGeometry() instanceof Point) { //TODO this will ignore ferries, but also new road links!

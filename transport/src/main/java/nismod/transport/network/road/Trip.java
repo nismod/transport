@@ -2,11 +2,13 @@ package nismod.transport.network.road;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import org.apache.commons.collections4.map.MultiKeyMap;
 import org.apache.commons.lang3.tuple.Pair;
 import org.geotools.graph.structure.DirectedNode;
 
+import nismod.transport.decision.CongestionCharging;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
@@ -18,12 +20,14 @@ import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
  */
 public class Trip {
 	
-	private VehicleType vehicle;
-	private EngineType engine;
-	private Route route;
-	private TimeOfDay hour;
-	private Integer origin; //for freight trips
-	private Integer destination; //for freight trips
+	private final static Logger LOGGER = Logger.getLogger(Trip.class.getName());
+	
+	protected VehicleType vehicle;
+	protected EngineType engine;
+	protected Route route;
+	protected TimeOfDay hour;
+	protected Integer origin; //for freight trips
+	protected Integer destination; //for freight trips
 		
 	/**
 	 * Constructor for a trip. Origin and destination are used for freight trips (according to DfT's BYFM zonal coding).
@@ -42,9 +46,11 @@ public class Trip {
 		this.origin = origin;
 		this.destination = destination;
 		
+		/*
 		if (vehicle == VehicleType.CAR || vehicle == VehicleType.AV)
 			if (origin != 0 || destination != 0)
 				System.err.println("Origin and destination for non-freight trips must be 0 as their ODs should be fetched from the route.");
+		*/
 	}
 	
 	/**

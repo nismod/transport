@@ -94,7 +94,7 @@ public class RoadNetworkAssignmentTest {
 		//create a road network
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
-		
+				
 		//create a road network assignment
 		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, props);
 
@@ -168,18 +168,14 @@ public class RoadNetworkAssignmentTest {
 		//
 		rna.saveAssignmentResults(2015, outputFolder + "car" + assignmentResultsFile);
 		
+		System.out.printf("RMSN for counts (0.25 expansion factor): %.2f%% %n", rna.calculateRMSNforExpandedSimulatedVolumes(0.25));
+		System.out.printf("RMSN for counts (0.5 expansion factor): %.2f%% %n", rna.calculateRMSNforExpandedSimulatedVolumes(0.5));
+		System.out.printf("RMSN for counts (0.7 expansion factor): %.2f%% %n", rna.calculateRMSNforExpandedSimulatedVolumes(0.75));
 		System.out.printf("RMSN for counts: %.2f%% %n", rna.calculateRMSNforSimulatedVolumes());
 		System.out.printf("RMSN for counts (2.0 expansion factor): %.2f%% %n", rna.calculateRMSNforExpandedSimulatedVolumes(2.0));
 		System.out.printf("RMSN for counts (3.0 expansion factor): %.2f%% %n", rna.calculateRMSNforExpandedSimulatedVolumes(3.0));
 		System.out.printf("RMSN for counts (4.0 expansion factor): %.2f%% %n", rna.calculateRMSNforExpandedSimulatedVolumes(4.0));
-		System.out.printf("RMSN for counts (5.0 expansion factor): %.2f%% %n", rna.calculateRMSNforExpandedSimulatedVolumes(5.0));
-		System.out.printf("RMSN for counts (6.0 expansion factor): %.2f%% %n", rna.calculateRMSNforExpandedSimulatedVolumes(6.0));
-		System.out.printf("RMSN for counts (7.0 expansion factor): %.2f%% %n", rna.calculateRMSNforExpandedSimulatedVolumes(7.0));
-		System.out.printf("RMSN for counts (8.0 expansion factor): %.2f%% %n", rna.calculateRMSNforExpandedSimulatedVolumes(8.0));
-		System.out.printf("RMSN for counts (9.0 expansion factor): %.2f%% %n", rna.calculateRMSNforExpandedSimulatedVolumes(9.0));
-		System.out.printf("RMSN for counts (10.0 expansion factor): %.2f%% %n", rna.calculateRMSNforExpandedSimulatedVolumes(10.0));
-
-		
+	
 /*		
 		
 		//clear the routes
@@ -559,7 +555,7 @@ public class RoadNetworkAssignmentTest {
 		
 		temproODM.printMatrixFormatted("Tempro OD Matrix");
 
-		rna.assignPassengerFlowsTempro(temproODM, zoning);
+		rna.assignPassengerFlowsTempro(temproODM, zoning, rsg);
 		System.out.println("Trip list size: " + rna.getTripList().size());
 		rna.updateLinkVolumePerVehicleType();
 		System.out.println(rna.getLinkVolumePerVehicleType());
@@ -571,6 +567,12 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("Sum of volumes : " + sumVolumes);
 		System.out.println("Sum of counts : " + sumCounts);
 		
+		rna.calculateDistanceSkimMatrixTempro().printMatrixFormatted();
+		
+		ODMatrix temproODM2 = ODMatrix.createUnitMatrix(temproODM.getOrigins());
+		rna.resetTripStorages();
+		rna.assignPassengerFlowsTempro(temproODM2, zoning, rsg);
+		rna.calculateDistanceSkimMatrixTempro().printMatrixFormatted();
 	}
 	
 	@Test
@@ -931,8 +933,13 @@ public class RoadNetworkAssignmentTest {
 		ODMatrix temproODM = new ODMatrix(temproODMatrixFile);
 		
 		temproODM.printMatrixFormatted("Tempro OD Matrix");
+		rna.assignPassengerFlowsTempro(temproODM, zoning, rsg);
+		rna.calculateDistanceSkimMatrixTempro().printMatrixFormatted();
 		
-		rna.assignPassengerFlowsTempro(temproODM, zoning);
+		ODMatrix temproODM2 = ODMatrix.createUnitMatrix(temproODM.getOrigins());
+		rna.resetTripStorages();
+		rna.assignPassengerFlowsTempro(temproODM2, zoning, rsg);
+		rna.calculateDistanceSkimMatrixTempro().printMatrixFormatted();
 	}
 	
 	@Test

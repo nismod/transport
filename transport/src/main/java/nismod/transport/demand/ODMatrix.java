@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.map.MultiKeyMap;
@@ -19,12 +20,16 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
+import nismod.transport.decision.CongestionCharging;
+
 /**
  * Origin-destination matrix
  * @author Milan Lovric
  *
  */
 public class ODMatrix {
+	
+	private final static Logger LOGGER = Logger.getLogger(ODMatrix.class.getName());
 	
 	private MultiKeyMap matrix;
 	
@@ -278,6 +283,55 @@ public class ODMatrix {
 			flow = flow * factor;
 			this.setFlow(origin, destination, (int) Math.round(flow));
 		}		
+	}
+	
+	/**
+	 * Creates a unit OD matrix for given lists of origin and destination zones.
+	 * @param origins List of origin zones.
+	 * @param destinations List of destination zones.
+	 * @return
+	 */
+	public static ODMatrix createUnitMatrix(List<String> origins, List<String> destinations) {
+		
+		ODMatrix odm = new ODMatrix();
+		
+		for (String origin: origins)
+			for (String destination: destinations)
+				odm.setFlow(origin, destination, 1);
+		
+		return odm;
+	}
+	
+	/**
+	 * Creates a quadratic unit OD matrix for a given lists of zones.
+	 * @param zones List of origin zones.
+	 * @return Unit OD matrix.
+	 */
+	public static ODMatrix createUnitMatrix(List<String> zones) {
+		
+		ODMatrix odm = new ODMatrix();
+		
+		for (String origin: zones)
+			for (String destination: zones)
+				odm.setFlow(origin, destination, 1);
+		
+		return odm;
+	}
+	
+	/**
+	 * Creates a quadratic unit OD matrix for a given lists of zones.
+	 * @param origins Set of origin zones.
+	 * @return Unit OD matrix.
+	 */
+	public static ODMatrix createUnitMatrix(Set<String> zones) {
+		
+		ODMatrix odm = new ODMatrix();
+		
+		for (String origin: zones)
+			for (String destination: zones)
+				odm.setFlow(origin, destination, 1);
+		
+		return odm;
 	}
 	
 	@Override
