@@ -262,7 +262,7 @@ public class SPSATest {
 		params.setProperty("INTERSECTIONS", "-0.1");
 		params.setProperty("AVERAGE_INTERSECTION_DELAY", "0.8");
 	
-		optimiser.initialise(rna, zoning, temproODMatrix, a, A, c, alpha, gamma);
+		optimiser.initialise(rna, zoning, rsg, temproODMatrix, a, A, c, alpha, gamma);
 		optimiser.runSPSA(100);
 
 		optimiser.getThetaEstimate().printMatrixFormatted("Final OD matrix:");
