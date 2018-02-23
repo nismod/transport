@@ -5,15 +5,24 @@ package nismod.transport.demand;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Properties;
 
 import org.junit.Test;
 
+import nismod.transport.network.road.RoadNetwork;
+import nismod.transport.network.road.RoadNetworkAssignment;
+import nismod.transport.network.road.RouteSetGenerator;
+import nismod.transport.utility.ConfigReader;
+import nismod.transport.zone.Zoning;
+
 /**
- * Tests for the ODMatrix class
+ * Tests for the EstimatedODMatrix class
  * @author Milan Lovric
  *
  */
@@ -24,11 +33,67 @@ public class EstimatedODMatrixTest {
 		double[] BIN_LIMITS_KM = {0.0, 0.621371, 1.242742, 3.106855, 6.21371, 15.534275, 31.06855, 62.1371, 93.20565, 155.34275, 217.47985};
 		double[] OTLD = {0.05526, 0.16579, 0.34737, 0.21053, 0.15789, 0.03947, 0.01579, 0.00432, 0.00280, 0.00063, 0.00014};
 		
-		SkimMatrix distanceSkimMatrix = new SkimMatrix("./distanceSkimMatrix.csv");
+		final String configFile = "./src/main/config/config.properties";
+		//final String configFile = "./src/test/config/testConfig.properties";
+		//final String configFile = "./src/test/config/miniTestConfig.properties";
+		Properties props = ConfigReader.getProperties(configFile);
 		
-		EstimatedODMAtrix odmpa = new EstimatedODMAtrix("./src/main/resources/data/passengerProductionsAttractions.csv", distanceSkimMatrix, BIN_LIMITS_KM, OTLD);
+		final String areaCodeFileName = props.getProperty("areaCodeFileName");
+		final String areaCodeNearestNodeFile = props.getProperty("areaCodeNearestNodeFile");
+		final String workplaceZoneFileName = props.getProperty("workplaceZoneFileName");
+		final String workplaceZoneNearestNodeFile = props.getProperty("workplaceZoneNearestNodeFile");
+		final String freightZoneToLADfile = props.getProperty("freightZoneToLADfile");
+		final String freightZoneNearestNodeFile = props.getProperty("freightZoneNearestNodeFile");
 
-		//odmpa.printMatrixFormatted();
+		final URL zonesUrl = new URL(props.getProperty("zonesUrl"));
+		final URL networkUrl = new URL(props.getProperty("networkUrl"));
+		final URL networkUrlFixedEdgeIDs = new URL(props.getProperty("networkUrlFixedEdgeIDs"));
+		final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
+		final URL AADFurl = new URL(props.getProperty("AADFurl"));
+
+		final String baseYearODMatrixFile = props.getProperty("baseYearODMatrixFile");
+		final String freightMatrixFile = props.getProperty("baseYearFreightMatrixFile");
+		
+		final String passengerRoutesFile = props.getProperty("passengerRoutesFile");
+		final String freightRoutesFile = props.getProperty("freightRoutesFile");
+		
+		final String outputFolder = props.getProperty("outputFolder");
+		final String assignmentResultsFile = props.getProperty("assignmentResultsFile");
+		
+		//create output directory
+	     File file = new File(outputFolder);
+	        if (!file.exists()) {
+	            if (file.mkdirs()) {
+	                System.out.println("Output directory is created.");
+	            } else {
+	                System.err.println("Failed to create output directory.");
+	            }
+	        }
+
+		//create a road network
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
+		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
+				
+		//create a road network assignment
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, props);
+		
+		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
+		
+		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
+		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
+		
+		ODMatrix temproODM = ODMatrix.createUnitMatrix(zoning.getZoneCodeToIDMap().keySet());
+		rna.assignPassengerFlowsTempro(temproODM, zoning, rsg);
+		rna.calculateDistanceSkimMatrixTempro().printMatrixFormatted();
+				
+		//SkimMatrix distanceSkimMatrix = new SkimMatrix("./distanceSkimMatrix.csv");
+		SkimMatrix distanceSkimMatrix = rna.calculateDistanceSkimMatrixTempro();
+				
+		//EstimatedODMatrix odmpa = new EstimatedODMatrix("./src/main/resources/data/passengerProductionsAttractions.csv", distanceSkimMatrix, BIN_LIMITS_KM, OTLD);
+		final String productionsAttractionsTemproFile = props.getProperty("productionsAttractionsTemproFile");
+		EstimatedODMatrix odmpa = new EstimatedODMatrix(productionsAttractionsTemproFile, distanceSkimMatrix, BIN_LIMITS_KM, OTLD);
+
+		odmpa.printMatrixFormatted();
 		odmpa.getBinIndexMatrix().printMatrixFormatted("Bin index matrix:");
 		
 		odmpa.createUnitMatrix();
@@ -40,8 +105,8 @@ public class EstimatedODMatrixTest {
 		odmpa.scaleToAttractions();
 		odmpa.printMatrixFormatted("Scaled to attractions:");
 		
-		odmpa.deleteInterzonalFlows("E06000053");
-		odmpa.printMatrixFormatted("After deleting interzonal flows for zone E06000053");
+		//odmpa.deleteInterzonalFlows("E06000053");
+		//odmpa.printMatrixFormatted("After deleting interzonal flows for zone E06000053");
 		
 		odmpa.scaleToObservedTripLenghtDistribution();
 		odmpa.printMatrixFormatted("Scaled to observed trip length distribution:");
@@ -49,8 +114,7 @@ public class EstimatedODMatrixTest {
 		for (int i=0; i<10; i++) odmpa.iterate();
 		
 		odmpa.printMatrixFormatted("After 10 further iterations:");
-		
-		odmpa.saveMatrixFormatted("balancedODMatrix.csv");
+		odmpa.saveMatrixFormatted(outputFolder + "balancedTemproODMatrix.csv");
 	}
 
 	@Test
@@ -60,16 +124,16 @@ public class EstimatedODMatrixTest {
 		productions.put("1", 400);
 		productions.put("2", 460);
 		productions.put("3", 400);
-		productions.put("4", 702);
+		productions.put("4", 700);
 
 		HashMap<String, Integer> attractions = new HashMap<String, Integer>();
 		attractions.put("1", 260);
 		attractions.put("2", 400);
 		attractions.put("3", 500);
-		attractions.put("4", 802);
+		attractions.put("4", 800);
 
 		double[] BIN_LIMITS = {0, 4, 8, 12, 16, 20, 24};
-		double[] OTLD = {0.186034659, 0.490316004, 0.081549439, 0.076452599, 0.117227319, 0.04841998};
+		double[] OTLD = {0.25, 0.5, 0.15, 0.1, 0.0, 0.0};
 		//{365, 962, 160, 150, 230, 95}; 
 		//{0.074923547, 0.372579001, 0.072884811, 0.127930683, 0.22069317, 0.130988787};
 		//{147, 731, 143, 251, 433, 257};
@@ -96,17 +160,15 @@ public class EstimatedODMatrixTest {
 		//distanceSkimMatrix.setCost("4",  "4", 0);
 		distanceSkimMatrix.printMatrixFormatted();
 		
-		EstimatedODMAtrix odmpa = new EstimatedODMAtrix(productions, attractions, distanceSkimMatrix, BIN_LIMITS, OTLD);
+		EstimatedODMatrix odmpa = new EstimatedODMatrix(productions, attractions, distanceSkimMatrix, BIN_LIMITS, OTLD);
 
 		odmpa.printMatrixFormatted();
 		odmpa.getBinIndexMatrix().printMatrixFormatted();
-
 		
-		odmpa.deleteInterzonalFlows("3");
-		odmpa.printMatrixFormatted("After deletion of interzonal flows for zone 3:");
+//		odmpa.deleteInterzonalFlows("3");
+//		odmpa.printMatrixFormatted("After deletion of interzonal flows for zone 3:");
 		
-		
-		for (int i=0; i<10; i++) {
+		for (int i=0; i<1; i++) {
 
 			odmpa.scaleToProductions();
 			odmpa.printMatrixFormatted();
@@ -120,11 +182,14 @@ public class EstimatedODMatrixTest {
 			System.out.println("TLD after update = " + Arrays.toString(odmpa.getTripLengthDistribution()));
 
 			odmpa.scaleToObservedTripLenghtDistribution();
+			
+			odmpa.roundMatrixValues();
+			
 			odmpa.updateTripLengthDistribution();
 			System.out.println("TLD after scaling to OTLD = " + Arrays.toString(odmpa.getTripLengthDistribution()));
 			odmpa.printMatrixFormatted();
 		}
-
+/*
 		SkimMatrix distanceSkimMatrix2 = new SkimMatrix();
 
 		distanceSkimMatrix2.setCost("E06000045", "E06000045", 0.5);
@@ -181,6 +246,7 @@ public class EstimatedODMatrixTest {
 		
 		odmpa2.deleteInterzonalFlows("E07000086");
 		odmpa2.printMatrixFormatted("After deletion of interzonal flows from/to E07000086:");
-		
+	
+		*/
 	}
 }

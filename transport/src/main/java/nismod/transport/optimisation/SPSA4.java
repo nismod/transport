@@ -3,12 +3,15 @@ package nismod.transport.optimisation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
 
+import nismod.transport.decision.CongestionCharging;
 import nismod.transport.demand.ODMatrix;
 import nismod.transport.demand.RealODMatrix;
 import nismod.transport.network.road.RoadNetworkAssignment;
+import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.utility.RandomSingleton;
 import nismod.transport.zone.Zoning;
 
@@ -19,6 +22,8 @@ import nismod.transport.zone.Zoning;
  * @author Milan Lovric
   */
 public class SPSA4 {
+	
+	private final static Logger LOGGER = Logger.getLogger(SPSA4.class.getName());
 	
 	//maximum and minimum values of OD matrix flows (i.e. constraints)
 	public static final double THETA_MAX = 10000000.0;
@@ -39,6 +44,7 @@ public class SPSA4 {
 	
 	private RoadNetworkAssignment rna;
 	private Zoning zoning;
+	private RouteSetGenerator rsg;
 
 	public SPSA4() {
 	}
@@ -54,10 +60,11 @@ public class SPSA4 {
 	 * @param alpha SPSA parameter.
 	 * @param gamma SPSA parameter.
 	 */
-	public void initialise(RoadNetworkAssignment rna, Zoning zoning, RealODMatrix initialTheta, double a, double A, double c, double alpha, double gamma) {
+	public void initialise(RoadNetworkAssignment rna, Zoning zoning, RouteSetGenerator rsg, RealODMatrix initialTheta, double a, double A, double c, double alpha, double gamma) {
 			
 		this.rna = rna;
 		this.zoning = zoning;
+		this.rsg = rsg;
 		this.thetaEstimate = initialTheta.clone();
 		this.deltas = new RealODMatrix();
 		this.gradientApproximation = new RealODMatrix();
@@ -108,7 +115,8 @@ public class SPSA4 {
 			//System.out.printf("yPlus = %.5f, yMinus = %.5f %n", yPlus, yMinus);
 						
 			//approximate gradient
-			this.approximateGradient(yPlus, yMinus, ck, deltas);
+	//		this.approximateGradient(yPlus, yMinus, ck, deltas);
+			this.approximateGradientActualChangeInX(yPlus, yMinus, thetaPlus, thetaMinus);
 			//gradientApproximation.printMatrixFormatted("Gradient approximation: ");
 			
 			//estimate new theta
@@ -204,7 +212,7 @@ public class SPSA4 {
 		rna.resetTripStorages();
 		
 		//assign passenger flows
-		rna.assignPassengerFlowsTempro(odm, this.zoning); //routing version with tempro zones
+		rna.assignPassengerFlowsTempro(odm, this.zoning, this.rsg); //routing version with tempro zones
 		rna.expandTripList(); //if fractional assignment used
 		rna.updateLinkVolumePerVehicleType(); //used in RMSN calculation
 		
@@ -238,6 +246,29 @@ public class SPSA4 {
 		
 			double delta = deltas.getFlow(origin, destination);
 			double grad = (yPlus - yMinus) / (2 * ck * delta);
+				
+			this.gradientApproximation.setFlow(origin, destination, grad);
+		}
+	}
+	
+	/**
+	 * Approximate the gradient.
+	 * @param yPlus Loss for theta plus.
+	 * @param yMinus Loss for theta minus.
+	 * @param ck Gain.
+	 * @param deltas Random deltas.
+	 */
+	private void approximateGradientActualChangeInX(double yPlus, double yMinus, RealODMatrix thetaPlus, RealODMatrix thetaMinus) {
+		
+		for (MultiKey mk: deltas.getKeySet()) {
+			String origin = (String) mk.getKey(0);
+			String destination = (String) mk.getKey(1);
+		
+			double xPlus = thetaPlus.getFlow(origin, destination);
+			double xMinus = thetaMinus.getFlow(origin, destination);
+				
+			double grad = (yPlus - yMinus) / (xPlus - xMinus);
+				
 			this.gradientApproximation.setFlow(origin, destination, grad);
 		}
 	}

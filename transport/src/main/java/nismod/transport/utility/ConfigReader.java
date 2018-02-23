@@ -4,8 +4,13 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
+import java.util.logging.Logger;
+
+import nismod.transport.decision.CongestionCharging;
 
 public class ConfigReader {
+	
+	private final static Logger LOGGER = Logger.getLogger(ConfigReader.class.getName());
 
 	public ConfigReader() {
 		// TODO Auto-generated constructor stub

@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.RenderingHints;
 import java.io.IOException;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import javax.swing.ImageIcon;
 
@@ -30,6 +31,7 @@ import org.opengis.filter.FilterFactory2;
 import org.opengis.filter.expression.Function;
 import org.opengis.filter.expression.PropertyName;
 
+import nismod.transport.decision.CongestionCharging;
 import nismod.transport.network.road.RoadNetwork;
 
 /**
@@ -37,6 +39,8 @@ import nismod.transport.network.road.RoadNetwork;
  * @author Milan Lovric
   */
 public class NetworkVisualiser {
+	
+	private final static Logger LOGGER = Logger.getLogger(NetworkVisualiser.class.getName());
 
 	protected NetworkVisualiser() {
 

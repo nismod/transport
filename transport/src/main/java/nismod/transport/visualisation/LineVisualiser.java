@@ -7,6 +7,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.logging.Logger;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
@@ -28,11 +29,15 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.general.DefaultPieDataset;
 
+import nismod.transport.decision.CongestionCharging;
+
 /**
  * For visualising pie charts using JFreeChart.
  * @author Milan Lovric
   */
 public class LineVisualiser extends JFrame {
+	
+	private final static Logger LOGGER = Logger.getLogger(LineVisualiser.class.getName());
 	
 	private static DefaultCategoryDataset dataset;
 	private static String title;

@@ -10,6 +10,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.logging.Logger;
 
 import org.jfree.data.category.DefaultCategoryDataset;
 
@@ -32,6 +33,8 @@ import nismod.transport.visualisation.LineVisualiser;
  *
  */
 public class App {
+	
+	private final static Logger LOGGER = Logger.getLogger(App.class.getName());
 
 	public static void main( String[] args ) {
 

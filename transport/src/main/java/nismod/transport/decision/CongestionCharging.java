@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Properties;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.map.MultiKeyMap;
@@ -24,6 +25,8 @@ import nismod.transport.demand.DemandModel;
  * @author Milan Lovric
  */
 public class CongestionCharging extends Intervention {
+	
+	private final static Logger LOGGER = Logger.getLogger(CongestionCharging.class.getName());
 	
 	private String name = null;
 

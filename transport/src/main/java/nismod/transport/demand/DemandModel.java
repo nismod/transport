@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import org.apache.commons.collections4.map.MultiKeyMap;
 import org.apache.commons.collections4.keyvalue.MultiKey;
@@ -21,6 +22,7 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 
+import nismod.transport.decision.CongestionCharging;
 import nismod.transport.decision.Intervention;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
@@ -34,7 +36,8 @@ import nismod.transport.network.road.RouteSetGenerator;
  * @author Milan Lovric
   */
 public class DemandModel {
-
+	
+	private final static Logger LOGGER = Logger.getLogger(DemandModel.class.getName());
 	public final static int BASE_YEAR = 2015;
 	public final static int BASE_YEAR_FREIGHT = 2006;
 	public final static double FREIGHT_SCALING_FACTOR = 18366.0/21848.0;

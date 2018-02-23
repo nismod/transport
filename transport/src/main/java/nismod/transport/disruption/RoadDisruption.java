@@ -3,12 +3,14 @@ package nismod.transport.disruption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.logging.Logger;
 
 import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Node;
 import org.opengis.feature.simple.SimpleFeature;
 
+import nismod.transport.decision.CongestionCharging;
 import nismod.transport.demand.DemandModel;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
@@ -21,6 +23,8 @@ import nismod.transport.network.road.RouteSetGenerator;
  *
  */
 public class RoadDisruption extends Disruption {
+	
+	private final static Logger LOGGER = Logger.getLogger(RoadDisruption.class.getName());
 	
 	private List<Edge> listOfRemovedEdges = null;
 	private List<Route> listOfRemovedRoutes = null;

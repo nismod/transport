@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.map.MultiKeyMap;
@@ -18,12 +19,16 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
+import nismod.transport.decision.CongestionCharging;
+
 /**
  * Origin-destination freight matrix
  * @author Milan Lovric
  *
  */
 public class FreightMatrix {
+	
+	private final static Logger LOGGER = Logger.getLogger(FreightMatrix.class.getName());
 	
 	private MultiKeyMap matrix;
 	
