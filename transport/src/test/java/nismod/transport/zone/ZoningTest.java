@@ -64,11 +64,30 @@ public class ZoningTest {
 		
 		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
 		
+		System.out.println("Number of TEMPRO zones: " + zoning.getZoneToNearestNodeIDMap().size());
+		System.out.println("Number of nodes: " + zoning.getNodeToZoneMap().size());
+		
 		System.out.println("Zones to nearest Nodes: " + zoning.getZoneToNearestNodeIDMap());
 		System.out.println("Zones to nearest nodes distances: " + zoning.getZoneToNearestNodeDistanceMap());
-		
 		System.out.println(zoning.getZoneToNearestNodeIDMap().keySet());
+		System.out.println("Nodes to zones in which they are located: " + zoning.getNodeToZoneMap());
+		
+		//check if any zones are assigned to nodes that belong to other zones (which is possible if they are closer to the centroid).
+		int counter = 0;
+		for (String zone: zoning.getZoneToNearestNodeIDMap().keySet()) {
 			
+			Integer nodeID = zoning.getZoneToNearestNodeIDMap().get(zone);
+			String zoneOfNode = zoning.getNodeToZoneMap().get(nodeID);
+			if (!zone.equals(zoneOfNode)) {
+				counter++;
+				System.out.printf("Zone %s is assigned to node %d which is located in zone %s. %n", zone, nodeID, zoneOfNode);
+			}
+		}
+		System.out.println("Number of cross-assigned zones: " + counter);
+		
+		System.out.println("Tempro zone to LAD zone map: " + zoning.getZoneToLADMap());
+		System.out.println("Tempro zone code to tempro zone ID map: " + zoning.getZoneCodeToIDMap());
+		System.out.println("Tempro zone ID to tempro zone code map: " + zoning.getZoneIDToCodeMap());
 	}
 	
 	@Test

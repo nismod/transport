@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.map.MultiKeyMap;
@@ -21,12 +22,16 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 
+import nismod.transport.decision.CongestionCharging;
+
 /**
  * Origin-destination matrix
  * @author Milan Lovric
  *
  */
 public class RealODMatrix {
+	
+	private final static Logger LOGGER = Logger.getLogger(RealODMatrix.class.getName());
 	
 	private MultiKeyMap matrix;
 	
@@ -240,8 +245,40 @@ public class RealODMatrix {
 			String destination = (String) mk.getKey(1);
 			double flow = this.getFlow(origin, destination);
 			flow = flow * factor;
-			this.setFlow(origin, destination, (int) Math.round(flow));
+			//this.setFlow(origin, destination, (int) Math.round(flow));
+			this.setFlow(origin, destination, flow);
+			
 		}		
+	}
+	
+	/**
+	 * Scales matrix values with another matrix (element-wise multiplication).
+	 * @param factor Scaling factor.
+	 */
+	public void scaleMatrixValue(RealODMatrix scalingMatrix) {
+		
+		for (MultiKey mk: this.getKeySet()) {
+			String origin = (String) mk.getKey(0);
+			String destination = (String) mk.getKey(1);
+			double flow = this.getFlow(origin, destination);
+			double scalingFactor = scalingMatrix.getFlow(origin, destination);
+			flow = flow * scalingFactor;
+			//this.setFlow(origin, destination, (int) Math.round(flow));
+			this.setFlow(origin, destination, flow);
+		}		
+	}
+	
+	/**
+	 * Rounds OD matrix values.
+	 */
+	public void roundMatrixValues() {
+
+		for (MultiKey mk: this.getKeySet()) {
+			String origin = (String) mk.getKey(0);
+			String destination = (String) mk.getKey(1);
+			double flow = (int) Math.round(this.getFlow(origin, destination));
+			this.setFlow(origin, destination, flow);
+		}
 	}
 	
 	public void printMatrixFormatted(String s) {
@@ -249,6 +286,55 @@ public class RealODMatrix {
 		
 		System.out.println(s);
 		this.printMatrixFormatted();
+	}
+	
+	/**
+	 * Creates a unit OD matrix for given lists of origin and destination zones.
+	 * @param origins List of origin zones.
+	 * @param destinations List of destination zones.
+	 * @return
+	 */
+	public static RealODMatrix createUnitMatrix(List<String> origins, List<String> destinations) {
+		
+		RealODMatrix odm = new RealODMatrix();
+		
+		for (String origin: origins)
+			for (String destination: destinations)
+				odm.setFlow(origin, destination, 1.0);
+		
+		return odm;
+	}
+	
+	/**
+	 * Creates a quadratic unit OD matrix for a given lists of zones.
+	 * @param zones List of zones.
+	 * @return Unit OD matrix.
+	 */
+	public static RealODMatrix createUnitMatrix(List<String> zones) {
+		
+		RealODMatrix odm = new RealODMatrix();
+		
+		for (String origin: zones)
+			for (String destination: zones)
+				odm.setFlow(origin, destination, 1.0);
+		
+		return odm;
+	}
+	
+	/**
+	 * Creates a quadratic unit OD matrix for a given lists of zones.
+	 * @param zones Set of zones.
+	 * @return Unit OD matrix.
+	 */
+	public static RealODMatrix createUnitMatrix(Set<String> zones) {
+		
+		RealODMatrix odm = new RealODMatrix();
+		
+		for (String origin: zones)
+			for (String destination: zones)
+				odm.setFlow(origin, destination, 1.0);
+		
+		return odm;
 	}
 	
 	@Override
@@ -322,6 +408,4 @@ public class RealODMatrix {
 			}
 		}
 	}
-	
-	
 }

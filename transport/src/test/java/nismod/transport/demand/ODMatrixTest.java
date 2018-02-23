@@ -7,7 +7,9 @@ import static org.junit.Assert.*;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.junit.Test;
@@ -119,5 +121,19 @@ public class ODMatrixTest {
 		
 		passengerODMatrix2.scaleMatrixValue(2.0);
 		passengerODMatrix2.printMatrixFormatted("After scaling:");
+		
+		
+		List<String> zones = new ArrayList<String>();
+		zones.add("E06000045");
+		zones.add("E07000086");
+		zones.add("E07000091");
+		zones.add("E06000046");
+		
+		ODMatrix odm = ODMatrix.createUnitMatrix(zones);
+		odm.printMatrixFormatted();
+		
+		ODMatrix odm2 = ODMatrix.createUnitMatrix(zones, zones);
+		odm2.printMatrixFormatted();
+		
 	}
 }

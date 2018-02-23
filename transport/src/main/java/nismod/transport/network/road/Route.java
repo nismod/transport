@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.logging.Logger;
 
 import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedNode;
@@ -12,12 +13,16 @@ import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Node;
 import org.opengis.feature.simple.SimpleFeature;
 
+import nismod.transport.decision.CongestionCharging;
+
 /**
  * Route is a sequence of directed edges with a choice utility
  * @author Milan Lovric
  *
  */
 public class Route {
+	
+	private final static Logger LOGGER = Logger.getLogger(Route.class.getName());
 	
 	//default route-choice parameters
 	public static final double PARAM_TIME = -1.5;
@@ -267,7 +272,7 @@ public class Route {
 	
 	public boolean isEmpty() {
 		
-		return this.edges.isEmpty();
+		return (this.edges.isEmpty() && this.singleNode == null);
 	}
 	
 	public boolean contains(Edge edge) {
@@ -335,7 +340,7 @@ public class Route {
 	
 	public boolean isValid() {
 		
-		if (this.edges.size() == 1) return true;
+		//if (this.edges.size() == 1) return true; //single node route still considered valid!
 		
 		for (int i = 1; i < this.edges.size(); i++) {
 			DirectedEdge edge1 = this.edges.get(i-1);

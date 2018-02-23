@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.map.MultiKeyMap;
@@ -32,9 +33,11 @@ import org.geotools.graph.build.line.BasicDirectedLineGraphBuilder;
 import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedNode;
 
+import nismod.transport.decision.CongestionCharging;
 import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.ODMatrix;
 import nismod.transport.utility.RandomSingleton;
+import nismod.transport.zone.Zoning;
 
 /**
  * RouteSetGenerator can generate, save and read route sets for route choice.
@@ -50,6 +53,8 @@ import nismod.transport.utility.RandomSingleton;
  *
  */
 public class RouteSetGenerator {
+	
+	private final static Logger LOGGER = Logger.getLogger(RouteSetGenerator.class.getName());
 	
 	//public static final int ROUTE_LIMIT = 5;
 	//public static final int GENERATION_LIMIT = 10;
@@ -83,10 +88,12 @@ public class RouteSetGenerator {
 	public void addRoute(Route route) {
 		
 		//NOTE this is commented, as single node routes are empty but still valid!
+		/*
 		if (route.isEmpty()) {
-//			System.err.println("Cannot add empty route!");
+			System.err.println("Cannot add empty route!");
 			return;
 		}
+		*/
 		if (!route.isValid()) {
 			System.err.println("Route is not valid. Not adding the route!");
 			return;
@@ -293,6 +300,8 @@ public class RouteSetGenerator {
 			System.err.printf("Fastest route between nodes %d and %d does not contain correct origin and destination nodes! Link elimination method unsucsessful!\n", origin, destination);
 			return;
 		}
+		
+		if (routeLimit == 1) return; //only fastest path had to be added
 
 		int pathSizeInLinks = fastestPath.size() - 1; //number of edges = number of nodes - 1
 
@@ -394,6 +403,26 @@ public class RouteSetGenerator {
 	}
 	
 	/**
+	 * Generates routes between all combinations of nodes from two LAD zones
+	 * @param originZone Origin Tempro zone.
+	 * @param destinationZone Destination Tempro zone.
+	 * @param zoning Tempro zoning system.
+	 */
+	public void generateRouteSetZoneToZoneTempro(String originZone, String destinationZone, Zoning zoning) {
+		
+//		List<Integer> originNodes = this.roadNetwork.getZoneToNodes().get(originLAD);
+//		List<Integer> destinationNodes = this.roadNetwork.getZoneToNodes().get(destinationLAD);
+//		//System.out.printf("Generating routes from %s (%d nodes) to %s (%d nodes) %n", originLAD, originNodes.size(), destinationLAD, destinationNodes.size());
+//		for (Integer origin: originNodes)
+//			for (Integer destination: destinationNodes)
+//				if (origin != destination) 					
+//					this.generateRouteSetNodeToNode(origin, destination);
+		Integer originNode = zoning.getZoneToNearestNodeIDMap().get(originZone);
+		Integer destinationNode = zoning.getZoneToNearestNodeIDMap().get(destinationZone);
+		this.generateRouteSetNodeToNode(originNode, destinationNode);
+	}
+	
+	/**
 	 * Generates routes between top N nodes (sorted by gravitating population) from two LAD zones.
 	 * If origin and destination LAD are the same (i.e., intra-zonal), then use all the nodes
 	 * @param originLAD Origin LAD.
@@ -453,6 +482,22 @@ public class RouteSetGenerator {
 					this.generateRouteSetZoneToZone(originLAD, destinationLAD);
 		}
 	}
+	
+	/**
+	 * Generates routes for all non-zero OD flows in the OD matrix.
+	 * @param matrix Origin-destination matrix.
+	 * @param zoning Tempro zoning system.
+	 */
+	public void generateRouteSetForODMatrixTempro(ODMatrix matrix, Zoning zoning) {
+		
+		for (MultiKey mk: matrix.getKeySet()) {
+				String originZone = (String) ((MultiKey)mk).getKey(0);
+				String destinationZone = (String) ((MultiKey)mk).getKey(1);
+				if (matrix.getFlow(originZone, destinationZone) != 0)
+					this.generateRouteSetZoneToZoneTempro(originZone, destinationZone, zoning);
+		}
+	}
+	
 	
 	/**
 	 * Generates routes for a slice of the OD matrix (useful for cluster computing).
