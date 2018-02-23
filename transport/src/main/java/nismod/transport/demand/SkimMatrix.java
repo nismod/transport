@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.logging.Logger;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.map.MultiKeyMap;
@@ -22,6 +23,7 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 
+import nismod.transport.decision.CongestionCharging;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 
 /**
@@ -30,6 +32,8 @@ import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
  *
  */
 public class SkimMatrix {
+	
+	private final static Logger LOGGER = Logger.getLogger(SkimMatrix.class.getName());
 	
 	private MultiKeyMap matrix;
 		

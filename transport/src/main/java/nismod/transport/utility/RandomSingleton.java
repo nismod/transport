@@ -4,12 +4,17 @@
 package nismod.transport.utility;
 
 import java.util.Random;
+import java.util.logging.Logger;
+
+import nismod.transport.decision.CongestionCharging;
 
 /**
  * @author Milan Lovric
  *
  */
 public class RandomSingleton {
+	
+	private final static Logger LOGGER = Logger.getLogger(RandomSingleton.class.getName());
 	
 	private static RandomSingleton instance;
 	private Random generator;

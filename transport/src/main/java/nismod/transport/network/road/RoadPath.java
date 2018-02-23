@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.logging.Logger;
 
 import org.geotools.graph.path.Path;
 import org.geotools.graph.structure.DirectedEdge;
@@ -11,12 +12,16 @@ import org.geotools.graph.structure.DirectedNode;
 import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Node;
 
+import nismod.transport.decision.CongestionCharging;
+
 /**
  * A directed path (a list of directed nodes)
  * @author Milan Lovric
  *
  */
 public class RoadPath extends Path {
+	
+	private final static Logger LOGGER = Logger.getLogger(RoadPath.class.getName());
 
 	public RoadPath() {
 		// TODO Auto-generated constructor stub

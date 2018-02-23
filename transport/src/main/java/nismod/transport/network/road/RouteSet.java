@@ -7,12 +7,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.logging.Logger;
 
 import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedNode;
 import org.geotools.graph.structure.Edge;
 import org.opengis.feature.simple.SimpleFeature;
 
+import nismod.transport.decision.CongestionCharging;
 import nismod.transport.utility.RandomSingleton;
 
 /**
@@ -21,6 +23,8 @@ import nismod.transport.utility.RandomSingleton;
  *
  */
 public class RouteSet {
+	
+	private final static Logger LOGGER = Logger.getLogger(RouteSet.class.getName());
 	
 	private DirectedNode originNode;
 	private DirectedNode destinationNode;

@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.logging.Logger;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.map.MultiKeyMap;
@@ -19,12 +20,16 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
+import nismod.transport.decision.CongestionCharging;
+
 /**
  * Skim matrix for freight
  * @author Milan Lovric
  *
  */
 public class SkimMatrixFreight {
+	
+	private final static Logger LOGGER = Logger.getLogger(SkimMatrixFreight.class.getName());
 	
 	private MultiKeyMap matrix;
 		
