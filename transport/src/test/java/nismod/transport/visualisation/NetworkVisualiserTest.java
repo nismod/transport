@@ -1,8 +1,6 @@
 package nismod.transport.visualisation;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.util.Map;
 import java.util.Properties;
@@ -43,10 +41,13 @@ public class NetworkVisualiserTest {
 		ODMatrix odm = new ODMatrix("./src/test/resources/testdata/csvfiles/passengerODM.csv");
 		rna.assignPassengerFlows(odm);
 		
+		final URL congestionChargeZoneUrl = new URL("file://src/test/resources/testdata/shapefiles/congestionChargingZone.shp");
 		
 		Map<Integer, Double> dailyVolume = rna.getLinkVolumeInPCU();
 		NetworkVisualiser.visualise(roadNetwork, "Network from shapefiles");
 		NetworkVisualiser.visualise(roadNetwork, "Network with traffic volume", dailyVolume);
-		NetworkVisualiser.visualise(roadNetwork, "Network with count comparison", rna.calculateAbsDifferenceCarCounts());
+		NetworkVisualiser.visualise(roadNetwork, "Network with count comparison", rna.calculateDirectionAveragedAbsoluteDifferenceCarCounts());
+		NetworkVisualiser.visualise(roadNetwork, "Network with count comparison", rna.calculateDirectionAveragedAbsoluteDifferenceCarCounts(), congestionChargeZoneUrl);
+		
 	}
 }

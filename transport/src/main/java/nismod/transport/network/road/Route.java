@@ -193,6 +193,9 @@ public class Route {
 				for (String policyName: linkCharges.keySet()) {
 					if (flags.get(policyName)) continue; //skip if policy already applied
 					HashMap<Integer, Double> charges = linkCharges.get(policyName);
+					if (charges == null)
+						System.err.println("No link charges for policy " + policyName);
+					
 					if (charges.containsKey(edge.getID())) {
 						cost += charges.get(edge.getID());
 						flags.put(policyName, true);
