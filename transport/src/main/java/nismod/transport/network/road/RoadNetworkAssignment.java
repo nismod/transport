@@ -69,6 +69,7 @@ public class RoadNetworkAssignment {
 	public double nodesProbabilityWeightingFreight; //manipulates probabilities of nodes for the node choice
 	public double assignmentFraction; //the fraction of vehicle flows to actually assign, with later results expansion to 100%
 	public boolean flagUseRouteChoiceModel; //use route-choice model (true) or routing with A-Star (false)
+	public int topTemproNodes = 2;
 	
 	private static RandomSingleton rng = RandomSingleton.getInstance();
 
@@ -630,7 +631,11 @@ public class RoadNetworkAssignment {
 	public void assignPassengerFlowsRouteChoice(ODMatrix passengerODM, RouteSetGenerator rsg, Properties routeChoiceParameters) {
 
 		System.out.println("Assigning the passenger flows from the passenger matrix...");
-
+		
+		if (passengerODM == null) { System.err.println("Passenger OD matrix is null!"); return; }
+		if (rsg == null) { System.err.println("Route set generator is null!"); return; }
+		if (routeChoiceParameters == null) { System.err.println("Route choice parameters are null!"); return; }
+		
 		final int totalExpectedFlow = passengerODM.getTotalFlow();
 		this.tripList = new ArrayList<Trip>(totalExpectedFlow); //use expected flow as array list initial capacity
 
@@ -839,7 +844,8 @@ public class RoadNetworkAssignment {
 					fetchedRouteSet.setParameters(routeChoiceParameters);
 
 					//fetch congestion charge for the vehicle type
-					HashMap<String, HashMap<Integer, Double>> linkCharges = null;
+					//HashMap<String, HashMap<Integer, Double>> linkCharges = null;
+					HashMap<String, HashMap<Integer, Double>> linkCharges = new HashMap<String, HashMap<Integer, Double>>();;
 					if (this.congestionCharges != null) 
 						for (String policyName: this.congestionCharges.keySet())
 							linkCharges.put(policyName, (HashMap<Integer, Double>) this.congestionCharges.get(policyName).get(vht, hour));
@@ -969,70 +975,114 @@ public class RoadNetworkAssignment {
 					}
 				}
 				if (engine == null) System.err.println("Engine type not chosen!");
-
+				
+				
 				//choose origin/destination nodes based on the gravitating population
 				//the choice with replacement means that possibly: destination node = origin node
 				//the choice without replacement means that destination node has to be different from origin node
-
-				//choose origin node
 				
-				/*
-				cumulativeProbability = 0.0;
+				//choose origin/destination node
 				Integer originNode = null;
+				Integer destinationNode = null;
+		
+				if (originZone.equals(destinationZone)) { 	//if inter-zonal, pick random node within the zone (based on gravitating population is better)
+				
+					List<Integer> listOfContainedNodes = zoning.getZoneToListOfContaintedNodes().get(originZone);
+	
+					//if there are no zones in that node, simply pick the closest node
+					if (listOfContainedNodes == null) { 
+						originNode = zoning.getZoneToNearestNodeIDMap().get(originZone);
+						destinationNode = originNode;
+					} else {
+		
+						////simply pick random
+						//originNode = listOfContainedNodes.get(rng.nextInt(listOfContainedNodes.size()));
+						//destinationNode = listOfContainedNodes.get(rng.nextInt(listOfContainedNodes.size()));
+						
+						//choose based on gravitating population
+						double sumOfGravitatingPopulation = 0.0;
+						for (Integer nodeID: listOfContainedNodes) sumOfGravitatingPopulation += this.roadNetwork.getGravitatingPopulation(nodeID); 
+						cumulativeProbability = 0.0;
+						random = rng.nextDouble();
+						for (Integer nodeID: listOfContainedNodes) {
+							cumulativeProbability += this.roadNetwork.getGravitatingPopulation(nodeID) / sumOfGravitatingPopulation;
+							if (Double.compare(cumulativeProbability, random) > 0) {
+								originNode = nodeID;
+								break;
+							}
+						}
+						cumulativeProbability = 0.0;
+						random = rng.nextDouble();
+						for (Integer nodeID: listOfContainedNodes) {
+							cumulativeProbability += this.roadNetwork.getGravitatingPopulation(nodeID) / sumOfGravitatingPopulation;
+							if (Double.compare(cumulativeProbability, random) > 0) {
+								destinationNode = nodeID;
+								break;
+							}
+						}
+					}
+								
+					if (originNode == null) System.err.println("Origin node was not chosen for zone " + originZone);
+					if (destinationNode == null) System.err.println("Destination node was not chosen!");
+								
+				} else { //if not interzonal, choose from topnodes based on the distance from zone centroid
+				
+				//choose origin node
+				List<Pair<Integer, Double>> listOfOriginNodes = zoning.getZoneToSortedListOfNodeAndDistancePairs().get(originZone);
+				//consider only top tempro nodes
+				List<Pair<Integer, Double>> listOfTopOriginNodes = listOfOriginNodes.subList(0, this.topTemproNodes);
+				
+				double sumOfDistances = 0.0;
+				for (Pair<Integer, Double> pair: listOfTopOriginNodes) sumOfDistances += pair.getValue(); 
+				cumulativeProbability = 0.0;
+				//Integer originNode = null;
 				random = rng.nextDouble();
-				for (Integer node: listOfOriginNodes) {
-					cumulativeProbability += startNodeProbabilities.get(node);
+				for (Pair<Integer, Double> pair: listOfTopOriginNodes) {
+					cumulativeProbability += pair.getRight() / sumOfDistances;
 					if (Double.compare(cumulativeProbability, random) > 0) {
-						originNode = node;
+						originNode = pair.getKey();
 						break;
 					}
 				}
 				
-				if (originNode == null) System.err.println("Origin node was not chosen!");
-				*/
-				
-				Integer originNode = zoning.getZoneToNearestNodeIDMap().get(originZone);
 				if (originNode == null) System.err.println("Origin node was not chosen for zone " + originZone);
+								
+				//take the nearest node!
+				//Integer originNode = zoning.getZoneToNearestNodeIDMap().get(originZone);
+				//if (originNode == null) System.err.println("Origin node was not chosen for zone " + originZone);
 				
 				if (this.roadNetwork.isBlacklistedAsStartNode(originNode)) 
 					System.err.println("Origin node is blacklisted! node: " + originNode);
 				
 
 				//choose destination node
-				/*
+				List<Pair<Integer, Double>> listOfDestinationNodes = zoning.getZoneToSortedListOfNodeAndDistancePairs().get(destinationZone);
+				//consider only top tempro nodes
+				List<Pair<Integer, Double>> listOfTopDestinationNodes = listOfDestinationNodes.subList(0, this.topTemproNodes);
+				
+				sumOfDistances = 0.0;
+				for (Pair<Integer, Double> pair: listOfTopDestinationNodes) sumOfDistances += pair.getValue(); 
 				cumulativeProbability = 0.0;
-				Integer destinationNode = null;
+				//Integer destinationNode = null;
 				random = rng.nextDouble();
-				//if intrazonal trip and replacement is not allowed, the probability of the originNode should be 0 so it cannot be chosen again
-				//also, in that case it is important to rescale other node probabilities (now that the originNode is removed) by dividing with (1.0 - p(originNode))!
-				if (!flagIntrazonalAssignmentReplacement && originZone.equals(destinationZone) && listOfDestinationNodes.contains(originNode)) { //no replacement and intra-zonal trip
-					for (Integer node: listOfDestinationNodes) {
-						if (node.intValue() == originNode.intValue()) continue; //skip if the node is the same as origin
-						cumulativeProbability += endNodeProbabilities.get(node) / (1.0 - endNodeProbabilities.get(originNode));
-						if (Double.compare(cumulativeProbability, random) > 0) {
-							destinationNode = node;
-							break;
-						}
+				for (Pair<Integer, Double> pair: listOfTopDestinationNodes) {
+					cumulativeProbability += pair.getRight() / sumOfDistances;
+					if (Double.compare(cumulativeProbability, random) > 0) {
+						destinationNode = pair.getKey();
+						break;
 					}
-				} else	{ //inter-zonal trip (or intra-zonal with replacement)
-					for (Integer node: listOfDestinationNodes) {
-						cumulativeProbability += endNodeProbabilities.get(node);
-						if (Double.compare(cumulativeProbability, random) > 0) {
-							destinationNode = node;
-							break;
-						}
-					}
-				}	
+				}
 
 				if (destinationNode == null) System.err.println("Destination node was not chosen!");
-				*/
-				
-				
-				Integer destinationNode = zoning.getZoneToNearestNodeIDMap().get(destinationZone);
-				if (destinationNode == null) System.err.println("Destination node was not chosen for zone " + destinationZone);
+			
+				//take just the nearest one
+				//Integer destinationNode = zoning.getZoneToNearestNodeIDMap().get(destinationZone);
+				//if (destinationNode == null) System.err.println("Destination node was not chosen for zone " + destinationZone);
 				
 				if (this.roadNetwork.isBlacklistedAsEndNode(destinationNode)) 
 					System.err.println("Destination node is blacklisted! node: " + destinationNode);
+				
+				}
 				
 				DirectedGraph rn = roadNetwork.getNetwork();
 				//set source and destination node
@@ -1281,7 +1331,8 @@ public class RoadNetworkAssignment {
 					fetchedRouteSet.setParameters(routeChoiceParameters);
 
 					//fetch congestion charge for the vehicle type
-					HashMap<String, HashMap<Integer, Double>> linkCharges = null;
+					//HashMap<String, HashMap<Integer, Double>> linkCharges = null;
+					HashMap<String, HashMap<Integer, Double>> linkCharges = new HashMap<String, HashMap<Integer, Double>>();
 					if (this.congestionCharges != null) 
 						for (String policyName: this.congestionCharges.keySet())
 							linkCharges.put(policyName, (HashMap<Integer, Double>) this.congestionCharges.get(policyName).get(vht, hour));
@@ -3685,11 +3736,62 @@ public class RoadNetworkAssignment {
 				long absoluteDifference = Math.abs(carCount - carVolume - carVolume2) / 2;
 				checkedCP.add(countPoint);
 				absoluteDifferences.put(edge.getID(), (int) absoluteDifference);
+				if (edge2 != null) absoluteDifferences.put(edge2, (int) absoluteDifference); //store in other direction too
 			}
 		}
 
 		return absoluteDifferences;
 	}
+	
+
+	/**
+	 * Calculates absolute differences between car volumes and traffic counts averaged for both directions.
+	 * For combined counts, takes the average of two absolute differences.
+	 * @return Direction averaged absolute differences between car volumes and traffic counts.
+	 */
+	public HashMap<Integer, Double> calculateDirectionAveragedAbsoluteDifferenceCarCounts () {
+
+		HashMap<Integer, Integer> absoluteDifferences = this.calculateDifferenceCarCounts(); //this.calculateAbsDifferenceCarCounts(); //TODO
+		HashMap<Integer, Double> directionAveragedAbsoluteDifferences = new HashMap<Integer, Double>();
+
+		System.out.println("Absolute differences: " + absoluteDifferences);
+		
+		Iterator iter = this.roadNetwork.getNetwork().getEdges().iterator();
+		ArrayList<Integer> checkedLinks = new ArrayList<Integer>(); //list of checked links
+
+		for (Integer edge1: absoluteDifferences.keySet())
+			
+			if (!checkedLinks.contains(edge1)) {
+				
+				//check if there is other direction edge, store average value for both
+				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(edge1);
+				if (edge2 != null) {
+					
+					Integer diff1 = absoluteDifferences.get(edge1);
+					Integer diff2 = absoluteDifferences.get(edge2);
+					
+					if (diff1 == null) System.err.println("No absolute difference for edge: " + edge1);
+					if (diff2 == null) System.err.println("No absolute difference for edge: " + edge2);
+					
+					Integer average = (diff1 + diff2) / 2;
+					
+					directionAveragedAbsoluteDifferences.put(edge1, (double) average);
+					directionAveragedAbsoluteDifferences.put(edge2, (double) average);
+					checkedLinks.add(edge1);
+					checkedLinks.add(edge2);
+
+				//if there is just a unidirectional edge, use the same value	
+				} else {
+					
+					Integer diff1 = absoluteDifferences.get(edge1);
+					directionAveragedAbsoluteDifferences.put(edge1, (double) diff1);
+					checkedLinks.add(edge1);
+				}
+			}
+			
+		return directionAveragedAbsoluteDifferences;
+	}
+
 
 	/**
 	 * Calculates differences between car volumes and traffic counts.
@@ -3748,6 +3850,7 @@ public class RoadNetworkAssignment {
 				long difference = (carCount - carVolume - carVolume2) / 2;
 				checkedCP.add(countPoint);
 				differences.put(edge.getID(), (int) difference);
+				if (edge2 != null) differences.put(edge2, (int) difference); //store in other direction too
 			}
 		}
 

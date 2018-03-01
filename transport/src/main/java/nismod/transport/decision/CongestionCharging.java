@@ -108,7 +108,7 @@ public class CongestionCharging extends Intervention {
 					linkCharges.put(edgeID, charge);
 				}
 
-				congestionCharges.put(vht,  hour, linkCharges);
+				congestionCharges.put(vht, hour, linkCharges);
 			}
 
 			//dm.setCongestionCharges(y, congestionCharges);

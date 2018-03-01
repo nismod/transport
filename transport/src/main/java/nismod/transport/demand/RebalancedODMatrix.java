@@ -40,6 +40,8 @@ public class RebalancedODMatrix extends RealODMatrix {
 	private RoadNetworkAssignment rna;
 	private RouteSetGenerator rsg;
 	private Zoning zoning;
+	
+	private List<Double> RMSNvalues;
 
 	/**
 	 * Constructor for rebalanced OD matrix that uses network assignment and traffic counts for matrix rebalancing.
@@ -54,6 +56,8 @@ public class RebalancedODMatrix extends RealODMatrix {
 		this.destinations = new ArrayList<String>();
 		this.rsg = rsg;
 		this.zoning = zoning;
+		this.RMSNvalues = new ArrayList<Double>();
+		
 		
 		for (String zone: origins) this.origins.add(zone);
 		for (String zone: destinations) this.destinations.add(zone);
@@ -96,6 +100,7 @@ public class RebalancedODMatrix extends RealODMatrix {
 		this.rna.updateLinkVolumePerVehicleType();
 		
 		double RMSN = this.rna.calculateRMSNforSimulatedVolumes();
+		this.RMSNvalues.add(RMSN);
 		System.out.printf("RMSN before scaling = %.2f%% %n", RMSN);
 		
 		RealODMatrix sf = this.getScalingFactors();
@@ -160,7 +165,12 @@ public class RebalancedODMatrix extends RealODMatrix {
 			String originZone = (String) ((MultiKey)mk).getKey(0);
 			String destinationZone = (String) ((MultiKey)mk).getKey(1);
 	
-			double scalingFactor = 1.0 * factors.getFlow(originZone, destinationZone) / counter.getFlow(originZone, destinationZone);
+			double scalingFactor;
+			if (counter.getFlow(originZone, destinationZone) == 0) 
+				scalingFactor = 1.0; //there were no (non-empty) routes between these two zones
+			else 
+				scalingFactor = 1.0 * factors.getFlow(originZone, destinationZone) / counter.getFlow(originZone, destinationZone);
+		
 			scalingFactors.setFlow(originZone, destinationZone, scalingFactor);
 		}
 		
@@ -185,6 +195,15 @@ public class RebalancedODMatrix extends RealODMatrix {
 	public List<String> getDestinations() {
 		
 		return this.destinations;
+	}
+	
+	/**
+	 * Gets the list of RMSN values over all performed rebalancing iterations.
+	 * @return List of RMSN values.
+	 */
+	public List<Double> getRMSNvalues() {
+		
+		return this.RMSNvalues;
 	}
 	
 //	/**
