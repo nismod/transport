@@ -102,12 +102,14 @@ public class RoadDisruptionTest {
 		rsg.calculateAllUtilities(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, null, params);
 		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
 
-		System.out.println(rna.getTripList());
+		//System.out.println(rna.getTripList());
+		
+		rna.updateLinkVolumeInPCU();
 		
 		Map<Integer, Double> dailyVolume = rna.getLinkVolumeInPCU();
 		System.out.println(dailyVolume);
 		
-		NetworkVisualiser.visualise(roadNetwork, "Network with traffic volume", dailyVolume);
+		NetworkVisualiser.visualise(roadNetwork, "Network with traffic volume", dailyVolume, "DayVolume", null);
 		
 		rd3.uninstall(rsg);
 		rsg.printChoiceSets();
@@ -118,8 +120,9 @@ public class RoadDisruptionTest {
 		rsg.calculateAllUtilities(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, null, params);
 		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
 		
+		rna.updateLinkVolumeInPCU();
 		dailyVolume = rna.getLinkVolumeInPCU();
-		NetworkVisualiser.visualise(roadNetwork, "Network with traffic volume", dailyVolume);
+		NetworkVisualiser.visualise(roadNetwork, "Network with traffic volume", dailyVolume, "DayVolume", null);
 	}
 	
 	@Test
@@ -240,13 +243,17 @@ public class RoadDisruptionTest {
 		props2.setProperty("endYear", "2025");
 		props2.setProperty("listOfDisruptedEdgeIDs", "561"); //space and tab added on purpose
 		RoadDisruption rd3 = new RoadDisruption(props2);
+
+		//read OD matrix
+		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
 		
 		//set route generation parameters
 		Properties params = new Properties();
 		params.setProperty("ROUTE_LIMIT", "5");
 		params.setProperty("GENERATION_LIMIT", "10");
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, params);
-		rsg.generateRouteSetWithRandomLinkEliminationRestricted(87, 46);
+		//rsg.generateRouteSetWithRandomLinkEliminationRestricted(87, 46);
+		rsg.generateRouteSetForODMatrix(odm, 5);
 		rsg.printChoiceSets();
 		rsg.printStatistics();
 
@@ -257,9 +264,6 @@ public class RoadDisruptionTest {
 		System.out.println("Disrupted edges: " + rd3.getListOfDisruptedEdgesIDs());
 		System.out.println("Removed routes: " + rd3.getListOfRemovedRoutes());
 
-		//read OD matrix
-		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
-	
 		//create a road network assignment
 		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, props);
 
@@ -282,6 +286,7 @@ public class RoadDisruptionTest {
 		rsg.calculateAllUtilities(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, null, params);
 		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
 		rna.expandTripList();
+		rna.updateLinkVolumeInPCU();
 
 		assertNull("There should be no traffic volume for the removed link", rna.getLinkVolumeInPCU().get(561));
 				

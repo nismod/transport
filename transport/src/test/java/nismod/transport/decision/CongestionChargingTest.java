@@ -100,7 +100,7 @@ public class CongestionChargingTest {
 		RoadNetworkAssignment rna = dm.getRoadNetworkAssignment(2016);
 		
 		final URL congestionChargeZoneUrl = new URL("file://src/test/resources/testdata/shapefiles/congestionChargingZone.shp");
-		NetworkVisualiser.visualise(roadNetwork, "No intervention", rna.calculateDirectionAveragedAbsoluteDifferenceCarCounts(), congestionChargeZoneUrl);
+		NetworkVisualiser.visualise(roadNetwork, "No intervention", rna.calculateDirectionAveragedAbsoluteDifferenceCarCounts(), "CountDiff", null, congestionChargeZoneUrl);
 	}
 	
 	@Test
