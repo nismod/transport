@@ -167,6 +167,7 @@ public class NetworkVisualiser {
 
            }
         });
+        
         // Finally display the map frame.
         // When it is closed the app will exit.
         frame.setVisible(true);
@@ -176,17 +177,21 @@ public class NetworkVisualiser {
 	 * Visualises the road network with dailyVolume.
 	 * @param roadNetwork Road network.
 	 * @param mapTitle Map title for the window.
-	 * @param dailyVolume Traffic volume to classify and colour road links.
+	 * @param linkData Data used to classify and colour road links.
+	 * @param linkDataLabel Label describing the link data used.
+	 * @param shapefilePath The path to the shapefile into which data will be stored.
 	 */
-	public static void visualise(RoadNetwork roadNetwork, String mapTitle, Map<Integer, Double> dailyVolume) throws IOException {
+	public static void visualise(RoadNetwork roadNetwork, String mapTitle, Map<Integer, Double> linkData, String linkDataLabel, String shapefilePath) throws IOException {
 		
+		String linkDataLabelTruncated = linkDataLabel;
+		if (linkDataLabelTruncated.length() > 10) linkDataLabelTruncated = linkDataLabel.substring(0, 10);
 		
-		SimpleFeatureCollection networkFeatures = roadNetwork.createNetworkFeatureCollection(dailyVolume);
+		SimpleFeatureCollection networkFeatures = roadNetwork.createNetworkFeatureCollection(linkData, linkDataLabelTruncated, shapefilePath);
 		networkFeatures = roadNetwork.getNewNetworkShapefile().getFeatureSource().getFeatures();
 	
 	    //classify road links based on the traffic volume
 	    FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2();
-	    PropertyName propertyExpression = ff.property("DayVolume");
+	    PropertyName propertyExpression = ff.property(linkDataLabelTruncated);
 	    
 	    //FeatureCollection featureCollection = this.newNetworkShapefile.getFeatureSource().getFeatures();
 	    FeatureCollection featureCollection = networkFeatures;
@@ -309,16 +314,22 @@ public class NetworkVisualiser {
 	 * Visualises the road network with dailyVolume.
 	 * @param roadNetwork Road network.
 	 * @param mapTitle Map title for the window.
-	 * @param dailyVolume Traffic volume to classify and colour road links.
+	 * @param linkData Data used to classify and colour road links.
+	 * @param linkDataLabel Label describing the link data used.
+	 * @param shapefilePath The path to the shapefile into which data will be stored.
+	 * @param congestionChargeZoneUrl The path to the shapefile with the congestion charge zone boundary.
 	 */
-	public static void visualise(RoadNetwork roadNetwork, String mapTitle, Map<Integer, Double> dailyVolume, URL congestionChargeZoneUrl) throws IOException {
+	public static void visualise(RoadNetwork roadNetwork, String mapTitle, Map<Integer, Double> linkData, String linkDataLabel, String shapefilePath, URL congestionChargeZoneUrl) throws IOException {
 		
-		SimpleFeatureCollection networkFeatures = roadNetwork.createNetworkFeatureCollection(dailyVolume);
+		String linkDataLabelTruncated = linkDataLabel;
+		if (linkDataLabelTruncated.length() > 10) linkDataLabelTruncated = linkDataLabel.substring(0, 10);
+		
+		SimpleFeatureCollection networkFeatures = roadNetwork.createNetworkFeatureCollection(linkData, linkDataLabelTruncated, shapefilePath);
 		networkFeatures = roadNetwork.getNewNetworkShapefile().getFeatureSource().getFeatures();
 	
 	    //classify road links based on the traffic volume
 	    FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2();
-	    PropertyName propertyExpression = ff.property("DayVolume");
+	    PropertyName propertyExpression = ff.property(linkDataLabelTruncated);
 	    
 	    //FeatureCollection featureCollection = this.newNetworkShapefile.getFeatureSource().getFeatures();
 	    FeatureCollection featureCollection = networkFeatures;

@@ -42,12 +42,17 @@ public class NetworkVisualiserTest {
 		rna.assignPassengerFlows(odm);
 		
 		final URL congestionChargeZoneUrl = new URL("file://src/test/resources/testdata/shapefiles/congestionChargingZone.shp");
+		String shapefilePath = "./temp/networkWithDailyVolume.shp";
+		String shapefilePath2 = "./temp/networkWithCountComparison.shp";
+		String shapefilePath3 = "./temp/networkWithCountComparison.shp";
 		
+		rna.updateLinkVolumeInPCU();
+		rna.updateLinkVolumePerVehicleType();
 		Map<Integer, Double> dailyVolume = rna.getLinkVolumeInPCU();
 		NetworkVisualiser.visualise(roadNetwork, "Network from shapefiles");
-		NetworkVisualiser.visualise(roadNetwork, "Network with traffic volume", dailyVolume);
-		NetworkVisualiser.visualise(roadNetwork, "Network with count comparison", rna.calculateDirectionAveragedAbsoluteDifferenceCarCounts());
-		NetworkVisualiser.visualise(roadNetwork, "Network with count comparison", rna.calculateDirectionAveragedAbsoluteDifferenceCarCounts(), congestionChargeZoneUrl);
+		NetworkVisualiser.visualise(roadNetwork, "Network with traffic volume", dailyVolume, "DayVolume", shapefilePath);
+		NetworkVisualiser.visualise(roadNetwork, "Network with count comparison", rna.calculateDirectionAveragedAbsoluteDifferenceCarCounts(), "AbsDiffCounts", shapefilePath2);
+		NetworkVisualiser.visualise(roadNetwork, "Network with count comparison", rna.calculateDirectionAveragedAbsoluteDifferenceCarCounts(), "AbsDiffCounts", shapefilePath3, congestionChargeZoneUrl);
 		
 	}
 }

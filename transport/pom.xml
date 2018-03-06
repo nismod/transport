@@ -100,8 +100,12 @@
 	  	  <artifactId>jfreesvg</artifactId>
 	  	  <version>3.3</version>
 		</dependency>
-	</dependencies>
-
+		<dependency>
+    		<groupId>com.jgoodies</groupId>
+    		<artifactId>jgoodies-forms</artifactId>
+    		<version>1.8.0</version>
+			</dependency>
+			</dependencies>
 	<repositories>
 		<repository>
 			<id>maven2-repository.dev.java.net</id>
