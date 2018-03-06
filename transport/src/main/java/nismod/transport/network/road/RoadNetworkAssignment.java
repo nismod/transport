@@ -2602,31 +2602,33 @@ public class RoadNetworkAssignment {
 	 */
 	public HashMap<Integer, Double> calculatePeakLinkPointCapacities() {
 
-		HashMap<Integer, Double> linkPointCapacities = new HashMap<Integer, Double>();
+		Map<Integer, Double> peakLinkVolumes = this.calculateLinkVolumeInPCUPerTimeOfDay(this.tripList).get(TimeOfDay.EIGHTAM);
 		HashMap<Integer, Integer> numberOfLanes = roadNetwork.getNumberOfLanes();
-
+		HashMap<Integer, Double> peakLinkCapacitieses = new HashMap<Integer, Double>();
+		
 		//iterate through all the edges in the graph
 		Iterator iter = roadNetwork.getNetwork().getEdges().iterator();
 		while(iter.hasNext()) {
 
 			Edge edge = (Edge) iter.next();
 			SimpleFeature sf = (SimpleFeature) edge.getObject();
-			double linkVolumeInPCU = 0.0;
-			if (linkVolumesInPCU.get(edge.getID()) != null) linkVolumeInPCU = linkVolumesInPCU.get(edge.getID());
+			double linkVol = 0.0;
+			if (peakLinkVolumes.get(edge.getID()) != null) linkVol = peakLinkVolumes.get(edge.getID());
 			double capacity = 0.0;
 			String roadNumber = (String) sf.getAttribute("RoadNumber");
 			if (roadNumber.charAt(0) == 'M') //motorway
-				capacity = peakHourPercentage * linkVolumeInPCU / numberOfLanes.get(edge.getID());
+				capacity = linkVol / numberOfLanes.get(edge.getID());
 			else if (roadNumber.charAt(0) == 'A') //A-road
-				capacity = peakHourPercentage * linkVolumeInPCU / numberOfLanes.get(edge.getID());
+				capacity = linkVol / numberOfLanes.get(edge.getID());
 			else //ferry
-				capacity = peakHourPercentage * linkVolumeInPCU;
+				capacity = linkVol;
 
-			linkPointCapacities.put(edge.getID(), capacity);
+			peakLinkCapacitieses.put(edge.getID(), capacity);
 		}
-		return linkPointCapacities;
+		return peakLinkCapacitieses;
 	}
 
+	
 	/**
 	 * Calculate peak-hour link point capacities (PCU/lane/hr) averaged by two directions.
 	 * @return Peak-hour link point capacities.
@@ -2682,9 +2684,10 @@ public class RoadNetworkAssignment {
 	 * @return Peak-hour link densities.
 	 */
 	public HashMap<Integer, Double> calculatePeakLinkDensities() {
-
-		HashMap<Integer, Double> linkDensities = new HashMap<Integer, Double>();
+		
+		Map<Integer, Double> peakLinkVolumes = this.calculateLinkVolumeInPCUPerTimeOfDay(this.tripList).get(TimeOfDay.EIGHTAM);
 		HashMap<Integer, Integer> numberOfLanes = roadNetwork.getNumberOfLanes();
+		HashMap<Integer, Double> peakLinkDensities = new HashMap<Integer, Double>();
 
 		//iterate through all the edges in the graph
 		Iterator iter = roadNetwork.getNetwork().getEdges().iterator();
@@ -2693,20 +2696,74 @@ public class RoadNetworkAssignment {
 			Edge edge = (Edge) iter.next();
 			SimpleFeature sf = (SimpleFeature) edge.getObject();
 			double linkVol = 0.0;
-			if (linkVolumesInPCU.get(edge.getID()) != null) linkVol = linkVolumesInPCU.get(edge.getID());
+			if (peakLinkVolumes.get(edge.getID()) != null) linkVol = peakLinkVolumes.get(edge.getID());
 			double density = 0.0;
 			String roadNumber = (String) sf.getAttribute("RoadNumber");
 			double length = (double) sf.getAttribute("LenNet");
 			if (roadNumber.charAt(0) == 'M') //motorway
-				density = peakHourPercentage * linkVol / numberOfLanes.get(edge.getID()) / length;
+				density = linkVol / numberOfLanes.get(edge.getID()) / length;
 			else if (roadNumber.charAt(0) == 'A') //A-road
-				density = peakHourPercentage * linkVol / numberOfLanes.get(edge.getID()) / length;
+				density = linkVol / numberOfLanes.get(edge.getID()) / length;
 			else //ferry
-				density = peakHourPercentage * linkVol / length;
+				density = linkVol / length;
 
-			linkDensities.put(edge.getID(), density);
+			peakLinkDensities.put(edge.getID(), density);
 		}
-		return linkDensities;
+		return peakLinkDensities;
+	}
+	
+	/**
+	 * Calculate peak-hour link capacity utilisation (capacity / max. capacity).
+	 * @return Peak-hour link capacity utilisation [%].
+	 */
+	public HashMap<Integer, Double> calculatePeakLinkCapacityUtilisation() {
+
+		HashMap<Integer, Double> peakLinkCapacitieses = this.calculatePeakLinkPointCapacities();
+		HashMap<Integer, Double> peakLinkCapacityUtilisataion = new HashMap<Integer, Double>();
+		
+		//iterate through all the edges in the graph
+		Iterator iter = roadNetwork.getNetwork().getEdges().iterator();
+		while(iter.hasNext()) {
+
+			Edge edge = (Edge) iter.next();
+			SimpleFeature sf = (SimpleFeature) edge.getObject();
+			double capacity = 0.0;
+			if (peakLinkCapacitieses.get(edge.getID()) != null) capacity = peakLinkCapacitieses.get(edge.getID());
+			double utilisation = 0.0;
+			String roadNumber = (String) sf.getAttribute("RoadNumber");
+			if (roadNumber.charAt(0) == 'M') //motorway
+				utilisation = capacity / this.maximumCapacityMRoad;
+			else if (roadNumber.charAt(0) == 'A') //A-road
+				utilisation = capacity / this.maximumCapacityARoad;
+			else //ferry
+				utilisation = 0.0; //undefined for ferry
+
+			peakLinkCapacityUtilisataion.put(edge.getID(), utilisation * 100);
+		}
+		return peakLinkCapacityUtilisataion;
+	}
+	
+	/**
+	 * Calculate peak-hour link capacity utilisation (%) averaged by two directions.
+	 * @return Peak-hour link capacity utilisation.
+	 */
+	public HashMap<Integer, Double> calculateDirectionAveragedPeakLinkCapacityUtilisation() {
+
+		HashMap<Integer, Double> utilisation = this.calculatePeakLinkCapacityUtilisation();
+		HashMap<Integer, Double> averagedUtilisation = new HashMap<Integer, Double>();
+
+		for (Integer edgeID: utilisation.keySet()) {
+			double utilisation1 = utilisation.get(edgeID);
+			Integer otherEdgeID = roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(edgeID);
+			if (otherEdgeID == null) averagedUtilisation.put(edgeID, utilisation1); //if just one direction, copy value
+			else { //otherwise, store average for both directions
+				Double utilisation2 = utilisation.get(otherEdgeID);
+				averagedUtilisation.put(edgeID, (utilisation1 + utilisation2) / 2.0);
+				averagedUtilisation.put(otherEdgeID, (utilisation1 + utilisation2) / 2.0);
+			}
+		}
+
+		return averagedUtilisation;
 	}
 
 	//	/**

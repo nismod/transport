@@ -471,17 +471,25 @@ public class RoadNetwork {
 	
 	/**
 	 * Creates a custom feature collection for the network.
-	*/
-	public SimpleFeatureCollection createNetworkFeatureCollection(Map<Integer, Double> dailyVolume) throws IOException {
+	 * @param linkData Data assigned to network links.
+	 * @param linkDataLabel The label of the link data.
+	 * @param shapefilePath The path to the shapefile into which data will be stored.
+	 * @return Feature collection.
+	 * @throws IOException
+	 */
+	public SimpleFeatureCollection createNetworkFeatureCollection(Map<Integer, Double> linkData, String linkDataLabel, String shapefilePath) throws IOException {
 
 		if (network == null) {
 			System.err.println("The network is empty.");
 			return null;
 		}
 		
-		//get an output file name and create the new shapefile
-		File newFile = getNewShapeFile("networkWithDailyVolume");
-		//File newFile = new File("./networkWithDailyVolume.shp");
+		File newFile = null;
+		if (shapefilePath == null)
+			//get an output file name and create the new shapefile
+			newFile = getNewShapeFile("networkWithLinkData");
+		else 
+			newFile = new File(shapefilePath);
 
 		ShapefileDataStoreFactory dataStoreFactory = new ShapefileDataStoreFactory();
 		Map<String, Serializable> params = new HashMap<>();
@@ -490,7 +498,7 @@ public class RoadNetwork {
 		this.newNetworkShapefile = (ShapefileDataStore) dataStoreFactory.createNewDataStore(params);
 
 		//dynamically creates a feature type to describe the shapefile contents
-		SimpleFeatureType type = createCustomFeatureType();
+		SimpleFeatureType type = createCustomFeatureType(linkDataLabel);
 		
 		//List<SimpleFeatureType> features = new ArrayList<>();
 		//List features = new ArrayList<>();
@@ -553,7 +561,7 @@ public class RoadNetwork {
 					objList.add(null);
 					objList.add(null);
 				}
-				Double volume = dailyVolume.get(edge.getID());
+				Double volume = linkData.get(edge.getID());
 				if (volume == null) volume = 0.0;
 				objList.add(volume);
 			} else {
@@ -2291,7 +2299,7 @@ public class RoadNetwork {
 	private static File getNewShapeFile(String fileName) {
 
 		//String defaultPath = "./output.shp";
-		String defaultPath = "./" + fileName + ".shp";
+		String defaultPath = "./temp/" + fileName + ".shp";
 		JFileDataStoreChooser chooser = new JFileDataStoreChooser("shp");
 		chooser.setDialogTitle("Save shapefile");
 		chooser.setSelectedFile(new File(defaultPath));
@@ -2352,9 +2360,10 @@ public class RoadNetwork {
 	
 	/**
 	 * Creates a custom schema for the network.
+	 * @param linkDataLabel The label for the link data (e.g. "DayVolume").
 	 * @return SimpleFeature type.
 	 */
-	public static SimpleFeatureType createCustomFeatureType() {
+	public static SimpleFeatureType createCustomFeatureType(String linkDataLabel) {
 
 		SimpleFeatureTypeBuilder builder = new SimpleFeatureTypeBuilder();
 		
@@ -2387,7 +2396,7 @@ public class RoadNetwork {
 		builder.add("FFspeed", Double.class);
 		builder.add("FFtime", Double.class);
 		builder.add("IsFerry", Boolean.class);
-		builder.add("DayVolume", Double.class);
+		builder.add(linkDataLabel, Double.class); //e.g. "DayVolume"
 
 		//build the type
 		final SimpleFeatureType SIMPLE_FEATURE_TYPE = builder.buildFeatureType();
