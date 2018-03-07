@@ -21,11 +21,21 @@ class TransportWrapper(SectorModel):
         """
         pass
 
-    def _input_region_names(self, input_name):
-        return self.inputs[input_name].spatial_resolution.get_entry_names()
+    def simulate(self, data_handle):
+        """Run the transport model
 
-    def _input_interval_names(self, input_name):
-        return self.inputs[input_name].temporal_resolution.get_entry_names()
+        Arguments
+        ---------
+        data_handle: smif.data_layer.DataHandle
+        """
+        source_dir = os.path.realpath(os.path.dirname(__file__))
+        with TemporaryDirectory() as temp_dir:
+            pass
+
+        self._set_parameters(data_handle, source_dir)
+        self._set_inputs(data_handle, source_dir)
+        self._run_model_subprocess(source_dir)
+        self._set_outputs(data_handle, source_dir)
 
     def _run_model_subprocess(self, source_dir):
         path_to_java_project = os.path.join(
@@ -58,27 +68,19 @@ class TransportWrapper(SectorModel):
 
         try:
             output = check_output(arguments)
+            self.logger.debug(output)
         except CalledProcessError as ex:
             self.logger.exception("Transport model failed %s", ex)
+            raise ex
 
         # change directory back to previous
         os.chdir(dir_to_restore)
 
-    def simulate(self, data_handle):
-        """Run the transport model
+    def _input_region_names(self, input_name):
+        return self.inputs[input_name].spatial_resolution.get_entry_names()
 
-        Arguments
-        ---------
-        data_handle: smif.data_layer.DataHandle
-        """
-        source_dir = os.path.realpath(os.path.dirname(__file__))
-        with TemporaryDirectory() as temp_dir:
-            pass
-
-        self._set_parameters(data_handle, source_dir)
-        self._set_inputs(data_handle, source_dir)
-        self._run_model_subprocess(source_dir)
-        self._set_outputs(data_handle, source_dir)
+    def _input_interval_names(self, input_name):
+        return self.inputs[input_name].temporal_resolution.get_entry_names()
 
     def _set_parameters(self, data_handle, source_dir):
         # Get model parameters
