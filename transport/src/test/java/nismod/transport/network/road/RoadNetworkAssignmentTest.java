@@ -349,7 +349,7 @@ public class RoadNetworkAssignmentTest {
 		
 		//assign passenger flows
 		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
-		rna.assignPassengerFlows(odm);
+		rna.assignPassengerFlows(odm, null);
 		rna.expandTripList();
 		
 		//TEST OUTPUT AREA PROBABILITIES
@@ -605,7 +605,7 @@ public class RoadNetworkAssignmentTest {
 
 		//assign passenger flows
 		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
-		rna.assignPassengerFlows(odm);
+		rna.assignPassengerFlows(odm, null);
 		rna.expandTripList();
 		
 		//TEST OUTPUT AREA PROBABILITIES
@@ -1147,7 +1147,7 @@ public class RoadNetworkAssignmentTest {
 		odm.printMatrixFormatted();
 		
 		long timeNow = System.currentTimeMillis();
-		rna.assignPassengerFlows(odm);
+		rna.assignPassengerFlows(odm, null);
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Passenger flows assigned in %d seconds.\n", timeNow / 1000);
 		

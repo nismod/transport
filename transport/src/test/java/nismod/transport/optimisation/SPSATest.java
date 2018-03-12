@@ -30,8 +30,8 @@ public class SPSATest {
 	public static void main( String[] args ) throws IOException	{
 			
 		//final String configFile = "./src/main/config/config.properties";
-		final String configFile = "./src/test/config/testConfig.properties";
-		//final String configFile = "./src/test/config/minitestConfig.properties";
+		//final String configFile = "./src/test/config/testConfig.properties";
+		final String configFile = "./src/test/config/minitestConfig.properties";
 		Properties props = ConfigReader.getProperties(configFile);
 		
 		final String areaCodeFileName = props.getProperty("areaCodeFileName");
@@ -76,12 +76,13 @@ public class SPSATest {
 		//create a road network assignment
 		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, props);
 
-/*		
+	
+	/*	
 	
 		//initial OD matrix
 		RealODMatrix odm = new RealODMatrix(baseYearODMatrixFile);
 		//odm.setFlow("E06000045", "E06000045", 70000);
-		odm.scaleMatrixValue(5.0);
+		//odm.scaleMatrixValue(5.0);
 		odm.printMatrixFormatted("Initial passenger matrix:");
 		
 		//double a = 100000;
@@ -93,7 +94,7 @@ public class SPSATest {
 		
 		SPSA optimiser = new SPSA();
 		optimiser.initialise(rna, odm, a, A, c, alpha, gamma);
-		optimiser.runSPSA(10);
+		optimiser.runSPSA(100);
 		
 		optimiser.getThetaEstimate().printMatrixFormatted("Final OD matrix:");
 	
@@ -146,7 +147,7 @@ public class SPSATest {
 		
 		SPSA2 optimiser2 = new SPSA2();
 		optimiser2.initialise(rna, odmat, rna.getStartNodeProbabilities(), rna.getEndNodeProbabilities(), a, A, c, alpha, gamma);
-		optimiser2.runSPSA(10);
+		optimiser2.runSPSA(100);
 
 		System.out.printf("Final RMSN: %.2f%% %n", optimiser2.lossFunction());
 		
@@ -157,15 +158,17 @@ public class SPSATest {
 		line2.setSize(600, 400);
 		line2.setVisible(true);
 		
-
 		*/
 		
+		
+		/*
+	
 		//initial OD matrix
 		RealODMatrix odmatrix = new RealODMatrix(baseYearODMatrixFile);
 		//RealODMatrix odmatrix = optimiser.getThetaEstimate();
-		//odmatrix.setFlow("E06000045", "E06000045", 70269);
-		//odmatrix.setFlow("E06000045", "E06000045", 70000);
-		odmatrix.setFlow("E06000045", "E06000045", 72930);
+		////odmatrix.setFlow("E06000045", "E06000045", 70269);
+		////odmatrix.setFlow("E06000045", "E06000045", 70000);
+		//odmatrix.setFlow("E06000045", "E06000045", 72930);
 		//odmatrix.scaleMatrixValue(10.0);
 		odmatrix.printMatrixFormatted("Initial passenger matrix:");
 		
@@ -199,7 +202,7 @@ public class SPSATest {
 		params.setProperty("AVERAGE_INTERSECTION_DELAY", "0.8");
 	
 		optimiser3.initialise(rna, rsg, params, odmatrix, rna.getStartNodeProbabilities(), rna.getEndNodeProbabilities(), a1, A1, c1, a2, A2, c2, alpha, gamma);
-	//	optimiser3.runSPSA(10);
+		optimiser3.runSPSA(100);
 
 		optimiser3.getThetaEstimate().printMatrixFormatted("Final OD matrix:");
 		System.out.println("Final start node probabilities: " + optimiser3.getThetaEstimateStart());
@@ -217,6 +220,9 @@ public class SPSATest {
 		line3.setVisible(true);
 		
 		
+		*/
+		
+	
 		//Assign tempro matrix
 		
 		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
@@ -236,26 +242,27 @@ public class SPSATest {
 		temproODMatrix.scaleMatrixValue(0.5);
 		temproODMatrix.printMatrixFormatted("Initial passenger matrix:");
 		
-		double a = 10000;
+		//double a = 10000;
+		double a = 1000;
 		double A = 0.0; 
 		double c = 50;
-		alpha = 0.602;
-		gamma = 0.101;
+		double alpha = 0.602;
+		double gamma = 0.101;
 		
 		SPSA4 optimiser = new SPSA4();
 
 		//rsg.readRoutes("./src/test/resources/testdata/testRoutes.txt");
 		//rsg.readRoutes("./src/test/resources/testdata/allRoutes.txt");
-		rsgparams = new Properties();
+		Properties rsgparams = new Properties();
 		rsgparams.setProperty("ROUTE_LIMIT", "5");
 		rsgparams.setProperty("GENERATION_LIMIT", "10");
-		rsg = new RouteSetGenerator(roadNetwork, rsgparams);
+		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, rsgparams);
 		//rsg.generateRouteSetForODMatrix(new ODMatrix(temproODMatrix));
 		
 		rsg.printStatistics();
 		
 		//set route choice parameters
-		params = new Properties();
+		Properties params = new Properties();
 		params.setProperty("TIME", "-1.5");
 		params.setProperty("LENGTH", "-1.0");
 		params.setProperty("COST", "-3.6");

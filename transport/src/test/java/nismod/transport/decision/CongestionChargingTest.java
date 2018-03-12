@@ -97,10 +97,13 @@ public class CongestionChargingTest {
 //		dm.getRoadNetworkAssignment(2015).assignPassengerFlowsRouteChoice(passengerODM, rsg, props);
 		
 		dm.predictHighwayDemand(2016, 2015);
-		RoadNetworkAssignment rna = dm.getRoadNetworkAssignment(2016);
+		RoadNetworkAssignment rna1 = dm.getRoadNetworkAssignment(2015);
+		RoadNetworkAssignment rna2 = dm.getRoadNetworkAssignment(2016);
 		
 		final URL congestionChargeZoneUrl = new URL("file://src/test/resources/testdata/shapefiles/congestionChargingZone.shp");
-		NetworkVisualiser.visualise(roadNetwork, "No intervention", rna.calculateDirectionAveragedAbsoluteDifferenceCarCounts(), "CountDiff", null, congestionChargeZoneUrl);
+		
+		NetworkVisualiser.visualise(roadNetwork, "2015 no intervention", rna1.calculateDirectionAveragedAbsoluteDifferenceCarCounts(), "CapUtil", null, congestionChargeZoneUrl);
+		NetworkVisualiser.visualise(roadNetwork, "2016 with congestion charging", rna2.calculateDirectionAveragedAbsoluteDifferenceCarCounts(), "CapUtil", null, congestionChargeZoneUrl);
 	}
 	
 	@Test

@@ -251,7 +251,7 @@ public class EstimatedODMatrix extends RealODMatrix {
 		this.rna.resetTripStorages();
 		ODMatrix odm = new ODMatrix(this);
 		
-		this.rna.assignPassengerFlows(odm);
+		this.rna.assignPassengerFlows(odm, null);
 		double RMSN = this.rna.calculateRMSNforSimulatedVolumes();
 		System.out.printf("RMSN before scaling = %.2f%% %n", RMSN);
 		

@@ -561,6 +561,9 @@ public class RoadNetwork {
 					objList.add(null);
 					objList.add(null);
 				}
+				Integer lanes = this.numberOfLanes.get(edge.getID());
+				if (lanes == null) lanes = 0;
+				objList.add(lanes);
 				Double volume = linkData.get(edge.getID());
 				if (volume == null) volume = 0.0;
 				objList.add(volume);
@@ -2396,6 +2399,7 @@ public class RoadNetwork {
 		builder.add("FFspeed", Double.class);
 		builder.add("FFtime", Double.class);
 		builder.add("IsFerry", Boolean.class);
+		builder.add("Lanes", Integer.class);
 		builder.add(linkDataLabel, Double.class); //e.g. "DayVolume"
 
 		//build the type

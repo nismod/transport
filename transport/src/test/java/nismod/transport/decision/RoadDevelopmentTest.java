@@ -48,7 +48,7 @@ public class RoadDevelopmentTest {
 		
 		//create a road network
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
-	
+		
 		List<Intervention> interventions = new ArrayList<Intervention>();
 		Properties props2 = new Properties();
 		props2.setProperty("startYear", "2016");
@@ -58,7 +58,7 @@ public class RoadDevelopmentTest {
 		props2.setProperty("biDirectional", "true");
 		props2.setProperty("lanesPerDirection", "2");
 		props2.setProperty("length", "10.23");
-		props2.setProperty("roadCategory", "A");
+		props2.setProperty("roadClass", "A");
 		RoadDevelopment rd = new RoadDevelopment(props2);
 		
 		RoadDevelopment rd2 = new RoadDevelopment(roadDevelopmentFileName);
