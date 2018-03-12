@@ -408,7 +408,7 @@ public class SPSA3 {
 		if (rna.getFlagUseRouteChoiceModel())
 			rna.assignPassengerFlowsRouteChoice(odm, rsg, routeChoiceParams); //route choice version
 		else 
-			rna.assignPassengerFlows(odm); //routing version
+			rna.assignPassengerFlows(odm, null); //routing version
 		rna.expandTripList(); //if fractional assignment used
 		rna.updateLinkVolumePerVehicleType(); //used in RMSN calculation
 		

@@ -712,7 +712,7 @@ public class RouteSetGeneratorTest {
 		System.out.printf("Passenger flows assigned with route choice in %d seconds.\n", timeNow / 1000);
 		
 		timeNow = System.currentTimeMillis();
-		rna.assignPassengerFlows(odm);
+		rna.assignPassengerFlows(odm, null);
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Passenger flows assigned in %d seconds.\n", timeNow / 1000);
 	}

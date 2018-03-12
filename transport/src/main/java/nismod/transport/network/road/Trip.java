@@ -185,7 +185,7 @@ public class Trip {
 		//double cost = distance / 100 * energyConsumptionsPer100km.get(this.engine) * energyUnitCosts.get(this.engine);
 		
 		//fetch congestion charge for the vehicle type
-		HashMap<String, HashMap<Integer, Double>> linkCharges = null;
+		HashMap<String, HashMap<Integer, Double>> linkCharges = new HashMap<String, HashMap<Integer, Double>>();;;
 		if (congestionCharges != null) 
 			for (String policyName: congestionCharges.keySet())
 				linkCharges.put(policyName, (HashMap<Integer, Double>) congestionCharges.get(policyName).get(this.vehicle, this.hour));

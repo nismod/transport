@@ -65,7 +65,7 @@ public class RoadDevelopment extends Intervention {
 		boolean biDirectional = Boolean.parseBoolean(this.props.getProperty("biDirectional"));
 		int numberOfLanesPerDirection = Integer.parseInt(this.props.getProperty("lanesPerDirection"));
 		double length = Double.parseDouble(this.props.getProperty("length"));
-		char roadCategory = this.props.getProperty("roadCategory").charAt(0);
+		char roadCategory = this.props.getProperty("roadClass").charAt(0);
 				
 		Node fromNode = rn.getNodeIDtoNode().get(fromNodeId);
 		Node toNode = rn.getNodeIDtoNode().get(toNodeId);

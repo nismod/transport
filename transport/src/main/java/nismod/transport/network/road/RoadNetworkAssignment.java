@@ -340,6 +340,7 @@ public class RoadNetworkAssignment {
 		}
 
 		this.congestionCharges = congestionCharges;
+		//System.out.println("Congestion charges: " + this.congestionCharges);
 
 		//read the parameters
 		this.maximumCapacityMRoad = Integer.parseInt(params.getProperty("MAXIMUM_CAPACITY_M_ROAD"));
@@ -412,9 +413,9 @@ public class RoadNetworkAssignment {
 				if (!roadNetwork.isBlacklistedAsEndNode(node))   endNodeProbabilities.put(node, Math.pow(roadNetwork.getGravitatingPopulation(node), nodesProbabilityWeighting) / sumEnd);
 			}
 		}
-		System.out.println("Probabilities for nodes:");
-		System.out.println(this.startNodeProbabilities);
-		System.out.println(this.endNodeProbabilities);
+		//System.out.println("Probabilities for nodes:");
+		//System.out.println(this.startNodeProbabilities);
+		//System.out.println(this.endNodeProbabilities);
 
 		//calculate node probabilities from gravitating workplace population (ignores blacklisted nodes)
 		startNodeProbabilitiesFreight = new HashMap<Integer, Double>();
@@ -432,9 +433,9 @@ public class RoadNetworkAssignment {
 				if (!roadNetwork.isBlacklistedAsEndNode(node))   endNodeProbabilitiesFreight.put(node, Math.pow(roadNetwork.getGravitatingWorkplacePopulation(node), nodesProbabilityWeightingFreight) / sumEnd);
 			}
 		}
-		System.out.println("Node probabilities for freight:");
-		System.out.println(this.startNodeProbabilitiesFreight);
-		System.out.println(this.endNodeProbabilitiesFreight);
+		//System.out.println("Node probabilities for freight:");
+		//System.out.println(this.startNodeProbabilitiesFreight);
+		//System.out.println(this.endNodeProbabilitiesFreight);
 	}
 	
 
@@ -445,7 +446,7 @@ public class RoadNetworkAssignment {
 	 * @param passengerODM Passenger origin-destination matrix with flows to be assigned.
 	 */
 	@SuppressWarnings("unused")
-	public void assignPassengerFlows(ODMatrix passengerODM) {
+	public void assignPassengerFlows(ODMatrix passengerODM, RouteSetGenerator rsg) {
 
 		System.out.println("Assigning the passenger flows from the passenger matrix...");
 
@@ -453,7 +454,8 @@ public class RoadNetworkAssignment {
 		this.roadNetwork.sortGravityNodes();
 
 		//to store routes generated during the assignment
-		RouteSetGenerator rsg = new RouteSetGenerator(this.roadNetwork);
+		//RouteSetGenerator rsg = new RouteSetGenerator(this.roadNetwork);
+		if (rsg == null) rsg = new RouteSetGenerator(this.roadNetwork);
 
 		//counters to calculate percentage of assignment success
 		long counterAssignedTrips = 0;
@@ -845,11 +847,16 @@ public class RoadNetworkAssignment {
 
 					//fetch congestion charge for the vehicle type
 					//HashMap<String, HashMap<Integer, Double>> linkCharges = null;
-					HashMap<String, HashMap<Integer, Double>> linkCharges = new HashMap<String, HashMap<Integer, Double>>();;
+					HashMap<String, HashMap<Integer, Double>> linkCharges = new HashMap<String, HashMap<Integer, Double>>();
 					if (this.congestionCharges != null) 
-						for (String policyName: this.congestionCharges.keySet())
+						for (String policyName: this.congestionCharges.keySet()) {
+							System.out.println("Policy = " + policyName);
+							System.out.println("vht = " + vht + " hour = " + hour);
+							System.out.println("Congestion charges: " + (HashMap<Integer, Double>) this.congestionCharges.get(policyName).get(vht, hour));
+							
 							linkCharges.put(policyName, (HashMap<Integer, Double>) this.congestionCharges.get(policyName).get(vht, hour));
-
+						}
+			
 					fetchedRouteSet.calculateUtilities(this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions.get(Pair.of(vht, engine)), this.energyUnitCosts.get(engine), linkCharges, routeChoiceParameters);
 					fetchedRouteSet.calculateProbabilities(this.linkTravelTimePerTimeOfDay.get(hour), routeChoiceParameters);
 					fetchedRouteSet.sortRoutesOnUtility();
@@ -1907,9 +1914,9 @@ public class RoadNetworkAssignment {
 					//probabilities need to be calculated for this route set before a choice can be made
 					fetchedRouteSet.setLinkTravelTime(this.linkTravelTimePerTimeOfDay.get(hour));
 					fetchedRouteSet.setParameters(routeChoiceParameters);
-
+					
 					//fetch congestion charge for the vehicle type
-					HashMap<String, HashMap<Integer, Double>> linkCharges = null;
+					HashMap<String, HashMap<Integer, Double>> linkCharges = new HashMap<String, HashMap<Integer, Double>>();
 					if (this.congestionCharges != null) 
 						for (String policyName: this.congestionCharges.keySet())
 							linkCharges.put(policyName, (HashMap<Integer, Double>) this.congestionCharges.get(policyName).get(vht, hour));
@@ -2107,11 +2114,12 @@ public class RoadNetworkAssignment {
 	 * Finally, updates link travel times using weighted averaging.
 	 * @param passengerODM Passenger origin-destination matrix.
 	 * @param freightODM Freight origin-destination matrix.
+	 * @param rsg Route set generator to store fastest routes generated during the assignment (but could be pregenerated too).
 	 * @param weight Weighting parameter.
 	 */
-	public void assignFlowsExpandTripsAndUpdateLinkTravelTimes(ODMatrix passengerODM, FreightMatrix freightODM, double weight) {
+	public void assignFlowsExpandTripsAndUpdateLinkTravelTimes(ODMatrix passengerODM, FreightMatrix freightODM, RouteSetGenerator rsg, double weight) {
 
-		this.assignPassengerFlows(passengerODM);
+		this.assignPassengerFlows(passengerODM, rsg);
 		this.assignFreightFlows(freightODM);
 		this.expandTripList();
 		this.updateLinkTravelTimes(weight);
@@ -2138,15 +2146,16 @@ public class RoadNetworkAssignment {
 	 * Iterates assignment and travel time update a fixed number of times.
 	 * @param passengerODM Passenger origin-destination matrix.
 	 * @param freightODM Freight origin-destination matrix.
+	 * @param rsg Route set generator.
 	 * @param weight Weighting parameter.
 	 * @param iterations Number of iterations.
 	 */
-	public void assignFlowsAndUpdateLinkTravelTimesIterated(ODMatrix passengerODM, FreightMatrix freightODM, double weight, int iterations) {
+	public void assignFlowsAndUpdateLinkTravelTimesIterated(ODMatrix passengerODM, FreightMatrix freightODM, RouteSetGenerator rsg, double weight, int iterations) {
 
 		for (int i=0; i<iterations; i++) {
 			this.resetLinkVolumes(); //link volumes must be reset or they would compound across all iterations
 			this.resetTripStorages(); //clear route storages
-			this.assignFlowsExpandTripsAndUpdateLinkTravelTimes(passengerODM, freightODM, weight);
+			this.assignFlowsExpandTripsAndUpdateLinkTravelTimes(passengerODM, freightODM, rsg, weight);
 		}
 	}
 
