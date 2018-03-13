@@ -10,6 +10,7 @@ import java.util.Properties;
 
 import org.junit.Test;
 
+import nismod.transport.demand.ODMatrix;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.utility.ConfigReader;
 
@@ -92,6 +93,15 @@ public class ZoningTest {
 		System.out.println(zoning.getZoneToSortedListOfNodeAndDistancePairs());
 		System.out.println(zoning.getZoneToListOfContaintedNodes());
 		
+		System.out.println(zoning.getZoneToNodeMatrix());
+		
+		for (String zone: zoning.getZoneToNodeMatrix().keySet()) {
+			
+			zoning.getZoneToNodeMatrix().get(zone).printMatrixFormatted(zone);
+			
+		}
+		
+		System.out.println("LAD to Tempro zone map: " + zoning.getLADToListOfContainedZones());
 	}
 	
 	@Test

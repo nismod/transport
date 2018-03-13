@@ -39,10 +39,14 @@ public class Zoning {
 	
 	private HashMap<Integer, String> nodeToZoneInWhichLocated; //maps node to Tempro zone in which it is located
 	private HashMap<String, List<Integer>> zoneToListOfContainedNodes; //maps Tempro zone to a list of nodes within that zone (if they exist)
+	
 	private HashMap<String, String> zoneToLAD; //maps Tempro zone to LAD zone
+	private HashMap<String, List<String>> LADToListOfContainedZones; //maps LAD zones to a list of contained Temrpo zones
 	
 	private HashMap<String, Integer> temproCodeToID;
 	private HashMap<Integer, String> temproIDToCode;
+	
+	private HashMap<String, NodeMatrix> zoneToNodeMatrix; //mapsTempro zones to a matrix of join node probabilities (for tempro zones that have multiple contained nodes)
 		
 	/**
 	 * @param zonesUrl
@@ -70,6 +74,10 @@ public class Zoning {
 		
 		mapZonesToNodesAndDistances(zonesFeatureCollection);
 		mapZonesToContainedNodes();
+		
+		mapLADsToContainedZones();
+		
+		mapZoneToNodeMatrices();
 		
 	}
 	
@@ -213,12 +221,41 @@ public class Zoning {
 		for (Integer nodeID: this.nodeToZoneInWhichLocated.keySet()) {
 			
 			String zoneCode = this.nodeToZoneInWhichLocated.get(nodeID);
-			List listOfNodes = this.zoneToListOfContainedNodes.get(zoneCode);
+			List<Integer> listOfNodes = this.zoneToListOfContainedNodes.get(zoneCode);
 			if (listOfNodes == null) {
 				listOfNodes = new ArrayList<Integer>();
 				this.zoneToListOfContainedNodes.put(zoneCode, listOfNodes);
 			}
 			listOfNodes.add(nodeID);
+		}
+	}
+	
+	private void mapZoneToNodeMatrices() {
+		
+		this.zoneToNodeMatrix = new HashMap<String, NodeMatrix>();
+		
+		for (String zone: this.zoneToListOfContainedNodes.keySet()) {
+			if (this.zoneToListOfContainedNodes.get(zone).size() >= 2) {
+				NodeMatrix nm = NodeMatrix.createUnitMatrix(this.zoneToListOfContainedNodes.get(zone));
+				//nm.normaliseWithZeroDiagonal();
+				nm.normalise();
+				this.zoneToNodeMatrix.put(zone, nm);
+			}
+		}
+	}
+	
+	private void mapLADsToContainedZones() {
+		
+		this.LADToListOfContainedZones = new HashMap<String, List<String>>();
+		
+		for (String zone: this.zoneToLAD.keySet()) {
+			String lad = this.zoneToLAD.get(zone);
+			List<String> list = this.LADToListOfContainedZones.get(lad);
+			if (list == null) {
+				list = new ArrayList<String>();
+				this.LADToListOfContainedZones.put(lad, list);
+			}
+			list.add(zone);
 		}
 	}
 	
@@ -332,5 +369,23 @@ public class Zoning {
 	public HashMap<String, List<Integer>> getZoneToListOfContaintedNodes() {
 		
 		return this.zoneToListOfContainedNodes;
+	}
+	
+	/**
+	 * Getter for tempro zone to node matrix of contained nodes.
+	 * @return Node matrix of contained nodes (with joint probabilities).
+	 */
+	public HashMap<String, NodeMatrix> getZoneToNodeMatrix() {
+		
+		return this.zoneToNodeMatrix;
+	}
+	
+	/**
+	 * Getter for LAD to list of contained tempro zones mapping.
+	 * @return LAD to list of contained zones.
+	 */
+	public HashMap<String, List<String>> getLADToListOfContainedZones() {
+		
+		return this.LADToListOfContainedZones;
 	}
 }
