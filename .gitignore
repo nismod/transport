@@ -428,3 +428,8 @@ transport/src/main/resources/data/
 ### Output files ###
 transport/output/
 transport/temp/
+
+transport/*.dat
+transport/*.csv
+transport/*.txt
+
