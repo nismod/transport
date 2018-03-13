@@ -7,12 +7,18 @@ import static org.junit.Assert.*;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.junit.Test;
+
+import nismod.transport.network.road.RoadNetwork;
+import nismod.transport.utility.ConfigReader;
+import nismod.transport.zone.Zoning;
 
 /**
  * Tests for the ODMatrix class
@@ -134,6 +140,57 @@ public class ODMatrixTest {
 		
 		ODMatrix odm2 = ODMatrix.createUnitMatrix(zones, zones);
 		odm2.printMatrixFormatted();
+		
+		final String configFile = "./src/test/config/testConfig.properties";
+		Properties props = ConfigReader.getProperties(configFile);
+		
+		final String areaCodeFileName = props.getProperty("areaCodeFileName");
+		final String areaCodeNearestNodeFile = props.getProperty("areaCodeNearestNodeFile");
+		final String workplaceZoneFileName = props.getProperty("workplaceZoneFileName");
+		final String workplaceZoneNearestNodeFile = props.getProperty("workplaceZoneNearestNodeFile");
+		final String freightZoneToLADfile = props.getProperty("freightZoneToLADfile");
+		final String freightZoneNearestNodeFile = props.getProperty("freightZoneNearestNodeFile");
+
+		final URL zonesUrl = new URL(props.getProperty("zonesUrl"));
+		final URL networkUrl = new URL(props.getProperty("networkUrl"));
+		final URL networkUrlFixedEdgeIDs = new URL(props.getProperty("networkUrlFixedEdgeIDs"));
+		final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
+		final URL AADFurl = new URL(props.getProperty("AADFurl"));
+
+		//create a road network
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
+		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
+		
+		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
+		
+		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
+		
+		//E06000045 (E02003552, E02003553)
+		//E07000091  (E02004801, E02004800)
+		
+		ODMatrix tempro = new ODMatrix();
+		tempro.setFlow("E02004800", "E02003552", 1);
+		tempro.setFlow("E02004800", "E02003553", 2);
+		tempro.setFlow("E02004801", "E02003552", 3);
+		tempro.setFlow("E02004801", "E02003553", 4);
+		
+		tempro.printMatrixFormatted("Tempro matrix:");
+		ODMatrix ladMatrix = ODMatrix.createLadMatrixFromTEMProMatrix(tempro, zoning);
+		ladMatrix.printMatrixFormatted("Lad matrix:");
+		
+		List<String> origins = new ArrayList<String>();
+		List<String> destinations = new ArrayList<String>();
+		origins.add("E02004800");
+		origins.add("E02004801");
+		destinations.add("E02003553");
+		System.out.println("Matrix subset sum: " + tempro.sumMatrixSubset(origins, destinations));
+		assertEquals("Matrix subset sum is correct", 6, tempro.sumMatrixSubset(origins, destinations));
+		
+		ladMatrix.scaleMatrixValue(2);
+		ladMatrix.printMatrixFormatted("Lad matrix after scaling:");
+		
+		ODMatrix tempro2 = ODMatrix.createTEMProFromLadMatrix(ladMatrix, tempro, zoning);
+		tempro2.printMatrixFormatted("New tempro from LAD:");
 		
 	}
 }
