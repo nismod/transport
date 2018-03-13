@@ -96,9 +96,7 @@ public class ZoningTest {
 		System.out.println(zoning.getZoneToNodeMatrix());
 		
 		for (String zone: zoning.getZoneToNodeMatrix().keySet()) {
-			
 			zoning.getZoneToNodeMatrix().get(zone).printMatrixFormatted(zone);
-			
 		}
 		
 		System.out.println("LAD to Tempro zone map: " + zoning.getLADToListOfContainedZones());

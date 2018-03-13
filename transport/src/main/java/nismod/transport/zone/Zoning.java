@@ -237,8 +237,8 @@ public class Zoning {
 		for (String zone: this.zoneToListOfContainedNodes.keySet()) {
 			if (this.zoneToListOfContainedNodes.get(zone).size() >= 2) {
 				NodeMatrix nm = NodeMatrix.createUnitMatrix(this.zoneToListOfContainedNodes.get(zone));
-				//nm.normaliseWithZeroDiagonal();
-				nm.normalise();
+				nm.normaliseWithZeroDiagonal();
+				//nm.normalise();
 				this.zoneToNodeMatrix.put(zone, nm);
 			}
 		}
