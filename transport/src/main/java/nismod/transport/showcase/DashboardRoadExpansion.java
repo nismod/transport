@@ -14,8 +14,10 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
@@ -26,6 +28,10 @@ import javax.swing.table.TableCellRenderer;
 
 import org.geotools.brewer.color.BrewerPalette;
 import org.geotools.brewer.color.ColorBrewer;
+import org.geotools.graph.structure.DirectedEdge;
+import org.geotools.graph.structure.DirectedNode;
+import org.geotools.graph.structure.Edge;
+import org.geotools.graph.structure.Node;
 import org.geotools.swing.JMapFrame;
 import org.geotools.swing.JMapPane;
 import org.jfree.chart.ChartFactory;
@@ -35,6 +41,7 @@ import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.BarRenderer;
 import org.jfree.data.category.DefaultCategoryDataset;
+import org.opengis.feature.simple.SimpleFeature;
 
 import nismod.transport.decision.Intervention;
 import nismod.transport.decision.RoadExpansion;
@@ -64,6 +71,10 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.JSlider;
 import javax.swing.JButton;
 import javax.swing.JSeparator;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+import javax.swing.JCheckBox;
+import javax.swing.SwingConstants;
 
 /**
  * Dashboard for the road expansion policy intervention.
@@ -331,6 +342,30 @@ public class DashboardRoadExpansion extends JFrame {
 		//leftFrame.setLocation(0, 0);
 		leftFrame.setVisible(false);
 		JMapPane pane = ((JMapFrameDemo)leftFrame).getMapPane();
+		//((JMapFrameDemo)leftFrame).getMapPane().resize(1000, 1000);
+		//leftFrame.setResizable(true);
+		//leftFrame.setSize(leftFrame.getMaximumSize());
+		//pane.setPreferredSize(pane.getMaximumSize());
+		//pane.setSize(pane.getMaximumSize());
+		//leftFrame.getContentPane().setSize(leftFrame.getContentPane().getMaximumSize());
+		//leftFrame.getLayeredPane().setSize(leftFrame.getLayeredPane().getMaximumSize());
+		//leftFrame.repaint();
+		//pane.reset();
+		//pane.setSize(pane.getMaximumSize());
+		//pane.resize(2000,2000);
+		//pane.setBounds(0,0,32767,32767);
+		//pane.setBounds(leftFrame.getX(), leftFrame.getY(), leftFrame.getWidth(), leftFrame.getHeight());
+		//pane.setSize(leftFrame.getWidth(), leftFrame.getHeight());
+		//pane.reset();
+		//pane.setBounds(0,0,5000,5000);
+		//pane.reset();
+		//System.out.println("MAX SIZE: " +pane.getMaximumSize());
+		//System.out.println("MIN SIZE: " + pane.getMinimumSize());
+		//System.out.println("SIZE: " + pane.getSize());
+		//System.out.println("BOUNDS: " + pane.getBounds());
+		//System.out.println("FRAME: " + leftFrame.getSize());
+		//System.out.println("CONTENT PANE: " + leftFrame.getContentPane().getSize());
+
 		
 		final String roadExpansionFileName = props.getProperty("roadExpansionFile");
 		//List<Intervention> interventions = new ArrayList<Intervention>();
@@ -387,15 +422,73 @@ public class DashboardRoadExpansion extends JFrame {
 		lblAfterPolicyIntervention.setBounds(470, 755, 392, 30);
 		contentPane.add(lblAfterPolicyIntervention);
 		
+		JCheckBox chckbxNewCheckBox = new JCheckBox("Both directions?");
+		chckbxNewCheckBox.setSelected(true);
+		chckbxNewCheckBox.setBounds(1558, 945, 122, 23);
+		contentPane.add(chckbxNewCheckBox);
+		
 		JComboBox comboBox = new JComboBox();
-		comboBox.setModel(new DefaultComboBoxModel(new String[] {"5", "6", "27", "23", "25"}));
+		comboBox.setModel(new DefaultComboBoxModel(roadNetwork.getNodeIDtoNode().keySet().toArray()));
+		//comboBox.setModel(new DefaultComboBoxModel(new String[] {"5", "6", "27", "23", "25"}));
 		comboBox.setBounds(1404, 832, 149, 20);
 		contentPane.add(comboBox);
+			
+		int fromNode = (int)comboBox.getSelectedItem();
+		DirectedNode nodeA = (DirectedNode) roadNetwork.getNodeIDtoNode().get(fromNode);
+		
+		Set<Integer> listOfNodes = new HashSet<Integer>();
+		List edges = nodeA.getOutEdges();
+		for (Object o: edges) {
+			DirectedEdge e = (DirectedEdge) o;
+			DirectedNode other = e.getOutNode();
+			if (roadNetwork.getNumberOfLanes().get(e.getID()) != null)	listOfNodes.add(other.getID()); //if there is no lane number information (e.g. ferry) skip edge
+		}
+		Integer[] arrayOfNodes = listOfNodes.toArray(new Integer[0]);
+		Arrays.sort(arrayOfNodes);
 		
 		JComboBox comboBox_1 = new JComboBox();
-		comboBox_1.setModel(new DefaultComboBoxModel(new String[] {"24", "25", "1", "22", "34", "16"}));
+		comboBox_1.setModel(new DefaultComboBoxModel(arrayOfNodes));
+		//comboBox_1.setModel(new DefaultComboBoxModel(new String[] {"24", "25", "1", "22", "34", "16"}));
 		comboBox_1.setBounds(1404, 886, 149, 20);
 		contentPane.add(comboBox_1);
+		
+		comboBox.addActionListener (new ActionListener () {
+		    public void actionPerformed(ActionEvent e) {
+		    	
+		    	int fromNode = (int)comboBox.getSelectedItem();
+				DirectedNode nodeA = (DirectedNode) roadNetwork.getNodeIDtoNode().get(fromNode);
+				
+				Set<Integer> listOfNodes = new HashSet<Integer>();
+				List edges = nodeA.getOutEdges();
+				for (Object o: edges) {
+					DirectedEdge e2 = (DirectedEdge) o;
+					DirectedNode other = e2.getOutNode();//e2.getOtherNode(nodeA);
+					if (roadNetwork.getNumberOfLanes().get(e2.getID()) != null)	listOfNodes.add(other.getID()); //if there is no lane number information (e.g. ferry) skip edge
+				}
+				Integer[] arrayOfNodes = listOfNodes.toArray(new Integer[0]);
+				Arrays.sort(arrayOfNodes);
+				comboBox_1.setModel(new DefaultComboBoxModel(arrayOfNodes));
+		        
+		    }
+		});
+		
+		comboBox_1.addActionListener (new ActionListener () {
+		    public void actionPerformed(ActionEvent e) {
+		    	
+		    	int fromNode = (int)comboBox.getSelectedItem();
+				DirectedNode nodeA = (DirectedNode) roadNetwork.getNodeIDtoNode().get(fromNode);
+				
+				int toNode = (int)comboBox_1.getSelectedItem();
+				DirectedNode nodeB = (DirectedNode) roadNetwork.getNodeIDtoNode().get(toNode);
+				
+				DirectedEdge edge = (DirectedEdge) nodeA.getOutEdge(nodeB);
+				if (roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(edge.getID()) == null) //if there is no other direction edge, disable checkbox
+					chckbxNewCheckBox.setEnabled(false);
+				else
+					chckbxNewCheckBox.setEnabled(true);
+		
+		    }
+		});
 		
 		JLabel lblANode = new JLabel("A node");
 		lblANode.setLabelFor(comboBox);
@@ -416,14 +509,86 @@ public class DashboardRoadExpansion extends JFrame {
 		slider.setMajorTickSpacing(1);
 		slider.setMaximum(5);
 		slider.setMinimum(1);
-		slider.setBounds(1404, 947, 200, 45);
+		slider.setBounds(1404, 947, 138, 45);
 		contentPane.add(slider);
 		
-		JLabel lblLanesToAdd = new JLabel("Lanes to add in each direction:");
+		JLabel lblLanesToAdd = new JLabel("Lanes to add:");
 		lblLanesToAdd.setBounds(1404, 921, 177, 14);
 		contentPane.add(lblLanesToAdd);
 		
 		JButton btnNewButton = new JButton("RUN");
+		btnNewButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				
+				int fromNode = (int) comboBox.getSelectedItem();
+				int toNode = (int) comboBox_1.getSelectedItem();
+				int lanes = slider.getValue();
+				
+				System.out.println("fromNode = " + fromNode);
+				System.out.println("toNode = " + toNode);
+				
+				DirectedNode nodeA = (DirectedNode) roadNetwork.getNodeIDtoNode().get(fromNode);
+				DirectedNode nodeB = (DirectedNode) roadNetwork.getNodeIDtoNode().get(toNode);
+				DirectedEdge edge = (DirectedEdge) nodeA.getOutEdge(nodeB);
+				SimpleFeature sf = (SimpleFeature)edge.getObject();
+				Long countPoint = (long) sf.getAttribute("CP");
+				
+				Properties props2 = new Properties();
+				props2.setProperty("startYear", "2016");
+				props2.setProperty("endYear", "2025");
+				props2.setProperty("fromNode", Integer.toString(nodeA.getID()));
+				props2.setProperty("toNode", Integer.toString(nodeB.getID()));
+				props2.setProperty("CP", Long.toString(countPoint));
+				props2.setProperty("number", Integer.toString(lanes));
+				RoadExpansion re = new RoadExpansion(props2);
+				
+				System.out.println("Road expansion intervention: " + re.toString());
+				//interventions.add(re);
+				re.install(roadNetwork);
+				
+				RoadExpansion re2 = null;
+				if (chckbxNewCheckBox.isSelected()) { //if both directions
+
+					edge = (DirectedEdge) nodeB.getEdge(nodeA);
+					sf = (SimpleFeature)edge.getObject();
+					countPoint = (long) sf.getAttribute("CP");
+
+					props2.setProperty("fromNode", Integer.toString(nodeB.getID()));
+					props2.setProperty("toNode", Integer.toString(nodeA.getID()));
+					props2.setProperty("CP", Long.toString(countPoint));
+					re2 = new RoadExpansion(props2);
+
+					System.out.println("Road expansion intervention: " + re2.toString());
+					//interventions.add(re);
+					re2.install(roadNetwork);
+				}
+
+				RoadNetworkAssignment rnaAfterExpansion = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, props);
+				rnaAfterExpansion.assignPassengerFlows(odm, rsg);
+				rnaAfterExpansion.updateLinkVolumeInPCU();
+				rnaAfterExpansion.updateLinkVolumeInPCUPerTimeOfDay();
+				HashMap<Integer, Double> capacityAfter = rnaAfterExpansion.calculateDirectionAveragedPeakLinkCapacityUtilisation();
+				String shapefilePathAfter = "./temp/networkWithCapacityUtilisationAfter.shp";
+				JFrame rightFrame;
+				try {
+					rightFrame = NetworkVisualiserDemo.visualise(roadNetwork, "Capacity Utilisation After Intervention", capacityAfter, "CapUtil", shapefilePathAfter);
+					rightFrame.setVisible(false);
+					rightFrame.repaint();
+				//	panel_2.add(rightFrame.getContentPane());
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				
+				
+				re.uninstall(roadNetwork);
+				if (re2 != null) re2.uninstall(roadNetwork);
+				
+				
+			}
+		});
+		
 		btnNewButton.setFont(new Font("Calibri Light", Font.BOLD, 25));
 		btnNewButton.setBounds(1686, 799, 200, 169);
 		contentPane.add(btnNewButton);
