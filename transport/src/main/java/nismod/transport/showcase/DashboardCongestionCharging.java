@@ -9,6 +9,7 @@ import java.awt.Toolkit;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseWheelListener;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,6 +23,8 @@ import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 
+import org.apache.commons.collections4.keyvalue.MultiKey;
+import org.apache.commons.collections4.map.MultiKeyMap;
 import org.geotools.brewer.color.BrewerPalette;
 import org.geotools.brewer.color.ColorBrewer;
 import org.geotools.swing.JMapFrame;
@@ -40,6 +43,8 @@ import nismod.transport.demand.DemandModel;
 import nismod.transport.demand.ODMatrix;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
+import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
+import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.utility.ConfigReader;
 import nismod.transport.visualisation.BarVisualiser;
@@ -62,6 +67,8 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.JSlider;
 import javax.swing.JButton;
 import javax.swing.JSeparator;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 /**
  * Dashboard for the congestion charging policy intervention.
@@ -281,8 +288,7 @@ public class DashboardCongestionCharging extends JFrame {
 		//this.setLocation(0,  (int)Math.round(screenSize.height * 0.65));
 		this.setExtendedState(JMapFrame.MAXIMIZED_BOTH);
 		this.setLocation(0, 0);
-		
-		
+				
 		
 		final String configFile = "./src/test/config/testConfig.properties";
 		//final String configFile = "./src/main/config/config.properties";
@@ -340,6 +346,156 @@ public class DashboardCongestionCharging extends JFrame {
 		leftFrame.setVisible(false);
 		((JMapFrameDemo)leftFrame).getMapPane().reset();
 		
+		JLabel lblBeforePolicyIntervention = new JLabel("Before Policy Intervention");
+		lblBeforePolicyIntervention.setLabelFor(table);
+		lblBeforePolicyIntervention.setForeground(Color.DARK_GRAY);
+		lblBeforePolicyIntervention.setBounds(21, 755, 392, 30);
+		contentPane.add(lblBeforePolicyIntervention);
+		lblBeforePolicyIntervention.setFont(new Font("Calibri Light", Font.BOLD, 16));
+		
+		JLabel lblAfterPolicyIntervention = new JLabel("After Policy Intervention");
+		lblAfterPolicyIntervention.setLabelFor(table_2);
+		lblAfterPolicyIntervention.setForeground(Color.DARK_GRAY);
+		lblAfterPolicyIntervention.setFont(new Font("Calibri Light", Font.BOLD, 16));
+		lblAfterPolicyIntervention.setBounds(470, 755, 392, 30);
+		contentPane.add(lblAfterPolicyIntervention);
+		
+		JLabel lblANode = new JLabel("Peak-hour congestion charge:");
+		lblANode.setBounds(1404, 813, 187, 14);
+		contentPane.add(lblANode);
+		
+		
+		JSlider slider_1 = new JSlider();
+		slider_1.setValue(15);
+		slider_1.setPaintTicks(true);
+		slider_1.setPaintLabels(true);
+		slider_1.setMinorTickSpacing(1);
+		slider_1.setMaximum(50);
+		slider_1.setMajorTickSpacing(10);
+		slider_1.setBounds(1404, 841, 200, 45);
+		contentPane.add(slider_1);
+		
+		JSlider slider = new JSlider();
+		slider.setPaintTicks(true);
+		slider.setPaintLabels(true);
+		slider.setMinorTickSpacing(1);
+		slider.setValue(2);
+		slider.setMajorTickSpacing(10);
+		slider.setMaximum(50);
+		slider.setBounds(1404, 947, 200, 45);
+		contentPane.add(slider);
+		
+		JLabel lblLanesToAdd = new JLabel("Off-peak congestion charge:");
+		lblLanesToAdd.setBounds(1404, 921, 177, 14);
+		contentPane.add(lblLanesToAdd);
+		
+		JPanel panel_1 = new JPanel();
+		panel_1.setBounds(10, 10, (int)Math.round(screenSize.width * 0.5) - 12, (int)Math.round(screenSize.height * 0.65));
+		//panel_1.setSize((int)Math.round(screenSize.width * 0.5) - 5, (int)Math.round(screenSize.height * 0.6));
+		contentPane.add(panel_1);
+		
+		JPanel panel_2 = new JPanel();
+		panel_2.setBounds((int)Math.round(screenSize.width * 0.5), 10, (int)Math.round(screenSize.width * 0.5) - 12, (int)Math.round(screenSize.height * 0.65));
+		//panel_2.setSize((int)Math.round(screenSize.width * 0.5) - 5, (int)Math.round(screenSize.height * 0.6));
+		contentPane.add(panel_2);
+		
+		JButton btnNewButton = new JButton("RUN");
+		btnNewButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				final String congestionChargingFile = "./src/test/resources/testdata/interventions/congestionChargingSouthampton.properties";
+				try {
+					final URL congestionChargeZoneUrl = new URL("file://src/test/resources/testdata/shapefiles/congestionChargingZone.shp");
+				} catch (MalformedURLException e2) {
+					// TODO Auto-generated catch block
+					e2.printStackTrace();
+				}
+
+				CongestionCharging cc = new CongestionCharging(congestionChargingFile);
+				System.out.println("Congestion charging intervention: " + cc.toString());
+				
+				List<Intervention> interventions = new ArrayList<Intervention>();
+				interventions.add(cc);
+		
+				DemandModel dm;
+				try {
+					dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, engineTypeFractionsFile, AVFractionsFile, interventions, rsg, props);
+										
+					System.out.println("Base-year congestion charging: ");
+					//System.out.println(dm.getCongestionCharges(2015));
+					
+					cc.install(dm);
+					
+					HashMap<String, MultiKeyMap> congestionCharges = dm.getCongestionCharges(2016);
+					System.out.println("Policies: " + congestionCharges);
+					MultiKeyMap specificCharges = (MultiKeyMap) congestionCharges.get(congestionCharges.keySet().iterator().next());
+					System.out.println("Southampton policy: " + specificCharges);
+					
+					double peakCharge = slider_1.getValue();
+					double offPeakCharge = slider.getValue();
+					
+					for (Object mk: specificCharges.keySet()) {
+						
+						VehicleType vht = (VehicleType) ((MultiKey)mk).getKey(0);
+						TimeOfDay hour = (TimeOfDay) ((MultiKey)mk).getKey(1);
+						HashMap<Integer, Double> linkCharges = (HashMap<Integer, Double>) specificCharges.get(vht, hour);
+						if (hour == TimeOfDay.SEVENAM || hour == TimeOfDay.EIGHTAM || hour == TimeOfDay.NINEAM || hour == TimeOfDay.TENAM ||
+							hour == TimeOfDay.FOURPM || hour == TimeOfDay.FIVEPM || hour == TimeOfDay.SIXPM || hour == TimeOfDay.SEVENPM)
+								for (int edgID: linkCharges.keySet()) linkCharges.put(edgID, peakCharge);
+						else	for (int edgID: linkCharges.keySet()) linkCharges.put(edgID, offPeakCharge);
+					}
+					
+					props.setProperty("TIME", "-1.5");
+					props.setProperty("LENGTH", "-1.0");
+					props.setProperty("COST", "-10.0"); //bump the cost sensitivity
+
+					RoadNetworkAssignment rnaAfterCongestionCharging = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, congestionCharges, props);
+					//rnaAfterCongestionCharging.assignPassengerFlows(odm, rsg);
+					rnaAfterCongestionCharging.assignPassengerFlowsRouteChoice(odm, rsg, props);
+					rnaAfterCongestionCharging.updateLinkVolumeInPCU();
+					rnaAfterCongestionCharging.updateLinkVolumeInPCUPerTimeOfDay();
+
+					HashMap<Integer, Double> capacityAfter = rnaAfterCongestionCharging.calculateDirectionAveragedPeakLinkCapacityUtilisation();
+					
+					System.out.println(capacityAfter.get(615));
+					System.out.println(capacityAfter.get(616));
+
+					String shapefilePathAfter = "./temp/networkWithCapacityUtilisationAfter.shp";
+					JFrame rightFrame;
+
+					rightFrame = NetworkVisualiserDemo.visualise(roadNetwork, "Capacity Utilisation After Intervention", capacityAfter, "CapUtil", shapefilePathAfter);
+					rightFrame.setVisible(false);
+					//rightFrame.repaint();
+					//panel_2.add(rightFrame.getContentPane());
+					//panel_2.setLayout(null);
+
+					cc.uninstall(dm);
+
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+		});
+		
+		btnNewButton.setFont(new Font("Calibri Light", Font.BOLD, 25));
+		btnNewButton.setBounds(1686, 799, 200, 169);
+		contentPane.add(btnNewButton);
+		
+		JLabel lblRoadExpansionPolicy = new JLabel("Congestion Charging Policy");
+		lblRoadExpansionPolicy.setForeground(Color.DARK_GRAY);
+		lblRoadExpansionPolicy.setFont(new Font("Calibri Light", Font.BOLD, 16));
+		lblRoadExpansionPolicy.setBounds(1404, 755, 380, 30);
+		contentPane.add(lblRoadExpansionPolicy);
+		
+		JLabel lblNewLabel = new JLabel("£");
+		lblNewLabel.setBounds(1604, 870, 46, 14);
+		contentPane.add(lblNewLabel);
+		
+		JLabel label_1 = new JLabel("£");
+		label_1.setBounds(1604, 976, 46, 14);
+		contentPane.add(label_1);
+		
 		final String congestionChargingFile = "./src/test/resources/testdata/interventions/congestionChargingSouthampton.properties";
 		final URL congestionChargeZoneUrl = new URL("file://src/test/resources/testdata/shapefiles/congestionChargingZone.shp");
 
@@ -368,84 +524,15 @@ public class DashboardCongestionCharging extends JFrame {
 		HashMap<Integer, Double> capacityAfter = rnaAfterCongestionCharging.calculateDirectionAveragedPeakLinkCapacityUtilisation();
 		JFrame rightFrame = NetworkVisualiserDemo.visualise(roadNetwork, "Capacity Utilisation After Intervention", capacityAfter, "CapUtil", shapefilePathAfter, congestionChargeZoneUrl);
 		rightFrame.setVisible(false);
-					
-		JPanel panel_1 = new JPanel();
-		panel_1.setBounds(10, 10, (int)Math.round(screenSize.width * 0.5) - 12, (int)Math.round(screenSize.height * 0.65));
-		//panel_1.setSize((int)Math.round(screenSize.width * 0.5) - 5, (int)Math.round(screenSize.height * 0.6));
-		contentPane.add(panel_1);
+	
 		panel_1.add(leftFrame.getContentPane());
 		panel_1.setLayout(null);
 				
-		JPanel panel_2 = new JPanel();
-		panel_2.setBounds((int)Math.round(screenSize.width * 0.5), 10, (int)Math.round(screenSize.width * 0.5) - 12, (int)Math.round(screenSize.height * 0.65));
-		//panel_2.setSize((int)Math.round(screenSize.width * 0.5) - 5, (int)Math.round(screenSize.height * 0.6));
-		contentPane.add(panel_2);
 		panel_2.add(rightFrame.getContentPane());
 		panel_2.setLayout(null);
 		
-		JLabel lblBeforePolicyIntervention = new JLabel("Before Policy Intervention");
-		lblBeforePolicyIntervention.setLabelFor(table);
-		lblBeforePolicyIntervention.setForeground(Color.DARK_GRAY);
-		lblBeforePolicyIntervention.setBounds(21, 755, 392, 30);
-		contentPane.add(lblBeforePolicyIntervention);
-		lblBeforePolicyIntervention.setFont(new Font("Calibri Light", Font.BOLD, 16));
-		
-		JLabel lblAfterPolicyIntervention = new JLabel("After Policy Intervention");
-		lblAfterPolicyIntervention.setLabelFor(table_2);
-		lblAfterPolicyIntervention.setForeground(Color.DARK_GRAY);
-		lblAfterPolicyIntervention.setFont(new Font("Calibri Light", Font.BOLD, 16));
-		lblAfterPolicyIntervention.setBounds(470, 755, 392, 30);
-		contentPane.add(lblAfterPolicyIntervention);
-		
-		JLabel lblANode = new JLabel("Peak-hour congestion charge:");
-		lblANode.setBounds(1404, 813, 187, 14);
-		contentPane.add(lblANode);
-		
-		JSlider slider = new JSlider();
-		slider.setPaintTicks(true);
-		slider.setPaintLabels(true);
-		slider.setMinorTickSpacing(1);
-		slider.setValue(2);
-		slider.setMajorTickSpacing(10);
-		slider.setMaximum(50);
-		slider.setBounds(1404, 947, 200, 45);
-		contentPane.add(slider);
-		
-		JLabel lblLanesToAdd = new JLabel("Off-peak congestion charge:");
-		lblLanesToAdd.setBounds(1404, 921, 177, 14);
-		contentPane.add(lblLanesToAdd);
-		
-		JButton btnNewButton = new JButton("RUN");
-		btnNewButton.setFont(new Font("Calibri Light", Font.BOLD, 25));
-		btnNewButton.setBounds(1686, 799, 200, 169);
-		contentPane.add(btnNewButton);
-		
-		JLabel lblRoadExpansionPolicy = new JLabel("Congestion Charging Policy");
-		lblRoadExpansionPolicy.setForeground(Color.DARK_GRAY);
-		lblRoadExpansionPolicy.setFont(new Font("Calibri Light", Font.BOLD, 16));
-		lblRoadExpansionPolicy.setBounds(1404, 755, 380, 30);
-		contentPane.add(lblRoadExpansionPolicy);
-		
-		JSlider slider_1 = new JSlider();
-		slider_1.setValue(15);
-		slider_1.setPaintTicks(true);
-		slider_1.setPaintLabels(true);
-		slider_1.setMinorTickSpacing(1);
-		slider_1.setMaximum(50);
-		slider_1.setMajorTickSpacing(10);
-		slider_1.setBounds(1404, 841, 200, 45);
-		contentPane.add(slider_1);
-		
-		JLabel lblNewLabel = new JLabel("£");
-		lblNewLabel.setBounds(1604, 870, 46, 14);
-		contentPane.add(lblNewLabel);
-		
-		JLabel label_1 = new JLabel("£");
-		label_1.setBounds(1604, 976, 46, 14);
-		contentPane.add(label_1);
-		
 		pack();
 		
-		//cc.uninstall(dm);
+		cc.uninstall(dm);
 	}
 }
