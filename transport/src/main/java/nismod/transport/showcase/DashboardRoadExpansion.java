@@ -366,48 +366,7 @@ public class DashboardRoadExpansion extends JFrame {
 		//System.out.println("FRAME: " + leftFrame.getSize());
 		//System.out.println("CONTENT PANE: " + leftFrame.getContentPane().getSize());
 
-		
-		final String roadExpansionFileName = props.getProperty("roadExpansionFile");
-		//List<Intervention> interventions = new ArrayList<Intervention>();
-		//RoadExpansion re = new RoadExpansion(roadExpansionFileName);
-		
-		Properties props2 = new Properties();
-		props2.setProperty("startYear", "2016");
-		props2.setProperty("endYear", "2025");
-		props2.setProperty("fromNode", "22");
-		props2.setProperty("toNode", "23");
-		props2.setProperty("CP", "6935");
-		props2.setProperty("number", "2");
-		RoadExpansion re = new RoadExpansion(props2);
-				
-		System.out.println("Road expansion intervention: " + re.toString());
-		//interventions.add(re);
-		re.install(roadNetwork);
-		
-		RoadNetworkAssignment rnaAfterExpansion = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, props);
-		rnaAfterExpansion.assignPassengerFlows(odm, rsg);
-		rnaAfterExpansion.updateLinkVolumeInPCU();
-		rnaAfterExpansion.updateLinkVolumeInPCUPerTimeOfDay();
-		HashMap<Integer, Double> capacityAfter = rnaAfterExpansion.calculateDirectionAveragedPeakLinkCapacityUtilisation();
-		JFrame rightFrame = NetworkVisualiserDemo.visualise(roadNetwork, "Capacity Utilisation After Intervention", capacityAfter, "CapUtil", shapefilePathAfter);
-		rightFrame.setVisible(false);
-		
-		re.uninstall(roadNetwork);
-		
-		JPanel panel_1 = new JPanel();
-		panel_1.setBounds(10, 10, (int)Math.round(screenSize.width * 0.5) - 12, (int)Math.round(screenSize.height * 0.65));
-		//panel_1.setSize((int)Math.round(screenSize.width * 0.5) - 5, (int)Math.round(screenSize.height * 0.6));
-		contentPane.add(panel_1);
-		panel_1.add(leftFrame.getContentPane());
-		panel_1.setLayout(null);
-				
-		JPanel panel_2 = new JPanel();
-		panel_2.setBounds((int)Math.round(screenSize.width * 0.5), 10, (int)Math.round(screenSize.width * 0.5) - 12, (int)Math.round(screenSize.height * 0.65));
-		//panel_2.setSize((int)Math.round(screenSize.width * 0.5) - 5, (int)Math.round(screenSize.height * 0.6));
-		contentPane.add(panel_2);
-		panel_2.add(rightFrame.getContentPane());
-		panel_2.setLayout(null);
-		
+			
 		JLabel lblBeforePolicyIntervention = new JLabel("Before Policy Intervention");
 		lblBeforePolicyIntervention.setLabelFor(table);
 		lblBeforePolicyIntervention.setForeground(Color.DARK_GRAY);
@@ -598,6 +557,53 @@ public class DashboardRoadExpansion extends JFrame {
 		lblRoadExpansionPolicy.setFont(new Font("Calibri Light", Font.BOLD, 16));
 		lblRoadExpansionPolicy.setBounds(1404, 755, 380, 30);
 		contentPane.add(lblRoadExpansionPolicy);
+		
+		final String roadExpansionFileName = props.getProperty("roadExpansionFile");
+		//List<Intervention> interventions = new ArrayList<Intervention>();
+		//RoadExpansion re = new RoadExpansion(roadExpansionFileName);
+		
+		Properties props2 = new Properties();
+		props2.setProperty("startYear", "2016");
+		props2.setProperty("endYear", "2025");
+		props2.setProperty("fromNode", "22");
+		props2.setProperty("toNode", "23");
+		props2.setProperty("CP", "6935");
+		props2.setProperty("number", "2");
+		RoadExpansion re = new RoadExpansion(props2);
+		
+		//set controls to represent the intervention
+		comboBox.setSelectedItem(new Integer(22));
+		comboBox_1.setSelectedItem(new Integer(23));
+		slider.setValue(2);
+		chckbxNewCheckBox.setSelected(false);
+				
+		System.out.println("Road expansion intervention: " + re.toString());
+		//interventions.add(re);
+		re.install(roadNetwork);
+		
+		RoadNetworkAssignment rnaAfterExpansion = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, props);
+		rnaAfterExpansion.assignPassengerFlows(odm, rsg);
+		rnaAfterExpansion.updateLinkVolumeInPCU();
+		rnaAfterExpansion.updateLinkVolumeInPCUPerTimeOfDay();
+		HashMap<Integer, Double> capacityAfter = rnaAfterExpansion.calculateDirectionAveragedPeakLinkCapacityUtilisation();
+		JFrame rightFrame = NetworkVisualiserDemo.visualise(roadNetwork, "Capacity Utilisation After Intervention", capacityAfter, "CapUtil", shapefilePathAfter);
+		rightFrame.setVisible(false);
+		
+		re.uninstall(roadNetwork);
+		
+		JPanel panel_1 = new JPanel();
+		panel_1.setBounds(10, 10, (int)Math.round(screenSize.width * 0.5) - 12, (int)Math.round(screenSize.height * 0.65));
+		//panel_1.setSize((int)Math.round(screenSize.width * 0.5) - 5, (int)Math.round(screenSize.height * 0.6));
+		contentPane.add(panel_1);
+		panel_1.add(leftFrame.getContentPane());
+		panel_1.setLayout(null);
+				
+		JPanel panel_2 = new JPanel();
+		panel_2.setBounds((int)Math.round(screenSize.width * 0.5), 10, (int)Math.round(screenSize.width * 0.5) - 12, (int)Math.round(screenSize.height * 0.65));
+		//panel_2.setSize((int)Math.round(screenSize.width * 0.5) - 5, (int)Math.round(screenSize.height * 0.6));
+		contentPane.add(panel_2);
+		panel_2.add(rightFrame.getContentPane());
+		panel_2.setLayout(null);
 		
 		pack();
 	}
