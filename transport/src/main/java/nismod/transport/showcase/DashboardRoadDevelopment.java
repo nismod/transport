@@ -10,9 +10,13 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseWheelListener;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
@@ -22,6 +26,10 @@ import javax.swing.table.DefaultTableModel;
 
 import org.geotools.brewer.color.BrewerPalette;
 import org.geotools.brewer.color.ColorBrewer;
+import org.geotools.graph.structure.DirectedEdge;
+import org.geotools.graph.structure.DirectedNode;
+import org.geotools.graph.structure.Edge;
+import org.geotools.graph.structure.Node;
 import org.geotools.swing.JMapFrame;
 import org.geotools.swing.JMapPane;
 import org.jfree.chart.ChartFactory;
@@ -31,8 +39,13 @@ import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.BarRenderer;
 import org.jfree.data.category.DefaultCategoryDataset;
+import org.opengis.feature.simple.SimpleFeature;
 
+import com.vividsolutions.jts.geom.Point;
+
+import nismod.transport.decision.Intervention;
 import nismod.transport.decision.RoadDevelopment;
+import nismod.transport.decision.RoadExpansion;
 import nismod.transport.demand.ODMatrix;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
@@ -61,6 +74,8 @@ import javax.swing.JSeparator;
 import javax.swing.JRadioButton;
 import javax.swing.ButtonGroup;
 import javax.swing.JTextField;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 /**
  * Dashboard for the road development policy intervention.
@@ -316,36 +331,6 @@ public class DashboardRoadDevelopment extends JFrame {
 		leftFrame.setVisible(false);
 		//((JMapFrameDemo)leftFrame).getMapPane()
 				
-		final String roadDevelopmentFileName = props.getProperty("roadDevelopmentFile");
-		RoadDevelopment rd = new RoadDevelopment(roadDevelopmentFileName);
-		System.out.println("Road development intervention: " + rd.toString());
-		rd.install(roadNetwork);
-		
-		RoadNetworkAssignment rnaAfterDevelopment = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, props);
-		rnaAfterDevelopment.assignPassengerFlows(odm, rsg);
-		rnaAfterDevelopment.updateLinkVolumeInPCU();
-		rnaAfterDevelopment.updateLinkVolumeInPCUPerTimeOfDay();
-		
-		HashMap<Integer, Double> capacityAfter = rnaAfterDevelopment.calculateDirectionAveragedPeakLinkCapacityUtilisation();
-		JFrame rightFrame = NetworkVisualiserDemo.visualise(roadNetwork, "Capacity Utilisation Before Intervention", capacityAfter, "CapUtil", shapefilePathAfter);
-		rightFrame.setVisible(false);
-					
-		rd.uninstall(roadNetwork);
-		
-		JPanel panel_1 = new JPanel();
-		panel_1.setBounds(10, 10, (int)Math.round(screenSize.width * 0.5) - 12, (int)Math.round(screenSize.height * 0.65));
-		//panel_1.setSize((int)Math.round(screenSize.width * 0.5) - 5, (int)Math.round(screenSize.height * 0.6));
-		contentPane.add(panel_1);
-		panel_1.add(leftFrame.getContentPane());
-		panel_1.setLayout(null);
-				
-		JPanel panel_2 = new JPanel();
-		panel_2.setBounds((int)Math.round(screenSize.width * 0.5), 10, (int)Math.round(screenSize.width * 0.5) - 12, (int)Math.round(screenSize.height * 0.65));
-		//panel_2.setSize((int)Math.round(screenSize.width * 0.5) - 5, (int)Math.round(screenSize.height * 0.6));
-		contentPane.add(panel_2);
-		panel_2.add(rightFrame.getContentPane());
-		panel_2.setLayout(null);
-		
 		JLabel lblBeforePolicyIntervention = new JLabel("Before Policy Intervention");
 		lblBeforePolicyIntervention.setLabelFor(table);
 		lblBeforePolicyIntervention.setForeground(Color.DARK_GRAY);
@@ -361,14 +346,56 @@ public class DashboardRoadDevelopment extends JFrame {
 		contentPane.add(lblAfterPolicyIntervention);
 		
 		JComboBox comboBox = new JComboBox();
-		comboBox.setModel(new DefaultComboBoxModel(new String[] {"5", "6", "27", "23", "25"}));
+		comboBox.setModel(new DefaultComboBoxModel(roadNetwork.getNodeIDtoNode().keySet().toArray()));
 		comboBox.setBounds(1379, 832, 149, 20);
 		contentPane.add(comboBox);
-		
+
 		JComboBox comboBox_1 = new JComboBox();
-		comboBox_1.setModel(new DefaultComboBoxModel(new String[] {"24", "25", "1", "34", "63", "16"}));
+    	int fromNode = (int)comboBox.getSelectedItem();
+    	
+    	System.out.println("fromNode = " + fromNode);
+    	
+		DirectedNode nodeA = (DirectedNode) roadNetwork.getNodeIDtoNode().get(fromNode);
+		Set<Integer> listOfNodes = new HashSet<Integer>();
+		for (Integer nodeID: roadNetwork.getNodeIDtoNode().keySet()) //first copy all of the nodes
+			listOfNodes.add(nodeID);
+		//remove fromNode
+		listOfNodes.remove(fromNode);
+		//remove all related/neighbouring nodes (regardless of direction).
+		List edges = nodeA.getEdges();
+		for (Object o: edges) {
+			Edge e = (Edge) o;
+			Node other = e.getOtherNode(nodeA);
+			listOfNodes.remove(other.getID());
+		}
+		Integer[] arrayOfNodes = listOfNodes.toArray(new Integer[0]);
+		Arrays.sort(arrayOfNodes);
+		comboBox_1.setModel(new DefaultComboBoxModel(roadNetwork.getNodeIDtoNode().keySet().toArray()));
 		comboBox_1.setBounds(1379, 886, 149, 20);
 		contentPane.add(comboBox_1);
+
+		comboBox.addActionListener (new ActionListener () {
+		    public void actionPerformed(ActionEvent e) {
+		    	
+		    	int fromNode = (int)comboBox.getSelectedItem();
+				DirectedNode nodeA = (DirectedNode) roadNetwork.getNodeIDtoNode().get(fromNode);
+				Set<Integer> listOfNodes = new HashSet<Integer>();
+				for (Integer nodeID: roadNetwork.getNodeIDtoNode().keySet()) //first copy all of the nodes
+					listOfNodes.add(nodeID);
+				//remove fromNode
+				listOfNodes.remove(fromNode);
+				//remove all related/neighbouring nodes (regardless of direction).
+				List edges = nodeA.getEdges();
+				for (Object o: edges) {
+					Edge e2 = (Edge) o;
+					Node other = e2.getOtherNode(nodeA);
+					listOfNodes.remove(other.getID());
+				}
+				Integer[] arrayOfNodes = listOfNodes.toArray(new Integer[0]);
+				Arrays.sort(arrayOfNodes);
+				comboBox_1.setModel(new DefaultComboBoxModel(arrayOfNodes));
+		    }
+		});
 		
 		JLabel lblANode = new JLabel("A node");
 		lblANode.setLabelFor(comboBox);
@@ -396,30 +423,27 @@ public class DashboardRoadDevelopment extends JFrame {
 		lblLanesToAdd.setBounds(1379, 921, 177, 14);
 		contentPane.add(lblLanesToAdd);
 		
-		JButton btnNewButton = new JButton("RUN");
-		btnNewButton.setFont(new Font("Calibri Light", Font.BOLD, 25));
-		btnNewButton.setBounds(1686, 799, 200, 169);
-		contentPane.add(btnNewButton);
-		
-		JLabel lblRoadDevelopmentPolicy = new JLabel("Road Development Policy");
-		lblRoadDevelopmentPolicy.setForeground(Color.DARK_GRAY);
-		lblRoadDevelopmentPolicy.setFont(new Font("Calibri Light", Font.BOLD, 16));
-		lblRoadDevelopmentPolicy.setBounds(1379, 755, 380, 30);
-		contentPane.add(lblRoadDevelopmentPolicy);
-		
 		JRadioButton rdbtnNewRadioButton = new JRadioButton("A-road");
 		buttonGroup.add(rdbtnNewRadioButton);
 		rdbtnNewRadioButton.setBounds(1572, 831, 70, 23);
 		contentPane.add(rdbtnNewRadioButton);
+		
+		rdbtnNewRadioButton.addActionListener (new ActionListener () {
+		    public void actionPerformed(ActionEvent e) {
+		    	if (rdbtnNewRadioButton.isSelected()) slider.setValue(1); //default number of lanes per direction for A roads
+		    }
+		});
 		
 		JRadioButton rdbtnNewRadioButton_1 = new JRadioButton("Motorway");
 		buttonGroup.add(rdbtnNewRadioButton_1);
 		rdbtnNewRadioButton_1.setBounds(1572, 861, 104, 23);
 		contentPane.add(rdbtnNewRadioButton_1);
 		
-		JLabel lblRoadClass = new JLabel("Road class:");
-		lblRoadClass.setBounds(1572, 813, 79, 14);
-		contentPane.add(lblRoadClass);
+		rdbtnNewRadioButton_1.addActionListener (new ActionListener () {
+		    public void actionPerformed(ActionEvent e) {
+		    	if (rdbtnNewRadioButton_1.isSelected()) slider.setValue(3); //default number of lanes per direction for motorways
+		    }
+		});
 		
 		textField = new JTextField();
 		textField.setText("10.0");
@@ -430,6 +454,137 @@ public class DashboardRoadDevelopment extends JFrame {
 		JLabel lblRoadLengthkm = new JLabel("Length in km:");
 		lblRoadLengthkm.setBounds(1575, 923, 101, 14);
 		contentPane.add(lblRoadLengthkm);
+		
+		JButton btnNewButton = new JButton("RUN");
+		btnNewButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+						
+				int fromNode = (int) comboBox.getSelectedItem();
+				int toNode = (int) comboBox_1.getSelectedItem();
+				int lanes = slider.getValue();
+				
+				System.out.println("fromNode = " + fromNode);
+				System.out.println("toNode = " + toNode);
+				System.out.println("lanes = " + lanes);
+				
+				String roadClass;
+				if (rdbtnNewRadioButton.isSelected()) roadClass = "A";
+				else roadClass = "M";
+				
+				DirectedNode nodeA = (DirectedNode) roadNetwork.getNodeIDtoNode().get(fromNode);
+				DirectedNode nodeB = (DirectedNode) roadNetwork.getNodeIDtoNode().get(toNode);
+	
+				//calculate straight line distance between nodes
+				SimpleFeature sf1 = (SimpleFeature)nodeA.getObject();
+				Point point = (Point)sf1.getDefaultGeometry();
+				SimpleFeature sf2 = (SimpleFeature)nodeB.getObject();
+				Point point2 = (Point)sf2.getDefaultGeometry();
+				double distance = point.distance(point2) / 1000.0; //straight line distance (from metres to kilometres)!
+				
+				double length = distance;
+				try {
+					length = Double.parseDouble(textField.getText());
+				} catch (NumberFormatException e) {
+			        System.err.println("The text box with road distnace has a wrong number format!");
+			        length = distance;
+			    }
+				
+				if (length < distance) //length should not be smaller than the straight line distance, if it is use straight line distance.
+					length = distance;
+				
+				//update textbox with new value
+				textField.setText(String.format("%.1f", length));
+				
+				Properties props2 = new Properties();
+				props2.setProperty("startYear", "2016");
+				props2.setProperty("endYear", "2025");
+				props2.setProperty("fromNode", Integer.toString(nodeA.getID()));
+				props2.setProperty("toNode", Integer.toString(nodeB.getID()));
+				props2.setProperty("biDirectional", "true");
+				props2.setProperty("lanesPerDirection", Integer.toString(lanes));
+				props2.setProperty("length", "10.23");
+				props2.setProperty("roadClass", roadClass);
+				RoadDevelopment rd = new RoadDevelopment(props2);
+			
+				System.out.println("Road development intervention: " + rd.toString());
+				rd.install(roadNetwork);
+		
+				RoadNetworkAssignment rnaAfterDevelopment = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, props);
+				rnaAfterDevelopment.assignPassengerFlows(odm, rsg);
+				rnaAfterDevelopment.updateLinkVolumeInPCU();
+				rnaAfterDevelopment.updateLinkVolumeInPCUPerTimeOfDay();
+				
+				HashMap<Integer, Double> capacityAfter = rnaAfterDevelopment.calculateDirectionAveragedPeakLinkCapacityUtilisation();
+				String shapefilePathAfter = "./temp/networkWithCapacityUtilisationAfter.shp";
+				JFrame rightFrame;
+				try {
+					rightFrame = NetworkVisualiserDemo.visualise(roadNetwork, "Capacity Utilisation After Intervention", capacityAfter, "CapUtil", shapefilePathAfter);
+					rightFrame.setVisible(false);
+					rightFrame.repaint();
+				//	panel_2.add(rightFrame.getContentPane());
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				
+				rd.uninstall(roadNetwork);
+			}
+		});
+		
+		btnNewButton.setFont(new Font("Calibri Light", Font.BOLD, 25));
+		btnNewButton.setBounds(1686, 799, 200, 169);
+		contentPane.add(btnNewButton);
+		
+		JLabel lblRoadDevelopmentPolicy = new JLabel("Road Development Policy");
+		lblRoadDevelopmentPolicy.setForeground(Color.DARK_GRAY);
+		lblRoadDevelopmentPolicy.setFont(new Font("Calibri Light", Font.BOLD, 16));
+		lblRoadDevelopmentPolicy.setBounds(1379, 755, 380, 30);
+		contentPane.add(lblRoadDevelopmentPolicy);
+		
+		JLabel lblRoadClass = new JLabel("Road class:");
+		lblRoadClass.setBounds(1572, 813, 79, 14);
+		contentPane.add(lblRoadClass);
+		
+		final String roadDevelopmentFileName = props.getProperty("roadDevelopmentFile");
+		RoadDevelopment rd = new RoadDevelopment(roadDevelopmentFileName);
+		System.out.println("Road development intervention: " + rd.toString());
+		rd.install(roadNetwork);
+		
+		//set controls to represent the intervention
+		ActionListener al = comboBox.getActionListeners()[0];
+		comboBox.removeActionListener(al); //temporarilly
+		comboBox.setSelectedItem(new Integer(63));
+		comboBox_1.setSelectedItem(new Integer(23));
+		comboBox.addActionListener(al);
+		rdbtnNewRadioButton.setSelected(true);
+		slider.setValue(2);
+		textField.setText("10.23");
+				
+		RoadNetworkAssignment rnaAfterDevelopment = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, props);
+		rnaAfterDevelopment.assignPassengerFlows(odm, rsg);
+		rnaAfterDevelopment.updateLinkVolumeInPCU();
+		rnaAfterDevelopment.updateLinkVolumeInPCUPerTimeOfDay();
+		
+		HashMap<Integer, Double> capacityAfter = rnaAfterDevelopment.calculateDirectionAveragedPeakLinkCapacityUtilisation();
+		JFrame rightFrame = NetworkVisualiserDemo.visualise(roadNetwork, "Capacity Utilisation Before Intervention", capacityAfter, "CapUtil", shapefilePathAfter);
+		rightFrame.setVisible(false);
+					
+		rd.uninstall(roadNetwork);
+		
+		JPanel panel_1 = new JPanel();
+		panel_1.setBounds(10, 10, (int)Math.round(screenSize.width * 0.5) - 12, (int)Math.round(screenSize.height * 0.65));
+		//panel_1.setSize((int)Math.round(screenSize.width * 0.5) - 5, (int)Math.round(screenSize.height * 0.6));
+		contentPane.add(panel_1);
+		panel_1.add(leftFrame.getContentPane());
+		panel_1.setLayout(null);
+				
+		JPanel panel_2 = new JPanel();
+		panel_2.setBounds((int)Math.round(screenSize.width * 0.5), 10, (int)Math.round(screenSize.width * 0.5) - 12, (int)Math.round(screenSize.height * 0.65));
+		//panel_2.setSize((int)Math.round(screenSize.width * 0.5) - 5, (int)Math.round(screenSize.height * 0.6));
+		contentPane.add(panel_2);
+		panel_2.add(rightFrame.getContentPane());
+		panel_2.setLayout(null);
+	
 		
 		pack();
 	}
