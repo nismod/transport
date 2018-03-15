@@ -514,6 +514,9 @@ public class DashboardRoadDevelopment extends JFrame {
 				rnaAfterDevelopment.updateLinkVolumeInPCU();
 				rnaAfterDevelopment.updateLinkVolumeInPCUPerTimeOfDay();
 				
+				//update bar chart
+				barDataset.addValue(rnaAfterDevelopment.getTripList().size(), "Road development", "Number of Trips");
+				
 				HashMap<Integer, Double> capacityAfter = rnaAfterDevelopment.calculateDirectionAveragedPeakLinkCapacityUtilisation();
 				String shapefilePathAfter = "./temp/networkWithCapacityUtilisationAfter.shp";
 				JFrame rightFrame;
@@ -585,6 +588,8 @@ public class DashboardRoadDevelopment extends JFrame {
 		panel_2.add(rightFrame.getContentPane());
 		panel_2.setLayout(null);
 	
+		barDataset.addValue(rnaBefore.getTripList().size(), "No intervention", "Number of Trips");
+		barDataset.addValue(rnaAfterDevelopment.getTripList().size(), "Road development", "Number of Trips");
 		
 		pack();
 	}
