@@ -540,6 +540,8 @@ public class DashboardRoadExpansion extends JFrame {
 					e1.printStackTrace();
 				}
 				
+				//update bar chart
+				barDataset.addValue(rnaAfterExpansion.getTripList().size(), "Road expansion", "Number of Trips");
 				
 				re.uninstall(roadNetwork);
 				if (re2 != null) re2.uninstall(roadNetwork);
@@ -604,6 +606,10 @@ public class DashboardRoadExpansion extends JFrame {
 		contentPane.add(panel_2);
 		panel_2.add(rightFrame.getContentPane());
 		panel_2.setLayout(null);
+
+		//update bar chart
+		barDataset.addValue(rnaBefore.getTripList().size(), "No intervention", "Number of Trips");
+		barDataset.addValue(rnaAfterExpansion.getTripList().size(), "Road expansion", "Number of Trips");
 		
 		pack();
 	}

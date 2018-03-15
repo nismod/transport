@@ -46,6 +46,7 @@ import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.network.road.RouteSetGenerator;
+import nismod.transport.network.road.Trip;
 import nismod.transport.utility.ConfigReader;
 import nismod.transport.visualisation.BarVisualiser;
 
@@ -428,7 +429,8 @@ public class DashboardCongestionCharging extends JFrame {
 					
 					HashMap<String, MultiKeyMap> congestionCharges = dm.getCongestionCharges(2016);
 					System.out.println("Policies: " + congestionCharges);
-					MultiKeyMap specificCharges = (MultiKeyMap) congestionCharges.get(congestionCharges.keySet().iterator().next());
+					String policyName = congestionCharges.keySet().iterator().next();
+					MultiKeyMap specificCharges = (MultiKeyMap) congestionCharges.get(policyName);
 					System.out.println("Southampton policy: " + specificCharges);
 					
 					double peakCharge = slider_1.getValue();
@@ -468,6 +470,29 @@ public class DashboardCongestionCharging extends JFrame {
 					//rightFrame.repaint();
 					//panel_2.add(rightFrame.getContentPane());
 					//panel_2.setLayout(null);
+					
+					//update bar chart
+					barDataset.addValue(rnaBefore.getTripList().size(), "No intervention", "Total Trips");
+					barDataset.addValue(rnaAfterCongestionCharging.getTripList().size(), "Congestion charging", "Total Trips");
+					
+					double sumThroughBefore = 0.0, sumOutsideBefore = 0.0;
+					for (Trip t: rnaBefore.getTripList())
+						if (t.isTripGoingThroughCongestionChargingZone(policyName, congestionCharges))
+							sumThroughBefore++;
+						else
+							sumOutsideBefore++;
+						
+					double sumThrough = 0.0, sumOutside = 0.0;
+					for (Trip t: rnaAfterCongestionCharging.getTripList())
+						if (t.isTripGoingThroughCongestionChargingZone(policyName, congestionCharges))
+							sumThrough++;
+						else
+							sumOutside++;
+					
+					barDataset.addValue(sumThroughBefore, "No intervention", "Through Zone");
+					barDataset.addValue(sumThrough, "Congestion charging", "Through Zone");
+					barDataset.addValue(sumOutsideBefore, "No intervention", "Outside Zone");
+					barDataset.addValue(sumOutside, "Congestion charging", "Outside Zone");
 
 					cc.uninstall(dm);
 
@@ -530,6 +555,32 @@ public class DashboardCongestionCharging extends JFrame {
 				
 		panel_2.add(rightFrame.getContentPane());
 		panel_2.setLayout(null);
+		
+		//update bar chart
+		barDataset.addValue(rnaBefore.getTripList().size(), "No intervention", "Total Trips");
+		barDataset.addValue(rnaAfterCongestionCharging.getTripList().size(), "Congestion charging", "Total Trips");
+		
+		double sumThroughBefore = 0.0, sumOutsideBefore = 0.0;
+		HashMap<String, MultiKeyMap> congestionCharges = dm.getCongestionCharges(2016);
+		String policyName = congestionCharges.keySet().iterator().next();
+		for (Trip t: rnaBefore.getTripList())
+			if (t.isTripGoingThroughCongestionChargingZone(policyName, congestionCharges))
+				sumThroughBefore++;
+			else
+				sumOutsideBefore++;
+			
+		double sumThrough = 0.0, sumOutside = 0.0;
+		for (Trip t: rnaAfterCongestionCharging.getTripList())
+			if (t.isTripGoingThroughCongestionChargingZone(policyName, congestionCharges))
+				sumThrough++;
+			else
+				sumOutside++;
+		
+		barDataset.addValue(sumThroughBefore, "No intervention", "Through Zone");
+		barDataset.addValue(sumThrough, "Congestion charging", "Through Zone");
+		barDataset.addValue(sumOutsideBefore, "No intervention", "Outside Zone");
+		barDataset.addValue(sumOutside, "Congestion charging", "Outside Zone");
+		
 		
 		pack();
 		
