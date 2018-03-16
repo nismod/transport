@@ -106,6 +106,46 @@ public class SkimMatrix {
 	}
 	
 	/**
+	 * Gets the sorted list of origins.
+	 * @return List of origins.
+	 */
+	public List<String> getOrigins() {
+		
+		Set<String> firstKey = new HashSet<String>();
+		
+		//extract row keysets
+		for (Object mk: matrix.keySet()) {
+			String origin = (String) ((MultiKey)mk).getKey(0);
+			firstKey.add(origin);
+		}
+		//put them into a list and sort them
+		List<String> firstKeyList = new ArrayList(firstKey);
+		Collections.sort(firstKeyList);
+		
+		return firstKeyList;
+	}
+	
+	/**
+	 * Gets the sorted list of destinations.
+	 * @return List of destinations.
+	 */
+	public List<String> getDestinations() {
+		
+		Set<String> secondKey = new HashSet<String>();
+		
+		//extract column keysets
+		for (Object mk: matrix.keySet()) {
+			String destination = (String) ((MultiKey)mk).getKey(1);
+			secondKey.add(destination);
+		}
+		//put them into a list and sort them
+		List<String> secondKeyList = new ArrayList(secondKey);
+		Collections.sort(secondKeyList);
+		
+		return secondKeyList;
+	}
+	
+	/**
 	 * Prints the matrix as a formatted table.
 	 */
 	public void printMatrixFormatted() {

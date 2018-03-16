@@ -6,7 +6,9 @@ import java.util.logging.Logger;
 
 import org.apache.commons.collections4.map.MultiKeyMap;
 import org.apache.commons.lang3.tuple.Pair;
+import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedNode;
+import org.opengis.feature.simple.SimpleFeature;
 
 import nismod.transport.decision.CongestionCharging;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
@@ -208,6 +210,19 @@ public class Trip {
 		//TODO add access/egress consumption
 		
 		return consumption;
+	}
+	
+	public boolean isTripGoingThroughCongestionChargingZone(String policyName, HashMap<String, MultiKeyMap> congestionCharges) {
+		
+		MultiKeyMap charges = congestionCharges.get(policyName);
+		HashMap<Integer, Double> linkCharges = (HashMap<Integer, Double>) charges.get(this.vehicle, this.hour);
+		
+		for (DirectedEdge edge: this.route.getEdges()) {
+			//if (linkCharges.containsKey(edge.getID()) && linkCharges.get(edge.getID()) > 0.0) return true;
+			if (linkCharges.containsKey(edge.getID())) return true; //we actually do not care if the charging is applied
+		}
+		
+		return false;
 	}
 	
 	@Override

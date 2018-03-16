@@ -43,6 +43,8 @@ public class Zoning {
 	private HashMap<String, String> zoneToLAD; //maps Tempro zone to LAD zone
 	private HashMap<String, List<String>> LADToListOfContainedZones; //maps LAD zones to a list of contained Temrpo zones
 	
+	private HashMap<String, String> LADToName; //maps LAD code to LAD name
+	
 	private HashMap<String, Integer> temproCodeToID;
 	private HashMap<Integer, String> temproIDToCode;
 	
@@ -117,6 +119,7 @@ public class Zoning {
 		this.zoneToNearestNodeDistance = new HashMap<String, Double>();
 		
 		this.zoneToLAD = new HashMap<String, String>();
+		this.LADToName = new HashMap<String, String>();
 
 		//iterate through the zones and through the nodes
 		SimpleFeatureIterator iter = zonesFeatureCollection.features();
@@ -127,7 +130,10 @@ public class Zoning {
 				String zoneID = (String) sf.getAttribute("Zone_Code");
 				
 				String ladID = (String) sf.getAttribute("LAD_Code");
-				this.zoneToLAD.put(zoneID, ladID);	
+				this.zoneToLAD.put(zoneID, ladID);
+				
+				String ladName = (String) sf.getAttribute("Local_Auth");
+				this.LADToName.put(ladID, ladName);
 				
 				Point centroid = polygon.getCentroid();
 				double minDistance = Double.MAX_VALUE;
@@ -387,5 +393,14 @@ public class Zoning {
 	public HashMap<String, List<String>> getLADToListOfContainedZones() {
 		
 		return this.LADToListOfContainedZones;
+	}
+	
+	/**
+	 * Getter for LAD code to LAD name mapping.
+	 * @return LAD code to LAD name mapping.
+	 */
+	public HashMap<String, String> getLADToName() {
+		
+		return this.LADToName;
 	}
 }
