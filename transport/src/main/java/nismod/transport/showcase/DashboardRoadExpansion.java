@@ -46,11 +46,13 @@ import org.opengis.feature.simple.SimpleFeature;
 import nismod.transport.decision.Intervention;
 import nismod.transport.decision.RoadExpansion;
 import nismod.transport.demand.ODMatrix;
+import nismod.transport.demand.SkimMatrix;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.utility.ConfigReader;
 import nismod.transport.visualisation.BarVisualiser;
+import nismod.transport.zone.Zoning;
 
 import javax.swing.JTable;
 import javax.swing.JScrollPane;
@@ -158,7 +160,6 @@ public class DashboardRoadExpansion extends JFrame {
 		scrollPane_1 = new JScrollPane();
 		scrollPane_1.setBounds(21, 916, 416, 90);
 		contentPane.add(scrollPane_1);
-
 		
 		table_1 = new JTable();
 		scrollPane_1.setViewportView(table_1);
@@ -182,20 +183,29 @@ public class DashboardRoadExpansion extends JFrame {
 		       @Override
 		        public Component prepareRenderer(TableCellRenderer renderer, int rowIndex, int columnIndex) {
 		            JComponent component = (JComponent) super.prepareRenderer(renderer, rowIndex, columnIndex);  
-
+		        	component.setOpaque(true);
+		            
 		            if (columnIndex == 0)  { 
-		            	component.setBackground(Color.LIGHT_GRAY);
+		            	component.setBackground(new Color(0, 0, 0, 20));
 		            } else {
 		            	int newValue = Integer.parseInt(getValueAt(rowIndex, columnIndex).toString());
 		            	int oldValue = Integer.parseInt(table.getValueAt(rowIndex, columnIndex).toString());
             	    
-		            	if (newValue > oldValue) component.setBackground(Color.RED);
-		            	else if (newValue < oldValue) component.setBackground(Color.GREEN);
+		            	if (newValue > oldValue) component.setBackground(new Color(255, 0, 0, 50));
+		            	else if (newValue < oldValue) component.setBackground(new Color(0, 255, 0, 50));
 		            	else component.setBackground(Color.WHITE);
 		            }
 		            return component;
 		        }
 		};
+
+		table_2.setBackground(Color.WHITE);
+		
+		table_2.setOpaque(false);
+		((JComponent)table_2.getDefaultRenderer(Object.class)).setOpaque(false);
+		scrollPane_2.setOpaque(false);
+		scrollPane_2.getViewport().setOpaque(false);
+		
 		scrollPane_2.setViewportView(table_2);
 		table_2.setModel(new DefaultTableModel(
 				 	new Object[][] {
@@ -213,7 +223,29 @@ public class DashboardRoadExpansion extends JFrame {
 		scrollPane_3.setBounds(470, 916, 416, 90);
 		contentPane.add(scrollPane_3);
 
-		table_3 = new JTable();
+		table_3 = new JTable() {
+			
+		       @Override
+		        public Component prepareRenderer(TableCellRenderer renderer, int rowIndex, int columnIndex) {
+		            JComponent component = (JComponent) super.prepareRenderer(renderer, rowIndex, columnIndex);  
+		           			            
+		            if (columnIndex == 0)  { 
+		               	component.setBackground(new Color(0, 0, 0, 20));
+		            } else {
+		            	double newValue = Double.parseDouble(getValueAt(rowIndex, columnIndex).toString());
+		            	double oldValue = Double.parseDouble(table_1.getValueAt(rowIndex, columnIndex).toString());
+           	    
+		            	if (newValue > oldValue) component.setBackground(new Color(255, 0, 0, 50));
+		            	else if (newValue < oldValue) component.setBackground(new Color(0, 255, 0, 50));
+		            	else component.setBackground(Color.WHITE);
+		            }
+		            return component;
+		        }
+			
+		};
+		
+		table_3.setBackground(Color.WHITE);
+		
 		scrollPane_3.setViewportView(table_3);
 		table_3.setModel(new DefaultTableModel(
 				 	new Object[][] {
@@ -320,10 +352,13 @@ public class DashboardRoadExpansion extends JFrame {
 		final URL AADFurl = new URL(props.getProperty("AADFurl"));
 		
 		final String baseYearODMatrixFile = props.getProperty("baseYearODMatrixFile");
-
+		
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
 		RoadNetworkAssignment rnaBefore = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, props);
+		
+		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
+		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
 		
 		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
@@ -366,7 +401,36 @@ public class DashboardRoadExpansion extends JFrame {
 		//System.out.println("FRAME: " + leftFrame.getSize());
 		//System.out.println("CONTENT PANE: " + leftFrame.getContentPane().getSize());
 
-			
+		int rows = odm.getOrigins().size();
+		int columns = odm.getDestinations().size();
+		Object[][] data = new Object[rows][columns + 1];
+		for (int i = 0; i < rows; i++) {
+			data[i][0] = zoning.getLADToName().get(odm.getOrigins().get(i));
+			for (int j = 0; j < columns; j++) {
+				data[i][j+1] = odm.getFlow(odm.getOrigins().get(i), odm.getDestinations().get(j));
+			}
+		}
+		String[] labels = new String[columns + 1];
+		labels[0] = "TRIPS";
+		for (int j = 0; j < columns; j++) labels[j+1] = zoning.getLADToName().get(odm.getDestinations().get(j));
+		table.setModel(new DefaultTableModel(data, labels));
+		
+		SkimMatrix sm = rnaBefore.calculateTimeSkimMatrix();
+		rows = sm.getOrigins().size();
+		columns = sm.getDestinations().size();
+		Object[][] data2 = new Object[rows][columns + 1];
+		for (int i = 0; i < rows; i++) {
+			data2[i][0] = zoning.getLADToName().get(sm.getOrigins().get(i));
+			for (int j = 0; j < columns; j++) {
+				data2[i][j+1] = String.format("%.2f", sm.getCost(sm.getOrigins().get(i), sm.getDestinations().get(j)));
+			}
+		}
+		String[] labels2 = new String[columns + 1];
+		labels2[0] = "TRAVEL TIME";
+		for (int j = 0; j < columns; j++) labels2[j+1] = zoning.getLADToName().get(sm.getDestinations().get(j));
+				
+		table_1.setModel(new DefaultTableModel(data2, labels2));	
+		
 		JLabel lblBeforePolicyIntervention = new JLabel("Before Policy Intervention");
 		lblBeforePolicyIntervention.setLabelFor(table);
 		lblBeforePolicyIntervention.setForeground(Color.DARK_GRAY);
@@ -540,6 +604,37 @@ public class DashboardRoadExpansion extends JFrame {
 					e1.printStackTrace();
 				}
 				
+				//update tables
+				int rows = odm.getOrigins().size();
+				int columns = odm.getDestinations().size();
+				Object[][] data = new Object[rows][columns + 1];
+				for (int i = 0; i < rows; i++) {
+					data[i][0] = zoning.getLADToName().get(odm.getOrigins().get(i));
+					for (int j = 0; j < columns; j++) {
+						data[i][j+1] = odm.getFlow(odm.getOrigins().get(i), odm.getDestinations().get(j));
+					}
+				}
+				String[] labels = new String[columns + 1];
+				labels[0] = "TRIPS";
+				for (int j = 0; j < columns; j++) labels[j+1] = zoning.getLADToName().get(odm.getDestinations().get(j));
+				table_2.setModel(new DefaultTableModel(data, labels));
+				
+				
+				SkimMatrix sm = rnaAfterExpansion.calculateTimeSkimMatrix();
+				rows = sm.getOrigins().size();
+				columns = sm.getDestinations().size();
+				Object[][] data2 = new Object[rows][columns + 1];
+				for (int i = 0; i < rows; i++) {
+					data2[i][0] = zoning.getLADToName().get(sm.getOrigins().get(i));
+					for (int j = 0; j < columns; j++) {
+						data2[i][j+1] = String.format("%.2f", sm.getCost(sm.getOrigins().get(i), sm.getDestinations().get(j)));
+					}
+				}
+				String[] labels2 = new String[columns + 1];
+				labels2[0] = "TRAVEL TIME";
+				for (int j = 0; j < columns; j++) labels2[j+1] = zoning.getLADToName().get(sm.getDestinations().get(j));
+				table_3.setModel(new DefaultTableModel(data2, labels2));
+				
 				//update bar chart
 				barDataset.addValue(rnaAfterExpansion.getTripList().size(), "Road expansion", "Number of Trips");
 				
@@ -606,6 +701,37 @@ public class DashboardRoadExpansion extends JFrame {
 		contentPane.add(panel_2);
 		panel_2.add(rightFrame.getContentPane());
 		panel_2.setLayout(null);
+		
+		//update tables
+		rows = odm.getOrigins().size();
+		columns = odm.getDestinations().size();
+		Object[][] data3 = new Object[rows][columns + 1];
+		for (int i = 0; i < rows; i++) {
+			data3[i][0] = zoning.getLADToName().get(odm.getOrigins().get(i));
+			for (int j = 0; j < columns; j++) {
+				data3[i][j+1] = odm.getFlow(odm.getOrigins().get(i), odm.getDestinations().get(j));
+			}
+		}
+		String[] labels3 = new String[columns + 1];
+		labels3[0] = "TRIPS";
+		for (int j = 0; j < columns; j++) labels3[j+1] = zoning.getLADToName().get(odm.getDestinations().get(j));
+		table_2.setModel(new DefaultTableModel(data3, labels3));
+		
+		
+		SkimMatrix sm4 = rnaAfterExpansion.calculateTimeSkimMatrix();
+		rows = sm4.getOrigins().size();
+		columns = sm4.getDestinations().size();
+		Object[][] data4 = new Object[rows][columns + 1];
+		for (int i = 0; i < rows; i++) {
+			data4[i][0] = zoning.getLADToName().get(sm4.getOrigins().get(i));
+			for (int j = 0; j < columns; j++) {
+				data4[i][j+1] = String.format("%.2f", sm4.getCost(sm4.getOrigins().get(i), sm4.getDestinations().get(j)));
+			}
+		}
+		String[] labels4 = new String[columns + 1];
+		labels4[0] = "TRAVEL TIME";
+		for (int j = 0; j < columns; j++) labels4[j+1] = zoning.getLADToName().get(sm4.getDestinations().get(j));
+		table_3.setModel(new DefaultTableModel(data4, labels4));
 
 		//update bar chart
 		barDataset.addValue(rnaBefore.getTripList().size(), "No intervention", "Number of Trips");

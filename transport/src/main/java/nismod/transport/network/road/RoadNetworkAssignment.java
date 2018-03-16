@@ -39,6 +39,7 @@ import nismod.transport.demand.SkimMatrix;
 import nismod.transport.demand.SkimMatrixFreight;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.utility.RandomSingleton;
+import nismod.transport.zone.NodeMatrix;
 import nismod.transport.zone.Zoning;
 
 /**
@@ -850,10 +851,9 @@ public class RoadNetworkAssignment {
 					HashMap<String, HashMap<Integer, Double>> linkCharges = new HashMap<String, HashMap<Integer, Double>>();
 					if (this.congestionCharges != null) 
 						for (String policyName: this.congestionCharges.keySet()) {
-							System.out.println("Policy = " + policyName);
-							System.out.println("vht = " + vht + " hour = " + hour);
-							System.out.println("Congestion charges: " + (HashMap<Integer, Double>) this.congestionCharges.get(policyName).get(vht, hour));
-							
+							//System.out.println("Policy = " + policyName);
+							//System.out.println("vht = " + vht + " hour = " + hour);
+							//System.out.println("Congestion charges: " + (HashMap<Integer, Double>) this.congestionCharges.get(policyName).get(vht, hour));
 							linkCharges.put(policyName, (HashMap<Integer, Double>) this.congestionCharges.get(policyName).get(vht, hour));
 						}
 			
@@ -1000,12 +1000,18 @@ public class RoadNetworkAssignment {
 					if (listOfContainedNodes == null) { 
 						originNode = zoning.getZoneToNearestNodeIDMap().get(originZone);
 						destinationNode = originNode;
-					} else {
+					} else if (listOfContainedNodes.size() == 1) { //if there is just one contained node, use it
+						originNode = listOfContainedNodes.get(0);
+						destinationNode = originNode;
+					} else	{
 		
-						////simply pick random
-						//originNode = listOfContainedNodes.get(rng.nextInt(listOfContainedNodes.size()));
-						//destinationNode = listOfContainedNodes.get(rng.nextInt(listOfContainedNodes.size()));
+						/*
+						//simply pick random
+						originNode = listOfContainedNodes.get(rng.nextInt(listOfContainedNodes.size()));
+						destinationNode = listOfContainedNodes.get(rng.nextInt(listOfContainedNodes.size()));
+						*/
 						
+						/*
 						//choose based on gravitating population
 						double sumOfGravitatingPopulation = 0.0;
 						for (Integer nodeID: listOfContainedNodes) sumOfGravitatingPopulation += this.roadNetwork.getGravitatingPopulation(nodeID); 
@@ -1024,6 +1030,22 @@ public class RoadNetworkAssignment {
 							cumulativeProbability += this.roadNetwork.getGravitatingPopulation(nodeID) / sumOfGravitatingPopulation;
 							if (Double.compare(cumulativeProbability, random) > 0) {
 								destinationNode = nodeID;
+								break;
+							}
+						}
+						*/
+						
+						//pick OD pair based on NodeMatrix
+						NodeMatrix nm = zoning.getZoneToNodeMatrix().get(originZone);
+						cumulativeProbability = 0.0;
+						random = rng.nextDouble();
+						for (MultiKey multiKey: nm.getKeySet()) {
+							Integer originNodeID = (Integer) multiKey.getKey(0);
+							Integer destinationNodeID = (Integer) multiKey.getKey(1);
+							cumulativeProbability += nm.getValue(originNodeID, destinationNodeID);
+							if (Double.compare(cumulativeProbability, random) > 0) {
+								originNode = originNodeID;
+								destinationNode = destinationNodeID;
 								break;
 							}
 						}
