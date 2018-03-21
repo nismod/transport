@@ -355,7 +355,7 @@ public class DemandModel {
 			predictedFreightODMatrix.printMatrixFormatted();
 			
 			//SECOND STAGE PREDICTION (FROM CHANGES IN COST AND TIME)
-		
+			
 			SkimMatrix tsm = null, csm = null;
 			SkimMatrixFreight tsmf = null, csmf = null;
 			RoadNetworkAssignment predictedRna = null;
@@ -759,7 +759,7 @@ public class DemandModel {
 	 * @param fileName File name.
 	 * @return Map with elasticity parameters.
 	 */
-	private HashMap<ElasticityTypes, Double> readElasticitiesFile (String fileName) throws FileNotFoundException, IOException {
+	public static HashMap<ElasticityTypes, Double> readElasticitiesFile (String fileName) throws FileNotFoundException, IOException {
 
 		HashMap<ElasticityTypes, Double> map = new HashMap<ElasticityTypes, Double>();
 		CSVParser parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());

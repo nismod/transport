@@ -39,5 +39,10 @@ public class RandomSingleton {
 	public int nextInt(int bound) { 
 		
 		return generator.nextInt(bound); 
-	} 
+	}
+	
+	public void setSeed(long seed) {
+		
+		generator = new Random(seed);
+	}
 }

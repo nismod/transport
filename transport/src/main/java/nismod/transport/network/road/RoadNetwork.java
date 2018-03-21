@@ -3,15 +3,12 @@
  */
 package nismod.transport.network.road;
 
-import java.awt.Color;
-import java.awt.RenderingHints;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -22,35 +19,25 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import javax.swing.ImageIcon;
-import javax.swing.JFrame;
-
-import org.geotools.data.collection.ListFeatureCollection;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import org.geotools.brewer.color.BrewerPalette;
-import org.geotools.brewer.color.ColorBrewer;
-import org.geotools.brewer.color.StyleGenerator;
 import org.geotools.data.CachingFeatureSource;
 import org.geotools.data.DefaultTransaction;
 import org.geotools.data.Transaction;
+import org.geotools.data.collection.ListFeatureCollection;
 import org.geotools.data.shapefile.ShapefileDataStore;
 import org.geotools.data.shapefile.ShapefileDataStoreFactory;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.data.simple.SimpleFeatureStore;
-import org.geotools.factory.CommonFactoryFinder;
-import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
-import org.geotools.filter.function.Classifier;
 import org.geotools.geometry.jts.JTSFactoryFinder;
 import org.geotools.graph.build.feature.FeatureGraphGenerator;
 import org.geotools.graph.build.line.BasicDirectedLineGraphBuilder;
 import org.geotools.graph.build.line.DirectedLineStringGraphGenerator;
-import org.geotools.graph.path.AStarShortestPathFinder;
 import org.geotools.graph.path.DijkstraShortestPathFinder;
 import org.geotools.graph.path.Path;
 import org.geotools.graph.structure.DirectedEdge;
@@ -59,33 +46,12 @@ import org.geotools.graph.structure.DirectedNode;
 import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Graph;
 import org.geotools.graph.structure.Node;
-import org.geotools.graph.traverse.standard.AStarIterator;
 import org.geotools.graph.traverse.standard.DijkstraIterator;
 import org.geotools.graph.traverse.standard.DijkstraIterator.EdgeWeighter;
-import org.geotools.map.FeatureLayer;
-import org.geotools.map.MapContent;
 import org.geotools.referencing.CRS;
-import org.geotools.renderer.GTRenderer;
-import org.geotools.styling.FeatureTypeStyle;
-import org.geotools.styling.Font;
-import org.geotools.styling.LineSymbolizer;
-import org.geotools.styling.PolygonSymbolizer;
-import org.geotools.styling.Rule;
-import org.geotools.styling.SLD;
-import org.geotools.styling.Stroke;
-import org.geotools.styling.Style;
-import org.geotools.styling.StyleBuilder;
-import org.geotools.styling.StyleFactory;
-import org.geotools.styling.Symbolizer;
-import org.geotools.styling.TextSymbolizer;
-import org.geotools.swing.JMapFrame;
 import org.geotools.swing.data.JFileDataStoreChooser;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
-import org.opengis.filter.FilterFactory;
-import org.opengis.filter.FilterFactory2;
-import org.opengis.filter.expression.Function;
-import org.opengis.filter.expression.PropertyName;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.NoSuchAuthorityCodeException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
@@ -96,11 +62,6 @@ import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.MultiLineString;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Point;
-import com.vividsolutions.jts.geom.Polygon;
-
-import nismod.transport.decision.CongestionCharging;
-import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
-import nismod.transport.visualisation.MyStyleGenerator;
 
 /**
  * A routable road network built from the shapefiles.
@@ -2354,7 +2315,7 @@ public class RoadNetwork {
 		builder.add("FFspeed", Double.class);
 		builder.add("FFtime", Double.class);
 		builder.add("IsFerry", Boolean.class);
-
+		
 		//build the type
 		final SimpleFeatureType SIMPLE_FEATURE_TYPE = builder.buildFeatureType();
 		//return the type
@@ -2396,11 +2357,11 @@ public class RoadNetwork {
 		builder.add("SRefE", Integer.class);
 		builder.add("SRefN", Integer.class);
 		builder.add("Distance", Double.class);
-		builder.add("FFspeed", Double.class);
-		builder.add("FFtime", Double.class);
+		builder.length(6).add("FFspeed", Double.class);
+		builder.length(6).add("FFtime", Double.class);
 		builder.add("IsFerry", Boolean.class);
 		builder.add("Lanes", Integer.class);
-		builder.add(linkDataLabel, Double.class); //e.g. "DayVolume"
+		builder.length(6).add(linkDataLabel, Double.class); //e.g. "DayVolume"
 
 		//build the type
 		final SimpleFeatureType SIMPLE_FEATURE_TYPE = builder.buildFeatureType();

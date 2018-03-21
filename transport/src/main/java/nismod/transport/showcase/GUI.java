@@ -34,6 +34,11 @@ import java.awt.Insets;
 public class GUI {
 
 	private JFrame frame;
+	
+	//public static final Color DASHBOARD = new Color(149,173,177);
+	public static final Color DASHBOARD = new Color(130, 160, 180);
+	public static final Color TOOLBAR = new Color(231, 211, 146);
+	//(new Color(11,73,84)); //mistral green
 
 	/**
 	 * Launch the application.

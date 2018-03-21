@@ -2,12 +2,14 @@ package nismod.transport.showcase;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseWheelListener;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -22,6 +24,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.map.MultiKeyMap;
@@ -41,6 +44,8 @@ import nismod.transport.decision.CongestionCharging;
 import nismod.transport.decision.Intervention;
 import nismod.transport.demand.DemandModel;
 import nismod.transport.demand.ODMatrix;
+import nismod.transport.demand.SkimMatrix;
+import nismod.transport.demand.DemandModel.ElasticityTypes;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
@@ -49,6 +54,7 @@ import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.network.road.Trip;
 import nismod.transport.utility.ConfigReader;
 import nismod.transport.visualisation.BarVisualiser;
+import nismod.transport.zone.Zoning;
 
 import javax.swing.JTable;
 import javax.swing.JScrollPane;
@@ -63,6 +69,7 @@ import javax.swing.border.LineBorder;
 import java.awt.event.MouseWheelEvent;
 import javax.swing.JList;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.AbstractListModel;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JSlider;
@@ -173,7 +180,33 @@ public class DashboardCongestionCharging extends JFrame {
 		scrollPane_2.setBounds(470, 796, 416, 90);
 		contentPane.add(scrollPane_2);
 
-		table_2 = new JTable();
+		table_2 = new JTable() {
+		       @Override
+		        public Component prepareRenderer(TableCellRenderer renderer, int rowIndex, int columnIndex) {
+		            JComponent component = (JComponent) super.prepareRenderer(renderer, rowIndex, columnIndex);  
+		        	component.setOpaque(true);
+		            
+		            if (columnIndex == 0)  { 
+		            	component.setBackground(new Color(0, 0, 0, 20));
+		            } else {
+		            	int newValue = Integer.parseInt(getValueAt(rowIndex, columnIndex).toString());
+		            	int oldValue = Integer.parseInt(table.getValueAt(rowIndex, columnIndex).toString());
+      	    
+		               	if (newValue > oldValue) component.setBackground(new Color(255, 0, 0, 50));
+		            	else if (newValue < oldValue) component.setBackground(new Color(0, 255, 0, 50));
+		            	else component.setBackground(Color.WHITE);
+		            		          
+		            	/*
+		            	double percentChange = 0.01;
+		               	if (1.0 * newValue / oldValue > (1 + percentChange)) component.setBackground(new Color(255, 0, 0, 50));
+		            	else if (1.0 * newValue / oldValue < (1 - percentChange)) component.setBackground(new Color(0, 255, 0, 50));
+		            	else component.setBackground(Color.WHITE);
+		            	*/
+		            	
+		            }
+		            return component;
+		        }
+		};
 		scrollPane_2.setViewportView(table_2);
 		table_2.setModel(new DefaultTableModel(
 				 	new Object[][] {
@@ -191,7 +224,25 @@ public class DashboardCongestionCharging extends JFrame {
 		scrollPane_3.setBounds(470, 916, 416, 90);
 		contentPane.add(scrollPane_3);
 
-		table_3 = new JTable();
+		table_3 = new JTable() {
+		       @Override
+		        public Component prepareRenderer(TableCellRenderer renderer, int rowIndex, int columnIndex) {
+		            JComponent component = (JComponent) super.prepareRenderer(renderer, rowIndex, columnIndex);  
+		           			            
+		            if (columnIndex == 0)  { 
+		               	component.setBackground(new Color(0, 0, 0, 20));
+		            } else {
+		            	double newValue = Double.parseDouble(getValueAt(rowIndex, columnIndex).toString());
+		            	double oldValue = Double.parseDouble(table_1.getValueAt(rowIndex, columnIndex).toString());
+     	    
+		            	if (newValue > oldValue) component.setBackground(new Color(255, 0, 0, 50));
+		            	else if (newValue < oldValue) component.setBackground(new Color(0, 255, 0, 50));
+		            	else component.setBackground(Color.WHITE);
+		            }
+		            return component;
+		        }
+			
+		};
 		scrollPane_3.setViewportView(table_3);
 		table_3.setModel(new DefaultTableModel(
 				 	new Object[][] {
@@ -328,6 +379,9 @@ public class DashboardCongestionCharging extends JFrame {
 		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, props);
 		
+		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
+		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
+				
 		rsg.readRoutesBinaryWithoutValidityCheck(passengerRoutesFile);
 		//rsg.generateRouteSetForODMatrix(odm, 5);
 		
@@ -335,9 +389,19 @@ public class DashboardCongestionCharging extends JFrame {
 		rnaBefore.assignPassengerFlowsRouteChoice(odm, rsg, props);
 		rnaBefore.updateLinkVolumeInPCU();
 		rnaBefore.updateLinkVolumeInPCUPerTimeOfDay();
-		
+		rnaBefore.updateLinkTravelTimes(0.9);
+		rnaBefore.resetLinkVolumes();
+		rnaBefore.resetTripStorages();
+		rnaBefore.assignPassengerFlowsRouteChoice(odm, rsg, props);
+		rnaBefore.updateLinkTravelTimes(0.9);
+		rnaBefore.updateLinkVolumeInPCU();
+		rnaBefore.updateLinkVolumeInPCUPerTimeOfDay();
+			
 		String shapefilePathBefore = "./temp/networkWithCapacityUtilisationBefore.shp";
 		String shapefilePathAfter = "./temp/networkWithCapacityUtilisationAfter.shp";
+		
+		SkimMatrix tsmBefore = rnaBefore.calculateTimeSkimMatrix();
+		SkimMatrix csmBefore = rnaBefore.calculateCostSkimMatrix();
 		
 		HashMap<Integer, Double> capacityBefore = rnaBefore.calculateDirectionAveragedPeakLinkCapacityUtilisation();
 		JFrame leftFrame = NetworkVisualiserDemo.visualise(roadNetwork, "Capacity Utilisation Before Intervention", capacityBefore, "CapUtil", shapefilePathBefore);
@@ -346,6 +410,37 @@ public class DashboardCongestionCharging extends JFrame {
 		//leftFrame.setLocation(0, 0);
 		leftFrame.setVisible(false);
 		((JMapFrameDemo)leftFrame).getMapPane().reset();
+		
+		//update before tables
+		int rows = odm.getOrigins().size();
+		int columns = odm.getDestinations().size();
+		Object[][] data = new Object[rows][columns + 1];
+		for (int i = 0; i < rows; i++) {
+			data[i][0] = zoning.getLADToName().get(odm.getOrigins().get(i));
+			for (int j = 0; j < columns; j++) {
+				data[i][j+1] = odm.getFlow(odm.getOrigins().get(i), odm.getDestinations().get(j));
+			}
+		}
+		String[] labels = new String[columns + 1];
+		labels[0] = "TRIPS";
+		for (int j = 0; j < columns; j++) labels[j+1] = zoning.getLADToName().get(odm.getDestinations().get(j));
+		table.setModel(new DefaultTableModel(data, labels));
+		
+		SkimMatrix sm = rnaBefore.calculateTimeSkimMatrix();
+		rows = sm.getOrigins().size();
+		columns = sm.getDestinations().size();
+		Object[][] data2 = new Object[rows][columns + 1];
+		for (int i = 0; i < rows; i++) {
+			data2[i][0] = zoning.getLADToName().get(sm.getOrigins().get(i));
+			for (int j = 0; j < columns; j++) {
+				data2[i][j+1] = String.format("%.2f", sm.getCost(sm.getOrigins().get(i), sm.getDestinations().get(j)));
+			}
+		}
+		String[] labels2 = new String[columns + 1];
+		labels2[0] = "TRAVEL TIME";
+		for (int j = 0; j < columns; j++) labels2[j+1] = zoning.getLADToName().get(sm.getDestinations().get(j));
+				
+		table_1.setModel(new DefaultTableModel(data2, labels2));
 		
 		JLabel lblBeforePolicyIntervention = new JLabel("Before Policy Intervention");
 		lblBeforePolicyIntervention.setLabelFor(table);
@@ -456,7 +551,57 @@ public class DashboardCongestionCharging extends JFrame {
 					rnaAfterCongestionCharging.assignPassengerFlowsRouteChoice(odm, rsg, props);
 					rnaAfterCongestionCharging.updateLinkVolumeInPCU();
 					rnaAfterCongestionCharging.updateLinkVolumeInPCUPerTimeOfDay();
+					
+					//predict change in demand
+					SkimMatrix tsm = rnaAfterCongestionCharging.calculateTimeSkimMatrix();
+					SkimMatrix csm = rnaAfterCongestionCharging.calculateCostSkimMatrix();
+					
+					//predicted demand	
+					ODMatrix predictedODM = new ODMatrix();
+					
+					final String elasticitiesFile = props.getProperty("elasticitiesFile");
+					HashMap<ElasticityTypes, Double> elasticities = null;
+					try {
+						elasticities = DemandModel.readElasticitiesFile(elasticitiesFile);
+					} catch (FileNotFoundException e2) {
+						// TODO Auto-generated catch block
+						e2.printStackTrace();
+					} catch (IOException e2) {
+						// TODO Auto-generated catch block
+						e2.printStackTrace();
+					}
+					
+					
+					tsmBefore.printMatrixFormatted();
+					tsm.printMatrixFormatted();
+					
+					//for each OD pair predict the change in passenger vehicle flow from the change in skim matrices
+					for (MultiKey mk: odm.getKeySet()) {
+						String originZone = (String) mk.getKey(0);
+						String destinationZone = (String) mk.getKey(1);
 
+						double oldFlow = odm.getFlow(originZone, destinationZone);
+
+						double oldODTravelTime = tsmBefore.getCost(originZone, destinationZone);
+						double newODTravelTime = tsm.getCost(originZone, destinationZone);
+						double oldODTravelCost = csmBefore.getCost(originZone, destinationZone);
+						double newODTravelCost = csm.getCost(originZone, destinationZone);
+
+						double predictedflow = oldFlow * Math.pow(newODTravelTime / oldODTravelTime, elasticities.get(ElasticityTypes.TIME)) *
+								Math.pow(newODTravelCost / oldODTravelCost, elasticities.get(ElasticityTypes.COST));
+
+						predictedODM.setFlow(originZone, destinationZone, (int) Math.round(predictedflow));
+					}
+		
+					
+					rnaAfterCongestionCharging.resetLinkVolumes();
+					rnaAfterCongestionCharging.resetTripStorages();
+												
+					rnaAfterCongestionCharging.assignPassengerFlows(predictedODM, rsg);
+					rnaAfterCongestionCharging.updateLinkVolumeInPCU();
+					rnaAfterCongestionCharging.updateLinkVolumeInPCUPerTimeOfDay();
+					//SkimMatrix sm = rnaAfterCongestionCharging.calculateTimeSkimMatrix();
+									
 					HashMap<Integer, Double> capacityAfter = rnaAfterCongestionCharging.calculateDirectionAveragedPeakLinkCapacityUtilisation();
 					
 					System.out.println(capacityAfter.get(615));
@@ -495,6 +640,37 @@ public class DashboardCongestionCharging extends JFrame {
 					barDataset.addValue(sumOutside, "Congestion charging", "Outside Zone");
 
 					cc.uninstall(dm);
+										
+					//update after tables
+					int rows = predictedODM.getOrigins().size();
+					int columns = predictedODM.getDestinations().size();
+					Object[][] data = new Object[rows][columns + 1];
+					for (int i = 0; i < rows; i++) {
+						data[i][0] = zoning.getLADToName().get(predictedODM.getOrigins().get(i));
+						for (int j = 0; j < columns; j++) {
+							data[i][j+1] = predictedODM.getFlow(predictedODM.getOrigins().get(i), predictedODM.getDestinations().get(j));
+						}
+					}
+					String[] labels = new String[columns + 1];
+					labels[0] = "TRIPS";
+					for (int j = 0; j < columns; j++) labels[j+1] = zoning.getLADToName().get(predictedODM.getDestinations().get(j));
+					table_2.setModel(new DefaultTableModel(data, labels));
+					
+					
+					SkimMatrix sm = rnaAfterCongestionCharging.calculateTimeSkimMatrix();
+					rows = sm.getOrigins().size();
+					columns = sm.getDestinations().size();
+					Object[][] data2 = new Object[rows][columns + 1];
+					for (int i = 0; i < rows; i++) {
+						data2[i][0] = zoning.getLADToName().get(sm.getOrigins().get(i));
+						for (int j = 0; j < columns; j++) {
+							data2[i][j+1] = String.format("%.2f", sm.getCost(sm.getOrigins().get(i), sm.getDestinations().get(j)));
+						}
+					}
+					String[] labels2 = new String[columns + 1];
+					labels2[0] = "TRAVEL TIME";
+					for (int j = 0; j < columns; j++) labels2[j+1] = zoning.getLADToName().get(sm.getDestinations().get(j));
+					table_3.setModel(new DefaultTableModel(data2, labels2));
 
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
@@ -580,8 +756,7 @@ public class DashboardCongestionCharging extends JFrame {
 		barDataset.addValue(sumThrough, "Congestion charging", "Through Zone");
 		barDataset.addValue(sumOutsideBefore, "No intervention", "Outside Zone");
 		barDataset.addValue(sumOutside, "Congestion charging", "Outside Zone");
-		
-		
+				
 		pack();
 		
 		cc.uninstall(dm);
