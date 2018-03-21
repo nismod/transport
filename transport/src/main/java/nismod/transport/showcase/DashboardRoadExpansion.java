@@ -9,6 +9,7 @@ import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseWheelListener;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -22,10 +23,12 @@ import java.util.Set;
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 
+import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.geotools.brewer.color.BrewerPalette;
 import org.geotools.brewer.color.ColorBrewer;
 import org.geotools.graph.structure.DirectedEdge;
@@ -45,12 +48,15 @@ import org.opengis.feature.simple.SimpleFeature;
 
 import nismod.transport.decision.Intervention;
 import nismod.transport.decision.RoadExpansion;
+import nismod.transport.demand.DemandModel;
 import nismod.transport.demand.ODMatrix;
 import nismod.transport.demand.SkimMatrix;
+import nismod.transport.demand.DemandModel.ElasticityTypes;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.utility.ConfigReader;
+import nismod.transport.utility.RandomSingleton;
 import nismod.transport.visualisation.BarVisualiser;
 import nismod.transport.zone.Zoning;
 
@@ -64,6 +70,8 @@ import javax.swing.JInternalFrame;
 import javax.swing.JDesktopPane;
 import javax.swing.SpringLayout;
 import javax.swing.border.LineBorder;
+import javax.swing.plaf.ColorUIResource;
+
 import java.awt.event.MouseWheelEvent;
 import javax.swing.JList;
 import javax.swing.JComboBox;
@@ -77,6 +85,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import javax.swing.JCheckBox;
 import javax.swing.SwingConstants;
+import javax.swing.ToolTipManager;
+import javax.swing.UIManager;
 
 /**
  * Dashboard for the road expansion policy intervention.
@@ -95,6 +105,8 @@ public class DashboardRoadExpansion extends JFrame {
 	private JScrollPane scrollPane_3;
 	private JLabel lblBeforeIntervention;
 	private JLabel label;
+	
+	private static int counter = 1;
 	
 
 	/**
@@ -126,6 +138,9 @@ public class DashboardRoadExpansion extends JFrame {
 		contentPane = new JPanel();
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
+		
+
+		contentPane.setBackground(GUI.DASHBOARD); //mistral green
 		 
 		 JLabel labelPanel1 = new JLabel("Before Policy Intervention");
 		 labelPanel1.setBounds(300, 20, 331, 20);
@@ -176,9 +191,18 @@ public class DashboardRoadExpansion extends JFrame {
 				 ));
 		
 		scrollPane_2 = new JScrollPane();
+		scrollPane_2.setToolTipText("This shows the impact on demand.");
 		scrollPane_2.setBounds(470, 796, 416, 90);
 		contentPane.add(scrollPane_2);
-
+		
+		//UIManager.put("ToolTip.background", new ColorUIResource(255, 247, 200)); //#fff7c8
+		UIManager.put("ToolTip.background", new ColorUIResource(255, 255, 255)); //#fff7c8
+		Border border = BorderFactory.createLineBorder(new Color(76,79,83));    //#4c4f53
+		UIManager.put("ToolTip.border", border);
+		UIManager.put("ToolTip.font", new Font("Calibri Light", Font.BOLD, 16));
+					
+		ToolTipManager.sharedInstance().setDismissDelay(15000); // 15 second delay  
+	
 		table_2 = new JTable() {
 		       @Override
 		        public Component prepareRenderer(TableCellRenderer renderer, int rowIndex, int columnIndex) {
@@ -191,9 +215,17 @@ public class DashboardRoadExpansion extends JFrame {
 		            	int newValue = Integer.parseInt(getValueAt(rowIndex, columnIndex).toString());
 		            	int oldValue = Integer.parseInt(table.getValueAt(rowIndex, columnIndex).toString());
             	    
-		            	if (newValue > oldValue) component.setBackground(new Color(255, 0, 0, 50));
+		               	if (newValue > oldValue) component.setBackground(new Color(255, 0, 0, 50));
 		            	else if (newValue < oldValue) component.setBackground(new Color(0, 255, 0, 50));
 		            	else component.setBackground(Color.WHITE);
+		            		          
+		            	/*
+		            	double percentChange = 0.01;
+		               	if (1.0 * newValue / oldValue > (1 + percentChange)) component.setBackground(new Color(255, 0, 0, 50));
+		            	else if (1.0 * newValue / oldValue < (1 - percentChange)) component.setBackground(new Color(0, 255, 0, 50));
+		            	else component.setBackground(Color.WHITE);
+		            	*/
+		            	
 		            }
 		            return component;
 		        }
@@ -201,10 +233,10 @@ public class DashboardRoadExpansion extends JFrame {
 
 		table_2.setBackground(Color.WHITE);
 		
-		table_2.setOpaque(false);
-		((JComponent)table_2.getDefaultRenderer(Object.class)).setOpaque(false);
-		scrollPane_2.setOpaque(false);
-		scrollPane_2.getViewport().setOpaque(false);
+		//table_2.setOpaque(false);
+		//((JComponent)table_2.getDefaultRenderer(Object.class)).setOpaque(false);
+		//scrollPane_2.setOpaque(false);
+		//scrollPane_2.getViewport().setOpaque(false);
 		
 		scrollPane_2.setViewportView(table_2);
 		table_2.setModel(new DefaultTableModel(
@@ -329,6 +361,16 @@ public class DashboardRoadExpansion extends JFrame {
 //		
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		
+		 JPanel panel_1 = new JPanel();
+		 panel_1.setBounds(10, 10, (int)Math.round(screenSize.width * 0.5) - 12, (int)Math.round(screenSize.height * 0.65));
+		 //panel_1.setSize((int)Math.round(screenSize.width * 0.5) - 5, (int)Math.round(screenSize.height * 0.6));
+		 contentPane.add(panel_1);
+					
+		 JPanel panel_2 = new JPanel();
+		 panel_2.setBounds((int)Math.round(screenSize.width * 0.5), 10, (int)Math.round(screenSize.width * 0.5) - 12, (int)Math.round(screenSize.height * 0.65));
+		 //panel_2.setSize((int)Math.round(screenSize.width * 0.5) - 5, (int)Math.round(screenSize.height * 0.6));
+		 contentPane.add(panel_2);
+			
 		//this.setSize(1920, 876);
 		//this.setLocation(0,  (int)Math.round(screenSize.height * 0.65));
 		this.setExtendedState(JMapFrame.MAXIMIZED_BOTH);
@@ -364,8 +406,20 @@ public class DashboardRoadExpansion extends JFrame {
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
 		
 		rnaBefore.assignPassengerFlows(odm, rsg);
+		rnaBefore.updateLinkTravelTimes(0.9);
+		
+		rnaBefore.resetLinkVolumes();
+		rnaBefore.resetTripStorages();
+		rnaBefore.assignPassengerFlows(odm, rsg);
+		rnaBefore.updateLinkTravelTimes(0.9);
+		
 		rnaBefore.updateLinkVolumeInPCU();
 		rnaBefore.updateLinkVolumeInPCUPerTimeOfDay();
+		
+		barDataset.addValue(rnaBefore.getTripList().size(), "No intervention", "Number of Trips");
+		
+		SkimMatrix tsmBefore = rnaBefore.calculateTimeSkimMatrix();
+		SkimMatrix csmBefore = rnaBefore.calculateCostSkimMatrix();
 		
 		String shapefilePathBefore = "./temp/networkWithCapacityUtilisationBefore.shp";
 		String shapefilePathAfter = "./temp/networkWithCapacityUtilisationAfter.shp";
@@ -376,30 +430,14 @@ public class DashboardRoadExpansion extends JFrame {
 		//leftFrame.setSize(screenSize.width / 2, (int)Math.round(screenSize.height * 0.65));
 		//leftFrame.setLocation(0, 0);
 		leftFrame.setVisible(false);
+		panel_1.add(leftFrame.getContentPane());
+		panel_1.setLayout(null);
 		JMapPane pane = ((JMapFrameDemo)leftFrame).getMapPane();
-		//((JMapFrameDemo)leftFrame).getMapPane().resize(1000, 1000);
-		//leftFrame.setResizable(true);
-		//leftFrame.setSize(leftFrame.getMaximumSize());
-		//pane.setPreferredSize(pane.getMaximumSize());
-		//pane.setSize(pane.getMaximumSize());
-		//leftFrame.getContentPane().setSize(leftFrame.getContentPane().getMaximumSize());
-		//leftFrame.getLayeredPane().setSize(leftFrame.getLayeredPane().getMaximumSize());
-		//leftFrame.repaint();
-		//pane.reset();
-		//pane.setSize(pane.getMaximumSize());
-		//pane.resize(2000,2000);
-		//pane.setBounds(0,0,32767,32767);
-		//pane.setBounds(leftFrame.getX(), leftFrame.getY(), leftFrame.getWidth(), leftFrame.getHeight());
-		//pane.setSize(leftFrame.getWidth(), leftFrame.getHeight());
-		//pane.reset();
-		//pane.setBounds(0,0,5000,5000);
-		//pane.reset();
-		//System.out.println("MAX SIZE: " +pane.getMaximumSize());
-		//System.out.println("MIN SIZE: " + pane.getMinimumSize());
-		//System.out.println("SIZE: " + pane.getSize());
-		//System.out.println("BOUNDS: " + pane.getBounds());
-		//System.out.println("FRAME: " + leftFrame.getSize());
-		//System.out.println("CONTENT PANE: " + leftFrame.getContentPane().getSize());
+
+		//JFrame rightFrame;
+		//panel_2.add(rightFrame.getContentPane());
+		//panel_2.setLayout(null);
+		
 
 		int rows = odm.getOrigins().size();
 		int columns = odm.getDestinations().size();
@@ -446,6 +484,7 @@ public class DashboardRoadExpansion extends JFrame {
 		contentPane.add(lblAfterPolicyIntervention);
 		
 		JCheckBox chckbxNewCheckBox = new JCheckBox("Both directions?");
+		chckbxNewCheckBox.setBackground(GUI.DASHBOARD);
 		chckbxNewCheckBox.setSelected(true);
 		chckbxNewCheckBox.setBounds(1558, 945, 122, 23);
 		contentPane.add(chckbxNewCheckBox);
@@ -533,6 +572,7 @@ public class DashboardRoadExpansion extends JFrame {
 		slider.setMaximum(5);
 		slider.setMinimum(1);
 		slider.setBounds(1404, 947, 138, 45);
+		slider.setBackground(GUI.DASHBOARD);
 		contentPane.add(slider);
 		
 		JLabel lblLanesToAdd = new JLabel("Lanes to add:");
@@ -543,6 +583,7 @@ public class DashboardRoadExpansion extends JFrame {
 		btnNewButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				
+				//RandomSingleton.getInstance().setSeed(1234);
 				
 				int fromNode = (int) comboBox.getSelectedItem();
 				int toNode = (int) comboBox_1.getSelectedItem();
@@ -591,32 +632,103 @@ public class DashboardRoadExpansion extends JFrame {
 				rnaAfterExpansion.assignPassengerFlows(odm, rsg);
 				rnaAfterExpansion.updateLinkVolumeInPCU();
 				rnaAfterExpansion.updateLinkVolumeInPCUPerTimeOfDay();
+				
+				//predict change in demand
+				SkimMatrix tsm = rnaAfterExpansion.calculateTimeSkimMatrix();
+				SkimMatrix csm = rnaAfterExpansion.calculateCostSkimMatrix();
+				
+				//predicted demand	
+				ODMatrix predictedODM = new ODMatrix();
+				
+				final String elasticitiesFile = props.getProperty("elasticitiesFile");
+				HashMap<ElasticityTypes, Double> elasticities = null;
+				try {
+					elasticities = DemandModel.readElasticitiesFile(elasticitiesFile);
+				} catch (FileNotFoundException e2) {
+					// TODO Auto-generated catch block
+					e2.printStackTrace();
+				} catch (IOException e2) {
+					// TODO Auto-generated catch block
+					e2.printStackTrace();
+				}
+				
+				
+				tsmBefore.printMatrixFormatted();
+				tsm.printMatrixFormatted();
+				
+				
+				//for each OD pair predict the change in passenger vehicle flow from the change in skim matrices
+				for (MultiKey mk: odm.getKeySet()) {
+					String originZone = (String) mk.getKey(0);
+					String destinationZone = (String) mk.getKey(1);
+
+					double oldFlow = odm.getFlow(originZone, destinationZone);
+
+					double oldODTravelTime = tsmBefore.getCost(originZone, destinationZone);
+					double newODTravelTime = tsm.getCost(originZone, destinationZone);
+					double oldODTravelCost = csmBefore.getCost(originZone, destinationZone);
+					double newODTravelCost = csm.getCost(originZone, destinationZone);
+
+					double predictedflow = oldFlow * Math.pow(newODTravelTime / oldODTravelTime, elasticities.get(ElasticityTypes.TIME)) *
+							Math.pow(newODTravelCost / oldODTravelCost, elasticities.get(ElasticityTypes.COST));
+
+					predictedODM.setFlow(originZone, destinationZone, (int) Math.round(predictedflow));
+				}
+				
+				rnaAfterExpansion.resetLinkVolumes();
+				rnaAfterExpansion.resetTripStorages();
+											
+				rnaAfterExpansion.assignPassengerFlows(predictedODM, rsg);
+				rnaAfterExpansion.updateLinkVolumeInPCU();
+				rnaAfterExpansion.updateLinkVolumeInPCUPerTimeOfDay();
+				//SkimMatrix sm = rnaAfterExpansion.calculateTimeSkimMatrix();
+				
 				HashMap<Integer, Double> capacityAfter = rnaAfterExpansion.calculateDirectionAveragedPeakLinkCapacityUtilisation();
-				String shapefilePathAfter = "./temp/networkWithCapacityUtilisationAfter.shp";
+				//String shapefilePathAfter = "./temp/networkWithCapacityUtilisationAfter.shp";
+				String shapefilePathAfter = "./temp/after" +  DashboardRoadExpansion.counter++ + ".shp";
 				JFrame rightFrame;
+				JButton reset = null;
 				try {
 					rightFrame = NetworkVisualiserDemo.visualise(roadNetwork, "Capacity Utilisation After Intervention", capacityAfter, "CapUtil", shapefilePathAfter);
 					rightFrame.setVisible(false);
 					rightFrame.repaint();
-				//	panel_2.add(rightFrame.getContentPane());
+					
+					JMapPane pane = ((JMapFrameDemo)rightFrame).getMapPane();
+					//((JMapFrameDemo)rightFrame).getToolBar().setBackground(GUI.TOOLBAR); //to set toolbar background
+		
+					System.out.println("component: " + ((JMapFrameDemo)rightFrame).getToolBar().getComponent(8).toString());
+					reset = (JButton) ((JMapFrameDemo)rightFrame).getToolBar().getComponent(8);
+					//reset.setBackground(Color.BLUE); //set icon background
+					//reset.setBorderPainted(false); //remove border
+					JButton minus = (JButton) ((JMapFrameDemo)rightFrame).getToolBar().getComponent(2);
+					//minus.setBackground(Color.GREEN); //set icon background
+					
+					//panel_2.removeAll();
+					panel_2.add(rightFrame.getContentPane(), 0);
+					panel_2.setLayout(null);
+					//panel_2.doLayout();
+					//panel_2.repaint();
+												
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
 				
+				//reset.doClick(4000);
+				
 				//update tables
-				int rows = odm.getOrigins().size();
-				int columns = odm.getDestinations().size();
+				int rows = predictedODM.getOrigins().size();
+				int columns = predictedODM.getDestinations().size();
 				Object[][] data = new Object[rows][columns + 1];
 				for (int i = 0; i < rows; i++) {
-					data[i][0] = zoning.getLADToName().get(odm.getOrigins().get(i));
+					data[i][0] = zoning.getLADToName().get(predictedODM.getOrigins().get(i));
 					for (int j = 0; j < columns; j++) {
-						data[i][j+1] = odm.getFlow(odm.getOrigins().get(i), odm.getDestinations().get(j));
+						data[i][j+1] = predictedODM.getFlow(predictedODM.getOrigins().get(i), predictedODM.getDestinations().get(j));
 					}
 				}
 				String[] labels = new String[columns + 1];
 				labels[0] = "TRIPS";
-				for (int j = 0; j < columns; j++) labels[j+1] = zoning.getLADToName().get(odm.getDestinations().get(j));
+				for (int j = 0; j < columns; j++) labels[j+1] = zoning.getLADToName().get(predictedODM.getDestinations().get(j));
 				table_2.setModel(new DefaultTableModel(data, labels));
 				
 				
@@ -637,11 +749,12 @@ public class DashboardRoadExpansion extends JFrame {
 				
 				//update bar chart
 				barDataset.addValue(rnaAfterExpansion.getTripList().size(), "Road expansion", "Number of Trips");
-				
+				//barDataset.addValue(predictedODM.getTotalFlow(), "Road expansion", "Number of Trips");
+			
 				re.uninstall(roadNetwork);
 				if (re2 != null) re2.uninstall(roadNetwork);
 				
-				
+				//pack();
 			}
 		});
 		
@@ -655,25 +768,28 @@ public class DashboardRoadExpansion extends JFrame {
 		lblRoadExpansionPolicy.setBounds(1404, 755, 380, 30);
 		contentPane.add(lblRoadExpansionPolicy);
 		
-		final String roadExpansionFileName = props.getProperty("roadExpansionFile");
+		//final String roadExpansionFileName = props.getProperty("roadExpansionFile");
 		//List<Intervention> interventions = new ArrayList<Intervention>();
 		//RoadExpansion re = new RoadExpansion(roadExpansionFileName);
-		
-		Properties props2 = new Properties();
-		props2.setProperty("startYear", "2016");
-		props2.setProperty("endYear", "2025");
-		props2.setProperty("fromNode", "22");
-		props2.setProperty("toNode", "23");
-		props2.setProperty("CP", "6935");
-		props2.setProperty("number", "2");
-		RoadExpansion re = new RoadExpansion(props2);
+		//Properties props2 = new Properties();
+		//props2.setProperty("startYear", "2016");
+		//props2.setProperty("endYear", "2025");
+		//props2.setProperty("fromNode", "22");
+		//props2.setProperty("toNode", "23");
+		//props2.setProperty("CP", "6935");
+		//props2.setProperty("number", "2");
+		//RoadExpansion re = new RoadExpansion(props2);
 		
 		//set controls to represent the intervention
 		comboBox.setSelectedItem(new Integer(22));
 		comboBox_1.setSelectedItem(new Integer(23));
 		slider.setValue(2);
 		chckbxNewCheckBox.setSelected(false);
-				
+		
+		//run the default intervention
+		btnNewButton.doClick();
+		
+		/*
 		System.out.println("Road expansion intervention: " + re.toString());
 		//interventions.add(re);
 		re.install(roadNetwork);
@@ -737,6 +853,11 @@ public class DashboardRoadExpansion extends JFrame {
 		barDataset.addValue(rnaBefore.getTripList().size(), "No intervention", "Number of Trips");
 		barDataset.addValue(rnaAfterExpansion.getTripList().size(), "Road expansion", "Number of Trips");
 		
+		*/
+	
 		pack();
+		//this.setExtendedState(this.getExtendedState()|JFrame.MAXIMIZED_BOTH );
+
+		
 	}
 }
