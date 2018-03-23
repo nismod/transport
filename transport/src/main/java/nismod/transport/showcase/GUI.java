@@ -1,31 +1,17 @@
 package nismod.transport.showcase;
 
+import java.awt.Color;
 import java.awt.EventQueue;
+import java.awt.Font;
+import java.awt.Image;
 import java.awt.Toolkit;
-
-import javax.swing.JFrame;
-
-import org.geotools.swing.JMapFrame;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.net.URL;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import java.awt.BorderLayout;
-import java.awt.Font;
-import java.awt.Image;
-import java.awt.Color;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
-import java.awt.Window.Type;
-import java.awt.FlowLayout;
-import com.jgoodies.forms.layout.FormLayout;
-import com.jgoodies.forms.layout.ColumnSpec;
-import com.jgoodies.forms.layout.FormSpecs;
-import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.GroupLayout;
-import javax.swing.GroupLayout.Alignment;
-import java.awt.GridBagLayout;
-import java.awt.GridBagConstraints;
-import java.awt.Insets;
+import javax.swing.JFrame;
 
 /**
  * Main GUI for the Show-case Demo
@@ -68,8 +54,12 @@ public class GUI {
 	 */
 	private void initialize() {
 		frame = new JFrame();
-		frame.setBounds(100, 100, 1024, 768);
-		//frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+		frame.setBounds(0, 0, 1920, 1080); //when window is unmaximised
+		//Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+		//frame.setSize(screenSize);
+		//frame.setBounds(0,0,screenSize.width, screenSize.height);
+		frame.setExtendedState(JFrame.MAXIMIZED_BOTH); //maximise the screen
+		//frame.setAlwaysOnTop(true);
 		frame.setTitle("NISMOD v2 Showcase Demo");
 		frame.setIconImage(Toolkit.getDefaultToolkit().getImage("./src/test/resources/images/NISMOD-LP.jpg"));
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -87,15 +77,27 @@ public class GUI {
 		icon2 = new ImageIcon(newimg2);
 		
 		JButton btnRoadDevelopment = new JButton("Road Development");
-		btnRoadDevelopment.setBounds(359, 258, 290, 180);
+		btnRoadDevelopment.setBounds(811, 258, 290, 384);
 		btnRoadDevelopment.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				DashboardRoadDevelopment.main(null);
 			}
 		});
 		
-		JButton btnRoadExpansion = new JButton("Road Expansion");
-		btnRoadExpansion.setBounds(31, 258, 290, 180);
+		URL url = getClass().getResource("/images/road.png");
+		System.out.println(url.toExternalForm());
+		
+		StringBuilder html = new StringBuilder();
+		html.append("<html><center>");
+		html.append("<h2>Intervention 1:</h2>");
+		html.append("<h1>Road Expansion</h1>");
+		html.append("<img src=\"");
+		html.append(url.toExternalForm());
+		html.append("\" alt=\"road expansion\" height=\"100\" width=\"100\"> ");
+		html.append("<h3>What happens with road expansion?</h3>");
+		
+		JButton btnRoadExpansion = new JButton(html.toString());
+		btnRoadExpansion.setBounds(259, 258, 314, 384);
 		btnRoadExpansion.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				DashboardRoadExpansion.main(null);
@@ -105,7 +107,9 @@ public class GUI {
 		btnRoadExpansion.setToolTipText("Expands the road link with additional lanes");
 		btnRoadExpansion.setForeground(Color.DARK_GRAY);
 		btnRoadExpansion.setFont(new Font("Calibri Light", Font.BOLD, 16));
-		btnRoadExpansion.setIcon(icon);
+		//btnRoadExpansion.setIcon(icon);
+		//btnRoadExpansion.setText("<html>Road Expansion</html>");
+
 		frame.getContentPane().add(btnRoadExpansion);
 		btnRoadDevelopment.setToolTipText("Builds new road links between existing intersections");
 		btnRoadDevelopment.setForeground(Color.DARK_GRAY);
@@ -114,7 +118,7 @@ public class GUI {
 		frame.getContentPane().add(btnRoadDevelopment);
 		
 		JButton btnCongestionCharging = new JButton("Congestion Charging");
-		btnCongestionCharging.setBounds(683, 258, 290, 180);
+		btnCongestionCharging.setBounds(1355, 258, 290, 384);
 		btnCongestionCharging.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				DashboardCongestionCharging.main(null);
@@ -126,5 +130,7 @@ public class GUI {
 		btnCongestionCharging.setToolTipText("Implements a congestion charging zone");
 		btnCongestionCharging.setIcon(icon2);
 		frame.getContentPane().add(btnCongestionCharging);
+	
+		frame.pack();
 	}
 }

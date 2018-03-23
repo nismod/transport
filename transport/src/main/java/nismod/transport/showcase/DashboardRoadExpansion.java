@@ -105,9 +105,9 @@ public class DashboardRoadExpansion extends JFrame {
 	private JScrollPane scrollPane_3;
 	private JLabel lblBeforeIntervention;
 	private JLabel label;
-	
+
 	private static int counter = 1;
-	
+
 
 	/**
 	 * Launch the application.
@@ -138,190 +138,192 @@ public class DashboardRoadExpansion extends JFrame {
 		contentPane = new JPanel();
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
-		
+
+		setAlwaysOnTop(true);
+
 
 		contentPane.setBackground(GUI.DASHBOARD); //mistral green
-		 
-		 JLabel labelPanel1 = new JLabel("Before Policy Intervention");
-		 labelPanel1.setBounds(300, 20, 331, 20);
-		 contentPane.add(labelPanel1);
-		 labelPanel1.setForeground(Color.DARK_GRAY);
-		 labelPanel1.setFont(new Font("Calibri Light", Font.BOLD, 16));
-		 
-		 JLabel labelPanel2 = new JLabel("After Policy Intervention");
-		 labelPanel2.setBounds(1300, 20, 331, 20);
-		 contentPane.add(labelPanel2);
-		 labelPanel2.setForeground(Color.DARK_GRAY);
-		 labelPanel2.setFont(new Font("Calibri Light", Font.BOLD, 16));
-		 
-		 scrollPane = new JScrollPane();
-		 scrollPane.setBounds(21, 796, 416, 90);
-		 contentPane.add(scrollPane);
-		
-		 table = new JTable();
-		 scrollPane.setViewportView(table);
-		 table.setModel(new DefaultTableModel(
-		 	new Object[][] {
-		 		{"Southampton", "2100", "1343", "4321", "1234"},
-		 		{"New Forest", "4252", "623", "1425", "653"},
-		 		{"Eeastleigh", "6534", "2345", "541", "6327"},
-		 		{"Isle of Wight", "2345", "235", "52", "435"},
-		 	},
-		 	new String[] {
-		 		"TRIPS", "Southampton", "New Forest", "Eastleigh", "Isle of Wight"
-		 	}
-		 ));
-		
+
+		JLabel labelPanel1 = new JLabel("Before Policy Intervention");
+		labelPanel1.setBounds(300, 20, 331, 20);
+		contentPane.add(labelPanel1);
+		labelPanel1.setForeground(Color.DARK_GRAY);
+		labelPanel1.setFont(new Font("Calibri Light", Font.BOLD, 16));
+
+		JLabel labelPanel2 = new JLabel("After Policy Intervention");
+		labelPanel2.setBounds(1300, 20, 331, 20);
+		contentPane.add(labelPanel2);
+		labelPanel2.setForeground(Color.DARK_GRAY);
+		labelPanel2.setFont(new Font("Calibri Light", Font.BOLD, 16));
+
+		scrollPane = new JScrollPane();
+		scrollPane.setBounds(21, 796, 416, 90);
+		contentPane.add(scrollPane);
+
+		table = new JTable();
+		scrollPane.setViewportView(table);
+		table.setModel(new DefaultTableModel(
+				new Object[][] {
+					{"Southampton", "2100", "1343", "4321", "1234"},
+					{"New Forest", "4252", "623", "1425", "653"},
+					{"Eeastleigh", "6534", "2345", "541", "6327"},
+					{"Isle of Wight", "2345", "235", "52", "435"},
+				},
+				new String[] {
+						"TRIPS", "Southampton", "New Forest", "Eastleigh", "Isle of Wight"
+				}
+				));
+
 		scrollPane_1 = new JScrollPane();
 		scrollPane_1.setBounds(21, 916, 416, 90);
 		contentPane.add(scrollPane_1);
-		
+
 		table_1 = new JTable();
 		scrollPane_1.setViewportView(table_1);
 		table_1.setModel(new DefaultTableModel(
-				 	new Object[][] {
-				 		{"Southampton", "10.0", "13.4", "43.1", "12.4"},
-				 		{"New Forest", "3.5", "6.2", "14.2", "6.5"},
-				 		{"Eeastleigh", "15.3", "23.4", "5.4", "6.3"},
-				 		{"Isle of Wight", "23.5", "35.7", "25.2", "14.6"},
-				 	},
-				 	new String[] {
-				 		"TRAVEL TIME", "Southampton", "New Forest", "Eastleigh", "Isle of Wight"
-				 	}
-				 ));
-		
+				new Object[][] {
+					{"Southampton", "10.0", "13.4", "43.1", "12.4"},
+					{"New Forest", "3.5", "6.2", "14.2", "6.5"},
+					{"Eeastleigh", "15.3", "23.4", "5.4", "6.3"},
+					{"Isle of Wight", "23.5", "35.7", "25.2", "14.6"},
+				},
+				new String[] {
+						"TRAVEL TIME", "Southampton", "New Forest", "Eastleigh", "Isle of Wight"
+				}
+				));
+
 		scrollPane_2 = new JScrollPane();
 		scrollPane_2.setToolTipText("This shows the impact on demand.");
 		scrollPane_2.setBounds(470, 796, 416, 90);
 		contentPane.add(scrollPane_2);
-		
+
 		//UIManager.put("ToolTip.background", new ColorUIResource(255, 247, 200)); //#fff7c8
 		UIManager.put("ToolTip.background", new ColorUIResource(255, 255, 255)); //#fff7c8
 		Border border = BorderFactory.createLineBorder(new Color(76,79,83));    //#4c4f53
 		UIManager.put("ToolTip.border", border);
 		UIManager.put("ToolTip.font", new Font("Calibri Light", Font.BOLD, 16));
-					
+
 		ToolTipManager.sharedInstance().setDismissDelay(15000); // 15 second delay  
-	
+
 		table_2 = new JTable() {
-		       @Override
-		        public Component prepareRenderer(TableCellRenderer renderer, int rowIndex, int columnIndex) {
-		            JComponent component = (JComponent) super.prepareRenderer(renderer, rowIndex, columnIndex);  
-		        	component.setOpaque(true);
-		            
-		            if (columnIndex == 0)  { 
-		            	component.setBackground(new Color(0, 0, 0, 20));
-		            } else {
-		            	int newValue = Integer.parseInt(getValueAt(rowIndex, columnIndex).toString());
-		            	int oldValue = Integer.parseInt(table.getValueAt(rowIndex, columnIndex).toString());
-            	    
-		               	if (newValue > oldValue) component.setBackground(new Color(255, 0, 0, 50));
-		            	else if (newValue < oldValue) component.setBackground(new Color(0, 255, 0, 50));
-		            	else component.setBackground(Color.WHITE);
-		            		          
-		            	/*
+			@Override
+			public Component prepareRenderer(TableCellRenderer renderer, int rowIndex, int columnIndex) {
+				JComponent component = (JComponent) super.prepareRenderer(renderer, rowIndex, columnIndex);  
+				component.setOpaque(true);
+
+				if (columnIndex == 0)  { 
+					component.setBackground(new Color(0, 0, 0, 20));
+				} else {
+					int newValue = Integer.parseInt(getValueAt(rowIndex, columnIndex).toString());
+					int oldValue = Integer.parseInt(table.getValueAt(rowIndex, columnIndex).toString());
+
+					if (newValue > oldValue) component.setBackground(new Color(255, 0, 0, 50));
+					else if (newValue < oldValue) component.setBackground(new Color(0, 255, 0, 50));
+					else component.setBackground(Color.WHITE);
+
+					/*
 		            	double percentChange = 0.01;
 		               	if (1.0 * newValue / oldValue > (1 + percentChange)) component.setBackground(new Color(255, 0, 0, 50));
 		            	else if (1.0 * newValue / oldValue < (1 - percentChange)) component.setBackground(new Color(0, 255, 0, 50));
 		            	else component.setBackground(Color.WHITE);
-		            	*/
-		            	
-		            }
-		            return component;
-		        }
+					 */
+
+				}
+				return component;
+			}
 		};
 
 		table_2.setBackground(Color.WHITE);
-		
+
 		//table_2.setOpaque(false);
 		//((JComponent)table_2.getDefaultRenderer(Object.class)).setOpaque(false);
 		//scrollPane_2.setOpaque(false);
 		//scrollPane_2.getViewport().setOpaque(false);
-		
+
 		scrollPane_2.setViewportView(table_2);
 		table_2.setModel(new DefaultTableModel(
-				 	new Object[][] {
-				 		{"Southampton", "2100", "1343", "4321", "1234"},
-				 		{"New Forest", "4253", "623", "1420", "653"},
-				 		{"Eeastleigh", "6534", "2346", "541", "6327"},
-				 		{"Isle of Wight", "2345", "234", "52", "435"},
-				 	},
-				 	new String[] {
-				 		"TRIPS", "Southampton", "New Forest", "Eastleigh", "Isle of Wight"
-				 	}
-				 ));
-		
+				new Object[][] {
+					{"Southampton", "2100", "1343", "4321", "1234"},
+					{"New Forest", "4253", "623", "1420", "653"},
+					{"Eeastleigh", "6534", "2346", "541", "6327"},
+					{"Isle of Wight", "2345", "234", "52", "435"},
+				},
+				new String[] {
+						"TRIPS", "Southampton", "New Forest", "Eastleigh", "Isle of Wight"
+				}
+				));
+
 		scrollPane_3 = new JScrollPane();
 		scrollPane_3.setBounds(470, 916, 416, 90);
 		contentPane.add(scrollPane_3);
 
 		table_3 = new JTable() {
-			
-		       @Override
-		        public Component prepareRenderer(TableCellRenderer renderer, int rowIndex, int columnIndex) {
-		            JComponent component = (JComponent) super.prepareRenderer(renderer, rowIndex, columnIndex);  
-		           			            
-		            if (columnIndex == 0)  { 
-		               	component.setBackground(new Color(0, 0, 0, 20));
-		            } else {
-		            	double newValue = Double.parseDouble(getValueAt(rowIndex, columnIndex).toString());
-		            	double oldValue = Double.parseDouble(table_1.getValueAt(rowIndex, columnIndex).toString());
-           	    
-		            	if (newValue > oldValue) component.setBackground(new Color(255, 0, 0, 50));
-		            	else if (newValue < oldValue) component.setBackground(new Color(0, 255, 0, 50));
-		            	else component.setBackground(Color.WHITE);
-		            }
-		            return component;
-		        }
-			
+
+			@Override
+			public Component prepareRenderer(TableCellRenderer renderer, int rowIndex, int columnIndex) {
+				JComponent component = (JComponent) super.prepareRenderer(renderer, rowIndex, columnIndex);  
+
+				if (columnIndex == 0)  { 
+					component.setBackground(new Color(0, 0, 0, 20));
+				} else {
+					double newValue = Double.parseDouble(getValueAt(rowIndex, columnIndex).toString());
+					double oldValue = Double.parseDouble(table_1.getValueAt(rowIndex, columnIndex).toString());
+
+					if (newValue > oldValue) component.setBackground(new Color(255, 0, 0, 50));
+					else if (newValue < oldValue) component.setBackground(new Color(0, 255, 0, 50));
+					else component.setBackground(Color.WHITE);
+				}
+				return component;
+			}
+
 		};
-		
+
 		table_3.setBackground(Color.WHITE);
-		
+
 		scrollPane_3.setViewportView(table_3);
 		table_3.setModel(new DefaultTableModel(
-				 	new Object[][] {
-				 		{"Southampton", "10.0", "13.4", "43.1", "12.4"},
-				 		{"New Forest", "3.5", "6.2", "14.2", "6.5"},
-				 		{"Eeastleigh", "15.3", "23.4", "5.4", "6.3"},
-				 		{"Isle of Wight", "23.5", "35.7", "25.2", "14.6"},
-				 	},
-				 	new String[] {
-				 		"TRAVEL TIME", "Southampton", "New Forest", "Eastleigh", "Isle of Wight"
-				 	}
-				 ));
-		
+				new Object[][] {
+					{"Southampton", "10.0", "13.4", "43.1", "12.4"},
+					{"New Forest", "3.5", "6.2", "14.2", "6.5"},
+					{"Eeastleigh", "15.3", "23.4", "5.4", "6.3"},
+					{"Isle of Wight", "23.5", "35.7", "25.2", "14.6"},
+				},
+				new String[] {
+						"TRAVEL TIME", "Southampton", "New Forest", "Eastleigh", "Isle of Wight"
+				}
+				));
+
 		DefaultCategoryDataset barDataset = new DefaultCategoryDataset();
-		
+
 		barDataset.addValue(70050.0, "No intervention", "Number of Trips");
 		barDataset.addValue(70100.0, "Road expansion", "Number of Trips");
 		//barDataset.addValue(70150.0, "Road development", "Number of Trips");
 
 		JFreeChart chart = ChartFactory.createBarChart("Impact of New Infrastructure on Demand", "", "", barDataset, PlotOrientation.VERTICAL, true, true, false);
-	
+
 		chart.setRenderingHints( new RenderingHints( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON ) );
 		chart.getRenderingHints().put(JFreeChart.KEY_SUPPRESS_SHADOW_GENERATION, Boolean.TRUE);
 		chart.setAntiAlias(true);
-		
+
 		ChartPanel chartPanel = new ChartPanel(chart);
 
 		chartPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 		chartPanel.setBackground(Color.WHITE);
-	
+
 		//chartPanel.setPreferredSize( new java.awt.Dimension( 560 , 367 ) );
-		
-	 	CategoryPlot plot = (CategoryPlot) chart.getPlot();
-	 	//plot.setBackgroundPaint(Color.black);
-	 	//plot.setBackgroundAlpha(0.1f);
-	 	plot.setBackgroundPaint(Color.WHITE);
-	 	plot.setOutlinePaint(Color.WHITE);
-	 	plot.setRangeGridlinePaint(Color.DARK_GRAY);
-	 	
-	 	chart.getTitle().setPaint(Color.DARK_GRAY);
-	 	Font titleFont = new Font("Calibri Light", Font.BOLD, 16); 
+
+		CategoryPlot plot = (CategoryPlot) chart.getPlot();
+		//plot.setBackgroundPaint(Color.black);
+		//plot.setBackgroundAlpha(0.1f);
+		plot.setBackgroundPaint(Color.WHITE);
+		plot.setOutlinePaint(Color.WHITE);
+		plot.setRangeGridlinePaint(Color.DARK_GRAY);
+
+		chart.getTitle().setPaint(Color.DARK_GRAY);
+		Font titleFont = new Font("Calibri Light", Font.BOLD, 16); 
 		chart.getTitle().setFont(titleFont);
-	 	
-	 	BarRenderer barRenderer = (BarRenderer)plot.getRenderer();
+
+		BarRenderer barRenderer = (BarRenderer)plot.getRenderer();
 
 		//get brewer palette
 		ColorBrewer brewer = ColorBrewer.instance();
@@ -338,48 +340,48 @@ public class DashboardRoadExpansion extends JFrame {
 		for (int i = 0; i < numberOfRowKeys; i++) {
 			barRenderer.setSeriesPaint(i, colors[i]);
 		}
-		
-		
+
+
 		chartPanel.setPreferredSize(new Dimension(421, 262)); //size according to my window
 		chartPanel.setMouseWheelEnabled(true);
 		chartPanel.setMouseZoomable(true);
-			
+
 		JPanel panel = new JPanel();
 		panel.setBounds(920, 744, 421, 262);
 		panel.add(chartPanel);
 		contentPane.add(panel);
-		
-//		lblBeforeIntervention = new JLabel("Before Intervention");
-//		lblBeforeIntervention.setFont(new Font("Calibri Light", Font.BOLD, 16));
-//		lblBeforeIntervention.setBounds(21, 771, 180, 14);
-//		contentPane.add(lblBeforeIntervention);
-//		
-//		label = new JLabel("After Intervention");
-//		label.setFont(new Font("Calibri Light", Font.BOLD, 16));
-//		label.setBounds(470, 771, 180, 14);
-//		contentPane.add(label);
-//		
+
+		//		lblBeforeIntervention = new JLabel("Before Intervention");
+		//		lblBeforeIntervention.setFont(new Font("Calibri Light", Font.BOLD, 16));
+		//		lblBeforeIntervention.setBounds(21, 771, 180, 14);
+		//		contentPane.add(lblBeforeIntervention);
+		//		
+		//		label = new JLabel("After Intervention");
+		//		label.setFont(new Font("Calibri Light", Font.BOLD, 16));
+		//		label.setBounds(470, 771, 180, 14);
+		//		contentPane.add(label);
+		//		
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-		
-		 JPanel panel_1 = new JPanel();
-		 panel_1.setBounds(10, 10, (int)Math.round(screenSize.width * 0.5) - 12, (int)Math.round(screenSize.height * 0.65));
-		 //panel_1.setSize((int)Math.round(screenSize.width * 0.5) - 5, (int)Math.round(screenSize.height * 0.6));
-		 contentPane.add(panel_1);
-					
-		 JPanel panel_2 = new JPanel();
-		 panel_2.setBounds((int)Math.round(screenSize.width * 0.5), 10, (int)Math.round(screenSize.width * 0.5) - 12, (int)Math.round(screenSize.height * 0.65));
-		 //panel_2.setSize((int)Math.round(screenSize.width * 0.5) - 5, (int)Math.round(screenSize.height * 0.6));
-		 contentPane.add(panel_2);
-			
+
+		JPanel panel_1 = new JPanel();
+		panel_1.setBounds(10, 10, (int)Math.round(screenSize.width * 0.5) - 12, (int)Math.round(screenSize.height * 0.65));
+		//panel_1.setSize((int)Math.round(screenSize.width * 0.5) - 5, (int)Math.round(screenSize.height * 0.6));
+		contentPane.add(panel_1);
+
+		JPanel panel_2 = new JPanel();
+		panel_2.setBounds((int)Math.round(screenSize.width * 0.5), 10, (int)Math.round(screenSize.width * 0.5) - 12, (int)Math.round(screenSize.height * 0.65));
+		//panel_2.setSize((int)Math.round(screenSize.width * 0.5) - 5, (int)Math.round(screenSize.height * 0.6));
+		contentPane.add(panel_2);
+
 		//this.setSize(1920, 876);
 		//this.setLocation(0,  (int)Math.round(screenSize.height * 0.65));
 		this.setExtendedState(JMapFrame.MAXIMIZED_BOTH);
 		this.setLocation(0, 0);
-		
+
 		final String configFile = "./src/test/config/testConfig.properties";
 		//final String configFile = "./src/main/config/config.properties";
 		Properties props = ConfigReader.getProperties(configFile);
-		
+
 		final String areaCodeFileName = props.getProperty("areaCodeFileName");
 		final String areaCodeNearestNodeFile = props.getProperty("areaCodeNearestNodeFile");
 		final String workplaceZoneFileName = props.getProperty("workplaceZoneFileName");
@@ -392,38 +394,38 @@ public class DashboardRoadExpansion extends JFrame {
 		final URL networkUrlFixedEdgeIDs = new URL(props.getProperty("networkUrlFixedEdgeIDs"));
 		final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
 		final URL AADFurl = new URL(props.getProperty("AADFurl"));
-		
+
 		final String baseYearODMatrixFile = props.getProperty("baseYearODMatrixFile");
-		
+
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
 		RoadNetworkAssignment rnaBefore = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, props);
-		
+
 		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
 		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
-		
+
 		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
-		
+
 		rnaBefore.assignPassengerFlows(odm, rsg);
 		rnaBefore.updateLinkTravelTimes(0.9);
-		
+
 		rnaBefore.resetLinkVolumes();
 		rnaBefore.resetTripStorages();
 		rnaBefore.assignPassengerFlows(odm, rsg);
 		rnaBefore.updateLinkTravelTimes(0.9);
-		
+
 		rnaBefore.updateLinkVolumeInPCU();
 		rnaBefore.updateLinkVolumeInPCUPerTimeOfDay();
-		
+
 		barDataset.addValue(rnaBefore.getTripList().size(), "No intervention", "Number of Trips");
-		
+
 		SkimMatrix tsmBefore = rnaBefore.calculateTimeSkimMatrix();
 		SkimMatrix csmBefore = rnaBefore.calculateCostSkimMatrix();
-		
+
 		String shapefilePathBefore = "./temp/networkWithCapacityUtilisationBefore.shp";
 		String shapefilePathAfter = "./temp/networkWithCapacityUtilisationAfter.shp";
-		
+
 		HashMap<Integer, Double> capacityBefore = rnaBefore.calculateDirectionAveragedPeakLinkCapacityUtilisation();
 		JFrame leftFrame = NetworkVisualiserDemo.visualise(roadNetwork, "Capacity Utilisation Before Intervention", capacityBefore, "CapUtil", shapefilePathBefore);
 		//Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -437,7 +439,7 @@ public class DashboardRoadExpansion extends JFrame {
 		//JFrame rightFrame;
 		//panel_2.add(rightFrame.getContentPane());
 		//panel_2.setLayout(null);
-		
+
 
 		int rows = odm.getOrigins().size();
 		int columns = odm.getDestinations().size();
@@ -452,7 +454,7 @@ public class DashboardRoadExpansion extends JFrame {
 		labels[0] = "TRIPS";
 		for (int j = 0; j < columns; j++) labels[j+1] = zoning.getLADToName().get(odm.getDestinations().get(j));
 		table.setModel(new DefaultTableModel(data, labels));
-		
+
 		SkimMatrix sm = rnaBefore.calculateTimeSkimMatrix();
 		rows = sm.getOrigins().size();
 		columns = sm.getDestinations().size();
@@ -466,38 +468,38 @@ public class DashboardRoadExpansion extends JFrame {
 		String[] labels2 = new String[columns + 1];
 		labels2[0] = "TRAVEL TIME";
 		for (int j = 0; j < columns; j++) labels2[j+1] = zoning.getLADToName().get(sm.getDestinations().get(j));
-				
+
 		table_1.setModel(new DefaultTableModel(data2, labels2));	
-		
+
 		JLabel lblBeforePolicyIntervention = new JLabel("Before Policy Intervention");
 		lblBeforePolicyIntervention.setLabelFor(table);
 		lblBeforePolicyIntervention.setForeground(Color.DARK_GRAY);
 		lblBeforePolicyIntervention.setBounds(21, 755, 392, 30);
 		contentPane.add(lblBeforePolicyIntervention);
 		lblBeforePolicyIntervention.setFont(new Font("Calibri Light", Font.BOLD, 16));
-		
+
 		JLabel lblAfterPolicyIntervention = new JLabel("After Policy Intervention");
 		lblAfterPolicyIntervention.setLabelFor(table_2);
 		lblAfterPolicyIntervention.setForeground(Color.DARK_GRAY);
 		lblAfterPolicyIntervention.setFont(new Font("Calibri Light", Font.BOLD, 16));
 		lblAfterPolicyIntervention.setBounds(470, 755, 392, 30);
 		contentPane.add(lblAfterPolicyIntervention);
-		
+
 		JCheckBox chckbxNewCheckBox = new JCheckBox("Both directions?");
 		chckbxNewCheckBox.setBackground(GUI.DASHBOARD);
 		chckbxNewCheckBox.setSelected(true);
 		chckbxNewCheckBox.setBounds(1558, 945, 122, 23);
 		contentPane.add(chckbxNewCheckBox);
-		
+
 		JComboBox comboBox = new JComboBox();
 		comboBox.setModel(new DefaultComboBoxModel(roadNetwork.getNodeIDtoNode().keySet().toArray()));
 		//comboBox.setModel(new DefaultComboBoxModel(new String[] {"5", "6", "27", "23", "25"}));
 		comboBox.setBounds(1404, 832, 149, 20);
 		contentPane.add(comboBox);
-			
+
 		int fromNode = (int)comboBox.getSelectedItem();
 		DirectedNode nodeA = (DirectedNode) roadNetwork.getNodeIDtoNode().get(fromNode);
-		
+
 		Set<Integer> listOfNodes = new HashSet<Integer>();
 		List edges = nodeA.getOutEdges();
 		for (Object o: edges) {
@@ -507,19 +509,19 @@ public class DashboardRoadExpansion extends JFrame {
 		}
 		Integer[] arrayOfNodes = listOfNodes.toArray(new Integer[0]);
 		Arrays.sort(arrayOfNodes);
-		
+
 		JComboBox comboBox_1 = new JComboBox();
 		comboBox_1.setModel(new DefaultComboBoxModel(arrayOfNodes));
 		//comboBox_1.setModel(new DefaultComboBoxModel(new String[] {"24", "25", "1", "22", "34", "16"}));
 		comboBox_1.setBounds(1404, 886, 149, 20);
 		contentPane.add(comboBox_1);
-		
+
 		comboBox.addActionListener (new ActionListener () {
-		    public void actionPerformed(ActionEvent e) {
-		    	
-		    	int fromNode = (int)comboBox.getSelectedItem();
+			public void actionPerformed(ActionEvent e) {
+
+				int fromNode = (int)comboBox.getSelectedItem();
 				DirectedNode nodeA = (DirectedNode) roadNetwork.getNodeIDtoNode().get(fromNode);
-				
+
 				Set<Integer> listOfNodes = new HashSet<Integer>();
 				List edges = nodeA.getOutEdges();
 				for (Object o: edges) {
@@ -530,38 +532,38 @@ public class DashboardRoadExpansion extends JFrame {
 				Integer[] arrayOfNodes = listOfNodes.toArray(new Integer[0]);
 				Arrays.sort(arrayOfNodes);
 				comboBox_1.setModel(new DefaultComboBoxModel(arrayOfNodes));
-		        
-		    }
+
+			}
 		});
-		
+
 		comboBox_1.addActionListener (new ActionListener () {
-		    public void actionPerformed(ActionEvent e) {
-		    	
-		    	int fromNode = (int)comboBox.getSelectedItem();
+			public void actionPerformed(ActionEvent e) {
+
+				int fromNode = (int)comboBox.getSelectedItem();
 				DirectedNode nodeA = (DirectedNode) roadNetwork.getNodeIDtoNode().get(fromNode);
-				
+
 				int toNode = (int)comboBox_1.getSelectedItem();
 				DirectedNode nodeB = (DirectedNode) roadNetwork.getNodeIDtoNode().get(toNode);
-				
+
 				DirectedEdge edge = (DirectedEdge) nodeA.getOutEdge(nodeB);
 				if (roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(edge.getID()) == null) //if there is no other direction edge, disable checkbox
 					chckbxNewCheckBox.setEnabled(false);
 				else
 					chckbxNewCheckBox.setEnabled(true);
-		
-		    }
+
+			}
 		});
-		
+
 		JLabel lblANode = new JLabel("A node");
 		lblANode.setLabelFor(comboBox);
 		lblANode.setBounds(1404, 813, 46, 14);
 		contentPane.add(lblANode);
-		
+
 		JLabel lblBNode = new JLabel("B node");
 		lblBNode.setLabelFor(comboBox_1);
 		lblBNode.setBounds(1404, 861, 46, 14);
 		contentPane.add(lblBNode);
-		
+
 		JSlider slider = new JSlider();
 		slider.setSnapToTicks(true);
 		slider.setPaintTicks(true);
@@ -574,30 +576,30 @@ public class DashboardRoadExpansion extends JFrame {
 		slider.setBounds(1404, 947, 138, 45);
 		slider.setBackground(GUI.DASHBOARD);
 		contentPane.add(slider);
-		
+
 		JLabel lblLanesToAdd = new JLabel("Lanes to add:");
 		lblLanesToAdd.setBounds(1404, 921, 177, 14);
 		contentPane.add(lblLanesToAdd);
-		
+
 		JButton btnNewButton = new JButton("RUN");
 		btnNewButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				
+
 				//RandomSingleton.getInstance().setSeed(1234);
-				
+
 				int fromNode = (int) comboBox.getSelectedItem();
 				int toNode = (int) comboBox_1.getSelectedItem();
 				int lanes = slider.getValue();
-				
+
 				System.out.println("fromNode = " + fromNode);
 				System.out.println("toNode = " + toNode);
-				
+
 				DirectedNode nodeA = (DirectedNode) roadNetwork.getNodeIDtoNode().get(fromNode);
 				DirectedNode nodeB = (DirectedNode) roadNetwork.getNodeIDtoNode().get(toNode);
 				DirectedEdge edge = (DirectedEdge) nodeA.getOutEdge(nodeB);
 				SimpleFeature sf = (SimpleFeature)edge.getObject();
 				Long countPoint = (long) sf.getAttribute("CP");
-				
+
 				Properties props2 = new Properties();
 				props2.setProperty("startYear", "2016");
 				props2.setProperty("endYear", "2025");
@@ -606,11 +608,11 @@ public class DashboardRoadExpansion extends JFrame {
 				props2.setProperty("CP", Long.toString(countPoint));
 				props2.setProperty("number", Integer.toString(lanes));
 				RoadExpansion re = new RoadExpansion(props2);
-				
+
 				System.out.println("Road expansion intervention: " + re.toString());
 				//interventions.add(re);
 				re.install(roadNetwork);
-				
+
 				RoadExpansion re2 = null;
 				if (chckbxNewCheckBox.isSelected()) { //if both directions
 
@@ -632,14 +634,14 @@ public class DashboardRoadExpansion extends JFrame {
 				rnaAfterExpansion.assignPassengerFlows(odm, rsg);
 				rnaAfterExpansion.updateLinkVolumeInPCU();
 				rnaAfterExpansion.updateLinkVolumeInPCUPerTimeOfDay();
-				
+
 				//predict change in demand
 				SkimMatrix tsm = rnaAfterExpansion.calculateTimeSkimMatrix();
 				SkimMatrix csm = rnaAfterExpansion.calculateCostSkimMatrix();
-				
+
 				//predicted demand	
 				ODMatrix predictedODM = new ODMatrix();
-				
+
 				final String elasticitiesFile = props.getProperty("elasticitiesFile");
 				HashMap<ElasticityTypes, Double> elasticities = null;
 				try {
@@ -651,12 +653,12 @@ public class DashboardRoadExpansion extends JFrame {
 					// TODO Auto-generated catch block
 					e2.printStackTrace();
 				}
-				
-				
+
+
 				tsmBefore.printMatrixFormatted();
 				tsm.printMatrixFormatted();
-				
-				
+
+
 				//for each OD pair predict the change in passenger vehicle flow from the change in skim matrices
 				for (MultiKey mk: odm.getKeySet()) {
 					String originZone = (String) mk.getKey(0);
@@ -674,15 +676,15 @@ public class DashboardRoadExpansion extends JFrame {
 
 					predictedODM.setFlow(originZone, destinationZone, (int) Math.round(predictedflow));
 				}
-				
+
 				rnaAfterExpansion.resetLinkVolumes();
 				rnaAfterExpansion.resetTripStorages();
-											
+
 				rnaAfterExpansion.assignPassengerFlows(predictedODM, rsg);
 				rnaAfterExpansion.updateLinkVolumeInPCU();
 				rnaAfterExpansion.updateLinkVolumeInPCUPerTimeOfDay();
 				//SkimMatrix sm = rnaAfterExpansion.calculateTimeSkimMatrix();
-				
+
 				HashMap<Integer, Double> capacityAfter = rnaAfterExpansion.calculateDirectionAveragedPeakLinkCapacityUtilisation();
 				//String shapefilePathAfter = "./temp/networkWithCapacityUtilisationAfter.shp";
 				String shapefilePathAfter = "./temp/after" +  DashboardRoadExpansion.counter++ + ".shp";
@@ -692,30 +694,30 @@ public class DashboardRoadExpansion extends JFrame {
 					rightFrame = NetworkVisualiserDemo.visualise(roadNetwork, "Capacity Utilisation After Intervention", capacityAfter, "CapUtil", shapefilePathAfter);
 					rightFrame.setVisible(false);
 					rightFrame.repaint();
-					
+
 					JMapPane pane = ((JMapFrameDemo)rightFrame).getMapPane();
 					//((JMapFrameDemo)rightFrame).getToolBar().setBackground(GUI.TOOLBAR); //to set toolbar background
-		
+
 					System.out.println("component: " + ((JMapFrameDemo)rightFrame).getToolBar().getComponent(8).toString());
 					reset = (JButton) ((JMapFrameDemo)rightFrame).getToolBar().getComponent(8);
 					//reset.setBackground(Color.BLUE); //set icon background
 					//reset.setBorderPainted(false); //remove border
 					JButton minus = (JButton) ((JMapFrameDemo)rightFrame).getToolBar().getComponent(2);
 					//minus.setBackground(Color.GREEN); //set icon background
-					
+
 					//panel_2.removeAll();
 					panel_2.add(rightFrame.getContentPane(), 0);
 					panel_2.setLayout(null);
 					//panel_2.doLayout();
 					//panel_2.repaint();
-												
+
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
-				
+
 				//reset.doClick(4000);
-				
+
 				//update tables
 				int rows = predictedODM.getOrigins().size();
 				int columns = predictedODM.getDestinations().size();
@@ -730,8 +732,8 @@ public class DashboardRoadExpansion extends JFrame {
 				labels[0] = "TRIPS";
 				for (int j = 0; j < columns; j++) labels[j+1] = zoning.getLADToName().get(predictedODM.getDestinations().get(j));
 				table_2.setModel(new DefaultTableModel(data, labels));
-				
-				
+
+
 				SkimMatrix sm = rnaAfterExpansion.calculateTimeSkimMatrix();
 				rows = sm.getOrigins().size();
 				columns = sm.getDestinations().size();
@@ -746,28 +748,28 @@ public class DashboardRoadExpansion extends JFrame {
 				labels2[0] = "TRAVEL TIME";
 				for (int j = 0; j < columns; j++) labels2[j+1] = zoning.getLADToName().get(sm.getDestinations().get(j));
 				table_3.setModel(new DefaultTableModel(data2, labels2));
-				
+
 				//update bar chart
 				barDataset.addValue(rnaAfterExpansion.getTripList().size(), "Road expansion", "Number of Trips");
 				//barDataset.addValue(predictedODM.getTotalFlow(), "Road expansion", "Number of Trips");
-			
+
 				re.uninstall(roadNetwork);
 				if (re2 != null) re2.uninstall(roadNetwork);
-				
+
 				//pack();
 			}
 		});
-		
+
 		btnNewButton.setFont(new Font("Calibri Light", Font.BOLD, 25));
 		btnNewButton.setBounds(1686, 799, 200, 169);
 		contentPane.add(btnNewButton);
-		
+
 		JLabel lblRoadExpansionPolicy = new JLabel("Road Expansion Policy");
 		lblRoadExpansionPolicy.setForeground(Color.DARK_GRAY);
 		lblRoadExpansionPolicy.setFont(new Font("Calibri Light", Font.BOLD, 16));
 		lblRoadExpansionPolicy.setBounds(1404, 755, 380, 30);
 		contentPane.add(lblRoadExpansionPolicy);
-		
+
 		//final String roadExpansionFileName = props.getProperty("roadExpansionFile");
 		//List<Intervention> interventions = new ArrayList<Intervention>();
 		//RoadExpansion re = new RoadExpansion(roadExpansionFileName);
@@ -779,21 +781,21 @@ public class DashboardRoadExpansion extends JFrame {
 		//props2.setProperty("CP", "6935");
 		//props2.setProperty("number", "2");
 		//RoadExpansion re = new RoadExpansion(props2);
-		
+
 		//set controls to represent the intervention
 		comboBox.setSelectedItem(new Integer(22));
 		comboBox_1.setSelectedItem(new Integer(23));
 		slider.setValue(2);
 		chckbxNewCheckBox.setSelected(false);
-		
+
 		//run the default intervention
 		btnNewButton.doClick();
-		
+
 		/*
 		System.out.println("Road expansion intervention: " + re.toString());
 		//interventions.add(re);
 		re.install(roadNetwork);
-		
+
 		RoadNetworkAssignment rnaAfterExpansion = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, props);
 		rnaAfterExpansion.assignPassengerFlows(odm, rsg);
 		rnaAfterExpansion.updateLinkVolumeInPCU();
@@ -801,23 +803,23 @@ public class DashboardRoadExpansion extends JFrame {
 		HashMap<Integer, Double> capacityAfter = rnaAfterExpansion.calculateDirectionAveragedPeakLinkCapacityUtilisation();
 		JFrame rightFrame = NetworkVisualiserDemo.visualise(roadNetwork, "Capacity Utilisation After Intervention", capacityAfter, "CapUtil", shapefilePathAfter);
 		rightFrame.setVisible(false);
-		
+
 		re.uninstall(roadNetwork);
-		
+
 		JPanel panel_1 = new JPanel();
 		panel_1.setBounds(10, 10, (int)Math.round(screenSize.width * 0.5) - 12, (int)Math.round(screenSize.height * 0.65));
 		//panel_1.setSize((int)Math.round(screenSize.width * 0.5) - 5, (int)Math.round(screenSize.height * 0.6));
 		contentPane.add(panel_1);
 		panel_1.add(leftFrame.getContentPane());
 		panel_1.setLayout(null);
-				
+
 		JPanel panel_2 = new JPanel();
 		panel_2.setBounds((int)Math.round(screenSize.width * 0.5), 10, (int)Math.round(screenSize.width * 0.5) - 12, (int)Math.round(screenSize.height * 0.65));
 		//panel_2.setSize((int)Math.round(screenSize.width * 0.5) - 5, (int)Math.round(screenSize.height * 0.6));
 		contentPane.add(panel_2);
 		panel_2.add(rightFrame.getContentPane());
 		panel_2.setLayout(null);
-		
+
 		//update tables
 		rows = odm.getOrigins().size();
 		columns = odm.getDestinations().size();
@@ -832,8 +834,8 @@ public class DashboardRoadExpansion extends JFrame {
 		labels3[0] = "TRIPS";
 		for (int j = 0; j < columns; j++) labels3[j+1] = zoning.getLADToName().get(odm.getDestinations().get(j));
 		table_2.setModel(new DefaultTableModel(data3, labels3));
-		
-		
+
+
 		SkimMatrix sm4 = rnaAfterExpansion.calculateTimeSkimMatrix();
 		rows = sm4.getOrigins().size();
 		columns = sm4.getDestinations().size();
@@ -852,12 +854,12 @@ public class DashboardRoadExpansion extends JFrame {
 		//update bar chart
 		barDataset.addValue(rnaBefore.getTripList().size(), "No intervention", "Number of Trips");
 		barDataset.addValue(rnaAfterExpansion.getTripList().size(), "Road expansion", "Number of Trips");
-		
-		*/
-	
+
+		 */
+
 		pack();
 		//this.setExtendedState(this.getExtendedState()|JFrame.MAXIMIZED_BOTH );
 
-		
+
 	}
 }
