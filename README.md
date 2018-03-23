@@ -13,7 +13,7 @@ The transport sector has various links with other sectors:
 * Water Supply: floods causing road and rail disruptions.
 * Solid Waste: waste transport (e.g. waste exports through seaports).
 
-<img src="https://cloud.githubusercontent.com/assets/7933541/21935019/abdd2b2c-d9a3-11e6-9b81-1a5acb8419bb.jpg" width="500">
+[<img alt="Interdependencies" src="images/interdependencies.jpg" style="max-width:500px"/>](images/interdependencies.jpg)
 
 The model is currently focusing on interdependencies with the energy sector:
 *	The fuel price from the energy sector is used in the traffic flow prediction.
@@ -37,7 +37,7 @@ http://www.geotools.org/about.html
 4. The classes containing the *main* method can be run as a Java application. The classes containing the methods annotated with *@Test* can be run as *JUnit* tests.
 5. To run the main model in Eclipse, open the *Run Configuration* for *nismod.transport.App.java* and pass the path to the config file as an argument:
 
-<img src="https://cloud.githubusercontent.com/assets/7933541/23258716/5c43c4f2-f9c1-11e6-9c14-13977f40ecf9.jpg" width="500">
+[<img alt="Configuration" src="images/configuration.jpg" style="max-width:500px" />](images/configuration.jpg)
 
 6. To build the project and run the main model in the command prompt, type:
  * mvn package
