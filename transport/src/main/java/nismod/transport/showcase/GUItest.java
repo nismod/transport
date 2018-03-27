@@ -33,6 +33,8 @@ import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
 import javax.swing.SwingConstants;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -197,16 +199,10 @@ public class GUItest {
 		icon = new ImageIcon(newimg);
 		btnNewButton.setIcon(icon);
 
-	
-		
-		
-		
-		
-		
 		JLabel lblWhatIsThe = new JLabel("What is the impact of traffic policy interventions in South East England?");
 		lblWhatIsThe.setHorizontalAlignment(SwingConstants.CENTER);
 		lblWhatIsThe.setForeground(Color.DARK_GRAY);
-		lblWhatIsThe.setFont(new Font("Tahoma", Font.PLAIN, 36));
+		lblWhatIsThe.setFont(new Font("Lato", Font.PLAIN, 36));
 		lblWhatIsThe.setBounds(258, 50, 1286, 66);
 		frame.getContentPane().add(lblWhatIsThe);
 		
@@ -241,30 +237,5 @@ public class GUItest {
 		frame.pack();
 		frame.setVisible(true);
 		
-		
-		
-//		<html><center>
-//		<img src="image001.png" alt="road expansion" height="242" width="242"> 
-//		<body>
-//		<h2>Intervention 1:</h2>
-//		<h1>Road Expansion</h1>
-//		<img src="file://image001.png" alt="road expansion" height="42" width="42"> 
-//		<p style="font-size: 1.0em; text-align:center">What happens when we<br> increase road capacity<br> by adding lanes?</p>
-//		<p>&nbsp;</p>
-//		</body>
-//		<img src="image001.png" alt="road expansion" height="242" width="242"> 
-//		</html>
-//		
-				
-//		try {
-//		URL u=new URL("http://www.mysite.com");
-//		JEditorPane jep = new JEditorPane(u);
-//		jep.setEditable(false);
-//		jep.setBounds(110, 721, 278, 197);
-//		frame.getContentPane().add(jep);
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-	
 	}
 }
