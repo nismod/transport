@@ -5,6 +5,7 @@ package nismod.transport.demand;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,6 +19,7 @@ import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.map.MultiKeyMap;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 
 import nismod.transport.decision.CongestionCharging;
@@ -287,6 +289,23 @@ public class ODMatrix {
 	}
 	
 	/**
+	 * Creates a new OD matrix (a matrix subset) for given lists of origin and destination zones.
+	 * @param origins List of origin zones.
+	 * @param destinations List of destination zones.
+	 * @return Matrix subset.
+	 */
+	public ODMatrix getMatrixSubset(List<String> origins, List<String> destinations) {
+		
+		ODMatrix odm = new ODMatrix();
+		
+		for (String origin: origins)
+			for (String destination: destinations)
+				odm.setFlow(origin, destination, this.getFlow(origin, destination));
+		
+		return odm;
+	}
+	
+	/**
 	 * Creates a unit OD matrix for given lists of origin and destination zones.
 	 * @param origins List of origin zones.
 	 * @param destinations List of destination zones.
@@ -426,5 +445,63 @@ public class ODMatrix {
 		}
 
 		return odm;
+	}
+	
+	/**
+	 * Saves the matrix into a csv file.
+	 */
+	public void saveMatrixFormatted(String outputFile) {
+		
+		Set<String> firstKey = new HashSet<String>();
+		Set<String> secondKey = new HashSet<String>();
+		
+		//extract row and column keysets
+		for (Object mk: matrix.keySet()) {
+			String origin = (String) ((MultiKey)mk).getKey(0);
+			String destination = (String) ((MultiKey)mk).getKey(1);
+			firstKey.add(origin);
+			secondKey.add(destination);
+		}
+	
+		//put them to a list and sort them
+		List<String> firstKeyList = new ArrayList<String>(firstKey);
+		List<String> secondKeyList = new ArrayList<String>(secondKey);
+		Collections.sort(firstKeyList);
+		Collections.sort(secondKeyList);
+		//System.out.println(firstKeyList);
+		//System.out.println(secondKeyList);
+	
+		String NEW_LINE_SEPARATOR = "\n";
+		ArrayList<String> header = new ArrayList<String>();
+		header.add("origin");
+		for (String s: secondKeyList) header.add(s);
+		FileWriter fileWriter = null;
+		CSVPrinter csvFilePrinter = null;
+		CSVFormat csvFileFormat = CSVFormat.DEFAULT.withRecordSeparator(NEW_LINE_SEPARATOR);
+		try {
+			fileWriter = new FileWriter(outputFile);
+			csvFilePrinter = new CSVPrinter(fileWriter, csvFileFormat);
+			csvFilePrinter.printRecord(header);
+			ArrayList<String> record = new ArrayList<String>();
+			for (String origin: firstKeyList) {
+				record.clear();
+				record.add(origin);
+				//for (String destination: secondKeyList) record.add(String.format("%.2f", this.getFlow(origin, destination)));
+				for (String destination: secondKeyList) record.add(String.format("%d", this.getFlow(origin, destination)));
+				csvFilePrinter.printRecord(record);
+			}
+		} catch (Exception e) {
+			System.err.println("Error in CsvFileWriter!");
+			e.printStackTrace();
+		} finally {
+			try {
+				fileWriter.flush();
+				fileWriter.close();
+				csvFilePrinter.close();
+			} catch (IOException e) {
+				System.err.println("Error while flushing/closing fileWriter/csvPrinter!");
+				e.printStackTrace();
+			}
+		}
 	}
 }
