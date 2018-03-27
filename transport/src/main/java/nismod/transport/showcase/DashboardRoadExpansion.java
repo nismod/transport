@@ -43,6 +43,7 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.BarRenderer;
+import org.jfree.chart.renderer.category.StandardBarPainter;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.opengis.feature.simple.SimpleFeature;
 
@@ -64,6 +65,8 @@ import javax.swing.JTable;
 import javax.swing.JScrollPane;
 import javax.swing.JLabel;
 import java.awt.Font;
+import java.awt.GradientPaint;
+import java.awt.Paint;
 import java.awt.Rectangle;
 
 import javax.swing.JInternalFrame;
@@ -85,8 +88,10 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import javax.swing.JCheckBox;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.ToolTipManager;
 import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 
 /**
  * Dashboard for the road expansion policy intervention.
@@ -304,6 +309,7 @@ public class DashboardRoadExpansion extends JFrame {
 		chart.setRenderingHints( new RenderingHints( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON ) );
 		chart.getRenderingHints().put(JFreeChart.KEY_SUPPRESS_SHADOW_GENERATION, Boolean.TRUE);
 		chart.setAntiAlias(true);
+		chart.setTextAntiAlias(true);
 
 		ChartPanel chartPanel = new ChartPanel(chart);
 
@@ -324,7 +330,11 @@ public class DashboardRoadExpansion extends JFrame {
 		chart.getTitle().setFont(titleFont);
 
 		BarRenderer barRenderer = (BarRenderer)plot.getRenderer();
-
+		barRenderer.setBarPainter(new StandardBarPainter()); //to remove gradient bar painter
+		barRenderer.setDrawBarOutline(false);
+		barRenderer.setShadowVisible(false);
+		//barRenderer.setMaximumBarWidth(0.30);
+		
 		//get brewer palette
 		ColorBrewer brewer = ColorBrewer.instance();
 		//String paletteName = "BrBG";
@@ -339,8 +349,8 @@ public class DashboardRoadExpansion extends JFrame {
 		Color[] colors = palette.getColors(numberOfRowKeys);
 		for (int i = 0; i < numberOfRowKeys; i++) {
 			barRenderer.setSeriesPaint(i, colors[i]);
+			//barRenderer.setSeriesFillPaint(i, colors[i]);
 		}
-
 
 		chartPanel.setPreferredSize(new Dimension(421, 262)); //size according to my window
 		chartPanel.setMouseWheelEnabled(true);
@@ -491,10 +501,72 @@ public class DashboardRoadExpansion extends JFrame {
 		chckbxNewCheckBox.setBounds(1558, 945, 122, 23);
 		contentPane.add(chckbxNewCheckBox);
 
+		//look and feel of the comboBox
+//	    UIManager.put("ComboBox.control", new ColorUIResource(255, 255, 255)); 
+//	    UIManager.put("ComboBox.controlForeground", new ColorUIResource(50, 15, 135));
+//	    UIManager.put("ComboBox.buttonShadow", new ColorUIResource(50, 15, 135));
+//	    UIManager.put("ComboBox.background", new ColorUIResource(255, 255, 255));
+//	    UIManager.put("ComboBox.selectionBackground", new ColorUIResource(238, 238, 238));
+//	    //UIManager.put("ComboBox.selectionForeground", new ColorUIResource(238, 238, 238)); //do not set
+//	    UIManager.put("ComboBox.foreground", new ColorUIResource(50, 15, 135));
+//		Border comboBoxBorder = BorderFactory.createLineBorder(new Color(76,79,83));    //#4c4f53
+//	    UIManager.put("ComboBox.boder", comboBoxBorder);
+//	    UIManager.put("ComboBox.buttonBackground", new ColorUIResource(50, 15, 135));
+//	    UIManager.put("ComboBox.buttonDarkShadow", new ColorUIResource(10, 10, 10));
+//	    
+//	    final Color COLOR_BUTTON_BACKGROUND = Color.decode("#d3dedb");
+//	    UIManager.put("ComboBox.buttonBackground", new ColorUIResource(COLOR_BUTTON_BACKGROUND));
+//	    UIManager.put("ComboBox.buttonShadow", new ColorUIResource(COLOR_BUTTON_BACKGROUND));
+//	    UIManager.put("ComboBox.buttonDarkShadow", new ColorUIResource(COLOR_BUTTON_BACKGROUND));
+//	    UIManager.put("ComboBox.buttonHighlight", new ColorUIResource(COLOR_BUTTON_BACKGROUND));
+//	    SwingUtilities.updateComponentTreeUI(this);
+	    
+//	    try {
+//			UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
+//		} catch (ClassNotFoundException e3) {
+//			// TODO Auto-generated catch block
+//			e3.printStackTrace();
+//		} catch (InstantiationException e3) {
+//			// TODO Auto-generated catch block
+//			e3.printStackTrace();
+//		} catch (IllegalAccessException e3) {
+//			// TODO Auto-generated catch block
+//			e3.printStackTrace();
+//		} catch (UnsupportedLookAndFeelException e3) {
+//			// TODO Auto-generated catch block
+//			e3.printStackTrace();
+//		}
+//	    System.out.println(   UIManager.getInstalledLookAndFeels().toString() );
+//	    SwingUtilities.updateComponentTreeUI(this);
+	    
+//	    ComboBox.actionMap ActionMap 
+//	    ComboBox.ancestorInputMap InputMap 
+//	    ComboBox.background Color 
+//	    ComboBox.border Border 
+//	    ComboBox.buttonBackground Color 
+//	    ComboBox.buttonDarkShadow Color 
+//	    ComboBox.buttonHighlight Color 
+//	    ComboBox.buttonShadow Color 
+//	    ComboBox.control Color 
+//	    ComboBox.controlForeground Color 
+//	    ComboBox.disabledBackground Color 
+//	    ComboBox.disabledForeground Color 
+//	    ComboBox.font Font 
+//	    ComboBox.foreground Color 
+//	    ComboBox.rendererUseListColors Boolean 
+//	    ComboBox.selectionBackground Color 
+//	    ComboBox.selectionForeground Color 
+//	    ComboBox.showPopupOnNavigation Boolean 
+//	    ComboBox.timeFactor Long 
+//	    ComboBox.togglePopupText String 
+//	    ComboBoxUI String 
+			
 		JComboBox comboBox = new JComboBox();
 		comboBox.setModel(new DefaultComboBoxModel(roadNetwork.getNodeIDtoNode().keySet().toArray()));
 		//comboBox.setModel(new DefaultComboBoxModel(new String[] {"5", "6", "27", "23", "25"}));
 		comboBox.setBounds(1404, 832, 149, 20);
+		//comboBox.setBorder(comboBoxBorder);
+		//comboBox.setBackground(GUI.DASHBOARD);
 		contentPane.add(comboBox);
 
 		int fromNode = (int)comboBox.getSelectedItem();

@@ -38,6 +38,7 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.BarRenderer;
+import org.jfree.chart.renderer.category.StandardBarPainter;
 import org.jfree.data.category.DefaultCategoryDataset;
 
 import nismod.transport.decision.CongestionCharging;
@@ -299,6 +300,10 @@ public class DashboardCongestionCharging extends JFrame {
 		chart.getTitle().setFont(titleFont);
 
 		BarRenderer barRenderer = (BarRenderer)plot.getRenderer();
+		barRenderer.setBarPainter(new StandardBarPainter()); //to remove gradient bar painter
+		barRenderer.setDrawBarOutline(false);
+		barRenderer.setShadowVisible(false);
+		//barRenderer.setMaximumBarWidth(0.30);
 
 		//get brewer palette
 		ColorBrewer brewer = ColorBrewer.instance();
