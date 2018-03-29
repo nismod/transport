@@ -551,7 +551,7 @@ public class DashboardCongestionCharging extends JFrame {
 
 					props.setProperty("TIME", "-1.5");
 					props.setProperty("LENGTH", "-1.0");
-					props.setProperty("COST", "-10.0"); //bump the cost sensitivity
+					props.setProperty("COST", "-3.6"); //based on VOT
 
 					RoadNetworkAssignment rnaAfterCongestionCharging = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, congestionCharges, props);
 					//rnaAfterCongestionCharging.assignPassengerFlows(odm, rsg);
@@ -721,7 +721,7 @@ public class DashboardCongestionCharging extends JFrame {
 
 		props.setProperty("TIME", "-1.5");
 		props.setProperty("LENGTH", "-1.0");
-		props.setProperty("COST", "-10.0"); //bump the cost sensitivity
+		props.setProperty("COST", "-3.6"); //based on VOT
 
 		RoadNetworkAssignment rnaAfterCongestionCharging = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, dm.getCongestionCharges(2016), props);
 		//rnaAfterCongestionCharging.assignPassengerFlows(odm, rsg);

@@ -347,6 +347,17 @@ public class DashboardRoadDevelopment extends JFrame {
 		//		
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 
+		JPanel panel_1 = new JPanel();
+		panel_1.setBounds(10, 10, (int)Math.round(screenSize.width * 0.5) - 12, (int)Math.round(screenSize.height * 0.65));
+		//panel_1.setSize((int)Math.round(screenSize.width * 0.5) - 5, (int)Math.round(screenSize.height * 0.6));
+		contentPane.add(panel_1);
+
+		JPanel panel_2 = new JPanel();
+		panel_2.setBounds((int)Math.round(screenSize.width * 0.5), 10, (int)Math.round(screenSize.width * 0.5) - 12, (int)Math.round(screenSize.height * 0.65));
+		//panel_2.setSize((int)Math.round(screenSize.width * 0.5) - 5, (int)Math.round(screenSize.height * 0.6));
+		contentPane.add(panel_2);
+		
+		
 		//this.setSize(1920, 876);
 		//this.setLocation(0,  (int)Math.round(screenSize.height * 0.65));
 		this.setExtendedState(JMapFrame.MAXIMIZED_BOTH);
@@ -621,7 +632,8 @@ public class DashboardRoadDevelopment extends JFrame {
 
 				RoadNetworkAssignment rnaAfterDevelopment = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, props);
 
-				rsg.generateRouteSetForODMatrix(odm);
+				//rsg.generateRouteSetForODMatrix(odm);
+				rsg.clearRoutes();
 				//rnaAfterDevelopment.assignPassengerFlowsRouteChoice(odm, rsg, props);
 				rnaAfterDevelopment.assignPassengerFlows(odm, rsg);
 				rnaAfterDevelopment.updateLinkVolumeInPCU();
@@ -671,6 +683,7 @@ public class DashboardRoadDevelopment extends JFrame {
 				rnaAfterDevelopment.resetLinkVolumes();
 				rnaAfterDevelopment.resetTripStorages();
 
+				rsg.clearRoutes();
 				rnaAfterDevelopment.assignPassengerFlows(predictedODM, rsg);
 				rnaAfterDevelopment.updateLinkVolumeInPCU();
 				rnaAfterDevelopment.updateLinkVolumeInPCUPerTimeOfDay();
@@ -681,19 +694,22 @@ public class DashboardRoadDevelopment extends JFrame {
 				barDataset.addValue(rnaAfterDevelopment.getTripList().size(), "Road development", "Number of Trips");
 
 				HashMap<Integer, Double> capacityAfter = rnaAfterDevelopment.calculateDirectionAveragedPeakLinkCapacityUtilisation();
-				String shapefilePathAfter = "./temp/networkWithCapacityUtilisationAfter.shp";
+				String shapefilePathAfter = "./temp/after" +  GUI.counter++ + ".shp";
 				JFrame rightFrame;
 				try {
 					rightFrame = NetworkVisualiserDemo.visualise(roadNetwork, "Capacity Utilisation After Intervention", capacityAfter, "CapUtil", shapefilePathAfter);
 					rightFrame.setVisible(false);
 					rightFrame.repaint();
 					//	panel_2.add(rightFrame.getContentPane());
+					//panel_2.removeAll();
+					panel_2.add(rightFrame.getContentPane(), 0);
+					panel_2.setLayout(null);
+					//panel_2.doLayout();
+					//panel_2.repaint();
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
-
-				rd.uninstall(roadNetwork);
 
 				//update after tables
 				int rows = predictedODM.getOrigins().size();
@@ -725,6 +741,8 @@ public class DashboardRoadDevelopment extends JFrame {
 				labels2[0] = "TRAVEL TIME";
 				for (int j = 0; j < columns; j++) labels2[j+1] = zoning.getLADToName().get(sm.getDestinations().get(j));
 				table_3.setModel(new DefaultTableModel(data2, labels2));
+			
+				rd.uninstall(roadNetwork);
 			}
 		});
 
@@ -768,17 +786,17 @@ public class DashboardRoadDevelopment extends JFrame {
 
 		rd.uninstall(roadNetwork);
 
-		JPanel panel_1 = new JPanel();
-		panel_1.setBounds(10, 10, (int)Math.round(screenSize.width * 0.5) - 12, (int)Math.round(screenSize.height * 0.65));
-		//panel_1.setSize((int)Math.round(screenSize.width * 0.5) - 5, (int)Math.round(screenSize.height * 0.6));
-		contentPane.add(panel_1);
+//		JPanel panel_1 = new JPanel();
+//		panel_1.setBounds(10, 10, (int)Math.round(screenSize.width * 0.5) - 12, (int)Math.round(screenSize.height * 0.65));
+//		//panel_1.setSize((int)Math.round(screenSize.width * 0.5) - 5, (int)Math.round(screenSize.height * 0.6));
+//		contentPane.add(panel_1);
 		panel_1.add(leftFrame.getContentPane());
 		panel_1.setLayout(null);
 
-		JPanel panel_2 = new JPanel();
-		panel_2.setBounds((int)Math.round(screenSize.width * 0.5), 10, (int)Math.round(screenSize.width * 0.5) - 12, (int)Math.round(screenSize.height * 0.65));
-		//panel_2.setSize((int)Math.round(screenSize.width * 0.5) - 5, (int)Math.round(screenSize.height * 0.6));
-		contentPane.add(panel_2);
+//		JPanel panel_2 = new JPanel();
+//		panel_2.setBounds((int)Math.round(screenSize.width * 0.5), 10, (int)Math.round(screenSize.width * 0.5) - 12, (int)Math.round(screenSize.height * 0.65));
+//		//panel_2.setSize((int)Math.round(screenSize.width * 0.5) - 5, (int)Math.round(screenSize.height * 0.6));
+//		contentPane.add(panel_2);
 		panel_2.add(rightFrame.getContentPane());
 		panel_2.setLayout(null);
 

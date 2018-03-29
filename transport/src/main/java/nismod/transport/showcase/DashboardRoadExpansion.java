@@ -111,9 +111,6 @@ public class DashboardRoadExpansion extends JFrame {
 	private JLabel lblBeforeIntervention;
 	private JLabel label;
 
-	private static int counter = 1;
-
-
 	/**
 	 * Launch the application.
 	 */
@@ -759,7 +756,7 @@ public class DashboardRoadExpansion extends JFrame {
 
 				HashMap<Integer, Double> capacityAfter = rnaAfterExpansion.calculateDirectionAveragedPeakLinkCapacityUtilisation();
 				//String shapefilePathAfter = "./temp/networkWithCapacityUtilisationAfter.shp";
-				String shapefilePathAfter = "./temp/after" +  DashboardRoadExpansion.counter++ + ".shp";
+				String shapefilePathAfter = "./temp/after" +  GUI.counter++ + ".shp";
 				JFrame rightFrame;
 				JButton reset = null;
 				try {
