@@ -24,6 +24,9 @@ public class GUI {
 
 	private JFrame frame;
 	
+	//counter for the output shapefiles (after intervenetion)
+	public static int counter = 1;
+	
 	//public static final Color DASHBOARD = new Color(149,173,177);
 	public static final Color DASHBOARD = new Color(238, 238, 238);
 	public static final Color TOOLBAR = new Color(231, 211, 146);
