@@ -21,5 +21,5 @@ transport/target/transport-0.0.1-SNAPSHOT-jar-with-dependencies.jar:
 
 clean:
 	mvn clean -f transport
-	rm -f $(DEPLOYDIR).zip
-	rm -r $(DEPLOYDIR)
+	rm -f transport_v*.zip
+	rm -r transport_v*
