@@ -280,6 +280,7 @@ ClientBin/
 *.publishsettings
 node_modules/
 orleans.codegen.cs
+.vscode
 
 # RIA/Silverlight projects
 Generated_Code/
@@ -432,4 +433,3 @@ transport/temp/
 transport/*.dat
 transport/*.csv
 transport/*.txt
-
