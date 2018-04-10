@@ -433,3 +433,7 @@ transport/temp/
 transport/*.dat
 transport/*.csv
 transport/*.txt
+
+# Releases
+transport_v*/*
+transport_v*.zip
