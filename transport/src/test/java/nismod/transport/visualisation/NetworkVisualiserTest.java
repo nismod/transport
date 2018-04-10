@@ -21,7 +21,7 @@ public class NetworkVisualiserTest {
 
 		final String configFile = "./src/test/config/testConfig.properties";
 		Properties props = ConfigReader.getProperties(configFile);
-		
+
 		final String areaCodeFileName = props.getProperty("areaCodeFileName");
 		final String areaCodeNearestNodeFile = props.getProperty("areaCodeNearestNodeFile");
 		final String workplaceZoneFileName = props.getProperty("workplaceZoneFileName");
@@ -39,13 +39,13 @@ public class NetworkVisualiserTest {
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
 		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, props);
 		ODMatrix odm = new ODMatrix("./src/test/resources/testdata/csvfiles/passengerODM.csv");
-		rna.assignPassengerFlows(odm);
-		
+		rna.assignPassengerFlows(odm, null);
+
 		final URL congestionChargeZoneUrl = new URL("file://src/test/resources/testdata/shapefiles/congestionChargingZone.shp");
 		String shapefilePath = "./temp/networkWithDailyVolume.shp";
 		String shapefilePath2 = "./temp/networkWithCountComparison.shp";
 		String shapefilePath3 = "./temp/networkWithCountComparison.shp";
-		
+
 		rna.updateLinkVolumeInPCU();
 		rna.updateLinkVolumePerVehicleType();
 		Map<Integer, Double> dailyVolume = rna.getLinkVolumeInPCU();
@@ -53,6 +53,6 @@ public class NetworkVisualiserTest {
 		NetworkVisualiser.visualise(roadNetwork, "Network with traffic volume", dailyVolume, "DayVolume", shapefilePath);
 		NetworkVisualiser.visualise(roadNetwork, "Network with count comparison", rna.calculateDirectionAveragedAbsoluteDifferenceCarCounts(), "AbsDiffCounts", shapefilePath2);
 		NetworkVisualiser.visualise(roadNetwork, "Network with count comparison", rna.calculateDirectionAveragedAbsoluteDifferenceCarCounts(), "AbsDiffCounts", shapefilePath3, congestionChargeZoneUrl);
-		
+
 	}
 }
