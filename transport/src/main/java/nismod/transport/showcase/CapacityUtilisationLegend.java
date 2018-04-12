@@ -12,7 +12,7 @@ import org.geotools.brewer.color.ColorBrewer;
 
 public class CapacityUtilisationLegend extends JPanel {
 
-	public static final Font LEGEND_FONT = new Font("Lato", Font.PLAIN, 14);
+	public static final Font LEGEND_FONT = new Font("Lato", Font.BOLD, 14);
 
 	private JTextField textField;
 	private JTextField textField_1;
@@ -50,6 +50,7 @@ public class CapacityUtilisationLegend extends JPanel {
 		textField.setColumns(13);
 		textField.setBorder(null);
 		textField.setFont(LEGEND_FONT);
+		textField.setForeground(LandingGUI.DARK_GRAY);
 		this.add(textField);
 		
 		textField_1 = new JTextField();
@@ -63,6 +64,7 @@ public class CapacityUtilisationLegend extends JPanel {
 		textField_2.setColumns(7);
 		textField_2.setBorder(null);
 		textField_2.setFont(LEGEND_FONT);
+		textField_2.setForeground(LandingGUI.DARK_GRAY);
 		this.add(textField_2);
 		
 		textField_3 = new JTextField();
@@ -76,6 +78,7 @@ public class CapacityUtilisationLegend extends JPanel {
 		textField_4.setColumns(7);
 		textField_4.setBorder(null);
 		textField_4.setFont(LEGEND_FONT);
+		textField_4.setForeground(LandingGUI.DARK_GRAY);
 		this.add(textField_4);
 		
 		textField_5 = new JTextField();
@@ -89,6 +92,7 @@ public class CapacityUtilisationLegend extends JPanel {
 		textField_6.setColumns(7);
 		textField_6.setBorder(null);
 		textField_6.setFont(LEGEND_FONT);
+		textField_6.setForeground(LandingGUI.DARK_GRAY);
 		this.add(textField_6);
 		
 		textField_7 = new JTextField();
@@ -102,6 +106,8 @@ public class CapacityUtilisationLegend extends JPanel {
 		textField_8.setColumns(7);
 		textField_8.setBorder(null);
 		textField_8.setFont(LEGEND_FONT);
+		textField_8.setForeground(LandingGUI.DARK_GRAY);
+
 		this.add(textField_8);
 		
 		textField_9 = new JTextField();
@@ -115,6 +121,8 @@ public class CapacityUtilisationLegend extends JPanel {
 		textField_10.setColumns(7);
 		textField_10.setBorder(null);
 		textField_10.setFont(LEGEND_FONT);
+		textField_10.setForeground(LandingGUI.DARK_GRAY);
+
 		this.add(textField_10);
 	
 	}
