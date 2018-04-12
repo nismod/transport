@@ -158,7 +158,7 @@ public class LandingGUI {
 		lblTitle.setBounds(LABEL_X, LABEL1_Y, LABEL_WIDTH, LABEL_HEIGHT);
 		frame.getContentPane().add(lblTitle);
 		
-		JLabel lblSubTitle = new JLabel("<html><center>Click to explore how three policy interventions would inﬂuence road capacity utilisation,<br>vehicle demand and travel times on major roads in Great Britain.</center></html>");
+		JLabel lblSubTitle = new JLabel("<html><center>Click to explore how three policy interventions would inﬂuence road capacity utilisation,<br>vehicle demand and travel times on major roads and motorways.</center></html>");
 		lblSubTitle.setHorizontalAlignment(SwingConstants.CENTER);
 		lblSubTitle.setVerticalAlignment(SwingConstants.TOP);
 		lblSubTitle.setForeground(Color.DARK_GRAY);
@@ -185,7 +185,7 @@ public class LandingGUI {
 		btnRoadExpansion.setBorderPainted(false);
 		btnRoadExpansion.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				DashboardRoadExpansion.main(null);
+				RoadExpansionDashboard.main(null);
 			}
 		});
 		btnRoadExpansion.setFocusable(false);
@@ -204,7 +204,8 @@ public class LandingGUI {
 		html2.append("<font size=+5><b>Road Development</b></font></html>");
 		//JButton btnNewButton = new JButton(content, icon);
 		JButton btnRoadDevelopment = new JButton(html2.toString());
-		btnRoadDevelopment.setToolTipText("<html><center><h3>What happens when we<br>increase road capacity<br>by building new roads?</h3></html>");
+		//btnRoadDevelopment.setToolTipText("<html><center><h3>What happens when we<br>increase road capacity<br>by building new roads?</h3></html>");
+		btnRoadDevelopment.setToolTipText("<html><center><h3>What happens when we<br>build completely<br>new roads?</h3></html>");
 		btnRoadDevelopment.setForeground(Color.DARK_GRAY);
 		btnRoadDevelopment.setFont(new Font("Lato", Font.PLAIN, 20));
 		btnRoadDevelopment.setBounds(BUTTON_X + BUTTON_WIDTH + BUTTON_SPACE, BUTTON_Y, BUTTON_WIDTH, BUTTON_HEIGHT);
@@ -222,7 +223,8 @@ public class LandingGUI {
 		btnRoadDevelopment.setFocusable(false);
 		frame.getContentPane().add(btnRoadDevelopment);
 
-		JLabel lblRoadDevelopment = new JLabel("<html><center>What happens when we<br>increase road capacity<br>by building new roads?</html>");
+		//JLabel lblRoadDevelopment = new JLabel("<html><center>What happens when we<br>increase road capacity<br>by building new roads?</html>");
+		JLabel lblRoadDevelopment = new JLabel("<html><center>What happens when we<br>build completely<br>new roads?</html>");
 		lblRoadDevelopment.setHorizontalAlignment(SwingConstants.CENTER);
 		lblRoadDevelopment.setForeground(DARK_GRAY);
 		lblRoadDevelopment.setFont(new Font("Lato", Font.PLAIN, SUBTITLE_FONT_SIZE));
