@@ -26,6 +26,7 @@ import java.util.Set;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -35,6 +36,7 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTable;
@@ -53,6 +55,8 @@ import org.geotools.brewer.color.BrewerPalette;
 import org.geotools.brewer.color.ColorBrewer;
 import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedNode;
+import org.geotools.graph.structure.Edge;
+import org.geotools.graph.structure.Node;
 import org.geotools.swing.JMapFrame;
 import org.geotools.swing.JMapPane;
 import org.jfree.chart.ChartFactory;
@@ -65,6 +69,9 @@ import org.jfree.chart.renderer.category.StandardBarPainter;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.opengis.feature.simple.SimpleFeature;
 
+import com.vividsolutions.jts.geom.Point;
+
+import nismod.transport.decision.RoadDevelopment;
 import nismod.transport.decision.RoadExpansion;
 import nismod.transport.demand.DemandModel;
 import nismod.transport.demand.DemandModel.ElasticityTypes;
@@ -78,10 +85,10 @@ import nismod.transport.zone.Zoning;
 import javax.swing.JSeparator;
 
 /**
- * Dashboard for the road expansion policy intervention.
+ * Dashboard for the road development policy intervention.
  * @author Milan Lovric
  */
-public class RoadExpansionDashboard extends JFrame {
+public class RoadDevelopmentDashboard extends JFrame {
 
 	private JPanel contentPane;
 	private JPanel panel_1;
@@ -99,6 +106,7 @@ public class RoadExpansionDashboard extends JFrame {
 	private JLabel labelPanel2;
 	private JTextField totalDemandAfter;
 	private JTextField totalDemandBefore;
+	private final ButtonGroup buttonGroup = new ButtonGroup();
 	
 	private static final String configFile = "./src/test/config/testConfig.properties";
 	private static RoadNetwork roadNetwork;
@@ -129,6 +137,7 @@ public class RoadExpansionDashboard extends JFrame {
 	public static final Border EMPTY_BORDER = BorderFactory.createEmptyBorder();
 	
 	public static final int OPACITY = 90; //opacity for table cell shading (increase, decrease)
+	private JTextField textField;
 
 
 	/**
@@ -138,7 +147,7 @@ public class RoadExpansionDashboard extends JFrame {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					RoadExpansionDashboard frame = new RoadExpansionDashboard();
+					RoadDevelopmentDashboard frame = new RoadDevelopmentDashboard();
 					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -151,7 +160,7 @@ public class RoadExpansionDashboard extends JFrame {
 	 * Create the frame.
 	 * @throws IOException 
 	 */
-	public RoadExpansionDashboard() throws IOException {
+	public RoadDevelopmentDashboard() throws IOException {
 		//setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setTitle("Dashboard Road Expansion");
@@ -214,41 +223,36 @@ public class RoadExpansionDashboard extends JFrame {
 		lblRoadExpansionPolicy.setFont(new Font("Lato", Font.BOLD, 26));
 		lblRoadExpansionPolicy.setBounds(LEFT_MARGIN, 569, 380, 30);
 		contentPane.add(lblRoadExpansionPolicy);
-		
-		JCheckBox chckbxNewCheckBox = new JCheckBox("2-way");
-		chckbxNewCheckBox.setFont(new Font("Lato", Font.PLAIN, 12));
-		chckbxNewCheckBox.setBackground(LandingGUI.LIGHT_GRAY);
-		chckbxNewCheckBox.setSelected(true);
-		chckbxNewCheckBox.setBounds(SECOND_MARGIN, 855, 122, 23);
-		contentPane.add(chckbxNewCheckBox);
 
 		JComboBox comboBox = new JComboBox();
 		comboBox.setModel(new DefaultComboBoxModel(roadNetwork.getNodeIDtoNode().keySet().toArray()));
 		//comboBox.setModel(new DefaultComboBoxModel(new String[] {"5", "6", "27", "23", "25"}));
-		comboBox.setBounds(36, 765, 149, 22);
-		comboBox.setFont(new Font("Lato", Font.BOLD, 14));
+		comboBox.setBounds(36, 728, 149, 22);
 		comboBox.setBorder(COMBOBOX_BORDER);
+		comboBox.setFont(new Font("Lato", Font.BOLD, 14));
 		//comboBox.setBorder(comboBoxBorder);
 		//comboBox.setBackground(GUI.DASHBOARD);
 		contentPane.add(comboBox);
 
 		int fromNode = (int)comboBox.getSelectedItem();
 		DirectedNode nodeA = (DirectedNode) roadNetwork.getNodeIDtoNode().get(fromNode);
-
 		Set<Integer> listOfNodes = new HashSet<Integer>();
-		List edges = nodeA.getOutEdges();
+		for (Integer nodeID: roadNetwork.getNodeIDtoNode().keySet()) //first copy all of the nodes
+			listOfNodes.add(nodeID);
+		//remove fromNode
+		listOfNodes.remove(fromNode);
+		//remove all related/neighbouring nodes (regardless of direction).
+		List edges = nodeA.getEdges();
 		for (Object o: edges) {
-			DirectedEdge e = (DirectedEdge) o;
-			DirectedNode other = e.getOutNode();
-			if (roadNetwork.getNumberOfLanes().get(e.getID()) != null)	listOfNodes.add(other.getID()); //if there is no lane number information (e.g. ferry) skip edge
+			Edge e = (Edge) o;
+			Node other = e.getOtherNode(nodeA);
+			listOfNodes.remove(other.getID());
 		}
 		Integer[] arrayOfNodes = listOfNodes.toArray(new Integer[0]);
 		Arrays.sort(arrayOfNodes);
-
 		JComboBox comboBox_1 = new JComboBox();
-		comboBox_1.setModel(new DefaultComboBoxModel(arrayOfNodes));
-		//comboBox_1.setModel(new DefaultComboBoxModel(new String[] {"24", "25", "1", "22", "34", "16"}));
-		comboBox_1.setBounds(SECOND_MARGIN, 765, 149, 22);
+		comboBox_1.setModel(new DefaultComboBoxModel(roadNetwork.getNodeIDtoNode().keySet().toArray()));
+		comboBox_1.setBounds(233, 728, 149, 22);
 		comboBox_1.setFont(new Font("Lato", Font.BOLD, 14));
 		comboBox_1.setBorder(COMBOBOX_BORDER);
 		contentPane.add(comboBox_1);
@@ -258,52 +262,60 @@ public class RoadExpansionDashboard extends JFrame {
 
 				int fromNode = (int)comboBox.getSelectedItem();
 				DirectedNode nodeA = (DirectedNode) roadNetwork.getNodeIDtoNode().get(fromNode);
-
 				Set<Integer> listOfNodes = new HashSet<Integer>();
-				List edges = nodeA.getOutEdges();
+				for (Integer nodeID: roadNetwork.getNodeIDtoNode().keySet()) //first copy all of the nodes
+					listOfNodes.add(nodeID);
+				//remove fromNode
+				listOfNodes.remove(fromNode);
+				//remove all related/neighbouring nodes (regardless of direction).
+				List edges = nodeA.getEdges();
 				for (Object o: edges) {
-					DirectedEdge e2 = (DirectedEdge) o;
-					DirectedNode other = e2.getOutNode();//e2.getOtherNode(nodeA);
-					if (roadNetwork.getNumberOfLanes().get(e2.getID()) != null)	listOfNodes.add(other.getID()); //if there is no lane number information (e.g. ferry) skip edge
+					Edge e2 = (Edge) o;
+					Node other = e2.getOtherNode(nodeA);
+					listOfNodes.remove(other.getID());
 				}
 				Integer[] arrayOfNodes = listOfNodes.toArray(new Integer[0]);
 				Arrays.sort(arrayOfNodes);
 				comboBox_1.setModel(new DefaultComboBoxModel(arrayOfNodes));
-
 			}
 		});
-
+		
 		comboBox_1.addActionListener (new ActionListener () {
 			public void actionPerformed(ActionEvent e) {
 
-				int fromNode = (int)comboBox.getSelectedItem();
+				int fromNode = (int) comboBox.getSelectedItem();
+				int toNode = (int) comboBox_1.getSelectedItem();
+	
 				DirectedNode nodeA = (DirectedNode) roadNetwork.getNodeIDtoNode().get(fromNode);
-
-				int toNode = (int)comboBox_1.getSelectedItem();
 				DirectedNode nodeB = (DirectedNode) roadNetwork.getNodeIDtoNode().get(toNode);
 
-				DirectedEdge edge = (DirectedEdge) nodeA.getOutEdge(nodeB);
-				if (roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(edge.getID()) == null) //if there is no other direction edge, disable checkbox
-					chckbxNewCheckBox.setEnabled(false);
-				else
-					chckbxNewCheckBox.setEnabled(true);
+				//calculate straight line distance between nodes
+				SimpleFeature sf1 = (SimpleFeature)nodeA.getObject();
+				Point point = (Point)sf1.getDefaultGeometry();
+				SimpleFeature sf2 = (SimpleFeature)nodeB.getObject();
+				Point point2 = (Point)sf2.getDefaultGeometry();
+				double distance = point.distance(point2) / 1000.0; //straight line distance (from metres to kilometres)!
 
+				//update textbox with new value
+				textField.setText(String.format("%.1f ", distance));
 			}
 		});
+
 
 		JLabel lblANode = new JLabel("Node A");
 		lblANode.setFont(new Font("Lato", Font.PLAIN, 20));
 		lblANode.setLabelFor(comboBox);
-		lblANode.setBounds(LEFT_MARGIN, 737, 79, 23);
+		lblANode.setBounds(36, 700, 79, 23);
 		contentPane.add(lblANode);
 
 		JLabel lblBNode = new JLabel("Node B");
 		lblBNode.setFont(new Font("Lato", Font.PLAIN, 20));
 		lblBNode.setLabelFor(comboBox_1);
-		lblBNode.setBounds(SECOND_MARGIN, 737, 79, 23);
+		lblBNode.setBounds(233, 700, 79, 23);
 		contentPane.add(lblBNode);
 
 		JSlider slider = new JSlider();
+		slider.setFont(new Font("Lato", Font.BOLD, 11));
 		slider.setSnapToTicks(true);
 		slider.setPaintTicks(true);
 		slider.setPaintLabels(true);
@@ -312,15 +324,39 @@ public class RoadExpansionDashboard extends JFrame {
 		slider.setMajorTickSpacing(1);
 		slider.setMaximum(5);
 		slider.setMinimum(1);
-		slider.setBounds(LEFT_MARGIN, 855, 138, 45);
+		slider.setBounds(233, 807, 138, 45);
 		slider.setBackground(LandingGUI.LIGHT_GRAY);
 		slider.setForeground(LandingGUI.DARK_GRAY);
 		contentPane.add(slider);
 
-		JLabel lblLanesToAdd = new JLabel("How many lanes to add?");
+		JLabel lblLanesToAdd = new JLabel("How many lanes?");
 		lblLanesToAdd.setFont(new Font("Lato", Font.PLAIN, 16));
-		lblLanesToAdd.setBounds(LEFT_MARGIN, 813, 200, 30);
+		lblLanesToAdd.setBounds(233, 772, 165, 30);
 		contentPane.add(lblLanesToAdd);
+		
+		JRadioButton rdbtnNewRadioButton = new JRadioButton("A-road");
+		rdbtnNewRadioButton.setFont(new Font("Lato", Font.PLAIN, 12));
+		buttonGroup.add(rdbtnNewRadioButton);
+		rdbtnNewRadioButton.setBounds(36, 809, 70, 23);
+		contentPane.add(rdbtnNewRadioButton);
+
+		rdbtnNewRadioButton.addActionListener (new ActionListener () {
+			public void actionPerformed(ActionEvent e) {
+				if (rdbtnNewRadioButton.isSelected()) slider.setValue(1); //default number of lanes per direction for A roads
+			}
+		});
+
+		JRadioButton rdbtnNewRadioButton_1 = new JRadioButton("Motorway");
+		rdbtnNewRadioButton_1.setFont(new Font("Lato", Font.PLAIN, 12));
+		buttonGroup.add(rdbtnNewRadioButton_1);
+		rdbtnNewRadioButton_1.setBounds(108, 809, 104, 23);
+		contentPane.add(rdbtnNewRadioButton_1);
+
+		rdbtnNewRadioButton_1.addActionListener (new ActionListener () {
+			public void actionPerformed(ActionEvent e) {
+				if (rdbtnNewRadioButton_1.isSelected()) slider.setValue(3); //default number of lanes per direction for motorways
+			}
+		});
 
 		JButton btnNewButton = new JButton("RUN");
 		btnNewButton.setFont(new Font("Lato", Font.BOLD, 25));
@@ -328,9 +364,7 @@ public class RoadExpansionDashboard extends JFrame {
 		btnNewButton.setBorder(RUN_BUTTON_BORDER);
 		btnNewButton.setBackground(LandingGUI.LIGHT_GRAY);
 		btnNewButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-
-				//RandomSingleton.getInstance().setSeed(1234);
+			public void actionPerformed(ActionEvent arg0) {
 
 				int fromNode = (int) comboBox.getSelectedItem();
 				int toNode = (int) comboBox_1.getSelectedItem();
@@ -338,51 +372,65 @@ public class RoadExpansionDashboard extends JFrame {
 
 				System.out.println("fromNode = " + fromNode);
 				System.out.println("toNode = " + toNode);
+				System.out.println("lanes = " + lanes);
+
+				String roadClass;
+				if (rdbtnNewRadioButton.isSelected()) roadClass = "A";
+				else roadClass = "M";
 
 				DirectedNode nodeA = (DirectedNode) roadNetwork.getNodeIDtoNode().get(fromNode);
 				DirectedNode nodeB = (DirectedNode) roadNetwork.getNodeIDtoNode().get(toNode);
-				DirectedEdge edge = (DirectedEdge) nodeA.getOutEdge(nodeB);
-				SimpleFeature sf = (SimpleFeature)edge.getObject();
-				Long countPoint = (long) sf.getAttribute("CP");
+
+				//calculate straight line distance between nodes
+				SimpleFeature sf1 = (SimpleFeature)nodeA.getObject();
+				Point point = (Point)sf1.getDefaultGeometry();
+				SimpleFeature sf2 = (SimpleFeature)nodeB.getObject();
+				Point point2 = (Point)sf2.getDefaultGeometry();
+				double distance = point.distance(point2) / 1000.0; //straight line distance (from metres to kilometres)!
+
+				double length = distance;
+				try {
+					length = Double.parseDouble(textField.getText());
+				} catch (NumberFormatException e) {
+					System.err.println("The text box with road distnace has a wrong number format!");
+					length = distance;
+				}
+
+				if (length < distance) //length should not be smaller than the straight line distance, if it is use straight line distance.
+					length = distance;
+
+				//update textbox with new value
+				textField.setText(String.format("%.1f ", length));
+				
+				length = Math.ceil(length * 10) / 10;
 
 				Properties props2 = new Properties();
 				props2.setProperty("startYear", "2016");
 				props2.setProperty("endYear", "2025");
 				props2.setProperty("fromNode", Integer.toString(nodeA.getID()));
 				props2.setProperty("toNode", Integer.toString(nodeB.getID()));
-				props2.setProperty("CP", Long.toString(countPoint));
-				props2.setProperty("number", Integer.toString(lanes));
-				RoadExpansion re = new RoadExpansion(props2);
+				props2.setProperty("biDirectional", "true");
+				props2.setProperty("lanesPerDirection", Integer.toString(lanes));
+				props2.setProperty("length", Double.toString(length));
+				props2.setProperty("roadClass", roadClass);
+				RoadDevelopment rd = new RoadDevelopment(props2);
 
-				System.out.println("Road expansion intervention: " + re.toString());
-				//interventions.add(re);
-				re.install(roadNetwork);
+				System.out.println("Road development intervention: " + rd.toString());
+				rd.install(roadNetwork);
 
-				RoadExpansion re2 = null;
-				if (chckbxNewCheckBox.isSelected()) { //if both directions
 
-					edge = (DirectedEdge) nodeB.getEdge(nodeA);
-					sf = (SimpleFeature)edge.getObject();
-					countPoint = (long) sf.getAttribute("CP");
+				RoadNetworkAssignment rnaAfterDevelopment = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, props);
 
-					props2.setProperty("fromNode", Integer.toString(nodeB.getID()));
-					props2.setProperty("toNode", Integer.toString(nodeA.getID()));
-					props2.setProperty("CP", Long.toString(countPoint));
-					re2 = new RoadExpansion(props2);
-
-					System.out.println("Road expansion intervention: " + re2.toString());
-					//interventions.add(re);
-					re2.install(roadNetwork);
-				}
-
-				RoadNetworkAssignment rnaAfterExpansion = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, props);
-				rnaAfterExpansion.assignPassengerFlows(odm, rsg);
-				rnaAfterExpansion.updateLinkVolumeInPCU();
-				rnaAfterExpansion.updateLinkVolumeInPCUPerTimeOfDay();
+				//rsg.generateRouteSetForODMatrix(odm);
+				rsg.clearRoutes();
+				//rnaAfterDevelopment.assignPassengerFlowsRouteChoice(odm, rsg, props);
+				rnaAfterDevelopment.assignPassengerFlows(odm, rsg);
+				rnaAfterDevelopment.updateLinkVolumeInPCU();
+				rnaAfterDevelopment.updateLinkVolumeInPCUPerTimeOfDay();
 
 				//predict change in demand
-				SkimMatrix tsm = rnaAfterExpansion.calculateTimeSkimMatrix();
-				SkimMatrix csm = rnaAfterExpansion.calculateCostSkimMatrix();
+				SkimMatrix tsm = rnaAfterDevelopment.calculateTimeSkimMatrix();
+				SkimMatrix csm = rnaAfterDevelopment.calculateCostSkimMatrix();
 
 				//predicted demand	
 				ODMatrix predictedODM = new ODMatrix();
@@ -399,10 +447,8 @@ public class RoadExpansionDashboard extends JFrame {
 					e2.printStackTrace();
 				}
 
-
 				tsmBefore.printMatrixFormatted();
 				tsm.printMatrixFormatted();
-
 
 				//for each OD pair predict the change in passenger vehicle flow from the change in skim matrices
 				for (MultiKey mk: odm.getKeySet()) {
@@ -422,54 +468,42 @@ public class RoadExpansionDashboard extends JFrame {
 					predictedODM.setFlow(originZone, destinationZone, (int) Math.round(predictedflow));
 				}
 
-				rnaAfterExpansion.resetLinkVolumes();
-				rnaAfterExpansion.resetTripStorages();
+				rnaAfterDevelopment.resetLinkVolumes();
+				rnaAfterDevelopment.resetTripStorages();
 
-				rnaAfterExpansion.assignPassengerFlows(predictedODM, rsg);
-				rnaAfterExpansion.updateLinkVolumeInPCU();
-				rnaAfterExpansion.updateLinkVolumeInPCUPerTimeOfDay();
-				//SkimMatrix sm = rnaAfterExpansion.calculateTimeSkimMatrix();
+				rsg.clearRoutes();
+				rnaAfterDevelopment.assignPassengerFlows(predictedODM, rsg);
+				rnaAfterDevelopment.updateLinkVolumeInPCU();
+				rnaAfterDevelopment.updateLinkVolumeInPCUPerTimeOfDay();
+				//SkimMatrix sm = rnaAfterDevelopment.calculateTimeSkimMatrix();
 
-				HashMap<Integer, Double> capacityAfter = rnaAfterExpansion.calculateDirectionAveragedPeakLinkCapacityUtilisation();
-				//String shapefilePathAfter = "./temp/networkWithCapacityUtilisationAfter.shp";
+				//update bar chart
+				//barDataset.addValue(rnaAfterDevelopment.getTripList().size(), "Road development", "Number of Trips");
+				
+				HashMap<Integer, Double> capacityAfter = rnaAfterDevelopment.calculateDirectionAveragedPeakLinkCapacityUtilisation();
 				String shapefilePathAfter = "./temp/after" +  LandingGUI.counter++ + ".shp";
 				JFrame rightFrame;
-				JButton reset = null;
 				try {
 					rightFrame = NetworkVisualiserDemo.visualise(roadNetwork, "Capacity Utilisation After Intervention", capacityAfter, "CapUtil", shapefilePathAfter);
 					rightFrame.setVisible(false);
 					rightFrame.repaint();
-
-					JMapPane pane = ((JMapFrameDemo)rightFrame).getMapPane();
-					//((JMapFrameDemo)rightFrame).getToolBar().setBackground(GUI.TOOLBAR); //to set toolbar background
-
-					System.out.println("component: " + ((JMapFrameDemo)rightFrame).getToolBar().getComponent(8).toString());
-					reset = (JButton) ((JMapFrameDemo)rightFrame).getToolBar().getComponent(8);
-					//reset.setBackground(Color.BLUE); //set icon background
-					//reset.setBorderPainted(false); //remove border
-					JButton minus = (JButton) ((JMapFrameDemo)rightFrame).getToolBar().getComponent(2);
-					//minus.setBackground(Color.GREEN); //set icon background
-			
+					//	panel_2.add(rightFrame.getContentPane());
 					//panel_2.removeAll();
 					panel_2.add(rightFrame.getContentPane(), 0);
 					panel_2.setLayout(null);
 					panel_2.setComponentZOrder(labelPanel2, 0);
-	//				contentPane.setComponentZOrder(labelAfter, 0);
 					//panel_2.doLayout();
 					//panel_2.repaint();
 					
 					((JMapFrameDemo)rightFrame).getToolBar().setBackground(LandingGUI.LIGHT_GRAY); //to set toolbar background
 					((JMapFrameDemo)rightFrame).getToolBar().setBorder(BorderFactory.createLineBorder(LandingGUI.LIGHT_GRAY, 1));
-				
-
+					
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
 
-				//reset.doClick(4000);
-
-				//update tables
+				//update after tables
 				int rows = predictedODM.getOrigins().size();
 				int columns = predictedODM.getDestinations().size();
 				Object[][] data = new Object[rows][columns + 1];
@@ -485,7 +519,7 @@ public class RoadExpansionDashboard extends JFrame {
 				table_2.setModel(new DefaultTableModel(data, labels));
 
 
-				SkimMatrix sm = rnaAfterExpansion.calculateTimeSkimMatrix();
+				SkimMatrix sm = rnaAfterDevelopment.calculateTimeSkimMatrix();
 				rows = sm.getOrigins().size();
 				columns = sm.getDestinations().size();
 				Object[][] data2 = new Object[rows][columns + 1];
@@ -502,26 +536,48 @@ public class RoadExpansionDashboard extends JFrame {
 
 				/*
 				//update bar chart
-				barDataset.addValue(rnaAfterExpansion.getTripList().size(), "Road expansion", "Number of Trips");
+				barDataset.addValue(rnaAfterDevelopment.getTripList().size(), "Road development", "Number of Trips");
 				//barDataset.addValue(predictedODM.getTotalFlow(), "Road expansion", "Number of Trips");
 				*/
 				
 				//update text cell with total demand
-				totalDemandAfter.setText(String.valueOf(rnaAfterExpansion.getTripList().size()));
+				totalDemandAfter.setText(String.valueOf(rnaAfterDevelopment.getTripList().size()));
 				
-				re.uninstall(roadNetwork);
-				if (re2 != null) re2.uninstall(roadNetwork);
+				rd.uninstall(roadNetwork);
 
 				//pack();
 			}
 		});
 		contentPane.add(btnNewButton);
 
+		JLabel label_1 = new JLabel("<html>Length [<i>km</i>]:</html>");
+		label_1.setFont(new Font("Lato", Font.PLAIN, 16));
+		label_1.setBounds(36, 853, 101, 30);
+		contentPane.add(label_1);
+		
+		textField = new JTextField();
+		textField.setHorizontalAlignment(SwingConstants.RIGHT);
+		textField.setText("10.0");
+		textField.setFont(new Font("Lato", Font.BOLD, 12));
+		textField.setBorder(COMBOBOX_BORDER);
+		textField.setColumns(10);
+		textField.setBounds(135, 855, 50, 30);
+		contentPane.add(textField);
+		
+//		final String roadDevelopmentFileName = props.getProperty("roadDevelopmentFile");
+//		RoadDevelopment rd = new RoadDevelopment(roadDevelopmentFileName);
+//		System.out.println("Road development intervention: " + rd.toString());
+//		rd.install(roadNetwork);
+
 		//set controls to represent the intervention
-		comboBox.setSelectedItem(new Integer(22));
+		ActionListener al = comboBox.getActionListeners()[0];
+		comboBox.removeActionListener(al); //temporarilly
+		comboBox.setSelectedItem(new Integer(63));
 		comboBox_1.setSelectedItem(new Integer(23));
+		comboBox.addActionListener(al);
+		rdbtnNewRadioButton.setSelected(true);
 		slider.setValue(2);
-		chckbxNewCheckBox.setSelected(false);
+		textField.setText("10.2");
 		
 		//run the default intervention
 		btnNewButton.doClick();
@@ -537,17 +593,17 @@ public class RoadExpansionDashboard extends JFrame {
 		
 		//coloured panel with icon
 		JPanel panel_4 = new JPanel();
-		panel_4.setBackground(LandingGUI.PASTEL_GREEN);
+		panel_4.setBackground(LandingGUI.PASTEL_YELLOW);
 		panel_4.setBounds(LEFT_MARGIN, 34, 346, 123);
 		contentPane.add(panel_4);
 		panel_4.setLayout(null);
 		
-		JLabel lblNewLabel_2 = new JLabel("<html><left>Intervention 1:<br>Road Expansion</html>");
+		JLabel lblNewLabel_2 = new JLabel("<html><left>Intervention 2:<br>Road Development</html>");
 		lblNewLabel_2.setBounds(116, 5, 220, 115);
 		lblNewLabel_2.setFont(new Font("Lato", Font.BOLD, 26));
 		panel_4.add(lblNewLabel_2);
 		
-		File imgRoad = new File("./src/test/resources/images/roadIcon.png");
+		File imgRoad = new File("./src/test/resources/images/roadworksIcon.png");
 		BufferedImage bufferedImageRoad = null;
 		try {
 			bufferedImageRoad = ImageIO.read(imgRoad);
@@ -566,10 +622,10 @@ public class RoadExpansionDashboard extends JFrame {
 		StringBuilder html = new StringBuilder();
 		html.append("<html><left>");
 		html.append("<font size=+1><b>What we asked:</b></font><br>");
-		html.append("<font size=+1>What happens when we increase road capacity by expanding the road network?</font><br><br>");
+		html.append("<font size=+1>What happens when we build completely new roads?</font><br><br>");
 		html.append("<font size=+1><b>What we found:</b></font><br>");
 		html.append("<ul>");
-		html.append("<li><font size=+1>Lower road capacity utilisation.</font>");
+		html.append("<li><font size=+1>Lower road capacity utilisation in a wider area compared to road expansion.</font>");
 		html.append("<li><font size=+1>Slight decrease in travel times.</font>");
 		html.append("<li><font size=+1>Slight increase in vehicle ﬂows.</font>");
 		html.append("</ul></html>");
@@ -584,16 +640,16 @@ public class RoadExpansionDashboard extends JFrame {
 		separator.setBounds(LEFT_MARGIN, LandingGUI.SCREEN_HEIGHT / 2, 346, 2);
 		contentPane.add(separator);
 		
-		JLabel lblNewLabel_5 = new JLabel("<html><left>Expand a road link by first selecting two nodes on the \"before\" map:</html>");
+		JLabel lblNewLabel_5 = new JLabel("<html><left>Create a new road by selecting two nodes indicated on the \"before\" map:</html>");
 		lblNewLabel_5.setHorizontalAlignment(SwingConstants.LEFT);
 		lblNewLabel_5.setVerticalAlignment(SwingConstants.TOP);
 		lblNewLabel_5.setFont(new Font("Lato", Font.PLAIN, 20));
 		lblNewLabel_5.setBounds(LEFT_MARGIN, 631, 346, 100);
 		contentPane.add(lblNewLabel_5);
 		
-		JLabel lblHowManyDirections = new JLabel("How many directions?");
+		JLabel lblHowManyDirections = new JLabel("What road class?");
 		lblHowManyDirections.setFont(new Font("Lato", Font.PLAIN, 16));
-		lblHowManyDirections.setBounds(SECOND_MARGIN, 813, 200, 30);
+		lblHowManyDirections.setBounds(36, 772, 178, 30);
 		contentPane.add(lblHowManyDirections);
 		
 		JLabel lblNewLabel_6 = new JLabel("Observe the change in capacity utilisation in the \"after\" map");
@@ -1263,5 +1319,4 @@ public class RoadExpansionDashboard extends JFrame {
 		panel.add(chartPanel);
 		contentPane.add(panel);
 	}
-	
 }
