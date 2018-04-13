@@ -637,7 +637,7 @@ public class NetworkVisualiserDemo {
 		Style zonesStyle4 = styleBuilder.createStyle(textSymbolizer);		
 		Style zonesStyle2 = SLD.createPolygonStyle(Color.DARK_GRAY, Color.DARK_GRAY, 0.5f);
 		Style zonesStyle3 = SLD.createPolygonStyle(Color.DARK_GRAY, Color.DARK_GRAY, 0.5f, "NAME", zonesFont);
-		
+				
 		//add zones layer to the map     
 		FeatureLayer zonesLayer = new FeatureLayer(roadNetwork.getZonesShapefile().getFeatureSource(), (Style) zonesStyle3);
 		map.addLayer(zonesLayer);
@@ -837,7 +837,7 @@ public class NetworkVisualiserDemo {
 		map.addLayer(AADFlayer);
 
 		//show the map in JMapFrame
-		JMapFrame show = new JMapFrame(map);
+		JMapFrameDemo show = new JMapFrameDemo(map);
 		
 		//show.getContentPane()
 		
