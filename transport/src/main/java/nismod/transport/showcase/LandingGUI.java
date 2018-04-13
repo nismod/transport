@@ -217,7 +217,7 @@ public class LandingGUI {
 		btnRoadDevelopment.setBorderPainted(false);
 		btnRoadDevelopment.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				DashboardRoadDevelopment.main(null);
+				RoadDevelopmentDashboard.main(null);
 			}
 		});
 		btnRoadDevelopment.setFocusable(false);
@@ -249,7 +249,7 @@ public class LandingGUI {
 		btnCongestionCharging.setBorderPainted(false);
 		btnCongestionCharging.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				DashboardCongestionCharging.main(null);
+				CongestionChargingDashboard.main(null);
 			}
 		});
 		btnCongestionCharging.setFocusable(false);

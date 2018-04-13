@@ -17,7 +17,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Dictionary;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -27,6 +30,7 @@ import java.util.Set;
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -42,6 +46,7 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.ToolTipManager;
+import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 import javax.swing.border.Border;
 import javax.swing.plaf.ColorUIResource;
@@ -49,6 +54,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
+import org.apache.commons.collections4.map.MultiKeyMap;
 import org.geotools.brewer.color.BrewerPalette;
 import org.geotools.brewer.color.ColorBrewer;
 import org.geotools.graph.structure.DirectedEdge;
@@ -65,6 +71,8 @@ import org.jfree.chart.renderer.category.StandardBarPainter;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.opengis.feature.simple.SimpleFeature;
 
+import nismod.transport.decision.CongestionCharging;
+import nismod.transport.decision.Intervention;
 import nismod.transport.decision.RoadExpansion;
 import nismod.transport.demand.DemandModel;
 import nismod.transport.demand.DemandModel.ElasticityTypes;
@@ -73,6 +81,9 @@ import nismod.transport.demand.SkimMatrix;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.network.road.RouteSetGenerator;
+import nismod.transport.network.road.Trip;
+import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
+import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.utility.ConfigReader;
 import nismod.transport.zone.Zoning;
 import javax.swing.JSeparator;
@@ -81,7 +92,7 @@ import javax.swing.JSeparator;
  * Dashboard for the road expansion policy intervention.
  * @author Milan Lovric
  */
-public class RoadExpansionDashboard extends JFrame {
+public class CongestionChargingDashboard extends JFrame {
 
 	private JPanel contentPane;
 	private JPanel panel_1;
@@ -99,6 +110,7 @@ public class RoadExpansionDashboard extends JFrame {
 	private JLabel labelPanel2;
 	private JTextField totalDemandAfter;
 	private JTextField totalDemandBefore;
+	private DefaultCategoryDataset barDataset;
 	
 	private static final String configFile = "./src/test/config/testConfig.properties";
 	private static RoadNetwork roadNetwork;
@@ -108,6 +120,7 @@ public class RoadExpansionDashboard extends JFrame {
 	private static SkimMatrix csmBefore;
 	private static RouteSetGenerator rsg;
 	private static Zoning zoning;
+	private static RoadNetworkAssignment rnaBefore;
 	
 	public static final int MAP_WIDTH = 750;
 	public static final int MAP_HEIGHT = 700;
@@ -120,7 +133,8 @@ public class RoadExpansionDashboard extends JFrame {
 	public static final int TABLE_ROW_HEIGHT = 18;
 	public static final int LEFT_MARGIN = 36; //x position of the first control (policy design area)
 	public static final int SECOND_MARGIN = 233; //x position of the second control (policy design area)
-
+	public static final int AFTER_TABLE_SHIFT = 200; //we have to shift after tables to fit the barchart in between
+	
 	public static final Font TABLE_FONT = new Font("Lato", Font.BOLD, 12);
 	public static final Border TABLE_BORDER = BorderFactory.createLineBorder(LandingGUI.DARK_GRAY, 1);
 	public static final Border COMBOBOX_BORDER = BorderFactory.createLineBorder(LandingGUI.DARK_GRAY, 2);
@@ -138,7 +152,7 @@ public class RoadExpansionDashboard extends JFrame {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					RoadExpansionDashboard frame = new RoadExpansionDashboard();
+					CongestionChargingDashboard frame = new CongestionChargingDashboard();
 					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -151,7 +165,7 @@ public class RoadExpansionDashboard extends JFrame {
 	 * Create the frame.
 	 * @throws IOException 
 	 */
-	public RoadExpansionDashboard() throws IOException {
+	public CongestionChargingDashboard() throws IOException {
 		//setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setTitle("NISMOD v2 Showcase Demo");
@@ -173,7 +187,7 @@ public class RoadExpansionDashboard extends JFrame {
 		UIManager.put("ToolTip.background", new ColorUIResource(255, 255, 255)); //#fff7c8
 		Border border = BorderFactory.createLineBorder(new Color(76,79,83));    //#4c4f53
 		UIManager.put("ToolTip.border", border);
-		UIManager.put("ToolTip.font", new Font("Calibri Light", Font.BOLD, 16));
+		UIManager.put("ToolTip.font", new Font("Lato", Font.PLAIN, 14));
 		ToolTipManager.sharedInstance().setDismissDelay(15000); // 15 second delay  
 
 		
@@ -184,6 +198,8 @@ public class RoadExpansionDashboard extends JFrame {
 		createAfterTables();
 		
 		createLabelsLeftOfTables();
+		
+		createBarChart();
 		
 		//create map panels and legend
 		
@@ -214,114 +230,67 @@ public class RoadExpansionDashboard extends JFrame {
 		lblRoadExpansionPolicy.setFont(new Font("Lato", Font.BOLD, 26));
 		lblRoadExpansionPolicy.setBounds(LEFT_MARGIN, 569, 380, 30);
 		contentPane.add(lblRoadExpansionPolicy);
-		
-		JCheckBox chckbxNewCheckBox = new JCheckBox("2-way");
-		chckbxNewCheckBox.setFont(new Font("Lato", Font.PLAIN, 12));
-		chckbxNewCheckBox.setBackground(LandingGUI.LIGHT_GRAY);
-		chckbxNewCheckBox.setSelected(true);
-		chckbxNewCheckBox.setBounds(SECOND_MARGIN, 855, 122, 23);
-		contentPane.add(chckbxNewCheckBox);
-
-		JComboBox comboBox = new JComboBox();
-		comboBox.setModel(new DefaultComboBoxModel(roadNetwork.getNodeIDtoNode().keySet().toArray()));
-		//comboBox.setModel(new DefaultComboBoxModel(new String[] {"5", "6", "27", "23", "25"}));
-		comboBox.setBounds(36, 765, 149, 22);
-		comboBox.setFont(new Font("Lato", Font.BOLD, 14));
-		comboBox.setBorder(COMBOBOX_BORDER);
-		//comboBox.setBorder(comboBoxBorder);
-		//comboBox.setBackground(GUI.DASHBOARD);
-		contentPane.add(comboBox);
-
-		int fromNode = (int)comboBox.getSelectedItem();
-		DirectedNode nodeA = (DirectedNode) roadNetwork.getNodeIDtoNode().get(fromNode);
-
-		Set<Integer> listOfNodes = new HashSet<Integer>();
-		List edges = nodeA.getOutEdges();
-		for (Object o: edges) {
-			DirectedEdge e = (DirectedEdge) o;
-			DirectedNode other = e.getOutNode();
-			if (roadNetwork.getNumberOfLanes().get(e.getID()) != null)	listOfNodes.add(other.getID()); //if there is no lane number information (e.g. ferry) skip edge
-		}
-		Integer[] arrayOfNodes = listOfNodes.toArray(new Integer[0]);
-		Arrays.sort(arrayOfNodes);
-
-		JComboBox comboBox_1 = new JComboBox();
-		comboBox_1.setModel(new DefaultComboBoxModel(arrayOfNodes));
-		//comboBox_1.setModel(new DefaultComboBoxModel(new String[] {"24", "25", "1", "22", "34", "16"}));
-		comboBox_1.setBounds(SECOND_MARGIN, 765, 149, 22);
-		comboBox_1.setFont(new Font("Lato", Font.BOLD, 14));
-		comboBox_1.setBorder(COMBOBOX_BORDER);
-		contentPane.add(comboBox_1);
-
-		comboBox.addActionListener (new ActionListener () {
-			public void actionPerformed(ActionEvent e) {
-
-				int fromNode = (int)comboBox.getSelectedItem();
-				DirectedNode nodeA = (DirectedNode) roadNetwork.getNodeIDtoNode().get(fromNode);
-
-				Set<Integer> listOfNodes = new HashSet<Integer>();
-				List edges = nodeA.getOutEdges();
-				for (Object o: edges) {
-					DirectedEdge e2 = (DirectedEdge) o;
-					DirectedNode other = e2.getOutNode();//e2.getOtherNode(nodeA);
-					if (roadNetwork.getNumberOfLanes().get(e2.getID()) != null)	listOfNodes.add(other.getID()); //if there is no lane number information (e.g. ferry) skip edge
-				}
-				Integer[] arrayOfNodes = listOfNodes.toArray(new Integer[0]);
-				Arrays.sort(arrayOfNodes);
-				comboBox_1.setModel(new DefaultComboBoxModel(arrayOfNodes));
-
-			}
-		});
-
-		comboBox_1.addActionListener (new ActionListener () {
-			public void actionPerformed(ActionEvent e) {
-
-				int fromNode = (int)comboBox.getSelectedItem();
-				DirectedNode nodeA = (DirectedNode) roadNetwork.getNodeIDtoNode().get(fromNode);
-
-				int toNode = (int)comboBox_1.getSelectedItem();
-				DirectedNode nodeB = (DirectedNode) roadNetwork.getNodeIDtoNode().get(toNode);
-
-				DirectedEdge edge = (DirectedEdge) nodeA.getOutEdge(nodeB);
-				if (roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(edge.getID()) == null) //if there is no other direction edge, disable checkbox
-					chckbxNewCheckBox.setEnabled(false);
-				else
-					chckbxNewCheckBox.setEnabled(true);
-
-			}
-		});
-
-		JLabel lblANode = new JLabel("Node A");
-		lblANode.setFont(new Font("Lato", Font.PLAIN, 20));
-		lblANode.setLabelFor(comboBox);
-		lblANode.setBounds(LEFT_MARGIN, 737, 79, 23);
-		contentPane.add(lblANode);
-
-		JLabel lblBNode = new JLabel("Node B");
-		lblBNode.setFont(new Font("Lato", Font.PLAIN, 20));
-		lblBNode.setLabelFor(comboBox_1);
-		lblBNode.setBounds(SECOND_MARGIN, 737, 79, 23);
-		contentPane.add(lblBNode);
-
+	
 		JSlider slider = new JSlider();
-		slider.setSnapToTicks(true);
+		slider.setValue(15);
 		slider.setPaintTicks(true);
 		slider.setPaintLabels(true);
 		slider.setMinorTickSpacing(1);
-		slider.setValue(1);
-		slider.setMajorTickSpacing(1);
-		slider.setMaximum(5);
-		slider.setMinimum(1);
-		slider.setBounds(LEFT_MARGIN, 855, 138, 45);
-		slider.setBackground(LandingGUI.LIGHT_GRAY);
+		slider.setMaximum(50);
+		slider.setMajorTickSpacing(10);
+		slider.setBounds(146, 728, 200, 45);
+		slider.setFont(new Font("Lato", Font.BOLD, 14));
 		slider.setForeground(LandingGUI.DARK_GRAY);
 		contentPane.add(slider);
+		
+	
+//		Icon icon = new ImageIcon("./src/test/resources/images/thumb.gif");
+//		UIDefaults defaults = UIManager.getDefaults();
+//	//	defaults.put("Slider.horizontalThumbIcon", icon);
+//		defaults.put("Slider.thumb", new ColorUIResource(LandingGUI.DARK_GRAY));
+//		defaults.put("Slider.focus", new ColorUIResource(LandingGUI.DARK_GRAY));
+//		defaults.put("Slider.altTrackColor", new ColorUIResource(LandingGUI.DARK_GRAY));
+//		defaults.put("Slider.shadow", new ColorUIResource(LandingGUI.DARK_GRAY));
+//		defaults.put("Slider.highlight", new ColorUIResource(LandingGUI.DARK_GRAY));
+//		defaults.put("Slider.thumbHeight", 20);
+//		defaults.put("Slider.thumbWidth", 20);
 
-		JLabel lblLanesToAdd = new JLabel("How many lanes to add?");
-		lblLanesToAdd.setFont(new Font("Lato", Font.PLAIN, 16));
-		lblLanesToAdd.setBounds(LEFT_MARGIN, 813, 200, 30);
-		contentPane.add(lblLanesToAdd);
-
+		
+		JLabel label_1 = new JLabel("£");
+		label_1.setFont(new Font("Lato", Font.BOLD, 14));
+		label_1.setBounds(346, 756, 46, 14);
+		contentPane.add(label_1);
+		
+		JSlider slider_1 = new JSlider();
+		slider_1.setValue(2);
+		slider_1.setPaintTicks(true);
+		slider_1.setPaintLabels(true);
+		slider_1.setMinorTickSpacing(1);
+		slider_1.setMaximum(50);
+		slider_1.setMajorTickSpacing(10);
+		slider_1.setBounds(146, 830, 200, 45);
+		slider_1.setFont(new Font("Lato", Font.BOLD, 14));
+		slider_1.setForeground(LandingGUI.DARK_GRAY);
+		contentPane.add(slider_1);
+		
+		JLabel label_2 = new JLabel("£");
+		label_2.setFont(new Font("Lato", Font.BOLD, 14));
+		label_2.setBounds(346, 858, 46, 14);
+		contentPane.add(label_2);
+		
+		JLabel label_3 = new JLabel("<html><left>What's the <b>peak-hour</b> charge?</html>?");
+		label_3.setBounds(36, 711, 100, 70);
+		label_3.setFont(new Font("Lato", Font.PLAIN, 16));
+		label_3.setForeground(LandingGUI.DARK_GRAY);
+		contentPane.add(label_3);
+		
+		JLabel label_4 = new JLabel("<html><left>What's the <b>off-peak</b> charge?</html>?");
+		label_4.setBounds(36, 810, 100, 70);
+		label_4.setFont(new Font("Lato", Font.PLAIN, 16));
+		label_4.setForeground(LandingGUI.DARK_GRAY);
+		contentPane.add(label_4);
+		
+		
 		JButton btnNewButton = new JButton("RUN");
 		btnNewButton.setFont(new Font("Lato", Font.BOLD, 25));
 		btnNewButton.setBounds(134, 920, 149, 70);
@@ -330,74 +299,91 @@ public class RoadExpansionDashboard extends JFrame {
 		btnNewButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 
-				//RandomSingleton.getInstance().setSeed(1234);
-
-				int fromNode = (int) comboBox.getSelectedItem();
-				int toNode = (int) comboBox_1.getSelectedItem();
-				int lanes = slider.getValue();
-
-				System.out.println("fromNode = " + fromNode);
-				System.out.println("toNode = " + toNode);
-
-				DirectedNode nodeA = (DirectedNode) roadNetwork.getNodeIDtoNode().get(fromNode);
-				DirectedNode nodeB = (DirectedNode) roadNetwork.getNodeIDtoNode().get(toNode);
-				DirectedEdge edge = (DirectedEdge) nodeA.getOutEdge(nodeB);
-				SimpleFeature sf = (SimpleFeature)edge.getObject();
-				Long countPoint = (long) sf.getAttribute("CP");
-
-				Properties props2 = new Properties();
-				props2.setProperty("startYear", "2016");
-				props2.setProperty("endYear", "2025");
-				props2.setProperty("fromNode", Integer.toString(nodeA.getID()));
-				props2.setProperty("toNode", Integer.toString(nodeB.getID()));
-				props2.setProperty("CP", Long.toString(countPoint));
-				props2.setProperty("number", Integer.toString(lanes));
-				RoadExpansion re = new RoadExpansion(props2);
-
-				System.out.println("Road expansion intervention: " + re.toString());
-				//interventions.add(re);
-				re.install(roadNetwork);
-
-				RoadExpansion re2 = null;
-				if (chckbxNewCheckBox.isSelected()) { //if both directions
-
-					edge = (DirectedEdge) nodeB.getEdge(nodeA);
-					sf = (SimpleFeature)edge.getObject();
-					countPoint = (long) sf.getAttribute("CP");
-
-					props2.setProperty("fromNode", Integer.toString(nodeB.getID()));
-					props2.setProperty("toNode", Integer.toString(nodeA.getID()));
-					props2.setProperty("CP", Long.toString(countPoint));
-					re2 = new RoadExpansion(props2);
-
-					System.out.println("Road expansion intervention: " + re2.toString());
-					//interventions.add(re);
-					re2.install(roadNetwork);
-				}
-
-				RoadNetworkAssignment rnaAfterExpansion = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, props);
-				rnaAfterExpansion.assignPassengerFlows(odm, rsg);
-				rnaAfterExpansion.updateLinkVolumeInPCU();
-				rnaAfterExpansion.updateLinkVolumeInPCUPerTimeOfDay();
-
-				//predict change in demand
-				SkimMatrix tsm = rnaAfterExpansion.calculateTimeSkimMatrix();
-				SkimMatrix csm = rnaAfterExpansion.calculateCostSkimMatrix();
-
-				//predicted demand	
-				ODMatrix predictedODM = new ODMatrix();
-
+				final String baseYearODMatrixFile = props.getProperty("baseYearODMatrixFile");
+				final String baseYearFreightMatrixFile = props.getProperty("baseYearFreightMatrixFile");
+				final String populationFile = props.getProperty("populationFile");
+				final String GVAFile = props.getProperty("GVAFile");
 				final String elasticitiesFile = props.getProperty("elasticitiesFile");
-				HashMap<ElasticityTypes, Double> elasticities = null;
+				final String elasticitiesFreightFile = props.getProperty("elasticitiesFreightFile");
+				final String passengerRoutesFile = props.getProperty("passengerRoutesFile");
+				final String freightRoutesFile = props.getProperty("freightRoutesFile");
+
+				final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
+				final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
+				final String AVFractionsFile = props.getProperty("autonomousVehiclesFile");
+
+				final String congestionChargingFile = "./src/test/resources/testdata/interventions/congestionChargingSouthampton.properties";
 				try {
-					elasticities = DemandModel.readElasticitiesFile(elasticitiesFile);
-				} catch (FileNotFoundException e2) {
-					// TODO Auto-generated catch block
-					e2.printStackTrace();
-				} catch (IOException e2) {
+					final URL congestionChargeZoneUrl = new URL("file://src/test/resources/testdata/shapefiles/congestionChargingZone.shp");
+				} catch (MalformedURLException e2) {
 					// TODO Auto-generated catch block
 					e2.printStackTrace();
 				}
+
+				CongestionCharging cc = new CongestionCharging(congestionChargingFile);
+				System.out.println("Congestion charging intervention: " + cc.toString());
+
+				List<Intervention> interventions = new ArrayList<Intervention>();
+				interventions.add(cc);
+	
+				DemandModel dm;
+				try {
+					dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, engineTypeFractionsFile, AVFractionsFile, interventions, rsg, props);
+
+					System.out.println("Base-year congestion charging: ");
+					//System.out.println(dm.getCongestionCharges(2015));
+
+					cc.install(dm);
+
+					HashMap<String, MultiKeyMap> congestionCharges = dm.getCongestionCharges(2016);
+					System.out.println("Policies: " + congestionCharges);
+					String policyName = congestionCharges.keySet().iterator().next();
+					MultiKeyMap specificCharges = (MultiKeyMap) congestionCharges.get(policyName);
+					System.out.println("Southampton policy: " + specificCharges);
+
+					double peakCharge = slider.getValue();
+					double offPeakCharge = slider_1.getValue();
+
+					for (Object mk: specificCharges.keySet()) {
+
+						VehicleType vht = (VehicleType) ((MultiKey)mk).getKey(0);
+						TimeOfDay hour = (TimeOfDay) ((MultiKey)mk).getKey(1);
+						HashMap<Integer, Double> linkCharges = (HashMap<Integer, Double>) specificCharges.get(vht, hour);
+						if (hour == TimeOfDay.SEVENAM || hour == TimeOfDay.EIGHTAM || hour == TimeOfDay.NINEAM || hour == TimeOfDay.TENAM ||
+								hour == TimeOfDay.FOURPM || hour == TimeOfDay.FIVEPM || hour == TimeOfDay.SIXPM || hour == TimeOfDay.SEVENPM)
+							for (int edgID: linkCharges.keySet()) linkCharges.put(edgID, peakCharge);
+						else	for (int edgID: linkCharges.keySet()) linkCharges.put(edgID, offPeakCharge);
+					}
+
+				
+					props.setProperty("TIME", "-1.5");
+					props.setProperty("LENGTH", "-1.0");
+					props.setProperty("COST", "-3.6"); //based on VOT
+
+					RoadNetworkAssignment rnaAfterCongestionCharging = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, congestionCharges, props);
+					//rnaAfterCongestionCharging.assignPassengerFlows(odm, rsg);
+					rnaAfterCongestionCharging.assignPassengerFlowsRouteChoice(odm, rsg, props);
+					rnaAfterCongestionCharging.updateLinkVolumeInPCU();
+					rnaAfterCongestionCharging.updateLinkVolumeInPCUPerTimeOfDay();
+
+					//predict change in demand
+					SkimMatrix tsm = rnaAfterCongestionCharging.calculateTimeSkimMatrix();
+					SkimMatrix csm = rnaAfterCongestionCharging.calculateCostSkimMatrix();
+
+					//predicted demand	
+					ODMatrix predictedODM = new ODMatrix();
+
+					//final String elasticitiesFile = props.getProperty("elasticitiesFile");
+					HashMap<ElasticityTypes, Double> elasticities = null;
+					try {
+						elasticities = DemandModel.readElasticitiesFile(elasticitiesFile);
+					} catch (FileNotFoundException e2) {
+						// TODO Auto-generated catch block
+						e2.printStackTrace();
+					} catch (IOException e2) {
+						// TODO Auto-generated catch block
+						e2.printStackTrace();
+					}
 
 
 				tsmBefore.printMatrixFormatted();
@@ -422,33 +408,38 @@ public class RoadExpansionDashboard extends JFrame {
 					predictedODM.setFlow(originZone, destinationZone, (int) Math.round(predictedflow));
 				}
 
-				rnaAfterExpansion.resetLinkVolumes();
-				rnaAfterExpansion.resetTripStorages();
 
-				rnaAfterExpansion.assignPassengerFlows(predictedODM, rsg);
-				rnaAfterExpansion.updateLinkVolumeInPCU();
-				rnaAfterExpansion.updateLinkVolumeInPCUPerTimeOfDay();
-				//SkimMatrix sm = rnaAfterExpansion.calculateTimeSkimMatrix();
+				rnaAfterCongestionCharging.resetLinkVolumes();
+				rnaAfterCongestionCharging.resetTripStorages();
 
-				HashMap<Integer, Double> capacityAfter = rnaAfterExpansion.calculateDirectionAveragedPeakLinkCapacityUtilisation();
+				rnaAfterCongestionCharging.assignPassengerFlows(predictedODM, rsg);
+				rnaAfterCongestionCharging.updateLinkVolumeInPCU();
+				rnaAfterCongestionCharging.updateLinkVolumeInPCUPerTimeOfDay();
+				//SkimMatrix sm = rnaAfterCongestionCharging.calculateTimeSkimMatrix();
+				
+
+				HashMap<Integer, Double> capacityAfter = rnaAfterCongestionCharging.calculateDirectionAveragedPeakLinkCapacityUtilisation();
+				
 				//String shapefilePathAfter = "./temp/networkWithCapacityUtilisationAfter.shp";
+				final URL congestionChargeZoneUrl = new URL("file://src/test/resources/testdata/shapefiles/congestionChargingZone.shp");
 				String shapefilePathAfter = "./temp/after" +  LandingGUI.counter++ + ".shp";
 				JFrame rightFrame;
 				JButton reset = null;
 				try {
-					rightFrame = NetworkVisualiserDemo.visualise(roadNetwork, "Capacity Utilisation After Intervention", capacityAfter, "CapUtil", shapefilePathAfter);
+					rightFrame = NetworkVisualiserDemo.visualise(roadNetwork, "Capacity Utilisation After Intervention", capacityAfter, "CapUtil", shapefilePathAfter, congestionChargeZoneUrl);
+					
 					rightFrame.setVisible(false);
 					rightFrame.repaint();
 
-					JMapPane pane = ((JMapFrameDemo)rightFrame).getMapPane();
-					//((JMapFrameDemo)rightFrame).getToolBar().setBackground(GUI.TOOLBAR); //to set toolbar background
-
-					System.out.println("component: " + ((JMapFrameDemo)rightFrame).getToolBar().getComponent(8).toString());
-					reset = (JButton) ((JMapFrameDemo)rightFrame).getToolBar().getComponent(8);
-					//reset.setBackground(Color.BLUE); //set icon background
-					//reset.setBorderPainted(false); //remove border
-					JButton minus = (JButton) ((JMapFrameDemo)rightFrame).getToolBar().getComponent(2);
-					//minus.setBackground(Color.GREEN); //set icon background
+//					JMapPane pane = ((JMapFrameDemo)rightFrame).getMapPane();
+//					//((JMapFrameDemo)rightFrame).getToolBar().setBackground(GUI.TOOLBAR); //to set toolbar background
+//
+//					System.out.println("component: " + ((JMapFrameDemo)rightFrame).getToolBar().getComponent(8).toString());
+//					reset = (JButton) ((JMapFrameDemo)rightFrame).getToolBar().getComponent(8);
+//					//reset.setBackground(Color.BLUE); //set icon background
+//					//reset.setBorderPainted(false); //remove border
+//					JButton minus = (JButton) ((JMapFrameDemo)rightFrame).getToolBar().getComponent(2);
+//					//minus.setBackground(Color.GREEN); //set icon background
 			
 					//panel_2.removeAll();
 					panel_2.add(rightFrame.getContentPane(), 0);
@@ -468,7 +459,7 @@ public class RoadExpansionDashboard extends JFrame {
 				}
 
 				//reset.doClick(4000);
-
+				
 				//update tables
 				int rows = predictedODM.getOrigins().size();
 				int columns = predictedODM.getDestinations().size();
@@ -485,7 +476,7 @@ public class RoadExpansionDashboard extends JFrame {
 				table_2.setModel(new DefaultTableModel(data, labels));
 
 
-				SkimMatrix sm = rnaAfterExpansion.calculateTimeSkimMatrix();
+				SkimMatrix sm = rnaAfterCongestionCharging.calculateTimeSkimMatrix();
 				rows = sm.getOrigins().size();
 				columns = sm.getDestinations().size();
 				Object[][] data2 = new Object[rows][columns + 1];
@@ -500,28 +491,43 @@ public class RoadExpansionDashboard extends JFrame {
 				for (int j = 0; j < columns; j++) labels2[j+1] = zoning.getLADToName().get(sm.getDestinations().get(j));
 				table_3.setModel(new DefaultTableModel(data2, labels2));
 
-				/*
+			
 				//update bar chart
-				barDataset.addValue(rnaAfterExpansion.getTripList().size(), "Road expansion", "Number of Trips");
-				//barDataset.addValue(predictedODM.getTotalFlow(), "Road expansion", "Number of Trips");
-				*/
-				
-				//update text cell with total demand
-				totalDemandAfter.setText(String.valueOf(rnaAfterExpansion.getTripList().size()));
-				
-				re.uninstall(roadNetwork);
-				if (re2 != null) re2.uninstall(roadNetwork);
+				barDataset.addValue(rnaBefore.getTripList().size(), "No intervention", "Total Trips");
+				barDataset.addValue(rnaAfterCongestionCharging.getTripList().size(), "Congestion charging", "Total Trips");
+
+				double sumThroughBefore = 0.0, sumOutsideBefore = 0.0;
+				for (Trip t: rnaBefore.getTripList())
+					if (t.isTripGoingThroughCongestionChargingZone(policyName, congestionCharges))
+						sumThroughBefore++;
+					else
+						sumOutsideBefore++;
+
+				double sumThrough = 0.0, sumOutside = 0.0;
+				for (Trip t: rnaAfterCongestionCharging.getTripList())
+					if (t.isTripGoingThroughCongestionChargingZone(policyName, congestionCharges))
+						sumThrough++;
+					else
+						sumOutside++;
+
+				barDataset.addValue(sumThroughBefore, "No intervention", "Through Zone");
+				barDataset.addValue(sumThrough, "Congestion charging", "Through Zone");
+				barDataset.addValue(sumOutsideBefore, "No intervention", "Outside Zone");
+				barDataset.addValue(sumOutside, "Congestion charging", "Outside Zone");
+
+				//uninstall intervention
+				cc.uninstall(dm);
 
 				//pack();
+				
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				
 			}
 		});
 		contentPane.add(btnNewButton);
-
-		//set controls to represent the intervention
-		comboBox.setSelectedItem(new Integer(22));
-		comboBox_1.setSelectedItem(new Integer(23));
-		slider.setValue(2);
-		chckbxNewCheckBox.setSelected(false);
 		
 		//run the default intervention
 		btnNewButton.doClick();
@@ -537,17 +543,17 @@ public class RoadExpansionDashboard extends JFrame {
 		
 		//coloured panel with icon
 		JPanel panel_4 = new JPanel();
-		panel_4.setBackground(LandingGUI.PASTEL_GREEN);
+		panel_4.setBackground(LandingGUI.PASTEL_BLUE);
 		panel_4.setBounds(LEFT_MARGIN, 34, 346, 123);
 		contentPane.add(panel_4);
 		panel_4.setLayout(null);
 		
-		JLabel lblNewLabel_2 = new JLabel("<html><left>Intervention 1:<br>Road Expansion</html>");
+		JLabel lblNewLabel_2 = new JLabel("<html><left>Intervention 3:<br>Congestion Charging</html>");
 		lblNewLabel_2.setBounds(116, 5, 220, 115);
 		lblNewLabel_2.setFont(new Font("Lato", Font.BOLD, 26));
 		panel_4.add(lblNewLabel_2);
 		
-		File imgRoad = new File("./src/test/resources/images/roadIcon.png");
+		File imgRoad = new File("./src/test/resources/images/tollGateIcon.png");
 		BufferedImage bufferedImageRoad = null;
 		try {
 			bufferedImageRoad = ImageIO.read(imgRoad);
@@ -566,17 +572,17 @@ public class RoadExpansionDashboard extends JFrame {
 		StringBuilder html = new StringBuilder();
 		html.append("<html><left>");
 		html.append("<font size=+1><b>What we asked:</b></font><br>");
-		html.append("<font size=+1>What happens when we increase road capacity by expanding the road network?</font><br><br>");
+		html.append("<font size=+1>What happens when we introduce a congestion charging zone?</font><br><br>");
 		html.append("<font size=+1><b>What we found:</b></font><br>");
 		html.append("<ul>");
-		html.append("<li><font size=+1>Lower road capacity utilisation.</font>");
-		html.append("<li><font size=+1>Slight decrease in travel times.</font>");
-		html.append("<li><font size=+1>Slight increase in vehicle ﬂows.</font>");
+		html.append("<li><font size=+1>Lower road capacity utilisation within the policy area.</font>");
+		html.append("<li><font size=+1>Decrease in vehicle flows due to increased travel costs.</font>");
+		html.append("<li><font size=+1>Travel times might increase due to vehicles avoiding the zone, but could also decrease due to lower total demand.</font>");
 		html.append("</ul></html>");
 		
 		JLabel lblNewLabel_4 = new JLabel(html.toString());
 		lblNewLabel_4.setFont(new Font("Lato", Font.PLAIN, 20));
-		lblNewLabel_4.setBounds(LEFT_MARGIN, 180, 346, 256);
+		lblNewLabel_4.setBounds(36, 180, 346, 327);
 		contentPane.add(lblNewLabel_4);
 		
 		JSeparator separator = new JSeparator();
@@ -584,23 +590,27 @@ public class RoadExpansionDashboard extends JFrame {
 		separator.setBounds(LEFT_MARGIN, LandingGUI.SCREEN_HEIGHT / 2, 346, 2);
 		contentPane.add(separator);
 		
-		JLabel lblNewLabel_5 = new JLabel("<html><left>Expand a road link by first selecting two nodes on the \"before\" map:</html>");
+		JLabel lblNewLabel_5 = new JLabel("<html><left>Change the congestion charge during peak and off-peak hours:</html>");
 		lblNewLabel_5.setHorizontalAlignment(SwingConstants.LEFT);
 		lblNewLabel_5.setVerticalAlignment(SwingConstants.TOP);
 		lblNewLabel_5.setFont(new Font("Lato", Font.PLAIN, 20));
-		lblNewLabel_5.setBounds(LEFT_MARGIN, 631, 346, 100);
+		lblNewLabel_5.setForeground(LandingGUI.DARK_GRAY);
+		lblNewLabel_5.setBounds(LEFT_MARGIN, 628, 346, 100);
 		contentPane.add(lblNewLabel_5);
 		
-		JLabel lblHowManyDirections = new JLabel("How many directions?");
-		lblHowManyDirections.setFont(new Font("Lato", Font.PLAIN, 16));
-		lblHowManyDirections.setBounds(SECOND_MARGIN, 813, 200, 30);
-		contentPane.add(lblHowManyDirections);
-		
-		JLabel lblNewLabel_6 = new JLabel("Observe the change in capacity utilisation in the \"after\" map");
+		JLabel lblNewLabel_6 = new JLabel("<html>(Peak hours: 7AM-11AM & 4PM-8PM)</html>");
 		lblNewLabel_6.setHorizontalAlignment(SwingConstants.LEFT);
 		lblNewLabel_6.setFont(new Font("Lato", Font.PLAIN, 12));
-		lblNewLabel_6.setBounds(LEFT_MARGIN, 1006, 342, 14);
+		lblNewLabel_6.setBounds(152, 784, 226, 14);
+		lblNewLabel_6.setForeground(LandingGUI.DARK_GRAY);
 		contentPane.add(lblNewLabel_6);
+		
+		JLabel lblNewLabel_7 = new JLabel("Observe the change in capacity utilisation in the \"after\" map");
+		lblNewLabel_7.setHorizontalAlignment(SwingConstants.LEFT);
+		lblNewLabel_7.setFont(new Font("Lato", Font.PLAIN, 12));
+		lblNewLabel_7.setForeground(LandingGUI.DARK_GRAY);
+		lblNewLabel_7.setBounds(LEFT_MARGIN, 1006, 342, 14);
+		contentPane.add(lblNewLabel_7);
 				
 	}
 	
@@ -733,9 +743,10 @@ public class RoadExpansionDashboard extends JFrame {
 
 		scrollPane_2 = new JScrollPane();
 		scrollPane_2.setToolTipText("This shows the impact on demand.");
-		scrollPane_2.setBounds(AFTER_MAP_X + TABLE_LABEL_WIDTH, MAP_HEIGHT + 100, 416, 90);
+		scrollPane_2.setBounds(AFTER_MAP_X + TABLE_LABEL_WIDTH + AFTER_TABLE_SHIFT, MAP_HEIGHT + 100, 416, 90);
 		contentPane.add(scrollPane_2);
 		
+		/*
 		//total demand panel (before)
 		JPanel panel_3 = new JPanel();
 		panel_3.setLayout(null);
@@ -777,6 +788,7 @@ public class RoadExpansionDashboard extends JFrame {
 		JLabel label_3 = new JLabel(icon);
 		label_3.setBounds(10, 30, 70, 45);
 		panel_3.add(label_3);
+		*/
 	
 	}
 	
@@ -787,7 +799,7 @@ public class RoadExpansionDashboard extends JFrame {
 		lblAfterPolicyIntervention.setLabelFor(table_2);
 		lblAfterPolicyIntervention.setForeground(Color.BLACK);
 		lblAfterPolicyIntervention.setFont(new Font("Lato", Font.BOLD, 18));
-		lblAfterPolicyIntervention.setBounds(AFTER_MAP_X, MAP_HEIGHT + 55, 392, 30);
+		lblAfterPolicyIntervention.setBounds(AFTER_MAP_X + AFTER_TABLE_SHIFT, MAP_HEIGHT + 55, 392, 30);
 		contentPane.add(lblAfterPolicyIntervention);
 		
 		table_2 = new JTable() {
@@ -878,7 +890,7 @@ public class RoadExpansionDashboard extends JFrame {
 
 
 		scrollPane_3 = new JScrollPane();
-		scrollPane_3.setBounds(AFTER_MAP_X + TABLE_LABEL_WIDTH, scrollPane_2.getY() + scrollPane_2.getHeight() + TABLE_ROW_HEIGHT, 416, 90);
+		scrollPane_3.setBounds(AFTER_MAP_X + TABLE_LABEL_WIDTH + AFTER_TABLE_SHIFT, scrollPane_2.getY() + scrollPane_2.getHeight() + TABLE_ROW_HEIGHT, 416, 90);
 		contentPane.add(scrollPane_3);
 		table_3 = new JTable() {
 			@Override
@@ -951,6 +963,7 @@ public class RoadExpansionDashboard extends JFrame {
 			}
 		});
 		
+		/*
 		//total demand panel (after)
 		JPanel panel = new JPanel();
 		panel.setBorder(TABLE_BORDER);
@@ -994,11 +1007,12 @@ public class RoadExpansionDashboard extends JFrame {
 		lblNewLabel_1.setBounds(10, 30, 70, 45);
 		panel.add(lblNewLabel_1);
 		
-		JPanel tableChangeLegend = new TableChangeLegend();
-		tableChangeLegend.setBounds(scrollPane_3.getX() + scrollPane_3.getWidth() + 7, scrollPane_3.getY() + 10, 165, 77);
-		contentPane.add(tableChangeLegend);
+		*/
+		
+		JPanel tableChangeLegendHorizontal = new TableChangeLegendHorizontal();
+		tableChangeLegendHorizontal.setBounds(scrollPane_3.getX() - 19, scrollPane_3.getY() + scrollPane_3.getHeight() + TABLE_ROW_HEIGHT, 450, 29);
+		contentPane.add(tableChangeLegendHorizontal);
 	}
-	
 	
 	private void createLabelsLeftOfTables () {
 		
@@ -1015,7 +1029,7 @@ public class RoadExpansionDashboard extends JFrame {
 		lblTrips_1.setHorizontalAlignment(SwingConstants.CENTER);
 		lblTrips_1.setFont(new Font("Lato", Font.BOLD, 13));
 		lblTrips_1.setForeground(LandingGUI.DARK_GRAY);
-		lblTrips_1.setBounds(AFTER_MAP_X, MAP_HEIGHT + 100, TABLE_LABEL_WIDTH, 40);
+		lblTrips_1.setBounds(AFTER_MAP_X + AFTER_TABLE_SHIFT, MAP_HEIGHT + 100, TABLE_LABEL_WIDTH, 40);
 		contentPane.add(lblTrips_1);
 		
 		File imgCars = new File("./src/test/resources/images/cars.png");
@@ -1039,7 +1053,7 @@ public class RoadExpansionDashboard extends JFrame {
 		JLabel lblCars_1 = new JLabel(iconCars);
 		lblCars_1.setVerticalAlignment(SwingConstants.TOP);
 		lblCars_1.setHorizontalAlignment(SwingConstants.CENTER);
-		lblCars_1.setBounds(AFTER_MAP_X, MAP_HEIGHT + 100, TABLE_LABEL_WIDTH, 100);
+		lblCars_1.setBounds(AFTER_MAP_X + AFTER_TABLE_SHIFT, MAP_HEIGHT + 100, TABLE_LABEL_WIDTH, 100);
 		contentPane.add(lblCars_1);
 		
 		JLabel lblTime = new JLabel("<html><center>Travel Time<br>[<i>min</i>]</html>");
@@ -1053,7 +1067,7 @@ public class RoadExpansionDashboard extends JFrame {
 		lblTime_1.setVerticalAlignment(SwingConstants.TOP);
 		lblTime_1.setHorizontalAlignment(SwingConstants.CENTER);
 		lblTime_1.setFont(new Font("Lato", Font.BOLD, 13));
-		lblTime_1.setBounds(AFTER_MAP_X, scrollPane_3.getY(), TABLE_LABEL_WIDTH, 40);
+		lblTime_1.setBounds(AFTER_MAP_X + AFTER_TABLE_SHIFT, scrollPane_3.getY(), TABLE_LABEL_WIDTH, 40);
 		contentPane.add(lblTime_1);
 		
 		File imgClock = new File("./src/test/resources/images/clock.png");
@@ -1077,7 +1091,7 @@ public class RoadExpansionDashboard extends JFrame {
 		JLabel lblClock_1 = new JLabel(iconClock);
 		lblClock_1.setVerticalAlignment(SwingConstants.TOP);
 		lblClock_1.setHorizontalAlignment(SwingConstants.CENTER);
-		lblClock_1.setBounds(AFTER_MAP_X, scrollPane_3.getY() + 20, TABLE_LABEL_WIDTH, 100);
+		lblClock_1.setBounds(AFTER_MAP_X + AFTER_TABLE_SHIFT, scrollPane_3.getY() + 20, TABLE_LABEL_WIDTH, 100);
 		contentPane.add(lblClock_1);
 		
 	}
@@ -1103,7 +1117,7 @@ public class RoadExpansionDashboard extends JFrame {
 
 		roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
-		RoadNetworkAssignment rnaBefore = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, props);
+		rnaBefore = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, props);
 
 		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
 		zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
@@ -1203,42 +1217,61 @@ public class RoadExpansionDashboard extends JFrame {
 		for (int j = 0; j < columns; j++) labels2[j+1] = zoning.getLADToName().get(sm.getDestinations().get(j));
 
 		table_1.setModel(new DefaultTableModel(data2, labels2));	
-		
-		//update text cell with total demand
-		totalDemandBefore.setText(String.valueOf(rnaBefore.getTripList().size()));
-	
 	}
 	
 	
 	private void createBarChart() {
 		//BAR CHART
-		DefaultCategoryDataset barDataset = new DefaultCategoryDataset();
-		barDataset.addValue(70050.0, "No intervention", "Number of Trips");
-		barDataset.addValue(70100.0, "Road expansion", "Number of Trips");
-		//barDataset.addValue(70150.0, "Road development", "Number of Trips");
-		JFreeChart chart = ChartFactory.createBarChart("Impact of New Infrastructure on Demand", "", "", barDataset, PlotOrientation.VERTICAL, true, true, false);
+		barDataset = new DefaultCategoryDataset();
+
+		//		barDataset.addValue(100.0, "No intervention", "Number of Trips");
+		//		barDataset.addValue(80.0, "Congestion charging", "Number of Trips");
+		//		barDataset.addValue(60.0, "No intervention", "Number of Trips Through the Zone");
+		//		barDataset.addValue(50.0, "Congestion charging", "Number of Trips Through the Zone");
+		//		barDataset.addValue(45.0, "No intervention", "Number of Trips Outside the Zone");
+		//		barDataset.addValue(40.0, "Congestion charging", "Number of Trips Outside the Zone");
+
+		barDataset.addValue(100.0, "No intervention", "Total Trips");
+		barDataset.addValue(90.0, "Congestion charging", "Total Trips");
+		barDataset.addValue(55.0, "No intervention", "Through Zone");
+		barDataset.addValue(40.0, "Congestion charging", "Through Zone");
+		barDataset.addValue(45.0, "No intervention", "Outside Zone");
+		barDataset.addValue(50.0, "Congestion charging", "Outside Zone");
+
+		//JFreeChart chart = ChartFactory.createBarChart("Impact of Congestion Charging on Demand", "", "", barDataset, PlotOrientation.VERTICAL, true, true, false);
+		JFreeChart chart = ChartFactory.createBarChart("", "", "", barDataset, PlotOrientation.VERTICAL, true, true, false);
+
 		chart.setRenderingHints( new RenderingHints( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON ) );
 		chart.getRenderingHints().put(JFreeChart.KEY_SUPPRESS_SHADOW_GENERATION, Boolean.TRUE);
 		chart.setAntiAlias(true);
-		chart.setTextAntiAlias(true);
+		
 		ChartPanel chartPanel = new ChartPanel(chart);
-		chartPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
-		chartPanel.setBackground(Color.WHITE);
+
+		chartPanel.setBorder(BorderFactory.createEmptyBorder(3, 3, 3, 3));
+		//chartPanel.setBackground(Color.WHITE);
+		chartPanel.setBackground(LandingGUI.LIGHT_GRAY);
+		
 		//chartPanel.setPreferredSize( new java.awt.Dimension( 560 , 367 ) );
+
 		CategoryPlot plot = (CategoryPlot) chart.getPlot();
 		//plot.setBackgroundPaint(Color.black);
 		//plot.setBackgroundAlpha(0.1f);
-		plot.setBackgroundPaint(Color.WHITE);
-		plot.setOutlinePaint(Color.WHITE);
-		plot.setRangeGridlinePaint(Color.DARK_GRAY);
-		chart.getTitle().setPaint(Color.DARK_GRAY);
-		Font titleFont = new Font("Calibri Light", Font.BOLD, 16); 
+		plot.setBackgroundPaint(LandingGUI.LIGHT_GRAY);
+		plot.setOutlinePaint(LandingGUI.LIGHT_GRAY);
+		plot.setRangeGridlinePaint(LandingGUI.DARK_GRAY);
+
+		chart.getTitle().setPaint(LandingGUI.DARK_GRAY);
+		Font titleFont = new Font("Lato", Font.BOLD, 16); 
 		chart.getTitle().setFont(titleFont);
+		
+		chartPanel.setFont(titleFont);
+
 		BarRenderer barRenderer = (BarRenderer)plot.getRenderer();
 		barRenderer.setBarPainter(new StandardBarPainter()); //to remove gradient bar painter
 		barRenderer.setDrawBarOutline(false);
 		barRenderer.setShadowVisible(false);
 		//barRenderer.setMaximumBarWidth(0.30);
+
 		//get brewer palette
 		ColorBrewer brewer = ColorBrewer.instance();
 		//String paletteName = "BrBG";
@@ -1253,15 +1286,51 @@ public class RoadExpansionDashboard extends JFrame {
 		Color[] colors = palette.getColors(numberOfRowKeys);
 		for (int i = 0; i < numberOfRowKeys; i++) {
 			barRenderer.setSeriesPaint(i, colors[i]);
-			//barRenderer.setSeriesFillPaint(i, colors[i]);
+			barRenderer.setSeriesItemLabelFont(i, TABLE_FONT);
+			barRenderer.setLegendTextFont(i, TABLE_FONT);
 		}
-		chartPanel.setPreferredSize(new Dimension(421, 262)); //size according to my window
+
+		barRenderer.setDefaultItemLabelFont(TABLE_FONT);
+		barRenderer.setDefaultLegendTextFont(TABLE_FONT);
+		
+		chartPanel.setPreferredSize(new Dimension(400, 175)); //size according to my window
 		chartPanel.setMouseWheelEnabled(true);
 		chartPanel.setMouseZoomable(true);
+
 		JPanel panel = new JPanel();
-		panel.setBounds(831, 772, 421, 262);
+		panel.setBounds(scrollPane.getX() + scrollPane.getWidth() + 20, scrollPane.getY() + 20, 400, 180);
 		panel.add(chartPanel);
 		contentPane.add(panel);
+		
+		//Demand label
+		
+		JPanel panelDemand = new JPanel();
+		//panelDemand.setBorder(TABLE_BORDER);
+		panelDemand.setBackground(LandingGUI.LIGHT_GRAY);
+		panelDemand.setBounds(scrollPane.getX() + scrollPane.getWidth() + 195, scrollPane.getY() - 50, 100, 130);
+		contentPane.add(panelDemand);
+		panelDemand.setLayout(null);
+		
+		JLabel lblDemand = new JLabel("Demand");
+		lblDemand.setFont(new Font("Lato", Font.BOLD, 14));
+		lblDemand.setBounds(15, 11, 66, 14);
+		panelDemand.add(lblDemand);
+		
+		File img = new File("./src/test/resources/images/car.png");
+		BufferedImage bufferedImage = null;
+		try {
+			bufferedImage = ImageIO.read(img);
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		BufferedImage subImage = bufferedImage.getSubimage(10, 20, bufferedImage.getWidth() - 10, bufferedImage.getHeight() - 20); //trimming
+		Image newimg = subImage.getScaledInstance(65, 65, java.awt.Image.SCALE_SMOOTH); //scaling
+		ImageIcon icon = new ImageIcon(newimg);
+		
+		JLabel lblNewLabel_1 = new JLabel(icon);
+		lblNewLabel_1.setBounds(7, 15, 65, 65);
+		panelDemand.add(lblNewLabel_1);
+
 	}
-	
 }

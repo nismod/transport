@@ -163,7 +163,7 @@ public class RoadDevelopmentDashboard extends JFrame {
 	public RoadDevelopmentDashboard() throws IOException {
 		//setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		setTitle("Dashboard Road Expansion");
+		setTitle("NISMOD v2 Showcase Demo");
 		setIconImage(Toolkit.getDefaultToolkit().getImage("./src/test/resources/images/NISMOD-LP.jpg"));
 		setBounds(100, 100, 939, 352);
 		contentPane = new JPanel();
@@ -1270,8 +1270,7 @@ public class RoadDevelopmentDashboard extends JFrame {
 		//BAR CHART
 		DefaultCategoryDataset barDataset = new DefaultCategoryDataset();
 		barDataset.addValue(70050.0, "No intervention", "Number of Trips");
-		barDataset.addValue(70100.0, "Road expansion", "Number of Trips");
-		//barDataset.addValue(70150.0, "Road development", "Number of Trips");
+		barDataset.addValue(70150.0, "Road development", "Number of Trips");
 		JFreeChart chart = ChartFactory.createBarChart("Impact of New Infrastructure on Demand", "", "", barDataset, PlotOrientation.VERTICAL, true, true, false);
 		chart.setRenderingHints( new RenderingHints( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON ) );
 		chart.getRenderingHints().put(JFreeChart.KEY_SUPPRESS_SHADOW_GENERATION, Boolean.TRUE);
