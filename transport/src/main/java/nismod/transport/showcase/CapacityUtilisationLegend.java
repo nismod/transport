@@ -25,6 +25,7 @@ public class CapacityUtilisationLegend extends JPanel {
 	private JTextField textField_8;
 	private JTextField textField_9;
 	private JTextField textField_10;
+	private JTextField textField_11;
 
 	/**
 	 * Create the panel.
@@ -75,7 +76,7 @@ public class CapacityUtilisationLegend extends JPanel {
 		
 		textField_4 = new JTextField();
 		textField_4.setText("High");
-		textField_4.setColumns(7);
+		textField_4.setColumns(4);
 		textField_4.setBorder(null);
 		textField_4.setFont(LEGEND_FONT);
 		textField_4.setForeground(LandingGUI.DARK_GRAY);
@@ -89,7 +90,7 @@ public class CapacityUtilisationLegend extends JPanel {
 		
 		textField_6 = new JTextField();
 		textField_6.setText("Medium");
-		textField_6.setColumns(7);
+		textField_6.setColumns(6);
 		textField_6.setBorder(null);
 		textField_6.setFont(LEGEND_FONT);
 		textField_6.setForeground(LandingGUI.DARK_GRAY);
@@ -103,7 +104,7 @@ public class CapacityUtilisationLegend extends JPanel {
 		
 		textField_8 = new JTextField();
 		textField_8.setText("Low");
-		textField_8.setColumns(7);
+		textField_8.setColumns(4);
 		textField_8.setBorder(null);
 		textField_8.setFont(LEGEND_FONT);
 		textField_8.setForeground(LandingGUI.DARK_GRAY);
@@ -124,6 +125,12 @@ public class CapacityUtilisationLegend extends JPanel {
 		textField_10.setForeground(LandingGUI.DARK_GRAY);
 
 		this.add(textField_10);
-	
+		
+		textField_11 = new JTextField(); 
+		textField_11.setText(""); //add some space at the end
+		textField_11.setColumns(7);
+		textField_11.setBorder(null);
+
+		this.add(textField_11);
 	}
 }
