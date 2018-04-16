@@ -2022,12 +2022,17 @@ public class RoadNetworkAssignment {
 					double flow = linkVolumeInPCU / numberOfLanes.get(edge.getID());
 					double speed = 0.0;
 					if (flow < 1398) speed = ((69.96 - 71.95) / 1398 * flow + 71.95) * 1.609344; //[kph]
-					else 			 speed = ((34.55 - 69.96) / (2330 - 1398) * (flow - 1398) + 69.96) * 1.609344; //[kph]
-
-					if (speed <= 0.0) {
-						System.err.println("Speed is not positive!");
-						speed = 34.55; //constraint speed
+					else if (flow < 2330) speed = ((34.55 - 69.96) / (2330 - 1398) * (flow - 1398) + 69.96) * 1.609344; //[kph]
+					else {
+						//flow higher than maximum (user over-capacity formula from WebTAG)
+						double E = flow / 2330;
+						double B = 0.5;
+						double speedC = 34.55;
+						double tc = roadLength / speedC; //h
+						speed = roadLength / (tc + B * (E - 1.0));
+						//System.out.println("Overcapacity speed:  " + speed);
 					}
+
 					congestedTravelTime = roadLength / speed * 60; //[min]
 
 				} else if (roadNumber.charAt(0) == 'A') {//A-road
@@ -2035,11 +2040,15 @@ public class RoadNetworkAssignment {
 					double flow = linkVolumeInPCU / numberOfLanes.get(edge.getID());
 					double speed = 0.0;
 					if (flow < 1251) speed = ((50.14 - 56.05) / 1251 * flow + 56.05) * 1.609344; //[kph]
-					else 			 speed = ((27.22 - 50.14) / (1740 - 1251) * (flow - 1251) + 50.14) * 1.609344; //[kph]
-
-					if (speed <= 0.0) {
-						System.err.println("Speed is not positive!");
-						speed = 27.22; //constraint speed
+					else if (flow < 1740) speed = ((27.22 - 50.14) / (1740 - 1251) * (flow - 1251) + 50.14) * 1.609344; //[kph]
+					else {
+						//flow higher than maximum (user over-capacity formula from WebTAG)
+						double E = flow / 1740;
+						double B = 0.5;
+						double speedC = 27.22;
+						double tc = roadLength / speedC; //h
+						speed = roadLength / (tc + B * (E - 1.0));
+						//System.out.println("Overcapacity speed:  " + speed);
 					}
 					congestedTravelTime = roadLength / speed * 60;
 
@@ -2096,11 +2105,15 @@ public class RoadNetworkAssignment {
 					double flow = linkVolumeInPCU / numberOfLanes.get(edge.getID());
 					double speed = 0.0;
 					if (flow < 1398) speed = ((69.96 - 71.95) / 1398 * flow + 71.95) * 1.609344; //[kph]
-					else 			 speed = ((34.55 - 69.96) / (2330 - 1398) * (flow - 1398) + 69.96) * 1.609344; //[kph]
-
-					if (speed <= 0.0) {
-						System.err.println("Speed is not positive!");
-						speed = 34.55; //constraint speed
+					else if (flow < 2330) speed = ((34.55 - 69.96) / (2330 - 1398) * (flow - 1398) + 69.96) * 1.609344; //[kph]
+					else {
+						//flow higher than maximum (user over-capacity formula from WebTAG)
+						double E = flow / 2330;
+						double B = 0.5;
+						double speedC = 34.55;
+						double tc = roadLength / speedC; //h
+						speed = roadLength / (tc + B * (E - 1.0));
+						//System.out.println("Overcapacity speed:  " + speed);
 					}
 					congestedTravelTime = roadLength / speed * 60; //[min]
 
@@ -2109,11 +2122,15 @@ public class RoadNetworkAssignment {
 					double flow = linkVolumeInPCU / numberOfLanes.get(edge.getID());
 					double speed = 0.0;
 					if (flow < 1251) speed = ((50.14 - 56.05) / 1251 * flow + 56.05) * 1.609344; //[kph]
-					else 			 speed = ((27.22 - 50.14) / (1740 - 1251) * (flow - 1251) + 50.14) * 1.609344; //[kph]
-
-					if (speed <= 0.0) {
-						System.err.println("Speed is not positive!");
-						speed = 27.22; //constraint speed
+					else if (flow < 1740) speed = ((27.22 - 50.14) / (1740 - 1251) * (flow - 1251) + 50.14) * 1.609344; //[kph]
+					else {
+						//flow higher than maximum (user over-capacity formula from WebTAG)
+						double E = flow / 1740;
+						double B = 0.15;
+						double speedC = 27.22;
+						double tc = roadLength / speedC; //h
+						speed = roadLength / (tc + B * (E - 1.0));
+						//System.out.println("Overcapacity speed:  " + speed);
 					}
 					congestedTravelTime = roadLength / speed * 60;
 

@@ -559,7 +559,7 @@ public class RoadNetwork {
 		 * 
 		 * Each data store has different limitations so check the resulting SimpleFeatureType.
 		 */
-		System.out.println("SHAPE:"+SHAPE_TYPE);
+		//System.out.println("SHAPE:"+SHAPE_TYPE);
 
 		if (featureSource instanceof SimpleFeatureStore) {
 			SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;

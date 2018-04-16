@@ -197,7 +197,7 @@ public class NodeMatrix {
 			double value = this.getValue(origin, destination);
 			if (origin.intValue() != destination.intValue()) sum += value;
 		}
-		System.out.println("sum = " + sum);
+		//System.out.println("sum = " + sum);
 		for (MultiKey mk: this.getKeySet()) {
 			Integer origin = (Integer) mk.getKey(0);
 			Integer destination = (Integer) mk.getKey(1);
