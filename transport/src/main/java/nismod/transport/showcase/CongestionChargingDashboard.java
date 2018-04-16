@@ -142,8 +142,7 @@ public class CongestionChargingDashboard extends JFrame {
 	public static final Border RUN_BUTTON_BORDER = BorderFactory.createLineBorder(LandingGUI.DARK_GRAY, 5);
 	public static final Border EMPTY_BORDER = BorderFactory.createEmptyBorder();
 	
-	public static final int OPACITY = 90; //opacity for table cell shading (increase, decrease)
-
+	public static final double MATRIX_SCALING_FACTOR = 3.0;
 
 	/**
 	 * Launch the application.
@@ -528,6 +527,10 @@ public class CongestionChargingDashboard extends JFrame {
 			}
 		});
 		contentPane.add(btnNewButton);
+			
+		//set controls to represent the intervention
+		slider.setValue(15);
+		slider_1.setValue(2);
 		
 		//run the default intervention
 		btnNewButton.doClick();
@@ -577,7 +580,7 @@ public class CongestionChargingDashboard extends JFrame {
 		html.append("<ul>");
 		html.append("<li><font size=+1>Lower road capacity utilisation within the policy area.</font>");
 		html.append("<li><font size=+1>Decrease in vehicle flows due to increased travel costs.</font>");
-		html.append("<li><font size=+1>Travel times might increase due to vehicles avoiding the zone, but could also decrease due to lower total demand.</font>");
+		html.append("<li><font size=+1>Decrease in travel times due to lower total demand; possible increase due to zone avoidance.</font>");
 		html.append("</ul></html>");
 		
 		JLabel lblNewLabel_4 = new JLabel(html.toString());
@@ -807,12 +810,7 @@ public class CongestionChargingDashboard extends JFrame {
 			public Component prepareRenderer(TableCellRenderer renderer, int rowIndex, int columnIndex) {
 				JComponent component = (JComponent) super.prepareRenderer(renderer, rowIndex, columnIndex);  
 				component.setOpaque(true);
-				
-				Color inc = LandingGUI.PASTEL_BLUE;
-				Color increase = new Color (inc.getRed(), inc.getGreen(), inc.getBlue(), OPACITY);
-				Color dec = LandingGUI.PASTEL_YELLOW;
-				Color decrease = new Color (dec.getRed(), dec.getGreen(), dec.getBlue(), OPACITY);
-
+			
 				if (columnIndex == 0)  { 
 					//component.setBackground(new Color(0, 0, 0, 20));
 					component.setBackground(LandingGUI.MID_GRAY);
@@ -826,11 +824,13 @@ public class CongestionChargingDashboard extends JFrame {
 					else component.setBackground(Color.WHITE);
 					*/
 					double absolutePercentChange = Math.abs((1.0 * newValue / oldValue - 1.0) * 100);
-					int opacity = (int) Math.round(absolutePercentChange) * 20; //amplify the change 20 times, so 1% becomes 20% opacity 
-					if (opacity > 100) opacity = 100;
+					int opacity = (int) Math.round(absolutePercentChange) * 5; //amplify the change 
+					if (opacity > 255) opacity = 255;
 					
-					increase = new Color (inc.getRed(), inc.getGreen(), inc.getBlue(), opacity);
-					decrease = new Color (dec.getRed(), dec.getGreen(), dec.getBlue(), opacity);
+					Color inc = LandingGUI.PASTEL_BLUE;
+					Color dec = LandingGUI.PASTEL_YELLOW;
+					Color increase = new Color (inc.getRed(), inc.getGreen(), inc.getBlue(), opacity);
+					Color decrease = new Color (dec.getRed(), dec.getGreen(), dec.getBlue(), opacity);
 					
 					if (newValue > oldValue) component.setBackground(increase);
 					else if (newValue < oldValue) component.setBackground(decrease);
@@ -896,11 +896,6 @@ public class CongestionChargingDashboard extends JFrame {
 			@Override
 			public Component prepareRenderer(TableCellRenderer renderer, int rowIndex, int columnIndex) {
 				JComponent component = (JComponent) super.prepareRenderer(renderer, rowIndex, columnIndex);  
-
-				Color inc = LandingGUI.PASTEL_BLUE;
-				Color increase = new Color (inc.getRed(), inc.getGreen(), inc.getBlue(), OPACITY);
-				Color dec = LandingGUI.PASTEL_YELLOW;
-				Color decrease = new Color (dec.getRed(), dec.getGreen(), dec.getBlue(), OPACITY);
 				
 				if (columnIndex == 0)  { 
 					//component.setBackground(new Color(0, 0, 0, 20));
@@ -910,11 +905,13 @@ public class CongestionChargingDashboard extends JFrame {
 					double oldValue = Double.parseDouble(table_1.getValueAt(rowIndex, columnIndex).toString());
 					
 					double absolutePercentChange = Math.abs((1.0 * newValue / oldValue - 1.0) * 100);
-					int opacity = (int) Math.round(absolutePercentChange) * 20; //amplify the change 20 times, so 1% becomes 20% opacity 
-					if (opacity > 100) opacity = 100;
+					int opacity = (int) Math.round(absolutePercentChange) * 5; //amplify the change 
+					if (opacity > 255) opacity = 255;
 					
-					increase = new Color (inc.getRed(), inc.getGreen(), inc.getBlue(), opacity);
-					decrease = new Color (dec.getRed(), dec.getGreen(), dec.getBlue(), opacity);
+					Color inc = LandingGUI.PASTEL_BLUE;
+					Color dec = LandingGUI.PASTEL_YELLOW;
+					Color increase = new Color (inc.getRed(), inc.getGreen(), inc.getBlue(), opacity);
+					Color decrease = new Color (dec.getRed(), dec.getGreen(), dec.getBlue(), opacity);
 					
 					if (newValue > oldValue) component.setBackground(increase);
 					else if (newValue < oldValue) component.setBackground(decrease);
@@ -1114,6 +1111,7 @@ public class CongestionChargingDashboard extends JFrame {
 		final URL AADFurl = new URL(props.getProperty("AADFurl"));
 
 		final String baseYearODMatrixFile = props.getProperty("baseYearODMatrixFile");
+		final String passengerRoutesFile = props.getProperty("passengerRoutesFile");
 
 		roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
@@ -1123,14 +1121,20 @@ public class CongestionChargingDashboard extends JFrame {
 		zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
 
 		odm = new ODMatrix(baseYearODMatrixFile);
+		odm.scaleMatrixValue(MATRIX_SCALING_FACTOR);
 		rsg = new RouteSetGenerator(roadNetwork);
+		
+		rsg.readRoutesBinaryWithoutValidityCheck(passengerRoutesFile);
+		//rsg.generateRouteSetForODMatrix(odm, 5);
+
+		rnaBefore.assignPassengerFlowsRouteChoice(odm, rsg, props);
 
 		rnaBefore.assignPassengerFlows(odm, rsg);
 		rnaBefore.updateLinkTravelTimes(0.9);
 
 		rnaBefore.resetLinkVolumes();
 		rnaBefore.resetTripStorages();
-		rnaBefore.assignPassengerFlows(odm, rsg);
+		rnaBefore.assignPassengerFlowsRouteChoice(odm, rsg, props);
 		rnaBefore.updateLinkTravelTimes(0.9);
 
 		rnaBefore.updateLinkVolumeInPCU();

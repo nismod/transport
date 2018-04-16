@@ -60,7 +60,10 @@ public class RoadExpansion extends Intervention {
 			return;
 		}
 		int number = Integer.parseInt(this.props.getProperty("number"));
-		Integer expandedEdgeID = this.getExpandedEdgeID(rn); 
+		Integer expandedEdgeID = this.getExpandedEdgeID(rn);
+		
+		//System.out.println("Edge to expand: " + expandedEdgeID);
+		
 		int numberOfLanes = rn.getNumberOfLanes().get(expandedEdgeID);
 		rn.getNumberOfLanes().put(expandedEdgeID, numberOfLanes + number);
 		
@@ -87,6 +90,9 @@ public class RoadExpansion extends Intervention {
 		}
 		int number = Integer.parseInt(this.props.getProperty("number"));
 		Integer expandedEdgeID = this.getExpandedEdgeID(rn); 
+		
+		//System.out.println("Uninstalling road expansion for edge: " + expandedEdgeID);
+		
 		int numberOfLanes = rn.getNumberOfLanes().get(expandedEdgeID);
 		rn.getNumberOfLanes().put(expandedEdgeID, numberOfLanes - number);
 		
@@ -118,11 +124,11 @@ public class RoadExpansion extends Intervention {
 		}
 		
 		DirectedEdge edgeToExpand = null;
-		List<DirectedEdge> listOfEdges = nodeA.getEdges(nodeB);
+		List<DirectedEdge> listOfEdges = nodeA.getOutEdges(nodeB);
 		for (DirectedEdge edge: listOfEdges) {
 			SimpleFeature sf = (SimpleFeature) edge.getObject(); 
 			long CPNumber = (long) sf.getAttribute("CP");
-			if (CPNumber == CP) edgeToExpand = edge;
+			if (CPNumber == CP && edge.getNodeA().getID() == nodeA.getID() && edge.getNodeB().getID() == nodeB.getID()) edgeToExpand = edge;
 		}
 		if (edgeToExpand == null) {
 			System.err.println("Could not find the edge for which road expansion should be installed!");

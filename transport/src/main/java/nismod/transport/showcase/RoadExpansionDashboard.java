@@ -73,6 +73,7 @@ import nismod.transport.demand.SkimMatrix;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.network.road.RouteSetGenerator;
+import nismod.transport.network.road.Trip;
 import nismod.transport.utility.ConfigReader;
 import nismod.transport.zone.Zoning;
 import javax.swing.JSeparator;
@@ -128,8 +129,7 @@ public class RoadExpansionDashboard extends JFrame {
 	public static final Border RUN_BUTTON_BORDER = BorderFactory.createLineBorder(LandingGUI.DARK_GRAY, 5);
 	public static final Border EMPTY_BORDER = BorderFactory.createEmptyBorder();
 	
-	public static final int OPACITY = 90; //opacity for table cell shading (increase, decrease)
-
+	public static final double MATRIX_SCALING_FACTOR = 3.0;
 
 	/**
 	 * Launch the application.
@@ -360,15 +360,21 @@ public class RoadExpansionDashboard extends JFrame {
 
 				RoadExpansion re2 = null;
 				if (chckbxNewCheckBox.isSelected()) { //if both directions
-
-					edge = (DirectedEdge) nodeB.getEdge(nodeA);
+					
+					//edge = (DirectedEdge) nodeB.getOutEdge(nodeA);
+					roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(edge.getID());
+					
 					sf = (SimpleFeature)edge.getObject();
 					countPoint = (long) sf.getAttribute("CP");
 
-					props2.setProperty("fromNode", Integer.toString(nodeB.getID()));
-					props2.setProperty("toNode", Integer.toString(nodeA.getID()));
-					props2.setProperty("CP", Long.toString(countPoint));
-					re2 = new RoadExpansion(props2);
+					Properties props3 = new Properties();
+					props3.setProperty("startYear", "2016");
+					props3.setProperty("endYear", "2025");
+					props3.setProperty("fromNode", Integer.toString(nodeB.getID()));
+					props3.setProperty("toNode", Integer.toString(nodeA.getID()));
+					props3.setProperty("CP", Long.toString(countPoint));
+					props3.setProperty("number", Integer.toString(lanes));
+					re2 = new RoadExpansion(props3);
 
 					System.out.println("Road expansion intervention: " + re2.toString());
 					//interventions.add(re);
@@ -376,10 +382,21 @@ public class RoadExpansionDashboard extends JFrame {
 				}
 
 				RoadNetworkAssignment rnaAfterExpansion = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, props);
+				rsg.clearRoutes();
 				rnaAfterExpansion.assignPassengerFlows(odm, rsg);
+	//			rnaAfterExpansion.assignPassengerFlowsRouteChoice(odm, rsg, props);
 				rnaAfterExpansion.updateLinkVolumeInPCU();
 				rnaAfterExpansion.updateLinkVolumeInPCUPerTimeOfDay();
-
+				rnaAfterExpansion.updateLinkTravelTimes(0.9);
+		
+				int count = 0;
+				for (Trip t: rnaAfterExpansion.getTripList()) {
+					//System.out.println(t);
+					if (t.getOriginLAD(roadNetwork.getNodeToZone()).equals("E07000086") &&
+						t.getDestinationLAD(roadNetwork.getNodeToZone()).equals("E06000045")) count++;		
+				}
+				System.out.print("Eastleigh to Southampton trips: " + count);
+						
 				//predict change in demand
 				SkimMatrix tsm = rnaAfterExpansion.calculateTimeSkimMatrix();
 				SkimMatrix csm = rnaAfterExpansion.calculateCostSkimMatrix();
@@ -399,8 +416,9 @@ public class RoadExpansionDashboard extends JFrame {
 					e2.printStackTrace();
 				}
 
-
+				System.out.println("Time skim matrix before intervention:");
 				tsmBefore.printMatrixFormatted();
+				System.out.println("Time skim matrix after intervention (first stage):");
 				tsm.printMatrixFormatted();
 
 
@@ -425,9 +443,12 @@ public class RoadExpansionDashboard extends JFrame {
 				rnaAfterExpansion.resetLinkVolumes();
 				rnaAfterExpansion.resetTripStorages();
 
+				rsg.clearRoutes();
 				rnaAfterExpansion.assignPassengerFlows(predictedODM, rsg);
+//				rnaAfterExpansion.assignPassengerFlowsRouteChoice(predictedODM, rsg, props);
 				rnaAfterExpansion.updateLinkVolumeInPCU();
 				rnaAfterExpansion.updateLinkVolumeInPCUPerTimeOfDay();
+				rnaAfterExpansion.updateLinkTravelTimes(1.0);
 				//SkimMatrix sm = rnaAfterExpansion.calculateTimeSkimMatrix();
 
 				HashMap<Integer, Double> capacityAfter = rnaAfterExpansion.calculateDirectionAveragedPeakLinkCapacityUtilisation();
@@ -486,6 +507,9 @@ public class RoadExpansionDashboard extends JFrame {
 
 
 				SkimMatrix sm = rnaAfterExpansion.calculateTimeSkimMatrix();
+				System.out.println("Time skim matrix after demand prediction:");
+				sm.printMatrixFormatted();
+				
 				rows = sm.getOrigins().size();
 				columns = sm.getDestinations().size();
 				Object[][] data2 = new Object[rows][columns + 1];
@@ -570,8 +594,8 @@ public class RoadExpansionDashboard extends JFrame {
 		html.append("<font size=+1><b>What we found:</b></font><br>");
 		html.append("<ul>");
 		html.append("<li><font size=+1>Lower road capacity utilisation.</font>");
-		html.append("<li><font size=+1>Slight decrease in travel times.</font>");
 		html.append("<li><font size=+1>Slight increase in vehicle ﬂows.</font>");
+		html.append("<li><font size=+1>Slight decrease in travel times.</font>");
 		html.append("</ul></html>");
 		
 		JLabel lblNewLabel_4 = new JLabel(html.toString());
@@ -796,11 +820,6 @@ public class RoadExpansionDashboard extends JFrame {
 				JComponent component = (JComponent) super.prepareRenderer(renderer, rowIndex, columnIndex);  
 				component.setOpaque(true);
 				
-				Color inc = LandingGUI.PASTEL_BLUE;
-				Color increase = new Color (inc.getRed(), inc.getGreen(), inc.getBlue(), OPACITY);
-				Color dec = LandingGUI.PASTEL_YELLOW;
-				Color decrease = new Color (dec.getRed(), dec.getGreen(), dec.getBlue(), OPACITY);
-
 				if (columnIndex == 0)  { 
 					//component.setBackground(new Color(0, 0, 0, 20));
 					component.setBackground(LandingGUI.MID_GRAY);
@@ -808,29 +827,18 @@ public class RoadExpansionDashboard extends JFrame {
 					int newValue = Integer.parseInt(getValueAt(rowIndex, columnIndex).toString());
 					int oldValue = Integer.parseInt(table.getValueAt(rowIndex, columnIndex).toString());
 
-					/*
-					if (newValue > oldValue) component.setBackground(increase);
-					else if (newValue < oldValue) component.setBackground(decrease);
-					else component.setBackground(Color.WHITE);
-					*/
 					double absolutePercentChange = Math.abs((1.0 * newValue / oldValue - 1.0) * 100);
-					int opacity = (int) Math.round(absolutePercentChange) * 20; //amplify the change 20 times, so 1% becomes 20% opacity 
-					if (opacity > 100) opacity = 100;
-					
-					increase = new Color (inc.getRed(), inc.getGreen(), inc.getBlue(), opacity);
-					decrease = new Color (dec.getRed(), dec.getGreen(), dec.getBlue(), opacity);
+					int opacity = (int) Math.round(absolutePercentChange) * 5; //amplify the change 
+					if (opacity > 255) opacity = 255;
+				
+					Color inc = LandingGUI.PASTEL_BLUE;
+					Color dec = LandingGUI.PASTEL_YELLOW;
+					Color increase = new Color (inc.getRed(), inc.getGreen(), inc.getBlue(), opacity);
+					Color decrease = new Color (dec.getRed(), dec.getGreen(), dec.getBlue(), opacity);
 					
 					if (newValue > oldValue) component.setBackground(increase);
 					else if (newValue < oldValue) component.setBackground(decrease);
 					else component.setBackground(Color.WHITE);
-
-					/*
-		            	double percentChange = 0.01;
-		               	if (1.0 * newValue / oldValue > (1 + percentChange)) component.setBackground(new Color(255, 0, 0, 50));
-		            	else if (1.0 * newValue / oldValue < (1 - percentChange)) component.setBackground(new Color(0, 255, 0, 50));
-		            	else component.setBackground(Color.WHITE);
-					 */
-
 				}
 				return component;
 			}
@@ -884,12 +892,7 @@ public class RoadExpansionDashboard extends JFrame {
 			@Override
 			public Component prepareRenderer(TableCellRenderer renderer, int rowIndex, int columnIndex) {
 				JComponent component = (JComponent) super.prepareRenderer(renderer, rowIndex, columnIndex);  
-
-				Color inc = LandingGUI.PASTEL_BLUE;
-				Color increase = new Color (inc.getRed(), inc.getGreen(), inc.getBlue(), OPACITY);
-				Color dec = LandingGUI.PASTEL_YELLOW;
-				Color decrease = new Color (dec.getRed(), dec.getGreen(), dec.getBlue(), OPACITY);
-				
+						
 				if (columnIndex == 0)  { 
 					//component.setBackground(new Color(0, 0, 0, 20));
 					component.setBackground(LandingGUI.MID_GRAY);
@@ -898,11 +901,13 @@ public class RoadExpansionDashboard extends JFrame {
 					double oldValue = Double.parseDouble(table_1.getValueAt(rowIndex, columnIndex).toString());
 					
 					double absolutePercentChange = Math.abs((1.0 * newValue / oldValue - 1.0) * 100);
-					int opacity = (int) Math.round(absolutePercentChange) * 20; //amplify the change 20 times, so 1% becomes 20% opacity 
-					if (opacity > 100) opacity = 100;
-					
-					increase = new Color (inc.getRed(), inc.getGreen(), inc.getBlue(), opacity);
-					decrease = new Color (dec.getRed(), dec.getGreen(), dec.getBlue(), opacity);
+					int opacity = (int) Math.round(absolutePercentChange) * 5; //amplify the change 
+					if (opacity > 255) opacity = 255;
+
+					Color inc = LandingGUI.PASTEL_BLUE;
+					Color dec = LandingGUI.PASTEL_YELLOW;
+					Color increase = new Color (inc.getRed(), inc.getGreen(), inc.getBlue(), opacity);
+					Color decrease = new Color (dec.getRed(), dec.getGreen(), dec.getBlue(), opacity);
 					
 					if (newValue > oldValue) component.setBackground(increase);
 					else if (newValue < oldValue) component.setBackground(decrease);
@@ -1100,6 +1105,7 @@ public class RoadExpansionDashboard extends JFrame {
 		final URL AADFurl = new URL(props.getProperty("AADFurl"));
 
 		final String baseYearODMatrixFile = props.getProperty("baseYearODMatrixFile");
+		final String passengerRoutesFile = props.getProperty("passengerRoutesFile");
 
 		roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
@@ -1108,17 +1114,21 @@ public class RoadExpansionDashboard extends JFrame {
 		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
 		zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
 
-		odm = new ODMatrix(baseYearODMatrixFile);
+		odm = new ODMatrix(baseYearODMatrixFile); 
+		odm.scaleMatrixValue(MATRIX_SCALING_FACTOR);
 		rsg = new RouteSetGenerator(roadNetwork);
+		
+		//rsg.readRoutesBinaryWithoutValidityCheck(passengerRoutesFile);
+		//rsg.generateRouteSetForODMatrix(odm, 5);
 
+//		rnaBefore.assignPassengerFlowsRouteChoice(odm, rsg, props);
 		rnaBefore.assignPassengerFlows(odm, rsg);
-		rnaBefore.updateLinkTravelTimes(0.9);
-
-		rnaBefore.resetLinkVolumes();
-		rnaBefore.resetTripStorages();
-		rnaBefore.assignPassengerFlows(odm, rsg);
-		rnaBefore.updateLinkTravelTimes(0.9);
-
+//		rnaBefore.updateLinkTravelTimes(0.9);
+//		rnaBefore.resetLinkVolumes();
+//		rnaBefore.resetTripStorages();
+//		rnaBefore.assignPassengerFlows(odm, rsg);
+//		rnaBefore.assignPassengerFlowsRouteChoice(odm, rsg, props);
+		rnaBefore.updateLinkTravelTimes(1.0);
 		rnaBefore.updateLinkVolumeInPCU();
 		rnaBefore.updateLinkVolumeInPCUPerTimeOfDay();
 

@@ -107,6 +107,7 @@ public class RoadDevelopmentDashboard extends JFrame {
 	private JTextField totalDemandAfter;
 	private JTextField totalDemandBefore;
 	private final ButtonGroup buttonGroup = new ButtonGroup();
+	private JTextField textField;
 	
 	private static final String configFile = "./src/test/config/testConfig.properties";
 	private static RoadNetwork roadNetwork;
@@ -136,8 +137,7 @@ public class RoadDevelopmentDashboard extends JFrame {
 	public static final Border RUN_BUTTON_BORDER = BorderFactory.createLineBorder(LandingGUI.DARK_GRAY, 5);
 	public static final Border EMPTY_BORDER = BorderFactory.createEmptyBorder();
 	
-	public static final int OPACITY = 90; //opacity for table cell shading (increase, decrease)
-	private JTextField textField;
+	public static final double MATRIX_SCALING_FACTOR = 3.0;
 
 
 	/**
@@ -626,8 +626,8 @@ public class RoadDevelopmentDashboard extends JFrame {
 		html.append("<font size=+1><b>What we found:</b></font><br>");
 		html.append("<ul>");
 		html.append("<li><font size=+1>Lower road capacity utilisation in a wider area compared to road expansion.</font>");
-		html.append("<li><font size=+1>Slight decrease in travel times.</font>");
-		html.append("<li><font size=+1>Slight increase in vehicle ﬂows.</font>");
+		html.append("<li><font size=+1>Increase in vehicle ﬂows.</font>");
+		html.append("<li><font size=+1>Decrease in travel times.</font>");
 		html.append("</ul></html>");
 		
 		JLabel lblNewLabel_4 = new JLabel(html.toString());
@@ -852,41 +852,24 @@ public class RoadDevelopmentDashboard extends JFrame {
 				JComponent component = (JComponent) super.prepareRenderer(renderer, rowIndex, columnIndex);  
 				component.setOpaque(true);
 				
-				Color inc = LandingGUI.PASTEL_BLUE;
-				Color increase = new Color (inc.getRed(), inc.getGreen(), inc.getBlue(), OPACITY);
-				Color dec = LandingGUI.PASTEL_YELLOW;
-				Color decrease = new Color (dec.getRed(), dec.getGreen(), dec.getBlue(), OPACITY);
-
 				if (columnIndex == 0)  { 
-					//component.setBackground(new Color(0, 0, 0, 20));
 					component.setBackground(LandingGUI.MID_GRAY);
 				} else {
 					int newValue = Integer.parseInt(getValueAt(rowIndex, columnIndex).toString());
 					int oldValue = Integer.parseInt(table.getValueAt(rowIndex, columnIndex).toString());
 
-					/*
-					if (newValue > oldValue) component.setBackground(increase);
-					else if (newValue < oldValue) component.setBackground(decrease);
-					else component.setBackground(Color.WHITE);
-					*/
-					double absolutePercentChange = Math.abs((1.0 * newValue / oldValue - 1.0) * 100);
-					int opacity = (int) Math.round(absolutePercentChange) * 20; //amplify the change 20 times, so 1% becomes 20% opacity 
-					if (opacity > 100) opacity = 100;
+									double absolutePercentChange = Math.abs((1.0 * newValue / oldValue - 1.0) * 100);
+					int opacity = (int) Math.round(absolutePercentChange) * 5; //amplify the change 
+					if (opacity > 255) opacity = 255;
 					
-					increase = new Color (inc.getRed(), inc.getGreen(), inc.getBlue(), opacity);
-					decrease = new Color (dec.getRed(), dec.getGreen(), dec.getBlue(), opacity);
+					Color inc = LandingGUI.PASTEL_BLUE;
+					Color dec = LandingGUI.PASTEL_YELLOW;
+					Color increase = new Color (inc.getRed(), inc.getGreen(), inc.getBlue(), opacity);
+					Color decrease = new Color (dec.getRed(), dec.getGreen(), dec.getBlue(), opacity);
 					
 					if (newValue > oldValue) component.setBackground(increase);
 					else if (newValue < oldValue) component.setBackground(decrease);
 					else component.setBackground(Color.WHITE);
-
-					/*
-		            	double percentChange = 0.01;
-		               	if (1.0 * newValue / oldValue > (1 + percentChange)) component.setBackground(new Color(255, 0, 0, 50));
-		            	else if (1.0 * newValue / oldValue < (1 - percentChange)) component.setBackground(new Color(0, 255, 0, 50));
-		            	else component.setBackground(Color.WHITE);
-					 */
-
 				}
 				return component;
 			}
@@ -940,12 +923,7 @@ public class RoadDevelopmentDashboard extends JFrame {
 			@Override
 			public Component prepareRenderer(TableCellRenderer renderer, int rowIndex, int columnIndex) {
 				JComponent component = (JComponent) super.prepareRenderer(renderer, rowIndex, columnIndex);  
-
-				Color inc = LandingGUI.PASTEL_BLUE;
-				Color increase = new Color (inc.getRed(), inc.getGreen(), inc.getBlue(), OPACITY);
-				Color dec = LandingGUI.PASTEL_YELLOW;
-				Color decrease = new Color (dec.getRed(), dec.getGreen(), dec.getBlue(), OPACITY);
-				
+			
 				if (columnIndex == 0)  { 
 					//component.setBackground(new Color(0, 0, 0, 20));
 					component.setBackground(LandingGUI.MID_GRAY);
@@ -954,11 +932,13 @@ public class RoadDevelopmentDashboard extends JFrame {
 					double oldValue = Double.parseDouble(table_1.getValueAt(rowIndex, columnIndex).toString());
 					
 					double absolutePercentChange = Math.abs((1.0 * newValue / oldValue - 1.0) * 100);
-					int opacity = (int) Math.round(absolutePercentChange) * 20; //amplify the change 20 times, so 1% becomes 20% opacity 
-					if (opacity > 100) opacity = 100;
+					int opacity = (int) Math.round(absolutePercentChange) * 5; // //amplify the change
+					if (opacity > 255) opacity = 255;
 					
-					increase = new Color (inc.getRed(), inc.getGreen(), inc.getBlue(), opacity);
-					decrease = new Color (dec.getRed(), dec.getGreen(), dec.getBlue(), opacity);
+					Color inc = LandingGUI.PASTEL_BLUE;
+					Color dec = LandingGUI.PASTEL_YELLOW;
+					Color increase = new Color (inc.getRed(), inc.getGreen(), inc.getBlue(), opacity);
+					Color decrease = new Color (dec.getRed(), dec.getGreen(), dec.getBlue(), opacity);
 					
 					if (newValue > oldValue) component.setBackground(increase);
 					else if (newValue < oldValue) component.setBackground(decrease);
@@ -1164,7 +1144,8 @@ public class RoadDevelopmentDashboard extends JFrame {
 		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
 		zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
 
-		odm = new ODMatrix(baseYearODMatrixFile);
+		odm = new ODMatrix(baseYearODMatrixFile); 
+		odm.scaleMatrixValue(MATRIX_SCALING_FACTOR);
 		rsg = new RouteSetGenerator(roadNetwork);
 
 		rnaBefore.assignPassengerFlows(odm, rsg);
