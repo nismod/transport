@@ -140,6 +140,7 @@ public class RoadExpansionDashboard extends JFrame {
 	
 	public static final double MATRIX_SCALING_FACTOR = 3.0; //to multiply OD matrix
 	public static final double OPACITY_FACTOR = 10.0; //to multiply opacity for table cells (to emphasise the change)
+	public static boolean FLAG_EXPAND_MORE_LINKS = false;
 
 	/**
 	 * Launch the application.
@@ -579,9 +580,11 @@ public class RoadExpansionDashboard extends JFrame {
 				//update text cell with total demand
 				totalDemandAfter.setText(String.valueOf(rnaAfterExpansion.getTripList().size()));
 				
-				re.uninstall(roadNetwork);
-				if (re2 != null) re2.uninstall(roadNetwork);
-
+				if (FLAG_EXPAND_MORE_LINKS == false) {
+					re.uninstall(roadNetwork);
+					if (re2 != null) re2.uninstall(roadNetwork);
+				}
+				
 				//pack();
 			}
 		});
@@ -640,14 +643,15 @@ public class RoadExpansionDashboard extends JFrame {
 		html.append("<font size=+1>What happens when we increase road capacity by expanding the road network?</font><br><br>");
 		html.append("<font size=+1><b>What we found:</b></font><br>");
 		html.append("<ul>");
-		html.append("<li><font size=+1>Lower road capacity utilisation.</font>");
+		html.append("<li><font size=+1>Lower road capacity utilisation on expanded links.</font>");
 		html.append("<li><font size=+1>Slight increase in vehicle ﬂows.</font>");
 		html.append("<li><font size=+1>Slight decrease in travel times.</font>");
 		html.append("</ul></html>");
 		
 		JLabel lblNewLabel_4 = new JLabel(html.toString());
+		lblNewLabel_4.setVerticalAlignment(SwingConstants.TOP);
 		lblNewLabel_4.setFont(new Font("Lato", Font.PLAIN, 20));
-		lblNewLabel_4.setBounds(LEFT_MARGIN, 180, 346, 256);
+		lblNewLabel_4.setBounds(LEFT_MARGIN, 200, 346, 346);
 		contentPane.add(lblNewLabel_4);
 		
 		JSeparator separator = new JSeparator();
@@ -679,7 +683,7 @@ public class RoadExpansionDashboard extends JFrame {
 		
 		JLabel lblBeforePolicyIntervention = new JLabel("Before Policy Intervention");
 		lblBeforePolicyIntervention.setLabelFor(table);
-		lblBeforePolicyIntervention.setForeground(Color.BLACK);
+		lblBeforePolicyIntervention.setForeground(LandingGUI.DARK_GRAY);
 		lblBeforePolicyIntervention.setBounds(BEFORE_MAP_X, MAP_HEIGHT + 55, 392, 30);
 		contentPane.add(lblBeforePolicyIntervention);
 		lblBeforePolicyIntervention.setFont(new Font("Lato", Font.BOLD, 18));
@@ -856,7 +860,7 @@ public class RoadExpansionDashboard extends JFrame {
 		
 		JLabel lblAfterPolicyIntervention = new JLabel("After Policy Intervention");
 		lblAfterPolicyIntervention.setLabelFor(table_2);
-		lblAfterPolicyIntervention.setForeground(Color.BLACK);
+		lblAfterPolicyIntervention.setForeground(LandingGUI.DARK_GRAY);
 		lblAfterPolicyIntervention.setFont(new Font("Lato", Font.BOLD, 18));
 		lblAfterPolicyIntervention.setBounds(AFTER_MAP_X, MAP_HEIGHT + 55, 392, 30);
 		contentPane.add(lblAfterPolicyIntervention);
@@ -1162,6 +1166,7 @@ public class RoadExpansionDashboard extends JFrame {
 		zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
 
 		odm = new ODMatrix(baseYearODMatrixFile); 
+		//odm = new ODMatrix("./src/test/resources/testdata/csvfiles/tempro2LAD.csv");
 		odm.scaleMatrixValue(MATRIX_SCALING_FACTOR);
 		rsg = new RouteSetGenerator(roadNetwork);
 		
