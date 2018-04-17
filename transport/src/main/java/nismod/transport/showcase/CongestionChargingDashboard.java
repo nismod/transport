@@ -1,5 +1,6 @@
 package nismod.transport.showcase;
 
+import java.awt.AWTException;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -8,6 +9,7 @@ import java.awt.Font;
 import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.awt.Robot;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -142,7 +144,8 @@ public class CongestionChargingDashboard extends JFrame {
 	public static final Border RUN_BUTTON_BORDER = BorderFactory.createLineBorder(LandingGUI.DARK_GRAY, 5);
 	public static final Border EMPTY_BORDER = BorderFactory.createEmptyBorder();
 	
-	public static final double MATRIX_SCALING_FACTOR = 3.0;
+	public static final double MATRIX_SCALING_FACTOR = 3.0; //to multiply OD matrix
+	public static final double OPACITY_FACTOR = 5.0; //to multiply opacity for table cells (to emphasise the change)
 
 	/**
 	 * Launch the application.
@@ -163,8 +166,9 @@ public class CongestionChargingDashboard extends JFrame {
 	/**
 	 * Create the frame.
 	 * @throws IOException 
+	 * @throws AWTException 
 	 */
-	public CongestionChargingDashboard() throws IOException {
+	public CongestionChargingDashboard() throws IOException, AWTException {
 		//setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setTitle("NISMOD v2 Showcase Demo");
@@ -179,6 +183,8 @@ public class CongestionChargingDashboard extends JFrame {
 		this.setExtendedState(JMapFrame.MAXIMIZED_BOTH);
 		this.setLocation(0, 0);
 
+		Robot robot = new Robot();
+		
 		setAlwaysOnTop(true);
 		contentPane.setBackground(LandingGUI.LIGHT_GRAY);
 	
@@ -278,13 +284,13 @@ public class CongestionChargingDashboard extends JFrame {
 		contentPane.add(label_2);
 		
 		JLabel label_3 = new JLabel("<html><left>What's the <b>peak-hour</b> charge?</html>?");
-		label_3.setBounds(36, 711, 100, 70);
+		label_3.setBounds(LEFT_MARGIN, 711, 100, 70);
 		label_3.setFont(new Font("Lato", Font.PLAIN, 16));
 		label_3.setForeground(LandingGUI.DARK_GRAY);
 		contentPane.add(label_3);
 		
 		JLabel label_4 = new JLabel("<html><left>What's the <b>off-peak</b> charge?</html>?");
-		label_4.setBounds(36, 810, 100, 70);
+		label_4.setBounds(LEFT_MARGIN, 810, 100, 70);
 		label_4.setFont(new Font("Lato", Font.PLAIN, 16));
 		label_4.setForeground(LandingGUI.DARK_GRAY);
 		contentPane.add(label_4);
@@ -426,20 +432,9 @@ public class CongestionChargingDashboard extends JFrame {
 				JButton reset = null;
 				try {
 					rightFrame = NetworkVisualiserDemo.visualise(roadNetwork, "Capacity Utilisation After Intervention", capacityAfter, "CapUtil", shapefilePathAfter, congestionChargeZoneUrl);
-					
-					rightFrame.setVisible(false);
-					rightFrame.repaint();
+					rightFrame.setVisible(true);
+					//rightFrame.repaint();
 
-//					JMapPane pane = ((JMapFrameDemo)rightFrame).getMapPane();
-//					//((JMapFrameDemo)rightFrame).getToolBar().setBackground(GUI.TOOLBAR); //to set toolbar background
-//
-//					System.out.println("component: " + ((JMapFrameDemo)rightFrame).getToolBar().getComponent(8).toString());
-//					reset = (JButton) ((JMapFrameDemo)rightFrame).getToolBar().getComponent(8);
-//					//reset.setBackground(Color.BLUE); //set icon background
-//					//reset.setBorderPainted(false); //remove border
-//					JButton minus = (JButton) ((JMapFrameDemo)rightFrame).getToolBar().getComponent(2);
-//					//minus.setBackground(Color.GREEN); //set icon background
-			
 					//panel_2.removeAll();
 					panel_2.add(rightFrame.getContentPane(), 0);
 					panel_2.setLayout(null);
@@ -451,15 +446,24 @@ public class CongestionChargingDashboard extends JFrame {
 					((JMapFrameDemo)rightFrame).getToolBar().setBackground(LandingGUI.LIGHT_GRAY); //to set toolbar background
 					((JMapFrameDemo)rightFrame).getToolBar().setBorder(BorderFactory.createLineBorder(LandingGUI.LIGHT_GRAY, 1));
 				
-
+					rightFrame.setVisible(true);
+					rightFrame.setVisible(false);
+					
+					labelPanel2 = new JLabel("After Policy Intervention");
+					labelPanel2.setBounds(301, 11, 331, 20);
+					panel_2.add(labelPanel2);
+					panel_2.setComponentZOrder(labelPanel2, 0);
+					labelPanel2.setForeground(LandingGUI.DARK_GRAY);
+					labelPanel2.setFont(new Font("Lato", Font.BOLD, 16));
+							
+					robot.mouseMove(1300, 600);
+		
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
-
-				//reset.doClick(4000);
 				
-				//update tables
+				//update after tables
 				int rows = predictedODM.getOrigins().size();
 				int columns = predictedODM.getDestinations().size();
 				Object[][] data = new Object[rows][columns + 1];
@@ -585,7 +589,7 @@ public class CongestionChargingDashboard extends JFrame {
 		
 		JLabel lblNewLabel_4 = new JLabel(html.toString());
 		lblNewLabel_4.setFont(new Font("Lato", Font.PLAIN, 20));
-		lblNewLabel_4.setBounds(36, 180, 346, 327);
+		lblNewLabel_4.setBounds(LEFT_MARGIN, 180, 346, 327);
 		contentPane.add(lblNewLabel_4);
 		
 		JSeparator separator = new JSeparator();
@@ -824,7 +828,7 @@ public class CongestionChargingDashboard extends JFrame {
 					else component.setBackground(Color.WHITE);
 					*/
 					double absolutePercentChange = Math.abs((1.0 * newValue / oldValue - 1.0) * 100);
-					int opacity = (int) Math.round(absolutePercentChange) * 5; //amplify the change 
+					int opacity = (int) Math.round(absolutePercentChange * OPACITY_FACTOR); //amplify the change 
 					if (opacity > 255) opacity = 255;
 					
 					Color inc = LandingGUI.PASTEL_BLUE;
@@ -905,7 +909,7 @@ public class CongestionChargingDashboard extends JFrame {
 					double oldValue = Double.parseDouble(table_1.getValueAt(rowIndex, columnIndex).toString());
 					
 					double absolutePercentChange = Math.abs((1.0 * newValue / oldValue - 1.0) * 100);
-					int opacity = (int) Math.round(absolutePercentChange) * 5; //amplify the change 
+					int opacity = (int) Math.round(absolutePercentChange * OPACITY_FACTOR); //amplify the change 
 					if (opacity > 255) opacity = 255;
 					
 					Color inc = LandingGUI.PASTEL_BLUE;
@@ -1163,6 +1167,9 @@ public class CongestionChargingDashboard extends JFrame {
 		leftFrame.setVisible(false);
 		panel_1.add(leftFrame.getContentPane());
 		panel_1.setLayout(null);
+		
+		leftFrame.setVisible(true);
+		leftFrame.setVisible(false);
 
 		JLabel labelPanel1 = new JLabel("Before Policy Intervention");
 		labelPanel1.setBounds(301, 11, 331, 20);

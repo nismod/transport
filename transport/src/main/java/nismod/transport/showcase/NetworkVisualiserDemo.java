@@ -678,7 +678,7 @@ public class NetworkVisualiserDemo {
 		//location of cursor and bounds of current
 		show.enableStatusBar(true);
 		//display
-		show.setVisible(true);
+//		show.setVisible(true);
 		
 		show.pack();
 		

@@ -1,5 +1,6 @@
 package nismod.transport.showcase;
 
+import java.awt.AWTException;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -8,6 +9,7 @@ import java.awt.Font;
 import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.awt.Robot;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -137,7 +139,8 @@ public class RoadDevelopmentDashboard extends JFrame {
 	public static final Border RUN_BUTTON_BORDER = BorderFactory.createLineBorder(LandingGUI.DARK_GRAY, 5);
 	public static final Border EMPTY_BORDER = BorderFactory.createEmptyBorder();
 	
-	public static final double MATRIX_SCALING_FACTOR = 3.0;
+	public static final double MATRIX_SCALING_FACTOR = 3.0; //to multiply OD matrix
+	public static final double OPACITY_FACTOR = 5.0; //to multiply opacity for table cells (to emphasise the change)
 
 
 	/**
@@ -159,8 +162,9 @@ public class RoadDevelopmentDashboard extends JFrame {
 	/**
 	 * Create the frame.
 	 * @throws IOException 
+	 * @throws AWTException 
 	 */
-	public RoadDevelopmentDashboard() throws IOException {
+	public RoadDevelopmentDashboard() throws IOException, AWTException {
 		//setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setTitle("NISMOD v2 Showcase Demo");
@@ -175,6 +179,8 @@ public class RoadDevelopmentDashboard extends JFrame {
 		this.setExtendedState(JMapFrame.MAXIMIZED_BOTH);
 		this.setLocation(0, 0);
 
+		Robot robot = new Robot();
+		
 		setAlwaysOnTop(true);
 		contentPane.setBackground(LandingGUI.LIGHT_GRAY);
 	
@@ -227,7 +233,7 @@ public class RoadDevelopmentDashboard extends JFrame {
 		JComboBox comboBox = new JComboBox();
 		comboBox.setModel(new DefaultComboBoxModel(roadNetwork.getNodeIDtoNode().keySet().toArray()));
 		//comboBox.setModel(new DefaultComboBoxModel(new String[] {"5", "6", "27", "23", "25"}));
-		comboBox.setBounds(36, 728, 149, 22);
+		comboBox.setBounds(LEFT_MARGIN, 728, 149, 22);
 		comboBox.setBorder(COMBOBOX_BORDER);
 		comboBox.setFont(new Font("Lato", Font.BOLD, 14));
 		//comboBox.setBorder(comboBoxBorder);
@@ -252,7 +258,7 @@ public class RoadDevelopmentDashboard extends JFrame {
 		Arrays.sort(arrayOfNodes);
 		JComboBox comboBox_1 = new JComboBox();
 		comboBox_1.setModel(new DefaultComboBoxModel(roadNetwork.getNodeIDtoNode().keySet().toArray()));
-		comboBox_1.setBounds(233, 728, 149, 22);
+		comboBox_1.setBounds(SECOND_MARGIN, 728, 149, 22);
 		comboBox_1.setFont(new Font("Lato", Font.BOLD, 14));
 		comboBox_1.setBorder(COMBOBOX_BORDER);
 		contentPane.add(comboBox_1);
@@ -305,13 +311,13 @@ public class RoadDevelopmentDashboard extends JFrame {
 		JLabel lblANode = new JLabel("Node A");
 		lblANode.setFont(new Font("Lato", Font.PLAIN, 20));
 		lblANode.setLabelFor(comboBox);
-		lblANode.setBounds(36, 700, 79, 23);
+		lblANode.setBounds(LEFT_MARGIN, 700, 79, 23);
 		contentPane.add(lblANode);
 
 		JLabel lblBNode = new JLabel("Node B");
 		lblBNode.setFont(new Font("Lato", Font.PLAIN, 20));
 		lblBNode.setLabelFor(comboBox_1);
-		lblBNode.setBounds(233, 700, 79, 23);
+		lblBNode.setBounds(SECOND_MARGIN, 700, 79, 23);
 		contentPane.add(lblBNode);
 
 		JSlider slider = new JSlider();
@@ -324,20 +330,20 @@ public class RoadDevelopmentDashboard extends JFrame {
 		slider.setMajorTickSpacing(1);
 		slider.setMaximum(5);
 		slider.setMinimum(1);
-		slider.setBounds(233, 807, 138, 45);
+		slider.setBounds(SECOND_MARGIN, 807, 138, 45);
 		slider.setBackground(LandingGUI.LIGHT_GRAY);
 		slider.setForeground(LandingGUI.DARK_GRAY);
 		contentPane.add(slider);
 
 		JLabel lblLanesToAdd = new JLabel("How many lanes?");
 		lblLanesToAdd.setFont(new Font("Lato", Font.PLAIN, 16));
-		lblLanesToAdd.setBounds(233, 772, 165, 30);
+		lblLanesToAdd.setBounds(SECOND_MARGIN, 772, 165, 30);
 		contentPane.add(lblLanesToAdd);
 		
 		JRadioButton rdbtnNewRadioButton = new JRadioButton("A-road");
 		rdbtnNewRadioButton.setFont(new Font("Lato", Font.PLAIN, 12));
 		buttonGroup.add(rdbtnNewRadioButton);
-		rdbtnNewRadioButton.setBounds(36, 809, 70, 23);
+		rdbtnNewRadioButton.setBounds(LEFT_MARGIN, 809, 70, 23);
 		contentPane.add(rdbtnNewRadioButton);
 
 		rdbtnNewRadioButton.addActionListener (new ActionListener () {
@@ -485,19 +491,31 @@ public class RoadDevelopmentDashboard extends JFrame {
 				JFrame rightFrame;
 				try {
 					rightFrame = NetworkVisualiserDemo.visualise(roadNetwork, "Capacity Utilisation After Intervention", capacityAfter, "CapUtil", shapefilePathAfter);
-					rightFrame.setVisible(false);
-					rightFrame.repaint();
+					rightFrame.setVisible(true);
+					//rightFrame.repaint();
 					//	panel_2.add(rightFrame.getContentPane());
 					//panel_2.removeAll();
 					panel_2.add(rightFrame.getContentPane(), 0);
 					panel_2.setLayout(null);
-					panel_2.setComponentZOrder(labelPanel2, 0);
+					//panel_2.setComponentZOrder(labelPanel2, 0);
 					//panel_2.doLayout();
 					//panel_2.repaint();
 					
 					((JMapFrameDemo)rightFrame).getToolBar().setBackground(LandingGUI.LIGHT_GRAY); //to set toolbar background
 					((JMapFrameDemo)rightFrame).getToolBar().setBorder(BorderFactory.createLineBorder(LandingGUI.LIGHT_GRAY, 1));
 					
+					rightFrame.setVisible(true);
+					rightFrame.setVisible(false);
+					
+					labelPanel2 = new JLabel("After Policy Intervention");
+					labelPanel2.setBounds(301, 11, 331, 20);
+					panel_2.add(labelPanel2);
+					panel_2.setComponentZOrder(labelPanel2, 0);
+					labelPanel2.setForeground(LandingGUI.DARK_GRAY);
+					labelPanel2.setFont(new Font("Lato", Font.BOLD, 16));
+							
+					robot.mouseMove(1300, 600);
+								
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
@@ -552,7 +570,7 @@ public class RoadDevelopmentDashboard extends JFrame {
 
 		JLabel label_1 = new JLabel("<html>Length [<i>km</i>]:</html>");
 		label_1.setFont(new Font("Lato", Font.PLAIN, 16));
-		label_1.setBounds(36, 853, 101, 30);
+		label_1.setBounds(LEFT_MARGIN, 853, 101, 30);
 		contentPane.add(label_1);
 		
 		textField = new JTextField();
@@ -649,7 +667,7 @@ public class RoadDevelopmentDashboard extends JFrame {
 		
 		JLabel lblHowManyDirections = new JLabel("What road class?");
 		lblHowManyDirections.setFont(new Font("Lato", Font.PLAIN, 16));
-		lblHowManyDirections.setBounds(36, 772, 178, 30);
+		lblHowManyDirections.setBounds(LEFT_MARGIN, 772, 178, 30);
 		contentPane.add(lblHowManyDirections);
 		
 		JLabel lblNewLabel_6 = new JLabel("Observe the change in capacity utilisation in the \"after\" map");
@@ -859,7 +877,7 @@ public class RoadDevelopmentDashboard extends JFrame {
 					int oldValue = Integer.parseInt(table.getValueAt(rowIndex, columnIndex).toString());
 
 									double absolutePercentChange = Math.abs((1.0 * newValue / oldValue - 1.0) * 100);
-					int opacity = (int) Math.round(absolutePercentChange) * 5; //amplify the change 
+					int opacity = (int) Math.round(absolutePercentChange * OPACITY_FACTOR); //amplify the change 
 					if (opacity > 255) opacity = 255;
 					
 					Color inc = LandingGUI.PASTEL_BLUE;
@@ -932,7 +950,7 @@ public class RoadDevelopmentDashboard extends JFrame {
 					double oldValue = Double.parseDouble(table_1.getValueAt(rowIndex, columnIndex).toString());
 					
 					double absolutePercentChange = Math.abs((1.0 * newValue / oldValue - 1.0) * 100);
-					int opacity = (int) Math.round(absolutePercentChange) * 5; // //amplify the change
+					int opacity = (int) Math.round(absolutePercentChange * OPACITY_FACTOR); // //amplify the change
 					if (opacity > 255) opacity = 255;
 					
 					Color inc = LandingGUI.PASTEL_BLUE;
@@ -1182,6 +1200,9 @@ public class RoadDevelopmentDashboard extends JFrame {
 		leftFrame.setVisible(false);
 		panel_1.add(leftFrame.getContentPane());
 		panel_1.setLayout(null);
+		
+		leftFrame.setVisible(true);
+		leftFrame.setVisible(false);
 
 		JLabel labelPanel1 = new JLabel("Before Policy Intervention");
 		labelPanel1.setBounds(301, 11, 331, 20);
