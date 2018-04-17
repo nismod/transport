@@ -140,7 +140,7 @@ public class RoadDevelopmentDashboard extends JFrame {
 	public static final Border EMPTY_BORDER = BorderFactory.createEmptyBorder();
 	
 	public static final double MATRIX_SCALING_FACTOR = 3.0; //to multiply OD matrix
-	public static final double OPACITY_FACTOR = 5.0; //to multiply opacity for table cells (to emphasise the change)
+	public static final double OPACITY_FACTOR = 3.0; //to multiply opacity for table cells (to emphasise the change)
 
 
 	/**
@@ -649,8 +649,9 @@ public class RoadDevelopmentDashboard extends JFrame {
 		html.append("</ul></html>");
 		
 		JLabel lblNewLabel_4 = new JLabel(html.toString());
+		lblNewLabel_4.setVerticalAlignment(SwingConstants.TOP);
 		lblNewLabel_4.setFont(new Font("Lato", Font.PLAIN, 20));
-		lblNewLabel_4.setBounds(LEFT_MARGIN, 180, 346, 256);
+		lblNewLabel_4.setBounds(LEFT_MARGIN, 200, 346, 346);
 		contentPane.add(lblNewLabel_4);
 		
 		JSeparator separator = new JSeparator();
@@ -682,7 +683,7 @@ public class RoadDevelopmentDashboard extends JFrame {
 		
 		JLabel lblBeforePolicyIntervention = new JLabel("Before Policy Intervention");
 		lblBeforePolicyIntervention.setLabelFor(table);
-		lblBeforePolicyIntervention.setForeground(Color.BLACK);
+		lblBeforePolicyIntervention.setForeground(LandingGUI.DARK_GRAY);
 		lblBeforePolicyIntervention.setBounds(BEFORE_MAP_X, MAP_HEIGHT + 55, 392, 30);
 		contentPane.add(lblBeforePolicyIntervention);
 		lblBeforePolicyIntervention.setFont(new Font("Lato", Font.BOLD, 18));
@@ -859,7 +860,7 @@ public class RoadDevelopmentDashboard extends JFrame {
 		
 		JLabel lblAfterPolicyIntervention = new JLabel("After Policy Intervention");
 		lblAfterPolicyIntervention.setLabelFor(table_2);
-		lblAfterPolicyIntervention.setForeground(Color.BLACK);
+		lblAfterPolicyIntervention.setForeground(LandingGUI.DARK_GRAY);
 		lblAfterPolicyIntervention.setFont(new Font("Lato", Font.BOLD, 18));
 		lblAfterPolicyIntervention.setBounds(AFTER_MAP_X, MAP_HEIGHT + 55, 392, 30);
 		contentPane.add(lblAfterPolicyIntervention);

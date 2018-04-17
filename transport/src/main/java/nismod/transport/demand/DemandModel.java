@@ -112,15 +112,15 @@ public class DemandModel {
 
 		//read base-year passenger matrix
 		ODMatrix passengerODMatrix = new ODMatrix(baseYearODMatrixFile);
-		passengerODMatrix.printMatrixFormatted();
+		//passengerODMatrix.printMatrixFormatted();
 		this.yearToPassengerODMatrix.put(DemandModel.BASE_YEAR, passengerODMatrix);
 		
 		//read base-year freight matrix
 		FreightMatrix freightMatrix = new FreightMatrix(baseYearFreightMatrixFile);
-		freightMatrix.printMatrixFormatted();
-		System.out.println("Freight matrix scaled to 2015:");
+		//freightMatrix.printMatrixFormatted();
+		//System.out.println("Freight matrix scaled to 2015:");
 		FreightMatrix freightMatrixScaled = freightMatrix.getScaledMatrix(FREIGHT_SCALING_FACTOR);
-		freightMatrixScaled.printMatrixFormatted();
+		//freightMatrixScaled.printMatrixFormatted();
 		this.yearToFreightODMatrix.put(DemandModel.BASE_YEAR, freightMatrixScaled);
 		
 		//read all year population predictions

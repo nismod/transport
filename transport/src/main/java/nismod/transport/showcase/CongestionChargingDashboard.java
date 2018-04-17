@@ -87,6 +87,7 @@ import nismod.transport.network.road.Trip;
 import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.utility.ConfigReader;
+import nismod.transport.utility.RandomSingleton;
 import nismod.transport.zone.Zoning;
 import javax.swing.JSeparator;
 
@@ -145,7 +146,7 @@ public class CongestionChargingDashboard extends JFrame {
 	public static final Border EMPTY_BORDER = BorderFactory.createEmptyBorder();
 	
 	public static final double MATRIX_SCALING_FACTOR = 3.0; //to multiply OD matrix
-	public static final double OPACITY_FACTOR = 5.0; //to multiply opacity for table cells (to emphasise the change)
+	public static final double OPACITY_FACTOR = 3.0; //to multiply opacity for table cells (to emphasise the change)
 
 	/**
 	 * Launch the application.
@@ -360,6 +361,7 @@ public class CongestionChargingDashboard extends JFrame {
 						else	for (int edgID: linkCharges.keySet()) linkCharges.put(edgID, offPeakCharge);
 					}
 
+					System.out.println("Congestion charges from sliders: " + specificCharges);
 				
 					props.setProperty("TIME", "-1.5");
 					props.setProperty("LENGTH", "-1.0");
@@ -367,6 +369,10 @@ public class CongestionChargingDashboard extends JFrame {
 
 					RoadNetworkAssignment rnaAfterCongestionCharging = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, congestionCharges, props);
 					//rnaAfterCongestionCharging.assignPassengerFlows(odm, rsg);
+					
+					
+					RandomSingleton.getInstance().setSeed(1234);
+					
 					rnaAfterCongestionCharging.assignPassengerFlowsRouteChoice(odm, rsg, props);
 					rnaAfterCongestionCharging.updateLinkVolumeInPCU();
 					rnaAfterCongestionCharging.updateLinkVolumeInPCUPerTimeOfDay();
@@ -374,7 +380,7 @@ public class CongestionChargingDashboard extends JFrame {
 					//predict change in demand
 					SkimMatrix tsm = rnaAfterCongestionCharging.calculateTimeSkimMatrix();
 					SkimMatrix csm = rnaAfterCongestionCharging.calculateCostSkimMatrix();
-
+					
 					//predicted demand	
 					ODMatrix predictedODM = new ODMatrix();
 
@@ -391,8 +397,14 @@ public class CongestionChargingDashboard extends JFrame {
 					}
 
 
+				System.out.println("Time Skim Matrix Before:");
 				tsmBefore.printMatrixFormatted();
+				System.out.println("Time Skim Matrix After:");
 				tsm.printMatrixFormatted();
+				System.out.println("Cost Skim Matrix Before:");
+				csmBefore.printMatrixFormatted();
+				System.out.println("Cost Skim Matrix After:");
+				csm.printMatrixFormatted();
 
 
 				//for each OD pair predict the change in passenger vehicle flow from the change in skim matrices
@@ -416,6 +428,8 @@ public class CongestionChargingDashboard extends JFrame {
 
 				rnaAfterCongestionCharging.resetLinkVolumes();
 				rnaAfterCongestionCharging.resetTripStorages();
+				
+				RandomSingleton.getInstance().setSeed(1234);
 
 				rnaAfterCongestionCharging.assignPassengerFlows(predictedODM, rsg);
 				rnaAfterCongestionCharging.updateLinkVolumeInPCU();
@@ -480,6 +494,10 @@ public class CongestionChargingDashboard extends JFrame {
 
 
 				SkimMatrix sm = rnaAfterCongestionCharging.calculateTimeSkimMatrix();
+				
+				System.out.println("Time Skim Matrix Final:");
+				sm.printMatrixFormatted();
+				
 				rows = sm.getOrigins().size();
 				columns = sm.getDestinations().size();
 				Object[][] data2 = new Object[rows][columns + 1];
@@ -584,12 +602,13 @@ public class CongestionChargingDashboard extends JFrame {
 		html.append("<ul>");
 		html.append("<li><font size=+1>Lower road capacity utilisation within the policy area.</font>");
 		html.append("<li><font size=+1>Decrease in vehicle flows due to increased travel costs.</font>");
-		html.append("<li><font size=+1>Decrease in travel times due to lower total demand; possible increase due to zone avoidance.</font>");
+		html.append("<li><font size=+1>Decrease in travel times due to lower total demand.</font>");
 		html.append("</ul></html>");
 		
 		JLabel lblNewLabel_4 = new JLabel(html.toString());
+		lblNewLabel_4.setVerticalAlignment(SwingConstants.TOP);
 		lblNewLabel_4.setFont(new Font("Lato", Font.PLAIN, 20));
-		lblNewLabel_4.setBounds(LEFT_MARGIN, 180, 346, 327);
+		lblNewLabel_4.setBounds(LEFT_MARGIN, 200, 346, 346);
 		contentPane.add(lblNewLabel_4);
 		
 		JSeparator separator = new JSeparator();
@@ -625,7 +644,7 @@ public class CongestionChargingDashboard extends JFrame {
 		
 		JLabel lblBeforePolicyIntervention = new JLabel("Before Policy Intervention");
 		lblBeforePolicyIntervention.setLabelFor(table);
-		lblBeforePolicyIntervention.setForeground(Color.BLACK);
+		lblBeforePolicyIntervention.setForeground(LandingGUI.DARK_GRAY);
 		lblBeforePolicyIntervention.setBounds(BEFORE_MAP_X, MAP_HEIGHT + 55, 392, 30);
 		contentPane.add(lblBeforePolicyIntervention);
 		lblBeforePolicyIntervention.setFont(new Font("Lato", Font.BOLD, 18));
@@ -804,7 +823,7 @@ public class CongestionChargingDashboard extends JFrame {
 		
 		JLabel lblAfterPolicyIntervention = new JLabel("After Policy Intervention");
 		lblAfterPolicyIntervention.setLabelFor(table_2);
-		lblAfterPolicyIntervention.setForeground(Color.BLACK);
+		lblAfterPolicyIntervention.setForeground(LandingGUI.DARK_GRAY);
 		lblAfterPolicyIntervention.setFont(new Font("Lato", Font.BOLD, 18));
 		lblAfterPolicyIntervention.setBounds(AFTER_MAP_X + AFTER_TABLE_SHIFT, MAP_HEIGHT + 55, 392, 30);
 		contentPane.add(lblAfterPolicyIntervention);
@@ -1131,16 +1150,15 @@ public class CongestionChargingDashboard extends JFrame {
 		rsg.readRoutesBinaryWithoutValidityCheck(passengerRoutesFile);
 		//rsg.generateRouteSetForODMatrix(odm, 5);
 
+		RandomSingleton.getInstance().setSeed(1234);
+		
 		rnaBefore.assignPassengerFlowsRouteChoice(odm, rsg, props);
-
-		rnaBefore.assignPassengerFlows(odm, rsg);
-		rnaBefore.updateLinkTravelTimes(0.9);
-
-		rnaBefore.resetLinkVolumes();
-		rnaBefore.resetTripStorages();
-		rnaBefore.assignPassengerFlowsRouteChoice(odm, rsg, props);
-		rnaBefore.updateLinkTravelTimes(0.9);
-
+//		rnaBefore.assignPassengerFlows(odm, rsg);
+//		rnaBefore.updateLinkTravelTimes(1.0);
+//		rnaBefore.resetLinkVolumes();
+//		rnaBefore.resetTripStorages();
+//		rnaBefore.assignPassengerFlowsRouteChoice(odm, rsg, props);
+		rnaBefore.updateLinkTravelTimes(1.0);
 		rnaBefore.updateLinkVolumeInPCU();
 		rnaBefore.updateLinkVolumeInPCUPerTimeOfDay();
 
