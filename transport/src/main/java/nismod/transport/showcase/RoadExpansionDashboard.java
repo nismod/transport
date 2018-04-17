@@ -31,6 +31,7 @@ import java.util.Set;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -40,6 +41,7 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTable;
@@ -106,6 +108,7 @@ public class RoadExpansionDashboard extends JFrame {
 	private JTextField totalDemandAfter;
 	private JTextField totalDemandBefore;
 	private JFrame rightFrame;
+	private final ButtonGroup buttonGroup = new ButtonGroup();
 	
 	private static final String configFile = "./src/test/config/testConfig.properties";
 	private static RoadNetwork roadNetwork;
@@ -225,12 +228,24 @@ public class RoadExpansionDashboard extends JFrame {
 		lblRoadExpansionPolicy.setBounds(LEFT_MARGIN, 569, 380, 30);
 		contentPane.add(lblRoadExpansionPolicy);
 		
-		JCheckBox chckbxNewCheckBox = new JCheckBox("2-way");
-		chckbxNewCheckBox.setFont(new Font("Lato", Font.PLAIN, 12));
-		chckbxNewCheckBox.setBackground(LandingGUI.LIGHT_GRAY);
-		chckbxNewCheckBox.setSelected(true);
-		chckbxNewCheckBox.setBounds(SECOND_MARGIN, 855, 122, 23);
-		contentPane.add(chckbxNewCheckBox);
+//		JCheckBox chckbxNewCheckBox = new JCheckBox("2-way");
+//		chckbxNewCheckBox.setFont(new Font("Lato", Font.PLAIN, 12));
+//		chckbxNewCheckBox.setBackground(LandingGUI.LIGHT_GRAY);
+//		chckbxNewCheckBox.setSelected(true);
+//		chckbxNewCheckBox.setBounds(SECOND_MARGIN, 855, 122, 23);
+//		contentPane.add(chckbxNewCheckBox);
+		
+		JRadioButton rdbtnNewRadioButton = new JRadioButton("1-way");
+		rdbtnNewRadioButton.setFont(new Font("Lato", Font.PLAIN, 12));
+		buttonGroup.add(rdbtnNewRadioButton);
+		rdbtnNewRadioButton.setBounds(SECOND_MARGIN, 855, 70, 23);
+		contentPane.add(rdbtnNewRadioButton);
+
+		JRadioButton rdbtnNewRadioButton_1 = new JRadioButton("2-way");
+		rdbtnNewRadioButton_1.setFont(new Font("Lato", Font.PLAIN, 12));
+		buttonGroup.add(rdbtnNewRadioButton_1);
+		rdbtnNewRadioButton_1.setBounds(SECOND_MARGIN + 80, 855, 104, 23);
+		contentPane.add(rdbtnNewRadioButton_1);
 
 		JComboBox comboBox = new JComboBox();
 		comboBox.setModel(new DefaultComboBoxModel(roadNetwork.getNodeIDtoNode().keySet().toArray()));
@@ -293,10 +308,15 @@ public class RoadExpansionDashboard extends JFrame {
 				DirectedNode nodeB = (DirectedNode) roadNetwork.getNodeIDtoNode().get(toNode);
 
 				DirectedEdge edge = (DirectedEdge) nodeA.getOutEdge(nodeB);
-				if (roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(edge.getID()) == null) //if there is no other direction edge, disable checkbox
-					chckbxNewCheckBox.setEnabled(false);
-				else
-					chckbxNewCheckBox.setEnabled(true);
+				if (roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(edge.getID()) == null) { //if there is no other direction edge, disable 2-way button
+					rdbtnNewRadioButton_1.setEnabled(false);
+					rdbtnNewRadioButton_1.setSelected(false);
+					rdbtnNewRadioButton.setSelected(true);
+				}
+				else { //enable both buttons
+					rdbtnNewRadioButton.setEnabled(true);
+					rdbtnNewRadioButton_1.setEnabled(true);
+				}
 
 			}
 		});
@@ -370,7 +390,7 @@ public class RoadExpansionDashboard extends JFrame {
 				re.install(roadNetwork);
 
 				RoadExpansion re2 = null;
-				if (chckbxNewCheckBox.isSelected()) { //if both directions
+				if (rdbtnNewRadioButton_1.isSelected()) { //if both directions
 					
 					//edge = (DirectedEdge) nodeB.getOutEdge(nodeA);
 					roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(edge.getID());
@@ -568,10 +588,11 @@ public class RoadExpansionDashboard extends JFrame {
 		contentPane.add(btnNewButton);
 
 		//set controls to represent the intervention
-		comboBox.setSelectedItem(new Integer(22));
-		comboBox_1.setSelectedItem(new Integer(23));
+		comboBox.setSelectedItem(new Integer(23));
+		comboBox_1.setSelectedItem(new Integer(22));
 		slider.setValue(2);
-		chckbxNewCheckBox.setSelected(false);
+		rdbtnNewRadioButton.setSelected(false);
+		rdbtnNewRadioButton_1.setSelected(true);
 		
 		//run the default intervention
 		btnNewButton.doClick();

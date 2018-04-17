@@ -8,6 +8,7 @@ import java.util.Properties;
 import nismod.transport.demand.ODMatrix;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
+import nismod.transport.showcase.NetworkVisualiserDemo;
 import nismod.transport.utility.ConfigReader;
 
 /**
@@ -20,6 +21,7 @@ public class NetworkVisualiserTest {
 	public static void main( String[] args ) throws IOException	{
 
 		final String configFile = "./src/test/config/testConfig.properties";
+		//final String configFile = "./src/main/config/config.properties";
 		Properties props = ConfigReader.getProperties(configFile);
 		
 		final String areaCodeFileName = props.getProperty("areaCodeFileName");
@@ -39,7 +41,7 @@ public class NetworkVisualiserTest {
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
 		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, props);
 		ODMatrix odm = new ODMatrix("./src/test/resources/testdata/csvfiles/passengerODM.csv");
-		rna.assignPassengerFlows(odm);
+		rna.assignPassengerFlows(odm, null);
 		
 		final URL congestionChargeZoneUrl = new URL("file://src/test/resources/testdata/shapefiles/congestionChargingZone.shp");
 		String shapefilePath = "./temp/networkWithDailyVolume.shp";
@@ -49,10 +51,11 @@ public class NetworkVisualiserTest {
 		rna.updateLinkVolumeInPCU();
 		rna.updateLinkVolumePerVehicleType();
 		Map<Integer, Double> dailyVolume = rna.getLinkVolumeInPCU();
-		NetworkVisualiser.visualise(roadNetwork, "Network from shapefiles");
-		NetworkVisualiser.visualise(roadNetwork, "Network with traffic volume", dailyVolume, "DayVolume", shapefilePath);
-		NetworkVisualiser.visualise(roadNetwork, "Network with count comparison", rna.calculateDirectionAveragedAbsoluteDifferenceCarCounts(), "AbsDiffCounts", shapefilePath2);
-		NetworkVisualiser.visualise(roadNetwork, "Network with count comparison", rna.calculateDirectionAveragedAbsoluteDifferenceCarCounts(), "AbsDiffCounts", shapefilePath3, congestionChargeZoneUrl);
+		NetworkVisualiserDemo.visualise(roadNetwork, "Network from shapefiles");
+//		NetworkVisualiser.visualise(roadNetwork, "Network with traffic volume", dailyVolume, "DayVolume", shapefilePath);
+		NetworkVisualiserDemo.visualise(roadNetwork, "Network with capacity utilisation", rna.calculateDirectionAveragedPeakLinkCapacityUtilisation(), "CapUtil", shapefilePath);
+//		NetworkVisualiser.visualise(roadNetwork, "Network with count comparison", rna.calculateDirectionAveragedAbsoluteDifferenceCarCounts(), "AbsDiffCounts", shapefilePath2);
+//		NetworkVisualiser.visualise(roadNetwork, "Network with count comparison", rna.calculateDirectionAveragedAbsoluteDifferenceCarCounts(), "AbsDiffCounts", shapefilePath3, congestionChargeZoneUrl);
 		
 	}
 }
