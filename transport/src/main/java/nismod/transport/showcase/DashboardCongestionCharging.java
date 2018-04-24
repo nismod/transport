@@ -604,7 +604,7 @@ public class DashboardCongestionCharging extends JFrame {
 					rnaAfterCongestionCharging.resetLinkVolumes();
 					rnaAfterCongestionCharging.resetTripStorages();
 
-					rnaAfterCongestionCharging.assignPassengerFlows(predictedODM, rsg);
+					rnaAfterCongestionCharging.assignPassengerFlowsRouting(predictedODM, rsg);
 					rnaAfterCongestionCharging.updateLinkVolumeInPCU();
 					rnaAfterCongestionCharging.updateLinkVolumeInPCUPerTimeOfDay();
 					//SkimMatrix sm = rnaAfterCongestionCharging.calculateTimeSkimMatrix();

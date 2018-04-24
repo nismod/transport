@@ -394,12 +394,12 @@ public class DashboardRoadDevelopment extends JFrame {
 		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
 		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
 
-		rnaBefore.assignPassengerFlows(odm, rsg);
+		rnaBefore.assignPassengerFlowsRouting(odm, rsg);
 		rnaBefore.updateLinkTravelTimes(0.9);
 
 		rnaBefore.resetLinkVolumes();
 		rnaBefore.resetTripStorages();
-		rnaBefore.assignPassengerFlows(odm, rsg);
+		rnaBefore.assignPassengerFlowsRouting(odm, rsg);
 		rnaBefore.updateLinkTravelTimes(0.9);
 
 		rnaBefore.updateLinkVolumeInPCU();
@@ -635,7 +635,7 @@ public class DashboardRoadDevelopment extends JFrame {
 				//rsg.generateRouteSetForODMatrix(odm);
 				rsg.clearRoutes();
 				//rnaAfterDevelopment.assignPassengerFlowsRouteChoice(odm, rsg, props);
-				rnaAfterDevelopment.assignPassengerFlows(odm, rsg);
+				rnaAfterDevelopment.assignPassengerFlowsRouting(odm, rsg);
 				rnaAfterDevelopment.updateLinkVolumeInPCU();
 				rnaAfterDevelopment.updateLinkVolumeInPCUPerTimeOfDay();
 
@@ -684,7 +684,7 @@ public class DashboardRoadDevelopment extends JFrame {
 				rnaAfterDevelopment.resetTripStorages();
 
 				rsg.clearRoutes();
-				rnaAfterDevelopment.assignPassengerFlows(predictedODM, rsg);
+				rnaAfterDevelopment.assignPassengerFlowsRouting(predictedODM, rsg);
 				rnaAfterDevelopment.updateLinkVolumeInPCU();
 				rnaAfterDevelopment.updateLinkVolumeInPCUPerTimeOfDay();
 				//SkimMatrix sm = rnaAfterDevelopment.calculateTimeSkimMatrix();
@@ -776,7 +776,7 @@ public class DashboardRoadDevelopment extends JFrame {
 		textField.setText("10.23");
 
 		RoadNetworkAssignment rnaAfterDevelopment = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, props);
-		rnaAfterDevelopment.assignPassengerFlows(odm, rsg);
+		rnaAfterDevelopment.assignPassengerFlowsRouting(odm, rsg);
 		rnaAfterDevelopment.updateLinkVolumeInPCU();
 		rnaAfterDevelopment.updateLinkVolumeInPCUPerTimeOfDay();
 

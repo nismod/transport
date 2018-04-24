@@ -198,7 +198,7 @@ public class DemandModelTest {
 			dm.setEngineTypeFractions(year, map);
 		}
 				
-		dm.predictHighwayDemand(2025, 2015);
+		dm.predictHighwayDemands(2025, 2015);
 		RoadNetworkAssignment rna2015 = dm.getRoadNetworkAssignment(2015);
 		RoadNetworkAssignment rna2025 = dm.getRoadNetworkAssignment(2025);
 

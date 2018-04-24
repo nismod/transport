@@ -177,6 +177,7 @@ public class ODMatrixTest {
 		tempro.printMatrixFormatted("Tempro matrix:");
 		ODMatrix ladMatrix = ODMatrix.createLadMatrixFromTEMProMatrix(tempro, zoning);
 		ladMatrix.printMatrixFormatted("Lad matrix:");
+		//ladMatrix.saveMatrixFormatted("ladFromTempro.csv");
 		
 		List<String> origins = new ArrayList<String>();
 		List<String> destinations = new ArrayList<String>();
@@ -191,6 +192,20 @@ public class ODMatrixTest {
 		
 		ODMatrix tempro2 = ODMatrix.createTEMProFromLadMatrix(ladMatrix, tempro, zoning);
 		tempro2.printMatrixFormatted("New tempro from LAD:");
+		
+		//ODMatrix fullODM = new ODMatrix("./src/main/resources/data/csvfiles/balancedODMatrix.csv");
+		//fullODM.printMatrixFormatted("Full ODM:");
+		//ODMatrix subset = fullODM.getMatrixSubset(zones, zones);
+		//subset.printMatrixFormatted("Fast-track subset:");
+		//subset.saveMatrixFormatted("fastTrackODM.csv");
+		
+		ODMatrix temproODM = new ODMatrix("./src/test/resources/testdata/csvfiles/temproODM.csv");
+		temproODM.printMatrixFormatted("tempro");
+		ladMatrix = ODMatrix.createLadMatrixFromTEMProMatrix(temproODM, zoning);
+		ladMatrix.printMatrixFormatted("from tempro to LAD:");
+		//ladMatrix.saveMatrixFormatted("tempro2LAD.csv");
+		//ladMatrix.scaleMatrixValue(0.1);
+		//ladMatrix.saveMatrixFormatted("tempro2LADscaled.csv");
 		
 	}
 }

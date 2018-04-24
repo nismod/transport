@@ -199,7 +199,7 @@ public class SPSA {
 		rna.resetTripStorages();
 		
 		//assign passenger flows
-		rna.assignPassengerFlows(odm, null); //routing version
+		rna.assignPassengerFlowsRouting(odm, null); //routing version
 		rna.updateLinkVolumePerVehicleType(); //used in RMSN calculation
 		
 		//calculate RMSN

@@ -247,7 +247,7 @@ public class SPSA2 {
 		rna.setEndNodeProbabilities(thetaEnd);
 		
 		//assign passenger flows
-		rna.assignPassengerFlows(this.odm, null); //routing version
+		rna.assignPassengerFlowsRouting(this.odm, null); //routing version
 		rna.updateLinkVolumePerVehicleType(); //used in RMSN calculation
 		
 		//calculate RMSN

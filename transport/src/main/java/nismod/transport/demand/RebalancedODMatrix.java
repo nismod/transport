@@ -21,6 +21,7 @@ import nismod.transport.decision.CongestionCharging;
 import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.network.road.Trip;
 import nismod.transport.network.road.TripTempro;
+import nismod.transport.zone.NodeMatrix;
 import nismod.transport.zone.Zoning;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.network.road.Route;
@@ -108,7 +109,32 @@ public class RebalancedODMatrix extends RealODMatrix {
 		
 		this.scaleMatrixValue(sf);
 		this.printMatrixFormatted("OD matrix after scaling:");
+		
+		//this.modifyNodeMatrixProbabilitiesForInterzonalTrips();
 	}
+	
+	/**
+	 * Scales OD matrix to traffic counts.
+	 */
+	public void scaleNodeMatricesToTrafficCounts() {
+			
+		this.rna.resetLinkVolumes();
+		this.rna.resetTripStorages();
+		ODMatrix odm = new ODMatrix(this);
+		
+		odm.printMatrixFormatted();
+		
+		this.rna.assignPassengerFlowsTempro(odm, zoning, rsg);
+		this.rna.updateLinkVolumePerVehicleType();
+		
+		double RMSN = this.rna.calculateRMSNforSimulatedVolumes();
+		this.RMSNvalues.add(RMSN);
+		System.out.printf("RMSN before scaling = %.2f%% %n", RMSN);
+		
+		this.modifyNodeMatrixProbabilitiesForInterzonalTrips();
+	}
+	
+	
 	
 	public RealODMatrix getScalingFactors() {
 		
@@ -140,6 +166,7 @@ public class RebalancedODMatrix extends RealODMatrix {
 			if (t instanceof TripTempro && t.getVehicle().equals(VehicleType.CAR))	{
 				
 				TripTempro temproTrip = (TripTempro) t;
+				int multiplier = temproTrip.getMultiplier();
 			
 				String originZone = temproTrip.getOriginTemproZone();
 				String destinationZone = temproTrip.getDestinationTemproZone();
@@ -151,8 +178,8 @@ public class RebalancedODMatrix extends RealODMatrix {
 				
 				for (DirectedEdge edge: route.getEdges())
 					if (linkFactors.get(edge.getID()) != null){
-					factor += linkFactors.get(edge.getID());
-					count++;
+					factor += linkFactors.get(edge.getID()) * multiplier;
+					count += multiplier;
 					}
 				
 				//update factor sum and count
@@ -175,6 +202,104 @@ public class RebalancedODMatrix extends RealODMatrix {
 		}
 		
 		return scalingFactors;
+	}
+	
+	public void modifyNodeMatrixProbabilitiesForInterzonalTrips() {
+		
+		List<Trip> tripList = this.rna.getTripList();
+		System.out.println("Trip list size: " + tripList.size());
+		
+		Map<Integer, Integer> volumes = this.rna.getLinkVolumePerVehicleType().get(VehicleType.CAR);
+		Map<Integer, Integer> counts = this.rna.getAADFCarTrafficCounts();
+		Map<Integer, Double> linkFactors = new HashMap<Integer, Double>();
+		
+		System.out.println("volumes = " + volumes);
+		System.out.println("counts = " + counts);
+				
+		//scaling link factors can only be calculated for links that have counts and flow > 0
+		for (Integer edgeID: volumes.keySet()) {
+			Integer count = counts.get(edgeID);
+			Integer volume = volumes.get(edgeID);
+			if (count == null) continue; //skip link with no count (e.g. ferry lines)
+			if (volume == 0.0) continue; //also skip as it would create infinite factor
+			linkFactors.put(edgeID, 1.0 * count / volume);
+		}
+		System.out.println("link factors = " + linkFactors);
+		
+		
+		HashMap<String, NodeMatrix> zoneToSumFactors = new HashMap<String, NodeMatrix>();
+		HashMap<String, NodeMatrix> zoneToCounters = new HashMap<String, NodeMatrix>();
+		HashMap<String, NodeMatrix> zoneToScalingFactors = new HashMap<String, NodeMatrix>();		
+		
+		for (String zone: zoning.getZoneToNodeMatrix().keySet()) {
+			zoneToSumFactors.put(zone, new NodeMatrix());
+			zoneToCounters.put(zone, new NodeMatrix());
+			zoneToScalingFactors.put(zone, new NodeMatrix());
+		}
+		
+		for (Trip t: tripList) 
+			if (t instanceof TripTempro && t.getVehicle().equals(VehicleType.CAR))	{
+				
+				TripTempro temproTrip = (TripTempro) t;
+			
+				String originZone = temproTrip.getOriginTemproZone();
+				String destinationZone = temproTrip.getDestinationTemproZone();
+				Route route = t.getRoute();
+				int multiplier = temproTrip.getMultiplier();
+				
+				//only if inter-zonal
+				if (!originZone.equals(destinationZone)) continue; //skip if not inter-zonal
+				
+				if (zoning.getZoneToNodeMatrix().get(originZone) == null) continue; //skip if no NodeMatrix (too few nodes).
+				
+				Integer originNode = temproTrip.getOriginNode().getID();
+				Integer destinationNode = temproTrip.getDestinationNode().getID();
+								
+				//get current sum factor and count NodeMatrix
+				NodeMatrix sum = zoneToSumFactors.get(originZone); 
+				NodeMatrix count = zoneToCounters.get(originZone);
+				
+				double s = sum.getValue(originNode, destinationNode);
+				double c = count.getValue(originNode, destinationNode);
+				
+				for (DirectedEdge edge: route.getEdges())
+					if (linkFactors.get(edge.getID()) != null){
+					s += linkFactors.get(edge.getID() * multiplier);
+					c += multiplier;
+					}
+				
+				//update factor sum and count
+				sum.setValue(originNode, destinationNode, s);
+				count.setValue(originNode, destinationNode, c);
+			}
+		
+		//calculate scaling factors by dividing factor sum and counter
+		for (String zone: zoning.getZoneToNodeMatrix().keySet()) {
+			NodeMatrix sum = zoneToSumFactors.get(zone); 
+			NodeMatrix count = zoneToCounters.get(zone);
+			NodeMatrix scaling = zoneToScalingFactors.get(zone);
+			
+			for (Object mk: sum.getKeySet()) {
+				Integer originNode = (Integer) ((MultiKey)mk).getKey(0);
+				Integer destinationNode = (Integer) ((MultiKey)mk).getKey(1);
+				double scalingFactor;
+				if (count.getValue(originNode, destinationNode) == 0) 
+					scalingFactor = 1.0; //there were no (non-empty) routes between these two zones
+				else 
+					scalingFactor = 1.0 * sum.getValue(originNode, destinationNode) / count.getValue(originNode, destinationNode);
+				scaling.setValue(originNode, destinationNode, scalingFactor);
+			}		
+		}
+
+		for (String zone: zoning.getZoneToNodeMatrix().keySet()) {
+			zoning.getZoneToNodeMatrix().get(zone).printMatrixFormatted(zone);
+			zoneToScalingFactors.get(zone).printMatrixFormatted("scaling factors:");
+			zoning.getZoneToNodeMatrix().get(zone).scaleMatrixValue(zoneToScalingFactors.get(zone));
+			zoning.getZoneToNodeMatrix().get(zone).printMatrixFormatted("after scaling");
+			zoning.getZoneToNodeMatrix().get(zone).normaliseWithZeroDiagonal();
+			zoning.getZoneToNodeMatrix().get(zone).printMatrixFormatted("after normalising:");
+		}
+		
 	}
 	
 	/**

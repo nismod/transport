@@ -251,7 +251,7 @@ public class EstimatedODMatrix extends RealODMatrix {
 		this.rna.resetTripStorages();
 		ODMatrix odm = new ODMatrix(this);
 		
-		this.rna.assignPassengerFlows(odm, null);
+		this.rna.assignPassengerFlowsRouting(odm, null);
 		double RMSN = this.rna.calculateRMSNforSimulatedVolumes();
 		System.out.printf("RMSN before scaling = %.2f%% %n", RMSN);
 		
@@ -282,14 +282,15 @@ public class EstimatedODMatrix extends RealODMatrix {
 				String originLAD = t.getOriginLAD(this.rna.getRoadNetwork().getNodeToZone());
 				String destinationLAD = t.getDestinationLAD(this.rna.getRoadNetwork().getNodeToZone());
 				Route route = t.getRoute();
+				int multiplier = t.getMultiplier();
 				
 				//get current factor and count
 				double factor = factors.getFlow(originLAD, destinationLAD); 
 				int count = counter.getFlow(originLAD, destinationLAD);
 				
 				for (DirectedEdge edge: route.getEdges()) {
-					factor += linkFactors.get(edge.getID());
-					count++;
+					factor += linkFactors.get(edge.getID()) * multiplier;
+					count += multiplier;
 				}
 				
 				//update factor sum and count
