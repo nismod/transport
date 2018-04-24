@@ -97,6 +97,9 @@ public class RoadNetworkAssignmentTest {
 				
 		//create a road network assignment
 		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, props);
+		
+		//set assignment fraction
+		rna.setAssignmentFraction(0.1);
 
 		//assign passenger flows
 		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
@@ -110,7 +113,7 @@ public class RoadNetworkAssignmentTest {
 		//rsg.readRoutes("./src/main/resources/data/5routes10nodesnew/all5routestop10new.txt");
 		//rsg.readRoutes("./src/main/resources/data/routesCombined/routesCombined.txt");
 		//rsg.readRoutesBinaryWithoutValidityCheck("./src/main/resources/data/routesCombined/routesCombined.dat");
-		rsg.readRoutesBinaryWithoutValidityCheck(passengerRoutesFile);
+		//rsg.readRoutesBinaryWithoutValidityCheck(passengerRoutesFile);
 		rsg.printStatistics();
 		
 		//set route choice parameters
@@ -121,10 +124,20 @@ public class RoadNetworkAssignmentTest {
 		params.setProperty("INTERSECTIONS", "-0.1");
 		params.setProperty("AVERAGE_INTERSECTION_DELAY", "0.8");
 		
+		
+		HashMap<TimeOfDay, RouteSetGenerator> routeStorage = new HashMap<TimeOfDay, RouteSetGenerator>();
+		for (TimeOfDay hour: TimeOfDay.values()) {
+			routeStorage.put(hour, new RouteSetGenerator(roadNetwork));
+		}
+		
 		//assign passenger flows
 		long timeNow = System.currentTimeMillis();
-//		rna.assignPassengerFlows(odm);
-		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
+		rna.assignPassengerFlowsHourlyRouting(odm, routeStorage);
+		for (TimeOfDay hour: TimeOfDay.values()) {
+			routeStorage.get(hour).printStatistics();
+		}
+		//rsg.printStatistics();
+		//rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Passenger flows assigned in %d seconds.\n", timeNow / 1000);
 		
@@ -163,8 +176,7 @@ public class RoadNetworkAssignmentTest {
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Parallel stream processing in %d milliseconds.\n", timeNow);
 		
-		//
-		rna.saveAssignmentResults(2015, outputFolder + "car" + assignmentResultsFile);
+		//rna.saveAssignmentResults(2015, outputFolder + "car" + assignmentResultsFile);
 		
 		System.out.printf("RMSN for counts (0.25 expansion factor): %.2f%% %n", rna.calculateRMSNforExpandedSimulatedVolumes(0.25));
 		System.out.printf("RMSN for counts (0.5 expansion factor): %.2f%% %n", rna.calculateRMSNforExpandedSimulatedVolumes(0.5));
@@ -347,7 +359,7 @@ public class RoadNetworkAssignmentTest {
 		
 		//assign passenger flows
 		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
-		rna.assignPassengerFlows(odm, null);
+		rna.assignPassengerFlowsRouting(odm, null);
 		
 		//TEST OUTPUT AREA PROBABILITIES
 		System.out.println("\n\n*** Testing output area probabilities ***");
@@ -602,7 +614,7 @@ public class RoadNetworkAssignmentTest {
 
 		//assign passenger flows
 		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
-		rna.assignPassengerFlows(odm, null);
+		rna.assignPassengerFlowsRouting(odm, null);
 		
 		//TEST OUTPUT AREA PROBABILITIES
 		System.out.println("\n\n*** Testing output area probabilities ***");
@@ -986,7 +998,7 @@ public class RoadNetworkAssignmentTest {
 		//assign freight flows
 		FreightMatrix fm = new FreightMatrix(baseYearFreightMatrixFile);
 		fm.printMatrixFormatted();
-		rna.assignFreightFlows(fm);
+		rna.assignFreightFlowsRouting(fm, null);
 		//rna.saveAssignmentResults(2015, "testAssignmentResultsWithFreight.csv");
 		
 		//TEST OUTPUT AREA PROBABILITIES
@@ -1142,7 +1154,7 @@ public class RoadNetworkAssignmentTest {
 		odm.printMatrixFormatted();
 		
 		long timeNow = System.currentTimeMillis();
-		rna.assignPassengerFlows(odm, null);
+		rna.assignPassengerFlowsRouting(odm, null);
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Passenger flows assigned in %d seconds.\n", timeNow / 1000);
 		

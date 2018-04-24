@@ -186,6 +186,21 @@ public class DemandModel {
 		this.yearToEngineTypeFractions.put(BASE_YEAR, engineTypeFractions);
 		*/
 	}
+	
+	
+	/**
+	 * Predicts (passenger and freight) highway demand (origin-destination vehicle flows)
+	 * for all years from baseYear to toYear
+	 * @param toYear The final year for which the demand is predicted.
+	 * @param baseYear The base year from which the predictions are made.
+	 */
+	public void predictHighwayDemands(int toYear, int baseYear) {
+		
+		for (int year = baseYear; year <= toYear - 1; year++)
+		
+			predictHighwayDemand(year + 1, year);
+	}
+	
 
 	/**
 	 * Predicts (passenger and freight) highway demand (origin-destination vehicle flows).

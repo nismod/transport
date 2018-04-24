@@ -414,12 +414,12 @@ public class DashboardRoadExpansion extends JFrame {
 		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
 
-		rnaBefore.assignPassengerFlows(odm, rsg);
+		rnaBefore.assignPassengerFlowsRouting(odm, rsg);
 		rnaBefore.updateLinkTravelTimes(0.9);
 
 		rnaBefore.resetLinkVolumes();
 		rnaBefore.resetTripStorages();
-		rnaBefore.assignPassengerFlows(odm, rsg);
+		rnaBefore.assignPassengerFlowsRouting(odm, rsg);
 		rnaBefore.updateLinkTravelTimes(0.9);
 
 		rnaBefore.updateLinkVolumeInPCU();
@@ -700,7 +700,7 @@ public class DashboardRoadExpansion extends JFrame {
 				}
 
 				RoadNetworkAssignment rnaAfterExpansion = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, props);
-				rnaAfterExpansion.assignPassengerFlows(odm, rsg);
+				rnaAfterExpansion.assignPassengerFlowsRouting(odm, rsg);
 				rnaAfterExpansion.updateLinkVolumeInPCU();
 				rnaAfterExpansion.updateLinkVolumeInPCUPerTimeOfDay();
 
@@ -749,7 +749,7 @@ public class DashboardRoadExpansion extends JFrame {
 				rnaAfterExpansion.resetLinkVolumes();
 				rnaAfterExpansion.resetTripStorages();
 
-				rnaAfterExpansion.assignPassengerFlows(predictedODM, rsg);
+				rnaAfterExpansion.assignPassengerFlowsRouting(predictedODM, rsg);
 				rnaAfterExpansion.updateLinkVolumeInPCU();
 				rnaAfterExpansion.updateLinkVolumeInPCUPerTimeOfDay();
 				//SkimMatrix sm = rnaAfterExpansion.calculateTimeSkimMatrix();

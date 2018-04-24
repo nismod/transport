@@ -430,7 +430,7 @@ public class RoadDevelopmentDashboard extends JFrame {
 				//rsg.generateRouteSetForODMatrix(odm);
 				rsg.clearRoutes();
 				//rnaAfterDevelopment.assignPassengerFlowsRouteChoice(odm, rsg, props);
-				rnaAfterDevelopment.assignPassengerFlows(odm, rsg);
+				rnaAfterDevelopment.assignPassengerFlowsRouting(odm, rsg);
 				rnaAfterDevelopment.updateLinkVolumeInPCU();
 				rnaAfterDevelopment.updateLinkVolumeInPCUPerTimeOfDay();
 
@@ -478,7 +478,7 @@ public class RoadDevelopmentDashboard extends JFrame {
 				rnaAfterDevelopment.resetTripStorages();
 
 				rsg.clearRoutes();
-				rnaAfterDevelopment.assignPassengerFlows(predictedODM, rsg);
+				rnaAfterDevelopment.assignPassengerFlowsRouting(predictedODM, rsg);
 				rnaAfterDevelopment.updateLinkVolumeInPCU();
 				rnaAfterDevelopment.updateLinkVolumeInPCUPerTimeOfDay();
 				//SkimMatrix sm = rnaAfterDevelopment.calculateTimeSkimMatrix();
@@ -1167,12 +1167,12 @@ public class RoadDevelopmentDashboard extends JFrame {
 		odm.scaleMatrixValue(MATRIX_SCALING_FACTOR);
 		rsg = new RouteSetGenerator(roadNetwork);
 
-		rnaBefore.assignPassengerFlows(odm, rsg);
+		rnaBefore.assignPassengerFlowsRouting(odm, rsg);
 		rnaBefore.updateLinkTravelTimes(0.9);
 
 		rnaBefore.resetLinkVolumes();
 		rnaBefore.resetTripStorages();
-		rnaBefore.assignPassengerFlows(odm, rsg);
+		rnaBefore.assignPassengerFlowsRouting(odm, rsg);
 		rnaBefore.updateLinkTravelTimes(0.9);
 
 		rnaBefore.updateLinkVolumeInPCU();

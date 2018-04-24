@@ -33,8 +33,8 @@ public class EstimatedODMatrixTest {
 		double[] BIN_LIMITS_KM = {0.0, 0.621371, 1.242742, 3.106855, 6.21371, 15.534275, 31.06855, 62.1371, 93.20565, 155.34275, 217.47985};
 		double[] OTLD = {0.05526, 0.16579, 0.34737, 0.21053, 0.15789, 0.03947, 0.01579, 0.00432, 0.00280, 0.00063, 0.00014};
 		
-		final String configFile = "./src/main/config/config.properties";
-		//final String configFile = "./src/test/config/testConfig.properties";
+		//final String configFile = "./src/main/config/config.properties";
+		final String configFile = "./src/test/config/testConfig.properties";
 		//final String configFile = "./src/test/config/miniTestConfig.properties";
 		Properties props = ConfigReader.getProperties(configFile);
 		
@@ -114,7 +114,14 @@ public class EstimatedODMatrixTest {
 		for (int i=0; i<10; i++) odmpa.iterate();
 		
 		odmpa.printMatrixFormatted("After 10 further iterations:");
-		odmpa.saveMatrixFormatted(outputFolder + "balancedTemproODMatrix.csv");
+		//odmpa.saveMatrixFormatted(outputFolder + "balancedTemproODMatrix.csv");
+		ODMatrix estimatedODM = new ODMatrix(odmpa);
+		
+		rna.resetTripStorages();
+		rna.resetLinkVolumes();
+		rna.assignPassengerFlowsTempro(estimatedODM, zoning, rsg);
+		double RMSN = rna.calculateRMSNforSimulatedVolumes();
+		System.out.printf("RMSN = %.2f%% %n", RMSN);
 	}
 
 	@Test

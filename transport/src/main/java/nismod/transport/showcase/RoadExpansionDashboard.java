@@ -415,7 +415,7 @@ public class RoadExpansionDashboard extends JFrame {
 
 				RoadNetworkAssignment rnaAfterExpansion = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, props);
 				rsg.clearRoutes();
-				rnaAfterExpansion.assignPassengerFlows(odm, rsg);
+				rnaAfterExpansion.assignPassengerFlowsRouting(odm, rsg);
 	//			rnaAfterExpansion.assignPassengerFlowsRouteChoice(odm, rsg, props);
 				rnaAfterExpansion.updateLinkVolumeInPCU();
 				rnaAfterExpansion.updateLinkVolumeInPCUPerTimeOfDay();
@@ -476,7 +476,7 @@ public class RoadExpansionDashboard extends JFrame {
 				rnaAfterExpansion.resetTripStorages();
 
 				rsg.clearRoutes();
-				rnaAfterExpansion.assignPassengerFlows(predictedODM, rsg);
+				rnaAfterExpansion.assignPassengerFlowsRouting(predictedODM, rsg);
 //				rnaAfterExpansion.assignPassengerFlowsRouteChoice(predictedODM, rsg, props);
 				rnaAfterExpansion.updateLinkVolumeInPCU();
 				rnaAfterExpansion.updateLinkVolumeInPCUPerTimeOfDay();
@@ -1174,7 +1174,7 @@ public class RoadExpansionDashboard extends JFrame {
 		//rsg.generateRouteSetForODMatrix(odm, 5);
 
 //		rnaBefore.assignPassengerFlowsRouteChoice(odm, rsg, props);
-		rnaBefore.assignPassengerFlows(odm, rsg);
+		rnaBefore.assignPassengerFlowsRouting(odm, rsg);
 //		rnaBefore.updateLinkTravelTimes(0.9);
 //		rnaBefore.resetLinkVolumes();
 //		rnaBefore.resetTripStorages();

@@ -439,15 +439,15 @@ public class RoadNetworkAssignment {
 		//System.out.println(this.endNodeProbabilitiesFreight);
 	}
 	
-
-
 	/** 
-	 * Assigns passenger origin-destination matrix to the road network.
-	 * Calculates the fastest path based on the current values in the linkTravelTime instance field.
+	 * Assigns passenger origin-destination matrix to the road network using A-star routing algorithm.
+	 * Calculates the fastest path based on the current values in the linkTravlinkTravelTimePerTimeOfDayelTime instance field,
+	 * however only one route will be used for the same OD pair (the route that was calculated first).
 	 * @param passengerODM Passenger origin-destination matrix with flows to be assigned.
+	 * @param rsg To store routes during the assignment (reduces the number of routing calls).
 	 */
 	@SuppressWarnings("unused")
-	public void assignPassengerFlows(ODMatrix passengerODM, RouteSetGenerator rsg) {
+	public void assignPassengerFlowsRouting(ODMatrix passengerODM, RouteSetGenerator rsg) {
 
 		System.out.println("Assigning the passenger flows from the passenger matrix...");
 
@@ -455,9 +455,8 @@ public class RoadNetworkAssignment {
 		this.roadNetwork.sortGravityNodes();
 
 		//to store routes generated during the assignment
-		//RouteSetGenerator rsg = new RouteSetGenerator(this.roadNetwork);
 		if (rsg == null) rsg = new RouteSetGenerator(this.roadNetwork);
-
+		
 		//counters to calculate percentage of assignment success
 		long counterAssignedTrips = 0;
 		long counterTotalFlow = 0;
@@ -584,6 +583,196 @@ public class RoadNetworkAssignment {
 				try {
 
 					//see if that route already exists in the route storage
+					RouteSet rs = rsg.getRouteSet(originNode, destinationNode);
+					if (rs != null) foundRoute = rs.getChoiceSet().get(0); //take the first route
+
+					//if route does not already exist, get the shortest path from the origin node to the destination node using AStar algorithm
+					if (foundRoute == null) {
+						//System.out.println("The path does not exist in the path storage");
+
+						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(originNode);
+						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(destinationNode);
+
+						//RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTime);
+						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, (HashMap<Integer, Double>)this.linkTravelTimePerTimeOfDay.get(hour));
+						if (fastestPath == null) {
+							System.err.println("Not even aStar could find a route!");
+							continue;
+						}
+
+						foundRoute = new Route(fastestPath);
+						rsg.addRoute(foundRoute); //add to the route set
+					}
+
+					int multiplier = (int) Math.round(1 / this.assignmentFraction);
+					counterAssignedTrips += multiplier;
+
+					//store trip in trip list
+					Trip trip = new Trip(vht, engine, foundRoute, hour, 0, 0, multiplier);
+					this.tripList.add(trip);
+
+				} catch (Exception e) {
+					e.printStackTrace();
+					System.err.printf("Couldnt find path from node %d to node %d!", from.getID(), to.getID());
+				}
+			}//for each trip
+		}//for each OD pair
+
+		System.out.println("Total flow: " + counterTotalFlow);
+		System.out.println("Total assigned trips: " + counterAssignedTrips);
+		System.out.println("Succesfully assigned trips: " + 100.0* counterAssignedTrips / counterTotalFlow);
+	}
+	
+	/** 
+	 * Assigns passenger origin-destination matrix to the road network using A-star routing algorithm.
+	 * Calculates the fastest path based on the current values in the linkTravlinkTravelTimePerTimeOfDayelTime instance field,
+	 * which means different fastest routes may be used in different hours of the day.
+	 * @param passengerODM Passenger origin-destination matrix with flows to be assigned.
+	 * @param routeStorage Stores routes for each hour of the day separately.
+	 */
+	@SuppressWarnings("unused")
+	public void assignPassengerFlowsHourlyRouting(ODMatrix passengerODM, HashMap<TimeOfDay, RouteSetGenerator> routeStorage) {
+
+		System.out.println("Assigning the passenger flows from the passenger matrix...");
+
+		//sort nodes based on the gravitating population
+		this.roadNetwork.sortGravityNodes();
+
+		//to store routes generated during the assignment
+		if (routeStorage == null) {
+			routeStorage = new HashMap<TimeOfDay, RouteSetGenerator>();
+			for (TimeOfDay hour: TimeOfDay.values()) {
+				routeStorage.put(hour, new RouteSetGenerator(this.roadNetwork));
+			}
+		}
+		
+		//counters to calculate percentage of assignment success
+		long counterAssignedTrips = 0;
+		long counterTotalFlow = 0;
+
+		//for each OD pair from the passengerODM		
+		for (MultiKey mk: passengerODM.getKeySet()) {
+			//System.out.println(mk);
+			//System.out.println("origin = " + mk.getKey(0));
+			//System.out.println("destination = " + mk.getKey(1));
+			String originZone = (String)mk.getKey(0);
+			String destinationZone = (String)mk.getKey(1);
+
+			List<Integer> listOfOriginNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(originZone)); //the list is already sorted
+			List<Integer> listOfDestinationNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(destinationZone)); //the list is already sorted
+			
+			//removing blacklisted nodes
+			for (Integer originNode: roadNetwork.getZoneToNodes().get(originZone))
+				//check if any of the nodes is blacklisted
+				if (this.roadNetwork.isBlacklistedAsStartNode(originNode)) 
+					listOfOriginNodes.remove(originNode);
+
+			//removing blacklisted nodes
+			for (Integer destinationNode: roadNetwork.getZoneToNodes().get(destinationZone))
+				//check if any of the nodes is blacklisted
+				if (this.roadNetwork.isBlacklistedAsEndNode(destinationNode)) 
+					listOfDestinationNodes.remove(destinationNode);
+	
+			//for each trip
+			int flow = (int) Math.round(passengerODM.getFlow(originZone, destinationZone) * this.assignmentFraction);
+			counterTotalFlow += passengerODM.getFlow(originZone, destinationZone);
+
+			for (int i=0; i<flow; i++) {
+
+				//choose time of day
+				double cumulativeProbability = 0.0;
+				double random = rng.nextDouble();
+				TimeOfDay hour = null;
+				for (Map.Entry<TimeOfDay, Double> entry : timeOfDayDistribution.entrySet()) {
+					TimeOfDay key = entry.getKey();
+					Double value = entry.getValue();	
+					cumulativeProbability += value;
+					if (Double.compare(cumulativeProbability, random) > 0) {
+						hour = key;
+						break;
+					}
+				}
+				if (hour == null) System.err.println("Time of day not chosen!");
+
+				//choose vehicle
+				random  = rng.nextDouble();
+				VehicleType vht = null;
+				if (Double.compare(1.0 - fractionAV, random) > 0)
+					vht = VehicleType.CAR;
+				else 
+					vht = VehicleType.AV;
+				if (vht == null) System.err.println("Vehicle type not chosen!");
+
+				//choose engine
+				cumulativeProbability = 0.0;
+				random = rng.nextDouble();
+				EngineType engine = null;
+				for (Map.Entry<EngineType, Double> entry : engineTypeFractions.get(vht).entrySet()) {
+					EngineType key = entry.getKey();
+					Double value = entry.getValue();	
+					cumulativeProbability += value;
+					if (Double.compare(cumulativeProbability, random) > 0) {
+						engine = key;
+						break;
+					}
+				}
+				if (engine == null) System.err.println("Engine type not chosen!");
+
+				//choose origin/destination nodes based on the gravitating population
+				//the choice with replacement means that possibly: destination node = origin node
+				//the choice without replacement means that destination node has to be different from origin node
+
+				//choose origin node
+				cumulativeProbability = 0.0;
+				Integer originNode = null;
+				random = rng.nextDouble();
+				for (Integer node: listOfOriginNodes) {
+					cumulativeProbability += startNodeProbabilities.get(node);
+					if (Double.compare(cumulativeProbability, random) > 0) {
+						originNode = node;
+						break;
+					}
+				}
+
+				if (originNode == null) System.err.println("Origin node was not chosen!");
+
+				//choose destination node
+				cumulativeProbability = 0.0;
+				Integer destinationNode = null;
+				random = rng.nextDouble();
+				//if intrazonal trip and replacement is not allowed, the probability of the originNode should be 0 so it cannot be chosen again
+				//also, in that case it is important to rescale other node probabilities (now that the originNode is removed) by dividing with (1.0 - p(originNode))!
+				if (!flagIntrazonalAssignmentReplacement && originZone.equals(destinationZone) && listOfDestinationNodes.contains(originNode)) { //no replacement and intra-zonal trip
+					for (Integer node: listOfDestinationNodes) {
+						if (node.intValue() == originNode.intValue()) continue; //skip if the node is the same as origin
+						cumulativeProbability += endNodeProbabilities.get(node) / (1.0 - endNodeProbabilities.get(originNode));
+						if (Double.compare(cumulativeProbability, random) > 0) {
+							destinationNode = node;
+							break;
+						}
+					}
+				} else	{ //inter-zonal trip (or intra-zonal with replacement)
+					for (Integer node: listOfDestinationNodes) {
+						cumulativeProbability += endNodeProbabilities.get(node);
+						if (Double.compare(cumulativeProbability, random) > 0) {
+							destinationNode = node;
+							break;
+						}
+					}
+				}	
+
+				if (destinationNode == null) System.err.println("Destination node was not chosen!");
+
+				DirectedGraph rn = roadNetwork.getNetwork();
+				//set source and destination node
+				Node from = roadNetwork.getNodeIDtoNode().get(originNode);
+				Node to = roadNetwork.getNodeIDtoNode().get(destinationNode);
+				//					System.out.println("from " + from + " to " + to);
+				Route foundRoute = null;
+				try {
+
+					//see if that route already exists in the route storage
+					RouteSetGenerator rsg = routeStorage.get(hour);
 					RouteSet rs = rsg.getRouteSet(originNode, destinationNode);
 					if (rs != null) foundRoute = rs.getChoiceSet().get(0); //take the first route
 
@@ -1408,7 +1597,7 @@ public class RoadNetworkAssignment {
 	}
 
 	/**
-	 * Assigns freight origin-destination matrix to the road network.
+	 * Assigns freight origin-destination matrix to the road network using A-star routing.
 	 * Zone ID ranges from the BYFM DfT model:
 	 * <ul>
 	 * 		<li>England: 1 - 867</li>
@@ -1419,9 +1608,10 @@ public class RoadNetworkAssignment {
 	 * 		<li>Freight ports: 1301 - 1388</li>
 	 * </ul>   
 	 * @param freightMatrix Freight origin-destination matrix.
+	 * @param rsg Route storage (reduces the number of routing calls).
 	 */
 	@SuppressWarnings("unused")
-	public void assignFreightFlows(FreightMatrix freightMatrix) {
+	public void assignFreightFlowsRouting(FreightMatrix freightMatrix, RouteSetGenerator rsg) {
 
 
 		System.out.println("Assigning the vehicle flows from the freight matrix...");
@@ -1431,7 +1621,7 @@ public class RoadNetworkAssignment {
 		long counterTotalFlow = 0;
 
 		//to store routes generated during the assignment
-		RouteSetGenerator rsg = new RouteSetGenerator(this.roadNetwork);
+		if (rsg == null) rsg = new RouteSetGenerator(this.roadNetwork);
 
 		//sort nodes based on the gravitating workplace population
 		this.roadNetwork.sortGravityNodesFreight();
@@ -1632,6 +1822,238 @@ public class RoadNetworkAssignment {
 		System.out.println("Successfully assigned trips percentage: " + 100.0* counterAssignedTrips / counterTotalFlow);
 	}
 
+	/**
+	 * Assigns freight origin-destination matrix to the road network using A-star routing.
+	 * Zone ID ranges from the BYFM DfT model:
+	 * <ul>
+	 * 		<li>England: 1 - 867</li>
+	 * 		<li>Wales: 901 - 922</li>
+	 * 		<li>Scotland: 1001 - 1032</li>
+	 * 		<li>Freight airports: 1111 - 1115</li>
+	 * 		<li>Major distribution centres: 1201 - 1256</li>
+	 * 		<li>Freight ports: 1301 - 1388</li>
+	 * </ul>   
+	 * @param freightMatrix Freight origin-destination matrix.
+	 * @param routeStorage Route storage (stores fastest routes separately for each hour of the day).
+	 */
+	@SuppressWarnings("unused")
+	public void assignFreightFlowsHourlyRouting(FreightMatrix freightMatrix, HashMap<TimeOfDay, RouteSetGenerator> routeStorage) {
+
+
+		System.out.println("Assigning the vehicle flows from the freight matrix...");
+
+		//counters to calculate percentage of assignment success
+		long counterAssignedTrips = 0;
+		long counterTotalFlow = 0;
+
+		//to store routes generated during the assignment
+		if (routeStorage == null) {
+			routeStorage = new HashMap<TimeOfDay, RouteSetGenerator>();
+			for (TimeOfDay hour: TimeOfDay.values()) {
+				routeStorage.put(hour, new RouteSetGenerator(this.roadNetwork));
+			}
+		}
+
+		//sort nodes based on the gravitating workplace population
+		this.roadNetwork.sortGravityNodesFreight();
+
+		//for each OD pair from the passengerODM		
+		for (MultiKey mk: freightMatrix.getKeySet()) {
+			//System.out.println(mk);
+			//System.out.println("origin = " + mk.getKey(0));
+			//System.out.println("destination = " + mk.getKey(1));
+			//System.out.println("vehicle type = " + mk.getKey(2));
+			int origin = (int) mk.getKey(0);
+			int destination = (int) mk.getKey(1);
+			int vehicleType = (int) mk.getKey(2);
+
+			//for each trip
+			int flow = (int) Math.round(freightMatrix.getFlow(origin, destination, vehicleType) * this.assignmentFraction);
+			counterTotalFlow += freightMatrix.getFlow(origin, destination, vehicleType);
+
+			for (int i=0; i<flow; i++) {
+
+				//choose time of day
+				double cumulativeProbability = 0.0;
+				double random = rng.nextDouble();
+				TimeOfDay hour = null;
+				for (Map.Entry<TimeOfDay, Double> entry : timeOfDayDistribution.entrySet()) {
+					TimeOfDay key = entry.getKey();
+					Double value = entry.getValue();	
+					cumulativeProbability += value;
+					if (Double.compare(cumulativeProbability, random) > 0) {
+						hour = key;
+						break;
+					}
+				}
+				if (hour == null) System.err.println("Time of day not chosen!");
+
+				VehicleType vht = VehicleType.values()[vehicleType];
+
+				//choose engine
+				cumulativeProbability = 0.0;
+				random = rng.nextDouble();
+				EngineType engine = null;
+				for (Map.Entry<EngineType, Double> entry : engineTypeFractions.get(vht).entrySet()) {
+					EngineType key = entry.getKey();
+					Double value = entry.getValue();	
+					cumulativeProbability += value;
+					if (Double.compare(cumulativeProbability, random) > 0) {
+						engine = key;
+						break;
+					}
+				}
+				if (engine == null) System.err.println("Engine type not chosen!");
+
+				Integer originNode = null, destinationNode = null;
+
+				//choose origin node based on the gravitating population
+				if (origin <= 1032) { //origin freight zone is a LAD
+
+					//choose origin node based on the gravitating population
+					//the choice with replacement means that possibly: destination node = origin node
+					//the choice without replacement means that destination node has to be different from origin node
+
+					//map freight zone number to LAD code
+					String originLAD = roadNetwork.getFreightZoneToLAD().get(origin);
+					//List<Integer> listOfOriginNodes = roadNetwork.getZoneToNodes().get(originLAD); //the list is already sorted
+					List<Integer> listOfOriginNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(originLAD)); //the list is already sorted
+
+					//removing blacklisted nodes
+					for (Integer node: roadNetwork.getZoneToNodes().get(originLAD))
+						//check if any of the nodes is blacklisted
+						if (this.roadNetwork.isBlacklistedAsStartNode(node)) 
+							listOfOriginNodes.remove(node);
+
+					//choose origin node
+					cumulativeProbability = 0.0;
+					random = rng.nextDouble();
+					for (int node: listOfOriginNodes) {
+						cumulativeProbability += startNodeProbabilitiesFreight.get(node);
+						if (Double.compare(cumulativeProbability, random) > 0) {
+							originNode = node;
+							break;
+						}
+					}
+
+				} else {// freight zone is a point (port, airport or distribution centre)
+					originNode = roadNetwork.getFreightZoneToNearestNode().get(origin);
+				}
+
+				//choose destination node based on the gravitating population
+				if (destination <= 1032) { //destination freight zone is a LAD
+
+					//choose origin/destination nodes based on the gravitating population
+					//the choice with replacement means that possibly: destination node = origin node
+					//the choice without replacement means that destination node has to be different from origin node
+
+					//map freight zone number to LAD code
+					String destinationLAD = roadNetwork.getFreightZoneToLAD().get(destination);
+					//List<Integer> listOfDestinationNodes = roadNetwork.getZoneToNodes().get(destinationLAD); //the list is already sorted
+					List<Integer> listOfDestinationNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(destinationLAD)); //the list is already sorted
+
+					//removing blacklisted nodes
+					for (Integer node: roadNetwork.getZoneToNodes().get(destinationLAD))
+						//check if any of the nodes is blacklisted
+						if (this.roadNetwork.isBlacklistedAsEndNode(node)) 
+							listOfDestinationNodes.remove(node);
+
+					//choose origin node
+					cumulativeProbability = 0.0;
+					random = rng.nextDouble();
+					//if intrazonal trip and replacement is not allowed, the probability of the originNode should be 0 so it cannot be chosen again
+					//also, in that case it is important to rescale other node probabilities (now that the originNode is removed) by dividing with (1.0 - p(originNode))!
+					if (!flagIntrazonalAssignmentReplacement && origin == destination && listOfDestinationNodes.contains(originNode)) { //no replacement and intra-zonal trip
+						for (int node: listOfDestinationNodes) {
+							if (node == originNode.intValue()) continue; //skip if the node is the same as origin
+							cumulativeProbability += endNodeProbabilitiesFreight.get(node) / (1.0 - endNodeProbabilitiesFreight.get(originNode));
+							if (Double.compare(cumulativeProbability, random) > 0) {
+								destinationNode = node;
+								break;
+							}
+						}
+					} else	{ //inter-zonal trip (or intra-zonal with replacement)
+						for (int node: listOfDestinationNodes) {
+							cumulativeProbability += endNodeProbabilitiesFreight.get(node);
+							if (Double.compare(cumulativeProbability, random) > 0) {
+								destinationNode = node;
+								break;
+							}
+						}
+					}
+
+				} else {// freight zone is a point (port, airport or distribution centre)
+					destinationNode = roadNetwork.getFreightZoneToNearestNode().get(destination);
+				}
+
+				if (originNode == null) System.err.println("Could not find origin node for a freight trip!");
+				if (destinationNode == null) System.err.println("Could not find destination node for a freight trip!");
+
+
+				DirectedGraph rn = roadNetwork.getNetwork();
+				//set source and destination node
+				Node from = roadNetwork.getNodeIDtoNode().get(originNode);
+				Node to = roadNetwork.getNodeIDtoNode().get(destinationNode);
+				//					System.out.println("from " + from + " to " + to);
+				Route foundRoute = null;
+				try {
+					//see if that route already exists in the route storage
+					RouteSetGenerator rsg = routeStorage.get(hour);
+					RouteSet rs = rsg.getRouteSet(originNode, destinationNode);
+					if (rs != null) foundRoute = rs.getChoiceSet().get(0); //take the first route
+
+					//if route does not already exist, get the shortest path from the origin node to the destination node using AStar algorithm
+					if (foundRoute == null) {
+						//System.out.println("The path does not exist in the path storage");
+
+						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(originNode);
+						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(destinationNode);
+
+						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
+						if (fastestPath == null) {
+							System.err.println("Not even aStar could find a route!");
+							continue;
+						}
+
+						foundRoute = new Route(fastestPath);
+						rsg.addRoute(foundRoute); //add to the route set
+					}
+
+					//if path does not already exist, get the shortest path from the origin node to the destination node using AStar algorithm
+					if (foundRoute == null) {
+
+						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(originNode);
+						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(destinationNode);
+
+						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
+						if (fastestPath == null) {
+							System.err.println("Not even aStar could find a route!");
+							continue;
+						}
+
+						foundRoute = new Route(fastestPath);
+					}
+
+					int multiplier = (int) Math.round(1 / this.assignmentFraction);
+					
+					//trip was assigned
+					counterAssignedTrips += multiplier;
+
+					//store trip in trip list
+					Trip trip = new Trip(vht, engine, foundRoute, hour, origin, destination, multiplier);
+					this.tripList.add(trip);
+
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}//for each trip
+		}//for each OD pair
+
+		System.out.println("Total flow: " + counterTotalFlow);
+		System.out.println("Total assigned trips: " + counterAssignedTrips);
+		System.out.println("Successfully assigned trips percentage: " + 100.0* counterAssignedTrips / counterTotalFlow);
+	}
+	
 	/**
 	 * Assigns freight origin-destination matrix to the road network using a route choice model and pre-generated routes.
 	 * Zone ID ranges from the BYFM DfT model:
@@ -2167,8 +2589,8 @@ public class RoadNetworkAssignment {
 	 */
 	public void assignFlowsAndUpdateLinkTravelTimes(ODMatrix passengerODM, FreightMatrix freightODM, RouteSetGenerator rsg, double weight) {
 
-		this.assignPassengerFlows(passengerODM, rsg);
-		this.assignFreightFlows(freightODM);
+		this.assignPassengerFlowsRouting(passengerODM, rsg);
+		this.assignFreightFlowsRouting(freightODM, rsg);
 		this.updateLinkTravelTimes(weight);
 	}
 
@@ -3606,6 +4028,15 @@ public class RoadNetworkAssignment {
 	public void setEngineTypeFractions (VehicleType vht, HashMap<EngineType, Double> engineTypeFractions) {
 
 		this.engineTypeFractions.put(vht, engineTypeFractions);
+	}
+	
+	/**
+	 * Setter method for fractional assignment.
+	 * @param double assignmentFraction Assignment fraction (<= 1.0).
+	 */
+	public void setAssignmentFraction (double assignmentFraction) {
+
+		this.assignmentFraction = assignmentFraction;
 	}
 
 	/**

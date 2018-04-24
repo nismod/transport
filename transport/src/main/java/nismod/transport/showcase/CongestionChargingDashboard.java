@@ -431,7 +431,7 @@ public class CongestionChargingDashboard extends JFrame {
 				
 				RandomSingleton.getInstance().setSeed(1234);
 
-				rnaAfterCongestionCharging.assignPassengerFlows(predictedODM, rsg);
+				rnaAfterCongestionCharging.assignPassengerFlowsRouting(predictedODM, rsg);
 				rnaAfterCongestionCharging.updateLinkVolumeInPCU();
 				rnaAfterCongestionCharging.updateLinkVolumeInPCUPerTimeOfDay();
 				//SkimMatrix sm = rnaAfterCongestionCharging.calculateTimeSkimMatrix();

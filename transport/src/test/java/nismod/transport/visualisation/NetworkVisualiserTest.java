@@ -41,7 +41,7 @@ public class NetworkVisualiserTest {
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
 		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, props);
 		ODMatrix odm = new ODMatrix("./src/test/resources/testdata/csvfiles/passengerODM.csv");
-		rna.assignPassengerFlows(odm, null);
+		rna.assignPassengerFlowsRouting(odm, null);
 		
 		final URL congestionChargeZoneUrl = new URL("file://src/test/resources/testdata/shapefiles/congestionChargingZone.shp");
 		String shapefilePath = "./temp/networkWithDailyVolume.shp";
