@@ -213,7 +213,6 @@ public class SPSA4 {
 		
 		//assign passenger flows
 		rna.assignPassengerFlowsTempro(odm, this.zoning, this.rsg); //routing version with tempro zones
-		rna.expandTripList(); //if fractional assignment used
 		rna.updateLinkVolumePerVehicleType(); //used in RMSN calculation
 		
 		//calculate RMSN

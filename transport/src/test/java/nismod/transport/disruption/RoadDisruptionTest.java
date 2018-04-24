@@ -285,7 +285,6 @@ public class RoadDisruptionTest {
 
 		rsg.calculateAllUtilities(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, null, params);
 		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
-		rna.expandTripList();
 		rna.updateLinkVolumeInPCU();
 
 		assertNull("There should be no traffic volume for the removed link", rna.getLinkVolumeInPCU().get(561));

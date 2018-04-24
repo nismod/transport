@@ -43,6 +43,25 @@ public class TripTempro extends Trip {
 		this.zoning = zoning;
 	}
 	
+	/**
+	 * Constructor for a trip. Origin and destination are used for freight trips (according to DfT's BYFM zonal coding).
+	 * Origin and destination for passenger car/AV trips are 0 as their correct origin and destination zone can be 
+	 * obtained using the first and the last node of the route.
+	 * @param vehicle Vehicle type.
+	 * @param engine Engine type.
+	 * @param route Route.
+	 * @param hour Time of day.
+	 * @param originTemproZone Origin tempro zone ID.
+	 * @param destinationTemproZone Destination tempro zone ID.
+	 * @param zoning Zoning system.
+	 * @param multiplier Multiplies the same trip.
+	 */
+	public TripTempro (VehicleType vehicle, EngineType engine, Route route, TimeOfDay hour, Integer originTemproZoneID, Integer destinationTemproZoneID, Zoning zoning, int multiplier) {
+		
+		super(vehicle, engine, route, hour, originTemproZoneID, destinationTemproZoneID, multiplier);
+		this.zoning = zoning;
+	}
+	
 	
 //	There should be mapping from Tempro to LAD zones in the Zoning class	
 //	/**
