@@ -248,7 +248,6 @@ public class SPSA2 {
 		
 		//assign passenger flows
 		rna.assignPassengerFlows(this.odm, null); //routing version
-		rna.expandTripList(); //if fractional assignment used
 		rna.updateLinkVolumePerVehicleType(); //used in RMSN calculation
 		
 		//calculate RMSN

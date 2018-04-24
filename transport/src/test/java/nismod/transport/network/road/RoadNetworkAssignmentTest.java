@@ -128,8 +128,6 @@ public class RoadNetworkAssignmentTest {
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Passenger flows assigned in %d seconds.\n", timeNow / 1000);
 		
-		rna.expandTripList();
-		
 		rna.updateLinkVolumeInPCU();
 		rna.updateLinkVolumeInPCUPerTimeOfDay();
 		rna.updateLinkVolumePerVehicleType();
@@ -350,7 +348,6 @@ public class RoadNetworkAssignmentTest {
 		//assign passenger flows
 		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
 		rna.assignPassengerFlows(odm, null);
-		rna.expandTripList();
 		
 		//TEST OUTPUT AREA PROBABILITIES
 		System.out.println("\n\n*** Testing output area probabilities ***");
@@ -606,7 +603,6 @@ public class RoadNetworkAssignmentTest {
 		//assign passenger flows
 		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
 		rna.assignPassengerFlows(odm, null);
-		rna.expandTripList();
 		
 		//TEST OUTPUT AREA PROBABILITIES
 		System.out.println("\n\n*** Testing output area probabilities ***");
@@ -991,7 +987,6 @@ public class RoadNetworkAssignmentTest {
 		FreightMatrix fm = new FreightMatrix(baseYearFreightMatrixFile);
 		fm.printMatrixFormatted();
 		rna.assignFreightFlows(fm);
-		rna.expandTripList();
 		//rna.saveAssignmentResults(2015, "testAssignmentResultsWithFreight.csv");
 		
 		//TEST OUTPUT AREA PROBABILITIES

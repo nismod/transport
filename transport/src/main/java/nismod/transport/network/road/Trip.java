@@ -30,6 +30,7 @@ public class Trip {
 	protected TimeOfDay hour;
 	protected Integer origin; //for freight trips
 	protected Integer destination; //for freight trips
+	protected int multiplier; //multiplies the same trip multiplier times
 		
 	/**
 	 * Constructor for a trip. Origin and destination are used for freight trips (according to DfT's BYFM zonal coding).
@@ -38,6 +39,9 @@ public class Trip {
 	 * @param vehicle Vehicle type.
 	 * @param engine Engine type.
 	 * @param route Route.
+	 * @param hour Time of day.
+	 * @param origin Origin zone for freight trips (null for passenger trips).
+	 * @param destination Destination zone for freight trips (null for passenger trips).
 	 */
 	public Trip(VehicleType vehicle, EngineType engine, Route route, TimeOfDay hour, Integer origin, Integer destination) {
 		
@@ -47,6 +51,36 @@ public class Trip {
 		this.hour = hour;
 		this.origin = origin;
 		this.destination = destination;
+		this.multiplier = 1; //create just one trip
+		
+		/*
+		if (vehicle == VehicleType.CAR || vehicle == VehicleType.AV)
+			if (origin != 0 || destination != 0)
+				System.err.println("Origin and destination for non-freight trips must be 0 as their ODs should be fetched from the route.");
+		*/
+	}
+	
+	/**
+	 * Constructor for a trip. Origin and destination are used for freight trips (according to DfT's BYFM zonal coding).
+	 * Origin and destination for passenger car/AV trips are 0 as their correct origin and destination zone can be 
+	 * obtained using the first and the last node of the route.
+	 * @param vehicle Vehicle type.
+	 * @param engine Engine type.
+	 * @param route Route.
+	 * @param hour Time of day.
+	 * @param origin Origin zone for freight trips (null for passenger trips).
+	 * @param destination Destination zone for freight trips (null for passenger trips).
+	 * @param multipliyer Multiplies the same trip.
+	 */
+	public Trip(VehicleType vehicle, EngineType engine, Route route, TimeOfDay hour, Integer origin, Integer destination, int multiplier) {
+		
+		this.vehicle = vehicle;
+		this.engine = engine;
+		this.route = route;
+		this.hour = hour;
+		this.origin = origin;
+		this.destination = destination;
+		this.multiplier = multiplier; //creates multiples of the same trip
 		
 		/*
 		if (vehicle == VehicleType.CAR || vehicle == VehicleType.AV)
@@ -149,6 +183,15 @@ public class Trip {
 		return this.hour;
 	}
 	
+	/**
+	 * Getter method for the multiplier.
+	 * @return Multiplier.
+	 */
+	public int getMultiplier() {
+		
+		return this.multiplier;
+	}
+	
 	public double getLength(HashMap<Integer, Double> averageAccessEgressMap) {
 
 		Double length = this.route.getLength(); //route length is not changing so if can be calculated only once and stored
@@ -238,6 +281,8 @@ public class Trip {
 		sb.append(this.origin);
 		sb.append(", ");
 		sb.append(this.destination);
+		sb.append(", ");
+		sb.append(this.multiplier);
 		sb.append(", ");
 		sb.append(this.route.toString());
 
