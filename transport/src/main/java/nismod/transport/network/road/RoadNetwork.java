@@ -420,8 +420,8 @@ public class RoadNetwork {
 			try {
 				featureStore.addFeatures(collection);
 				transaction.commit();
-			} catch (Exception problem) {
-				problem.printStackTrace();
+			} catch (Exception e) {
+				LOGGER.error(e);
 				transaction.rollback();
 			} finally {
 				transaction.close();
@@ -574,8 +574,8 @@ public class RoadNetwork {
 			try {
 				featureStore.addFeatures(collection);
 				transaction.commit();
-			} catch (Exception problem) {
-				problem.printStackTrace();
+			} catch (Exception e) {
+				LOGGER.error(e);
 				transaction.rollback();
 			} finally {
 				transaction.close();
@@ -615,10 +615,10 @@ public class RoadNetwork {
 //			builder.setCRS(crs);
 //		} catch (NoSuchAuthorityCodeException e) {
 //			// TODO Auto-generated catch block
-//			e.printStackTrace();
+//			LOGGER.error(e);
 //		} catch (FactoryException e) {
 //			// TODO Auto-generated catch block
-//			e.printStackTrace();
+//			LOGGER.error(e);
 //		}
 //		builder.setName("Location");
 //		//add attributes in order
@@ -1075,7 +1075,7 @@ public class RoadNetwork {
 				System.err.println("Could not find the shortest path using astar.");
 				path = null;
 			} catch (Exception e) {
-				e.printStackTrace();
+				LOGGER.error(e);
 				System.err.println("Could not find the shortest path using astar.");
 				path = null;
 			} 
@@ -1124,7 +1124,7 @@ public class RoadNetwork {
 				return null;
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			LOGGER.error(e);
 			System.err.println("Could not find the shortest path using Dijkstra.");
 			return null;
 		}
@@ -2295,10 +2295,10 @@ public class RoadNetwork {
 			builder.setCRS(crs);
 		} catch (NoSuchAuthorityCodeException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOGGER.error(e);
 		} catch (FactoryException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOGGER.error(e);
 		}
 		builder.setName("Location");
 
@@ -2340,10 +2340,10 @@ public class RoadNetwork {
 			builder.setCRS(crs);
 		} catch (NoSuchAuthorityCodeException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOGGER.error(e);
 		} catch (FactoryException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOGGER.error(e);
 		}
 		builder.setName("Location");
 

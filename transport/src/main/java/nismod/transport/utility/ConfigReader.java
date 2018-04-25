@@ -25,16 +25,14 @@ public class ConfigReader {
 			inputStream = new FileInputStream(configFile);
 			// load properties file
 			props.load(inputStream);
-		} catch (IOException ex) {
-			ex.printStackTrace();
-			System.err.println("Unable to load config.properties file!");
-			
+		} catch (IOException e) {
+			LOGGER.error("Unable to load config properties file! {}", e);
 		} finally {
 			if (inputStream != null) {
 				try {
 					inputStream.close();
 				} catch (IOException e) {
-					e.printStackTrace();
+					LOGGER.error(e);
 				}
 			}
 		}
