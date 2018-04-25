@@ -86,7 +86,7 @@ public class RouteSetGenerator {
 		}
 		*/
 		if (!route.isValid()) {
-			System.err.println("Route is not valid. Not adding the route!");
+			LOGGER.debug("Route is not valid. Not adding the route!");
 			return;
 		}
 		int origin = route.getOriginNode().getID();
@@ -192,7 +192,7 @@ public class RouteSetGenerator {
 		//find the fastest path from origin to destination
 		RoadPath fastestPath  = this.roadNetwork.getFastestPath(originNode, destinationNode, null);
 		if (fastestPath == null) {
-			System.err.printf("Unable to find the fastest path between nodes %d and %d! Link elimination method unsucsessful!\n", origin, destination);
+			LOGGER.warn("Unable to find the fastest path between nodes {} and {}! Link elimination method unsucsessful!", origin, destination);
 			return;
 		}
 		//System.out.println(fastestPath.toString());
@@ -207,7 +207,7 @@ public class RouteSetGenerator {
 		if (fastestRoute.getOriginNode().equals(originNode) && fastestRoute.getDestinationNode().equals(destinationNode))
 			this.addRoute(fastestRoute);
 		else {
-			System.err.println("Fastest path does not contain correct origin and destination nodes!");
+			LOGGER.warn("Fastest path does not contain correct origin and destination nodes!");
 			return;
 		}
 		
@@ -226,7 +226,7 @@ public class RouteSetGenerator {
 				if (route.getOriginNode().equals(originNode) && route.getDestinationNode().equals(destinationNode))
 					this.addRoute(route);
 				else 
-					System.err.println("Path generated with link elimination does not contain correct origin and destination nodes!");
+					LOGGER.warn("Path generated with link elimination does not contain correct origin and destination nodes!");
 			}
 		}
 	}
@@ -243,7 +243,7 @@ public class RouteSetGenerator {
 		RandomSingleton rng = RandomSingleton.getInstance();
 		
 		if (params == null) {
-			System.err.println("Route set generator does not have required parameters!");
+			LOGGER.error("Route set generator does not have required parameters!");
 			return;
 		}
 		
@@ -273,7 +273,7 @@ public class RouteSetGenerator {
 		//RoadPath fastestPath  = this.roadNetwork.getFastestPathDijkstra(originNode, destinationNode, null);
 
 		if (fastestPath == null) {
-			System.err.printf("Unable to find the fastest path between nodes %d and %d! Link elimination method unsucsessful!\n", origin, destination);
+			LOGGER.warn("Unable to find the fastest path between nodes {} and {}! Link elimination method unsucsessful!", origin, destination);
 			return;
 		}
 		//System.out.println("RoadPath " + fastestPath.toString());
@@ -288,7 +288,7 @@ public class RouteSetGenerator {
 		if (fastestRoute.getOriginNode().equals(originNode) && fastestRoute.getDestinationNode().equals(destinationNode))
 			this.addRoute(fastestRoute);
 		else {
-			System.err.printf("Fastest route between nodes %d and %d does not contain correct origin and destination nodes! Link elimination method unsucsessful!\n", origin, destination);
+			LOGGER.warn("Fastest route between nodes {} and {} does not contain correct origin and destination nodes! Link elimination method unsucsessful!", origin, destination);
 			return;
 		}
 		
@@ -331,7 +331,7 @@ public class RouteSetGenerator {
 					if (route.getOriginNode().equals(originNode) && route.getDestinationNode().equals(destinationNode))
 						this.addRoute(route);
 					else 
-						System.err.println("Route generated with link elimination does not contain correct origin and destination nodes! Skipping this route.");
+						LOGGER.warn("Route generated with link elimination does not contain correct origin and destination nodes! Skipping this route.");
 				}
 			}
 		} else { //otherwise use the actual random link elimination method 
@@ -369,7 +369,7 @@ public class RouteSetGenerator {
 					if (route.getOriginNode().equals(originNode) && route.getDestinationNode().equals(destinationNode))
 						this.addRoute(route);
 					else 
-						System.err.println("Route generated with link elimination does not contain correct origin and destination nodes! Skipping this route.");
+						LOGGER.warn("Route generated with link elimination does not contain correct origin and destination nodes! Skipping this route.");
 				}
 				RouteSet rs = (RouteSet)routes.get(origin, destination);
 				if (rs.getSize() >= routeLimit) break; //stop if sufficient number of routes has been generated 
@@ -727,7 +727,7 @@ public class RouteSetGenerator {
 			List<Integer> originNodes = 
 					this.roadNetwork.getZoneToNodes().get(originLAD);
 			for (int i= 0; i < originNodes.size(); i++)			this.generateRouteSetNodeToNode(originNodes.get(i), destinationNode);
-		} else System.err.println("Problem in generating route set for freight!");
+		} else LOGGER.warn("Problem in generating route set for freight!");
 	}
 	
 	/**
@@ -783,7 +783,7 @@ public class RouteSetGenerator {
 			List<Integer> originNodes = 
 					this.roadNetwork.getZoneToNodes().get(originLAD);
 			for (int i= 0; i < topNodes && i < originNodes.size(); i++)			this.generateRouteSetNodeToNode(originNodes.get(i), destinationNode);
-		} else System.err.println("Problem in generating route set for freight!");
+		} else LOGGER.warn("Problem in generating route set for freight!");
 	}
 	
 	/**
@@ -961,7 +961,8 @@ public class RouteSetGenerator {
 	 */
 	public void readRoutes(String fileName) {
 		
-		System.out.println("Reading pre-generated routes...");
+		LOGGER.info("Reading pre-generated routes...");
+		
 		BufferedReader br = null;
 		try {
 			br = new BufferedReader(new FileReader(fileName));
@@ -1005,7 +1006,8 @@ public class RouteSetGenerator {
 	 */
 	public void readRoutesWithoutValidityCheck(String fileName) {
 		
-		System.out.println("Reading pre-generated routes...");
+		LOGGER.info("Reading pre-generated routes...");
+		
 		BufferedReader br = null;
 		try {
 			br = new BufferedReader(new FileReader(fileName));
@@ -1048,7 +1050,8 @@ public class RouteSetGenerator {
 	 */
 	public void readRoutesBinary(String fileName) {
 		
-		System.out.println("Reading pre-generated routes from " + fileName);
+		LOGGER.info("Reading pre-generated routes from " + fileName);
+		
 		FileInputStream input = null;
 		BufferedInputStream buff = null;
 		DataInputStream data = null;
@@ -1079,7 +1082,7 @@ public class RouteSetGenerator {
 				}
 			}
 		} catch (EOFException e) {
-			LOGGER.info("End of the binary route file reached. ");
+			LOGGER.debug("End of the binary route file reached. ");
 			LOGGER.debug("{} bad routes ignored.", counterBadRoutes);
 		} catch (Exception e) {
 			LOGGER.error(e);
@@ -1100,7 +1103,8 @@ public class RouteSetGenerator {
 	 */
 	public void readRoutesBinaryWithoutValidityCheck(String fileName) {
 		
-		System.out.println("Reading pre-generated routes from " + fileName);
+		LOGGER.info("Reading pre-generated routes from " + fileName);
+		
 		FileInputStream input = null;
 		BufferedInputStream buff = null;
 		DataInputStream data = null;
@@ -1125,7 +1129,7 @@ public class RouteSetGenerator {
 				}
 			}
 		} catch (EOFException e) {
-			LOGGER.info("End of the binary route file reached.");
+			LOGGER.debug("End of the binary route file reached.");
 		} catch (Exception e) {
 			LOGGER.error(e);
 		} finally {

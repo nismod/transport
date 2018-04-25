@@ -49,7 +49,8 @@ public class RoadExpansion extends Intervention {
 	@Override
 	public void install(Object o) {
 		
-		System.out.println("Implementing road expansion.");
+		LOGGER.info("Implementing road expansion.");
+		
 		RoadNetwork rn = null;
 		if (o instanceof RoadNetwork) {
 			rn = (RoadNetwork)o;
@@ -58,7 +59,7 @@ public class RoadExpansion extends Intervention {
 			rn = ((DemandModel)o).getRoadNetwork();
 		}
 		else {
-			System.err.println("RoadExpansion installation has received an unexpected type.");
+			LOGGER.error("RoadExpansion installation has received an unexpected type.");
 			return;
 		}
 		int number = Integer.parseInt(this.props.getProperty("number"));
@@ -78,7 +79,8 @@ public class RoadExpansion extends Intervention {
 	@Override
 	public void uninstall(Object o) {
 
-		System.out.println("Removing road expansion.");
+		LOGGER.info("Removing road expansion.");
+		
 		RoadNetwork rn = null;
 		if (o instanceof RoadNetwork) {
 			rn = (RoadNetwork)o;
@@ -87,7 +89,7 @@ public class RoadExpansion extends Intervention {
 			rn = ((DemandModel)o).getRoadNetwork();
 		}
 		else {
-			System.err.println("RoadExpansion installation has received an unexpected type.");
+			LOGGER.error("RoadExpansion installation has received an unexpected type.");
 			return;
 		}
 		int number = Integer.parseInt(this.props.getProperty("number"));
@@ -121,7 +123,7 @@ public class RoadExpansion extends Intervention {
 			if (node.getID() == toNode) nodeB = node;
 		}
 		if (nodeA == null || nodeB == null) {
-			System.err.println("Could not find a node where road expansion should be installed!");
+			LOGGER.warn("Could not find a node where road expansion should be installed!");
 			return null;
 		}
 		
@@ -133,7 +135,7 @@ public class RoadExpansion extends Intervention {
 			if (CPNumber == CP && edge.getNodeA().getID() == nodeA.getID() && edge.getNodeB().getID() == nodeB.getID()) edgeToExpand = edge;
 		}
 		if (edgeToExpand == null) {
-			System.err.println("Could not find the edge for which road expansion should be installed!");
+			LOGGER.warn("Could not find the edge for which road expansion should be installed!");
 			return null;
 		}
 		

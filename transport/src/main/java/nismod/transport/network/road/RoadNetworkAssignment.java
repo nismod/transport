@@ -443,7 +443,7 @@ public class RoadNetworkAssignment {
 	@SuppressWarnings("unused")
 	public void assignPassengerFlowsRouting(ODMatrix passengerODM, RouteSetGenerator rsg) {
 
-		System.out.println("Assigning the passenger flows from the passenger matrix...");
+		LOGGER.info("Assigning the passenger flows from the passenger matrix...");
 
 		//sort nodes based on the gravitating population
 		this.roadNetwork.sortGravityNodes();
@@ -497,7 +497,7 @@ public class RoadNetworkAssignment {
 						break;
 					}
 				}
-				if (hour == null) System.err.println("Time of day not chosen!");
+				if (hour == null) LOGGER.warn("Time of day not chosen!");
 
 				//choose vehicle
 				random  = rng.nextDouble();
@@ -506,7 +506,7 @@ public class RoadNetworkAssignment {
 					vht = VehicleType.CAR;
 				else 
 					vht = VehicleType.AV;
-				if (vht == null) System.err.println("Vehicle type not chosen!");
+				if (vht == null) LOGGER.warn("Vehicle type not chosen!");
 
 				//choose engine
 				cumulativeProbability = 0.0;
@@ -521,7 +521,7 @@ public class RoadNetworkAssignment {
 						break;
 					}
 				}
-				if (engine == null) System.err.println("Engine type not chosen!");
+				if (engine == null) LOGGER.warn("Engine type not chosen!");
 
 				//choose origin/destination nodes based on the gravitating population
 				//the choice with replacement means that possibly: destination node = origin node
@@ -539,7 +539,7 @@ public class RoadNetworkAssignment {
 					}
 				}
 
-				if (originNode == null) System.err.println("Origin node was not chosen!");
+				if (originNode == null) LOGGER.warn("Origin node was not chosen!");
 
 				//choose destination node
 				cumulativeProbability = 0.0;
@@ -566,7 +566,7 @@ public class RoadNetworkAssignment {
 					}
 				}	
 
-				if (destinationNode == null) System.err.println("Destination node was not chosen!");
+				if (destinationNode == null) LOGGER.warn("Destination node was not chosen!");
 
 				DirectedGraph rn = roadNetwork.getNetwork();
 				//set source and destination node
@@ -590,7 +590,7 @@ public class RoadNetworkAssignment {
 						//RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTime);
 						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, (HashMap<Integer, Double>)this.linkTravelTimePerTimeOfDay.get(hour));
 						if (fastestPath == null) {
-							System.err.println("Not even aStar could find a route!");
+							LOGGER.warn("Not even aStar could find a route!");
 							continue;
 						}
 
@@ -607,14 +607,14 @@ public class RoadNetworkAssignment {
 
 				} catch (Exception e) {
 					LOGGER.error(e);
-					System.err.printf("Couldnt find path from node %d to node %d!", from.getID(), to.getID());
+					LOGGER.error("Couldnt find path from node {} to node {}!", from.getID(), to.getID());
 				}
 			}//for each trip
 		}//for each OD pair
 
-		System.out.println("Total flow: " + counterTotalFlow);
-		System.out.println("Total assigned trips: " + counterAssignedTrips);
-		System.out.println("Succesfully assigned trips: " + 100.0* counterAssignedTrips / counterTotalFlow);
+		LOGGER.debug("Total flow: {}", counterTotalFlow);
+		LOGGER.debug("Total assigned trips: {}", counterAssignedTrips);
+		LOGGER.debug("Succesfully assigned trips: {}", 100.0* counterAssignedTrips / counterTotalFlow);
 	}
 	
 	/** 
@@ -627,7 +627,7 @@ public class RoadNetworkAssignment {
 	@SuppressWarnings("unused")
 	public void assignPassengerFlowsHourlyRouting(ODMatrix passengerODM, HashMap<TimeOfDay, RouteSetGenerator> routeStorage) {
 
-		System.out.println("Assigning the passenger flows from the passenger matrix...");
+		LOGGER.info("Assigning the passenger flows from the passenger matrix...");
 
 		//sort nodes based on the gravitating population
 		this.roadNetwork.sortGravityNodes();
@@ -686,7 +686,7 @@ public class RoadNetworkAssignment {
 						break;
 					}
 				}
-				if (hour == null) System.err.println("Time of day not chosen!");
+				if (hour == null) LOGGER.warn("Time of day not chosen!");
 
 				//choose vehicle
 				random  = rng.nextDouble();
@@ -695,7 +695,7 @@ public class RoadNetworkAssignment {
 					vht = VehicleType.CAR;
 				else 
 					vht = VehicleType.AV;
-				if (vht == null) System.err.println("Vehicle type not chosen!");
+				if (vht == null) LOGGER.warn("Vehicle type not chosen!");
 
 				//choose engine
 				cumulativeProbability = 0.0;
@@ -710,7 +710,7 @@ public class RoadNetworkAssignment {
 						break;
 					}
 				}
-				if (engine == null) System.err.println("Engine type not chosen!");
+				if (engine == null) LOGGER.warn("Engine type not chosen!");
 
 				//choose origin/destination nodes based on the gravitating population
 				//the choice with replacement means that possibly: destination node = origin node
@@ -728,7 +728,7 @@ public class RoadNetworkAssignment {
 					}
 				}
 
-				if (originNode == null) System.err.println("Origin node was not chosen!");
+				if (originNode == null) LOGGER.warn("Origin node was not chosen!");
 
 				//choose destination node
 				cumulativeProbability = 0.0;
@@ -755,7 +755,7 @@ public class RoadNetworkAssignment {
 					}
 				}	
 
-				if (destinationNode == null) System.err.println("Destination node was not chosen!");
+				if (destinationNode == null) LOGGER.warn("Destination node was not chosen!");
 
 				DirectedGraph rn = roadNetwork.getNetwork();
 				//set source and destination node
@@ -780,7 +780,7 @@ public class RoadNetworkAssignment {
 						//RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTime);
 						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, (HashMap<Integer, Double>)this.linkTravelTimePerTimeOfDay.get(hour));
 						if (fastestPath == null) {
-							System.err.println("Not even aStar could find a route!");
+							LOGGER.warn("Not even aStar could find a route!");
 							continue;
 						}
 
@@ -797,14 +797,14 @@ public class RoadNetworkAssignment {
 
 				} catch (Exception e) {
 					LOGGER.error(e);
-					System.err.printf("Couldnt find path from node %d to node %d!", from.getID(), to.getID());
+					LOGGER.error("Couldnt find path from node {} to node {}!", from.getID(), to.getID());
 				}
 			}//for each trip
 		}//for each OD pair
 
-		System.out.println("Total flow: " + counterTotalFlow);
-		System.out.println("Total assigned trips: " + counterAssignedTrips);
-		System.out.println("Succesfully assigned trips: " + 100.0* counterAssignedTrips / counterTotalFlow);
+		LOGGER.debug("Total flow: {}", + counterTotalFlow);
+		LOGGER.debug("Total assigned trips: {}", counterAssignedTrips);
+		LOGGER.debug("Succesfully assigned trips: {}", 100.0* counterAssignedTrips / counterTotalFlow);
 	}
 
 	/** 
@@ -817,11 +817,11 @@ public class RoadNetworkAssignment {
 	//@SuppressWarnings("unused")
 	public void assignPassengerFlowsRouteChoice(ODMatrix passengerODM, RouteSetGenerator rsg, Properties routeChoiceParameters) {
 
-		System.out.println("Assigning the passenger flows from the passenger matrix...");
+		LOGGER.info("Assigning the passenger flows from the passenger matrix...");
 		
-		if (passengerODM == null) { System.err.println("Passenger OD matrix is null!"); return; }
-		if (rsg == null) { System.err.println("Route set generator is null!"); return; }
-		if (routeChoiceParameters == null) { System.err.println("Route choice parameters are null!"); return; }
+		if (passengerODM == null) { LOGGER.warn("Passenger OD matrix is null! Skipping assignment."); return; }
+		if (rsg == null) { LOGGER.warn("Route set generator is null! Skipping assignment."); return; }
+		if (routeChoiceParameters == null) { LOGGER.warn("Route choice parameters are null! Skipping assignment."); return; }
 		
 		final int totalExpectedFlow = passengerODM.getTotalFlow();
 		this.tripList = new ArrayList<Trip>(totalExpectedFlow); //use expected flow as array list initial capacity
@@ -875,7 +875,7 @@ public class RoadNetworkAssignment {
 						break;
 					}
 				}
-				if (hour == null) System.err.println("Time of day not chosen!");
+				if (hour == null) LOGGER.warn("Time of day not chosen!");
 
 				//choose vehicle
 				random  = rng.nextDouble();
@@ -884,7 +884,7 @@ public class RoadNetworkAssignment {
 					vht = VehicleType.CAR;
 				else 
 					vht = VehicleType.AV;
-				if (vht == null) System.err.println("Vehicle type not chosen!");
+				if (vht == null) LOGGER.warn("Vehicle type not chosen!");
 
 				//choose engine
 				cumulativeProbability = 0.0;
@@ -899,7 +899,7 @@ public class RoadNetworkAssignment {
 						break;
 					}
 				}
-				if (engine == null) System.err.println("Engine type not chosen!");
+				if (engine == null) LOGGER.warn("Engine type not chosen!");
 
 				//choose origin/destination nodes based on the gravitating population
 				//the choice with replacement means that possibly: destination node = origin node
@@ -921,7 +921,7 @@ public class RoadNetworkAssignment {
 						}
 					}
 
-					if (originNode == null) System.err.println("Origin node for intra-zonal trip was not chosen!");
+					if (originNode == null) LOGGER.warn("Origin node for intra-zonal trip was not chosen!");
 
 					//choose destination node
 					cumulativeProbability = 0.0;
@@ -947,7 +947,7 @@ public class RoadNetworkAssignment {
 						}
 					}	
 
-					if (destinationNode == null) System.err.println("Destination for intra-zonal trip node was not chosen!");
+					if (destinationNode == null) LOGGER.warn("Destination for intra-zonal trip node was not chosen!");
 
 				} else { //inter-zonal
 
@@ -993,18 +993,18 @@ public class RoadNetworkAssignment {
 						}
 					}
 
-					if (originNode == null) System.err.println("Origin node for inter-zonal trip was not chosen!");
-					if (destinationNode == null) System.err.println("Destination node for inter-zonal trip was not chosen!");
+					if (originNode == null) LOGGER.warn("Origin node for inter-zonal trip was not chosen!");
+					if (destinationNode == null) LOGGER.warn("Destination node for inter-zonal trip was not chosen!");
 				}
 
 				Route chosenRoute = null;
 				RouteSet fetchedRouteSet = rsg.getRouteSet(originNode.intValue(), destinationNode.intValue());
 				if (fetchedRouteSet == null) {
-					System.err.printf("Can't fetch the route set between nodes %d and %d! %s", originNode, destinationNode, System.lineSeparator());
+					LOGGER.warn("Can't fetch the route set between nodes {} and {}!", originNode, destinationNode);
 
 					if (!flagAStarIfEmptyRouteSet)	continue;
 					else { //try finding a path with aStar
-						System.err.println("Trying the astar!");
+						LOGGER.debug("Trying the astar!");
 
 						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(originNode);
 						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(destinationNode);
@@ -1012,12 +1012,12 @@ public class RoadNetworkAssignment {
 						//RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTime);
 						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
 						if (fastestPath == null) {
-							System.err.println("Not even aStar could find a route!");
+							LOGGER.warn("Not even aStar could find a route!");
 							continue;
 						}
 						chosenRoute = new Route(fastestPath);
 						if (chosenRoute.isEmpty()) {
-							System.err.printf("Empty route between nodes %d and %d! %s", originNode, destinationNode, System.lineSeparator());
+							LOGGER.warn("Empty route between nodes {} and {}!", originNode, destinationNode);
 							continue;
 						}
 						//store generated route into the rsg!
@@ -1049,13 +1049,13 @@ public class RoadNetworkAssignment {
 					//choose the route
 					chosenRoute = fetchedRouteSet.choose(routeChoiceParameters);
 					if (chosenRoute == null) {
-						System.err.printf("No chosen route between nodes %d and %d! %s", originNode, destinationNode, System.lineSeparator());
+						LOGGER.warn("No chosen route between nodes {} and {}!", originNode, destinationNode);
 						continue;
 					}
 				}
 
 				if (chosenRoute.isEmpty()) {
-					System.err.println("The chosen route is empty, skipping this trip!");
+					LOGGER.warn("The chosen route is empty, skipping this trip!");
 					continue;
 				}
 
@@ -1071,9 +1071,9 @@ public class RoadNetworkAssignment {
 			}//for each trip
 		}//for each OD pair
 
-		System.out.println("Total flow: " + counterTotalFlow);
-		System.out.println("Total assigned trips: " + counterAssignedTrips);
-		System.out.println("Succesfully assigned trips percentage: " + 100.0* counterAssignedTrips / counterTotalFlow);
+		LOGGER.debug("Total flow: " + counterTotalFlow);
+		LOGGER.debug("Total assigned trips: " + counterAssignedTrips);
+		LOGGER.debug("Succesfully assigned trips percentage: " + 100.0* counterAssignedTrips / counterTotalFlow);
 	}
 	
 
@@ -1087,7 +1087,7 @@ public class RoadNetworkAssignment {
 	@SuppressWarnings("unused")
 	public void assignPassengerFlowsTempro(ODMatrix passengerODM, Zoning zoning, RouteSetGenerator rsg) {
 
-		System.out.println("Assigning the passenger flows from the tempro passenger matrix...");
+		LOGGER.info("Assigning the passenger flows from the tempro passenger matrix...");
 
 		//to store routes generated during the assignment
 		//RouteSetGenerator rsg = new RouteSetGenerator(this.roadNetwork);
@@ -1143,7 +1143,7 @@ public class RoadNetworkAssignment {
 						break;
 					}
 				}
-				if (hour == null) System.err.println("Time of day not chosen!");
+				if (hour == null) LOGGER.warn("Time of day not chosen!");
 
 				//choose vehicle
 				random  = rng.nextDouble();
@@ -1152,7 +1152,7 @@ public class RoadNetworkAssignment {
 					vht = VehicleType.CAR;
 				else 
 					vht = VehicleType.AV;
-				if (vht == null) System.err.println("Vehicle type not chosen!");
+				if (vht == null) LOGGER.warn("Vehicle type not chosen!");
 
 				//choose engine
 				cumulativeProbability = 0.0;
@@ -1167,7 +1167,7 @@ public class RoadNetworkAssignment {
 						break;
 					}
 				}
-				if (engine == null) System.err.println("Engine type not chosen!");
+				if (engine == null) LOGGER.warn("Engine type not chosen!");
 				
 				
 				//choose origin/destination nodes based on the gravitating population
@@ -1237,8 +1237,8 @@ public class RoadNetworkAssignment {
 						}
 					}
 								
-					if (originNode == null) System.err.println("Origin node was not chosen for zone " + originZone);
-					if (destinationNode == null) System.err.println("Destination node was not chosen!");
+					if (originNode == null) LOGGER.warn("Origin node was not chosen for zone {}", originZone);
+					if (destinationNode == null) LOGGER.warn("Destination node was not chosen!");
 								
 				} else { //if not interzonal, choose from topnodes based on the distance from zone centroid
 				
@@ -1260,14 +1260,14 @@ public class RoadNetworkAssignment {
 					}
 				}
 				
-				if (originNode == null) System.err.println("Origin node was not chosen for zone " + originZone);
+				if (originNode == null) LOGGER.warn("Origin node was not chosen for zone {}", originZone);
 								
 				//take the nearest node!
 				//Integer originNode = zoning.getZoneToNearestNodeIDMap().get(originZone);
 				//if (originNode == null) System.err.println("Origin node was not chosen for zone " + originZone);
 				
 				if (this.roadNetwork.isBlacklistedAsStartNode(originNode)) 
-					System.err.println("Origin node is blacklisted! node: " + originNode);
+					LOGGER.warn("Origin node is blacklisted! node: {}", originNode);
 				
 
 				//choose destination node
@@ -1288,14 +1288,14 @@ public class RoadNetworkAssignment {
 					}
 				}
 
-				if (destinationNode == null) System.err.println("Destination node was not chosen!");
+				if (destinationNode == null) LOGGER.warn("Destination node was not chosen!");
 			
 				//take just the nearest one
 				//Integer destinationNode = zoning.getZoneToNearestNodeIDMap().get(destinationZone);
 				//if (destinationNode == null) System.err.println("Destination node was not chosen for zone " + destinationZone);
 				
 				if (this.roadNetwork.isBlacklistedAsEndNode(destinationNode)) 
-					System.err.println("Destination node is blacklisted! node: " + destinationNode);
+					LOGGER.warn("Destination node is blacklisted! node: {}", destinationNode);
 				
 				}
 				
@@ -1321,7 +1321,7 @@ public class RoadNetworkAssignment {
 						//RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTime);
 						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, (HashMap<Integer, Double>)this.linkTravelTimePerTimeOfDay.get(hour));
 						if (fastestPath == null) {
-							System.err.println("Not even aStar could find a route!");
+							LOGGER.warn("Not even aStar could find a route!");
 							continue;
 						}
 
@@ -1340,14 +1340,14 @@ public class RoadNetworkAssignment {
 
 				} catch (Exception e) {
 					LOGGER.error(e);
-					System.err.printf("Couldnt find path from node %d to node %d!", from.getID(), to.getID());
+					LOGGER.error("Couldnt find path from node {} to node {}!", from.getID(), to.getID());
 				}
 			}//for each trip
 		}//for each OD pair
 
-		System.out.println("Total flow: " + counterTotalFlow);
-		System.out.println("Total assigned trips: " + counterAssignedTrips);
-		System.out.println("Succesfully assigned trips: " + 100.0* counterAssignedTrips / counterTotalFlow);
+		LOGGER.debug("Total flow: " + counterTotalFlow);
+		LOGGER.debug("Total assigned trips: " + counterAssignedTrips);
+		LOGGER.debug("Succesfully assigned trips: " + 100.0* counterAssignedTrips / counterTotalFlow);
 	}
 
 	/** 
@@ -1361,7 +1361,7 @@ public class RoadNetworkAssignment {
 	@SuppressWarnings("unused")
 	public void assignPassengerFlowsRouteChoiceTempro(ODMatrix passengerODM, Zoning zoning, RouteSetGenerator rsg, Properties routeChoiceParameters) {
 
-		System.out.println("Assigning the passenger flows from the tempro passenger matrix...");
+		LOGGER.info("Assigning the passenger flows from the tempro passenger matrix...");
 
 		//to store routes generated during the assignment
 		//RouteSetGenerator rsg = new RouteSetGenerator(this.roadNetwork);
@@ -1417,7 +1417,7 @@ public class RoadNetworkAssignment {
 						break;
 					}
 				}
-				if (hour == null) System.err.println("Time of day not chosen!");
+				if (hour == null) LOGGER.warn("Time of day not chosen!");
 
 				//choose vehicle
 				random  = rng.nextDouble();
@@ -1426,7 +1426,7 @@ public class RoadNetworkAssignment {
 					vht = VehicleType.CAR;
 				else 
 					vht = VehicleType.AV;
-				if (vht == null) System.err.println("Vehicle type not chosen!");
+				if (vht == null) LOGGER.warn("Vehicle type not chosen!");
 
 				//choose engine
 				cumulativeProbability = 0.0;
@@ -1441,7 +1441,7 @@ public class RoadNetworkAssignment {
 						break;
 					}
 				}
-				if (engine == null) System.err.println("Engine type not chosen!");
+				if (engine == null) LOGGER.warn("Engine type not chosen!");
 
 				//choose origin/destination nodes based on the gravitating population
 				//the choice with replacement means that possibly: destination node = origin node
@@ -1465,10 +1465,10 @@ public class RoadNetworkAssignment {
 				*/
 				
 				Integer originNode = zoning.getZoneToNearestNodeIDMap().get(originZone);
-				if (originNode == null) System.err.println("Origin node was not chosen for zone " + originZone);
+				if (originNode == null) LOGGER.warn("Origin node was not chosen for zone {}", originZone);
 				
 				if (this.roadNetwork.isBlacklistedAsStartNode(originNode)) 
-					System.err.println("Origin node is blacklisted! node: " + originNode);
+					LOGGER.warn("Origin node is blacklisted! node: {}", originNode);
 				
 
 				//choose destination node
@@ -1502,10 +1502,10 @@ public class RoadNetworkAssignment {
 				
 				
 				Integer destinationNode = zoning.getZoneToNearestNodeIDMap().get(destinationZone);
-				if (destinationNode == null) System.err.println("Destination node was not chosen for zone " + destinationZone);
+				if (destinationNode == null) LOGGER.warn("Destination node was not chosen for zone {}", destinationZone);
 				
 				if (this.roadNetwork.isBlacklistedAsEndNode(destinationNode)) 
-					System.err.println("Destination node is blacklisted! node: " + destinationNode);
+					LOGGER.warn("Destination node is blacklisted! node: {}", destinationNode);
 				
 				DirectedGraph rn = roadNetwork.getNetwork();
 				//set source and destination node
@@ -1516,11 +1516,11 @@ public class RoadNetworkAssignment {
 				Route chosenRoute = null;
 				RouteSet fetchedRouteSet = rsg.getRouteSet(originNode.intValue(), destinationNode.intValue());
 				if (fetchedRouteSet == null) {
-					System.err.printf("Can't fetch the route set between nodes %d and %d! %s", originNode, destinationNode, System.lineSeparator());
+					LOGGER.warn("Can't fetch the route set between nodes {} and {}!", originNode, destinationNode);
 
 					if (!flagAStarIfEmptyRouteSet)	continue;
 					else { //try finding a path with aStar
-						System.err.println("Trying the astar!");
+						LOGGER.debug("Trying the astar!");
 
 						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(originNode);
 						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(destinationNode);
@@ -1528,12 +1528,12 @@ public class RoadNetworkAssignment {
 						//RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTime);
 						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
 						if (fastestPath == null) {
-							System.err.println("Not even aStar could find a route!");
+							LOGGER.warn("Not even aStar could find a route!");
 							continue;
 						}
 						chosenRoute = new Route(fastestPath);
 						if (chosenRoute.isEmpty()) {
-							System.err.printf("Empty route between nodes %d and %d! %s", originNode, destinationNode, System.lineSeparator());
+							LOGGER.warn("Empty route between nodes {} and {}!", originNode, destinationNode);
 							continue;
 						}
 						//store generated route into the rsg!
@@ -1561,13 +1561,13 @@ public class RoadNetworkAssignment {
 					//choose the route
 					chosenRoute = fetchedRouteSet.choose(routeChoiceParameters);
 					if (chosenRoute == null) {
-						System.err.printf("No chosen route between nodes %d and %d! %s", originNode, destinationNode, System.lineSeparator());
+						LOGGER.warn("No chosen route between nodes {} and {}", originNode, destinationNode);
 						continue;
 					}
 				}
 
 				if (chosenRoute.isEmpty()) {
-					System.err.println("The chosen route is empty, skipping this trip!");
+					LOGGER.warn("The chosen route is empty, skipping this trip!");
 					continue;
 				}
 
@@ -1585,9 +1585,9 @@ public class RoadNetworkAssignment {
 			}//for each trip
 		}//for each OD pair
 
-		System.out.println("Total flow: " + counterTotalFlow);
-		System.out.println("Total assigned trips: " + counterAssignedTrips);
-		System.out.println("Succesfully assigned trips: " + 100.0* counterAssignedTrips / counterTotalFlow);
+		LOGGER.debug("Total flow: {}", counterTotalFlow);
+		LOGGER.debug("Total assigned trips: {}", counterAssignedTrips);
+		LOGGER.debug("Succesfully assigned trips: {}", 100.0* counterAssignedTrips / counterTotalFlow);
 	}
 
 	/**
@@ -1608,7 +1608,7 @@ public class RoadNetworkAssignment {
 	public void assignFreightFlowsRouting(FreightMatrix freightMatrix, RouteSetGenerator rsg) {
 
 
-		System.out.println("Assigning the vehicle flows from the freight matrix...");
+		LOGGER.info("Assigning the vehicle flows from the freight matrix...");
 
 		//counters to calculate percentage of assignment success
 		long counterAssignedTrips = 0;
@@ -1649,7 +1649,7 @@ public class RoadNetworkAssignment {
 						break;
 					}
 				}
-				if (hour == null) System.err.println("Time of day not chosen!");
+				if (hour == null) LOGGER.warn("Time of day not chosen!");
 
 				VehicleType vht = VehicleType.values()[vehicleType];
 
@@ -1666,7 +1666,7 @@ public class RoadNetworkAssignment {
 						break;
 					}
 				}
-				if (engine == null) System.err.println("Engine type not chosen!");
+				if (engine == null) LOGGER.warn("Engine type not chosen!");
 
 				Integer originNode = null, destinationNode = null;
 
@@ -1749,8 +1749,8 @@ public class RoadNetworkAssignment {
 					destinationNode = roadNetwork.getFreightZoneToNearestNode().get(destination);
 				}
 
-				if (originNode == null) System.err.println("Could not find origin node for a freight trip!");
-				if (destinationNode == null) System.err.println("Could not find destination node for a freight trip!");
+				if (originNode == null) LOGGER.warn("Could not find origin node for a freight trip!");
+				if (destinationNode == null) LOGGER.warn("Could not find destination node for a freight trip!");
 
 
 				DirectedGraph rn = roadNetwork.getNetwork();
@@ -1773,7 +1773,7 @@ public class RoadNetworkAssignment {
 
 						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
 						if (fastestPath == null) {
-							System.err.println("Not even aStar could find a route!");
+							LOGGER.warn("Not even aStar could find a route!");
 							continue;
 						}
 
@@ -1789,7 +1789,7 @@ public class RoadNetworkAssignment {
 
 						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
 						if (fastestPath == null) {
-							System.err.println("Not even aStar could find a route!");
+							LOGGER.warn("Not even aStar could find a route!");
 							continue;
 						}
 
@@ -1811,9 +1811,9 @@ public class RoadNetworkAssignment {
 			}//for each trip
 		}//for each OD pair
 
-		System.out.println("Total flow: " + counterTotalFlow);
-		System.out.println("Total assigned trips: " + counterAssignedTrips);
-		System.out.println("Successfully assigned trips percentage: " + 100.0* counterAssignedTrips / counterTotalFlow);
+		LOGGER.debug("Total flow: {}", counterTotalFlow);
+		LOGGER.debug("Total assigned trips: {}", counterAssignedTrips);
+		LOGGER.debug("Successfully assigned trips percentage: {}", 100.0* counterAssignedTrips / counterTotalFlow);
 	}
 
 	/**
@@ -1834,7 +1834,7 @@ public class RoadNetworkAssignment {
 	public void assignFreightFlowsHourlyRouting(FreightMatrix freightMatrix, HashMap<TimeOfDay, RouteSetGenerator> routeStorage) {
 
 
-		System.out.println("Assigning the vehicle flows from the freight matrix...");
+		LOGGER.info("Assigning the vehicle flows from the freight matrix...");
 
 		//counters to calculate percentage of assignment success
 		long counterAssignedTrips = 0;
@@ -1880,7 +1880,7 @@ public class RoadNetworkAssignment {
 						break;
 					}
 				}
-				if (hour == null) System.err.println("Time of day not chosen!");
+				if (hour == null) LOGGER.warn("Time of day not chosen!");
 
 				VehicleType vht = VehicleType.values()[vehicleType];
 
@@ -1897,7 +1897,7 @@ public class RoadNetworkAssignment {
 						break;
 					}
 				}
-				if (engine == null) System.err.println("Engine type not chosen!");
+				if (engine == null) LOGGER.warn("Engine type not chosen!");
 
 				Integer originNode = null, destinationNode = null;
 
@@ -1980,8 +1980,8 @@ public class RoadNetworkAssignment {
 					destinationNode = roadNetwork.getFreightZoneToNearestNode().get(destination);
 				}
 
-				if (originNode == null) System.err.println("Could not find origin node for a freight trip!");
-				if (destinationNode == null) System.err.println("Could not find destination node for a freight trip!");
+				if (originNode == null) LOGGER.warn("Could not find origin node for a freight trip!");
+				if (destinationNode == null) LOGGER.warn("Could not find destination node for a freight trip!");
 
 
 				DirectedGraph rn = roadNetwork.getNetwork();
@@ -2005,7 +2005,7 @@ public class RoadNetworkAssignment {
 
 						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
 						if (fastestPath == null) {
-							System.err.println("Not even aStar could find a route!");
+							LOGGER.warn("Not even aStar could find a route!");
 							continue;
 						}
 
@@ -2021,7 +2021,7 @@ public class RoadNetworkAssignment {
 
 						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
 						if (fastestPath == null) {
-							System.err.println("Not even aStar could find a route!");
+							LOGGER.warn("Not even aStar could find a route!");
 							continue;
 						}
 
@@ -2043,9 +2043,9 @@ public class RoadNetworkAssignment {
 			}//for each trip
 		}//for each OD pair
 
-		System.out.println("Total flow: " + counterTotalFlow);
-		System.out.println("Total assigned trips: " + counterAssignedTrips);
-		System.out.println("Successfully assigned trips percentage: " + 100.0* counterAssignedTrips / counterTotalFlow);
+		LOGGER.debug("Total flow: {}", counterTotalFlow);
+		LOGGER.debug("Total assigned trips: {}", counterAssignedTrips);
+		LOGGER.debug("Successfully assigned trips percentage: {}", 100.0* counterAssignedTrips / counterTotalFlow);
 	}
 	
 	/**
@@ -2066,7 +2066,7 @@ public class RoadNetworkAssignment {
 	@SuppressWarnings("unused")
 	public void assignFreightFlowsRouteChoice(FreightMatrix freightMatrix, RouteSetGenerator rsg, Properties routeChoiceParameters) {
 
-		System.out.println("Assigning the vehicle flows from the freight matrix...");
+		LOGGER.info("Assigning the vehicle flows from the freight matrix...");
 
 		//counters to calculate percentage of assignment success
 		long counterAssignedTrips = 0;
@@ -2104,7 +2104,7 @@ public class RoadNetworkAssignment {
 						break;
 					}
 				}
-				if (hour == null) System.err.println("Time of day not chosen!");
+				if (hour == null) LOGGER.warn("Time of day not chosen!");
 
 				VehicleType vht = VehicleType.values()[vehicleType];
 
@@ -2121,7 +2121,7 @@ public class RoadNetworkAssignment {
 						break;
 					}
 				}
-				if (engine == null) System.err.println("Engine type not chosen!");
+				if (engine == null) LOGGER.warn("Engine type not chosen!");
 
 				Integer originNode = null, destinationNode = null;
 				String originLAD = null, destinationLAD = null;
@@ -2138,11 +2138,11 @@ public class RoadNetworkAssignment {
 
 				//check blacklisting just in case
 				if (originNode != null && roadNetwork.isBlacklistedAsStartNode(originNode)) {
-					System.err.printf("Origin node %d is blacklisted, skipping this trip! %n", originNode);
+					LOGGER.warn("Origin node {} is blacklisted, skipping this trip!", originNode);
 					continue;
 				}
 				if (destinationNode != null && roadNetwork.isBlacklistedAsEndNode(destinationNode))	{
-					System.err.printf("Destination node %d is blacklisted, skipping this trip! %n", destinationNode);
+					LOGGER.warn("Destination node {} is blacklisted, skipping this trip!", destinationNode);
 					continue;	
 				}
 
@@ -2231,8 +2231,8 @@ public class RoadNetworkAssignment {
 							}
 						}
 
-						if (originNode == null) System.err.println("Origin node for inter-zonal freight trip was not chosen!");
-						if (destinationNode == null) System.err.println("Destination node for inter-zonal freight trip was not chosen!");
+						if (originNode == null) LOGGER.warn("Origin node for inter-zonal freight trip was not chosen!");
+						if (destinationNode == null) LOGGER.warn("Destination node for inter-zonal freight trip was not chosen!");
 
 					}
 
@@ -2322,32 +2322,32 @@ public class RoadNetworkAssignment {
 				} else if (originNode != null && destinationNode != null) { //point to point
 
 					if (!flagIntrazonalAssignmentReplacement && originNode == destinationNode) 
-						System.err.println("Origin and destination node are the same, but there is no replacement!");
+						LOGGER.warn("Origin and destination node are the same, but there is no replacement!");
 				}
 
-				if (originNode == null) System.err.println("Could not find origin node for a freight trip!");
-				if (destinationNode == null) System.err.println("Could not find destination node for a freight trip!");
+				if (originNode == null) LOGGER.warn("Could not find origin node for a freight trip!");
+				if (destinationNode == null) LOGGER.warn("Could not find destination node for a freight trip!");
 
 				Route chosenRoute = null;
 				RouteSet fetchedRouteSet = rsg.getRouteSet(originNode.intValue(), destinationNode.intValue());
 				if (fetchedRouteSet == null) {
-					System.err.printf("Can't fetch the route set between nodes %d and %d! %s", originNode, destinationNode, System.lineSeparator());
+					LOGGER.warn("Can't fetch the route set between nodes {} and {}!", originNode, destinationNode);
 
 					if (!flagAStarIfEmptyRouteSet)	continue;
 					else { //try finding a path with aStar
-						System.err.println("Trying the astar!");
+						LOGGER.debug("Trying the astar!");
 
 						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(originNode);
 						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(destinationNode);
 
 						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
 						if (fastestPath == null) {
-							System.err.println("Not even aStar could find a route!");
+							LOGGER.warn("Not even aStar could find a route!");
 							continue;
 						}
 						chosenRoute = new Route(fastestPath);
 						if (chosenRoute.isEmpty()) {
-							System.err.printf("Empty route between nodes %d and %d! %s", originNode, destinationNode, System.lineSeparator());
+							LOGGER.warn("Empty route between nodes {} and {}!", originNode, destinationNode);
 							continue;
 						}
 
@@ -2375,13 +2375,13 @@ public class RoadNetworkAssignment {
 					//choose the route
 					chosenRoute = fetchedRouteSet.choose(routeChoiceParameters);
 					if (chosenRoute == null) {
-						System.err.printf("No chosen route between nodes %d and %d! %s", originNode, destinationNode, System.lineSeparator());
+						LOGGER.warn("No chosen route between nodes {} and {}!", originNode, destinationNode);
 						continue;
 					}
 				}
 
 				if (chosenRoute.isEmpty()) {
-					System.err.println("The chosen route is empty, skipping this trip!");
+					LOGGER.warn("The chosen route is empty, skipping this trip!");
 					continue;
 				}
 
@@ -2401,9 +2401,9 @@ public class RoadNetworkAssignment {
 			}//for each trip
 		}//for each OD pair
 
-		System.out.println("Total flow: " + counterTotalFlow);
-		System.out.println("Total assigned trips: " + counterAssignedTrips);
-		System.out.println("Successfully assigned trips percentage: " + 100.0* counterAssignedTrips / counterTotalFlow);
+		LOGGER.debug("Total flow: {}", counterTotalFlow);
+		LOGGER.debug("Total assigned trips: {}", counterAssignedTrips);
+		LOGGER.debug("Successfully assigned trips percentage: {}", 100.0* counterAssignedTrips / counterTotalFlow);
 	}
 
 	/**
@@ -2916,7 +2916,10 @@ public class RoadNetworkAssignment {
 		//this.updateLinkTravelTimes();
 		SkimMatrixFreight counter = new SkimMatrixFreight();
 
-		if (this.tripList == null || this.tripList.size() == 0) System.err.println("TripList is empty!");
+		if (this.tripList == null || this.tripList.size() == 0) {
+			LOGGER.warn("TripList is empty! Cannot update cost skim matrix for freight.");
+			return;
+		}
 
 		for (Trip trip: this.tripList) {
 
@@ -3428,7 +3431,6 @@ public class RoadNetworkAssignment {
 				csvFilePrinter.printRecord(record);
 			}
 		} catch (Exception e) {
-			System.err.println("Error in CsvFileWriter!");
 			LOGGER.error(e);
 		} finally {
 			try {
@@ -3436,7 +3438,6 @@ public class RoadNetworkAssignment {
 				fileWriter.close();
 				csvFilePrinter.close();
 			} catch (IOException e) {
-				System.err.println("Error while flushing/closing fileWriter/csvPrinter!");
 				LOGGER.error(e);
 			}
 		}
@@ -3506,7 +3507,6 @@ public class RoadNetworkAssignment {
 				csvFilePrinter.printRecord(record);
 			}
 		} catch (Exception e) {
-			System.err.println("Error in CsvFileWriter!");
 			LOGGER.error(e);
 		} finally {
 			try {
@@ -3514,7 +3514,6 @@ public class RoadNetworkAssignment {
 				fileWriter.close();
 				csvFilePrinter.close();
 			} catch (IOException e) {
-				System.err.println("Error while flushing/closing fileWriter/csvPrinter!");
 				LOGGER.error(e);
 			}
 		}
@@ -3549,7 +3548,6 @@ public class RoadNetworkAssignment {
 			}
 			csvFilePrinter.printRecord(record);
 		} catch (Exception e) {
-			System.err.println("Error in CsvFileWriter!");
 			LOGGER.error(e);
 		} finally {
 			try {
@@ -3557,7 +3555,6 @@ public class RoadNetworkAssignment {
 				fileWriter.close();
 				csvFilePrinter.close();
 			} catch (IOException e) {
-				System.err.println("Error while flushing/closing fileWriter/csvPrinter!");
 				LOGGER.error(e);
 			}
 		}
@@ -3601,7 +3598,6 @@ public class RoadNetworkAssignment {
 				csvFilePrinter.printRecord(record);
 			}
 		} catch (Exception e) {
-			System.err.println("Error in CsvFileWriter!");
 			LOGGER.error(e);
 		} finally {
 			try {
@@ -3609,7 +3605,6 @@ public class RoadNetworkAssignment {
 				fileWriter.close();
 				csvFilePrinter.close();
 			} catch (IOException e) {
-				System.err.println("Error while flushing/closing fileWriter/csvPrinter!");
 				LOGGER.error(e);
 			}
 		}
@@ -3646,7 +3641,6 @@ public class RoadNetworkAssignment {
 				csvFilePrinter.printRecord(record);
 			}	
 		} catch (Exception e) {
-			System.err.println("Error in CsvFileWriter!");
 			LOGGER.error(e);
 		} finally {
 			try {
@@ -3654,7 +3648,6 @@ public class RoadNetworkAssignment {
 				fileWriter.close();
 				csvFilePrinter.close();
 			} catch (IOException e) {
-				System.err.println("Error while flushing/closing fileWriter/csvPrinter!");
 				LOGGER.error(e);
 			}
 		}
@@ -3695,7 +3688,6 @@ public class RoadNetworkAssignment {
 				csvFilePrinter.printRecord(record);
 			}
 		} catch (Exception e) {
-			System.err.println("Error in CsvFileWriter!");
 			LOGGER.error(e);
 		} finally {
 			try {
@@ -3703,7 +3695,6 @@ public class RoadNetworkAssignment {
 				fileWriter.close();
 				csvFilePrinter.close();
 			} catch (IOException e) {
-				System.err.println("Error while flushing/closing fileWriter/csvPrinter!");
 				LOGGER.error(e);
 			}
 		}
@@ -3742,7 +3733,6 @@ public class RoadNetworkAssignment {
 				csvFilePrinter.printRecord(record);
 			}
 		} catch (Exception e) {
-			System.err.println("Error in CsvFileWriter!");
 			LOGGER.error(e);
 		} finally {
 			try {
@@ -3750,7 +3740,6 @@ public class RoadNetworkAssignment {
 				fileWriter.close();
 				csvFilePrinter.close();
 			} catch (IOException e) {
-				System.err.println("Error while flushing/closing fileWriter/csvPrinter!");
 				LOGGER.error(e);
 			}
 		}
@@ -4279,7 +4268,7 @@ public class RoadNetworkAssignment {
 		HashMap<Integer, Integer> absoluteDifferences = this.calculateDifferenceCarCounts(); //this.calculateAbsDifferenceCarCounts(); //TODO
 		HashMap<Integer, Double> directionAveragedAbsoluteDifferences = new HashMap<Integer, Double>();
 
-		System.out.println("Absolute differences: " + absoluteDifferences);
+		LOGGER.trace("Absolute differences: {}", absoluteDifferences);
 		
 		Iterator iter = this.roadNetwork.getNetwork().getEdges().iterator();
 		ArrayList<Integer> checkedLinks = new ArrayList<Integer>(); //list of checked links
@@ -4295,8 +4284,8 @@ public class RoadNetworkAssignment {
 					Integer diff1 = absoluteDifferences.get(edge1);
 					Integer diff2 = absoluteDifferences.get(edge2);
 					
-					if (diff1 == null) System.err.println("No absolute difference for edge: " + edge1);
-					if (diff2 == null) System.err.println("No absolute difference for edge: " + edge2);
+					if (diff1 == null) LOGGER.trace("No absolute difference for edge: {}", edge1);
+					if (diff2 == null) LOGGER.trace("No absolute difference for edge: {}", edge2);
 					
 					Integer average = (diff1 + diff2) / 2;
 					

@@ -48,7 +48,8 @@ public class RoadDevelopment extends Intervention {
 	@Override
 	public void install(Object o) {
 		
-		System.out.println("Implementing road development.");
+		LOGGER.info("Implementing road development.");
+		
 		RoadNetwork rn = null;
 		if (o instanceof RoadNetwork) {
 			rn = (RoadNetwork)o;
@@ -57,7 +58,7 @@ public class RoadDevelopment extends Intervention {
 			rn = ((DemandModel)o).getRoadNetwork();
 		}
 		else {
-			System.err.println("RoadDevelopment installation has received an unexpected type.");
+			LOGGER.error("RoadDevelopment installation has received an unexpected type.");
 			return;
 		}
 		
@@ -71,14 +72,14 @@ public class RoadDevelopment extends Intervention {
 		Node fromNode = rn.getNodeIDtoNode().get(fromNodeId);
 		Node toNode = rn.getNodeIDtoNode().get(toNodeId);
 		if (fromNode == null || toNode == null) {
-			System.err.println("Could not find a node where road development should be installed!");
+			LOGGER.error("Could not find a node where road development should be installed!");
 			return;
 		}
 		
 		//create one edge
 		Edge newEdge = rn.createNewRoadLink(fromNode, toNode, numberOfLanesPerDirection, roadCategory, length);
 		if (newEdge == null) {
-			System.err.println("Edge creation was not sucessful");
+			LOGGER.error("Edge creation was not sucessful");
 			return;
 		}
 		//store edge ID
@@ -88,7 +89,7 @@ public class RoadDevelopment extends Intervention {
 		if(biDirectional) {
 			Edge newEdge2 = rn.createNewRoadLink(toNode, fromNode, numberOfLanesPerDirection, roadCategory, length);
 			if (newEdge2 == null) {
-				System.err.println("Second edge creation was not sucessful");
+				LOGGER.error("Second edge creation was not sucessful");
 				return;
 			}
 			//update map that maps edgeId to the edgeID of other direction
@@ -108,7 +109,8 @@ public class RoadDevelopment extends Intervention {
 	@Override
 	public void uninstall(Object o) {
 		
-		System.out.println("Removing road development.");
+		LOGGER.info("Removing road development.");
+		
 		RoadNetwork rn = null;
 		if (o instanceof RoadNetwork) {
 			rn = (RoadNetwork)o;
@@ -117,12 +119,12 @@ public class RoadDevelopment extends Intervention {
 			rn = ((DemandModel)o).getRoadNetwork();
 		}
 		else {
-			System.err.println("RoadDevelopment installation has received an unexpected type.");
+			LOGGER.error("RoadDevelopment installation has received an unexpected type.");
 			return;
 		}
 	
 		if (this.newEdgeId == null) {
-			System.err.println("RoadDevelopment does not have ID of the edge that needs to be removed.");
+			LOGGER.warn("RoadDevelopment does not have ID of the edge that needs to be removed.");
 			return;
 		} else 
 			rn.removeRoadLink(rn.getEdgeIDtoEdge().get(this.newEdgeId));
@@ -140,7 +142,7 @@ public class RoadDevelopment extends Intervention {
 	public Integer getDevelopedEdgeID() {
 		
 		if (this.newEdgeId == null) {
-			System.err.println("Unknown edge ID of developed road link!");
+			LOGGER.warn("Unknown edge ID of developed road link!");
 			return null;
 		}
 		return this.newEdgeId;
@@ -152,7 +154,7 @@ public class RoadDevelopment extends Intervention {
 	public Integer getDevelopedEdgeID2() {
 		
 		if (this.newEdgeId2 == null) {
-			System.err.println("Unknown edge ID of developed road link in second direction!");
+			LOGGER.warn("Unknown edge ID of developed road link in second direction!");
 			return null;
 		}
 		return this.newEdgeId2;

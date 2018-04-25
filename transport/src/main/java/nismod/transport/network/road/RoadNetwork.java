@@ -21,6 +21,7 @@ import java.util.Set;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.geotools.data.CachingFeatureSource;
@@ -168,7 +169,7 @@ public class RoadNetwork {
 					else if (roadNumber.charAt(0) == 'F')//ferry
 						cost = length / averageSpeedFerry * 60;  //travel time in minutes
 					else {
-						System.err.println("Unknown road type for link " + edge.getID());
+						LOGGER.warn("Unknown road type for link {}", edge.getID());
 						cost = Double.NaN;
 					}
 				return cost;
@@ -213,7 +214,7 @@ public class RoadNetwork {
 				else if (roadNumber.charAt(0) == 'F')//ferry
 					time = length / averageSpeedFerry * 60;  //travel time in minutes
 				else {
-					System.err.println("Unknown road type for link " + ((Edge)edge).getID());
+					LOGGER.warn("Unknown road type for link {}", ((Edge)edge).getID());
 					time = Double.NaN;
 				}
 				this.freeFlowTravelTime.put(((Edge)edge).getID(), time);
@@ -222,7 +223,7 @@ public class RoadNetwork {
 
 	public void replaceNetworkEdgeIDs(URL networkShapeFile) throws IOException {
 		
-		System.out.println("Replacing network edges IDs with persistent ones...");
+		LOGGER.info("Replacing network edges IDs with persistent ones...");
 		
 		ShapefileDataStore networkShapefile = new ShapefileDataStore(networkShapeFile);
 		CachingFeatureSource cache2 = new CachingFeatureSource(networkShapefile.getFeatureSource());
@@ -291,8 +292,8 @@ public class RoadNetwork {
 			Point point2 = (Point)sf2.getDefaultGeometry();
 			double distance = point.distance(point2) / 1000.0; //straight line distance (from metres to kilometres)!
 			if (length < distance) {
-				System.err.printf("The length of the edge (%.2f) is smaller than the straight line distance (%.2f)!\n", length, distance);
-				System.err.printf("I am overriding actual distance for edge (%d)-%d->(%d) \n", fromNode.getID(), edge.getID(), toNode.getID());
+				LOGGER.printf(Level.DEBUG, "The length of the edge (%.2f) is smaller than the straight line distance (%.2f)!", length, distance);
+				LOGGER.debug("I am overriding actual distance for edge ({})-{}->({})", fromNode.getID(), edge.getID(), toNode.getID());
 				feature.setAttribute("LenNet", distance);
 			}
 		}
@@ -305,7 +306,7 @@ public class RoadNetwork {
 	public void exportToShapefile(String fileName) throws IOException {
 
 		if (network == null) {
-			System.err.println("The network is empty.");
+			LOGGER.warn("Cannot export empty network to a shapefile!");
 			return;
 		}
 
@@ -376,13 +377,13 @@ public class RoadNetwork {
 					objList.add(freeFlowTime);
 					objList.add(true); //ferry
 				} else {
-					System.err.println("Unknown road category for edge " + edge.getID());
+					LOGGER.warn("Unknown road category for edge {}", edge.getID());
 					objList.add(null);
 					objList.add(null);
 					objList.add(null);
 				}
 			} else {
-				System.err.println("No object assigned to the edge " + edge.getID());
+				LOGGER.warn("No object assigned to the edge {}", edge.getID());
 			}
 			SimpleFeature feature = featureBuilder.build(type, objList, Integer.toString(edge.getID()));
 			//System.out.println(feature.toString());
@@ -406,7 +407,7 @@ public class RoadNetwork {
 		 * 
 		 * Each data store has different limitations so check the resulting SimpleFeatureType.
 		 */
-		System.out.println("SHAPE:"+SHAPE_TYPE);
+		//LOGGER.debug("SHAPE: {}", SHAPE_TYPE);
 
 		if (featureSource instanceof SimpleFeatureStore) {
 			SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;
@@ -427,7 +428,7 @@ public class RoadNetwork {
 				transaction.close();
 			}
 		} else {
-			System.err.println(typeName + " does not support read/write access");
+			LOGGER.warn("{} does not support read/write access", typeName);
 		}
 	}
 	
@@ -442,7 +443,7 @@ public class RoadNetwork {
 	public SimpleFeatureCollection createNetworkFeatureCollection(Map<Integer, Double> linkData, String linkDataLabel, String shapefilePath) throws IOException {
 
 		if (network == null) {
-			System.err.println("The network is empty.");
+			LOGGER.warn("Cannot create network feature collection as the network is empty!");
 			return null;
 		}
 		
@@ -518,7 +519,7 @@ public class RoadNetwork {
 					objList.add(freeFlowTime);
 					objList.add(true); //ferry
 				} else {
-					System.err.println("Unknown road category for edge " + edge.getID());
+					LOGGER.warn("Unknown road category for edge {}", edge.getID());
 					objList.add(null);
 					objList.add(null);
 					objList.add(null);
@@ -530,7 +531,7 @@ public class RoadNetwork {
 				if (volume == null) volume = 0.0;
 				objList.add(volume);
 			} else {
-				System.err.println("No object assigned to the edge " + edge.getID());
+				LOGGER.warn("No object assigned to the edge {}", edge.getID());
 			}
 			//SimpleFeature feature = featureBuilder.build(type, objList, Integer.toString(edge.getID()));
 			SimpleFeature feature = SimpleFeatureBuilder.build(type,  objList, Integer.toString(edge.getID()));
@@ -581,7 +582,7 @@ public class RoadNetwork {
 				transaction.close();
 			}
 		} else {
-			System.err.println(typeName + " does not support read/write access");
+			LOGGER.warn("{} does not support read/write access.", typeName);
 		}
 		
 		return featureSource.getFeatures();
@@ -784,7 +785,7 @@ public class RoadNetwork {
 		Point point2 = (Point)sf2.getDefaultGeometry();
 		double distance = point.distance(point2) / 1000.0; //straight line distance (from metres to kilometres)!
 		if (length < distance) 
-			System.err.printf("The length of the newly created link (%.2f) is smaller than the straight line distance (%.2f)!\n", length, distance);
+			LOGGER.printf(Level.WARN, "The length of the newly created link (%.2f) is smaller than the straight line distance (%.2f)!", length, distance);
 		
 		//create an object to add to edge
 		//dynamically creates a feature type to describe the shapefile contents
@@ -916,7 +917,7 @@ public class RoadNetwork {
 					else if (roadNumber.charAt(0) == 'F')//ferry
 						cost = (double) feature.getAttribute("LenNet") / averageSpeedFerry * 60;  //travel time in minutes
 					else {
-						System.err.println("Unknown road type for link " + edge.getID());
+						LOGGER.warn("Unknown road type for link {}", edge.getID());
 						cost = Double.NaN;
 					}
 				} else //use provided travel time
@@ -1072,16 +1073,16 @@ public class RoadNetwork {
 					return null;
 				}
 			} catch (WrongPathException e) {
-				System.err.println("Could not find the shortest path using astar.");
+				LOGGER.warn("Could not find the shortest path using astar. {}", e);
 				path = null;
 			} catch (Exception e) {
-				LOGGER.error(e);
-				System.err.println("Could not find the shortest path using astar.");
+				LOGGER.warn(e);
+				LOGGER.warn("Could not find the shortest path using astar.");
 				path = null;
 			} 
 
 		if (path != null && !path.isValid()) {
-			System.err.printf("Fastest path from %d to %d exists, but is not valid! %n", from.getID(), to.getID());
+			LOGGER.warn("Fastest path from {} to {} exists, but is not valid!", from.getID(), to.getID());
 			return null;
 		}
 		return path;
@@ -1124,12 +1125,12 @@ public class RoadNetwork {
 				return null;
 			}
 		} catch (Exception e) {
-			LOGGER.error(e);
-			System.err.println("Could not find the shortest path using Dijkstra.");
+			LOGGER.warn(e);
+			LOGGER.warn("Could not find the shortest path using Dijkstra.");
 			return null;
 		}
 		if (path != null && !path.isValid()) {
-			System.err.printf("Fastest path from %d to %d exists, but is not valid! %n", from.getID(), to.getID());
+			LOGGER.warn("Fastest path from {} to {} exists, but is not valid!", from.getID(), to.getID());
 			return null;
 		}
 		return path;
@@ -1528,7 +1529,7 @@ public class RoadNetwork {
 		CachingFeatureSource cache4 = new CachingFeatureSource(zonesShapefile.getFeatureSource());
 		SimpleFeatureCollection zonesFeatureCollection = cache4.getFeatures();
 
-		System.out.println("Creating undirected graph...");
+		LOGGER.info("Creating undirected graph...");
 		
 		//create undirected graph with features from the network shapefile
 		Graph undirectedGraph = createUndirectedGraph(networkFeatureCollection);
@@ -1536,12 +1537,12 @@ public class RoadNetwork {
 		//graph builder to build a directed graph
 		BasicDirectedLineGraphBuilder graphBuilder = new BasicDirectedLineGraphBuilder();
 
-		System.out.println("Adding nodes to directed graph...");
+		LOGGER.info("Adding nodes to directed graph...");
 		
 		//create nodes of the directed graph directly from the nodes shapefile
 		addNodesToGraph(graphBuilder, nodesFeatureCollection);
 		
-		System.out.println("Adding edges to directed graph...");
+		LOGGER.info("Adding edges to directed graph...");
 
 		//for each edge from the undirected graph create (usually) two directed edges in the directed graph
 		//and assign the data from the count points
@@ -1550,35 +1551,35 @@ public class RoadNetwork {
 		//set the instance field with the generated directed graph
 		this.network = (DirectedGraph) graphBuilder.getGraph();
 
-		System.out.println("Mapping nodes to LAD zones...");
+		LOGGER.info("Mapping nodes to LAD zones...");
 		
 		//map the nodes to zones
 		mapNodesToZones(zonesFeatureCollection);
 		
-		System.out.println("Mapping edges to LAD zones...");
+		LOGGER.info("Mapping edges to LAD zones...");
 		
 		//map the edges to zones
 		mapEdgesToZones(zonesFeatureCollection);
 		
-		System.out.println("Creating direct access maps for nodes and edges...");
+		LOGGER.info("Creating direct access maps for nodes and edges...");
 		createDirectAccessNodeMap();
 		createDirectAccessEdgeMap();
 		createEdgeToOtherDirectionEdgeMap();
 		
-		System.out.println("Populating blacklists with unallowed starting/ending node IDs...");
+		LOGGER.info("Populating blacklists with unallowed starting/ending node IDs...");
 		createNodeBlacklists();
-		System.out.println("Start node blacklist: " + this.startNodeBlacklist);
-		System.out.println("End node blacklist: " + this.endNodeBlacklist);
+		LOGGER.debug("Start node blacklist: " + this.startNodeBlacklist);
+		LOGGER.debug("End node blacklist: " + this.endNodeBlacklist);
 		
-		System.out.println("Determining the number of lanes...");
+		LOGGER.info("Determining the number of lanes...");
 		
 		//set number of lanes
 		addNumberOfLanes();
 		
-		System.out.println("Undirected graph representation of the road network:");
-		System.out.println(undirectedGraph);
-		System.out.println("Directed graph representation of the road network:");
-		System.out.println(network);
+		LOGGER.debug("Undirected graph representation of the road network:");
+		LOGGER.debug(undirectedGraph);
+		LOGGER.debug("Directed graph representation of the road network:");
+		LOGGER.debug(network);
 	}
 
 	/**
@@ -1667,7 +1668,7 @@ public class RoadNetwork {
 				if (c1.equals(coord)) nodeA = node;
 				if (c2.equals(coord)) nodeB = node;	
 			}
-			if (nodeA == null || nodeB == null) System.err.println("There is a road link for which start or end node is missing in the nodes shapefile.");
+			if (nodeA == null || nodeB == null) LOGGER.warn("There is a road link for which start or end node is missing in the nodes shapefile.");
 
 			//add edge A->B or B->A or both (depending on the direction information contained in the AADF count points)
 			DirectedEdge directedEdge = null;
@@ -1728,7 +1729,7 @@ public class RoadNetwork {
 							directedEdge2 = (DirectedEdge) graphBuilder.buildEdge(nodeB, nodeA);
 							directedEdge2.setObject(countFeature); // add the same count point to the other direction
 							graphBuilder.addEdge(directedEdge2); break; 
-						default: System.err.println("Unrecognized direction character.");
+						default: LOGGER.warn("Unrecognized direction character.");
 						}
 					}
 					
@@ -1741,7 +1742,7 @@ public class RoadNetwork {
 			}
 
 			if (directedEdge == null) {
-				System.err.printf("No count point data found for this edge (RoadNumber = '%s', ferry = %d).\n", 
+				LOGGER.warn("No count point data found for this edge (RoadNumber = '{}', ferry = {}).", 
 						edgeFeature.getAttribute("RoadNumber"), edgeFeature.getAttribute("ferry"));
 
 				//still need to create two edges for the ferry line
@@ -1902,7 +1903,7 @@ public class RoadNetwork {
 					if (countPoint == countPoint2) //if there is a count point match
 						this.edgeIDtoOtherDirectionEdgeID.put(edge.getID(), edge2.getID());
 						if (length1 != length2) //if lenghts are different something may be wrong (possible with more edges with 0 CP)
-							System.err.println("Edge to other direction edge have different lengths!");
+							LOGGER.warn("Edge to other direction edge have different lengths!");
 				}
 	
 //				if (this.edgeIDtoOtherDirectionEdgeID.get(edge.getID()) == null)
@@ -1947,7 +1948,7 @@ public class RoadNetwork {
 			else if (roadNumber.charAt(0) == 'F')//ferry
 				lanes = null;
 			else {
-				System.err.println("Link with unknown road type " + edge.getID());
+				LOGGER.warn("Link with unknown road type: {}", edge.getID());
 				lanes = null;
 			}
 			numberOfLanes.put(edge.getID(), lanes);

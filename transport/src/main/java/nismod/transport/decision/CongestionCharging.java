@@ -53,14 +53,14 @@ public class CongestionCharging extends Intervention {
 		String name = props.getProperty("name");
 		this.name = name;
 		
-		System.out.println("Implementing congestion charging: " + name);
+		LOGGER.info("Implementing congestion charging: " + name);
 		
 		DemandModel dm = null;
 		if (o instanceof DemandModel) {
 			dm = (DemandModel)o;
 		}
 		else {
-			System.err.println("CongestionCharging installation has received an unexpected type.");
+			LOGGER.error("CongestionCharging installation has received an unexpected type. Not installed.");
 			return;
 		}
 	
@@ -89,7 +89,7 @@ public class CongestionCharging extends Intervention {
 			LOGGER.error(e);
 		}
 		
-		System.out.println(congestionCharge.toString());
+		LOGGER.debug("Congestion charge: {}", congestionCharge.toString());
 		
 		//set congestion charge for all years from startYear to endYear
 		for (int y = startYear; y <= endYear; y++) {
@@ -123,14 +123,14 @@ public class CongestionCharging extends Intervention {
 	public void uninstall(Object o) {
 
 		
-		System.out.println("Removing congestion charging.");
+		LOGGER.info("Removing congestion charging.");
 		
 		DemandModel dm = null;
 		if (o instanceof DemandModel) {
 			dm = (DemandModel)o;
 		}
 		else {
-			System.err.println("CongestionCharging uninstallation has received an unexpected type.");
+			LOGGER.error("CongestionCharging uninstallation has received an unexpected type.");
 			return;
 		}
 	
