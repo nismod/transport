@@ -102,7 +102,7 @@ public class FreightMatrix {
 	 */
 	public void printMatrixFormatted() {
 		
-		System.out.println(matrix.toString());
+		//System.out.println(matrix.toString());
 		
 		Set<Integer> firstKey = new HashSet<Integer>();
 		Set<Integer> secondKey = new HashSet<Integer>();

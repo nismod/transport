@@ -46,14 +46,14 @@ public class VehicleElectrification extends Intervention {
 	@Override
 	public void install(Object o) {
 		
-		System.out.println("Implementing vehicle electrification.");
+		LOGGER.info("Implementing vehicle electrification.");
 		
 		DemandModel dm = null;
 		if (o instanceof DemandModel) {
 			dm = (DemandModel)o;
 		}
 		else {
-			System.err.println("VehicleElectrification installation has received an unexpected type.");
+			LOGGER.error("VehicleElectrification installation has received an unexpected type.");
 			return;
 		}
 		
@@ -83,14 +83,14 @@ public class VehicleElectrification extends Intervention {
 	@Override
 	public void uninstall(Object o) {
 		
-		System.out.println("Removing vehicle electrification.");
+		LOGGER.info("Removing vehicle electrification.");
 		
 		DemandModel dm = null;
 		if (o instanceof DemandModel) {
 			dm = (DemandModel)o;
 		}
 		else {
-			System.err.println("VehicleElectrification uninstallation has received an unexpected type.");
+			LOGGER.error("VehicleElectrification uninstallation has received an unexpected type.");
 			return;
 		}
 		

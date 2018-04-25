@@ -16,6 +16,7 @@ import org.apache.commons.collections4.map.MultiKeyMap;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -205,17 +206,17 @@ public class DemandModel {
 	 */
 	public void predictHighwayDemand(int predictedYear, int fromYear) {
 
-		System.out.printf("Predicting %d highway demand from %d demand\n", predictedYear, fromYear);
+		LOGGER.info("Predicting {} highway demand from {} demand.", predictedYear, fromYear);
 		
 		if (predictedYear <= fromYear) {
-			System.err.println("predictedYear should be greater than fromYear!");
+			LOGGER.error("predictedYear should be greater than fromYear!");
 			return;
 		//check if the demand from year fromYear exists
 		} else if (!this.yearToPassengerODMatrix.containsKey(fromYear)) { 
-			System.err.printf("Passenger demand from year %d does not exist!\n", fromYear);
+			LOGGER.error("Passenger demand from year {} does not exist!", fromYear);
 			return;
 		} else if (!this.yearToFreightODMatrix.containsKey(fromYear)) { 
-			System.err.printf("Freight demand from year %d does not exist!\n", fromYear);
+			LOGGER.error("Freight demand from year {} does not exist!", fromYear);
 			return;
 		} else {
 			
@@ -229,7 +230,7 @@ public class DemandModel {
 			//check if the demand for fromYear has already been assigned, if not assign it
 			RoadNetworkAssignment rna = yearToRoadNetworkAssignment.get(fromYear);
 			if (rna == null) {
-				System.out.printf("%d year has not been assigned to the network, so assigning it now.\n", fromYear);
+				LOGGER.debug("{} year has not been assigned to the network, so assigning it now.", fromYear);
 				
 				//create a network assignment and assign the demand
 				rna = new RoadNetworkAssignment(this.roadNetwork, 
@@ -304,9 +305,9 @@ public class DemandModel {
 				predictedPassengerODMatrix.setFlow(originZone, destinationZone, (int) Math.round(predictedFlow));
 			} 
 			
-			System.out.println("First stage prediction passenger matrix (from population and GVA):");
-			predictedPassengerODMatrix.printMatrixFormatted();
-			
+			LOGGER.debug("First stage prediction passenger matrix (from population and GVA):");
+			if (LOGGER.getLevel().isLessSpecificThan(Level.DEBUG)) predictedPassengerODMatrix.printMatrixFormatted();
+						
 			//for each OD pair first predict the change in freight vehicle flows from the changes in population and GVA
 			for (MultiKey mk: this.yearToFreightODMatrix.get(fromYear).getKeySet()) {
 				int origin = (int) mk.getKey(0);
@@ -362,8 +363,8 @@ public class DemandModel {
 				predictedFreightODMatrix.setFlow(origin, destination, vehicleType, (int) Math.round(predictedFlow));
 			}
 
-			System.out.println("First stage prediction freight matrix (from population and GVA):");
-			predictedFreightODMatrix.printMatrixFormatted();
+			LOGGER.debug("First stage prediction freight matrix (from population and GVA):");
+			if (LOGGER.getLevel().isLessSpecificThan(Level.DEBUG)) predictedFreightODMatrix.printMatrixFormatted();
 			
 			//SECOND STAGE PREDICTION (FROM CHANGES IN COST AND TIME)
 			
@@ -427,8 +428,8 @@ public class DemandModel {
 					predictedPassengerODMatrix.setFlow(originZone, destinationZone, (int) Math.round(predictedflow));
 				}
 
-				System.out.println("Second stage prediction passenger matrix (from changes in skim matrices):");
-				predictedPassengerODMatrix.printMatrixFormatted();
+				LOGGER.debug("Second stage prediction passenger matrix (from changes in skim matrices):");
+				if (LOGGER.getLevel().isLessSpecificThan(Level.DEBUG)) predictedPassengerODMatrix.printMatrixFormatted();
 				
 				//for each OD pair predict the change in freight vehicle flow from the change in skim matrices
 				for (MultiKey mk: this.yearToFreightODMatrix.get(fromYear).getKeySet()) {
@@ -449,8 +450,8 @@ public class DemandModel {
 					predictedFreightODMatrix.setFlow(origin, destination, vehicleType, (int) Math.round(predictedflow));
 				}
 
-				System.out.println("Second stage prediction freight matrix (from changes in skim matrices):");
-				predictedFreightODMatrix.printMatrixFormatted();
+				LOGGER.debug("Second stage prediction freight matrix (from changes in skim matrices):");
+				if (LOGGER.getLevel().isLessSpecificThan(Level.DEBUG)) predictedFreightODMatrix.printMatrixFormatted();
 				
 				//assign predicted year again using latest link travel times
 				predictedRna = new RoadNetworkAssignment(this.roadNetwork, 
@@ -822,7 +823,8 @@ public class DemandModel {
 			parser.close();
 		}
 
-		System.out.println(map);
+		LOGGER.debug("Energy unit costs:");
+		LOGGER.debug(map);
 
 		return map;
 	}
@@ -871,7 +873,8 @@ public class DemandModel {
 			parser.close();
 		}
 
-		System.out.println(yearToVehicleToEngineTypeFractions);
+		LOGGER.debug("Year to vehicle engine type fractions:");
+		LOGGER.debug(yearToVehicleToEngineTypeFractions);
 		
 		return yearToVehicleToEngineTypeFractions;
 	}
