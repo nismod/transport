@@ -5,6 +5,7 @@ package nismod.transport.demand;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,6 +18,7 @@ import java.util.Properties;
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.geotools.graph.path.Path;
 
+import nismod.transport.decision.CongestionCharging;
 import nismod.transport.decision.Intervention;
 import nismod.transport.decision.RoadDevelopment;
 import nismod.transport.decision.RoadExpansion;
@@ -36,11 +38,9 @@ public class DemandModelTest {
 	
 	public static void main( String[] args ) throws IOException	{
 
+		//final String configFile = "./src/main/config/config.properties";
 		final String configFile = "./src/test/config/testConfig.properties";
 		Properties props = ConfigReader.getProperties(configFile);
-		
-		final String fromYear = props.getProperty("fromYear");
-		final String predictedYear = props.getProperty("predictedYear");
 		
 		final String areaCodeFileName = props.getProperty("areaCodeFileName");
 		final String areaCodeNearestNodeFile = props.getProperty("areaCodeNearestNodeFile");
@@ -56,27 +56,41 @@ public class DemandModelTest {
 		final URL AADFurl = new URL(props.getProperty("AADFurl"));
 
 		final String baseYearODMatrixFile = props.getProperty("baseYearODMatrixFile");
-		final String baseYearFreightMatrixFile = props.getProperty("baseYearFreightMatrixFile");
+		final String freightMatrixFile = props.getProperty("baseYearFreightMatrixFile");
 		final String populationFile = props.getProperty("populationFile");
 		final String GVAFile = props.getProperty("GVAFile");
 		final String elasticitiesFile = props.getProperty("elasticitiesFile");
 		final String elasticitiesFreightFile = props.getProperty("elasticitiesFreightFile");
 
+		final String passengerRoutesFile = props.getProperty("passengerRoutesFile");
+		final String freightRoutesFile = props.getProperty("freightRoutesFile");
+		
 		final String roadExpansionFileName = props.getProperty("roadExpansionFile");
 		final String roadDevelopmentFileName = props.getProperty("roadDevelopmentFile");
 		final String vehicleElectrificationFileName = props.getProperty("vehicleElectrificationFile");
-		final String congestionChargeFile = props.getProperty("congestionChargingFile");
+		final String congestionChargingFileName = props.getProperty("congestionChargingFile");
 
 		final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
 		final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
 		final String AVFractionsFile = props.getProperty("autonomousVehiclesFile");
 		
 		final String energyConsumptionsFile = props.getProperty("energyConsumptionsFile"); //output
-		
+		final String outputFolder = props.getProperty("outputFolder");
+				
+		//create output directory
+	     File file = new File(outputFolder);
+	        if (!file.exists()) {
+	            if (file.mkdirs()) {
+	                System.out.println("Output directory is created.");
+	            } else {
+	                System.err.println("Failed to create output directory.");
+	            }
+	        }
+
 		//create a road network
-		RoadNetwork roadNetwork2 = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
-		roadNetwork2.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
-		
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
+		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
+
 		//visualise the shapefiles
 		//roadNetwork2.visualise("Test Area");
 		
@@ -169,8 +183,9 @@ public class DemandModelTest {
 		props.setProperty("roadCategory", "A");
 		RoadDevelopment rd = new RoadDevelopment(props);
 		interventions.add(rd);
+	
 		*/
-			
+		
 		Properties props2 = new Properties();
 		props2.setProperty("startYear", "2016");
 		props2.setProperty("endYear", "2025");
@@ -182,22 +197,44 @@ public class DemandModelTest {
 		props2.setProperty("HYDROGEN", "0.025");
 		props2.setProperty("HYBRID", "0.025");
 		VehicleElectrification ve = new VehicleElectrification(props2);
-		interventions.add(ve);
+				
+		RoadExpansion re = new RoadExpansion(roadExpansionFileName);
+		RoadDevelopment rd = new RoadDevelopment(roadDevelopmentFileName);
+		CongestionCharging cc = new CongestionCharging(congestionChargingFileName);
+		//VehicleElectrification ve = new VehicleElectrification(congestionChargingFileName);
 		
-		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork2);
-		//rsg.readRoutes("./src/test/resources/testdata/testRoutes.txt");
-		rsg.readRoutes("./src/test/resources/testdata/allRoutes.txt");
+		interventions.add(re);
+		interventions.add(rd);
+		interventions.add(cc);
+		interventions.add(ve);
+			
+		//read routes
+		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
+		rsg.readRoutesBinaryWithoutValidityCheck(passengerRoutesFile);
+		rsg.printStatistics();
+		rsg.readRoutesBinaryWithoutValidityCheck(freightRoutesFile);
+		rsg.printStatistics();
 		
 		//the main demand model
-		DemandModel dm = new DemandModel(roadNetwork2, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, engineTypeFractionsFile, AVFractionsFile, interventions, rsg, props);
+		DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, freightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, engineTypeFractionsFile, AVFractionsFile, interventions, rsg, props);
 		
 		//copy base-year engine fractions
-		for (int year = 2015; year < 2025; year++) {
+		//for (int year = 2015; year < 2025; year++) {
+		for (int year = 2015; year < 2016; year++) {
 			HashMap<VehicleType, HashMap<EngineType, Double>> map = new HashMap<VehicleType, HashMap<EngineType, Double>>();
 			map.putAll(dm.getEngineTypeFractions(2015));
 			dm.setEngineTypeFractions(year, map);
 		}
-				
+	
+		dm.predictHighwayDemand(2016, 2015);
+		RoadNetworkAssignment rna2015 = dm.getRoadNetworkAssignment(2015);
+		RoadNetworkAssignment rna2016 = dm.getRoadNetworkAssignment(2016);
+		System.out.println("Base-year (2015) car energy consumptions:");
+		System.out.println(rna2015.calculateCarEnergyConsumptions());
+		System.out.println("Predicted (2016) car energy consumptions:");
+		System.out.println(rna2016.calculateCarEnergyConsumptions());
+		
+		/*
 		dm.predictHighwayDemands(2025, 2015);
 		RoadNetworkAssignment rna2015 = dm.getRoadNetworkAssignment(2015);
 		RoadNetworkAssignment rna2025 = dm.getRoadNetworkAssignment(2025);
@@ -206,9 +243,9 @@ public class DemandModelTest {
 		System.out.println(rna2015.calculateCarEnergyConsumptions());
 		System.out.println("Predicted (2025) car energy consumptions:");
 		System.out.println(rna2025.calculateCarEnergyConsumptions());
+		*/
 		
 		/*
-		
 		System.out.println("Base-year (2015) passenger matrix: ");
 		dm.getPassengerDemand(2015).printMatrixFormatted();
 		System.out.println("Predicted (2016) passenger matrix: ");

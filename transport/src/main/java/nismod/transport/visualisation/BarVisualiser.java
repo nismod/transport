@@ -7,7 +7,6 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.logging.Logger;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
@@ -15,6 +14,8 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.geotools.brewer.color.BrewerPalette;
 import org.geotools.brewer.color.ColorBrewer;
 import org.jfree.chart.ChartFactory;
@@ -31,7 +32,7 @@ import org.jfree.data.category.DefaultCategoryDataset;
   */
 public class BarVisualiser extends JFrame {
 	
-	private final static Logger LOGGER = Logger.getLogger(BarVisualiser.class.getName());
+	private final static Logger LOGGER = LogManager.getLogger(BarVisualiser.class);
 	
 	private static DefaultCategoryDataset dataset;
 	private static String title;

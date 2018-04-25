@@ -3,31 +3,26 @@
  */
 package nismod.transport.demand;
 
-import java.util.List;
-import java.util.Properties;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.List;
+import java.util.Properties;
 import java.util.Set;
-import java.util.logging.Logger;
 
-import org.apache.commons.collections4.map.MultiKeyMap;
 import org.apache.commons.collections4.keyvalue.MultiKey;
+import org.apache.commons.collections4.map.MultiKeyMap;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import nismod.transport.decision.CongestionCharging;
 import nismod.transport.decision.Intervention;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
-import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.network.road.RouteSetGenerator;
 
@@ -37,7 +32,8 @@ import nismod.transport.network.road.RouteSetGenerator;
   */
 public class DemandModel {
 	
-	private final static Logger LOGGER = Logger.getLogger(DemandModel.class.getName());
+	private final static Logger LOGGER = LogManager.getLogger(DemandModel.class);
+	
 	public final static int BASE_YEAR = 2015;
 	public final static int BASE_YEAR_FREIGHT = 2006;
 	public final static double FREIGHT_SCALING_FACTOR = 18366.0/21848.0;

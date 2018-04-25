@@ -6,7 +6,9 @@ package nismod.transport.decision;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
-import java.util.logging.Logger;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedGraph;
@@ -23,7 +25,7 @@ import nismod.transport.network.road.RoadNetwork;
  */
 public class RoadExpansion extends Intervention {
 	
-	private final static Logger LOGGER = Logger.getLogger(RoadExpansion.class.getName());
+	private final static Logger LOGGER = LogManager.getLogger(RoadExpansion.class);
 	
 	/** Constructor.
 	 * @param props Properties of the road expansion intervention.

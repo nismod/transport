@@ -2,15 +2,14 @@ package nismod.transport.network.road;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import org.apache.commons.collections4.map.MultiKeyMap;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedNode;
-import org.opengis.feature.simple.SimpleFeature;
 
-import nismod.transport.decision.CongestionCharging;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
@@ -22,7 +21,7 @@ import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
  */
 public class Trip {
 	
-	private final static Logger LOGGER = Logger.getLogger(Trip.class.getName());
+	private final static Logger LOGGER = LogManager.getLogger(Trip.class);
 	
 	protected VehicleType vehicle;
 	protected EngineType engine;

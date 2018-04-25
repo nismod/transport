@@ -5,15 +5,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.logging.Logger;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedNode;
 import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Node;
 import org.opengis.feature.simple.SimpleFeature;
-
-import nismod.transport.decision.CongestionCharging;
 
 /**
  * Route is a sequence of directed edges with a choice utility
@@ -22,7 +21,7 @@ import nismod.transport.decision.CongestionCharging;
  */
 public class Route {
 	
-	private final static Logger LOGGER = Logger.getLogger(Route.class.getName());
+	private final static Logger LOGGER = LogManager.getLogger(Route.class);
 	
 	//default route-choice parameters
 	public static final double PARAM_TIME = -1.5;

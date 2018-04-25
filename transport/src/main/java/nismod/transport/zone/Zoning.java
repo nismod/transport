@@ -10,6 +10,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.geotools.data.CachingFeatureSource;
 import org.geotools.data.shapefile.ShapefileDataStore;
 import org.geotools.data.simple.SimpleFeatureCollection;
@@ -27,6 +29,8 @@ import nismod.transport.network.road.RoadNetwork;
  * @author Milan Lovric
   */
 public class Zoning {
+	
+	private final static Logger LOGGER = LogManager.getLogger(Zoning.class);
 	
 	private ShapefileDataStore zonesShapefile;
 	private ShapefileDataStore nodesShapefile;

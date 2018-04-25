@@ -6,13 +6,11 @@ package nismod.transport.network.road;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.logging.Logger;
 import java.util.Properties;
 import java.util.Set;
 
@@ -21,10 +19,8 @@ import org.apache.commons.collections4.map.MultiKeyMap;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.lang3.tuple.Pair;
-
-import org.geotools.graph.path.AStarShortestPathFinder;
-import org.geotools.graph.path.DijkstraShortestPathFinder;
-import org.geotools.graph.path.Path;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedGraph;
 import org.geotools.graph.structure.DirectedNode;
@@ -32,12 +28,10 @@ import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Node;
 import org.opengis.feature.simple.SimpleFeature;
 
-import nismod.transport.decision.CongestionCharging;
 import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.ODMatrix;
 import nismod.transport.demand.SkimMatrix;
 import nismod.transport.demand.SkimMatrixFreight;
-import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.utility.RandomSingleton;
 import nismod.transport.zone.NodeMatrix;
 import nismod.transport.zone.Zoning;
@@ -48,7 +42,7 @@ import nismod.transport.zone.Zoning;
  */
 public class RoadNetworkAssignment {
 
-	private final static Logger LOGGER = Logger.getLogger(RoadNetworkAssignment.class.getName());
+	private final static Logger LOGGER = LogManager.getLogger(RoadNetworkAssignment.class);
 	
 	//	//public static final double SPEED_LIMIT_M_ROAD = 112.65; //70mph = 31.29mps = 112.65kph
 	//	//public static final double SPEED_LIMIT_A_ROAD = 96.56; //60mph = 26.82mps = 96.56kph

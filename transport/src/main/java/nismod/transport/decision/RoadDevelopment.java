@@ -4,8 +4,9 @@
 package nismod.transport.decision;
 
 import java.util.Properties;
-import java.util.logging.Logger;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Node;
 import org.opengis.feature.simple.SimpleFeature;
@@ -20,7 +21,7 @@ import nismod.transport.network.road.RoadNetwork;
  */
 public class RoadDevelopment extends Intervention {
 	
-	private final static Logger LOGGER = Logger.getLogger(RoadDevelopment.class.getName());
+	private final static Logger LOGGER = LogManager.getLogger(RoadDevelopment.class);
 	
 	private Integer newEdgeId = null;
 	private Integer newEdgeId2 = null;

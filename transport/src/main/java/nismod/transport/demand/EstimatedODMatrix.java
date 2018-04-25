@@ -4,24 +4,23 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.geotools.graph.structure.DirectedEdge;
 
-import nismod.transport.decision.CongestionCharging;
 import nismod.transport.network.road.RoadNetworkAssignment;
-import nismod.transport.network.road.Trip;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.network.road.Route;
+import nismod.transport.network.road.Trip;
 
 /**
  * Origin-destination matrix created from productions, attractions and observed trip length distribution.
@@ -30,7 +29,7 @@ import nismod.transport.network.road.Route;
  */
 public class EstimatedODMatrix extends RealODMatrix {
 	
-	private final static Logger LOGGER = Logger.getLogger(EstimatedODMatrix.class.getName());
+	private final static Logger LOGGER = LogManager.getLogger(EstimatedODMatrix.class);
 	
 	//public static final int[] BIN_LIMITS_MILES = {0, 1, 2, 5, 10, 25, 50, 100, 150, 250, 350};
 	//public static final double[] BIN_LIMITS_KM = {0.0, 0.621371, 1.242742, 3.106855, 6.21371, 15.534275, 31.06855, 62.1371, 93.20565, 155.34275, 217.47985};
