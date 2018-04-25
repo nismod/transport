@@ -108,12 +108,7 @@ public class RoadNetworkAssignmentTest {
 
 		//read routes
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
-		//rsg.readRoutes("completeRoutesNewest.txt");
-		//rsg.readRoutes("./src/main/resources/data/all5routestop10/all5routestop10.txt");
-		//rsg.readRoutes("./src/main/resources/data/5routes10nodesnew/all5routestop10new.txt");
-		//rsg.readRoutes("./src/main/resources/data/routesCombined/routesCombined.txt");
-		//rsg.readRoutesBinaryWithoutValidityCheck("./src/main/resources/data/routesCombined/routesCombined.dat");
-		//rsg.readRoutesBinaryWithoutValidityCheck(passengerRoutesFile);
+		rsg.readRoutesBinaryWithoutValidityCheck(passengerRoutesFile);
 		rsg.printStatistics();
 		
 		//set route choice parameters
@@ -132,12 +127,11 @@ public class RoadNetworkAssignmentTest {
 		
 		//assign passenger flows
 		long timeNow = System.currentTimeMillis();
-		rna.assignPassengerFlowsHourlyRouting(odm, routeStorage);
-		for (TimeOfDay hour: TimeOfDay.values()) {
-			routeStorage.get(hour).printStatistics();
-		}
-		//rsg.printStatistics();
-		//rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
+		//rna.assignPassengerFlowsHourlyRouting(odm, routeStorage);
+		//for (TimeOfDay hour: TimeOfDay.values()) {
+		//	routeStorage.get(hour).printStatistics();
+		//}
+		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Passenger flows assigned in %d seconds.\n", timeNow / 1000);
 		

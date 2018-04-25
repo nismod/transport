@@ -260,16 +260,14 @@ public class SPSA3 {
 				csvFilePrinter.printRecord(record);
 			}
 		} catch (Exception e) {
-			System.err.println("Error in CsvFileWriter!");
-			e.printStackTrace();
+			LOGGER.error(e);
 		} finally {
 			try {
 				fileWriter.flush();
 				fileWriter.close();
 				csvFilePrinter.close();
 			} catch (IOException e) {
-				System.err.println("Error while flushing/closing fileWriter/csvPrinter!");
-				e.printStackTrace();
+				LOGGER.error(e);
 			}
 		}
 	}

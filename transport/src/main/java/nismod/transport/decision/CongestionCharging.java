@@ -83,10 +83,10 @@ public class CongestionCharging extends Intervention {
 			congestionCharge = this.readCongestionChargeFile(congestionChargingPricing);
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOGGER.error(e);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOGGER.error(e);
 		}
 		
 		System.out.println(congestionCharge.toString());

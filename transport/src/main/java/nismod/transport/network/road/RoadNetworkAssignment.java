@@ -606,7 +606,7 @@ public class RoadNetworkAssignment {
 					this.tripList.add(trip);
 
 				} catch (Exception e) {
-					e.printStackTrace();
+					LOGGER.error(e);
 					System.err.printf("Couldnt find path from node %d to node %d!", from.getID(), to.getID());
 				}
 			}//for each trip
@@ -796,7 +796,7 @@ public class RoadNetworkAssignment {
 					this.tripList.add(trip);
 
 				} catch (Exception e) {
-					e.printStackTrace();
+					LOGGER.error(e);
 					System.err.printf("Couldnt find path from node %d to node %d!", from.getID(), to.getID());
 				}
 			}//for each trip
@@ -1339,7 +1339,7 @@ public class RoadNetworkAssignment {
 					this.tripList.add(trip);
 
 				} catch (Exception e) {
-					e.printStackTrace();
+					LOGGER.error(e);
 					System.err.printf("Couldnt find path from node %d to node %d!", from.getID(), to.getID());
 				}
 			}//for each trip
@@ -1806,7 +1806,7 @@ public class RoadNetworkAssignment {
 					this.tripList.add(trip);
 
 				} catch (Exception e) {
-					e.printStackTrace();
+					LOGGER.error(e);
 				}
 			}//for each trip
 		}//for each OD pair
@@ -2038,7 +2038,7 @@ public class RoadNetworkAssignment {
 					this.tripList.add(trip);
 
 				} catch (Exception e) {
-					e.printStackTrace();
+					LOGGER.error(e);
 				}
 			}//for each trip
 		}//for each OD pair
@@ -3429,7 +3429,7 @@ public class RoadNetworkAssignment {
 			}
 		} catch (Exception e) {
 			System.err.println("Error in CsvFileWriter!");
-			e.printStackTrace();
+			LOGGER.error(e);
 		} finally {
 			try {
 				fileWriter.flush();
@@ -3437,7 +3437,7 @@ public class RoadNetworkAssignment {
 				csvFilePrinter.close();
 			} catch (IOException e) {
 				System.err.println("Error while flushing/closing fileWriter/csvPrinter!");
-				e.printStackTrace();
+				LOGGER.error(e);
 			}
 		}
 	}
@@ -3507,7 +3507,7 @@ public class RoadNetworkAssignment {
 			}
 		} catch (Exception e) {
 			System.err.println("Error in CsvFileWriter!");
-			e.printStackTrace();
+			LOGGER.error(e);
 		} finally {
 			try {
 				fileWriter.flush();
@@ -3515,7 +3515,7 @@ public class RoadNetworkAssignment {
 				csvFilePrinter.close();
 			} catch (IOException e) {
 				System.err.println("Error while flushing/closing fileWriter/csvPrinter!");
-				e.printStackTrace();
+				LOGGER.error(e);
 			}
 		}
 	}
@@ -3550,7 +3550,7 @@ public class RoadNetworkAssignment {
 			csvFilePrinter.printRecord(record);
 		} catch (Exception e) {
 			System.err.println("Error in CsvFileWriter!");
-			e.printStackTrace();
+			LOGGER.error(e);
 		} finally {
 			try {
 				fileWriter.flush();
@@ -3558,7 +3558,7 @@ public class RoadNetworkAssignment {
 				csvFilePrinter.close();
 			} catch (IOException e) {
 				System.err.println("Error while flushing/closing fileWriter/csvPrinter!");
-				e.printStackTrace();
+				LOGGER.error(e);
 			}
 		}
 	}
@@ -3602,7 +3602,7 @@ public class RoadNetworkAssignment {
 			}
 		} catch (Exception e) {
 			System.err.println("Error in CsvFileWriter!");
-			e.printStackTrace();
+			LOGGER.error(e);
 		} finally {
 			try {
 				fileWriter.flush();
@@ -3610,7 +3610,7 @@ public class RoadNetworkAssignment {
 				csvFilePrinter.close();
 			} catch (IOException e) {
 				System.err.println("Error while flushing/closing fileWriter/csvPrinter!");
-				e.printStackTrace();
+				LOGGER.error(e);
 			}
 		}
 	}
@@ -3647,7 +3647,7 @@ public class RoadNetworkAssignment {
 			}	
 		} catch (Exception e) {
 			System.err.println("Error in CsvFileWriter!");
-			e.printStackTrace();
+			LOGGER.error(e);
 		} finally {
 			try {
 				fileWriter.flush();
@@ -3655,7 +3655,7 @@ public class RoadNetworkAssignment {
 				csvFilePrinter.close();
 			} catch (IOException e) {
 				System.err.println("Error while flushing/closing fileWriter/csvPrinter!");
-				e.printStackTrace();
+				LOGGER.error(e);
 			}
 		}
 	}
@@ -3696,7 +3696,7 @@ public class RoadNetworkAssignment {
 			}
 		} catch (Exception e) {
 			System.err.println("Error in CsvFileWriter!");
-			e.printStackTrace();
+			LOGGER.error(e);
 		} finally {
 			try {
 				fileWriter.flush();
@@ -3704,7 +3704,7 @@ public class RoadNetworkAssignment {
 				csvFilePrinter.close();
 			} catch (IOException e) {
 				System.err.println("Error while flushing/closing fileWriter/csvPrinter!");
-				e.printStackTrace();
+				LOGGER.error(e);
 			}
 		}
 	}
@@ -3743,7 +3743,7 @@ public class RoadNetworkAssignment {
 			}
 		} catch (Exception e) {
 			System.err.println("Error in CsvFileWriter!");
-			e.printStackTrace();
+			LOGGER.error(e);
 		} finally {
 			try {
 				fileWriter.flush();
@@ -3751,7 +3751,7 @@ public class RoadNetworkAssignment {
 				csvFilePrinter.close();
 			} catch (IOException e) {
 				System.err.println("Error while flushing/closing fileWriter/csvPrinter!");
-				e.printStackTrace();
+				LOGGER.error(e);
 			}
 		}
 	}

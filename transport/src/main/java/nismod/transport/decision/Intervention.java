@@ -8,11 +8,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /**
  * @author Milan Lovric
  *
  */
 public abstract class Intervention {
+	
+	private final static Logger LOGGER = LogManager.getLogger(Intervention.class);
 	
 	protected Properties props;
 	protected boolean installed;
@@ -32,14 +37,14 @@ public abstract class Intervention {
 			input = new FileInputStream(fileName);
 			// load properties file
 			props.load(input);
-		} catch (IOException ex) {
-			ex.printStackTrace();
+		} catch (IOException e) {
+			LOGGER.error(e);
 		} finally {
 			if (input != null) {
 				try {
 					input.close();
 				} catch (IOException e) {
-					e.printStackTrace();
+					LOGGER.error(e);
 				}
 			}
 		}

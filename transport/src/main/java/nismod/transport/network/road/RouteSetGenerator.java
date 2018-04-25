@@ -902,8 +902,7 @@ public class RouteSetGenerator {
 					bufferedWriter.write(route.getFormattedString() + System.getProperty("line.separator"));
 			}
 		} catch (Exception e) {
-			System.err.println("Error in fileWriter!");
-			e.printStackTrace();
+			LOGGER.error(e);
 		} finally {
 			try {
 				bufferedWriter.flush();
@@ -911,8 +910,7 @@ public class RouteSetGenerator {
 				//fileWriter.flush();
 				//fileWriter.close();
 			} catch (IOException e) {
-				System.err.println("Error while flushing/closing fileWriter!");
-				e.printStackTrace();
+				LOGGER.error(e);
 			}
 		}
 	}
@@ -942,8 +940,7 @@ public class RouteSetGenerator {
 				}
 			}
 		} catch (Exception e) {
-			System.err.println("Error in outputStream!");
-			e.printStackTrace();
+			LOGGER.error(e);
 		} finally {
 			try {
 				dataStream.flush();
@@ -953,8 +950,7 @@ public class RouteSetGenerator {
 				outputStream.flush();
 				outputStream.close();
 			} catch (IOException e) {
-				System.err.println("Error while flushing/closing outputStream!");
-				e.printStackTrace();
+				LOGGER.error(e);
 			}
 		}
 	}
@@ -993,14 +989,12 @@ public class RouteSetGenerator {
 		    	//System.out.println(line);
 		    }
 		} catch (Exception e) {
-			System.err.println("Error in fileReader!");
-			e.printStackTrace();
+			LOGGER.error(e);
 		} finally {
 			try {
 				br.close();
 			} catch (IOException e) {
-				System.err.println("Error while closing BufferedReader!");
-				e.printStackTrace();
+				LOGGER.error(e);
 			}
 		}
 	}
@@ -1038,14 +1032,12 @@ public class RouteSetGenerator {
 		    	//System.out.println(line);
 		    }
 		} catch (Exception e) {
-			System.err.println("Error in fileReader!");
-			e.printStackTrace();
+			LOGGER.error(e);
 		} finally {
 			try {
 				br.close();
 			} catch (IOException e) {
-				System.err.println("Error while closing BufferedReader!");
-				e.printStackTrace();
+				LOGGER.error(e);
 			}
 		}
 	}
@@ -1087,19 +1079,17 @@ public class RouteSetGenerator {
 				}
 			}
 		} catch (EOFException e) {
-			System.out.print("End of the binary route file reached. ");
-			System.out.println(counterBadRoutes + " bad routes ignored.");
+			LOGGER.info("End of the binary route file reached. ");
+			LOGGER.debug("{} bad routes ignored.", counterBadRoutes);
 		} catch (Exception e) {
-			System.err.println("Error in fileReader!");
-			e.printStackTrace();
+			LOGGER.error(e);
 		} finally {
 			try {
 				input.close();
 				buff.close();
 				data.close();
 			} catch (IOException e) {
-				System.err.println("Error while closing input stream!");
-				e.printStackTrace();
+				LOGGER.error(e);
 			}
 		}
 	}
@@ -1135,18 +1125,16 @@ public class RouteSetGenerator {
 				}
 			}
 		} catch (EOFException e) {
-			System.out.print("End of the binary route file reached. ");
+			LOGGER.info("End of the binary route file reached.");
 		} catch (Exception e) {
-			System.err.println("Error in fileReader!");
-			e.printStackTrace();
+			LOGGER.error(e);
 		} finally {
 			try {
 				input.close();
 				buff.close();
 				data.close();
 			} catch (IOException e) {
-				System.err.println("Error while closing input stream!");
-				e.printStackTrace();
+				LOGGER.error(e);
 			}
 		}
 	}
