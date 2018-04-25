@@ -6,8 +6,6 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.logging.Logger;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
@@ -15,21 +13,13 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
-import org.geotools.brewer.color.BrewerPalette;
-import org.geotools.brewer.color.ColorBrewer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
-import org.jfree.chart.ChartUtils;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.labels.PieSectionLabelGenerator;
-import org.jfree.chart.labels.StandardPieSectionLabelGenerator;
-import org.jfree.chart.plot.PiePlot;
-import org.jfree.chart.plot.PiePlot3D;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.category.DefaultCategoryDataset;
-import org.jfree.data.general.DefaultPieDataset;
-
-import nismod.transport.decision.CongestionCharging;
 
 /**
  * For visualising pie charts using JFreeChart.
@@ -37,7 +27,7 @@ import nismod.transport.decision.CongestionCharging;
   */
 public class LineVisualiser extends JFrame {
 	
-	private final static Logger LOGGER = Logger.getLogger(LineVisualiser.class.getName());
+	private final static Logger LOGGER = LogManager.getLogger(LineVisualiser.class);
 	
 	private static DefaultCategoryDataset dataset;
 	private static String title;

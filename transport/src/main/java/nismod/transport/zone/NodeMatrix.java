@@ -7,12 +7,13 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.map.MultiKeyMap;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Node to node matrix with joint probability (used for assigning inter-zonal TEMPRo flows between the nodes contained in that zone). 
@@ -21,7 +22,7 @@ import org.apache.commons.csv.CSVPrinter;
  */
 public class NodeMatrix {
 	
-	private final static Logger LOGGER = Logger.getLogger(NodeMatrix.class.getName());
+	private final static Logger LOGGER = LogManager.getLogger(NodeMatrix.class);
 	
 	private MultiKeyMap matrix;
 	

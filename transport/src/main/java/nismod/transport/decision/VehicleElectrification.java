@@ -5,7 +5,9 @@ package nismod.transport.decision;
 
 import java.util.HashMap;
 import java.util.Properties;
-import java.util.logging.Logger;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import org.jfree.data.general.DefaultPieDataset;
 
@@ -19,7 +21,7 @@ import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
  */
 public class VehicleElectrification extends Intervention {
 	
-	private final static Logger LOGGER = Logger.getLogger(VehicleElectrification.class.getName());
+	private final static Logger LOGGER = LogManager.getLogger(VehicleElectrification.class.getName());
 
 	/**
 	 * @param props

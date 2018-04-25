@@ -17,11 +17,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.geotools.data.CachingFeatureSource;
 import org.geotools.data.DefaultTransaction;
 import org.geotools.data.Transaction;
@@ -70,7 +71,7 @@ import com.vividsolutions.jts.geom.Point;
  */
 public class RoadNetwork {
 	
-	private final static Logger LOGGER = Logger.getLogger(RoadNetwork.class.getName());
+	private final static Logger LOGGER = LogManager.getLogger(RoadNetwork.class);
 
 	private DirectedGraph network;
 	//BasicDirectedLineGraphBuilder graphBuilder;

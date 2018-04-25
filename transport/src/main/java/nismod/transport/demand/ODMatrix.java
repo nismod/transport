@@ -13,7 +13,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.map.MultiKeyMap;
@@ -21,8 +20,9 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import nismod.transport.decision.CongestionCharging;
 import nismod.transport.zone.Zoning;
 
 /**
@@ -32,7 +32,7 @@ import nismod.transport.zone.Zoning;
  */
 public class ODMatrix {
 	
-	private final static Logger LOGGER = Logger.getLogger(ODMatrix.class.getName());
+	private final static Logger LOGGER = LogManager.getLogger(ODMatrix.class);
 	
 	private MultiKeyMap matrix;
 	

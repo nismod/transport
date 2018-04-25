@@ -7,19 +7,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import nismod.transport.decision.CongestionCharging;
 import nismod.transport.demand.ODMatrix;
 import nismod.transport.demand.RealODMatrix;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.network.road.RouteSetGenerator;
-import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.utility.RandomSingleton;
 
 /**
@@ -29,7 +28,7 @@ import nismod.transport.utility.RandomSingleton;
   */
 public class SPSA3 {
 	
-	private final static Logger LOGGER = Logger.getLogger(SPSA3.class.getName());
+	private final static Logger LOGGER = LogManager.getLogger(SPSA3.class);
 	
 	//maximum and minimum values of OD matrix flows (i.e. constraints)
 	public static final double THETA_MAX_FLOW = 10000000.0;

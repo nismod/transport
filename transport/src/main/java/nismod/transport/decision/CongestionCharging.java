@@ -6,13 +6,14 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Properties;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.map.MultiKeyMap;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
@@ -26,7 +27,7 @@ import nismod.transport.demand.DemandModel;
  */
 public class CongestionCharging extends Intervention {
 	
-	private final static Logger LOGGER = Logger.getLogger(CongestionCharging.class.getName());
+	private final static Logger LOGGER = LogManager.getLogger(CongestionCharging.class);
 	
 	private String name = null;
 

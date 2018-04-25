@@ -3,11 +3,11 @@ package nismod.transport.optimisation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import nismod.transport.decision.CongestionCharging;
 import nismod.transport.demand.ODMatrix;
 import nismod.transport.demand.RealODMatrix;
 import nismod.transport.network.road.RoadNetworkAssignment;
@@ -20,7 +20,7 @@ import nismod.transport.utility.RandomSingleton;
   */
 public class SPSA {
 	
-	private final static Logger LOGGER = Logger.getLogger(SPSA.class.getName());
+	private final static Logger LOGGER = LogManager.getLogger(SPSA.class);
 	
 	//maximum and minimum values of OD matrix flows (i.e. constraints)
 	public static final double THETA_MAX = 10000000.0;
