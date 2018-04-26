@@ -55,8 +55,8 @@ public class RoadNetworkAssignmentTest {
 	public static void main( String[] args ) throws IOException	{
 		
 		
-		final String configFile = "./src/main/config/config.properties";
-		//final String configFile = "./src/test/config/testConfig.properties";
+		//final String configFile = "./src/main/config/config.properties";
+		final String configFile = "./src/test/config/testConfig.properties";
 		Properties props = ConfigReader.getProperties(configFile);
 		
 		final String areaCodeFileName = props.getProperty("areaCodeFileName");
@@ -140,6 +140,10 @@ public class RoadNetworkAssignmentTest {
 		rna.updateLinkVolumePerVehicleType();
 		rna.updateLinkTravelTimes();
 		
+		//rna.saveLinkTravelTimes(2015, "linkTravelTimes.csv");
+		//rna.saveTotalEnergyConsumptions(2015, "totalEnergy.csv");
+		//rna.saveZonalCarEnergyConsumptions(2015, 0.5, "zonalEnergy.csv");
+			
 		//roadNetworkAssignment.saveHourlyCarVolumes(2015, "hourlyCarVolumesAstar.csv");
 		//roadNetworkAssignment.saveHourlyCarVolumes(2015, "hourlyCarVolumes.csv");
 

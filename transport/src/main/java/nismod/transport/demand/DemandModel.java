@@ -3,6 +3,7 @@
  */
 package nismod.transport.demand;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -193,11 +194,36 @@ public class DemandModel {
 	 */
 	public void predictHighwayDemands(int toYear, int baseYear) {
 		
-		for (int year = baseYear; year <= toYear - 1; year++)
+		Boolean flagPredictIntermediateYears = Boolean.parseBoolean(this.params.getProperty("FLAG_PREDICT_INTERMEDIATE_YEARS"));
 		
-			predictHighwayDemand(year + 1, year);
+		if (flagPredictIntermediateYears) { //predict all intermediate years
+			for (int year = baseYear; year <= toYear - 1; year++) {
+				this.predictHighwayDemand(year + 1, year);
+			}
+		} else { //predict only final year
+			this.predictHighwayDemand(toYear, baseYear);
+		}
 	}
 	
+	/**
+	 * Saves all results from baseYear to toYear (including intermediate if flat is set)
+	 * @param toYear The final year for which the demand is predicted.
+	 * @param baseYear The base year from which the predictions are made.
+	 */
+	public void saveAllResults(int toYear, int baseYear) {
+		
+		Boolean flagPredictIntermediateYears = Boolean.parseBoolean(this.params.getProperty("FLAG_PREDICT_INTERMEDIATE_YEARS"));
+		
+		//save base year
+		this.saveAllResults(baseYear);
+		if (flagPredictIntermediateYears) { //save all intermediate years
+			for (int year = baseYear; year <= toYear - 1; year++) {
+				this.saveAllResults(year + 1);
+			}
+		} else { //save only final year
+			this.saveAllResults(toYear);
+		}
+	}
 
 	/**
 	 * Predicts (passenger and freight) highway demand (origin-destination vehicle flows).
@@ -247,7 +273,7 @@ public class DemandModel {
 												this.params);
 				rna.assignFlowsAndUpdateLinkTravelTimesIterated(this.yearToPassengerODMatrix.get(fromYear), this.yearToFreightODMatrix.get(fromYear), this.rsg, this.params, LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);
 				yearToRoadNetworkAssignment.put(fromYear, rna);
-	
+		
 				//calculate skim matrices
 				SkimMatrix tsm = rna.calculateTimeSkimMatrix();
 				SkimMatrix csm = rna.calculateCostSkimMatrix();
@@ -306,8 +332,9 @@ public class DemandModel {
 			} 
 			
 			LOGGER.debug("First stage prediction passenger matrix (from population and GVA):");
-			if (LOGGER.getLevel().isLessSpecificThan(Level.DEBUG)) predictedPassengerODMatrix.printMatrixFormatted();
-						
+			//if (LOGGER.getLevel().isLessSpecificThan(Level.DEBUG)) predictedPassengerODMatrix.printMatrixFormatted();
+			if (LogManager.getRootLogger().getLevel().isLessSpecificThan(Level.DEBUG)) predictedPassengerODMatrix.printMatrixFormatted();
+					
 			//for each OD pair first predict the change in freight vehicle flows from the changes in population and GVA
 			for (MultiKey mk: this.yearToFreightODMatrix.get(fromYear).getKeySet()) {
 				int origin = (int) mk.getKey(0);
@@ -364,7 +391,8 @@ public class DemandModel {
 			}
 
 			LOGGER.debug("First stage prediction freight matrix (from population and GVA):");
-			if (LOGGER.getLevel().isLessSpecificThan(Level.DEBUG)) predictedFreightODMatrix.printMatrixFormatted();
+			//if (LOGGER.getLevel().isLessSpecificThan(Level.DEBUG)) predictedFreightODMatrix.printMatrixFormatted();
+			if (LogManager.getRootLogger().getLevel().isLessSpecificThan(Level.DEBUG)) predictedFreightODMatrix.printMatrixFormatted();
 			
 			//SECOND STAGE PREDICTION (FROM CHANGES IN COST AND TIME)
 			
@@ -429,8 +457,9 @@ public class DemandModel {
 				}
 
 				LOGGER.debug("Second stage prediction passenger matrix (from changes in skim matrices):");
-				if (LOGGER.getLevel().isLessSpecificThan(Level.DEBUG)) predictedPassengerODMatrix.printMatrixFormatted();
-				
+				//if (LOGGER.getLevel().isLessSpecificThan(Level.DEBUG)) predictedPassengerODMatrix.printMatrixFormatted();
+				if (LogManager.getRootLogger().getLevel().isLessSpecificThan(Level.DEBUG)) predictedPassengerODMatrix.printMatrixFormatted();
+								
 				//for each OD pair predict the change in freight vehicle flow from the change in skim matrices
 				for (MultiKey mk: this.yearToFreightODMatrix.get(fromYear).getKeySet()) {
 					int origin = (int) mk.getKey(0);
@@ -451,7 +480,8 @@ public class DemandModel {
 				}
 
 				LOGGER.debug("Second stage prediction freight matrix (from changes in skim matrices):");
-				if (LOGGER.getLevel().isLessSpecificThan(Level.DEBUG)) predictedFreightODMatrix.printMatrixFormatted();
+				//if (LOGGER.getLevel().isLessSpecificThan(Level.DEBUG)) predictedFreightODMatrix.printMatrixFormatted();
+				if (LogManager.getRootLogger().getLevel().isLessSpecificThan(Level.DEBUG)) predictedFreightODMatrix.printMatrixFormatted();
 				
 				//assign predicted year again using latest link travel times
 				predictedRna = new RoadNetworkAssignment(this.roadNetwork, 
@@ -680,6 +710,76 @@ public class DemandModel {
 		this.yearToRoadNetworkAssignment.get(year).saveAssignmentResults(year, outputFile);
 	}
 	
+		
+	/**
+	 * Saves all results into the output folder.
+	 * @param year Year of the data.
+	 */
+	public void saveAllResults (int year) {
+		
+		LOGGER.info("Outputing all results for year {}.", year);
+
+		String outputFolder = this.params.getProperty("outputFolder");
+				
+		//create output directory for this year
+		File file = new File(outputFolder + year);
+		if (!file.exists()) {
+			if (file.mkdirs()) {
+				LOGGER.debug("Output directory for year {} is created.", year);
+			} else {
+				LOGGER.error("Failed to create output directory for year {}.", year);
+			}
+		}
+		LOGGER.debug("Output folder: {}", file.getPath());
+						
+		String baseYear = this.params.getProperty("baseYear");
+		String predictedODMatrixFile = this.params.getProperty("predictedODMatrixFile");
+		String predictedFreightMatrixFile = this.params.getProperty("predictedFreightMatrixFile");
+		String assignmentResultsFile = this.params.getProperty("assignmentResultsFile");
+		String linkTravelTimesFile = this.params.getProperty("linkTravelTimesFile");
+		String timeSkimMatrixFile = this.params.getProperty("timeSkimMatrixFile");
+		String costSkimMatrixFile = this.params.getProperty("costSkimMatrixFile");
+		String timeSkimMatrixFreightFile = this.params.getProperty("timeSkimMatrixFreightFile");
+		String costSkimMatrixFreightFile = this.params.getProperty("costSkimMatrixFreightFile");
+		String vehicleKilometresFile = this.params.getProperty("vehicleKilometresFile");
+		String energyConsumptionsFile = this.params.getProperty("energyConsumptionsFile");
+		String tripsFile = this.params.getProperty("tripsFile");
+	
+		if (year == Integer.parseInt(baseYear)) { //rename output files for base year
+			predictedODMatrixFile = "baseYearODMatrix.csv";
+			predictedFreightMatrixFile = "baseYearFreightMatrix.csv";
+		}
+		
+		String outputFile = file.getPath() + File.separator + predictedODMatrixFile;
+		this.yearToPassengerODMatrix.get(year).saveMatrixFormatted(outputFile);
+			
+		outputFile = file.getPath() + File.separator + predictedFreightMatrixFile;
+		this.yearToFreightODMatrix.get(year).saveMatrixFormatted(outputFile);
+		
+		outputFile = file.getPath() + File.separator +  timeSkimMatrixFile;
+		this.yearToTimeSkimMatrix.get(year).saveMatrixFormatted(outputFile);
+		
+		outputFile = file.getPath() + File.separator +  costSkimMatrixFile;
+		this.yearToCostSkimMatrix.get(year).saveMatrixFormatted(outputFile);
+		
+		outputFile = file.getPath() + File.separator +  timeSkimMatrixFreightFile;
+		this.yearToTimeSkimMatrixFreight.get(year).saveMatrixFormatted(outputFile);
+		
+		outputFile = file.getPath() + File.separator +  costSkimMatrixFreightFile;
+		this.yearToCostSkimMatrixFreight.get(year).saveMatrixFormatted(outputFile);
+		
+		outputFile = file.getPath() + File.separator +  vehicleKilometresFile;
+		this.yearToRoadNetworkAssignment.get(year).saveZonalVehicleKilometres(year, outputFile);
+		
+		outputFile = file.getPath() + File.separator +  energyConsumptionsFile;
+		this.yearToRoadNetworkAssignment.get(year).saveTotalEnergyConsumptions(year, outputFile);
+	
+		outputFile = file.getPath() + File.separator +  assignmentResultsFile;
+		this.yearToRoadNetworkAssignment.get(year).saveAssignmentResults(year, outputFile);
+		
+		outputFile = file.getPath() + File.separator + linkTravelTimesFile;
+		this.yearToRoadNetworkAssignment.get(year).saveLinkTravelTimes(year, outputFile);
+	}
 	
 	/**
 	 * Getter method for engine type fractions in a given year.

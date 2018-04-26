@@ -2585,6 +2585,9 @@ public class RoadNetworkAssignment {
 
 		this.assignPassengerFlowsRouting(passengerODM, rsg);
 		this.assignFreightFlowsRouting(freightODM, rsg);
+		this.updateLinkVolumeInPCU();
+		this.updateLinkVolumeInPCUPerTimeOfDay();
+		this.updateLinkVolumePerVehicleType();
 		this.updateLinkTravelTimes(weight);
 	}
 
@@ -2600,6 +2603,9 @@ public class RoadNetworkAssignment {
 
 		this.assignPassengerFlowsRouteChoice(passengerODM, rsg, params);
 		this.assignFreightFlowsRouteChoice(freightODM, rsg, params);
+		this.updateLinkVolumeInPCU();
+		this.updateLinkVolumeInPCUPerTimeOfDay();
+		this.updateLinkVolumePerVehicleType();
 		this.updateLinkTravelTimes(weight);
 	}
 
@@ -3312,6 +3318,8 @@ public class RoadNetworkAssignment {
 	 * @param outputFile Output file name (with path).
 	 */
 	public void saveAssignmentResults(int year, String outputFile) {
+		
+		LOGGER.debug("Saving link-based assignment results.");
 
 		//calculate peak capacities and densities
 		HashMap<Integer, Double> capacities = this.calculatePeakLinkPointCapacities();
@@ -3525,6 +3533,8 @@ public class RoadNetworkAssignment {
 	 * @param outputFile Output file name (with path).
 	 */
 	public void saveTotalEnergyConsumptions(int year, String outputFile) {
+		
+		LOGGER.debug("Saving energy consumptions file.");
 
 		//calculate energy consumptions
 		HashMap<EngineType, Double> energyConsumptions = this.calculateEnergyConsumptions();
@@ -3616,6 +3626,8 @@ public class RoadNetworkAssignment {
 	 * @param outputFile Output file name (with path).
 	 */
 	public void saveZonalVehicleKilometres(int year, String outputFile) {
+		
+		LOGGER.debug("Saving zonal vehicle-kilometres.");
 
 		Map<String, Double> vehicleKilometres = this.calculateVehicleKilometres();
 
@@ -3706,6 +3718,8 @@ public class RoadNetworkAssignment {
 	 * @param outputFile Output file name (with path).
 	 */
 	public void saveLinkTravelTimes (int year, String outputFile) {
+		
+		LOGGER.debug("Saving link travel times.");
 
 		String NEW_LINE_SEPARATOR = "\n";
 		ArrayList<String> header = new ArrayList<String>();

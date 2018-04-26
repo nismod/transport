@@ -204,8 +204,6 @@ public class App {
 				final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
 				final String AVFractionsFile = props.getProperty("autonomousVehiclesFile");
 
-				final String energyConsumptionsFile = props.getProperty("energyConsumptionsFile"); //output
-
 				final String passengerRoutesFile = props.getProperty("passengerRoutesFile");
 				final String freightRoutesFile = props.getProperty("freightRoutesFile");
 
@@ -222,8 +220,8 @@ public class App {
 
 				//the main demand model
 				DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, engineTypeFractionsFile, AVFractionsFile, interventions, rsg, props);
-				dm.predictHighwayDemand(Integer.parseInt(predictedYear), Integer.parseInt(fromYear));
-				dm.saveEnergyConsumptions(Integer.parseInt(predictedYear), energyConsumptionsFile);
+				dm.predictHighwayDemands(Integer.parseInt(predictedYear), Integer.parseInt(fromYear));
+				dm.saveAllResults(Integer.parseInt(predictedYear), Integer.parseInt(fromYear));
 			}
 
 		} catch (ParseException e) {
@@ -234,7 +232,7 @@ public class App {
 		} catch (IOException e) {
 			LOGGER.error(e);
 		} catch (Exception e) {
-			LOGGER.error("bla", e);
+			LOGGER.error(e);
 		} finally {
 			LOGGER.info("Done.");
 		}

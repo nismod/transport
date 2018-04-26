@@ -26,7 +26,7 @@ public class ConfigReader {
 			// load properties file
 			props.load(inputStream);
 		} catch (IOException e) {
-			LOGGER.error("Unable to load config properties file! {}", e);
+			LOGGER.error("Unable to load config properties file!", e);
 		} finally {
 			if (inputStream != null) {
 				try {
