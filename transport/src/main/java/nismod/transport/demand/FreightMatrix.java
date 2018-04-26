@@ -5,6 +5,7 @@ package nismod.transport.demand;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,6 +17,7 @@ import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.map.MultiKeyMap;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -235,5 +237,53 @@ public class FreightMatrix {
 			scaled.setFlow(origin, destination, vehicleType, flow);
 		}
 		return scaled;
+	}
+	
+	/**
+	 * Saves the matrix into a csv file.
+	 */
+	public void saveMatrixFormatted(String outputFile) {
+		
+		LOGGER.debug("Saving freight OD matrix.");
+		
+		List<Integer> firstKeyList = this.getDestinations();
+		List<Integer> secondKeyList = this.getOrigins();
+	
+		String NEW_LINE_SEPARATOR = "\n";
+		ArrayList<String> header = new ArrayList<String>();
+		header.add("destination");
+		header.add("origin");
+		header.add("vehicleType");
+		header.add("flow");
+		FileWriter fileWriter = null;
+		CSVPrinter csvFilePrinter = null;
+		CSVFormat csvFileFormat = CSVFormat.DEFAULT.withRecordSeparator(NEW_LINE_SEPARATOR);
+		try {
+			fileWriter = new FileWriter(outputFile);
+			csvFilePrinter = new CSVPrinter(fileWriter, csvFileFormat);
+			csvFilePrinter.printRecord(header);
+			ArrayList<String> record = new ArrayList<String>();
+			for (Integer d: firstKeyList)
+				for (Integer o: secondKeyList)
+					for (Integer v=0; v<=3; v++)
+						if (this.getFlow(o, d, v) != 0) {//print only if there is a flow
+							record.clear();
+							record.add(d.toString());
+							record.add(o.toString());
+							record.add(v.toString());
+							record.add(String.format("%d", this.getFlow(o, d, v)));
+							csvFilePrinter.printRecord(record);
+						}
+		} catch (Exception e) {
+			LOGGER.error(e);
+		} finally {
+			try {
+				fileWriter.flush();
+				fileWriter.close();
+				csvFilePrinter.close();
+			} catch (IOException e) {
+				LOGGER.error(e);
+			}
+		}
 	}
 }

@@ -5,6 +5,7 @@ package nismod.transport.demand;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,6 +17,7 @@ import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.map.MultiKeyMap;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -127,7 +129,70 @@ public class SkimMatrixFreight {
 					if (this.getCost(o, d, v) != null && this.getCost(o, d, v) > 0.0) //print only if there is a cost
 						System.out.printf("%6d%12d%12d%7.2f\n", o, d, v, this.getCost(o, d, v));
 	}
+	
+	/**
+	 * Saves the matrix into a csv file.
+	 */
+	public void saveMatrixFormatted(String outputFile) {
 		
+		LOGGER.debug("Saving freight skim matrix.");
+		
+		Set<Integer> firstKey = new HashSet<Integer>();
+		Set<Integer> secondKey = new HashSet<Integer>();
+		
+		//extract row and column keysets
+		for (Object mk: matrix.keySet()) {
+			int origin = (int) ((MultiKey)mk).getKey(0);
+			int destination = (int) ((MultiKey)mk).getKey(1);
+			firstKey.add(destination);
+			secondKey.add(origin);
+		}
+	
+		//put them to a list and sort them
+		List<Integer> firstKeyList = new ArrayList<Integer>(firstKey);
+		List<Integer> secondKeyList = new ArrayList<Integer>(secondKey);
+		Collections.sort(firstKeyList);
+		Collections.sort(secondKeyList);
+	
+		String NEW_LINE_SEPARATOR = "\n";
+		ArrayList<String> header = new ArrayList<String>();
+		header.add("destination");
+		header.add("origin");
+		header.add("vehicleType");
+		header.add("flow");
+		FileWriter fileWriter = null;
+		CSVPrinter csvFilePrinter = null;
+		CSVFormat csvFileFormat = CSVFormat.DEFAULT.withRecordSeparator(NEW_LINE_SEPARATOR);
+		try {
+			fileWriter = new FileWriter(outputFile);
+			csvFilePrinter = new CSVPrinter(fileWriter, csvFileFormat);
+			csvFilePrinter.printRecord(header);
+			ArrayList<String> record = new ArrayList<String>();
+			for (Integer d: firstKeyList)
+				for (Integer o: secondKeyList)
+					for (Integer v=0; v<=3; v++) {
+						Double cost = this.getCost(o, d, v);
+						record.clear();
+						record.add(d.toString());
+						record.add(o.toString());
+						record.add(v.toString());
+						if (cost != null)	record.add(String.format("%.2f", cost));
+						else				record.add("N/A");
+						csvFilePrinter.printRecord(record);
+					}
+		} catch (Exception e) {
+			LOGGER.error(e);
+		} finally {
+			try {
+				fileWriter.flush();
+				fileWriter.close();
+				csvFilePrinter.close();
+			} catch (IOException e) {
+				LOGGER.error(e);
+			}
+		}
+	}
+				
 	/**
 	 * Gets the keyset of the multimap.
 	 * @return

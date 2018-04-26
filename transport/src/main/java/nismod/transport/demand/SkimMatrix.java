@@ -184,6 +184,8 @@ public class SkimMatrix {
 	 */
 	public void saveMatrixFormatted(String outputFile) {
 		
+		LOGGER.debug("Saving passenger skim matrix.");
+		
 		Set<String> firstKey = new HashSet<String>();
 		Set<String> secondKey = new HashSet<String>();
 		

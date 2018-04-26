@@ -452,6 +452,8 @@ public class ODMatrix {
 	 */
 	public void saveMatrixFormatted(String outputFile) {
 		
+		LOGGER.debug("Saving passenger OD matrix.");
+		
 		Set<String> firstKey = new HashSet<String>();
 		Set<String> secondKey = new HashSet<String>();
 		
