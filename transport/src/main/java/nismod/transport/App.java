@@ -19,9 +19,10 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import nismod.transport.decision.CongestionCharging;
 import nismod.transport.decision.Intervention;
+import nismod.transport.decision.RoadDevelopment;
 import nismod.transport.decision.RoadExpansion;
-import nismod.transport.decision.VehicleElectrification;
 import nismod.transport.demand.DemandModel;
 import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.ODMatrix;
@@ -197,8 +198,9 @@ public class App {
 				final String elasticitiesFile = props.getProperty("elasticitiesFile");
 				final String elasticitiesFreightFile = props.getProperty("elasticitiesFreightFile");
 
-				final String roadExpansionFileName = props.getProperty("roadExpansionFile");
-				final String vehicleElectrificationFileName = props.getProperty("vehicleElectrificationFile");
+				final String roadExpansionFile = props.getProperty("roadExpansionFile");
+				final String roadDevelopmentFile = props.getProperty("roadDevelopmentFile");
+				final String congestionChargingFile = props.getProperty("congestionChargingFile");
 
 				final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
 				final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
@@ -209,11 +211,14 @@ public class App {
 
 				//load interventions
 				List<Intervention> interventions = new ArrayList<Intervention>();
-				RoadExpansion re = new RoadExpansion(roadExpansionFileName);
-				VehicleElectrification ve = new VehicleElectrification(vehicleElectrificationFileName);
+				RoadExpansion re = new RoadExpansion(roadExpansionFile);
+				RoadDevelopment rd = new RoadDevelopment(roadDevelopmentFile);
+				CongestionCharging cc = new CongestionCharging(congestionChargingFile);
+				
 				interventions.add(re);
-				interventions.add(ve);
-
+				interventions.add(rd);
+				interventions.add(cc);
+				
 				RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, props);
 				rsg.readRoutesBinary(passengerRoutesFile);
 				rsg.readRoutesBinary(freightRoutesFile);
@@ -232,7 +237,7 @@ public class App {
 		} catch (IOException e) {
 			LOGGER.error(e);
 		} catch (Exception e) {
-			LOGGER.error(e);
+			LOGGER.error(ExceptionUtils.getStackTrace(e));
 		} finally {
 			LOGGER.info("Done.");
 		}
