@@ -57,6 +57,7 @@ import javax.swing.table.TableCellRenderer;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.map.MultiKeyMap;
+import org.apache.commons.lang3.tuple.Pair;
 import org.geotools.brewer.color.BrewerPalette;
 import org.geotools.brewer.color.ColorBrewer;
 import org.geotools.graph.structure.DirectedEdge;
@@ -84,6 +85,7 @@ import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.network.road.Trip;
+import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.utility.ConfigReader;
@@ -125,6 +127,13 @@ public class CongestionChargingDashboard extends JFrame {
 	private static RouteSetGenerator rsg;
 	private static Zoning zoning;
 	private static RoadNetworkAssignment rnaBefore;
+	
+	private static HashMap<VehicleType, Double> vehicleTypeToPCU;
+	private static HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> vehicleFuelEfficiency;
+	private static HashMap<TimeOfDay, Double> timeOfDayDistribution;
+	private static HashMap<Integer, HashMap<EngineType, Double>> yearToEnergyUnitCosts;
+	private static HashMap<Integer, HashMap<VehicleType, HashMap<EngineType, Double>>> yearToEngineTypeFractions;
+	private static HashMap<Integer, Double> yearToAVFractions;
 
 	public static final int MAP_WIDTH = 750;
 	public static final int MAP_HEIGHT = 700;
@@ -368,9 +377,23 @@ public class CongestionChargingDashboard extends JFrame {
 					props.setProperty("LENGTH", "-1.0");
 					props.setProperty("COST", "-3.6"); //based on VOT
 
-					RoadNetworkAssignment rnaAfterCongestionCharging = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, congestionCharges, props);
+					final int BASE_YEAR = Integer.parseInt(props.getProperty("baseYear"));
+					
+					//create a road network assignment
+					RoadNetworkAssignment rnaAfterCongestionCharging = new RoadNetworkAssignment(roadNetwork, 
+							yearToEnergyUnitCosts.get(BASE_YEAR),
+							yearToEngineTypeFractions.get(BASE_YEAR),
+							yearToAVFractions.get(BASE_YEAR),
+							vehicleTypeToPCU,
+							vehicleFuelEfficiency,
+							timeOfDayDistribution,
+							null,
+							null,
+							null,
+							congestionCharges,
+							props);
+					
 					//rnaAfterCongestionCharging.assignPassengerFlows(odm, rsg);
-
 
 					RandomSingleton.getInstance().setSeed(1234);
 
@@ -505,7 +528,7 @@ public class CongestionChargingDashboard extends JFrame {
 
 
 					//update bar chart
-					barDataset.addValue(rnaBefore.getTripList().size(), "No intervention", "Total Trips");
+		//			barDataset.addValue(rnaBefore.getTripList().size(), "No intervention", "Total Trips");
 					barDataset.addValue(rnaAfterCongestionCharging.getTripList().size(), "Congestion charging", "Total Trips");
 
 					double sumThroughBefore = 0.0, sumOutsideBefore = 0.0;
@@ -1129,7 +1152,35 @@ public class CongestionChargingDashboard extends JFrame {
 
 		roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
-		rnaBefore = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, props);
+		
+		final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
+		final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
+		final String AVFractionsFile = props.getProperty("autonomousVehiclesFile");
+		final String vehicleTypeToPCUFile = props.getProperty("vehicleTypeToPCUFile");
+		final String timeOfDayDistributionFile = props.getProperty("timeOfDayDistributionFile");
+		final String vehicleFuelEfficiencyFile = props.getProperty("vehicleFuelEfficiencyFile");
+		final int BASE_YEAR = Integer.parseInt(props.getProperty("baseYear"));
+		
+		vehicleTypeToPCU = InputFileReader.readVehicleTypeToPCUFile(vehicleTypeToPCUFile);
+		vehicleFuelEfficiency = InputFileReader.readEnergyConsumptionParamsFile(vehicleFuelEfficiencyFile);
+		timeOfDayDistribution = InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFile);
+		yearToEnergyUnitCosts = InputFileReader.readEnergyUnitCostsFile(energyUnitCostsFile);
+		yearToEngineTypeFractions = InputFileReader.readEngineTypeFractionsFile(engineTypeFractionsFile);
+		yearToAVFractions = InputFileReader.readAVFractionsFile(AVFractionsFile);
+	
+		//create a road network assignment
+		rnaBefore = new RoadNetworkAssignment(roadNetwork, 
+											yearToEnergyUnitCosts.get(BASE_YEAR),
+											yearToEngineTypeFractions.get(BASE_YEAR),
+											yearToAVFractions.get(BASE_YEAR),
+											vehicleTypeToPCU,
+											vehicleFuelEfficiency,
+											timeOfDayDistribution,
+											null,
+											null,
+											null,
+											null,
+											props);
 
 		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
 		zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
@@ -1153,10 +1204,10 @@ public class CongestionChargingDashboard extends JFrame {
 		rnaBefore.updateLinkVolumeInPCU();
 		rnaBefore.updateLinkVolumeInPCUPerTimeOfDay();
 
-		/*
-		barDataset.addValue(rnaBefore.getTripList().size(), "No intervention", "Number of Trips");
-		 */
-
+		//update bar chart
+		barDataset.addValue(rnaBefore.getTripList().size(), "No intervention", "Total Trips");
+		
+		
 		tsmBefore = rnaBefore.calculateTimeSkimMatrix();
 		csmBefore = rnaBefore.calculateCostSkimMatrix();
 
