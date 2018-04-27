@@ -117,7 +117,7 @@ public class VehicleElectrificationTest {
 		List<Intervention> interventions = new ArrayList<Intervention>();
 		interventions.add(ve2);
 		
-		DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, engineTypeFractionsFile, AVFractionsFile, interventions, null, null);
+		DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, engineTypeFractionsFile, AVFractionsFile, interventions, null, props);
 		
 		System.out.println("Base-year engine type fractions: ");
 		System.out.println(dm.getEngineTypeFractions(2015));

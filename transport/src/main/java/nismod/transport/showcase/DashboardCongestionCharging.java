@@ -54,6 +54,7 @@ import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.network.road.Trip;
 import nismod.transport.utility.ConfigReader;
+import nismod.transport.utility.InputFileReader;
 import nismod.transport.visualisation.BarVisualiser;
 import nismod.transport.zone.Zoning;
 
@@ -567,18 +568,8 @@ public class DashboardCongestionCharging extends JFrame {
 					ODMatrix predictedODM = new ODMatrix();
 
 					final String elasticitiesFile = props.getProperty("elasticitiesFile");
-					HashMap<ElasticityTypes, Double> elasticities = null;
-					try {
-						elasticities = DemandModel.readElasticitiesFile(elasticitiesFile);
-					} catch (FileNotFoundException e2) {
-						// TODO Auto-generated catch block
-						e2.printStackTrace();
-					} catch (IOException e2) {
-						// TODO Auto-generated catch block
-						e2.printStackTrace();
-					}
-
-
+					HashMap<ElasticityTypes, Double> elasticities = InputFileReader.readElasticitiesFile(elasticitiesFile);
+			
 					tsmBefore.printMatrixFormatted();
 					tsm.printMatrixFormatted();
 

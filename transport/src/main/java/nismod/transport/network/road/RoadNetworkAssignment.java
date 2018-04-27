@@ -164,12 +164,14 @@ public class RoadNetworkAssignment {
 		this.tripList = new ArrayList<Trip>();
 		this.linkFreeFlowTravelTime = roadNetwork.getFreeFlowTravelTime();
 
-		if (defaultLinkTravelTime == null) //use free flow
+		if (defaultLinkTravelTime == null) { //use free flow
+			LOGGER.debug("No link travel time provided, using free-flow link travel time.");
 			for (TimeOfDay hour: TimeOfDay.values()) {
 				Map<Integer, Double> hourlyMap = this.linkTravelTimePerTimeOfDay.get(hour);
 				for (Integer edgeID: this.linkFreeFlowTravelTime.keySet())
 					hourlyMap.put(edgeID, this.linkFreeFlowTravelTime.get(edgeID));
 			}
+		}
 		else //otherwise copy
 			for (TimeOfDay hour: TimeOfDay.values()) {
 				Map<Integer, Double> hourlyMap = this.linkTravelTimePerTimeOfDay.get(hour);
@@ -177,162 +179,21 @@ public class RoadNetworkAssignment {
 					hourlyMap.put(edgeID, defaultLinkTravelTime.get(hour).get(edgeID));
 			}
 
-		if (vehicleTypeToPCU != null) this.vehicleTypeToPCU = vehicleTypeToPCU;
-		else {
-			//set default values for vehicle type to PCU conversion
-			this.vehicleTypeToPCU = new HashMap<VehicleType, Double>();
-			this.vehicleTypeToPCU.put(VehicleType.CAR, 1.0);
-			this.vehicleTypeToPCU.put(VehicleType.ARTIC, 2.3);
-			this.vehicleTypeToPCU.put(VehicleType.RIGID, 2.0);
-			this.vehicleTypeToPCU.put(VehicleType.VAN, 1.0);
-			this.vehicleTypeToPCU.put(VehicleType.AV, 0.5);
-		}
+		if (vehicleTypeToPCU != null) 	this.vehicleTypeToPCU = vehicleTypeToPCU;
+		else 							LOGGER.error("Missing vehicle type to PCU conversion.");
 
-		//set default values for energy consumption of different car engine types
-		//for petrol/diesel/lpg this is in £/l, for hydrogen in £/kg, for electricity in £/kWh.
-		if (energyUnitCosts != null) this.energyUnitCosts = energyUnitCosts;
-		else {
-			this.energyUnitCosts = new HashMap<EngineType, Double>();
-			this.energyUnitCosts.put(EngineType.PETROL, 1.17);
-			this.energyUnitCosts.put(EngineType.DIESEL, 1.20);
-			this.energyUnitCosts.put(EngineType.LPG, 0.6);
-			this.energyUnitCosts.put(EngineType.ELECTRICITY, 0.1);
-			this.energyUnitCosts.put(EngineType.HYDROGEN, 4.19);
-			this.energyUnitCosts.put(EngineType.HYBRID, 1.17);
-		}
 
-		if (energyConsumptionParams != null) this.energyConsumptions = energyConsumptionParams;
-		else {
+		if (energyUnitCosts != null) 	this.energyUnitCosts = energyUnitCosts;
+		else 							LOGGER.error("Missing energy unit costs.");
 
-			this.energyConsumptions = new HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>>();
-			HashMap<String, Double> parameters = new HashMap<String, Double>();
-			parameters.put("A", 1.11932239320862);
-			parameters.put("B", 0.0440047704089497);
-			parameters.put("C", -0.0000813834474888197);
-			parameters.put("D", 2.44908328418021E-06);
-			this.energyConsumptions.put(Pair.of(VehicleType.CAR, EngineType.PETROL), parameters);
-			this.energyConsumptions.put(Pair.of(VehicleType.AV, EngineType.PETROL), parameters);
-			parameters = new HashMap<String, Double>();
-			parameters.put("A", 0.492145560354439);
-			parameters.put("B", 0.0621819673117346);
-			parameters.put("C", -0.000590984065596694);
-			parameters.put("D", 4.64689042740593E-06);
-			this.energyConsumptions.put(Pair.of(VehicleType.CAR, EngineType.DIESEL), parameters);
-			this.energyConsumptions.put(Pair.of(VehicleType.AV, EngineType.DIESEL), parameters);
-			parameters = new HashMap<String, Double>();
-			parameters.put("A", 1.9508327694036);
-			parameters.put("B", 0.0345279785832351);
-			parameters.put("C", 0.0000679867603539223);
-			parameters.put("D", 3.71489958706489E-06);
-			this.energyConsumptions.put(Pair.of(VehicleType.VAN, EngineType.PETROL), parameters);
-			parameters = new HashMap<String, Double>();
-			parameters.put("A", 1.39688349613763);
-			parameters.put("B", 0.0334774003427366);
-			parameters.put("C", -0.000229977888526145);
-			parameters.put("D", 7.67319942399065E-06);
-			this.energyConsumptions.put(Pair.of(VehicleType.VAN, EngineType.DIESEL), parameters);
-			parameters = new HashMap<String, Double>();
-			parameters.put("A", 1.81290336211856);
-			parameters.put("B", 0.326784427957389);
-			parameters.put("C", -0.00494782507508988);
-			parameters.put("D", 0.0000425842233266921);
-			this.energyConsumptions.put(Pair.of(VehicleType.RIGID, EngineType.DIESEL), parameters);
-			parameters = new HashMap<String, Double>();
-			parameters.put("A", 2.89329150710372);
-			parameters.put("B", 0.603481016828657);
-			parameters.put("C", -0.00863692643386338);
-			parameters.put("D", 0.0000651027867897036);
-			this.energyConsumptions.put(Pair.of(VehicleType.ARTIC, EngineType.DIESEL), parameters);
-			parameters = new HashMap<String, Double>();
-			parameters.put("A", 0.0);
-			parameters.put("B", 0.12564236);
-			parameters.put("C", 0.0);
-			parameters.put("D", 0.0);
-			this.energyConsumptions.put(Pair.of(VehicleType.CAR, EngineType.ELECTRICITY), parameters);
-			this.energyConsumptions.put(Pair.of(VehicleType.AV, EngineType.ELECTRICITY), parameters);
-			parameters = new HashMap<String, Double>();
-			parameters.put("A", 0.0);
-			parameters.put("B", 0.0675);
-			parameters.put("C", 0.0);
-			parameters.put("D", 0.0);
-			this.energyConsumptions.put(Pair.of(VehicleType.CAR, EngineType.LPG), parameters);
-			this.energyConsumptions.put(Pair.of(VehicleType.AV, EngineType.LPG), parameters);
-			parameters = new HashMap<String, Double>();
-			parameters.put("A", 0.0);
-			parameters.put("B",  0.0095);
-			parameters.put("C", 0.0);
-			parameters.put("D", 0.0);
-			this.energyConsumptions.put(Pair.of(VehicleType.CAR, EngineType.HYDROGEN), parameters);
-			this.energyConsumptions.put(Pair.of(VehicleType.AV, EngineType.HYDROGEN), parameters);
-			parameters = new HashMap<String, Double>();
-			parameters.put("A", 0.0);
-			parameters.put("B", 0.074);
-			parameters.put("C", 0.0);
-			parameters.put("D", 0.0);
-			this.energyConsumptions.put(Pair.of(VehicleType.CAR, EngineType.HYBRID), parameters);
-			this.energyConsumptions.put(Pair.of(VehicleType.AV, EngineType.HYBRID), parameters);
-		}
+		if (energyConsumptionParams != null) 	this.energyConsumptions = energyConsumptionParams;
+		else									LOGGER.error("Missing energy consumption parameters.");
 
-		if (engineTypeFractions != null) this.engineTypeFractions = engineTypeFractions;
-		else {
-			this.engineTypeFractions = new HashMap<VehicleType, HashMap<EngineType, Double>>();
-
-			HashMap<EngineType, Double> map = new HashMap<EngineType, Double>();
-			map.put(EngineType.PETROL, 0.45);
-			map.put(EngineType.DIESEL, 0.35);
-			map.put(EngineType.LPG, 0.1);
-			map.put(EngineType.ELECTRICITY, 0.05);
-			map.put(EngineType.HYDROGEN, 0.025);
-			map.put(EngineType.HYBRID, 0.025);
-			this.engineTypeFractions.put(VehicleType.CAR, map);
-			this.engineTypeFractions.put(VehicleType.AV, map);
-			map = new HashMap<EngineType, Double>();
-			map.put(EngineType.PETROL, 0.45);
-			map.put(EngineType.DIESEL, 0.55);
-			map.put(EngineType.LPG, 0.0);
-			map.put(EngineType.ELECTRICITY, 0.0);
-			map.put(EngineType.HYDROGEN, 0.0);
-			map.put(EngineType.HYBRID, 0.0);
-			this.engineTypeFractions.put(VehicleType.VAN, map);
-			map = new HashMap<EngineType, Double>();
-			map.put(EngineType.PETROL, 0.0);
-			map.put(EngineType.DIESEL, 1.00);
-			map.put(EngineType.LPG, 0.0);
-			map.put(EngineType.ELECTRICITY, 0.0);
-			map.put(EngineType.HYDROGEN, 0.0);
-			map.put(EngineType.HYBRID, 0.0);
-			this.engineTypeFractions.put(VehicleType.RIGID, map);
-			this.engineTypeFractions.put(VehicleType.ARTIC, map);
-		}
-
-		if (timeOfDayDistribution != null) this.timeOfDayDistribution = timeOfDayDistribution; //TODO check it adds up to one!
-		else {
-			this.timeOfDayDistribution = new HashMap<TimeOfDay, Double>();
-			this.timeOfDayDistribution.put(TimeOfDay.MIDNIGHT, 0.0015);
-			this.timeOfDayDistribution.put(TimeOfDay.ONEAM, 0.0006);
-			this.timeOfDayDistribution.put(TimeOfDay.TWOAM, 0.0005);
-			this.timeOfDayDistribution.put(TimeOfDay.THREEAM, 0.0005);
-			this.timeOfDayDistribution.put(TimeOfDay.FOURAM, 0.0017);
-			this.timeOfDayDistribution.put(TimeOfDay.FIVEAM, 0.0087);
-			this.timeOfDayDistribution.put(TimeOfDay.SIXAM, 0.0236);
-			this.timeOfDayDistribution.put(TimeOfDay.SEVENAM, 0.0636);
-			this.timeOfDayDistribution.put(TimeOfDay.EIGHTAM, 0.1046);
-			this.timeOfDayDistribution.put(TimeOfDay.NINEAM, 0.0679);
-			this.timeOfDayDistribution.put(TimeOfDay.TENAM, 0.0587);
-			this.timeOfDayDistribution.put(TimeOfDay.ELEVENAM, 0.0589);
-			this.timeOfDayDistribution.put(TimeOfDay.NOON, 0.0570);
-			this.timeOfDayDistribution.put(TimeOfDay.ONEPM, 0.0549);
-			this.timeOfDayDistribution.put(TimeOfDay.TWOPM, 0.0581);
-			this.timeOfDayDistribution.put(TimeOfDay.THREEPM, 0.0774);
-			this.timeOfDayDistribution.put(TimeOfDay.FOURPM, 0.0834);
-			this.timeOfDayDistribution.put(TimeOfDay.FIVEPM, 0.0942);
-			this.timeOfDayDistribution.put(TimeOfDay.SIXPM, 0.0708);
-			this.timeOfDayDistribution.put(TimeOfDay.SEVENPM, 0.0456);
-			this.timeOfDayDistribution.put(TimeOfDay.EIGHTPM, 0.0284);
-			this.timeOfDayDistribution.put(TimeOfDay.NINEPM, 0.0187);
-			this.timeOfDayDistribution.put(TimeOfDay.TENPM, 0.0136);
-			this.timeOfDayDistribution.put(TimeOfDay.ELEVENPM, 0.0071);
-		}
+		if (engineTypeFractions != null) 	this.engineTypeFractions = engineTypeFractions;
+		else								LOGGER.error("Missing engine type fractions.");
+	
+		if (timeOfDayDistribution != null) 	this.timeOfDayDistribution = timeOfDayDistribution; //TODO check it adds up to one!
+		else 								LOGGER.error("Missing time of day distribution.");
 
 		this.congestionCharges = congestionCharges;
 		//System.out.println("Congestion charges: " + this.congestionCharges);

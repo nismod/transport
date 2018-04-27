@@ -10,6 +10,7 @@ import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.showcase.NetworkVisualiserDemo;
 import nismod.transport.utility.ConfigReader;
+import nismod.transport.utility.InputFileReader;
 
 /**
  * Test for the NetworkVisualizer class
@@ -39,7 +40,27 @@ public class NetworkVisualiserTest {
 
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, props);
+		final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
+		final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
+		final String AVFractionsFile = props.getProperty("autonomousVehiclesFile");
+		final String vehicleTypeToPCUFile = props.getProperty("vehicleTypeToPCUFile");
+		final String timeOfDayDistributionFile = props.getProperty("timeOfDayDistributionFile");
+		final String vehicleFuelEfficiencyFile = props.getProperty("vehicleFuelEfficiencyFile");
+		final int BASE_YEAR = Integer.parseInt(props.getProperty("baseYear"));
+	
+		//create a road network assignment
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, 
+															InputFileReader.readEnergyUnitCostsFile(energyUnitCostsFile).get(BASE_YEAR),
+															InputFileReader.readEngineTypeFractionsFile(engineTypeFractionsFile).get(BASE_YEAR),
+															InputFileReader.readAVFractionsFile(AVFractionsFile).get(BASE_YEAR),
+															InputFileReader.readVehicleTypeToPCUFile(vehicleTypeToPCUFile),
+															InputFileReader.readEnergyConsumptionParamsFile(vehicleFuelEfficiencyFile),
+															InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFile),
+															null,
+															null,
+															null,
+															null,
+															props);
 		ODMatrix odm = new ODMatrix("./src/test/resources/testdata/csvfiles/passengerODM.csv");
 		rna.assignPassengerFlowsRouting(odm, null);
 		

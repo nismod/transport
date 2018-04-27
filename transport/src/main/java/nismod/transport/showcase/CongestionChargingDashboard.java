@@ -87,6 +87,7 @@ import nismod.transport.network.road.Trip;
 import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.utility.ConfigReader;
+import nismod.transport.utility.InputFileReader;
 import nismod.transport.utility.RandomSingleton;
 import nismod.transport.zone.Zoning;
 import javax.swing.JSeparator;
@@ -114,7 +115,7 @@ public class CongestionChargingDashboard extends JFrame {
 	private JTextField totalDemandAfter;
 	private JTextField totalDemandBefore;
 	private DefaultCategoryDataset barDataset;
-	
+
 	private static final String configFile = "./src/test/config/testConfig.properties";
 	private static RoadNetwork roadNetwork;
 	private static Properties props;
@@ -124,7 +125,7 @@ public class CongestionChargingDashboard extends JFrame {
 	private static RouteSetGenerator rsg;
 	private static Zoning zoning;
 	private static RoadNetworkAssignment rnaBefore;
-	
+
 	public static final int MAP_WIDTH = 750;
 	public static final int MAP_HEIGHT = 700;
 	public static final int BETWEEN_MAP_SPACE = 0; 
@@ -137,14 +138,14 @@ public class CongestionChargingDashboard extends JFrame {
 	public static final int LEFT_MARGIN = 36; //x position of the first control (policy design area)
 	public static final int SECOND_MARGIN = 233; //x position of the second control (policy design area)
 	public static final int AFTER_TABLE_SHIFT = 200; //we have to shift after tables to fit the barchart in between
-	
+
 	public static final Font TABLE_FONT = new Font("Lato", Font.BOLD, 12);
 	public static final Border TABLE_BORDER = BorderFactory.createLineBorder(LandingGUI.DARK_GRAY, 1);
 	public static final Border COMBOBOX_BORDER = BorderFactory.createLineBorder(LandingGUI.DARK_GRAY, 2);
 	public static final Border TOTAL_DEMAND_BORDER = BorderFactory.createLineBorder(LandingGUI.DARK_GRAY, 3);
 	public static final Border RUN_BUTTON_BORDER = BorderFactory.createLineBorder(LandingGUI.DARK_GRAY, 5);
 	public static final Border EMPTY_BORDER = BorderFactory.createEmptyBorder();
-	
+
 	public static final double MATRIX_SCALING_FACTOR = 3.0; //to multiply OD matrix
 	public static final double OPACITY_FACTOR = 3.0; //to multiply opacity for table cells (to emphasise the change)
 
@@ -179,16 +180,16 @@ public class CongestionChargingDashboard extends JFrame {
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 		//this.setSize(1920, 876);
-		
+
 		//this.setLocation(0,  (int)Math.round(screenSize.height * 0.65));
 		this.setExtendedState(JMapFrame.MAXIMIZED_BOTH);
 		this.setLocation(0, 0);
 
 		Robot robot = new Robot();
-		
+
 		setAlwaysOnTop(true);
 		contentPane.setBackground(LandingGUI.LIGHT_GRAY);
-	
+
 		//UIManager.put("ToolTip.background", new ColorUIResource(255, 247, 200)); //#fff7c8
 		UIManager.put("ToolTip.background", new ColorUIResource(255, 255, 255)); //#fff7c8
 		Border border = BorderFactory.createLineBorder(new Color(76,79,83));    //#4c4f53
@@ -196,19 +197,19 @@ public class CongestionChargingDashboard extends JFrame {
 		UIManager.put("ToolTip.font", new Font("Lato", Font.PLAIN, 14));
 		ToolTipManager.sharedInstance().setDismissDelay(15000); // 15 second delay  
 
-		
+
 		createDashboardExplanation();
-		
+
 		createBeforeTables();
-		
+
 		createAfterTables();
-		
+
 		createLabelsLeftOfTables();
-		
+
 		createBarChart();
-		
+
 		//create map panels and legend
-		
+
 		panel_1 = new JPanel();
 		panel_1.setBounds(BEFORE_MAP_X, BEFORE_MAP_Y, MAP_WIDTH, MAP_HEIGHT);
 		//Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -225,18 +226,18 @@ public class CongestionChargingDashboard extends JFrame {
 		JPanel legend = new CapacityUtilisationLegend();
 		legend.setBounds(BEFORE_MAP_X, BEFORE_MAP_Y + MAP_HEIGHT, MAP_WIDTH * 2 + BETWEEN_MAP_SPACE, 28);
 		contentPane.add(legend);
-	
+
 
 		runModelBeforeIntervention();
-		
+
 		//policy design area
-		
+
 		JLabel lblRoadExpansionPolicy = new JLabel("Try it yourself!");
 		lblRoadExpansionPolicy.setForeground(Color.DARK_GRAY);
 		lblRoadExpansionPolicy.setFont(new Font("Lato", Font.BOLD, 26));
 		lblRoadExpansionPolicy.setBounds(LEFT_MARGIN, 569, 380, 30);
 		contentPane.add(lblRoadExpansionPolicy);
-	
+
 		JSlider slider = new JSlider();
 		slider.setValue(15);
 		slider.setPaintTicks(true);
@@ -248,25 +249,25 @@ public class CongestionChargingDashboard extends JFrame {
 		slider.setFont(new Font("Lato", Font.BOLD, 14));
 		slider.setForeground(LandingGUI.DARK_GRAY);
 		contentPane.add(slider);
-		
-	
-//		Icon icon = new ImageIcon("./src/test/resources/images/thumb.gif");
-//		UIDefaults defaults = UIManager.getDefaults();
-//	//	defaults.put("Slider.horizontalThumbIcon", icon);
-//		defaults.put("Slider.thumb", new ColorUIResource(LandingGUI.DARK_GRAY));
-//		defaults.put("Slider.focus", new ColorUIResource(LandingGUI.DARK_GRAY));
-//		defaults.put("Slider.altTrackColor", new ColorUIResource(LandingGUI.DARK_GRAY));
-//		defaults.put("Slider.shadow", new ColorUIResource(LandingGUI.DARK_GRAY));
-//		defaults.put("Slider.highlight", new ColorUIResource(LandingGUI.DARK_GRAY));
-//		defaults.put("Slider.thumbHeight", 20);
-//		defaults.put("Slider.thumbWidth", 20);
 
-		
+
+		//		Icon icon = new ImageIcon("./src/test/resources/images/thumb.gif");
+		//		UIDefaults defaults = UIManager.getDefaults();
+		//	//	defaults.put("Slider.horizontalThumbIcon", icon);
+		//		defaults.put("Slider.thumb", new ColorUIResource(LandingGUI.DARK_GRAY));
+		//		defaults.put("Slider.focus", new ColorUIResource(LandingGUI.DARK_GRAY));
+		//		defaults.put("Slider.altTrackColor", new ColorUIResource(LandingGUI.DARK_GRAY));
+		//		defaults.put("Slider.shadow", new ColorUIResource(LandingGUI.DARK_GRAY));
+		//		defaults.put("Slider.highlight", new ColorUIResource(LandingGUI.DARK_GRAY));
+		//		defaults.put("Slider.thumbHeight", 20);
+		//		defaults.put("Slider.thumbWidth", 20);
+
+
 		JLabel label_1 = new JLabel("£");
 		label_1.setFont(new Font("Lato", Font.BOLD, 14));
 		label_1.setBounds(346, 756, 46, 14);
 		contentPane.add(label_1);
-		
+
 		JSlider slider_1 = new JSlider();
 		slider_1.setValue(2);
 		slider_1.setPaintTicks(true);
@@ -278,25 +279,25 @@ public class CongestionChargingDashboard extends JFrame {
 		slider_1.setFont(new Font("Lato", Font.BOLD, 14));
 		slider_1.setForeground(LandingGUI.DARK_GRAY);
 		contentPane.add(slider_1);
-		
+
 		JLabel label_2 = new JLabel("£");
 		label_2.setFont(new Font("Lato", Font.BOLD, 14));
 		label_2.setBounds(346, 858, 46, 14);
 		contentPane.add(label_2);
-		
+
 		JLabel label_3 = new JLabel("<html><left>What's the <b>peak-hour</b> charge?</html>?");
 		label_3.setBounds(LEFT_MARGIN, 711, 100, 70);
 		label_3.setFont(new Font("Lato", Font.PLAIN, 16));
 		label_3.setForeground(LandingGUI.DARK_GRAY);
 		contentPane.add(label_3);
-		
+
 		JLabel label_4 = new JLabel("<html><left>What's the <b>off-peak</b> charge?</html>?");
 		label_4.setBounds(LEFT_MARGIN, 810, 100, 70);
 		label_4.setFont(new Font("Lato", Font.PLAIN, 16));
 		label_4.setForeground(LandingGUI.DARK_GRAY);
 		contentPane.add(label_4);
-		
-		
+
+
 		JButton btnNewButton = new JButton("RUN");
 		btnNewButton.setFont(new Font("Lato", Font.BOLD, 25));
 		btnNewButton.setBounds(134, 920, 149, 70);
@@ -331,7 +332,7 @@ public class CongestionChargingDashboard extends JFrame {
 
 				List<Intervention> interventions = new ArrayList<Intervention>();
 				interventions.add(cc);
-	
+
 				DemandModel dm;
 				try {
 					dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, engineTypeFractionsFile, AVFractionsFile, interventions, rsg, props);
@@ -362,17 +363,17 @@ public class CongestionChargingDashboard extends JFrame {
 					}
 
 					System.out.println("Congestion charges from sliders: " + specificCharges);
-				
+
 					props.setProperty("TIME", "-1.5");
 					props.setProperty("LENGTH", "-1.0");
 					props.setProperty("COST", "-3.6"); //based on VOT
 
 					RoadNetworkAssignment rnaAfterCongestionCharging = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, congestionCharges, props);
 					//rnaAfterCongestionCharging.assignPassengerFlows(odm, rsg);
-					
-					
+
+
 					RandomSingleton.getInstance().setSeed(1234);
-					
+
 					rnaAfterCongestionCharging.assignPassengerFlowsRouteChoice(odm, rsg, props);
 					rnaAfterCongestionCharging.updateLinkVolumeInPCU();
 					rnaAfterCongestionCharging.updateLinkVolumeInPCUPerTimeOfDay();
@@ -380,204 +381,194 @@ public class CongestionChargingDashboard extends JFrame {
 					//predict change in demand
 					SkimMatrix tsm = rnaAfterCongestionCharging.calculateTimeSkimMatrix();
 					SkimMatrix csm = rnaAfterCongestionCharging.calculateCostSkimMatrix();
-					
+
 					//predicted demand	
 					ODMatrix predictedODM = new ODMatrix();
 
 					//final String elasticitiesFile = props.getProperty("elasticitiesFile");
-					HashMap<ElasticityTypes, Double> elasticities = null;
+					HashMap<ElasticityTypes, Double> elasticities = InputFileReader.readElasticitiesFile(elasticitiesFile);
+
+					System.out.println("Time Skim Matrix Before:");
+					tsmBefore.printMatrixFormatted();
+					System.out.println("Time Skim Matrix After:");
+					tsm.printMatrixFormatted();
+					System.out.println("Cost Skim Matrix Before:");
+					csmBefore.printMatrixFormatted();
+					System.out.println("Cost Skim Matrix After:");
+					csm.printMatrixFormatted();
+
+
+					//for each OD pair predict the change in passenger vehicle flow from the change in skim matrices
+					for (MultiKey mk: odm.getKeySet()) {
+						String originZone = (String) mk.getKey(0);
+						String destinationZone = (String) mk.getKey(1);
+
+						double oldFlow = odm.getFlow(originZone, destinationZone);
+
+						double oldODTravelTime = tsmBefore.getCost(originZone, destinationZone);
+						double newODTravelTime = tsm.getCost(originZone, destinationZone);
+						double oldODTravelCost = csmBefore.getCost(originZone, destinationZone);
+						double newODTravelCost = csm.getCost(originZone, destinationZone);
+
+						double predictedflow = oldFlow * Math.pow(newODTravelTime / oldODTravelTime, elasticities.get(ElasticityTypes.TIME)) *
+								Math.pow(newODTravelCost / oldODTravelCost, elasticities.get(ElasticityTypes.COST));
+
+						predictedODM.setFlow(originZone, destinationZone, (int) Math.round(predictedflow));
+					}
+
+
+					rnaAfterCongestionCharging.resetLinkVolumes();
+					rnaAfterCongestionCharging.resetTripStorages();
+
+					RandomSingleton.getInstance().setSeed(1234);
+
+					rnaAfterCongestionCharging.assignPassengerFlowsRouting(predictedODM, rsg);
+					rnaAfterCongestionCharging.updateLinkVolumeInPCU();
+					rnaAfterCongestionCharging.updateLinkVolumeInPCUPerTimeOfDay();
+					//SkimMatrix sm = rnaAfterCongestionCharging.calculateTimeSkimMatrix();
+
+
+					HashMap<Integer, Double> capacityAfter = rnaAfterCongestionCharging.calculateDirectionAveragedPeakLinkCapacityUtilisation();
+
+					//String shapefilePathAfter = "./temp/networkWithCapacityUtilisationAfter.shp";
+					final URL congestionChargeZoneUrl = new URL("file://src/test/resources/testdata/shapefiles/congestionChargingZone.shp");
+					String shapefilePathAfter = "./temp/after" +  LandingGUI.counter++ + ".shp";
+					JFrame rightFrame;
+					JButton reset = null;
 					try {
-						elasticities = DemandModel.readElasticitiesFile(elasticitiesFile);
-					} catch (FileNotFoundException e2) {
+						rightFrame = NetworkVisualiserDemo.visualise(roadNetwork, "Capacity Utilisation After Intervention", capacityAfter, "CapUtil", shapefilePathAfter, congestionChargeZoneUrl);
+						rightFrame.setVisible(true);
+						//rightFrame.repaint();
+
+						//panel_2.removeAll();
+						panel_2.add(rightFrame.getContentPane(), 0);
+						panel_2.setLayout(null);
+						panel_2.setComponentZOrder(labelPanel2, 0);
+						//				contentPane.setComponentZOrder(labelAfter, 0);
+						//panel_2.doLayout();
+						//panel_2.repaint();
+
+						((JMapFrameDemo)rightFrame).getToolBar().setBackground(LandingGUI.LIGHT_GRAY); //to set toolbar background
+						((JMapFrameDemo)rightFrame).getToolBar().setBorder(BorderFactory.createLineBorder(LandingGUI.LIGHT_GRAY, 1));
+
+						rightFrame.setVisible(true);
+						rightFrame.setVisible(false);
+
+						labelPanel2 = new JLabel("After Policy Intervention");
+						labelPanel2.setBounds(301, 11, 331, 20);
+						panel_2.add(labelPanel2);
+						panel_2.setComponentZOrder(labelPanel2, 0);
+						labelPanel2.setForeground(LandingGUI.DARK_GRAY);
+						labelPanel2.setFont(new Font("Lato", Font.BOLD, 16));
+
+						robot.mouseMove(1300, 600);
+
+					} catch (IOException e1) {
 						// TODO Auto-generated catch block
-						e2.printStackTrace();
-					} catch (IOException e2) {
-						// TODO Auto-generated catch block
-						e2.printStackTrace();
+						e1.printStackTrace();
 					}
 
-
-				System.out.println("Time Skim Matrix Before:");
-				tsmBefore.printMatrixFormatted();
-				System.out.println("Time Skim Matrix After:");
-				tsm.printMatrixFormatted();
-				System.out.println("Cost Skim Matrix Before:");
-				csmBefore.printMatrixFormatted();
-				System.out.println("Cost Skim Matrix After:");
-				csm.printMatrixFormatted();
-
-
-				//for each OD pair predict the change in passenger vehicle flow from the change in skim matrices
-				for (MultiKey mk: odm.getKeySet()) {
-					String originZone = (String) mk.getKey(0);
-					String destinationZone = (String) mk.getKey(1);
-
-					double oldFlow = odm.getFlow(originZone, destinationZone);
-
-					double oldODTravelTime = tsmBefore.getCost(originZone, destinationZone);
-					double newODTravelTime = tsm.getCost(originZone, destinationZone);
-					double oldODTravelCost = csmBefore.getCost(originZone, destinationZone);
-					double newODTravelCost = csm.getCost(originZone, destinationZone);
-
-					double predictedflow = oldFlow * Math.pow(newODTravelTime / oldODTravelTime, elasticities.get(ElasticityTypes.TIME)) *
-							Math.pow(newODTravelCost / oldODTravelCost, elasticities.get(ElasticityTypes.COST));
-
-					predictedODM.setFlow(originZone, destinationZone, (int) Math.round(predictedflow));
-				}
+					//update after tables
+					int rows = predictedODM.getOrigins().size();
+					int columns = predictedODM.getDestinations().size();
+					Object[][] data = new Object[rows][columns + 1];
+					for (int i = 0; i < rows; i++) {
+						data[i][0] = zoning.getLADToName().get(predictedODM.getOrigins().get(i));
+						for (int j = 0; j < columns; j++) {
+							data[i][j+1] = predictedODM.getFlow(predictedODM.getOrigins().get(i), predictedODM.getDestinations().get(j));
+						}
+					}
+					String[] labels = new String[columns + 1];
+					labels[0] = "ORIG \\ DEST";
+					for (int j = 0; j < columns; j++) labels[j+1] = zoning.getLADToName().get(predictedODM.getDestinations().get(j));
+					table_2.setModel(new DefaultTableModel(data, labels));
 
 
-				rnaAfterCongestionCharging.resetLinkVolumes();
-				rnaAfterCongestionCharging.resetTripStorages();
-				
-				RandomSingleton.getInstance().setSeed(1234);
+					SkimMatrix sm = rnaAfterCongestionCharging.calculateTimeSkimMatrix();
 
-				rnaAfterCongestionCharging.assignPassengerFlowsRouting(predictedODM, rsg);
-				rnaAfterCongestionCharging.updateLinkVolumeInPCU();
-				rnaAfterCongestionCharging.updateLinkVolumeInPCUPerTimeOfDay();
-				//SkimMatrix sm = rnaAfterCongestionCharging.calculateTimeSkimMatrix();
-				
+					System.out.println("Time Skim Matrix Final:");
+					sm.printMatrixFormatted();
 
-				HashMap<Integer, Double> capacityAfter = rnaAfterCongestionCharging.calculateDirectionAveragedPeakLinkCapacityUtilisation();
-				
-				//String shapefilePathAfter = "./temp/networkWithCapacityUtilisationAfter.shp";
-				final URL congestionChargeZoneUrl = new URL("file://src/test/resources/testdata/shapefiles/congestionChargingZone.shp");
-				String shapefilePathAfter = "./temp/after" +  LandingGUI.counter++ + ".shp";
-				JFrame rightFrame;
-				JButton reset = null;
-				try {
-					rightFrame = NetworkVisualiserDemo.visualise(roadNetwork, "Capacity Utilisation After Intervention", capacityAfter, "CapUtil", shapefilePathAfter, congestionChargeZoneUrl);
-					rightFrame.setVisible(true);
-					//rightFrame.repaint();
+					rows = sm.getOrigins().size();
+					columns = sm.getDestinations().size();
+					Object[][] data2 = new Object[rows][columns + 1];
+					for (int i = 0; i < rows; i++) {
+						data2[i][0] = zoning.getLADToName().get(sm.getOrigins().get(i));
+						for (int j = 0; j < columns; j++) {
+							data2[i][j+1] = String.format("%.2f", sm.getCost(sm.getOrigins().get(i), sm.getDestinations().get(j)));
+						}
+					}
+					String[] labels2 = new String[columns + 1];
+					labels2[0] = "ORIG \\ DEST";
+					for (int j = 0; j < columns; j++) labels2[j+1] = zoning.getLADToName().get(sm.getDestinations().get(j));
+					table_3.setModel(new DefaultTableModel(data2, labels2));
 
-					//panel_2.removeAll();
-					panel_2.add(rightFrame.getContentPane(), 0);
-					panel_2.setLayout(null);
-					panel_2.setComponentZOrder(labelPanel2, 0);
-	//				contentPane.setComponentZOrder(labelAfter, 0);
-					//panel_2.doLayout();
-					//panel_2.repaint();
-					
-					((JMapFrameDemo)rightFrame).getToolBar().setBackground(LandingGUI.LIGHT_GRAY); //to set toolbar background
-					((JMapFrameDemo)rightFrame).getToolBar().setBorder(BorderFactory.createLineBorder(LandingGUI.LIGHT_GRAY, 1));
-				
-					rightFrame.setVisible(true);
-					rightFrame.setVisible(false);
-					
-					labelPanel2 = new JLabel("After Policy Intervention");
-					labelPanel2.setBounds(301, 11, 331, 20);
-					panel_2.add(labelPanel2);
-					panel_2.setComponentZOrder(labelPanel2, 0);
-					labelPanel2.setForeground(LandingGUI.DARK_GRAY);
-					labelPanel2.setFont(new Font("Lato", Font.BOLD, 16));
-							
-					robot.mouseMove(1300, 600);
-		
+
+					//update bar chart
+					barDataset.addValue(rnaBefore.getTripList().size(), "No intervention", "Total Trips");
+					barDataset.addValue(rnaAfterCongestionCharging.getTripList().size(), "Congestion charging", "Total Trips");
+
+					double sumThroughBefore = 0.0, sumOutsideBefore = 0.0;
+					for (Trip t: rnaBefore.getTripList())
+						if (t.isTripGoingThroughCongestionChargingZone(policyName, congestionCharges))
+							sumThroughBefore++;
+						else
+							sumOutsideBefore++;
+
+					double sumThrough = 0.0, sumOutside = 0.0;
+					for (Trip t: rnaAfterCongestionCharging.getTripList())
+						if (t.isTripGoingThroughCongestionChargingZone(policyName, congestionCharges))
+							sumThrough++;
+						else
+							sumOutside++;
+
+					barDataset.addValue(sumThroughBefore, "No intervention", "Through Zone");
+					barDataset.addValue(sumThrough, "Congestion charging", "Through Zone");
+					barDataset.addValue(sumOutsideBefore, "No intervention", "Outside Zone");
+					barDataset.addValue(sumOutside, "Congestion charging", "Outside Zone");
+
+					//uninstall intervention
+					cc.uninstall(dm);
+
+					//pack();
+
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
-				
-				//update after tables
-				int rows = predictedODM.getOrigins().size();
-				int columns = predictedODM.getDestinations().size();
-				Object[][] data = new Object[rows][columns + 1];
-				for (int i = 0; i < rows; i++) {
-					data[i][0] = zoning.getLADToName().get(predictedODM.getOrigins().get(i));
-					for (int j = 0; j < columns; j++) {
-						data[i][j+1] = predictedODM.getFlow(predictedODM.getOrigins().get(i), predictedODM.getDestinations().get(j));
-					}
-				}
-				String[] labels = new String[columns + 1];
-				labels[0] = "ORIG \\ DEST";
-				for (int j = 0; j < columns; j++) labels[j+1] = zoning.getLADToName().get(predictedODM.getDestinations().get(j));
-				table_2.setModel(new DefaultTableModel(data, labels));
 
-
-				SkimMatrix sm = rnaAfterCongestionCharging.calculateTimeSkimMatrix();
-				
-				System.out.println("Time Skim Matrix Final:");
-				sm.printMatrixFormatted();
-				
-				rows = sm.getOrigins().size();
-				columns = sm.getDestinations().size();
-				Object[][] data2 = new Object[rows][columns + 1];
-				for (int i = 0; i < rows; i++) {
-					data2[i][0] = zoning.getLADToName().get(sm.getOrigins().get(i));
-					for (int j = 0; j < columns; j++) {
-						data2[i][j+1] = String.format("%.2f", sm.getCost(sm.getOrigins().get(i), sm.getDestinations().get(j)));
-					}
-				}
-				String[] labels2 = new String[columns + 1];
-				labels2[0] = "ORIG \\ DEST";
-				for (int j = 0; j < columns; j++) labels2[j+1] = zoning.getLADToName().get(sm.getDestinations().get(j));
-				table_3.setModel(new DefaultTableModel(data2, labels2));
-
-			
-				//update bar chart
-				barDataset.addValue(rnaBefore.getTripList().size(), "No intervention", "Total Trips");
-				barDataset.addValue(rnaAfterCongestionCharging.getTripList().size(), "Congestion charging", "Total Trips");
-
-				double sumThroughBefore = 0.0, sumOutsideBefore = 0.0;
-				for (Trip t: rnaBefore.getTripList())
-					if (t.isTripGoingThroughCongestionChargingZone(policyName, congestionCharges))
-						sumThroughBefore++;
-					else
-						sumOutsideBefore++;
-
-				double sumThrough = 0.0, sumOutside = 0.0;
-				for (Trip t: rnaAfterCongestionCharging.getTripList())
-					if (t.isTripGoingThroughCongestionChargingZone(policyName, congestionCharges))
-						sumThrough++;
-					else
-						sumOutside++;
-
-				barDataset.addValue(sumThroughBefore, "No intervention", "Through Zone");
-				barDataset.addValue(sumThrough, "Congestion charging", "Through Zone");
-				barDataset.addValue(sumOutsideBefore, "No intervention", "Outside Zone");
-				barDataset.addValue(sumOutside, "Congestion charging", "Outside Zone");
-
-				//uninstall intervention
-				cc.uninstall(dm);
-
-				//pack();
-				
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-				
 			}
 		});
 		contentPane.add(btnNewButton);
-			
+
 		//set controls to represent the intervention
 		slider.setValue(15);
 		slider_1.setValue(2);
-		
+
 		//run the default intervention
 		btnNewButton.doClick();
 
 		pack();
 		//this.setExtendedState(this.getExtendedState()|JFrame.MAXIMIZED_BOTH );
 	}
-	
-	
+
+
 	private void createDashboardExplanation( ) {
-		
-	
-		
+
+
+
 		//coloured panel with icon
 		JPanel panel_4 = new JPanel();
 		panel_4.setBackground(LandingGUI.PASTEL_BLUE);
 		panel_4.setBounds(LEFT_MARGIN, 34, 346, 123);
 		contentPane.add(panel_4);
 		panel_4.setLayout(null);
-		
+
 		JLabel lblNewLabel_2 = new JLabel("<html><left>Intervention 3:<br>Congestion Charging</html>");
 		lblNewLabel_2.setBounds(116, 5, 220, 115);
 		lblNewLabel_2.setFont(new Font("Lato", Font.BOLD, 26));
 		panel_4.add(lblNewLabel_2);
-		
+
 		File imgRoad = new File("./src/test/resources/images/tollGateIcon.png");
 		BufferedImage bufferedImageRoad = null;
 		try {
@@ -589,11 +580,11 @@ public class CongestionChargingDashboard extends JFrame {
 		//BufferedImage subImage = bufferedImage.getSubimage(0, 10, bufferedImage.getWidth(), bufferedImage.getHeight() - 20); //trimming
 		Image newimgRoad = bufferedImageRoad.getScaledInstance(80, 80, java.awt.Image.SCALE_SMOOTH); //scaling  
 		ImageIcon iconRoad = new ImageIcon(newimgRoad);
-		
+
 		JLabel lblNewLabel_3 = new JLabel(iconRoad);
 		lblNewLabel_3.setBounds(17, 20, 80, 80);
 		panel_4.add(lblNewLabel_3);
-				
+
 		StringBuilder html = new StringBuilder();
 		html.append("<html><left>");
 		html.append("<font size=+1><b>What we asked:</b></font><br>");
@@ -604,18 +595,18 @@ public class CongestionChargingDashboard extends JFrame {
 		html.append("<li><font size=+1>Decrease in vehicle flows due to increased travel costs.</font>");
 		html.append("<li><font size=+1>Decrease in travel times due to lower total demand.</font>");
 		html.append("</ul></html>");
-		
+
 		JLabel lblNewLabel_4 = new JLabel(html.toString());
 		lblNewLabel_4.setVerticalAlignment(SwingConstants.TOP);
 		lblNewLabel_4.setFont(new Font("Lato", Font.PLAIN, 20));
 		lblNewLabel_4.setBounds(LEFT_MARGIN, 200, 346, 346);
 		contentPane.add(lblNewLabel_4);
-		
+
 		JSeparator separator = new JSeparator();
 		separator.setForeground(Color.GRAY);
 		separator.setBounds(LEFT_MARGIN, LandingGUI.SCREEN_HEIGHT / 2, 346, 2);
 		contentPane.add(separator);
-		
+
 		JLabel lblNewLabel_5 = new JLabel("<html><left>Change the congestion charge during peak and off-peak hours:</html>");
 		lblNewLabel_5.setHorizontalAlignment(SwingConstants.LEFT);
 		lblNewLabel_5.setVerticalAlignment(SwingConstants.TOP);
@@ -623,32 +614,32 @@ public class CongestionChargingDashboard extends JFrame {
 		lblNewLabel_5.setForeground(LandingGUI.DARK_GRAY);
 		lblNewLabel_5.setBounds(LEFT_MARGIN, 628, 346, 100);
 		contentPane.add(lblNewLabel_5);
-		
+
 		JLabel lblNewLabel_6 = new JLabel("<html>(Peak hours: 7AM-11AM & 4PM-8PM)</html>");
 		lblNewLabel_6.setHorizontalAlignment(SwingConstants.LEFT);
 		lblNewLabel_6.setFont(new Font("Lato", Font.PLAIN, 12));
 		lblNewLabel_6.setBounds(152, 784, 226, 14);
 		lblNewLabel_6.setForeground(LandingGUI.DARK_GRAY);
 		contentPane.add(lblNewLabel_6);
-		
+
 		JLabel lblNewLabel_7 = new JLabel("Observe the change in capacity utilisation in the \"after\" map");
 		lblNewLabel_7.setHorizontalAlignment(SwingConstants.LEFT);
 		lblNewLabel_7.setFont(new Font("Lato", Font.PLAIN, 12));
 		lblNewLabel_7.setForeground(LandingGUI.DARK_GRAY);
 		lblNewLabel_7.setBounds(LEFT_MARGIN, 1006, 342, 14);
 		contentPane.add(lblNewLabel_7);
-				
+
 	}
-	
+
 	private void createBeforeTables() {
-		
+
 		JLabel lblBeforePolicyIntervention = new JLabel("Before Policy Intervention");
 		lblBeforePolicyIntervention.setLabelFor(table);
 		lblBeforePolicyIntervention.setForeground(LandingGUI.DARK_GRAY);
 		lblBeforePolicyIntervention.setBounds(BEFORE_MAP_X, MAP_HEIGHT + 55, 392, 30);
 		contentPane.add(lblBeforePolicyIntervention);
 		lblBeforePolicyIntervention.setFont(new Font("Lato", Font.BOLD, 18));
-		
+
 		scrollPane = new JScrollPane();
 		scrollPane.setBounds(BEFORE_MAP_X + TABLE_LABEL_WIDTH, MAP_HEIGHT + 100, 416, 90);
 		contentPane.add(scrollPane);
@@ -771,7 +762,7 @@ public class CongestionChargingDashboard extends JFrame {
 		scrollPane_2.setToolTipText("This shows the impact on demand.");
 		scrollPane_2.setBounds(AFTER_MAP_X + TABLE_LABEL_WIDTH + AFTER_TABLE_SHIFT, MAP_HEIGHT + 100, 416, 90);
 		contentPane.add(scrollPane_2);
-		
+
 		/*
 		//total demand panel (before)
 		JPanel panel_3 = new JPanel();
@@ -780,7 +771,7 @@ public class CongestionChargingDashboard extends JFrame {
 		panel_3.setBackground(Color.WHITE);
 		panel_3.setBounds(scrollPane.getX() + scrollPane.getWidth() - 1, scrollPane.getY(), 222, scrollPane.getHeight());
 		contentPane.add(panel_3);
-		
+
 		totalDemandBefore = new JTextField();
 		totalDemandBefore.setHorizontalAlignment(SwingConstants.RIGHT);
 		totalDemandBefore.setFont(new Font("Lato", Font.BOLD, 24));
@@ -788,17 +779,17 @@ public class CongestionChargingDashboard extends JFrame {
 		totalDemandBefore.setBorder(TOTAL_DEMAND_BORDER);
 		totalDemandBefore.setBounds(86, 37, 114, 31);
 		panel_3.add(totalDemandBefore);
-		
+
 		JLabel label_1 = new JLabel("(Total Number of Trips)");
 		label_1.setFont(new Font("Lato", Font.BOLD, 11));
 		label_1.setBounds(86, 11, 126, 14);
 		panel_3.add(label_1);
-		
+
 		JLabel label_2 = new JLabel("Demand");
 		label_2.setFont(new Font("Lato", Font.BOLD, 14));
 		label_2.setBounds(15, 9, 66, 14);
 		panel_3.add(label_2);
-		
+
 		File img = new File("./src/test/resources/images/car.png");
 		BufferedImage bufferedImage = null;
 		try {
@@ -810,30 +801,30 @@ public class CongestionChargingDashboard extends JFrame {
 		BufferedImage subImage = bufferedImage.getSubimage(10, 20, bufferedImage.getWidth() - 10, bufferedImage.getHeight() - 20); //trimming
 		Image newimg = subImage.getScaledInstance(70, 70, java.awt.Image.SCALE_SMOOTH); //scaling
 		ImageIcon icon = new ImageIcon(newimg);
-		
+
 		JLabel label_3 = new JLabel(icon);
 		label_3.setBounds(10, 30, 70, 45);
 		panel_3.add(label_3);
-		*/
-	
+		 */
+
 	}
-	
-	
+
+
 	private void createAfterTables() {
-		
+
 		JLabel lblAfterPolicyIntervention = new JLabel("After Policy Intervention");
 		lblAfterPolicyIntervention.setLabelFor(table_2);
 		lblAfterPolicyIntervention.setForeground(LandingGUI.DARK_GRAY);
 		lblAfterPolicyIntervention.setFont(new Font("Lato", Font.BOLD, 18));
 		lblAfterPolicyIntervention.setBounds(AFTER_MAP_X + AFTER_TABLE_SHIFT, MAP_HEIGHT + 55, 392, 30);
 		contentPane.add(lblAfterPolicyIntervention);
-		
+
 		table_2 = new JTable() {
 			@Override
 			public Component prepareRenderer(TableCellRenderer renderer, int rowIndex, int columnIndex) {
 				JComponent component = (JComponent) super.prepareRenderer(renderer, rowIndex, columnIndex);  
 				component.setOpaque(true);
-			
+
 				if (columnIndex == 0)  { 
 					//component.setBackground(new Color(0, 0, 0, 20));
 					component.setBackground(LandingGUI.MID_GRAY);
@@ -845,16 +836,16 @@ public class CongestionChargingDashboard extends JFrame {
 					if (newValue > oldValue) component.setBackground(increase);
 					else if (newValue < oldValue) component.setBackground(decrease);
 					else component.setBackground(Color.WHITE);
-					*/
+					 */
 					double absolutePercentChange = Math.abs((1.0 * newValue / oldValue - 1.0) * 100);
 					int opacity = (int) Math.round(absolutePercentChange * OPACITY_FACTOR); //amplify the change 
 					if (opacity > 255) opacity = 255;
-					
+
 					Color inc = LandingGUI.PASTEL_BLUE;
 					Color dec = LandingGUI.PASTEL_YELLOW;
 					Color increase = new Color (inc.getRed(), inc.getGreen(), inc.getBlue(), opacity);
 					Color decrease = new Color (dec.getRed(), dec.getGreen(), dec.getBlue(), opacity);
-					
+
 					if (newValue > oldValue) component.setBackground(increase);
 					else if (newValue < oldValue) component.setBackground(decrease);
 					else component.setBackground(Color.WHITE);
@@ -919,23 +910,23 @@ public class CongestionChargingDashboard extends JFrame {
 			@Override
 			public Component prepareRenderer(TableCellRenderer renderer, int rowIndex, int columnIndex) {
 				JComponent component = (JComponent) super.prepareRenderer(renderer, rowIndex, columnIndex);  
-				
+
 				if (columnIndex == 0)  { 
 					//component.setBackground(new Color(0, 0, 0, 20));
 					component.setBackground(LandingGUI.MID_GRAY);
 				} else {
 					double newValue = Double.parseDouble(getValueAt(rowIndex, columnIndex).toString());
 					double oldValue = Double.parseDouble(table_1.getValueAt(rowIndex, columnIndex).toString());
-					
+
 					double absolutePercentChange = Math.abs((1.0 * newValue / oldValue - 1.0) * 100);
 					int opacity = (int) Math.round(absolutePercentChange * OPACITY_FACTOR); //amplify the change 
 					if (opacity > 255) opacity = 255;
-					
+
 					Color inc = LandingGUI.PASTEL_BLUE;
 					Color dec = LandingGUI.PASTEL_YELLOW;
 					Color increase = new Color (inc.getRed(), inc.getGreen(), inc.getBlue(), opacity);
 					Color decrease = new Color (dec.getRed(), dec.getGreen(), dec.getBlue(), opacity);
-					
+
 					if (newValue > oldValue) component.setBackground(increase);
 					else if (newValue < oldValue) component.setBackground(decrease);
 					else component.setBackground(Color.WHITE);
@@ -982,7 +973,7 @@ public class CongestionChargingDashboard extends JFrame {
 				return lbl;
 			}
 		});
-		
+
 		/*
 		//total demand panel (after)
 		JPanel panel = new JPanel();
@@ -991,7 +982,7 @@ public class CongestionChargingDashboard extends JFrame {
 		panel.setBounds(scrollPane_2.getX() + scrollPane_2.getWidth() - 1, scrollPane_2.getY(), 222, scrollPane_2.getHeight());
 		contentPane.add(panel);
 		panel.setLayout(null);
-		
+
 		totalDemandAfter = new JTextField();
 		totalDemandAfter.setBounds(86, 37, 114, 31);
 		totalDemandAfter.setFont(new Font("Lato", Font.BOLD, 24));
@@ -1000,17 +991,17 @@ public class CongestionChargingDashboard extends JFrame {
 		panel.add(totalDemandAfter);
 		totalDemandAfter.setColumns(5);
 		totalDemandAfter.setBorder(TOTAL_DEMAND_BORDER);
-		
+
 		JLabel lblNewLabel = new JLabel("(Total Number of Trips)");
 		lblNewLabel.setFont(new Font("Lato", Font.BOLD, 11));
 		lblNewLabel.setBounds(86, 11, 126, 14);
 		panel.add(lblNewLabel);
-		
+
 		JLabel lblDemand = new JLabel("Demand");
 		lblDemand.setFont(new Font("Lato", Font.BOLD, 14));
 		lblDemand.setBounds(15, 11, 66, 14);
 		panel.add(lblDemand);
-		
+
 		File img = new File("./src/test/resources/images/car.png");
 		BufferedImage bufferedImage = null;
 		try {
@@ -1022,20 +1013,20 @@ public class CongestionChargingDashboard extends JFrame {
 		BufferedImage subImage = bufferedImage.getSubimage(10, 20, bufferedImage.getWidth() - 10, bufferedImage.getHeight() - 20); //trimming
 		Image newimg = subImage.getScaledInstance(70, 70, java.awt.Image.SCALE_SMOOTH); //scaling
 		ImageIcon icon = new ImageIcon(newimg);
-		
+
 		JLabel lblNewLabel_1 = new JLabel(icon);
 		lblNewLabel_1.setBounds(10, 30, 70, 45);
 		panel.add(lblNewLabel_1);
-		
-		*/
-		
+
+		 */
+
 		JPanel tableChangeLegendHorizontal = new TableChangeLegendHorizontal();
 		tableChangeLegendHorizontal.setBounds(scrollPane_3.getX() - 19, scrollPane_3.getY() + scrollPane_3.getHeight() + TABLE_ROW_HEIGHT, 450, 29);
 		contentPane.add(tableChangeLegendHorizontal);
 	}
-	
+
 	private void createLabelsLeftOfTables () {
-		
+
 		JLabel lblTrips = new JLabel("<html><center>OD Matrix<br>[<i>trips</i>]</html>");
 		lblTrips.setVerticalAlignment(SwingConstants.TOP);
 		lblTrips.setHorizontalAlignment(SwingConstants.CENTER);
@@ -1043,7 +1034,7 @@ public class CongestionChargingDashboard extends JFrame {
 		lblTrips.setForeground(LandingGUI.DARK_GRAY);
 		lblTrips.setBounds(BEFORE_MAP_X, MAP_HEIGHT + 100, TABLE_LABEL_WIDTH, 40);
 		contentPane.add(lblTrips);
-		
+
 		JLabel lblTrips_1 = new JLabel("<html><center>OD Matrix<br>[<i>trips</i>]</html>");
 		lblTrips_1.setVerticalAlignment(SwingConstants.TOP);
 		lblTrips_1.setHorizontalAlignment(SwingConstants.CENTER);
@@ -1051,7 +1042,7 @@ public class CongestionChargingDashboard extends JFrame {
 		lblTrips_1.setForeground(LandingGUI.DARK_GRAY);
 		lblTrips_1.setBounds(AFTER_MAP_X + AFTER_TABLE_SHIFT, MAP_HEIGHT + 100, TABLE_LABEL_WIDTH, 40);
 		contentPane.add(lblTrips_1);
-		
+
 		File imgCars = new File("./src/test/resources/images/cars.png");
 		BufferedImage bufferedImageCars = null;
 		try {
@@ -1063,33 +1054,33 @@ public class CongestionChargingDashboard extends JFrame {
 		BufferedImage subImageCars = bufferedImageCars.getSubimage(0, 20, bufferedImageCars.getWidth(), bufferedImageCars.getHeight() - 20); //trimming
 		Image newimgCars = subImageCars.getScaledInstance(100, 100, java.awt.Image.SCALE_SMOOTH); //scaling
 		ImageIcon iconCars = new ImageIcon(newimgCars);
-		
+
 		JLabel lblCars = new JLabel(iconCars);
 		lblCars.setVerticalAlignment(SwingConstants.TOP);
 		lblCars.setHorizontalAlignment(SwingConstants.CENTER);
 		lblCars.setBounds(BEFORE_MAP_X, MAP_HEIGHT + 100, TABLE_LABEL_WIDTH, 100);
 		contentPane.add(lblCars);
-		
+
 		JLabel lblCars_1 = new JLabel(iconCars);
 		lblCars_1.setVerticalAlignment(SwingConstants.TOP);
 		lblCars_1.setHorizontalAlignment(SwingConstants.CENTER);
 		lblCars_1.setBounds(AFTER_MAP_X + AFTER_TABLE_SHIFT, MAP_HEIGHT + 100, TABLE_LABEL_WIDTH, 100);
 		contentPane.add(lblCars_1);
-		
+
 		JLabel lblTime = new JLabel("<html><center>Travel Time<br>[<i>min</i>]</html>");
 		lblTime.setVerticalAlignment(SwingConstants.TOP);
 		lblTime.setHorizontalAlignment(SwingConstants.CENTER);
 		lblTime.setFont(new Font("Lato", Font.BOLD, 13));
 		lblTime.setBounds(BEFORE_MAP_X, scrollPane_1.getY(), TABLE_LABEL_WIDTH, 40);
 		contentPane.add(lblTime);
-		
+
 		JLabel lblTime_1 = new JLabel("<html><center>Travel Time<br>[<i>min</i>]</html>");
 		lblTime_1.setVerticalAlignment(SwingConstants.TOP);
 		lblTime_1.setHorizontalAlignment(SwingConstants.CENTER);
 		lblTime_1.setFont(new Font("Lato", Font.BOLD, 13));
 		lblTime_1.setBounds(AFTER_MAP_X + AFTER_TABLE_SHIFT, scrollPane_3.getY(), TABLE_LABEL_WIDTH, 40);
 		contentPane.add(lblTime_1);
-		
+
 		File imgClock = new File("./src/test/resources/images/clock.png");
 		BufferedImage bufferedImageClock = null;
 		try {
@@ -1101,23 +1092,23 @@ public class CongestionChargingDashboard extends JFrame {
 		BufferedImage subImageClock = bufferedImageClock.getSubimage(0, 20, bufferedImageCars.getWidth(), bufferedImageCars.getHeight() - 20); //trimming
 		Image newimgClock = subImageClock.getScaledInstance(75, 75, java.awt.Image.SCALE_SMOOTH); //scaling
 		ImageIcon iconClock = new ImageIcon(newimgClock);
-		
+
 		JLabel lblClock = new JLabel(iconClock);
 		lblClock.setVerticalAlignment(SwingConstants.TOP);
 		lblClock.setHorizontalAlignment(SwingConstants.CENTER);
 		lblClock.setBounds(BEFORE_MAP_X, scrollPane_1.getY() + 20, TABLE_LABEL_WIDTH, 100);
 		contentPane.add(lblClock);
-		
+
 		JLabel lblClock_1 = new JLabel(iconClock);
 		lblClock_1.setVerticalAlignment(SwingConstants.TOP);
 		lblClock_1.setHorizontalAlignment(SwingConstants.CENTER);
 		lblClock_1.setBounds(AFTER_MAP_X + AFTER_TABLE_SHIFT, scrollPane_3.getY() + 20, TABLE_LABEL_WIDTH, 100);
 		contentPane.add(lblClock_1);
-		
+
 	}
-	
+
 	private void runModelBeforeIntervention() throws IOException {
-		
+
 		props = ConfigReader.getProperties(configFile);
 
 		final String areaCodeFileName = props.getProperty("areaCodeFileName");
@@ -1146,29 +1137,29 @@ public class CongestionChargingDashboard extends JFrame {
 		odm = new ODMatrix(baseYearODMatrixFile);
 		odm.scaleMatrixValue(MATRIX_SCALING_FACTOR);
 		rsg = new RouteSetGenerator(roadNetwork);
-		
+
 		rsg.readRoutesBinaryWithoutValidityCheck(passengerRoutesFile);
 		//rsg.generateRouteSetForODMatrix(odm, 5);
 
 		RandomSingleton.getInstance().setSeed(1234);
-		
+
 		rnaBefore.assignPassengerFlowsRouteChoice(odm, rsg, props);
-//		rnaBefore.assignPassengerFlows(odm, rsg);
-//		rnaBefore.updateLinkTravelTimes(1.0);
-//		rnaBefore.resetLinkVolumes();
-//		rnaBefore.resetTripStorages();
-//		rnaBefore.assignPassengerFlowsRouteChoice(odm, rsg, props);
+		//		rnaBefore.assignPassengerFlows(odm, rsg);
+		//		rnaBefore.updateLinkTravelTimes(1.0);
+		//		rnaBefore.resetLinkVolumes();
+		//		rnaBefore.resetTripStorages();
+		//		rnaBefore.assignPassengerFlowsRouteChoice(odm, rsg, props);
 		rnaBefore.updateLinkTravelTimes(1.0);
 		rnaBefore.updateLinkVolumeInPCU();
 		rnaBefore.updateLinkVolumeInPCUPerTimeOfDay();
 
 		/*
 		barDataset.addValue(rnaBefore.getTripList().size(), "No intervention", "Number of Trips");
-		*/
-		
+		 */
+
 		tsmBefore = rnaBefore.calculateTimeSkimMatrix();
 		csmBefore = rnaBefore.calculateCostSkimMatrix();
-		
+
 		File directory = new File("temp");
 		if (!directory.exists()) directory.mkdir();
 
@@ -1185,7 +1176,7 @@ public class CongestionChargingDashboard extends JFrame {
 		leftFrame.setVisible(false);
 		panel_1.add(leftFrame.getContentPane());
 		panel_1.setLayout(null);
-		
+
 		leftFrame.setVisible(true);
 		leftFrame.setVisible(false);
 
@@ -1196,25 +1187,25 @@ public class CongestionChargingDashboard extends JFrame {
 		labelPanel1.setForeground(LandingGUI.DARK_GRAY);
 		labelPanel1.setFont(new Font("Lato", Font.BOLD, 16));
 		JMapPane pane = ((JMapFrameDemo)leftFrame).getMapPane();
-		
-//		JLabel labelAfter = new JLabel("After Policy Intervention");
-//		labelAfter.setBounds(1601, 11, 331, 20);
-//		contentPane.add(labelAfter);
-//		labelAfter.setForeground(Color.RED);
-//		labelAfter.setFont(new Font("Lato", Font.BOLD, 16));
-//		contentPane.setComponentZOrder(labelAfter, 0);
-		
+
+		//		JLabel labelAfter = new JLabel("After Policy Intervention");
+		//		labelAfter.setBounds(1601, 11, 331, 20);
+		//		contentPane.add(labelAfter);
+		//		labelAfter.setForeground(Color.RED);
+		//		labelAfter.setFont(new Font("Lato", Font.BOLD, 16));
+		//		contentPane.setComponentZOrder(labelAfter, 0);
+
 		labelPanel2 = new JLabel("After Policy Intervention");
 		labelPanel2.setBounds(301, 11, 331, 20);
 		panel_2.add(labelPanel2);
 		panel_2.setComponentZOrder(labelPanel2, 0);
 		labelPanel2.setForeground(LandingGUI.DARK_GRAY);
 		labelPanel2.setFont(new Font("Lato", Font.BOLD, 16));
-	
+
 		//JFrame rightFrame;
 		//panel_2.add(rightFrame.getContentPane());
 		//panel_2.setLayout(null);
-		
+
 		//update tables
 
 		int rows = odm.getOrigins().size();
@@ -1247,8 +1238,8 @@ public class CongestionChargingDashboard extends JFrame {
 
 		table_1.setModel(new DefaultTableModel(data2, labels2));	
 	}
-	
-	
+
+
 	private void createBarChart() {
 		//BAR CHART
 		barDataset = new DefaultCategoryDataset();
@@ -1273,13 +1264,13 @@ public class CongestionChargingDashboard extends JFrame {
 		chart.setRenderingHints( new RenderingHints( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON ) );
 		chart.getRenderingHints().put(JFreeChart.KEY_SUPPRESS_SHADOW_GENERATION, Boolean.TRUE);
 		chart.setAntiAlias(true);
-		
+
 		ChartPanel chartPanel = new ChartPanel(chart);
 
 		chartPanel.setBorder(BorderFactory.createEmptyBorder(3, 3, 3, 3));
 		//chartPanel.setBackground(Color.WHITE);
 		chartPanel.setBackground(LandingGUI.LIGHT_GRAY);
-		
+
 		//chartPanel.setPreferredSize( new java.awt.Dimension( 560 , 367 ) );
 
 		CategoryPlot plot = (CategoryPlot) chart.getPlot();
@@ -1292,7 +1283,7 @@ public class CongestionChargingDashboard extends JFrame {
 		chart.getTitle().setPaint(LandingGUI.DARK_GRAY);
 		Font titleFont = new Font("Lato", Font.BOLD, 16); 
 		chart.getTitle().setFont(titleFont);
-		
+
 		chartPanel.setFont(titleFont);
 
 		BarRenderer barRenderer = (BarRenderer)plot.getRenderer();
@@ -1321,7 +1312,7 @@ public class CongestionChargingDashboard extends JFrame {
 
 		barRenderer.setDefaultItemLabelFont(TABLE_FONT);
 		barRenderer.setDefaultLegendTextFont(TABLE_FONT);
-		
+
 		chartPanel.setPreferredSize(new Dimension(400, 175)); //size according to my window
 		chartPanel.setMouseWheelEnabled(true);
 		chartPanel.setMouseZoomable(true);
@@ -1330,21 +1321,21 @@ public class CongestionChargingDashboard extends JFrame {
 		panel.setBounds(scrollPane.getX() + scrollPane.getWidth() + 20, scrollPane.getY() + 20, 400, 180);
 		panel.add(chartPanel);
 		contentPane.add(panel);
-		
+
 		//Demand label
-		
+
 		JPanel panelDemand = new JPanel();
 		//panelDemand.setBorder(TABLE_BORDER);
 		panelDemand.setBackground(LandingGUI.LIGHT_GRAY);
 		panelDemand.setBounds(scrollPane.getX() + scrollPane.getWidth() + 195, scrollPane.getY() - 50, 100, 130);
 		contentPane.add(panelDemand);
 		panelDemand.setLayout(null);
-		
+
 		JLabel lblDemand = new JLabel("Demand");
 		lblDemand.setFont(new Font("Lato", Font.BOLD, 14));
 		lblDemand.setBounds(15, 11, 66, 14);
 		panelDemand.add(lblDemand);
-		
+
 		File img = new File("./src/test/resources/images/car.png");
 		BufferedImage bufferedImage = null;
 		try {
@@ -1356,7 +1347,7 @@ public class CongestionChargingDashboard extends JFrame {
 		BufferedImage subImage = bufferedImage.getSubimage(10, 20, bufferedImage.getWidth() - 10, bufferedImage.getHeight() - 20); //trimming
 		Image newimg = subImage.getScaledInstance(65, 65, java.awt.Image.SCALE_SMOOTH); //scaling
 		ImageIcon icon = new ImageIcon(newimg);
-		
+
 		JLabel lblNewLabel_1 = new JLabel(icon);
 		lblNewLabel_1.setBounds(7, 15, 65, 65);
 		panelDemand.add(lblNewLabel_1);

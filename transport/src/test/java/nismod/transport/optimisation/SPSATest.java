@@ -16,6 +16,7 @@ import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.utility.ConfigReader;
+import nismod.transport.utility.InputFileReader;
 import nismod.transport.visualisation.LineVisualiser;
 import nismod.transport.visualisation.NetworkVisualiser;
 import nismod.transport.zone.Zoning;
@@ -73,9 +74,27 @@ public class SPSATest {
 		//set inter-zonal top nodes
 		props.setProperty("INTERZONAL_TOP_NODES", "5");
 		
+		final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
+		final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
+		final String AVFractionsFile = props.getProperty("autonomousVehiclesFile");
+		final String vehicleTypeToPCUFile = props.getProperty("vehicleTypeToPCUFile");
+		final String timeOfDayDistributionFile = props.getProperty("timeOfDayDistributionFile");
+		final String vehicleFuelEfficiencyFile = props.getProperty("vehicleFuelEfficiencyFile");
+		final int BASE_YEAR = Integer.parseInt(props.getProperty("baseYear"));
+	
 		//create a road network assignment
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, props);
-
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, 
+															InputFileReader.readEnergyUnitCostsFile(energyUnitCostsFile).get(BASE_YEAR),
+															InputFileReader.readEngineTypeFractionsFile(engineTypeFractionsFile).get(BASE_YEAR),
+															InputFileReader.readAVFractionsFile(AVFractionsFile).get(BASE_YEAR),
+															InputFileReader.readVehicleTypeToPCUFile(vehicleTypeToPCUFile),
+															InputFileReader.readEnergyConsumptionParamsFile(vehicleFuelEfficiencyFile),
+															InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFile),
+															null,
+															null,
+															null,
+															null,
+															props);
 	
 	/*	
 	

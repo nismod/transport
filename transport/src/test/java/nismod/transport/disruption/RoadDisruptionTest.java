@@ -19,6 +19,7 @@ import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.utility.ConfigReader;
+import nismod.transport.utility.InputFileReader;
 import nismod.transport.visualisation.NetworkVisualiser;
 
 /**
@@ -80,8 +81,27 @@ public class RoadDisruptionTest {
 		System.out.println("Disrupted edges: " + rd3.getListOfDisruptedEdgesIDs());
 		System.out.println("Removed routes: " + rd3.getListOfRemovedRoutes());
 
+		final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
+		final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
+		final String AVFractionsFile = props.getProperty("autonomousVehiclesFile");
+		final String vehicleTypeToPCUFile = props.getProperty("vehicleTypeToPCUFile");
+		final String timeOfDayDistributionFile = props.getProperty("timeOfDayDistributionFile");
+		final String vehicleFuelEfficiencyFile = props.getProperty("vehicleFuelEfficiencyFile");
+		final int BASE_YEAR = Integer.parseInt(props.getProperty("baseYear"));
+	
 		//create a road network assignment
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, props);
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, 
+															InputFileReader.readEnergyUnitCostsFile(energyUnitCostsFile).get(BASE_YEAR),
+															InputFileReader.readEngineTypeFractionsFile(engineTypeFractionsFile).get(BASE_YEAR),
+															InputFileReader.readAVFractionsFile(AVFractionsFile).get(BASE_YEAR),
+															InputFileReader.readVehicleTypeToPCUFile(vehicleTypeToPCUFile),
+															InputFileReader.readEnergyConsumptionParamsFile(vehicleFuelEfficiencyFile),
+															InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFile),
+															null,
+															null,
+															null,
+															null,
+															props);
 
 		//set route choice parameters
 		params = new Properties();
@@ -160,9 +180,7 @@ public class RoadDisruptionTest {
 		final String congestionChargeFile = props.getProperty("congestionChargingFile");
 		
 		final String roadDisruptionFile = props.getProperty("roadDisruptionFile");
-
-		final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
-		final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
+	
 		final String energyConsumptionsFile = props.getProperty("energyConsumptionsFile"); //output
 		
 		//create a road network
@@ -264,9 +282,27 @@ public class RoadDisruptionTest {
 		System.out.println("Disrupted edges: " + rd3.getListOfDisruptedEdgesIDs());
 		System.out.println("Removed routes: " + rd3.getListOfRemovedRoutes());
 
+		final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
+		final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
+		final String AVFractionsFile = props.getProperty("autonomousVehiclesFile");
+		final String vehicleTypeToPCUFile = props.getProperty("vehicleTypeToPCUFile");
+		final String timeOfDayDistributionFile = props.getProperty("timeOfDayDistributionFile");
+		final String vehicleFuelEfficiencyFile = props.getProperty("vehicleFuelEfficiencyFile");
+		final int BASE_YEAR = Integer.parseInt(props.getProperty("baseYear"));
+	
 		//create a road network assignment
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, props);
-
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, 
+															InputFileReader.readEnergyUnitCostsFile(energyUnitCostsFile).get(BASE_YEAR),
+															InputFileReader.readEngineTypeFractionsFile(engineTypeFractionsFile).get(BASE_YEAR),
+															InputFileReader.readAVFractionsFile(AVFractionsFile).get(BASE_YEAR),
+															InputFileReader.readVehicleTypeToPCUFile(vehicleTypeToPCUFile),
+															InputFileReader.readEnergyConsumptionParamsFile(vehicleFuelEfficiencyFile),
+															InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFile),
+															null,
+															null,
+															null,
+															null,
+															props);
 		//set route choice parameters
 		params = new Properties();
 		params.setProperty("TIME", "-1.5");

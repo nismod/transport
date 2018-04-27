@@ -17,6 +17,7 @@ import org.apache.commons.collections4.map.MultiKeyMap;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -25,8 +26,10 @@ import nismod.transport.decision.Intervention;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
+import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.network.road.RouteSetGenerator;
+import nismod.transport.utility.InputFileReader;
 
 /**
  * Demand prediction model.
@@ -48,6 +51,9 @@ public class DemandModel {
 
 	private HashMap<ElasticityTypes, Double> elasticities;
 	private HashMap<ElasticityTypes, Double> elasticitiesFreight;
+	private HashMap<VehicleType, Double> vehicleTypeToPCU;
+	private HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> vehicleFuelEfficiency;
+	private HashMap<TimeOfDay, Double> timeOfDayDistribution;
 	private HashMap<Integer, ODMatrix> yearToPassengerODMatrix; //passenger demand
 	private HashMap<Integer, FreightMatrix> yearToFreightODMatrix; //freight demand
 	private HashMap<Integer, SkimMatrix> yearToTimeSkimMatrix;
@@ -65,7 +71,7 @@ public class DemandModel {
 	//private SkimMatrix baseYearTimeSkimMatrix,	baseYearCostSkimMatrix;
 	
 	private RouteSetGenerator rsg;
-	private Properties params;
+	private Properties props;
 	
 	private List<Intervention> interventions;
 	
@@ -85,9 +91,9 @@ public class DemandModel {
 	 * @param autonomousVehiclesFractionsFile Autonomous vehicles fractions file.
 	 * @param interventions List of interventions.
 	 * @param rsg Route Set Generator with routes for both cars and freight.
-	 * @param params Assignment and route-choice parameters
+	 * @param props Properties file.
 	 */
-	public DemandModel(RoadNetwork roadNetwork, String baseYearODMatrixFile, String baseYearFreightMatrixFile, String populationFile, String GVAFile, String elasticitiesFile, String elasticitiesFreightFile, String energyUnitCostsFile, String engineTypeFractionsFile, String autonomousVehiclesFractionsFile, List<Intervention> interventions, RouteSetGenerator rsg, Properties params) throws FileNotFoundException, IOException {
+	public DemandModel(RoadNetwork roadNetwork, String baseYearODMatrixFile, String baseYearFreightMatrixFile, String populationFile, String GVAFile, String elasticitiesFile, String elasticitiesFreightFile, String energyUnitCostsFile, String engineTypeFractionsFile, String autonomousVehiclesFractionsFile, List<Intervention> interventions, RouteSetGenerator rsg, Properties props) throws FileNotFoundException, IOException {
 
 		this.yearToPassengerODMatrix = new HashMap<Integer, ODMatrix>();
 		this.yearToFreightODMatrix = new HashMap<Integer, FreightMatrix>();
@@ -104,7 +110,7 @@ public class DemandModel {
 		this.yearToCongestionCharges = new HashMap<Integer, HashMap<String, MultiKeyMap>>();
 		
 		this.rsg = rsg;
-		this.params = params;
+		this.props = props;
 		this.roadNetwork = roadNetwork;
 		this.interventions = interventions;
 
@@ -122,67 +128,26 @@ public class DemandModel {
 		this.yearToFreightODMatrix.put(DemandModel.BASE_YEAR, freightMatrixScaled);
 		
 		//read all year population predictions
-		this.yearToZoneToPopulation = readPopulationFile(populationFile);
+		this.yearToZoneToPopulation = InputFileReader.readPopulationFile(populationFile);
 
 		//read all year GVA predictions
-		this.yearToZoneToGVA = readGVAFile(GVAFile);
+		this.yearToZoneToGVA = InputFileReader.readGVAFile(GVAFile);
 		
-		this.yearToEnergyUnitCosts = readEnergyUnitCostsFile(energyUnitCostsFile);
+		this.yearToEnergyUnitCosts = InputFileReader.readEnergyUnitCostsFile(energyUnitCostsFile);
 		
-		this.yearToEngineTypeFractions = readEngineTypeFractionsFile(engineTypeFractionsFile);
+		this.yearToEngineTypeFractions = InputFileReader.readEngineTypeFractionsFile(engineTypeFractionsFile);
 		
-		this.yearToAVFractions = readAVFractionsFile(autonomousVehiclesFractionsFile);
+		this.yearToAVFractions = InputFileReader.readAVFractionsFile(autonomousVehiclesFractionsFile);
 		
-		this.elasticities = readElasticitiesFile(elasticitiesFile);
-		this.elasticitiesFreight = readElasticitiesFile(elasticitiesFreightFile);
+		this.elasticities = InputFileReader.readElasticitiesFile(elasticitiesFile);
+		this.elasticitiesFreight = InputFileReader.readElasticitiesFile(elasticitiesFreightFile);
 		
-		/*
-		//default elasticity values
-		elasticities = new HashMap<ElasticityTypes, Double>();
-		elasticities.put(ElasticityTypes.POPULATION, 1.0);
-		elasticities.put(ElasticityTypes.GVA, 0.63);
-		elasticities.put(ElasticityTypes.TIME, -0.41);
-		elasticities.put(ElasticityTypes.COST, -0.215);
-		
-		elasticitiesFreight = new HashMap<ElasticityTypes, Double>();
-		elasticitiesFreight.put(ElasticityTypes.POPULATION, 1.0);
-		elasticitiesFreight.put(ElasticityTypes.GVA, 0.7);
-		elasticitiesFreight.put(ElasticityTypes.TIME, -0.41);
-		elasticitiesFreight.put(ElasticityTypes.COST, -0.1);
-		*/
-		
-		/*
-		//base-year engine type fractions
-		HashMap<VehicleType, HashMap<EngineType, Double>> engineTypeFractions = new HashMap<VehicleType, HashMap<EngineType, Double>>();
-		HashMap<EngineType, Double> map = new HashMap<EngineType, Double>();
-		map.put(EngineType.PETROL, 0.45);
-		map.put(EngineType.DIESEL, 0.35);
-		map.put(EngineType.LPG, 0.1);
-		map.put(EngineType.ELECTRICITY, 0.05);
-		map.put(EngineType.HYDROGEN, 0.025);
-		map.put(EngineType.HYBRID, 0.025);
-		engineTypeFractions.put(VehicleType.CAR, map);
-		engineTypeFractions.put(VehicleType.AV, map);
-		map = new HashMap<EngineType, Double>();
-		map.put(EngineType.PETROL, 0.45);
-		map.put(EngineType.DIESEL, 0.55);
-		map.put(EngineType.LPG, 0.0);
-		map.put(EngineType.ELECTRICITY, 0.0);
-		map.put(EngineType.HYDROGEN, 0.0);
-		map.put(EngineType.HYBRID, 0.0);
-		engineTypeFractions.put(VehicleType.VAN, map);
-		map = new HashMap<EngineType, Double>();
-		map.put(EngineType.PETROL, 0.0);
-		map.put(EngineType.DIESEL, 1.00);
-		map.put(EngineType.LPG, 0.0);
-		map.put(EngineType.ELECTRICITY, 0.0);
-		map.put(EngineType.HYDROGEN, 0.0);
-		map.put(EngineType.HYBRID, 0.0);
-		engineTypeFractions.put(VehicleType.RIGID, map);
-		engineTypeFractions.put(VehicleType.ARTIC, map);
-		
-		this.yearToEngineTypeFractions.put(BASE_YEAR, engineTypeFractions);
-		*/
+		final String vehicleTypeToPCUFile = props.getProperty("vehicleTypeToPCUFile");
+		final String vehicleFuelEfficiencyFile = props.getProperty("vehicleFuelEfficiencyFile");
+		final String timeOfDayDistributionFile = props.getProperty("timeOfDayDistributionFile");
+		this.vehicleTypeToPCU = InputFileReader.readVehicleTypeToPCUFile(vehicleTypeToPCUFile);
+		this.vehicleFuelEfficiency = InputFileReader.readEnergyConsumptionParamsFile(vehicleFuelEfficiencyFile);
+		this.timeOfDayDistribution = InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFile);
 	}
 	
 	
@@ -194,7 +159,7 @@ public class DemandModel {
 	 */
 	public void predictHighwayDemands(int toYear, int baseYear) {
 		
-		Boolean flagPredictIntermediateYears = Boolean.parseBoolean(this.params.getProperty("FLAG_PREDICT_INTERMEDIATE_YEARS"));
+		Boolean flagPredictIntermediateYears = Boolean.parseBoolean(this.props.getProperty("FLAG_PREDICT_INTERMEDIATE_YEARS"));
 		
 		if (flagPredictIntermediateYears) { //predict all intermediate years
 			for (int year = baseYear; year <= toYear - 1; year++) {
@@ -212,7 +177,7 @@ public class DemandModel {
 	 */
 	public void saveAllResults(int toYear, int baseYear) {
 		
-		Boolean flagPredictIntermediateYears = Boolean.parseBoolean(this.params.getProperty("FLAG_PREDICT_INTERMEDIATE_YEARS"));
+		Boolean flagPredictIntermediateYears = Boolean.parseBoolean(this.props.getProperty("FLAG_PREDICT_INTERMEDIATE_YEARS"));
 		
 		//save base year
 		this.saveAllResults(baseYear);
@@ -258,20 +223,28 @@ public class DemandModel {
 			if (rna == null) {
 				LOGGER.debug("{} year has not been assigned to the network, so assigning it now.", fromYear);
 				
+				final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
+				final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
+				final String AVFractionsFile = props.getProperty("autonomousVehiclesFile");
+				final String vehicleTypeToPCUFile = props.getProperty("vehicleTypeToPCUFile");
+				final String timeOfDayDistributionFile = props.getProperty("timeOfDayDistributionFile");
+				final String vehicleFuelEfficiencyFile = props.getProperty("vehicleFuelEfficiencyFile");
+				final int BASE_YEAR = Integer.parseInt(props.getProperty("baseYear"));
+			
 				//create a network assignment and assign the demand
 				rna = new RoadNetworkAssignment(this.roadNetwork, 
 												this.yearToEnergyUnitCosts.get(fromYear), 
 												this.yearToEngineTypeFractions.get(fromYear), 
 												this.yearToAVFractions.get(fromYear),
-												null,
-												null,
-												null,
+												this.vehicleTypeToPCU,
+												this.vehicleFuelEfficiency,
+												this.timeOfDayDistribution,
 												null, 
 												null,
 												null, 
 												this.yearToCongestionCharges.get(fromYear),
-												this.params);
-				rna.assignFlowsAndUpdateLinkTravelTimesIterated(this.yearToPassengerODMatrix.get(fromYear), this.yearToFreightODMatrix.get(fromYear), this.rsg, this.params, LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);
+												this.props);
+				rna.assignFlowsAndUpdateLinkTravelTimesIterated(this.yearToPassengerODMatrix.get(fromYear), this.yearToFreightODMatrix.get(fromYear), this.rsg, this.props, LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);
 				yearToRoadNetworkAssignment.put(fromYear, rna);
 		
 				//calculate skim matrices
@@ -407,30 +380,30 @@ public class DemandModel {
 															 this.yearToEnergyUnitCosts.get(predictedYear), 
 															 this.yearToEngineTypeFractions.get(predictedYear), 
 															 this.yearToAVFractions.get(predictedYear),
-															 null,
-															 null,
-															 null,
+															 this.vehicleTypeToPCU,
+															 this.vehicleFuelEfficiency,
+															 this.timeOfDayDistribution,
 															 rna.getLinkTravelTimes(), 
 															 rna.getAreaCodeProbabilities(), 
 															 rna.getWorkplaceZoneProbabilities(),
 															 this.yearToCongestionCharges.get(predictedYear),
-															 this.params);
+															 this.props);
 				else
 					//using latest link travel times
 					predictedRna = new RoadNetworkAssignment(this.roadNetwork, 
 															 this.yearToEnergyUnitCosts.get(predictedYear), 
 															 this.yearToEngineTypeFractions.get(predictedYear), 
 															 this.yearToAVFractions.get(predictedYear),
-															 null,
-															 null,
-															 null,
+															 this.vehicleTypeToPCU,
+															 this.vehicleFuelEfficiency,
+															 this.timeOfDayDistribution,
 															 predictedRna.getLinkTravelTimes(), 
 															 predictedRna.getAreaCodeProbabilities(), 
 															 predictedRna.getWorkplaceZoneProbabilities(),
 															 this.yearToCongestionCharges.get(predictedYear),
-															 this.params);
+															 this.props);
 
-				predictedRna.assignFlowsAndUpdateLinkTravelTimesIterated(predictedPassengerODMatrix, predictedFreightODMatrix, this.rsg, this.params, LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);
+				predictedRna.assignFlowsAndUpdateLinkTravelTimesIterated(predictedPassengerODMatrix, predictedFreightODMatrix, this.rsg, this.props, LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);
 				
 				//update skim matrices for predicted year after the assignment
 				tsm = predictedRna.calculateTimeSkimMatrix();
@@ -488,18 +461,18 @@ public class DemandModel {
 														 this.yearToEnergyUnitCosts.get(predictedYear), 
 														 this.yearToEngineTypeFractions.get(predictedYear), 
 														 this.yearToAVFractions.get(predictedYear),
-														 null,
-														 null,
-														 null,
+														 this.vehicleTypeToPCU,
+														 this.vehicleFuelEfficiency,
+														 this.timeOfDayDistribution,
 														 predictedRna.getLinkTravelTimes(), 
 														 predictedRna.getAreaCodeProbabilities(), 
 														 predictedRna.getWorkplaceZoneProbabilities(),
 														 this.yearToCongestionCharges.get(predictedYear),
-														 this.params);
+														 this.props);
 				//predictedRna.resetLinkVolumes();
 				//predictedRna.assignPassengerFlows(predictedPassengerODMatrix);
 				//predictedRna.updateLinkTravelTimes(ALPHA_LINK_TRAVEL_TIME_AVERAGING);
-				predictedRna.assignFlowsAndUpdateLinkTravelTimesIterated(predictedPassengerODMatrix, predictedFreightODMatrix, this.rsg, this.params, LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);				
+				predictedRna.assignFlowsAndUpdateLinkTravelTimesIterated(predictedPassengerODMatrix, predictedFreightODMatrix, this.rsg, this.props, LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);				
 				
 				//store skim matrices into hashmaps
 				yearToTimeSkimMatrix.put(predictedYear, tsm);
@@ -719,7 +692,7 @@ public class DemandModel {
 		
 		LOGGER.info("Outputing all results for year {}.", year);
 
-		String outputFolder = this.params.getProperty("outputFolder");
+		String outputFolder = this.props.getProperty("outputFolder");
 				
 		//create output directory for this year
 		File file = new File(outputFolder + year);
@@ -732,18 +705,18 @@ public class DemandModel {
 		}
 		LOGGER.debug("Output folder: {}", file.getPath());
 						
-		String baseYear = this.params.getProperty("baseYear");
-		String predictedODMatrixFile = this.params.getProperty("predictedODMatrixFile");
-		String predictedFreightMatrixFile = this.params.getProperty("predictedFreightMatrixFile");
-		String assignmentResultsFile = this.params.getProperty("assignmentResultsFile");
-		String linkTravelTimesFile = this.params.getProperty("linkTravelTimesFile");
-		String timeSkimMatrixFile = this.params.getProperty("timeSkimMatrixFile");
-		String costSkimMatrixFile = this.params.getProperty("costSkimMatrixFile");
-		String timeSkimMatrixFreightFile = this.params.getProperty("timeSkimMatrixFreightFile");
-		String costSkimMatrixFreightFile = this.params.getProperty("costSkimMatrixFreightFile");
-		String vehicleKilometresFile = this.params.getProperty("vehicleKilometresFile");
-		String energyConsumptionsFile = this.params.getProperty("energyConsumptionsFile");
-		String tripsFile = this.params.getProperty("tripsFile");
+		String baseYear = this.props.getProperty("baseYear");
+		String predictedODMatrixFile = this.props.getProperty("predictedODMatrixFile");
+		String predictedFreightMatrixFile = this.props.getProperty("predictedFreightMatrixFile");
+		String assignmentResultsFile = this.props.getProperty("assignmentResultsFile");
+		String linkTravelTimesFile = this.props.getProperty("linkTravelTimesFile");
+		String timeSkimMatrixFile = this.props.getProperty("timeSkimMatrixFile");
+		String costSkimMatrixFile = this.props.getProperty("costSkimMatrixFile");
+		String timeSkimMatrixFreightFile = this.props.getProperty("timeSkimMatrixFreightFile");
+		String costSkimMatrixFreightFile = this.props.getProperty("costSkimMatrixFreightFile");
+		String vehicleKilometresFile = this.props.getProperty("vehicleKilometresFile");
+		String energyConsumptionsFile = this.props.getProperty("energyConsumptionsFile");
+		String tripsFile = this.props.getProperty("tripsFile");
 	
 		if (year == Integer.parseInt(baseYear)) { //rename output files for base year
 			predictedODMatrixFile = "baseYearODMatrix.csv";
@@ -798,210 +771,5 @@ public class DemandModel {
 	public RoadNetwork getRoadNetwork() {
 		
 		return this.roadNetwork;
-	}
-		
-	/**
-	 * Reads population file.
-	 * @param fileName File name.
-	 * @return Map with population data.
-	 */
-	private HashMap<Integer, HashMap<String, Integer>> readPopulationFile (String fileName) throws FileNotFoundException, IOException {
-
-		HashMap<Integer, HashMap<String, Integer>> map = new HashMap<Integer, HashMap<String, Integer>>();
-
-		CSVParser parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
-		try {
-			//System.out.println(parser.getHeaderMap().toString());
-			Set<String> keySet = parser.getHeaderMap().keySet();
-			//System.out.println("keySet = " + keySet);
-			int population;
-			for (CSVRecord record : parser) {
-				//System.out.println(record);
-				int year = Integer.parseInt(record.get(0));
-				HashMap<String, Integer> zoneToPopulation = new HashMap<String, Integer>();
-				for (String zone: keySet) {
-					//System.out.println("Destination zone = " + destination);
-					population = Integer.parseInt(record.get(zone));
-					zoneToPopulation.put(zone, population);			
-				}
-				map.put(year, zoneToPopulation);
-			}
-		} finally {
-			parser.close();
-		}
-
-		return map;
-	}
-
-	/**
-	 * Reads GVA file.
-	 * @param fileName File name.
-	 * @return Map with GVA data.
-	 */
-	private HashMap<Integer, HashMap<String, Double>> readGVAFile (String fileName) throws FileNotFoundException, IOException {
-
-		HashMap<Integer, HashMap<String, Double>> map = new HashMap<Integer, HashMap<String, Double>>();
-		CSVParser parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
-		try {
-			//System.out.println(parser.getHeaderMap().toString());
-			Set<String> keySet = parser.getHeaderMap().keySet();
-			keySet.remove("year");
-			//System.out.println("keySet = " + keySet);
-			double GVA;
-			for (CSVRecord record : parser) {
-				//System.out.println(record);
-				int year = Integer.parseInt(record.get(0));
-				HashMap<String, Double> zoneToGVA = new HashMap<String, Double>();
-				for (String zone: keySet) {
-					//System.out.println("Destination zone = " + destination);
-					GVA = Double.parseDouble(record.get(zone));
-					zoneToGVA.put(zone, GVA);			
-				}
-				map.put(year, zoneToGVA);
-			}
-		} finally {
-			parser.close();
-		}
-
-		return map;
-	}
-	
-	/**
-	 * Reads population file.
-	 * @param fileName File name.
-	 * @return Map with elasticity parameters.
-	 */
-	public static HashMap<ElasticityTypes, Double> readElasticitiesFile (String fileName) throws FileNotFoundException, IOException {
-
-		HashMap<ElasticityTypes, Double> map = new HashMap<ElasticityTypes, Double>();
-		CSVParser parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
-		try {
-			//System.out.println(parser.getHeaderMap().toString());
-			Set<String> keySet = parser.getHeaderMap().keySet();
-			//System.out.println("keySet = " + keySet);
-			for (CSVRecord record : parser) {
-				//System.out.println(record);
-				ElasticityTypes et = ElasticityTypes.valueOf(record.get(0));
-				Double elasticity = Double.parseDouble(record.get(1));		
-				map.put(et, elasticity);
-			}
-		} finally {
-			parser.close();
-		}
-
-		return map;
-	}
-	
-	/**
-	 * Reads energy unit costs file.
-	 * @param fileName File name.
-	 * @return Map with energy unit costs.
-	 */
-	private HashMap<Integer, HashMap<EngineType, Double>> readEnergyUnitCostsFile (String fileName) throws FileNotFoundException, IOException {
-
-		HashMap<Integer, HashMap<EngineType, Double>> map = new HashMap<Integer, HashMap<EngineType, Double>>();
-		CSVParser parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
-		try {
-			//System.out.println(parser.getHeaderMap().toString());
-			Set<String> keySet = parser.getHeaderMap().keySet();
-			keySet.remove("year");
-			//System.out.println("keySet = " + keySet);
-			double unitPrice;
-			for (CSVRecord record : parser) {
-				//System.out.println(record);
-				int year = Integer.parseInt(record.get(0));
-				HashMap<EngineType, Double> engineTypeToPrice = new HashMap<EngineType, Double>();
-				for (String et: keySet) {
-					//System.out.println("Destination zone = " + destination);
-					EngineType engineType = EngineType.valueOf(et);
-					unitPrice = Double.parseDouble(record.get(engineType));
-					engineTypeToPrice.put(engineType, unitPrice);			
-				}
-				map.put(year, engineTypeToPrice);
-			}
-		} finally {
-			parser.close();
-		}
-
-		LOGGER.debug("Energy unit costs:");
-		LOGGER.debug(map);
-
-		return map;
-	}
-	
-	
-	/**
-	 * Reads engine type fractions file.
-	 * @param fileName File name.
-	 * @return Map with engine type fractions.
-	 */
-	private HashMap<Integer, HashMap<VehicleType, HashMap<EngineType, Double>>> readEngineTypeFractionsFile (String fileName) throws FileNotFoundException, IOException {
-		
-		HashMap<Integer, HashMap<VehicleType, HashMap<EngineType, Double>>> yearToVehicleToEngineTypeFractions = new HashMap<Integer, HashMap<VehicleType, HashMap<EngineType, Double>>>();
-
-		CSVParser parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
-		try {
-			//System.out.println(parser.getHeaderMap().toString());
-			Set<String> keySet = parser.getHeaderMap().keySet();
-			keySet.remove("year");
-			keySet.remove("vehicle");
-			//System.out.println("keySet = " + keySet);
-			double fraction;
-			for (CSVRecord record : parser) {
-				//System.out.println(record);
-				int year = Integer.parseInt(record.get(0));
-
-				HashMap<VehicleType, HashMap<EngineType, Double>> vehicleToEngineTypeFractions = yearToVehicleToEngineTypeFractions.get(year);
-				if (vehicleToEngineTypeFractions == null) { vehicleToEngineTypeFractions = new HashMap<VehicleType, HashMap<EngineType, Double>>();
-				yearToVehicleToEngineTypeFractions.put(year, vehicleToEngineTypeFractions);
-				}
-
-				VehicleType vht = VehicleType.valueOf(record.get(1));
-				HashMap<EngineType, Double> engineTypeFractions = vehicleToEngineTypeFractions.get(vht);
-				if (engineTypeFractions == null) { engineTypeFractions = new HashMap<EngineType, Double>();
-				vehicleToEngineTypeFractions.put(vht, engineTypeFractions);
-				}
-
-				for (String et: keySet) {
-					//System.out.println("Destination zone = " + destination);
-					EngineType engineType = EngineType.valueOf(et);
-					fraction = Double.parseDouble(record.get(engineType));
-					engineTypeFractions.put(engineType, fraction);			
-				}
-			} 
-		} finally {
-			parser.close();
-		}
-
-		LOGGER.debug("Year to vehicle engine type fractions:");
-		LOGGER.debug(yearToVehicleToEngineTypeFractions);
-		
-		return yearToVehicleToEngineTypeFractions;
-	}
-	
-	/**
-	 * Reads autonomous vehicles fractions file.
-	 * @param fileName File name.
-	 * @return Map with predictions of autonomous vehicles fractions.
-	 */
-	private HashMap<Integer, Double> readAVFractionsFile(String fileName) throws FileNotFoundException, IOException {
-
-		HashMap<Integer, Double> map = new HashMap<Integer, Double>();
-		CSVParser parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
-		try {
-			//System.out.println(parser.getHeaderMap().toString());
-			Set<String> keySet = parser.getHeaderMap().keySet();
-			//System.out.println("keySet = " + keySet);
-			for (CSVRecord record : parser) {
-				//System.out.println(record);
-				int year = Integer.parseInt(record.get(0));
-				double fraction = Double.parseDouble(record.get(1));		
-				map.put(year, fraction);
-			}
-		} finally {
-			parser.close();
-		}
-
-		return map;
 	}
 }

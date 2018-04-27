@@ -33,6 +33,7 @@ import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.ODMatrix;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.utility.ConfigReader;
+import nismod.transport.utility.InputFileReader;
 
 public class RouteSetGeneratorTest {
 
@@ -356,11 +357,29 @@ public class RouteSetGeneratorTest {
 		System.out.println("End node blacklist: " + roadNetwork.getEndNodeBlacklist());
 
 		System.out.println(roadNetwork.getZoneToNodes());
-		
-		
+			
+		final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
+		final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
+		final String AVFractionsFile = props.getProperty("autonomousVehiclesFile");
+		final String vehicleTypeToPCUFile = props.getProperty("vehicleTypeToPCUFile");
+		final String timeOfDayDistributionFile = props.getProperty("timeOfDayDistributionFile");
+		final String vehicleFuelEfficiencyFile = props.getProperty("vehicleFuelEfficiencyFile");
+		final int BASE_YEAR = Integer.parseInt(props.getProperty("baseYear"));
+	
 		//create a road network assignment
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, props);
-
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, 
+															InputFileReader.readEnergyUnitCostsFile(energyUnitCostsFile).get(BASE_YEAR),
+															InputFileReader.readEngineTypeFractionsFile(engineTypeFractionsFile).get(BASE_YEAR),
+															InputFileReader.readAVFractionsFile(AVFractionsFile).get(BASE_YEAR),
+															InputFileReader.readVehicleTypeToPCUFile(vehicleTypeToPCUFile),
+															InputFileReader.readEnergyConsumptionParamsFile(vehicleFuelEfficiencyFile),
+															InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFile),
+															null,
+															null,
+															null,
+															null,
+															props);
+		
 		FreightMatrix fm = new FreightMatrix(baseYearFreightMatrixFile);
 		
 		//set route generation parameters
