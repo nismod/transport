@@ -56,6 +56,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
+import org.apache.commons.lang3.tuple.Pair;
 import org.geotools.brewer.color.BrewerPalette;
 import org.geotools.brewer.color.ColorBrewer;
 import org.geotools.graph.structure.DirectedEdge;
@@ -74,13 +75,18 @@ import org.opengis.feature.simple.SimpleFeature;
 
 import nismod.transport.decision.RoadExpansion;
 import nismod.transport.demand.DemandModel;
+import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.DemandModel.ElasticityTypes;
 import nismod.transport.demand.ODMatrix;
 import nismod.transport.demand.SkimMatrix;
+import nismod.transport.demand.SkimMatrixFreight;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.network.road.Trip;
+import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
+import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
+import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.utility.ConfigReader;
 import nismod.transport.utility.InputFileReader;
 import nismod.transport.zone.Zoning;
@@ -119,6 +125,13 @@ public class RoadExpansionDashboard extends JFrame {
 	private static SkimMatrix csmBefore;
 	private static RouteSetGenerator rsg;
 	private static Zoning zoning;
+	
+	private static HashMap<VehicleType, Double> vehicleTypeToPCU;
+	private static HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> vehicleFuelEfficiency;
+	private static HashMap<TimeOfDay, Double> timeOfDayDistribution;
+	private static HashMap<Integer, HashMap<EngineType, Double>> yearToEnergyUnitCosts;
+	private static HashMap<Integer, HashMap<VehicleType, HashMap<EngineType, Double>>> yearToEngineTypeFractions;
+	private static HashMap<Integer, Double> yearToAVFractions;
 	
 	public static final int MAP_WIDTH = 750;
 	public static final int MAP_HEIGHT = 700;
@@ -413,8 +426,23 @@ public class RoadExpansionDashboard extends JFrame {
 					//interventions.add(re);
 					re2.install(roadNetwork);
 				}
+				
+				final int BASE_YEAR = Integer.parseInt(props.getProperty("baseYear"));
+			
+				//create a road network assignment
+				RoadNetworkAssignment rnaAfterExpansion = new RoadNetworkAssignment(roadNetwork, 
+						yearToEnergyUnitCosts.get(BASE_YEAR),
+						yearToEngineTypeFractions.get(BASE_YEAR),
+						yearToAVFractions.get(BASE_YEAR),
+						vehicleTypeToPCU,
+						vehicleFuelEfficiency,
+						timeOfDayDistribution,
+						null,
+						null,
+						null,
+						null,
+						props);
 
-				RoadNetworkAssignment rnaAfterExpansion = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, props);
 				rsg.clearRoutes();
 				rnaAfterExpansion.assignPassengerFlowsRouting(odm, rsg);
 	//			rnaAfterExpansion.assignPassengerFlowsRouteChoice(odm, rsg, props);
@@ -1152,7 +1180,35 @@ public class RoadExpansionDashboard extends JFrame {
 
 		roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
-		RoadNetworkAssignment rnaBefore = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, props);
+				
+		final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
+		final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
+		final String AVFractionsFile = props.getProperty("autonomousVehiclesFile");
+		final String vehicleTypeToPCUFile = props.getProperty("vehicleTypeToPCUFile");
+		final String timeOfDayDistributionFile = props.getProperty("timeOfDayDistributionFile");
+		final String vehicleFuelEfficiencyFile = props.getProperty("vehicleFuelEfficiencyFile");
+		final int BASE_YEAR = Integer.parseInt(props.getProperty("baseYear"));
+		
+		vehicleTypeToPCU = InputFileReader.readVehicleTypeToPCUFile(vehicleTypeToPCUFile);
+		vehicleFuelEfficiency = InputFileReader.readEnergyConsumptionParamsFile(vehicleFuelEfficiencyFile);
+		timeOfDayDistribution = InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFile);
+		yearToEnergyUnitCosts = InputFileReader.readEnergyUnitCostsFile(energyUnitCostsFile);
+		yearToEngineTypeFractions = InputFileReader.readEngineTypeFractionsFile(engineTypeFractionsFile);
+		yearToAVFractions = InputFileReader.readAVFractionsFile(AVFractionsFile);
+	
+		//create a road network assignment
+		RoadNetworkAssignment rnaBefore = new RoadNetworkAssignment(roadNetwork, 
+															yearToEnergyUnitCosts.get(BASE_YEAR),
+															yearToEngineTypeFractions.get(BASE_YEAR),
+															yearToAVFractions.get(BASE_YEAR),
+															vehicleTypeToPCU,
+															vehicleFuelEfficiency,
+															timeOfDayDistribution,
+															null,
+															null,
+															null,
+															null,
+															props);
 
 		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
 		zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
