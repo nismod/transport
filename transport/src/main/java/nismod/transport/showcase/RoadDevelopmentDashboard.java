@@ -83,6 +83,7 @@ import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.utility.ConfigReader;
+import nismod.transport.utility.InputFileReader;
 import nismod.transport.zone.Zoning;
 import javax.swing.JSeparator;
 
@@ -442,16 +443,7 @@ public class RoadDevelopmentDashboard extends JFrame {
 				ODMatrix predictedODM = new ODMatrix();
 
 				final String elasticitiesFile = props.getProperty("elasticitiesFile");
-				HashMap<ElasticityTypes, Double> elasticities = null;
-				try {
-					elasticities = DemandModel.readElasticitiesFile(elasticitiesFile);
-				} catch (FileNotFoundException e2) {
-					// TODO Auto-generated catch block
-					e2.printStackTrace();
-				} catch (IOException e2) {
-					// TODO Auto-generated catch block
-					e2.printStackTrace();
-				}
+				HashMap<ElasticityTypes, Double> elasticities = InputFileReader.readElasticitiesFile(elasticitiesFile);
 
 				tsmBefore.printMatrixFormatted();
 				tsm.printMatrixFormatted();

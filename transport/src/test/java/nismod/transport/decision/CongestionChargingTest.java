@@ -161,7 +161,7 @@ public class CongestionChargingTest {
 		interventions.add(cg2);
 		interventions.add(cg3);
 		
-		DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, engineTypeFractionsFile, AVFractionsFile, interventions, null, null);
+		DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, engineTypeFractionsFile, AVFractionsFile, interventions, null, props);
 		
 		System.out.println("Base-year congestion charging: ");
 		System.out.println(dm.getCongestionCharges(2015));
