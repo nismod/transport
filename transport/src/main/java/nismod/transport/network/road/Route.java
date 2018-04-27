@@ -185,7 +185,7 @@ public class Route {
 			double len = (double) sf.getAttribute("LenNet"); //in [km]
 			double time = linkTravelTime.get(edge.getID()); //in [min]
 			double speed = len / (time / 60);
-			double consumption = energyConsumptionParameters.get("A") / speed + energyConsumptionParameters.get("B") + energyConsumptionParameters.get("C") * speed + energyConsumptionParameters.get("D") * speed  * speed;
+			double consumption = len * (energyConsumptionParameters.get("A") / speed + energyConsumptionParameters.get("B") + energyConsumptionParameters.get("C") * speed + energyConsumptionParameters.get("D") * speed  * speed);
 			cost += consumption * unitCost;
 
 			if (linkCharges != null)
@@ -218,7 +218,7 @@ public class Route {
 			double len = (double) sf.getAttribute("LenNet"); //in [km]
 			double time = linkTravelTime.get(edge.getID()); //in [min]
 			double speed = len / (time / 60);
-			double consumption = energyConsumptionParameters.get("A") / speed + energyConsumptionParameters.get("B") + energyConsumptionParameters.get("C") * speed + energyConsumptionParameters.get("D") * speed  * speed;
+			double consumption = len * (energyConsumptionParameters.get("A") / speed + energyConsumptionParameters.get("B") + energyConsumptionParameters.get("C") * speed + energyConsumptionParameters.get("D") * speed  * speed);
 			routeConsumption += consumption;
 		}
 		
