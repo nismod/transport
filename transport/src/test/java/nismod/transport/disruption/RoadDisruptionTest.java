@@ -176,7 +176,6 @@ public class RoadDisruptionTest {
 
 		final String roadExpansionFileName = props.getProperty("roadExpansionFile");
 		final String roadDevelopmentFileName = props.getProperty("roadDevelopmentFile");
-		final String vehicleElectrificationFileName = props.getProperty("vehicleElectrificationFile");
 		final String congestionChargeFile = props.getProperty("congestionChargingFile");
 		
 		final String roadDisruptionFile = props.getProperty("roadDisruptionFile");
