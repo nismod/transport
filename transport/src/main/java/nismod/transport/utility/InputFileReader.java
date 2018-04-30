@@ -14,6 +14,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import nismod.transport.demand.DemandModel.ElasticityTypes;
+import nismod.transport.network.road.RoadNetworkAssignment.EnergyType;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
@@ -240,9 +241,9 @@ public class InputFileReader {
 	 * @param fileName File name.
 	 * @return Map with energy unit costs.
 	 */
-	public static HashMap<Integer, HashMap<EngineType, Double>> readEnergyUnitCostsFile (String fileName) {
+	public static HashMap<Integer, HashMap<EnergyType, Double>> readEnergyUnitCostsFile (String fileName) {
 
-		HashMap<Integer, HashMap<EngineType, Double>> map = new HashMap<Integer, HashMap<EngineType, Double>>();
+		HashMap<Integer, HashMap<EnergyType, Double>> map = new HashMap<Integer, HashMap<EnergyType, Double>>();
 		CSVParser parser = null;
 		try {
 			parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
@@ -254,14 +255,14 @@ public class InputFileReader {
 			for (CSVRecord record : parser) {
 				//System.out.println(record);
 				int year = Integer.parseInt(record.get(0));
-				HashMap<EngineType, Double> engineTypeToPrice = new HashMap<EngineType, Double>();
+				HashMap<EnergyType, Double> energyTypeToPrice = new HashMap<EnergyType, Double>();
 				for (String et: keySet) {
 					//System.out.println("Destination zone = " + destination);
-					EngineType engineType = EngineType.valueOf(et);
-					unitPrice = Double.parseDouble(record.get(engineType));
-					engineTypeToPrice.put(engineType, unitPrice);			
+					EnergyType energyType = EnergyType.valueOf(et);
+					unitPrice = Double.parseDouble(record.get(energyType));
+					energyTypeToPrice.put(energyType, unitPrice);			
 				}
-				map.put(year, engineTypeToPrice);
+				map.put(year, energyTypeToPrice);
 			}
 		} catch (FileNotFoundException e) {
 			LOGGER.error(e);

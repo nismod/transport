@@ -25,6 +25,7 @@ import org.apache.logging.log4j.Logger;
 import nismod.transport.decision.Intervention;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
+import nismod.transport.network.road.RoadNetworkAssignment.EnergyType;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
@@ -63,7 +64,7 @@ public class DemandModel {
 	private HashMap<Integer, HashMap<String, Integer>> yearToZoneToPopulation;
 	private HashMap<Integer, HashMap<String, Double>> yearToZoneToGVA;
 	private HashMap<Integer, RoadNetworkAssignment> yearToRoadNetworkAssignment;
-	private HashMap<Integer, HashMap<EngineType, Double>> yearToEnergyUnitCosts;
+	private HashMap<Integer, HashMap<EnergyType, Double>> yearToEnergyUnitCosts;
 	private HashMap<Integer, HashMap<VehicleType, HashMap<EngineType, Double>>> yearToEngineTypeFractions;
 	private HashMap<Integer, Double> yearToAVFractions;
 	//private HashMap<Integer, HashMap<Integer, Double>> yearToCongestionCharges;
@@ -104,7 +105,7 @@ public class DemandModel {
 		this.yearToZoneToPopulation = new HashMap<Integer, HashMap<String, Integer>>();
 		this.yearToZoneToGVA = new HashMap<Integer, HashMap<String, Double>>();
 		this.yearToRoadNetworkAssignment = new HashMap<Integer, RoadNetworkAssignment>();
-		this.yearToEnergyUnitCosts = new HashMap<Integer, HashMap<EngineType, Double>>();
+		this.yearToEnergyUnitCosts = new HashMap<Integer, HashMap<EnergyType, Double>>();
 		this.yearToEngineTypeFractions = new HashMap<Integer, HashMap<VehicleType, HashMap<EngineType, Double>>>();
 		this.yearToAVFractions = new HashMap<Integer, Double>();
 		this.yearToCongestionCharges = new HashMap<Integer, HashMap<String, MultiKeyMap>>();

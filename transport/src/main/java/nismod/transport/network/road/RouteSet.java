@@ -8,12 +8,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedNode;
 import org.opengis.feature.simple.SimpleFeature;
 
+import nismod.transport.network.road.RoadNetworkAssignment.EnergyType;
+import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
+import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.utility.RandomSingleton;
 
 /**
@@ -175,7 +179,7 @@ public class RouteSet {
 	 * @param linkTravelTime Link travel times.
 	 * @param params Route choice parameters.
 	 */
-	public void calculateUtilities(Map<Integer, Double> linkTravelTime, HashMap<String, Double> energyConsumptionParameters, double unitCost, HashMap<String, HashMap<Integer, Double>> linkCharges, Properties params) {
+	public void calculateUtilities(VehicleType vht, EngineType et, Map<Integer, Double> linkTravelTime, HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParameters, HashMap<EnergyType, Double> energyUnitCosts, HashMap<String, HashMap<Integer, Double>> linkCharges, Properties params) {
 		
 		//store arguments into instance fields
 		this.linkTravelTime = linkTravelTime;
@@ -183,7 +187,7 @@ public class RouteSet {
 		
 		//re-calculate utility for all the routes
 		for (Route r: choiceSet)
-			r.calculateUtility(linkTravelTime, energyConsumptionParameters, unitCost, linkCharges, params);
+			r.calculateUtility(vht, et, linkTravelTime, energyConsumptionParameters, energyUnitCosts, linkCharges, params);
 		
 		//correct for correlation with path-size
 		this.correctUtilitiesWithPathSize();

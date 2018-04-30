@@ -179,19 +179,19 @@ public class RoadNetworkAssignmentTest {
 		ArrayList<Trip> tripList = rna.getTripList();
 		int count = 0;
 		for (Trip t: tripList) 
-			if (t.getEngine() == EngineType.PETROL) count++;
+			if (t.getEngine() == EngineType.ICE_PETROL) count++;
 		System.out.println("The number of petrol trips: " + count);
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Collection processing in %d milliseconds.\n", timeNow);
 		
 		timeNow = System.currentTimeMillis();
-		Long countOfPetrolTrips = tripList.stream().filter(t -> t.getEngine() == EngineType.PETROL).count();
+		Long countOfPetrolTrips = tripList.stream().filter(t -> t.getEngine() == EngineType.ICE_PETROL).count();
 		System.out.println("The number of petrol trips with Java streams: " + countOfPetrolTrips);
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Stream processing in %d milliseconds.\n", timeNow);
 		
 		timeNow = System.currentTimeMillis();
-		Long countOfPetrolTrips2 = tripList.parallelStream().filter(t -> t.getEngine() == EngineType.PETROL).count();
+		Long countOfPetrolTrips2 = tripList.parallelStream().filter(t -> t.getEngine() == EngineType.ICE_PETROL).count();
 		System.out.println("The number of petrol trips with Java streams: " + countOfPetrolTrips2);
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Parallel stream processing in %d milliseconds.\n", timeNow);
@@ -425,8 +425,8 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("Energy unit costs:\t\t" + rna.getEnergyUnitCosts());
 		System.out.println("Energy consumptions:\t" + rna.getEnergyConsumptions());
 		System.out.println("Engine type fractions:\t\t" + rna.getEngineTypeFractions());
-		rna.setEnergyUnitCost(RoadNetworkAssignment.EngineType.ELECTRICITY, 0.20);
-		assertEquals("asdf", 0.20, (double) rna.getEnergyUnitCosts().get(RoadNetworkAssignment.EngineType.ELECTRICITY), EPSILON);
+		rna.setEnergyUnitCost(RoadNetworkAssignment.EnergyType.ELECTRICITY, 0.20);
+		assertEquals("asdf", 0.20, (double) rna.getEnergyUnitCosts().get(RoadNetworkAssignment.EnergyType.ELECTRICITY), EPSILON);
 
 		//TEST TRIP STORAGE
 		System.out.println("\n\n*** Testing trip storage ***");
@@ -740,9 +740,9 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("Energy consumptions:\t" + rna.getEnergyConsumptions());
 		System.out.println("Engine type fractions:\t\t" + rna.getEngineTypeFractions());
 		
-		rna.setEnergyUnitCost(RoadNetworkAssignment.EngineType.ELECTRICITY, 0.20);
+		rna.setEnergyUnitCost(RoadNetworkAssignment.EnergyType.ELECTRICITY, 0.20);
 		
-		assertEquals("asdf", 0.20, (double) rna.getEnergyUnitCosts().get(RoadNetworkAssignment.EngineType.ELECTRICITY), EPSILON);
+		assertEquals("asdf", 0.20, (double) rna.getEnergyUnitCosts().get(RoadNetworkAssignment.EnergyType.ELECTRICITY), EPSILON);
 		
 		//check that the number of trips for a given OD equals the flow (the number of trips in the OD matrix).
 		//for each OD
@@ -935,13 +935,13 @@ public class RoadNetworkAssignmentTest {
 		
 		int count = 0;
 		for (Trip t: tripList) 
-			if (t.getEngine() == EngineType.PETROL) count++;
+			if (t.getEngine() == EngineType.ICE_PETROL) count++;
 		System.out.println("The number of petrol trips: " + count);
 		
-		Long countOfPetrolTrips = tripList.stream().filter(t -> t.getEngine() == EngineType.PETROL).count();
+		Long countOfPetrolTrips = tripList.stream().filter(t -> t.getEngine() == EngineType.ICE_PETROL).count();
 		System.out.println("The number of petrol trips with Java streams: " + countOfPetrolTrips);
 		
-		Long countOfPetrolTrips2 = tripList.parallelStream().filter(t -> t.getEngine() == EngineType.PETROL).count();
+		Long countOfPetrolTrips2 = tripList.parallelStream().filter(t -> t.getEngine() == EngineType.ICE_PETROL).count();
 		System.out.println("The number of petrol trips with parallel Java streams: " + countOfPetrolTrips2);
 		
 		//frequencies per time of day
@@ -1252,9 +1252,9 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("Energy consumptions:\t" + rna.getEnergyConsumptions());
 		System.out.println("Engine type fractions:\t\t" + rna.getEngineTypeFractions());
 		
-		rna.setEnergyUnitCost(RoadNetworkAssignment.EngineType.ELECTRICITY, 0.20);
+		rna.setEnergyUnitCost(RoadNetworkAssignment.EnergyType.ELECTRICITY, 0.20);
 		
-		assertEquals("asdf", 0.20, (double) rna.getEnergyUnitCosts().get(RoadNetworkAssignment.EngineType.ELECTRICITY), EPSILON);
+		assertEquals("asdf", 0.20, (double) rna.getEnergyUnitCosts().get(RoadNetworkAssignment.EnergyType.ELECTRICITY), EPSILON);
 		
 		//TEST COUNTERS OF TRIP STARTS/ENDS
 		System.out.println("\n\n*** Testing trip starts/ends ***");

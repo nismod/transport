@@ -863,24 +863,24 @@ public class RouteSetGenerator {
 		return this.roadNetwork;
 	}
 
-	/**
-	 * Calculates utilities for all the routes in all the route sets.
-	 * @param linkTravelTime Link travel times.
-	 * @param consumption Engine fuel consumption per 100 km.
-	 * @param unitCost Unit cost of fuel.
-	 * @param params Parameters of the route choice model.
-	 */
-	public void calculateAllUtilities(HashMap<Integer, Double> linkTravelTime, HashMap<String, Double> energyConsumptionParameters, double unitCost, HashMap<String, HashMap<Integer, Double>> linkCharges, Properties params) {
-
-		for (Object mk: routes.keySet()) {
-			int origin = (int) ((MultiKey)mk).getKey(0);
-			int destination = (int) ((MultiKey)mk).getKey(1);
-		
-			RouteSet rs = (RouteSet)routes.get(origin, destination);
-			rs.calculateUtilities(linkTravelTime, energyConsumptionParameters, unitCost, linkCharges, params);
-			rs.sortRoutesOnUtility(); //will update probabilities as well
-		}
-	}
+//	/**
+//	 * Calculates utilities for all the routes in all the route sets.
+//	 * @param linkTravelTime Link travel times.
+//	 * @param consumption Engine fuel consumption per 100 km.
+//	 * @param unitCost Unit cost of fuel.
+//	 * @param params Parameters of the route choice model.
+//	 */
+//	public void calculateAllUtilities(HashMap<Integer, Double> linkTravelTime, HashMap<String, Double> energyConsumptionParameters, double unitCost, HashMap<String, HashMap<Integer, Double>> linkCharges, Properties params) {
+//
+//		for (Object mk: routes.keySet()) {
+//			int origin = (int) ((MultiKey)mk).getKey(0);
+//			int destination = (int) ((MultiKey)mk).getKey(1);
+//		
+//			RouteSet rs = (RouteSet)routes.get(origin, destination);
+//			rs.calculateUtilities(linkTravelTime, energyConsumptionParameters, unitCost, linkCharges, params);
+//			rs.sortRoutesOnUtility(); //will update probabilities as well
+//		}
+//	}
 	
 	/**
 	 * Saves all route sets into a text file.

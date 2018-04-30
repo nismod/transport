@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.geotools.graph.structure.DirectedEdge;
@@ -13,6 +14,10 @@ import org.geotools.graph.structure.DirectedNode;
 import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Node;
 import org.opengis.feature.simple.SimpleFeature;
+
+import nismod.transport.network.road.RoadNetworkAssignment.EnergyType;
+import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
+import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 
 /**
  * Route is a sequence of directed edges with a choice utility
@@ -172,21 +177,23 @@ public class Route {
 	/**
 	 * Calculates the cost of the route.
 	 */
-	public void calculateCost(Map<Integer, Double> linkTravelTime, HashMap<String, Double> energyConsumptionParameters, double unitCost, HashMap<String, HashMap<Integer, Double>> linkCharges) {
+	public void calculateCost(VehicleType vht, EngineType et, Map<Integer, Double> linkTravelTime, HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParameters, HashMap<EnergyType, Double> energyUnitCosts, HashMap<String, HashMap<Integer, Double>> linkCharges) {
 
 		//temporary map to check if a charging policy has already been applied
 		HashMap<String, Boolean> flags = new HashMap<String, Boolean>();
 		if (linkCharges != null)
 			for (String policyName: linkCharges.keySet()) flags.put(policyName, false);
-
-		double cost = 0.0;
+		
+		
+		double fuelCost = 0.0;
+		HashMap<EnergyType, Double> routeConsumptions = calculateConsumption(vht, et, linkTravelTime, energyConsumptionParameters);
+		
+		LOGGER.trace(routeConsumptions);
+	
+		for (EnergyType energy: EnergyType.values()) fuelCost +=  routeConsumptions.get(energy) * energyUnitCosts.get(energy);
+		
+		double tollCost = 0.0;
 		for (DirectedEdge edge: edges) {
-			SimpleFeature sf = (SimpleFeature) edge.getObject();
-			double len = (double) sf.getAttribute("LenNet"); //in [km]
-			double time = linkTravelTime.get(edge.getID()); //in [min]
-			double speed = len / (time / 60);
-			double consumption = len * (energyConsumptionParameters.get("A") / speed + energyConsumptionParameters.get("B") + energyConsumptionParameters.get("C") * speed + energyConsumptionParameters.get("D") * speed  * speed);
-			cost += consumption * unitCost;
 
 			if (linkCharges != null)
 				for (String policyName: linkCharges.keySet()) {
@@ -198,45 +205,130 @@ public class Route {
 						continue; //skip this policy then
 					}
 					if (charges.containsKey(edge.getID())) {
-						cost += charges.get(edge.getID());
+						tollCost += charges.get(edge.getID());
 						flags.put(policyName, true);
 					}
 				}
 		}
-		
-		this.cost = cost;
+				
+		this.cost = fuelCost + tollCost;
 	}
 	
 	/**
 	 * Calculates energy consumption of the route.
 	 */
-	public double calculateConsumption(Map<Integer, Double> linkTravelTime, HashMap<String, Double> energyConsumptionParameters) {
+	public HashMap<EnergyType, Double> calculateConsumption(VehicleType vht, EngineType et, Map<Integer, Double> linkTravelTime, HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParameters) {
 
-		double routeConsumption = 0.0;
-		for (DirectedEdge edge: edges) {
-			SimpleFeature sf = (SimpleFeature) edge.getObject();
-			double len = (double) sf.getAttribute("LenNet"); //in [km]
-			double time = linkTravelTime.get(edge.getID()); //in [min]
-			double speed = len / (time / 60);
-			double consumption = len * (energyConsumptionParameters.get("A") / speed + energyConsumptionParameters.get("B") + energyConsumptionParameters.get("C") * speed + energyConsumptionParameters.get("D") * speed  * speed);
-			routeConsumption += consumption;
-		}
+		HashMap<EnergyType, Double> routeConsumptions = new HashMap<EnergyType, Double>();
+		HashMap<String, Double> parameters, parametersFuel, parametersElectricity;
 		
-		return routeConsumption;
+		for (EnergyType energy: EnergyType.values()) routeConsumptions.put(energy, 0.0);
+		
+		if (et == EngineType.PHEV_PETROL) {
+			parametersFuel = energyConsumptionParameters.get(Pair.of(vht, EngineType.ICE_PETROL));
+			parametersElectricity = energyConsumptionParameters.get(Pair.of(vht, EngineType.BEV));
+			
+			double fuelConsumption = 0.0;
+			double electricityConsumption = 0.0;
+			for (DirectedEdge edge: edges) {
+				
+				SimpleFeature sf = (SimpleFeature) edge.getObject();
+				double len = (double) sf.getAttribute("LenNet"); //in [km]
+				double time = linkTravelTime.get(edge.getID()); //in [min]
+				String cat = (String) sf.getAttribute("RCat"); //road category (PM, PR, Pu, PU, TM, TR, Tu, TU), use Pu, PU, Tu, TU as urban, otherwise rural
+				double speed = len / (time / 60);
+			
+				//if no roadCategory information, assume it is ferry and skip
+				if (cat == null) {
+					LOGGER.trace("No road category information. Assuming it is ferry and skipping for consumption calculation.");
+					continue;
+				}
+		
+				//if edge is urban use electricity
+				if (cat.toUpperCase().charAt(1) == 'U')
+					electricityConsumption += len * (parametersElectricity.get("A") / speed + parametersElectricity.get("B") + parametersElectricity.get("C") * speed + parametersElectricity.get("D") * speed  * speed);
+				else 
+					fuelConsumption += len * (parametersFuel.get("A") / speed + parametersFuel.get("B") + parametersFuel.get("C") * speed + parametersFuel.get("D") * speed  * speed);
+			}
+			routeConsumptions.put(EnergyType.ELECTRICITY, electricityConsumption);
+			routeConsumptions.put(EnergyType.PETROL, fuelConsumption);
+					
+		} else if (et == EngineType.PHEV_DIESEL) {
+			parametersFuel = energyConsumptionParameters.get(Pair.of(vht, EngineType.ICE_DIESEL));
+			parametersElectricity = energyConsumptionParameters.get(Pair.of(vht, EngineType.BEV));
+			
+			double fuelConsumption = 0.0;
+			double electricityConsumption = 0.0;
+			for (DirectedEdge edge: edges) {
+				SimpleFeature sf = (SimpleFeature) edge.getObject();
+				double len = (double) sf.getAttribute("LenNet"); //in [km]
+				double time = linkTravelTime.get(edge.getID()); //in [min]
+				String cat = (String) sf.getAttribute("RCat"); //road category (PM, PR, Pu, PU, TM, TR, Tu, TU), use Pu, PU, Tu, TU as urban, otherwise rural
+				double speed = len / (time / 60);
+				
+				//if no roadCategory information, assume it is ferry and skip
+				if (cat == null) {
+					LOGGER.trace("No road category information. Assuming it is ferry and skipping for consumption calculation.");
+					continue;
+				}
+		
+				//if edge is urban use electricity
+				if (cat.toUpperCase().charAt(1) == 'U')
+					electricityConsumption += len * (parametersElectricity.get("A") / speed + parametersElectricity.get("B") + parametersElectricity.get("C") * speed + parametersElectricity.get("D") * speed  * speed);
+				else 
+					fuelConsumption += len * (parametersFuel.get("A") / speed + parametersFuel.get("B") + parametersFuel.get("C") * speed + parametersFuel.get("D") * speed  * speed);
+			}
+			routeConsumptions.put(EnergyType.ELECTRICITY, electricityConsumption);
+			routeConsumptions.put(EnergyType.DIESEL, fuelConsumption);
+			
+		} else {
+			
+			parameters = energyConsumptionParameters.get(Pair.of(vht, et));
+			double consumption = 0.0;
+			for (DirectedEdge edge: edges) {
+				SimpleFeature sf = (SimpleFeature) edge.getObject();
+				double len = (double) sf.getAttribute("LenNet"); //in [km]
+				double time = linkTravelTime.get(edge.getID()); //in [min]
+				String cat = (String) sf.getAttribute("RCat"); //road category (PM, PR, Pu, PU, TM, TR, Tu, TU), use Pu, PU, Tu, TU as urban, otherwise rural
+				double speed = len / (time / 60);
+				
+				//if no roadCategory information, assume it is ferry and skip
+				if (cat == null) {
+					LOGGER.trace("No road category information. Assuming it is ferry and skipping for consumption calculation.");
+					continue;
+				}
+		
+				consumption += len * (parameters.get("A") / speed + parameters.get("B") + parameters.get("C") * speed + parameters.get("D") * speed  * speed);
+			}
+			
+			if (et == EngineType.ICE_PETROL || et == EngineType.HEV_PETROL)
+				routeConsumptions.put(EnergyType.PETROL, consumption);
+			else if (et == EngineType.ICE_DIESEL || et == EngineType.HEV_DIESEL)
+				routeConsumptions.put(EnergyType.DIESEL, consumption);
+			else if (et == EngineType.ICE_CNG)
+				routeConsumptions.put(EnergyType.CNG, consumption);
+			else if (et == EngineType.ICE_H2)
+				routeConsumptions.put(EnergyType.HYDROGEN, consumption);
+			else if (et == EngineType.BEV)
+				routeConsumptions.put(EnergyType.ELECTRICITY, consumption);
+			
+		}
+			
+		return routeConsumptions;
 	}
-	
-	
+		
 	
 	/**
 	 * Calculates the utility of the route.
+	 * @param vht Vehicle type.
+	 * @param et Engine type.
 	 * @param linkTravelTime Link travel times.
 	 * @param avgIntersectionDelay Average intersection delay.
-	 * @param energyConsumptionParameters Energy consumption parameters (A, B, C, D).
+	 * @param energyConsumptionParameters Energy consumption parameters (A, B, C, D) for a combination of vehicle type and engine type
 	 * @param unitCost Unit cost of fuel.
 	 * @param params Route choice parameters.
 	 */
-	public void calculateUtility(Map<Integer, Double> linkTravelTime, HashMap<String, Double> energyConsumptionParameters, double unitCost, HashMap<String, HashMap<Integer, Double>> linkCharges, Properties params) {
-		
+	public void calculateUtility(VehicleType vht, EngineType et, Map<Integer, Double> linkTravelTime, HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParameters, HashMap<EnergyType, Double> energyUnitCosts, HashMap<String, HashMap<Integer, Double>> linkCharges, Properties params) {		
 		if (this.length == null) this.calculateLength(); //calculate only once (length is not going to change)
 				
 		double avgIntersectionDelay;
@@ -248,7 +340,7 @@ public class Route {
 	
 		this.calculateTravelTime(linkTravelTime, avgIntersectionDelay); //always (re)calculate
 		
-		this.calculateCost(linkTravelTime, energyConsumptionParameters, unitCost, linkCharges); //always (re)calculate
+		this.calculateCost(vht, et, linkTravelTime, energyConsumptionParameters, energyUnitCosts, linkCharges); //always (re)calculate
 		
 		double length = this.getLength();
 		double time = this.getTime();

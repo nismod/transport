@@ -83,6 +83,7 @@ import nismod.transport.demand.SkimMatrix;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.network.road.RouteSetGenerator;
+import nismod.transport.network.road.RoadNetworkAssignment.EnergyType;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
@@ -128,7 +129,7 @@ public class RoadDevelopmentDashboard extends JFrame {
 	private static HashMap<VehicleType, Double> vehicleTypeToPCU;
 	private static HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> vehicleFuelEfficiency;
 	private static HashMap<TimeOfDay, Double> timeOfDayDistribution;
-	private static HashMap<Integer, HashMap<EngineType, Double>> yearToEnergyUnitCosts;
+	private static HashMap<Integer, HashMap<EnergyType, Double>> yearToEnergyUnitCosts;
 	private static HashMap<Integer, HashMap<VehicleType, HashMap<EngineType, Double>>> yearToEngineTypeFractions;
 	private static HashMap<Integer, Double> yearToAVFractions;
 	
