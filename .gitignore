@@ -437,3 +437,5 @@ transport/*.txt
 # Releases
 transport_v*/*
 transport_v*.zip
+transport_testdata_v*/*
+transport_testdata_v*.zip
