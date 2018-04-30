@@ -22,7 +22,6 @@ import nismod.transport.decision.CongestionCharging;
 import nismod.transport.decision.Intervention;
 import nismod.transport.decision.RoadDevelopment;
 import nismod.transport.decision.RoadExpansion;
-import nismod.transport.decision.VehicleElectrification;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.network.road.RouteSetGenerator;
@@ -67,7 +66,6 @@ public class DemandModelTest {
 		
 		final String roadExpansionFileName = props.getProperty("roadExpansionFile");
 		final String roadDevelopmentFileName = props.getProperty("roadDevelopmentFile");
-		final String vehicleElectrificationFileName = props.getProperty("vehicleElectrificationFile");
 		final String congestionChargingFileName = props.getProperty("congestionChargingFile");
 
 		final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
@@ -185,28 +183,14 @@ public class DemandModelTest {
 		interventions.add(rd);
 	
 		*/
-		
-		Properties props2 = new Properties();
-		props2.setProperty("startYear", "2016");
-		props2.setProperty("endYear", "2025");
-		props2.setProperty("vehicleType", "CAR");
-		props2.setProperty("PETROL", "0.40");
-		props2.setProperty("DIESEL", "0.30");
-		props2.setProperty("LPG", "0.1");
-		props2.setProperty("ELECTRICITY", "0.15");
-		props2.setProperty("HYDROGEN", "0.025");
-		props2.setProperty("HYBRID", "0.025");
-		VehicleElectrification ve = new VehicleElectrification(props2);
-				
+			
 		RoadExpansion re = new RoadExpansion(roadExpansionFileName);
 		RoadDevelopment rd = new RoadDevelopment(roadDevelopmentFileName);
 		CongestionCharging cc = new CongestionCharging(congestionChargingFileName);
-		//VehicleElectrification ve = new VehicleElectrification(congestionChargingFileName);
 		
 		interventions.add(re);
 		interventions.add(rd);
 		interventions.add(cc);
-		interventions.add(ve);
 			
 		//read routes
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
