@@ -119,7 +119,7 @@ public class RoadDisruptionTest {
 		
 		double unitCost = 1.17;
 
-		rsg.calculateAllUtilities(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, null, params);
+		//rsg.calculateAllUtilities(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, null, params);
 		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
 
 		//System.out.println(rna.getTripList());
@@ -137,7 +137,7 @@ public class RoadDisruptionTest {
 		
 		rna.resetLinkVolumes();
 		rna.resetTripStorages();
-		rsg.calculateAllUtilities(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, null, params);
+		//rsg.calculateAllUtilities(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, null, params);
 		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
 		
 		rna.updateLinkVolumeInPCU();
@@ -318,7 +318,7 @@ public class RoadDisruptionTest {
 		
 		double unitCost = 1.17;
 
-		rsg.calculateAllUtilities(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, null, params);
+		//rsg.calculateAllUtilities(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, null, params);
 		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
 		rna.updateLinkVolumeInPCU();
 
