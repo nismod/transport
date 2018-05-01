@@ -56,6 +56,7 @@ public class DemandModel {
 	private HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> baseFuelConsumptionRates;
 	private HashMap<Integer, HashMap<Pair<VehicleType, EngineType>, Double>> yearToRelativeFuelEfficiencies;
 	private HashMap<Integer, HashMap<TimeOfDay, Double>> yearToTimeOfDayDistribution;
+	private HashMap<Integer, HashMap<TimeOfDay, Double>> yearToTimeOfDayDistributionFreight;
 	private HashMap<Integer, ODMatrix> yearToPassengerODMatrix; //passenger demand
 	private HashMap<Integer, FreightMatrix> yearToFreightODMatrix; //freight demand
 	private HashMap<Integer, SkimMatrix> yearToTimeSkimMatrix;
@@ -233,6 +234,7 @@ public class DemandModel {
 				final String AVFractionsFile = props.getProperty("autonomousVehiclesFile");
 				final String vehicleTypeToPCUFile = props.getProperty("vehicleTypeToPCUFile");
 				final String timeOfDayDistributionFile = props.getProperty("timeOfDayDistributionFile");
+				final String timeOfDayDistributionFreightFile = props.getProperty("timeOfDayDistributionFreightFile");
 				final String baseFuelConsumptionRatesFile = props.getProperty("baseFuelConsumptionRatesFile");
 				final int BASE_YEAR = Integer.parseInt(props.getProperty("baseYear"));
 			
@@ -245,6 +247,7 @@ public class DemandModel {
 												this.baseFuelConsumptionRates,
 												this.yearToRelativeFuelEfficiencies.get(fromYear),
 												this.yearToTimeOfDayDistribution.get(fromYear),
+												this.yearToTimeOfDayDistributionFreight.get(fromYear),
 												null, 
 												null,
 												null, 
@@ -390,6 +393,7 @@ public class DemandModel {
 															 this.baseFuelConsumptionRates,
 															 this.yearToRelativeFuelEfficiencies.get(predictedYear),
 															 this.yearToTimeOfDayDistribution.get(predictedYear),
+															 this.yearToTimeOfDayDistributionFreight.get(predictedYear),
 															 rna.getLinkTravelTimes(), 
 															 rna.getAreaCodeProbabilities(), 
 															 rna.getWorkplaceZoneProbabilities(),
@@ -405,6 +409,7 @@ public class DemandModel {
 															 this.baseFuelConsumptionRates,
 															 this.yearToRelativeFuelEfficiencies.get(predictedYear),
 															 this.yearToTimeOfDayDistribution.get(predictedYear),
+															 this.yearToTimeOfDayDistributionFreight.get(predictedYear),
 															 predictedRna.getLinkTravelTimes(), 
 															 predictedRna.getAreaCodeProbabilities(), 
 															 predictedRna.getWorkplaceZoneProbabilities(),
@@ -473,6 +478,7 @@ public class DemandModel {
 														 this.baseFuelConsumptionRates,
 														 this.yearToRelativeFuelEfficiencies.get(predictedYear),
 														 this.yearToTimeOfDayDistribution.get(predictedYear),
+														 this.yearToTimeOfDayDistributionFreight.get(predictedYear),
 														 predictedRna.getLinkTravelTimes(), 
 														 predictedRna.getAreaCodeProbabilities(), 
 														 predictedRna.getWorkplaceZoneProbabilities(),

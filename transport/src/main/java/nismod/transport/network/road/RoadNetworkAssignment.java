@@ -110,6 +110,7 @@ public class RoadNetworkAssignment {
 	private HashMap<VehicleType, HashMap<EngineType, Double>> engineTypeFractions;
 
 	private HashMap<TimeOfDay, Double> timeOfDayDistribution;
+	private HashMap<TimeOfDay, Double> timeOfDayDistributionFreight;
 
 	private RoadNetwork roadNetwork;
 
@@ -147,6 +148,7 @@ public class RoadNetworkAssignment {
 	 * @param energyConsumptionParams Base fuel consumption rates.
 	 * @param relativeFuelEfficiencies Relative fuel efficiencies (compared to base year).
 	 * @param timeOfDayDistribution Time of day distribution.
+	 * @param timeOfDayDistributionFreight Time of day distribution for freight.
 	 * @param defaultLinkTravelTime Default link travel times.
 	 * @param areaCodeProbabilities Probabilities of trips starting/ending in each census output area.
 	 * @param workplaceZoneProbabilities Probabilities of freight trips starting/ending in each census output area.
@@ -160,7 +162,8 @@ public class RoadNetworkAssignment {
 			HashMap<VehicleType, Double> vehicleTypeToPCU,
 			HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParams,
 			HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiencies,
-			HashMap<TimeOfDay, Double> timeOfDayDistribution, 
+			HashMap<TimeOfDay, Double> timeOfDayDistribution,
+			HashMap<TimeOfDay, Double> timeOfDayDistributionFreight, 
 			Map<TimeOfDay, Map<Integer, Double>> defaultLinkTravelTime, 
 			HashMap<String, Double> areaCodeProbabilities, 
 			HashMap<String, Double> workplaceZoneProbabilities,
@@ -216,6 +219,9 @@ public class RoadNetworkAssignment {
 	
 		if (timeOfDayDistribution != null) 	this.timeOfDayDistribution = timeOfDayDistribution; //TODO check it adds up to one!
 		else 								LOGGER.error("Missing time of day distribution.");
+		
+		if (timeOfDayDistributionFreight != null) 	this.timeOfDayDistributionFreight = timeOfDayDistributionFreight; //TODO check it adds up to one!
+		else 								LOGGER.error("Missing time of day distribution for freight.");
 
 		this.congestionCharges = congestionCharges;
 		//System.out.println("Congestion charges: " + this.congestionCharges);
@@ -1523,7 +1529,7 @@ public class RoadNetworkAssignment {
 				double cumulativeProbability = 0.0;
 				double random = rng.nextDouble();
 				TimeOfDay hour = null;
-				for (Map.Entry<TimeOfDay, Double> entry : timeOfDayDistribution.entrySet()) {
+				for (Map.Entry<TimeOfDay, Double> entry : timeOfDayDistributionFreight.entrySet()) {
 					TimeOfDay key = entry.getKey();
 					Double value = entry.getValue();	
 					cumulativeProbability += value;
@@ -1754,7 +1760,7 @@ public class RoadNetworkAssignment {
 				double cumulativeProbability = 0.0;
 				double random = rng.nextDouble();
 				TimeOfDay hour = null;
-				for (Map.Entry<TimeOfDay, Double> entry : timeOfDayDistribution.entrySet()) {
+				for (Map.Entry<TimeOfDay, Double> entry : timeOfDayDistributionFreight.entrySet()) {
 					TimeOfDay key = entry.getKey();
 					Double value = entry.getValue();	
 					cumulativeProbability += value;
@@ -1978,7 +1984,7 @@ public class RoadNetworkAssignment {
 				double cumulativeProbability = 0.0;
 				double random = rng.nextDouble();
 				TimeOfDay hour = null;
-				for (Map.Entry<TimeOfDay, Double> entry : timeOfDayDistribution.entrySet()) {
+				for (Map.Entry<TimeOfDay, Double> entry : timeOfDayDistributionFreight.entrySet()) {
 					TimeOfDay key = entry.getKey();
 					Double value = entry.getValue();	
 					cumulativeProbability += value;
