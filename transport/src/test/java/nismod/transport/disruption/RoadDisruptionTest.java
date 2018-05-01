@@ -86,6 +86,7 @@ public class RoadDisruptionTest {
 		final String AVFractionsFile = props.getProperty("autonomousVehiclesFile");
 		final String vehicleTypeToPCUFile = props.getProperty("vehicleTypeToPCUFile");
 		final String timeOfDayDistributionFile = props.getProperty("timeOfDayDistributionFile");
+		final String timeOfDayDistributionFreightFile = props.getProperty("timeOfDayDistributionFreightFile");
 		final String baseFuelConsumptionRatesFile = props.getProperty("baseFuelConsumptionRatesFile");
 		final String relativeFuelEfficiencyFile = props.getProperty("relativeFuelEfficiencyFile");
 		final int BASE_YEAR = Integer.parseInt(props.getProperty("baseYear"));
@@ -99,6 +100,7 @@ public class RoadDisruptionTest {
 															InputFileReader.readEnergyConsumptionParamsFile(baseFuelConsumptionRatesFile),
 															InputFileReader.readRelativeFuelEfficiencyFile(relativeFuelEfficiencyFile).get(BASE_YEAR),
 															InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFile).get(BASE_YEAR),
+															InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFreightFile).get(BASE_YEAR),
 															null,
 															null,
 															null,
@@ -288,6 +290,7 @@ public class RoadDisruptionTest {
 		final String AVFractionsFile = props.getProperty("autonomousVehiclesFile");
 		final String vehicleTypeToPCUFile = props.getProperty("vehicleTypeToPCUFile");
 		final String timeOfDayDistributionFile = props.getProperty("timeOfDayDistributionFile");
+		final String timeOfDayDistributionFreightFile = props.getProperty("timeOfDayDistributionFreightFile");
 		final String baseFuelConsumptionRatesFile = props.getProperty("baseFuelConsumptionRatesFile");
 		final String relativeFuelEfficiencyFile = props.getProperty("relativeFuelEfficiencyFile");
 		final int BASE_YEAR = Integer.parseInt(props.getProperty("baseYear"));
@@ -301,6 +304,7 @@ public class RoadDisruptionTest {
 															InputFileReader.readEnergyConsumptionParamsFile(baseFuelConsumptionRatesFile),
 															InputFileReader.readRelativeFuelEfficiencyFile(relativeFuelEfficiencyFile).get(BASE_YEAR),
 															InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFile).get(BASE_YEAR),
+															InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFreightFile).get(BASE_YEAR),
 															null,
 															null,
 															null,

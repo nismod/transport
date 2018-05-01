@@ -130,6 +130,7 @@ public class RoadDevelopmentDashboard extends JFrame {
 	private static HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> baseFuelConsumptionRates;
 	private static HashMap<Integer, HashMap<Pair<VehicleType, EngineType>, Double>> relativeFuelEfficiency;
 	private static HashMap<Integer, HashMap<TimeOfDay, Double>> timeOfDayDistribution;
+	private static HashMap<Integer, HashMap<TimeOfDay, Double>> timeOfDayDistributionFreight;
 	private static HashMap<Integer, HashMap<EnergyType, Double>> yearToEnergyUnitCosts;
 	private static HashMap<Integer, HashMap<VehicleType, HashMap<EngineType, Double>>> yearToEngineTypeFractions;
 	private static HashMap<Integer, Double> yearToAVFractions;
@@ -449,6 +450,7 @@ public class RoadDevelopmentDashboard extends JFrame {
 						baseFuelConsumptionRates,
 						relativeFuelEfficiency.get(BASE_YEAR),
 						timeOfDayDistribution.get(BASE_YEAR),
+						timeOfDayDistributionFreight.get(BASE_YEAR),
 						null,
 						null,
 						null,
@@ -1202,6 +1204,7 @@ public class RoadDevelopmentDashboard extends JFrame {
 															baseFuelConsumptionRates,
 															relativeFuelEfficiency.get(BASE_YEAR),
 															timeOfDayDistribution.get(BASE_YEAR),
+															timeOfDayDistributionFreight.get(BASE_YEAR),
 															null,
 															null,
 															null,
