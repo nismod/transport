@@ -203,20 +203,28 @@ public class InputFileReader {
 	 * @param fileName File name.
 	 * @return Time of day distribution.
 	 */
-	public static HashMap<TimeOfDay, Double> readTimeOfDayDistributionFile (String fileName) {
+	public static HashMap<Integer, HashMap<TimeOfDay, Double>> readTimeOfDayDistributionFile (String fileName) {
 
-		HashMap<TimeOfDay, Double> map = new HashMap<TimeOfDay, Double>();
+		HashMap<Integer, HashMap<TimeOfDay, Double>> map = new HashMap<Integer, HashMap<TimeOfDay, Double>>();
 		CSVParser parser = null;
 		try {
 			parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
 			//System.out.println(parser.getHeaderMap().toString());
 			Set<String> keySet = parser.getHeaderMap().keySet();
+			keySet.remove("year");
 			//System.out.println("keySet = " + keySet);
 			for (CSVRecord record : parser) {
 				//System.out.println(record);
-				TimeOfDay hour = TimeOfDay.valueOf(record.get(0));
-				Double frequency = Double.parseDouble(record.get(1));		
-				map.put(hour, frequency);
+				int year = Integer.parseInt(record.get(0));
+				HashMap<TimeOfDay, Double> timeDistribution = new HashMap<TimeOfDay, Double>();
+				
+				for (String key: keySet) {
+					TimeOfDay hour = TimeOfDay.valueOf(key);
+					Double frequency = Double.parseDouble(record.get(key));
+					timeDistribution.put(hour, frequency);
+				}
+	
+				map.put(year, timeDistribution);
 			}
 		} catch (FileNotFoundException e) {
 			LOGGER.error(e);
