@@ -149,10 +149,12 @@ public class DemandModel {
 		final String baseFuelConsumptionRatesFile = props.getProperty("baseFuelConsumptionRatesFile");
 		final String relativeFuelEfficiencyFile = props.getProperty("relativeFuelEfficiencyFile");
 		final String timeOfDayDistributionFile = props.getProperty("timeOfDayDistributionFile");
+		final String timeOfDayDistributionFreightFile = props.getProperty("timeOfDayDistributionFreightFile");
 		
 		this.vehicleTypeToPCU = InputFileReader.readVehicleTypeToPCUFile(vehicleTypeToPCUFile);
 		this.baseFuelConsumptionRates = InputFileReader.readEnergyConsumptionParamsFile(baseFuelConsumptionRatesFile);
 		this.yearToTimeOfDayDistribution = InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFile);
+		this.yearToTimeOfDayDistributionFreight = InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFreightFile);
 		this.yearToRelativeFuelEfficiencies = InputFileReader.readRelativeFuelEfficiencyFile(relativeFuelEfficiencyFile);
 	}
 	
