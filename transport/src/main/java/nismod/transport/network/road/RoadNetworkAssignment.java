@@ -141,7 +141,7 @@ public class RoadNetworkAssignment {
 	 * @param engineTypeFractions Market shares of different engine/fuel types.
 	 * @param fractionAV Fraction of autonomous vehicles for passenger vehicle trips.
 	 * @param vehicleTypeToPCU Vehicle to PCU conversion.
-	 * @param energyConsumptionParams Fuel efficiency parameters.
+	 * @param energyConsumptionParams Base fuel consumption rates.
 	 * @param timeOfDayDistribution Time of day distribution.
 	 * @param defaultLinkTravelTime Default link travel times.
 	 * @param areaCodeProbabilities Probabilities of trips starting/ending in each census output area.
