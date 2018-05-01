@@ -92,6 +92,10 @@ public class RouteTest {
 		energyConsumptionParameters.put(Pair.of(VehicleType.CAR, EngineType.ICE_PETROL), parameters);
 		energyConsumptionParameters.put(Pair.of(VehicleType.CAR, EngineType.BEV), parameters);
 		
+		HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency = new HashMap<Pair<VehicleType, EngineType>, Double>();
+		relativeFuelEfficiency.put(Pair.of(VehicleType.CAR, EngineType.ICE_PETROL), 0.9);
+		relativeFuelEfficiency.put(Pair.of(VehicleType.CAR, EngineType.BEV), 0.9);
+		
 		HashMap<EnergyType, Double> energyUnitCosts = new HashMap<EnergyType, Double>();
 		energyUnitCosts.put(EnergyType.PETROL, 1.17);
 		energyUnitCosts.put(EnergyType.DIESEL, 1.17);
@@ -103,7 +107,7 @@ public class RouteTest {
 		System.out.println(energyConsumptionParameters);
 		System.out.println(energyUnitCosts);
 		
-		r1.calculateUtility(VehicleType.CAR, EngineType.PHEV_PETROL, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, energyUnitCosts, null, params);
+		r1.calculateUtility(VehicleType.CAR, EngineType.PHEV_PETROL, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null, params);
 		
 		double time = r1.getTime();
 		double length = r1.getLength();
@@ -145,7 +149,7 @@ public class RouteTest {
 		params.setProperty("INTERSECTIONS", "-0.1");
 		params.setProperty("AVERAGE_INTERSECTION_DELAY", "0.8");
 		
-		r2.calculateUtility(VehicleType.CAR, EngineType.ICE_PETROL, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, energyUnitCosts, null, params);
+		r2.calculateUtility(VehicleType.CAR, EngineType.ICE_PETROL, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null, params);
 		
 		time = r2.getTime();
 		length = r2.getLength();
@@ -170,7 +174,7 @@ public class RouteTest {
 		r3.addEdge(e7);
 		r3.addEdge(e2);
 		r3.addEdge(e3);
-		r3.calculateUtility(VehicleType.CAR, EngineType.ICE_PETROL, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, energyUnitCosts, null, params);
+		r3.calculateUtility(VehicleType.CAR, EngineType.ICE_PETROL, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null, params);
 		
 //		System.out.println("Route " + r3.getID() + " is valid: " + r3.isValid());
 //		System.out.println("Route " + r3.getID() + ": " + r3.getEdges());
@@ -185,7 +189,7 @@ public class RouteTest {
 		params.setProperty("INTERSECTIONS", "-0.1");
 		params.setProperty("AVERAGE_INTERSECTION_DELAY", "0.8");
 		
-		r3.calculateUtility(VehicleType.CAR, EngineType.ICE_PETROL, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, energyUnitCosts, null, params);
+		r3.calculateUtility(VehicleType.CAR, EngineType.ICE_PETROL, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null, params);
 		
 		time = r3.getTime();
 		length = r3.getLength();
@@ -225,7 +229,7 @@ public class RouteTest {
 		params.setProperty("INTERSECTIONS", "-0.1");
 		params.setProperty("AVERAGE_INTERSECTION_DELAY", "0.8");
 		
-		r4.calculateUtility(VehicleType.CAR, EngineType.ICE_PETROL, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, energyUnitCosts, null, params);
+		r4.calculateUtility(VehicleType.CAR, EngineType.ICE_PETROL, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null, params);
 		
 		time = r4.getTime();
 		length = r4.getLength();
@@ -262,9 +266,9 @@ public class RouteTest {
 		
 		r5.calculateLength();
 		r5.calculateTravelTime(roadNetwork.getFreeFlowTravelTime(), 0.8);
-		r5.calculateCost(VehicleType.CAR, EngineType.ICE_PETROL, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, energyUnitCosts, null);
+		r5.calculateCost(VehicleType.CAR, EngineType.ICE_PETROL, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null);
 		System.out.println("Intersections: " + r5.getNumberOfIntersections());
-		r5.calculateUtility(VehicleType.CAR, EngineType.ICE_PETROL, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, energyUnitCosts, null, params);
+		r5.calculateUtility(VehicleType.CAR, EngineType.ICE_PETROL, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null, params);
 		System.out.println("Length: " + r5.getLength());
 		System.out.println("Time: " + r5.getTime());
 		System.out.println("Cost: " + r5.getCost());

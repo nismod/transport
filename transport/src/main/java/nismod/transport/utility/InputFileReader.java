@@ -424,4 +424,56 @@ public class InputFileReader {
 
 		return map;
 	}
+	
+	/**
+	 * Reads relative fuel efficiency file.
+	 * @param fileName File name.
+	 * @return Map with relative fuel efficiency.
+	 */
+	public static HashMap<Integer, HashMap<Pair<VehicleType, EngineType>, Double>> readRelativeFuelEfficiencyFile (String fileName){
+		
+		HashMap<Integer, HashMap<Pair<VehicleType, EngineType>, Double>> yearToRelativeFuelEfficiency = new HashMap<Integer, HashMap<Pair<VehicleType, EngineType>, Double>>();
+
+		CSVParser parser = null;
+		try {
+			parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
+			LOGGER.trace(parser.getHeaderMap().toString());
+			Set<String> keySet = parser.getHeaderMap().keySet();
+			keySet.remove("VehicleType");
+			keySet.remove("EngineType");
+			LOGGER.trace("keySet = {}", keySet);
+			double efficiency;
+			for (CSVRecord record : parser) {
+				LOGGER.trace(record);
+				VehicleType vht = VehicleType.valueOf(record.get(0));
+				EngineType engine = EngineType.valueOf(record.get(1));
+				
+				for(String key: keySet) {
+					Integer year = Integer.parseInt(key);
+					efficiency = Double.parseDouble(record.get(key));
+					HashMap<Pair<VehicleType, EngineType>, Double> vehicleEngineEfficiency = yearToRelativeFuelEfficiency.get(year);
+					if (vehicleEngineEfficiency == null) {
+						vehicleEngineEfficiency = new HashMap<Pair<VehicleType, EngineType>, Double>();
+						yearToRelativeFuelEfficiency.put(year, vehicleEngineEfficiency);
+					}
+					vehicleEngineEfficiency.put(Pair.of(vht,  engine), efficiency);
+				}
+			} 
+		} catch (FileNotFoundException e) {
+			LOGGER.error(e);
+		} catch (IOException e) {
+			LOGGER.error(e);
+		} finally {
+			try {
+				parser.close();
+			} catch (IOException e) {
+				LOGGER.error(e);
+			}
+		}
+
+		LOGGER.debug("Relative fuel efficiencies:");
+		LOGGER.debug(yearToRelativeFuelEfficiency);
+		
+		return yearToRelativeFuelEfficiency;
+	}
 }

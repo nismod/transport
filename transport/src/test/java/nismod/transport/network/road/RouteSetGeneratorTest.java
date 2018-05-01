@@ -364,6 +364,7 @@ public class RouteSetGeneratorTest {
 		final String vehicleTypeToPCUFile = props.getProperty("vehicleTypeToPCUFile");
 		final String timeOfDayDistributionFile = props.getProperty("timeOfDayDistributionFile");
 		final String baseFuelConsumptionRatesFile = props.getProperty("baseFuelConsumptionRatesFile");
+		final String relativeFuelEfficiencyFile = props.getProperty("relativeFuelEfficiencyFile");
 		final int BASE_YEAR = Integer.parseInt(props.getProperty("baseYear"));
 	
 		//create a road network assignment
@@ -373,6 +374,7 @@ public class RouteSetGeneratorTest {
 															InputFileReader.readAVFractionsFile(AVFractionsFile).get(BASE_YEAR),
 															InputFileReader.readVehicleTypeToPCUFile(vehicleTypeToPCUFile),
 															InputFileReader.readEnergyConsumptionParamsFile(baseFuelConsumptionRatesFile),
+															InputFileReader.readRelativeFuelEfficiencyFile(relativeFuelEfficiencyFile).get(BASE_YEAR),
 															InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFile),
 															null,
 															null,
@@ -505,7 +507,7 @@ public class RouteSetGeneratorTest {
 		System.out.printf("Node %d edges to node %d: %s \n", node1.getID(), node2.getID(), node1.getEdges(node2));
 
 		//create a road network assignment
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, props);
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, null, props);
 
 		//set route generation parameters
 		Properties params = new Properties();

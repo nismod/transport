@@ -118,6 +118,10 @@ public class RouteSetTest {
 		energyConsumptionParameters.put(Pair.of(VehicleType.CAR, EngineType.ICE_PETROL), parameters);
 		energyConsumptionParameters.put(Pair.of(VehicleType.CAR, EngineType.BEV), parameters);
 		
+		HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency = new HashMap<Pair<VehicleType, EngineType>, Double>();
+		relativeFuelEfficiency.put(Pair.of(VehicleType.CAR, EngineType.ICE_PETROL), 0.9);
+		relativeFuelEfficiency.put(Pair.of(VehicleType.CAR, EngineType.BEV), 0.9);
+		
 		HashMap<EnergyType, Double> energyUnitCosts = new HashMap<EnergyType, Double>();
 		energyUnitCosts.put(EnergyType.PETROL, 1.17);
 		energyUnitCosts.put(EnergyType.DIESEL, 1.17);
@@ -137,7 +141,7 @@ public class RouteSetTest {
 		//rs.calculateUtilities(roadNetwork.getFreeFlowTravelTime(), params);
 		rs.setLinkTravelTime(roadNetwork.getFreeFlowTravelTime());
 		rs.setParameters(params);
-		rs.calculateUtilities(VehicleType.CAR, EngineType.PHEV_PETROL, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, energyUnitCosts, null, params);
+		rs.calculateUtilities(VehicleType.CAR, EngineType.PHEV_PETROL, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null, params);
 		rs.printUtilities();
 	
 		for (double utility: rs.getUtilities())
@@ -196,7 +200,7 @@ public class RouteSetTest {
 		rs.printChoiceSet();
 		rs.printStatistics();
 		//all routes need to have re-calculated utility and path size after the new route is added!
-		rs.calculateUtilities(VehicleType.CAR, EngineType.PHEV_PETROL, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, energyUnitCosts, null, params);
+		rs.calculateUtilities(VehicleType.CAR, EngineType.PHEV_PETROL, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null, params);
 		rs.printUtilities();
 		rs.calculateProbabilities(roadNetwork.getFreeFlowTravelTime(), params);
 		rs.printProbabilities();

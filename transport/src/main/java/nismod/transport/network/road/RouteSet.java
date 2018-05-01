@@ -179,7 +179,7 @@ public class RouteSet {
 	 * @param linkTravelTime Link travel times.
 	 * @param params Route choice parameters.
 	 */
-	public void calculateUtilities(VehicleType vht, EngineType et, Map<Integer, Double> linkTravelTime, HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParameters, HashMap<EnergyType, Double> energyUnitCosts, HashMap<String, HashMap<Integer, Double>> linkCharges, Properties params) {
+	public void calculateUtilities(VehicleType vht, EngineType et, Map<Integer, Double> linkTravelTime, HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParameters, HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency, HashMap<EnergyType, Double> energyUnitCosts, HashMap<String, HashMap<Integer, Double>> linkCharges, Properties params) {
 		
 		//store arguments into instance fields
 		this.linkTravelTime = linkTravelTime;
@@ -187,7 +187,7 @@ public class RouteSet {
 		
 		//re-calculate utility for all the routes
 		for (Route r: choiceSet)
-			r.calculateUtility(vht, et, linkTravelTime, energyConsumptionParameters, energyUnitCosts, linkCharges, params);
+			r.calculateUtility(vht, et, linkTravelTime, energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, linkCharges, params);
 		
 		//correct for correlation with path-size
 		this.correctUtilitiesWithPathSize();

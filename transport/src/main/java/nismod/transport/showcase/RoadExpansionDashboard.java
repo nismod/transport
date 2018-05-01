@@ -129,6 +129,7 @@ public class RoadExpansionDashboard extends JFrame {
 	
 	private static HashMap<VehicleType, Double> vehicleTypeToPCU;
 	private static HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> baseFuelConsumptionRates;
+	private static HashMap<Integer, HashMap<Pair<VehicleType, EngineType>, Double>> relativeFuelEfficiency;
 	private static HashMap<TimeOfDay, Double> timeOfDayDistribution;
 	private static HashMap<Integer, HashMap<EnergyType, Double>> yearToEnergyUnitCosts;
 	private static HashMap<Integer, HashMap<VehicleType, HashMap<EngineType, Double>>> yearToEngineTypeFractions;
@@ -437,6 +438,7 @@ public class RoadExpansionDashboard extends JFrame {
 						yearToAVFractions.get(BASE_YEAR),
 						vehicleTypeToPCU,
 						baseFuelConsumptionRates,
+						relativeFuelEfficiency.get(BASE_YEAR),
 						timeOfDayDistribution,
 						null,
 						null,
@@ -1188,10 +1190,12 @@ public class RoadExpansionDashboard extends JFrame {
 		final String vehicleTypeToPCUFile = props.getProperty("vehicleTypeToPCUFile");
 		final String timeOfDayDistributionFile = props.getProperty("timeOfDayDistributionFile");
 		final String baseFuelConsumptionRatesFile = props.getProperty("baseFuelConsumptionRatesFile");
+		final String relativeFuelEfficiencyFile = props.getProperty("relativeFuelEfficiencyFile");
 		final int BASE_YEAR = Integer.parseInt(props.getProperty("baseYear"));
 		
 		vehicleTypeToPCU = InputFileReader.readVehicleTypeToPCUFile(vehicleTypeToPCUFile);
 		baseFuelConsumptionRates = InputFileReader.readEnergyConsumptionParamsFile(baseFuelConsumptionRatesFile);
+		relativeFuelEfficiency = InputFileReader.readRelativeFuelEfficiencyFile(relativeFuelEfficiencyFile);
 		timeOfDayDistribution = InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFile);
 		yearToEnergyUnitCosts = InputFileReader.readEnergyUnitCostsFile(energyUnitCostsFile);
 		yearToEngineTypeFractions = InputFileReader.readEngineTypeFractionsFile(engineTypeFractionsFile);
@@ -1204,6 +1208,7 @@ public class RoadExpansionDashboard extends JFrame {
 															yearToAVFractions.get(BASE_YEAR),
 															vehicleTypeToPCU,
 															baseFuelConsumptionRates,
+															relativeFuelEfficiency.get(BASE_YEAR),
 															timeOfDayDistribution,
 															null,
 															null,
