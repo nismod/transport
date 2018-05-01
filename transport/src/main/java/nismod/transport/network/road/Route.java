@@ -177,7 +177,7 @@ public class Route {
 	/**
 	 * Calculates the cost of the route.
 	 */
-	public void calculateCost(VehicleType vht, EngineType et, Map<Integer, Double> linkTravelTime, HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParameters, HashMap<EnergyType, Double> energyUnitCosts, HashMap<String, HashMap<Integer, Double>> linkCharges) {
+	public void calculateCost(VehicleType vht, EngineType et, Map<Integer, Double> linkTravelTime, HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParameters, HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency, HashMap<EnergyType, Double> energyUnitCosts, HashMap<String, HashMap<Integer, Double>> linkCharges) {
 
 		//temporary map to check if a charging policy has already been applied
 		HashMap<String, Boolean> flags = new HashMap<String, Boolean>();
@@ -186,7 +186,7 @@ public class Route {
 		
 		
 		double fuelCost = 0.0;
-		HashMap<EnergyType, Double> routeConsumptions = calculateConsumption(vht, et, linkTravelTime, energyConsumptionParameters);
+		HashMap<EnergyType, Double> routeConsumptions = calculateConsumption(vht, et, linkTravelTime, energyConsumptionParameters, relativeFuelEfficiency);
 		
 		LOGGER.trace(routeConsumptions);
 	
@@ -217,7 +217,7 @@ public class Route {
 	/**
 	 * Calculates energy consumption of the route.
 	 */
-	public HashMap<EnergyType, Double> calculateConsumption(VehicleType vht, EngineType et, Map<Integer, Double> linkTravelTime, HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParameters) {
+	public HashMap<EnergyType, Double> calculateConsumption(VehicleType vht, EngineType et, Map<Integer, Double> linkTravelTime, HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParameters, HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency) {
 
 		HashMap<EnergyType, Double> routeConsumptions = new HashMap<EnergyType, Double>();
 		HashMap<String, Double> parameters, parametersFuel, parametersElectricity;
@@ -225,9 +225,12 @@ public class Route {
 		for (EnergyType energy: EnergyType.values()) routeConsumptions.put(energy, 0.0);
 		
 		if (et == EngineType.PHEV_PETROL) {
+		
 			parametersFuel = energyConsumptionParameters.get(Pair.of(vht, EngineType.ICE_PETROL));
 			parametersElectricity = energyConsumptionParameters.get(Pair.of(vht, EngineType.BEV));
-			
+			double relativeEfficiencyFuel = relativeFuelEfficiency.get(Pair.of(vht, EngineType.ICE_PETROL));
+			double relativeEfficiencyElectricity = relativeFuelEfficiency.get(Pair.of(vht, EngineType.BEV));
+					
 			double fuelConsumption = 0.0;
 			double electricityConsumption = 0.0;
 			for (DirectedEdge edge: edges) {
@@ -250,12 +253,18 @@ public class Route {
 				else 
 					fuelConsumption += len * (parametersFuel.get("A") / speed + parametersFuel.get("B") + parametersFuel.get("C") * speed + parametersFuel.get("D") * speed  * speed);
 			}
+			//apply relative fuel efficiency
+			electricityConsumption *= relativeEfficiencyElectricity;
+			fuelConsumption *= relativeEfficiencyFuel;
+			//store
 			routeConsumptions.put(EnergyType.ELECTRICITY, electricityConsumption);
 			routeConsumptions.put(EnergyType.PETROL, fuelConsumption);
 					
 		} else if (et == EngineType.PHEV_DIESEL) {
 			parametersFuel = energyConsumptionParameters.get(Pair.of(vht, EngineType.ICE_DIESEL));
 			parametersElectricity = energyConsumptionParameters.get(Pair.of(vht, EngineType.BEV));
+			double relativeEfficiencyFuel = relativeFuelEfficiency.get(Pair.of(vht, EngineType.ICE_DIESEL));
+			double relativeEfficiencyElectricity = relativeFuelEfficiency.get(Pair.of(vht, EngineType.BEV));
 			
 			double fuelConsumption = 0.0;
 			double electricityConsumption = 0.0;
@@ -278,12 +287,18 @@ public class Route {
 				else 
 					fuelConsumption += len * (parametersFuel.get("A") / speed + parametersFuel.get("B") + parametersFuel.get("C") * speed + parametersFuel.get("D") * speed  * speed);
 			}
+			//apply relative fuel efficiency
+			electricityConsumption *= relativeEfficiencyElectricity;
+			fuelConsumption *= relativeEfficiencyFuel;
+			//store
 			routeConsumptions.put(EnergyType.ELECTRICITY, electricityConsumption);
 			routeConsumptions.put(EnergyType.DIESEL, fuelConsumption);
 			
 		} else {
 			
 			parameters = energyConsumptionParameters.get(Pair.of(vht, et));
+			double relativeEfficiency = relativeFuelEfficiency.get(Pair.of(vht, et));
+			
 			double consumption = 0.0;
 			for (DirectedEdge edge: edges) {
 				SimpleFeature sf = (SimpleFeature) edge.getObject();
@@ -300,7 +315,9 @@ public class Route {
 		
 				consumption += len * (parameters.get("A") / speed + parameters.get("B") + parameters.get("C") * speed + parameters.get("D") * speed  * speed);
 			}
-			
+			//apply relative fuel efficiency
+			consumption *= relativeEfficiency;
+			//store
 			if (et == EngineType.ICE_PETROL || et == EngineType.HEV_PETROL)
 				routeConsumptions.put(EnergyType.PETROL, consumption);
 			else if (et == EngineType.ICE_DIESEL || et == EngineType.HEV_DIESEL)
@@ -311,7 +328,6 @@ public class Route {
 				routeConsumptions.put(EnergyType.HYDROGEN, consumption);
 			else if (et == EngineType.BEV)
 				routeConsumptions.put(EnergyType.ELECTRICITY, consumption);
-			
 		}
 			
 		return routeConsumptions;
@@ -324,11 +340,12 @@ public class Route {
 	 * @param et Engine type.
 	 * @param linkTravelTime Link travel times.
 	 * @param avgIntersectionDelay Average intersection delay.
-	 * @param energyConsumptionParameters Energy consumption parameters (A, B, C, D) for a combination of vehicle type and engine type
+	 * @param energyConsumptionParameters Energy consumption parameters (A, B, C, D) for a combination of vehicle type and engine type.
+	 * @param relativeFuelEfficiency Relative fuel efficiency compared to the base year.
 	 * @param unitCost Unit cost of fuel.
 	 * @param params Route choice parameters.
 	 */
-	public void calculateUtility(VehicleType vht, EngineType et, Map<Integer, Double> linkTravelTime, HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParameters, HashMap<EnergyType, Double> energyUnitCosts, HashMap<String, HashMap<Integer, Double>> linkCharges, Properties params) {		
+	public void calculateUtility(VehicleType vht, EngineType et, Map<Integer, Double> linkTravelTime, HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParameters, HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency, HashMap<EnergyType, Double> energyUnitCosts, HashMap<String, HashMap<Integer, Double>> linkCharges, Properties params) {		
 		if (this.length == null) this.calculateLength(); //calculate only once (length is not going to change)
 				
 		double avgIntersectionDelay;
@@ -340,7 +357,7 @@ public class Route {
 	
 		this.calculateTravelTime(linkTravelTime, avgIntersectionDelay); //always (re)calculate
 		
-		this.calculateCost(vht, et, linkTravelTime, energyConsumptionParameters, energyUnitCosts, linkCharges); //always (re)calculate
+		this.calculateCost(vht, et, linkTravelTime, energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, linkCharges); //always (re)calculate
 		
 		double length = this.getLength();
 		double time = this.getTime();

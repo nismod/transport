@@ -46,6 +46,7 @@ public class NetworkVisualiserTest {
 		final String vehicleTypeToPCUFile = props.getProperty("vehicleTypeToPCUFile");
 		final String timeOfDayDistributionFile = props.getProperty("timeOfDayDistributionFile");
 		final String baseFuelConsumptionRatesFile = props.getProperty("baseFuelConsumptionRatesFile");
+		final String relativeFuelEfficiencyFile = props.getProperty("relativeFuelEfficiencyFile");
 		final int BASE_YEAR = Integer.parseInt(props.getProperty("baseYear"));
 	
 		//create a road network assignment
@@ -55,6 +56,7 @@ public class NetworkVisualiserTest {
 															InputFileReader.readAVFractionsFile(AVFractionsFile).get(BASE_YEAR),
 															InputFileReader.readVehicleTypeToPCUFile(vehicleTypeToPCUFile),
 															InputFileReader.readEnergyConsumptionParamsFile(baseFuelConsumptionRatesFile),
+															InputFileReader.readRelativeFuelEfficiencyFile(relativeFuelEfficiencyFile).get(BASE_YEAR),
 															InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFile),
 															null,
 															null,

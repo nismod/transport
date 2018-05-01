@@ -32,6 +32,8 @@ import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.ODMatrix;
 import nismod.transport.demand.SkimMatrix;
 import nismod.transport.demand.SkimMatrixFreight;
+import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
+import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.utility.RandomSingleton;
 import nismod.transport.zone.NodeMatrix;
 import nismod.transport.zone.Zoning;
@@ -104,6 +106,7 @@ public class RoadNetworkAssignment {
 
 	private HashMap<EnergyType, Double> energyUnitCosts;
 	private HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptions;
+	private HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiencies;
 	private HashMap<VehicleType, HashMap<EngineType, Double>> engineTypeFractions;
 
 	private HashMap<TimeOfDay, Double> timeOfDayDistribution;
@@ -142,6 +145,7 @@ public class RoadNetworkAssignment {
 	 * @param fractionAV Fraction of autonomous vehicles for passenger vehicle trips.
 	 * @param vehicleTypeToPCU Vehicle to PCU conversion.
 	 * @param energyConsumptionParams Base fuel consumption rates.
+	 * @param relativeFuelEfficiencies Relative fuel efficiencies (compared to base year).
 	 * @param timeOfDayDistribution Time of day distribution.
 	 * @param defaultLinkTravelTime Default link travel times.
 	 * @param areaCodeProbabilities Probabilities of trips starting/ending in each census output area.
@@ -154,7 +158,8 @@ public class RoadNetworkAssignment {
 			HashMap<VehicleType, HashMap<EngineType, Double>> engineTypeFractions,
 			Double fractionAV,
 			HashMap<VehicleType, Double> vehicleTypeToPCU,
-			HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParams, 
+			HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParams,
+			HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiencies,
 			HashMap<TimeOfDay, Double> timeOfDayDistribution, 
 			Map<TimeOfDay, Map<Integer, Double>> defaultLinkTravelTime, 
 			HashMap<String, Double> areaCodeProbabilities, 
@@ -202,6 +207,9 @@ public class RoadNetworkAssignment {
 
 		if (energyConsumptionParams != null) 	this.energyConsumptions = energyConsumptionParams;
 		else									LOGGER.error("Missing energy consumption parameters.");
+		
+		if (relativeFuelEfficiencies != null) 	this.relativeFuelEfficiencies = relativeFuelEfficiencies;
+		else									LOGGER.error("Missing relative fuel efficiencies.");
 
 		if (engineTypeFractions != null) 	this.engineTypeFractions = engineTypeFractions;
 		else								LOGGER.error("Missing engine type fractions.");
@@ -916,7 +924,7 @@ public class RoadNetworkAssignment {
 							linkCharges.put(policyName, (HashMap<Integer, Double>) this.congestionCharges.get(policyName).get(vht, hour));
 						}
 			
-					fetchedRouteSet.calculateUtilities(vht, engine, this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions, this.energyUnitCosts, linkCharges, routeChoiceParameters);
+					fetchedRouteSet.calculateUtilities(vht, engine, this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions, this.relativeFuelEfficiencies, this.energyUnitCosts, linkCharges, routeChoiceParameters);
 					fetchedRouteSet.calculateProbabilities(this.linkTravelTimePerTimeOfDay.get(hour), routeChoiceParameters);
 					fetchedRouteSet.sortRoutesOnUtility();
 					//}
@@ -1428,7 +1436,7 @@ public class RoadNetworkAssignment {
 						for (String policyName: this.congestionCharges.keySet())
 							linkCharges.put(policyName, (HashMap<Integer, Double>) this.congestionCharges.get(policyName).get(vht, hour));
 
-					fetchedRouteSet.calculateUtilities(vht, engine, this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions, this.energyUnitCosts, linkCharges, routeChoiceParameters);
+					fetchedRouteSet.calculateUtilities(vht, engine, this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions, this.relativeFuelEfficiencies, this.energyUnitCosts, linkCharges, routeChoiceParameters);
 					fetchedRouteSet.calculateProbabilities(this.linkTravelTimePerTimeOfDay.get(hour), routeChoiceParameters);
 					fetchedRouteSet.sortRoutesOnUtility();
 					//}
@@ -2242,7 +2250,7 @@ public class RoadNetworkAssignment {
 						for (String policyName: this.congestionCharges.keySet())
 							linkCharges.put(policyName, (HashMap<Integer, Double>) this.congestionCharges.get(policyName).get(vht, hour));
 
-					fetchedRouteSet.calculateUtilities(vht, engine, this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions, this.energyUnitCosts, linkCharges, routeChoiceParameters);
+					fetchedRouteSet.calculateUtilities(vht, engine, this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions, this.relativeFuelEfficiencies, this.energyUnitCosts, linkCharges, routeChoiceParameters);
 					fetchedRouteSet.calculateProbabilities(this.linkTravelTimePerTimeOfDay.get(hour), routeChoiceParameters);
 					fetchedRouteSet.sortRoutesOnUtility();
 					//}
@@ -2640,7 +2648,7 @@ public class RoadNetworkAssignment {
 
 			Double sum = costSkimMatrix.getCost(originLAD, destinationLAD);
 			if (sum == null) sum = 0.0;
-			double tripFuelCost = trip.getCost(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistance(), averageAccessEgressSpeedCar, this.energyUnitCosts, this.energyConsumptions, this.congestionCharges);
+			double tripFuelCost = trip.getCost(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistance(), averageAccessEgressSpeedCar, this.energyUnitCosts, this.energyConsumptions, this.relativeFuelEfficiencies, this.congestionCharges);
 			costSkimMatrix.setCost(originLAD, destinationLAD, sum + tripFuelCost * multiplier);
 		}
 
@@ -2817,7 +2825,7 @@ public class RoadNetworkAssignment {
 
 			Double sum = costSkimMatrixFreight.getCost(origin, destination, vht.value);
 			if (sum == null) sum = 0.0;
-			double tripFuelCost = trip.getCost(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyUnitCosts, this.energyConsumptions, this.congestionCharges);
+			double tripFuelCost = trip.getCost(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyUnitCosts, this.energyConsumptions, this.relativeFuelEfficiencies, this.congestionCharges);
 
 			costSkimMatrixFreight.setCost(origin, destination, vht.value, sum + tripFuelCost * multiplier);
 		}
@@ -2855,7 +2863,7 @@ public class RoadNetworkAssignment {
 				
 		for (Trip trip: this.tripList) {
 			if (trip.getVehicle() != VehicleType.CAR) continue; //skip freight vehicles
-			HashMap<EnergyType, Double> consumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistance(), averageAccessEgressSpeedCar, this.energyConsumptions);
+			HashMap<EnergyType, Double> consumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistance(), averageAccessEgressSpeedCar, this.energyConsumptions, this.relativeFuelEfficiencies);
 			int multiplier = trip.getMultiplier();
 	
 			for (EnergyType energy: EnergyType.values()) {
@@ -2886,7 +2894,7 @@ public class RoadNetworkAssignment {
 
 			if (trip.getVehicle() != VehicleType.CAR) continue; //skip freight vehicles
 
-			HashMap<EnergyType, Double> tripConsumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyConsumptions);
+			HashMap<EnergyType, Double> tripConsumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyConsumptions, this.relativeFuelEfficiencies);
 
 			String originLAD = trip.getOriginLAD(this.roadNetwork.getNodeToZone());
 			String destinationLAD = trip.getDestinationLAD(this.roadNetwork.getNodeToZone());
@@ -2925,7 +2933,7 @@ public class RoadNetworkAssignment {
 		for (Trip trip: this.tripList) {
 			VehicleType vht = trip.getVehicle();
 			if ( ! (vht == VehicleType.ARTIC || vht == VehicleType.RIGID || vht == VehicleType.VAN)) continue; //skip non-freight vehicles
-			HashMap<EnergyType, Double> consumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyConsumptions);
+			HashMap<EnergyType, Double> consumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyConsumptions, this.relativeFuelEfficiencies);
 			int multiplier = trip.getMultiplier();
 			
 			for (EnergyType energy: EnergyType.values()) {
