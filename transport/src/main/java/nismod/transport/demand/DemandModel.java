@@ -53,7 +53,7 @@ public class DemandModel {
 	private HashMap<ElasticityTypes, Double> elasticities;
 	private HashMap<ElasticityTypes, Double> elasticitiesFreight;
 	private HashMap<VehicleType, Double> vehicleTypeToPCU;
-	private HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> vehicleFuelEfficiency;
+	private HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> baseFuelConsumptionRates;
 	private HashMap<TimeOfDay, Double> timeOfDayDistribution;
 	private HashMap<Integer, ODMatrix> yearToPassengerODMatrix; //passenger demand
 	private HashMap<Integer, FreightMatrix> yearToFreightODMatrix; //freight demand
@@ -144,10 +144,10 @@ public class DemandModel {
 		this.elasticitiesFreight = InputFileReader.readElasticitiesFile(elasticitiesFreightFile);
 		
 		final String vehicleTypeToPCUFile = props.getProperty("vehicleTypeToPCUFile");
-		final String vehicleFuelEfficiencyFile = props.getProperty("vehicleFuelEfficiencyFile");
+		final String baseFuelConsumptionRatesFile = props.getProperty("baseFuelConsumptionRatesFile");
 		final String timeOfDayDistributionFile = props.getProperty("timeOfDayDistributionFile");
 		this.vehicleTypeToPCU = InputFileReader.readVehicleTypeToPCUFile(vehicleTypeToPCUFile);
-		this.vehicleFuelEfficiency = InputFileReader.readEnergyConsumptionParamsFile(vehicleFuelEfficiencyFile);
+		this.baseFuelConsumptionRates = InputFileReader.readEnergyConsumptionParamsFile(baseFuelConsumptionRatesFile);
 		this.timeOfDayDistribution = InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFile);
 	}
 	
@@ -229,7 +229,7 @@ public class DemandModel {
 				final String AVFractionsFile = props.getProperty("autonomousVehiclesFile");
 				final String vehicleTypeToPCUFile = props.getProperty("vehicleTypeToPCUFile");
 				final String timeOfDayDistributionFile = props.getProperty("timeOfDayDistributionFile");
-				final String vehicleFuelEfficiencyFile = props.getProperty("vehicleFuelEfficiencyFile");
+				final String baseFuelConsumptionRatesFile = props.getProperty("baseFuelConsumptionRatesFile");
 				final int BASE_YEAR = Integer.parseInt(props.getProperty("baseYear"));
 			
 				//create a network assignment and assign the demand
@@ -238,7 +238,7 @@ public class DemandModel {
 												this.yearToEngineTypeFractions.get(fromYear), 
 												this.yearToAVFractions.get(fromYear),
 												this.vehicleTypeToPCU,
-												this.vehicleFuelEfficiency,
+												this.baseFuelConsumptionRates,
 												this.timeOfDayDistribution,
 												null, 
 												null,
@@ -382,7 +382,7 @@ public class DemandModel {
 															 this.yearToEngineTypeFractions.get(predictedYear), 
 															 this.yearToAVFractions.get(predictedYear),
 															 this.vehicleTypeToPCU,
-															 this.vehicleFuelEfficiency,
+															 this.baseFuelConsumptionRates,
 															 this.timeOfDayDistribution,
 															 rna.getLinkTravelTimes(), 
 															 rna.getAreaCodeProbabilities(), 
@@ -396,7 +396,7 @@ public class DemandModel {
 															 this.yearToEngineTypeFractions.get(predictedYear), 
 															 this.yearToAVFractions.get(predictedYear),
 															 this.vehicleTypeToPCU,
-															 this.vehicleFuelEfficiency,
+															 this.baseFuelConsumptionRates,
 															 this.timeOfDayDistribution,
 															 predictedRna.getLinkTravelTimes(), 
 															 predictedRna.getAreaCodeProbabilities(), 
@@ -463,7 +463,7 @@ public class DemandModel {
 														 this.yearToEngineTypeFractions.get(predictedYear), 
 														 this.yearToAVFractions.get(predictedYear),
 														 this.vehicleTypeToPCU,
-														 this.vehicleFuelEfficiency,
+														 this.baseFuelConsumptionRates,
 														 this.timeOfDayDistribution,
 														 predictedRna.getLinkTravelTimes(), 
 														 predictedRna.getAreaCodeProbabilities(), 

@@ -130,7 +130,7 @@ public class CongestionChargingDashboard extends JFrame {
 	private static RoadNetworkAssignment rnaBefore;
 	
 	private static HashMap<VehicleType, Double> vehicleTypeToPCU;
-	private static HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> vehicleFuelEfficiency;
+	private static HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> baseFuelConsumptionRates;
 	private static HashMap<TimeOfDay, Double> timeOfDayDistribution;
 	private static HashMap<Integer, HashMap<EnergyType, Double>> yearToEnergyUnitCosts;
 	private static HashMap<Integer, HashMap<VehicleType, HashMap<EngineType, Double>>> yearToEngineTypeFractions;
@@ -386,7 +386,7 @@ public class CongestionChargingDashboard extends JFrame {
 							yearToEngineTypeFractions.get(BASE_YEAR),
 							yearToAVFractions.get(BASE_YEAR),
 							vehicleTypeToPCU,
-							vehicleFuelEfficiency,
+							baseFuelConsumptionRates,
 							timeOfDayDistribution,
 							null,
 							null,
@@ -1159,11 +1159,11 @@ public class CongestionChargingDashboard extends JFrame {
 		final String AVFractionsFile = props.getProperty("autonomousVehiclesFile");
 		final String vehicleTypeToPCUFile = props.getProperty("vehicleTypeToPCUFile");
 		final String timeOfDayDistributionFile = props.getProperty("timeOfDayDistributionFile");
-		final String vehicleFuelEfficiencyFile = props.getProperty("vehicleFuelEfficiencyFile");
+		final String baseFuelConsumptionRatesFile = props.getProperty("baseFuelConsumptionRatesFile");
 		final int BASE_YEAR = Integer.parseInt(props.getProperty("baseYear"));
 		
 		vehicleTypeToPCU = InputFileReader.readVehicleTypeToPCUFile(vehicleTypeToPCUFile);
-		vehicleFuelEfficiency = InputFileReader.readEnergyConsumptionParamsFile(vehicleFuelEfficiencyFile);
+		baseFuelConsumptionRates = InputFileReader.readEnergyConsumptionParamsFile(baseFuelConsumptionRatesFile);
 		timeOfDayDistribution = InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFile);
 		yearToEnergyUnitCosts = InputFileReader.readEnergyUnitCostsFile(energyUnitCostsFile);
 		yearToEngineTypeFractions = InputFileReader.readEngineTypeFractionsFile(engineTypeFractionsFile);
@@ -1175,7 +1175,7 @@ public class CongestionChargingDashboard extends JFrame {
 											yearToEngineTypeFractions.get(BASE_YEAR),
 											yearToAVFractions.get(BASE_YEAR),
 											vehicleTypeToPCU,
-											vehicleFuelEfficiency,
+											baseFuelConsumptionRates,
 											timeOfDayDistribution,
 											null,
 											null,
