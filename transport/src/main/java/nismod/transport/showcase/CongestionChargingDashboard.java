@@ -136,7 +136,7 @@ public class CongestionChargingDashboard extends JFrame {
 	private static HashMap<Integer, HashMap<TimeOfDay, Double>> timeOfDayDistributionFreight;
 	private static HashMap<Integer, HashMap<EnergyType, Double>> yearToEnergyUnitCosts;
 	private static HashMap<Integer, HashMap<VehicleType, HashMap<EngineType, Double>>> yearToEngineTypeFractions;
-	private static HashMap<Integer, Double> yearToAVFractions;
+	private static HashMap<Integer, HashMap<VehicleType, Double>> yearToAVFractions;
 
 	public static final int MAP_WIDTH = 750;
 	public static final int MAP_HEIGHT = 700;

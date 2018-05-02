@@ -400,20 +400,26 @@ public class InputFileReader {
 	 * @param fileName File name.
 	 * @return Map with predictions of autonomous vehicles fractions.
 	 */
-	public static HashMap<Integer, Double> readAVFractionsFile(String fileName) {
+	public static HashMap<Integer, HashMap<VehicleType, Double>> readAVFractionsFile(String fileName) {
 
-		HashMap<Integer, Double> map = new HashMap<Integer, Double>();
+		HashMap<Integer, HashMap<VehicleType, Double>>  map = new HashMap<Integer, HashMap<VehicleType, Double>> ();
 		CSVParser parser = null;
 		try {
 			parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
 			//System.out.println(parser.getHeaderMap().toString());
 			Set<String> keySet = parser.getHeaderMap().keySet();
+			keySet.remove("year");
 			//System.out.println("keySet = " + keySet);
 			for (CSVRecord record : parser) {
 				//System.out.println(record);
 				int year = Integer.parseInt(record.get(0));
-				double fraction = Double.parseDouble(record.get(1));		
-				map.put(year, fraction);
+				HashMap<VehicleType, Double> fractionMap = new HashMap<VehicleType, Double>();
+				map.put(year, fractionMap);
+				for (String key: keySet) {
+					VehicleType vht = VehicleType.valueOf(key);
+					double fraction = Double.parseDouble(record.get(key));
+					fractionMap.put(vht,  fraction);
+				}
 			}
 		} catch (FileNotFoundException e) {
 			LOGGER.error(e);
