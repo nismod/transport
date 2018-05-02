@@ -26,6 +26,7 @@ import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
+import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.utility.ConfigReader;
 
@@ -229,7 +230,7 @@ public class DemandModelTest {
 		System.out.println(rna2025.calculateCarEnergyConsumptions());
 		*/
 		
-		/*
+		
 		System.out.println("Base-year (2015) passenger matrix: ");
 		dm.getPassengerDemand(2015).printMatrixFormatted();
 		System.out.println("Predicted (2016) passenger matrix: ");
@@ -237,6 +238,8 @@ public class DemandModelTest {
 
 		System.out.println("Base-year (2015) time skim matrix:");
 		dm.getTimeSkimMatrix(2015).printMatrixFormatted();
+
+		
 		System.out.println("Predicted (2016) time skim matrix:");
 		dm.getTimeSkimMatrix(2016).printMatrixFormatted();
 		System.out.printf("Base-year (2015) average OD time: %.2f.\n", dm.getTimeSkimMatrix(2015).getAverageCost());
@@ -276,13 +279,13 @@ public class DemandModelTest {
 		System.out.printf("Predicted (2016) average OD cost: %.2f.\n", dm.getCostSkimMatrixFreight(2016).getAverageCost());
 		System.out.printf("Predicted (2016) average OD cost (weighted by demand): %.2f.\n", dm.getCostSkimMatrixFreight(2016).getAverageCost(dm.getFreightDemand(2016)));
 
-		RoadNetworkAssignment rna2015 = dm.getRoadNetworkAssignment(2015);
-		RoadNetworkAssignment rna2016 = dm.getRoadNetworkAssignment(2016);
+		rna2015 = dm.getRoadNetworkAssignment(2015);
+		rna2016 = dm.getRoadNetworkAssignment(2016);
 		
 		System.out.println("Base-year (2015) peak-hour travel times:");
-		System.out.println(rna2015.getLinkTravelTimes());
+		System.out.println(rna2015.getLinkTravelTimes().get(TimeOfDay.EIGHTAM));
 		System.out.println("Predicted (2016) peak-hour travel times:");
-		System.out.println(rna2016.getLinkTravelTimes());
+		System.out.println(rna2016.getLinkTravelTimes().get(TimeOfDay.EIGHTAM));
 		
 		System.out.println("Base-year (2015) car energy consumptions:");
 		System.out.println(rna2015.calculateCarEnergyConsumptions());
@@ -308,8 +311,6 @@ public class DemandModelTest {
 		System.out.println(rna2015.calculatePeakLinkDensities());
 		System.out.println("Predicted (2016) peak-hour link densities:");
 		System.out.println(rna2016.calculatePeakLinkDensities());
-		
-		*/
 		
 		//dm.saveAssignmentResults(2015, "assignment2015noIntervention.csv");
 		//dm.saveAssignmentResults(2016, "assignment2016noIntervention.csv");

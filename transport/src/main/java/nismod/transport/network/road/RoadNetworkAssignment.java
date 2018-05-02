@@ -2620,13 +2620,19 @@ public class RoadNetworkAssignment {
 	public void updateTimeSkimMatrixFreight(SkimMatrixFreight timeSkimMatrixFreight) {
 
 		//this.updateLinkTravelTimes();
-
+		
 		SkimMatrixFreight counter = new SkimMatrixFreight();
 
 		for (Trip trip: this.tripList) {
 
 			VehicleType vht = trip.getVehicle();
-			if ( ! (vht == VehicleType.ARTIC || vht == VehicleType.RIGID || vht == VehicleType.VAN)) continue; //skip non-freight vehicles
+			if ( ! (vht == VehicleType.ARTIC || vht == VehicleType.RIGID || vht == VehicleType.VAN ||
+					vht == VehicleType.ARTIC_AV || vht == VehicleType.RIGID_AV || vht == VehicleType.VAN_AV)) continue; //skip non-freight vehicles
+			
+			//map AV types to non-AV types
+			if (vht == VehicleType.ARTIC_AV) vht = VehicleType.ARTIC;
+			if (vht == VehicleType.RIGID_AV) vht = VehicleType.RIGID;
+			if (vht == VehicleType.VAN_AV) vht = VehicleType.VAN;			
 
 			int origin = trip.getFreightOriginZone();
 			int destination = trip.getFreightDestinationZone();
@@ -2724,7 +2730,7 @@ public class RoadNetworkAssignment {
 
 		for (Trip trip: this.tripList) {
 
-			if (trip.getVehicle() != VehicleType.CAR) continue; //skip freight vehicles
+			if (trip.getVehicle() != VehicleType.CAR && trip.getVehicle() != VehicleType.CAR_AV) continue; //skip freight vehicles
 
 			String originLAD = trip.getOriginLAD(this.roadNetwork.getNodeToZone());
 			String destinationLAD = trip.getDestinationLAD(this.roadNetwork.getNodeToZone());
@@ -2763,7 +2769,7 @@ public class RoadNetworkAssignment {
 
 		for (Trip trip: this.tripList) {
 
-			if (trip instanceof TripTempro && trip.getVehicle() == VehicleType.CAR) {
+			if (trip instanceof TripTempro && (trip.getVehicle() == VehicleType.CAR || trip.getVehicle() == VehicleType.CAR_AV)) {
 
 				TripTempro temproTrip = (TripTempro) trip;
 				
@@ -2806,8 +2812,14 @@ public class RoadNetworkAssignment {
 		for (Trip trip: this.tripList) {
 
 			VehicleType vht = trip.getVehicle();
-			if ( ! (vht == VehicleType.ARTIC || vht == VehicleType.RIGID || vht == VehicleType.VAN)) continue; //skip non-freight vehicles
+			if ( ! (vht == VehicleType.ARTIC || vht == VehicleType.RIGID || vht == VehicleType.VAN ||
+					vht == VehicleType.ARTIC_AV || vht == VehicleType.RIGID_AV || vht == VehicleType.VAN_AV)) continue; //skip non-freight vehicles
 
+			//map AV types to non-AV types
+			if (vht == VehicleType.ARTIC_AV) vht = VehicleType.ARTIC;
+			if (vht == VehicleType.RIGID_AV) vht = VehicleType.RIGID;
+			if (vht == VehicleType.VAN_AV) vht = VehicleType.VAN;	
+			
 			int origin = trip.getFreightOriginZone();
 			int destination = trip.getFreightDestinationZone();
 			int multiplier = trip.getMultiplier();
@@ -2852,8 +2864,14 @@ public class RoadNetworkAssignment {
 		for (Trip trip: this.tripList) {
 
 			VehicleType vht = trip.getVehicle();
-			if ( ! (vht == VehicleType.ARTIC || vht == VehicleType.RIGID || vht == VehicleType.VAN)) continue; //skip non-freight vehicles
+			if ( ! (vht == VehicleType.ARTIC || vht == VehicleType.RIGID || vht == VehicleType.VAN ||
+					vht == VehicleType.ARTIC_AV || vht == VehicleType.RIGID_AV || vht == VehicleType.VAN_AV)) continue; //skip non-freight vehicles
 
+			//map AV types to non-AV types
+			if (vht == VehicleType.ARTIC_AV) vht = VehicleType.ARTIC;
+			if (vht == VehicleType.RIGID_AV) vht = VehicleType.RIGID;
+			if (vht == VehicleType.VAN_AV) vht = VehicleType.VAN;	
+			
 			int origin = trip.getFreightOriginZone();
 			int destination = trip.getFreightDestinationZone();
 			int multiplier = trip.getMultiplier();
@@ -2892,7 +2910,7 @@ public class RoadNetworkAssignment {
 	}
 
 	/**
-	 * Calculates total energy consumption for each car energy type (in litres for fuels and in kWh for electricity).
+	 * Calculates total energy consumption for each car/AV energy type (in litres for fuels and in kWh for electricity).
 	 * @return Total consumption for each energy type.
 	 */
 	public HashMap<EnergyType, Double> calculateCarEnergyConsumptions() {
@@ -2901,7 +2919,7 @@ public class RoadNetworkAssignment {
 		for (EnergyType energy: EnergyType.values()) consumptions.put(energy, 0.0);
 				
 		for (Trip trip: this.tripList) {
-			if (trip.getVehicle() != VehicleType.CAR) continue; //skip freight vehicles
+			if (trip.getVehicle() != VehicleType.CAR && trip.getVehicle() != VehicleType.CAR_AV) continue; //skip freight vehicles
 			HashMap<EnergyType, Double> consumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistance(), averageAccessEgressSpeedCar, this.energyConsumptions, this.relativeFuelEfficiencies);
 			int multiplier = trip.getMultiplier();
 	
@@ -2931,7 +2949,7 @@ public class RoadNetworkAssignment {
 
 		for (Trip trip: this.tripList) {
 
-			if (trip.getVehicle() != VehicleType.CAR) continue; //skip freight vehicles
+			if (trip.getVehicle() != VehicleType.CAR && trip.getVehicle() != VehicleType.CAR_AV) continue; //skip freight vehicles
 
 			HashMap<EnergyType, Double> tripConsumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyConsumptions, this.relativeFuelEfficiencies);
 
@@ -2971,7 +2989,8 @@ public class RoadNetworkAssignment {
 
 		for (Trip trip: this.tripList) {
 			VehicleType vht = trip.getVehicle();
-			if ( ! (vht == VehicleType.ARTIC || vht == VehicleType.RIGID || vht == VehicleType.VAN)) continue; //skip non-freight vehicles
+			if ( ! (vht == VehicleType.ARTIC || vht == VehicleType.RIGID || vht == VehicleType.VAN ||
+					vht == VehicleType.ARTIC_AV || vht == VehicleType.RIGID_AV || vht == VehicleType.VAN_AV)) continue; //skip non-freight vehicles
 			HashMap<EnergyType, Double> consumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyConsumptions, this.relativeFuelEfficiencies);
 			int multiplier = trip.getMultiplier();
 			
@@ -3257,6 +3276,10 @@ public class RoadNetworkAssignment {
 		header.add("linkVolumeVan");
 		header.add("linkVolumeRigid");
 		header.add("linkVolumeArtic");
+		header.add("linkVolumeCarAV");
+		header.add("linkVolumeVanAV");
+		header.add("linkVolumeRigidAV");
+		header.add("linkVolumeArticAV");
 		header.add("linkVolumeInPCU");
 		header.add("peakCapacity");
 		header.add("peakDensity");
@@ -3299,6 +3322,18 @@ public class RoadNetworkAssignment {
 				if (linkVolume == null) record.add(Integer.toString(0));
 				else 					record.add(Integer.toString(linkVolume));
 				linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC).get(edge.getID());
+				if (linkVolume == null) record.add(Integer.toString(0));
+				else 					record.add(Integer.toString(linkVolume));
+				linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.CAR_AV).get(edge.getID());
+				if (linkVolume == null) record.add(Integer.toString(0));
+				else 					record.add(Integer.toString(linkVolume));
+				linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.VAN_AV).get(edge.getID());
+				if (linkVolume == null) record.add(Integer.toString(0));
+				else 					record.add(Integer.toString(linkVolume));
+				linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.RIGID_AV).get(edge.getID());
+				if (linkVolume == null) record.add(Integer.toString(0));
+				else 					record.add(Integer.toString(linkVolume));
+				linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC_AV).get(edge.getID());
 				if (linkVolume == null) record.add(Integer.toString(0));
 				else 					record.add(Integer.toString(linkVolume));
 				Double linkVolumePCU = this.linkVolumesInPCU.get(edge.getID());
@@ -3844,7 +3879,8 @@ public class RoadNetworkAssignment {
 		HashMap<String, Integer> totalLADnoTripStarts = new HashMap<String, Integer>();
 
 		for (Trip trip: this.tripList)
-			if (trip.getVehicle() == VehicleType.VAN || trip.getVehicle() == VehicleType.RIGID || trip.getVehicle() == VehicleType.ARTIC) {
+			if (trip.getVehicle() == VehicleType.VAN || trip.getVehicle() == VehicleType.RIGID || trip.getVehicle() == VehicleType.ARTIC ||
+				trip.getVehicle() == VehicleType.ARTIC_AV || trip.getVehicle() == VehicleType.RIGID_AV || trip.getVehicle() == VehicleType.VAN_AV) {
 				String originZone = trip.getOriginLAD(this.roadNetwork.getNodeToZone());
 				Integer tripStarts = totalLADnoTripStarts.get(originZone);
 				if (tripStarts == null) tripStarts = 0;
@@ -3864,7 +3900,8 @@ public class RoadNetworkAssignment {
 		HashMap<String, Integer> totalLADnoTripEnds = new HashMap<String, Integer>();
 
 		for (Trip trip: this.tripList) 
-			if (trip.getVehicle() == VehicleType.VAN || trip.getVehicle() == VehicleType.RIGID || trip.getVehicle() == VehicleType.ARTIC) {
+			if (trip.getVehicle() == VehicleType.VAN || trip.getVehicle() == VehicleType.RIGID || trip.getVehicle() == VehicleType.ARTIC ||
+				trip.getVehicle() == VehicleType.ARTIC_AV || trip.getVehicle() == VehicleType.RIGID_AV || trip.getVehicle() == VehicleType.VAN_AV) {
 				String destinationZone = trip.getDestinationLAD(this.roadNetwork.getNodeToZone());
 				Integer tripEnds = totalLADnoTripEnds.get(destinationZone);
 				if (tripEnds == null) tripEnds = 0;
