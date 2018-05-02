@@ -1540,7 +1540,18 @@ public class RoadNetworkAssignment {
 				}
 				if (hour == null) LOGGER.warn("Time of day not chosen!");
 
+				//get freight vehicle type from the freight matrix value
 				VehicleType vht = VehicleType.values()[vehicleType];
+				//find autonomous counterpart
+				VehicleType avht = null;
+				if (vht == VehicleType.VAN) 		avht = VehicleType.VAN_AV;
+				else if (vht == VehicleType.RIGID) 	avht = VehicleType.RIGID_AV;
+				else if (vht == VehicleType.ARTIC) 	avht = VehicleType.ARTIC_AV;
+								
+				//choose vehicle
+				random  = rng.nextDouble();
+				if (Double.compare(AVFractions.get(avht), random) > 0) vht = avht;
+				if (vht == null) LOGGER.warn("Vehicle type not chosen!");
 
 				//choose engine
 				cumulativeProbability = 0.0;
@@ -1771,7 +1782,18 @@ public class RoadNetworkAssignment {
 				}
 				if (hour == null) LOGGER.warn("Time of day not chosen!");
 
+				//get freight vehicle type from the freight matrix value
 				VehicleType vht = VehicleType.values()[vehicleType];
+				//find autonomous counterpart
+				VehicleType avht = null;
+				if (vht == VehicleType.VAN) 		avht = VehicleType.VAN_AV;
+				else if (vht == VehicleType.RIGID) 	avht = VehicleType.RIGID_AV;
+				else if (vht == VehicleType.ARTIC) 	avht = VehicleType.ARTIC_AV;
+								
+				//choose vehicle
+				random  = rng.nextDouble();
+				if (Double.compare(AVFractions.get(avht), random) > 0) vht = avht;
+				if (vht == null) LOGGER.warn("Vehicle type not chosen!");
 
 				//choose engine
 				cumulativeProbability = 0.0;
@@ -1995,7 +2017,18 @@ public class RoadNetworkAssignment {
 				}
 				if (hour == null) LOGGER.warn("Time of day not chosen!");
 
+				//get freight vehicle type from the freight matrix value
 				VehicleType vht = VehicleType.values()[vehicleType];
+				//find autonomous counterpart
+				VehicleType avht = null;
+				if (vht == VehicleType.VAN) 		avht = VehicleType.VAN_AV;
+				else if (vht == VehicleType.RIGID) 	avht = VehicleType.RIGID_AV;
+				else if (vht == VehicleType.ARTIC) 	avht = VehicleType.ARTIC_AV;
+								
+				//choose vehicle
+				random  = rng.nextDouble();
+				if (Double.compare(AVFractions.get(avht), random) > 0) vht = avht;
+				if (vht == null) LOGGER.warn("Vehicle type not chosen!");
 
 				//choose engine
 				cumulativeProbability = 0.0;
