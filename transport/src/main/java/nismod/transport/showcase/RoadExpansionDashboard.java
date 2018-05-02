@@ -1191,6 +1191,7 @@ public class RoadExpansionDashboard extends JFrame {
 		final String AVFractionsFile = props.getProperty("autonomousVehiclesFile");
 		final String vehicleTypeToPCUFile = props.getProperty("vehicleTypeToPCUFile");
 		final String timeOfDayDistributionFile = props.getProperty("timeOfDayDistributionFile");
+		final String timeOfDayDistributionFreightFile = props.getProperty("timeOfDayDistributionFreightFile");
 		final String baseFuelConsumptionRatesFile = props.getProperty("baseFuelConsumptionRatesFile");
 		final String relativeFuelEfficiencyFile = props.getProperty("relativeFuelEfficiencyFile");
 		final int BASE_YEAR = Integer.parseInt(props.getProperty("baseYear"));
@@ -1199,6 +1200,7 @@ public class RoadExpansionDashboard extends JFrame {
 		baseFuelConsumptionRates = InputFileReader.readEnergyConsumptionParamsFile(baseFuelConsumptionRatesFile);
 		relativeFuelEfficiency = InputFileReader.readRelativeFuelEfficiencyFile(relativeFuelEfficiencyFile);
 		timeOfDayDistribution = InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFile);
+		timeOfDayDistributionFreight = InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFreightFile);
 		yearToEnergyUnitCosts = InputFileReader.readEnergyUnitCostsFile(energyUnitCostsFile);
 		yearToEngineTypeFractions = InputFileReader.readEngineTypeFractionsFile(engineTypeFractionsFile);
 		yearToAVFractions = InputFileReader.readAVFractionsFile(AVFractionsFile);
