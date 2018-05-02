@@ -68,7 +68,7 @@ public class DemandModel {
 	private HashMap<Integer, RoadNetworkAssignment> yearToRoadNetworkAssignment;
 	private HashMap<Integer, HashMap<EnergyType, Double>> yearToEnergyUnitCosts;
 	private HashMap<Integer, HashMap<VehicleType, HashMap<EngineType, Double>>> yearToEngineTypeFractions;
-	private HashMap<Integer, Double> yearToAVFractions;
+	private HashMap<Integer, HashMap<VehicleType, Double>> yearToAVFractions;
 	//private HashMap<Integer, HashMap<Integer, Double>> yearToCongestionCharges;
 	private HashMap<Integer, HashMap<String, MultiKeyMap>> yearToCongestionCharges;
 	//private SkimMatrix baseYearTimeSkimMatrix,	baseYearCostSkimMatrix;
@@ -109,7 +109,7 @@ public class DemandModel {
 		this.yearToRoadNetworkAssignment = new HashMap<Integer, RoadNetworkAssignment>();
 		this.yearToEnergyUnitCosts = new HashMap<Integer, HashMap<EnergyType, Double>>();
 		this.yearToEngineTypeFractions = new HashMap<Integer, HashMap<VehicleType, HashMap<EngineType, Double>>>();
-		this.yearToAVFractions = new HashMap<Integer, Double>();
+		this.yearToAVFractions = new HashMap<Integer, HashMap<VehicleType, Double>>();
 		this.yearToCongestionCharges = new HashMap<Integer, HashMap<String, MultiKeyMap>>();
 		
 		this.rsg = rsg;

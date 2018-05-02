@@ -61,7 +61,6 @@ public class RoadNetworkAssignment {
 	public boolean flagAStarIfEmptyRouteSet; //if there is no pre-generated route set for a node pair, try finding a route with aStar
 	public int interzonalTopNodes; //how many top nodes (based on gravitated population size) to considers as trip origin/destination
 	public double averageIntersectionDelay; //[min]
-	public double fractionAV;
 	public double nodesProbabilityWeighting; //manipulates probabilities of nodes for the node choice
 	public double nodesProbabilityWeightingFreight; //manipulates probabilities of nodes for the node choice
 	public double assignmentFraction; //the fraction of vehicle flows to actually assign, with later results expansion to 100%
@@ -89,7 +88,7 @@ public class RoadNetworkAssignment {
 	}
 
 	public static enum VehicleType {
-		CAR(0), ARTIC(1), RIGID(2), VAN(3), AV(4);
+		CAR(0), ARTIC(1), RIGID(2), VAN(3), CAR_AV(4), ARTIC_AV(5), RIGID_AV(6), VAN_AV(7);
 		private int value; 
 		private VehicleType(int value) { this.value = value; } 
 		public int getValue() { return this.value; } 
@@ -108,6 +107,7 @@ public class RoadNetworkAssignment {
 	private HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptions;
 	private HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiencies;
 	private HashMap<VehicleType, HashMap<EngineType, Double>> engineTypeFractions;
+	private HashMap<VehicleType, Double> AVFractions;
 
 	private HashMap<TimeOfDay, Double> timeOfDayDistribution;
 	private HashMap<TimeOfDay, Double> timeOfDayDistributionFreight;
@@ -143,7 +143,7 @@ public class RoadNetworkAssignment {
 	 * @param roadNetwork Road network.
 	 * @param energyUnitCosts Energy unit costs.
 	 * @param engineTypeFractions Market shares of different engine/fuel types.
-	 * @param fractionAV Fraction of autonomous vehicles for passenger vehicle trips.
+	 * @param fractionsAV Fraction of autonomous vehicles for different vehicle types.
 	 * @param vehicleTypeToPCU Vehicle to PCU conversion.
 	 * @param energyConsumptionParams Base fuel consumption rates.
 	 * @param relativeFuelEfficiencies Relative fuel efficiencies (compared to base year).
@@ -158,7 +158,7 @@ public class RoadNetworkAssignment {
 	public RoadNetworkAssignment(RoadNetwork roadNetwork, 
 			HashMap<EnergyType, Double> energyUnitCosts, 
 			HashMap<VehicleType, HashMap<EngineType, Double>> engineTypeFractions,
-			Double fractionAV,
+			HashMap<VehicleType, Double> fractionsAV,
 			HashMap<VehicleType, Double> vehicleTypeToPCU,
 			HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParams,
 			HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiencies,
@@ -223,6 +223,9 @@ public class RoadNetworkAssignment {
 		if (timeOfDayDistributionFreight != null) 	this.timeOfDayDistributionFreight = timeOfDayDistributionFreight; //TODO check it adds up to one!
 		else 								LOGGER.error("Missing time of day distribution for freight.");
 
+		if (fractionsAV != null)	this.AVFractions = fractionsAV;
+		else						LOGGER.error("Missing fractions of autonomous vehicles.");
+
 		this.congestionCharges = congestionCharges;
 		//System.out.println("Congestion charges: " + this.congestionCharges);
 
@@ -244,9 +247,6 @@ public class RoadNetworkAssignment {
 		this.assignmentFraction = Double.parseDouble(params.getProperty("ASSIGNMENT_FRACTION"));
 		this.flagUseRouteChoiceModel = Boolean.parseBoolean(params.getProperty("USE_ROUTE_CHOICE_MODEL")); //use route-choice model (true) or routing with A-Star (false)
 		
-		if (fractionAV != null)		this.fractionAV = fractionAV;
-		else						this.fractionAV = 0.00;
-
 		//calculate area code choice probability
 		if (areaCodeProbabilities != null)	this.areaCodeProbabilities = areaCodeProbabilities;
 		else {
@@ -391,10 +391,10 @@ public class RoadNetworkAssignment {
 				//choose vehicle
 				random  = rng.nextDouble();
 				VehicleType vht = null;
-				if (Double.compare(1.0 - fractionAV, random) > 0)
+				if (Double.compare(1.0 - AVFractions.get(VehicleType.CAR_AV), random) > 0)
 					vht = VehicleType.CAR;
 				else 
-					vht = VehicleType.AV;
+					vht = VehicleType.CAR_AV;
 				if (vht == null) LOGGER.warn("Vehicle type not chosen!");
 
 				//choose engine
@@ -580,10 +580,10 @@ public class RoadNetworkAssignment {
 				//choose vehicle
 				random  = rng.nextDouble();
 				VehicleType vht = null;
-				if (Double.compare(1.0 - fractionAV, random) > 0)
+				if (Double.compare(1.0 - AVFractions.get(VehicleType.CAR_AV), random) > 0)
 					vht = VehicleType.CAR;
 				else 
-					vht = VehicleType.AV;
+					vht = VehicleType.CAR_AV;
 				if (vht == null) LOGGER.warn("Vehicle type not chosen!");
 
 				//choose engine
@@ -769,10 +769,10 @@ public class RoadNetworkAssignment {
 				//choose vehicle
 				random  = rng.nextDouble();
 				VehicleType vht = null;
-				if (Double.compare(1.0 - fractionAV, random) > 0)
+				if (Double.compare(1.0 - AVFractions.get(VehicleType.CAR_AV), random) > 0)
 					vht = VehicleType.CAR;
 				else 
-					vht = VehicleType.AV;
+					vht = VehicleType.CAR_AV;
 				if (vht == null) LOGGER.warn("Vehicle type not chosen!");
 
 				//choose engine
@@ -1037,10 +1037,10 @@ public class RoadNetworkAssignment {
 				//choose vehicle
 				random  = rng.nextDouble();
 				VehicleType vht = null;
-				if (Double.compare(1.0 - fractionAV, random) > 0)
+				if (Double.compare(1.0 - AVFractions.get(VehicleType.CAR_AV), random) > 0)
 					vht = VehicleType.CAR;
 				else 
-					vht = VehicleType.AV;
+					vht = VehicleType.CAR_AV;
 				if (vht == null) LOGGER.warn("Vehicle type not chosen!");
 
 				//choose engine
@@ -1311,10 +1311,10 @@ public class RoadNetworkAssignment {
 				//choose vehicle
 				random  = rng.nextDouble();
 				VehicleType vht = null;
-				if (Double.compare(1.0 - fractionAV, random) > 0)
+				if (Double.compare(1.0 - AVFractions.get(VehicleType.CAR_AV), random) > 0)
 					vht = VehicleType.CAR;
 				else 
-					vht = VehicleType.AV;
+					vht = VehicleType.CAR_AV;
 				if (vht == null) LOGGER.warn("Vehicle type not chosen!");
 
 				//choose engine
@@ -3771,7 +3771,7 @@ public class RoadNetworkAssignment {
 		HashMap<String, Integer> totalLADnoTripStarts = new HashMap<String, Integer>();
 
 		for (Trip trip: this.tripList)
-			if (trip.getVehicle() == VehicleType.CAR || trip.getVehicle() == VehicleType.AV) {
+			if (trip.getVehicle() == VehicleType.CAR || trip.getVehicle() == VehicleType.CAR_AV) {
 				String originZone = trip.getOriginLAD(this.roadNetwork.getNodeToZone());
 				Integer tripStarts = totalLADnoTripStarts.get(originZone);
 				if (tripStarts == null) tripStarts = 0;
@@ -3791,7 +3791,7 @@ public class RoadNetworkAssignment {
 		HashMap<String, Integer> totalLADnoTripEnds = new HashMap<String, Integer>();
 
 		for (Trip trip: this.tripList) 
-			if (trip.getVehicle() == VehicleType.CAR || trip.getVehicle() == VehicleType.AV) {
+			if (trip.getVehicle() == VehicleType.CAR || trip.getVehicle() == VehicleType.CAR_AV) {
 				String destinationZone = trip.getDestinationLAD(this.roadNetwork.getNodeToZone());
 				Integer tripEnds = totalLADnoTripEnds.get(destinationZone);
 				if (tripEnds == null) tripEnds = 0;
