@@ -184,12 +184,9 @@ public class Route {
 		if (linkCharges != null)
 			for (String policyName: linkCharges.keySet()) flags.put(policyName, false);
 		
-		
 		double fuelCost = 0.0;
 		HashMap<EnergyType, Double> routeConsumptions = calculateConsumption(vht, et, linkTravelTime, energyConsumptionParameters, relativeFuelEfficiency);
 		
-		LOGGER.trace(routeConsumptions);
-	
 		for (EnergyType energy: EnergyType.values()) fuelCost +=  routeConsumptions.get(energy) * energyUnitCosts.get(energy);
 		
 		double tollCost = 0.0;
@@ -221,7 +218,7 @@ public class Route {
 
 		HashMap<EnergyType, Double> routeConsumptions = new HashMap<EnergyType, Double>();
 		HashMap<String, Double> parameters, parametersFuel, parametersElectricity;
-		
+
 		for (EnergyType energy: EnergyType.values()) routeConsumptions.put(energy, 0.0);
 		
 		if (et == EngineType.PHEV_PETROL) {
