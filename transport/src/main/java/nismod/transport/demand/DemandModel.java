@@ -129,7 +129,7 @@ public class DemandModel {
 		FreightMatrix freightMatrixScaled = freightMatrix.getScaledMatrix(FREIGHT_SCALING_FACTOR);
 		//freightMatrixScaled.printMatrixFormatted();
 		this.yearToFreightODMatrix.put(DemandModel.BASE_YEAR, freightMatrixScaled);
-		
+				
 		//read all year population predictions
 		this.yearToZoneToPopulation = InputFileReader.readPopulationFile(populationFile);
 
@@ -231,15 +231,6 @@ public class DemandModel {
 			if (rna == null) {
 				LOGGER.debug("{} year has not been assigned to the network, so assigning it now.", fromYear);
 				
-				final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
-				final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
-				final String AVFractionsFile = props.getProperty("autonomousVehiclesFile");
-				final String vehicleTypeToPCUFile = props.getProperty("vehicleTypeToPCUFile");
-				final String timeOfDayDistributionFile = props.getProperty("timeOfDayDistributionFile");
-				final String timeOfDayDistributionFreightFile = props.getProperty("timeOfDayDistributionFreightFile");
-				final String baseFuelConsumptionRatesFile = props.getProperty("baseFuelConsumptionRatesFile");
-				final int BASE_YEAR = Integer.parseInt(props.getProperty("baseYear"));
-			
 				//create a network assignment and assign the demand
 				rna = new RoadNetworkAssignment(this.roadNetwork, 
 												this.yearToEnergyUnitCosts.get(fromYear), 

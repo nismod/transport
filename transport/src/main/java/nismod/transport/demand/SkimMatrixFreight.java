@@ -170,14 +170,15 @@ public class SkimMatrixFreight {
 			ArrayList<String> record = new ArrayList<String>();
 			for (Integer d: firstKeyList)
 				for (Integer o: secondKeyList)
-					for (Integer v=0; v<=3; v++) {
+					for (Integer v=1; v<=3; v++) {
 						Double cost = this.getCost(o, d, v);
 						record.clear();
 						record.add(d.toString());
 						record.add(o.toString());
 						record.add(v.toString());
 						if (cost != null)	record.add(String.format("%.2f", cost));
-						else				record.add("N/A");
+						else				//record.add("N/A");
+											continue; //do not save record if unknown cost
 						csvFilePrinter.printRecord(record);
 					}
 		} catch (Exception e) {

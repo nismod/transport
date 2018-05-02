@@ -1162,7 +1162,7 @@ public class RoadNetworkAssignmentTest {
 		ArrayList<Trip> tripList = rna.getTripList();
 		Frequency freq = new Frequency();
 		for (Trip trip: tripList) {
-			System.out.println(trip.toString());
+			//System.out.println(trip.toString());
 			freq.addValue(trip.getVehicle());
 		}
 		
