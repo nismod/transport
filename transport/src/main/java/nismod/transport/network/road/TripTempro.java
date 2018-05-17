@@ -172,4 +172,18 @@ public class TripTempro extends Trip {
 		
 		return consumption;
 	}
+	
+	@Override
+	public Double getCO2emission(Map<Integer, Double> linkTravelTime, HashMap<Integer, Double> distanceFromTemproZoneToNearestNode, double averageAccessEgressSpeed, HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptions, HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency, HashMap<EnergyType, Double> unitCO2Emissions) {
+		
+		HashMap<EnergyType, Double> consumption = this.route.calculateConsumption(this.vehicle, this.engine, linkTravelTime, energyConsumptions, relativeFuelEfficiency);
+		
+		double CO2 = 0.0;
+		for (EnergyType et: consumption.keySet()) {
+			
+			CO2 += consumption.get(et) * unitCO2Emissions.get(et);
+		}
+		
+		return CO2;
+	}
 }

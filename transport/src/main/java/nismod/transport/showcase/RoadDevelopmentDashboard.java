@@ -132,6 +132,7 @@ public class RoadDevelopmentDashboard extends JFrame {
 	private static HashMap<Integer, HashMap<TimeOfDay, Double>> timeOfDayDistribution;
 	private static HashMap<Integer, HashMap<TimeOfDay, Double>> timeOfDayDistributionFreight;
 	private static HashMap<Integer, HashMap<EnergyType, Double>> yearToEnergyUnitCosts;
+	private static HashMap<Integer, HashMap<EnergyType, Double>> yearToUnitCO2Emissions;
 	private static HashMap<Integer, HashMap<VehicleType, HashMap<EngineType, Double>>> yearToEngineTypeFractions;
 	private static HashMap<Integer, HashMap<VehicleType, Double>> yearToAVFractions;
 	
@@ -442,7 +443,8 @@ public class RoadDevelopmentDashboard extends JFrame {
 				final int BASE_YEAR = Integer.parseInt(props.getProperty("baseYear"));
 				
 				//create a road network assignment
-				RoadNetworkAssignment rnaAfterDevelopment = new RoadNetworkAssignment(roadNetwork, 
+				RoadNetworkAssignment rnaAfterDevelopment = new RoadNetworkAssignment(roadNetwork,
+						yearToUnitCO2Emissions.get(BASE_YEAR),
 						yearToEnergyUnitCosts.get(BASE_YEAR),
 						yearToEngineTypeFractions.get(BASE_YEAR),
 						yearToAVFractions.get(BASE_YEAR),
@@ -1181,6 +1183,7 @@ public class RoadDevelopmentDashboard extends JFrame {
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
 		
 		final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
+		final String unitCO2EmissionsFile = props.getProperty("unitCO2EmissionsFile");
 		final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
 		final String AVFractionsFile = props.getProperty("autonomousVehiclesFile");
 		final String vehicleTypeToPCUFile = props.getProperty("vehicleTypeToPCUFile");
@@ -1196,12 +1199,14 @@ public class RoadDevelopmentDashboard extends JFrame {
 		timeOfDayDistribution = InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFile);
 		timeOfDayDistributionFreight = InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFreightFile);
 		yearToEnergyUnitCosts = InputFileReader.readEnergyUnitCostsFile(energyUnitCostsFile);
+		yearToUnitCO2Emissions = InputFileReader.readUnitCO2EmissionFile(unitCO2EmissionsFile);
 		yearToEngineTypeFractions = InputFileReader.readEngineTypeFractionsFile(engineTypeFractionsFile);
 		yearToAVFractions = InputFileReader.readAVFractionsFile(AVFractionsFile);
 	
 		//create a road network assignment
 		RoadNetworkAssignment rnaBefore = new RoadNetworkAssignment(roadNetwork, 
 															yearToEnergyUnitCosts.get(BASE_YEAR),
+															yearToUnitCO2Emissions.get(BASE_YEAR),
 															yearToEngineTypeFractions.get(BASE_YEAR),
 															yearToAVFractions.get(BASE_YEAR),
 															vehicleTypeToPCU,

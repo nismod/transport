@@ -203,6 +203,7 @@ public class App {
 				final String congestionChargingFile = props.getProperty("congestionChargingFile");
 
 				final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
+				final String unitCO2EmissionsFile = props.getProperty("unitCO2EmissionsFile");
 				final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
 				final String AVFractionsFile = props.getProperty("autonomousVehiclesFile");
 
@@ -224,7 +225,7 @@ public class App {
 				rsg.readRoutesBinary(freightRoutesFile);
 
 				//the main demand model
-				DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, engineTypeFractionsFile, AVFractionsFile, interventions, rsg, props);
+				DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, unitCO2EmissionsFile, engineTypeFractionsFile, AVFractionsFile, interventions, rsg, props);
 				dm.predictHighwayDemands(Integer.parseInt(predictedYear), Integer.parseInt(fromYear));
 				dm.saveAllResults(Integer.parseInt(predictedYear), Integer.parseInt(fromYear));
 			}

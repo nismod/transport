@@ -291,6 +291,52 @@ public class InputFileReader {
 	}
 	
 	/**
+	 * Reads unit CO2 emissions file.
+	 * @param fileName File name.
+	 * @return Map with unit CO2 emissions.
+	 */
+	public static HashMap<Integer, HashMap<EnergyType, Double>> readUnitCO2EmissionFile (String fileName) {
+
+		HashMap<Integer, HashMap<EnergyType, Double>> map = new HashMap<Integer, HashMap<EnergyType, Double>>();
+		CSVParser parser = null;
+		try {
+			parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
+			//System.out.println(parser.getHeaderMap().toString());
+			Set<String> keySet = parser.getHeaderMap().keySet();
+			keySet.remove("year");
+			//System.out.println("keySet = " + keySet);
+			double unitEmission;
+			for (CSVRecord record : parser) {
+				//System.out.println(record);
+				int year = Integer.parseInt(record.get(0));
+				HashMap<EnergyType, Double> energyTypeToUnitCO2Emission = new HashMap<EnergyType, Double>();
+				for (String et: keySet) {
+					//System.out.println("Destination zone = " + destination);
+					EnergyType energyType = EnergyType.valueOf(et);
+					unitEmission = Double.parseDouble(record.get(energyType));
+					energyTypeToUnitCO2Emission.put(energyType, unitEmission);			
+				}
+				map.put(year, energyTypeToUnitCO2Emission);
+			}
+		} catch (FileNotFoundException e) {
+			LOGGER.error(e);
+		} catch (IOException e) {
+			LOGGER.error(e);
+		} finally {
+			try {
+				parser.close();
+			} catch (IOException e) {
+				LOGGER.error(e);
+			}
+		}
+
+		LOGGER.debug("Unit CO2 emissions:");
+		LOGGER.debug(map);
+
+		return map;
+	}
+	
+	/**
 	 * Reads engine type fractions file.
 	 * @param fileName File name.
 	 * @return Map with engine type fractions.

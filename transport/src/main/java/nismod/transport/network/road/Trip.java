@@ -255,6 +255,19 @@ public class Trip {
 		return consumption;
 	}
 	
+	public Double getCO2emission(Map<Integer, Double> linkTravelTime, HashMap<Integer, Double> averageAccessEgressMap, double averageAccessEgressSpeed, HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptions, HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency, HashMap<EnergyType, Double> unitCO2Emissions) {
+		
+		HashMap<EnergyType, Double> consumption = this.route.calculateConsumption(this.vehicle, this.engine, linkTravelTime, energyConsumptions, relativeFuelEfficiency);
+		
+		double CO2 = 0.0;
+		for (EnergyType et: consumption.keySet()) {
+			
+			CO2 += consumption.get(et) * unitCO2Emissions.get(et);
+		}
+		
+		return CO2;
+	}
+	
 	public boolean isTripGoingThroughCongestionChargingZone(String policyName, HashMap<String, MultiKeyMap> congestionCharges) {
 		
 		MultiKeyMap charges = congestionCharges.get(policyName);

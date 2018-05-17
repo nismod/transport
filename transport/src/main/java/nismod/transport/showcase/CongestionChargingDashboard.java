@@ -135,6 +135,7 @@ public class CongestionChargingDashboard extends JFrame {
 	private static HashMap<Integer, HashMap<TimeOfDay, Double>> timeOfDayDistribution;
 	private static HashMap<Integer, HashMap<TimeOfDay, Double>> timeOfDayDistributionFreight;
 	private static HashMap<Integer, HashMap<EnergyType, Double>> yearToEnergyUnitCosts;
+	private static HashMap<Integer, HashMap<EnergyType, Double>> yearToUnitCO2Emissions;
 	private static HashMap<Integer, HashMap<VehicleType, HashMap<EngineType, Double>>> yearToEngineTypeFractions;
 	private static HashMap<Integer, HashMap<VehicleType, Double>> yearToAVFractions;
 
@@ -328,6 +329,7 @@ public class CongestionChargingDashboard extends JFrame {
 				final String freightRoutesFile = props.getProperty("freightRoutesFile");
 
 				final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
+				final String unitCO2EmissionsFile = props.getProperty("unitCO2EmissionsFile");
 				final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
 				final String AVFractionsFile = props.getProperty("autonomousVehiclesFile");
 
@@ -347,7 +349,7 @@ public class CongestionChargingDashboard extends JFrame {
 
 				DemandModel dm;
 				try {
-					dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, engineTypeFractionsFile, AVFractionsFile, interventions, rsg, props);
+					dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, unitCO2EmissionsFile, engineTypeFractionsFile, AVFractionsFile, interventions, rsg, props);
 
 					System.out.println("Base-year congestion charging: ");
 					//System.out.println(dm.getCongestionCharges(2015));
@@ -383,7 +385,8 @@ public class CongestionChargingDashboard extends JFrame {
 					final int BASE_YEAR = Integer.parseInt(props.getProperty("baseYear"));
 					
 					//create a road network assignment
-					RoadNetworkAssignment rnaAfterCongestionCharging = new RoadNetworkAssignment(roadNetwork, 
+					RoadNetworkAssignment rnaAfterCongestionCharging = new RoadNetworkAssignment(roadNetwork,
+							yearToUnitCO2Emissions.get(BASE_YEAR),
 							yearToEnergyUnitCosts.get(BASE_YEAR),
 							yearToEngineTypeFractions.get(BASE_YEAR),
 							yearToAVFractions.get(BASE_YEAR),
@@ -1159,6 +1162,7 @@ public class CongestionChargingDashboard extends JFrame {
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
 		
 		final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
+		final String unitCO2EmissionsFile = props.getProperty("unitCO2EmissionsFile");
 		final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
 		final String AVFractionsFile = props.getProperty("autonomousVehiclesFile");
 		final String vehicleTypeToPCUFile = props.getProperty("vehicleTypeToPCUFile");
@@ -1174,12 +1178,14 @@ public class CongestionChargingDashboard extends JFrame {
 		timeOfDayDistribution = InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFile);
 		timeOfDayDistributionFreight = InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFreightFile);
 		yearToEnergyUnitCosts = InputFileReader.readEnergyUnitCostsFile(energyUnitCostsFile);
+		yearToUnitCO2Emissions = InputFileReader.readEnergyUnitCostsFile(unitCO2EmissionsFile);
 		yearToEngineTypeFractions = InputFileReader.readEngineTypeFractionsFile(engineTypeFractionsFile);
 		yearToAVFractions = InputFileReader.readAVFractionsFile(AVFractionsFile);
 	
 		//create a road network assignment
 		rnaBefore = new RoadNetworkAssignment(roadNetwork, 
 											yearToEnergyUnitCosts.get(BASE_YEAR),
+											yearToUnitCO2Emissions.get(BASE_YEAR),
 											yearToEngineTypeFractions.get(BASE_YEAR),
 											yearToAVFractions.get(BASE_YEAR),
 											vehicleTypeToPCU,
