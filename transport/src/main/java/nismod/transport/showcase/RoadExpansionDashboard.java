@@ -133,6 +133,7 @@ public class RoadExpansionDashboard extends JFrame {
 	private static HashMap<Integer, HashMap<TimeOfDay, Double>> timeOfDayDistribution;
 	private static HashMap<Integer, HashMap<TimeOfDay, Double>> timeOfDayDistributionFreight;
 	private static HashMap<Integer, HashMap<EnergyType, Double>> yearToEnergyUnitCosts;
+	private static HashMap<Integer, HashMap<EnergyType, Double>> yearToUnitCO2Emissions;
 	private static HashMap<Integer, HashMap<VehicleType, HashMap<EngineType, Double>>> yearToEngineTypeFractions;
 	private static HashMap<Integer, HashMap<VehicleType, Double>> yearToAVFractions;
 	
@@ -433,7 +434,8 @@ public class RoadExpansionDashboard extends JFrame {
 				final int BASE_YEAR = Integer.parseInt(props.getProperty("baseYear"));
 			
 				//create a road network assignment
-				RoadNetworkAssignment rnaAfterExpansion = new RoadNetworkAssignment(roadNetwork, 
+				RoadNetworkAssignment rnaAfterExpansion = new RoadNetworkAssignment(roadNetwork,
+						yearToUnitCO2Emissions.get(BASE_YEAR),
 						yearToEnergyUnitCosts.get(BASE_YEAR),
 						yearToEngineTypeFractions.get(BASE_YEAR),
 						yearToAVFractions.get(BASE_YEAR),
@@ -1208,6 +1210,7 @@ public class RoadExpansionDashboard extends JFrame {
 		//create a road network assignment
 		RoadNetworkAssignment rnaBefore = new RoadNetworkAssignment(roadNetwork, 
 															yearToEnergyUnitCosts.get(BASE_YEAR),
+															yearToUnitCO2Emissions.get(BASE_YEAR),
 															yearToEngineTypeFractions.get(BASE_YEAR),
 															yearToAVFractions.get(BASE_YEAR),
 															vehicleTypeToPCU,

@@ -111,6 +111,8 @@ public class RoadNetworkAssignment {
 
 	private HashMap<TimeOfDay, Double> timeOfDayDistribution;
 	private HashMap<TimeOfDay, Double> timeOfDayDistributionFreight;
+	
+	private HashMap<EnergyType, Double> unitCO2Emissions;
 
 	private RoadNetwork roadNetwork;
 
@@ -142,6 +144,7 @@ public class RoadNetworkAssignment {
 	/**
 	 * @param roadNetwork Road network.
 	 * @param energyUnitCosts Energy unit costs.
+	 * @param unitCO2Emissions Unit CO2 emissions.
 	 * @param engineTypeFractions Market shares of different engine/fuel types.
 	 * @param fractionsAV Fraction of autonomous vehicles for different vehicle types.
 	 * @param vehicleTypeToPCU Vehicle to PCU conversion.
@@ -157,6 +160,7 @@ public class RoadNetworkAssignment {
 	 */
 	public RoadNetworkAssignment(RoadNetwork roadNetwork, 
 			HashMap<EnergyType, Double> energyUnitCosts, 
+			HashMap<EnergyType, Double> unitCO2Emissions,
 			HashMap<VehicleType, HashMap<EngineType, Double>> engineTypeFractions,
 			HashMap<VehicleType, Double> fractionsAV,
 			HashMap<VehicleType, Double> vehicleTypeToPCU,
@@ -207,6 +211,9 @@ public class RoadNetworkAssignment {
 
 		if (energyUnitCosts != null) 	this.energyUnitCosts = energyUnitCosts;
 		else 							LOGGER.error("Missing energy unit costs.");
+		
+		if (unitCO2Emissions != null) 	this.unitCO2Emissions = unitCO2Emissions;
+		else 							LOGGER.error("Missing unit CO2 emissions.");
 
 		if (energyConsumptionParams != null) 	this.energyConsumptions = energyConsumptionParams;
 		else									LOGGER.error("Missing energy consumption parameters.");
@@ -3020,7 +3027,34 @@ public class RoadNetworkAssignment {
 		}
 		return combined;
 	}
+	
+	/**
+	 * Calculates total CO2 emissions (in kg) for each type of passenger and freight vehicle.
+	 * @return Total consumption for each engine type.
+	 */
+	public HashMap<String, Double> calculateCO2Emissions() {
+		
+		HashMap<String, Double> totalCO2Emissions = new HashMap<String, Double>();
 
+		HashMap<EnergyType, Double> car = calculateCarEnergyConsumptions();
+		double carCO2 = 0.0;
+		for (EnergyType energy: EnergyType.values()) {
+			carCO2 += car.get(energy) + this.unitCO2Emissions.get(energy);
+		}
+		totalCO2Emissions.put("PASSENGER", carCO2);
+		
+		HashMap<EnergyType, Double> freight = calculateFreightEnergyConsumptions();
+		double freightCO2 = 0.0;
+		for (EnergyType energy: EnergyType.values()) {
+			freightCO2 += freight.get(energy) + this.unitCO2Emissions.get(energy);
+		}
+		totalCO2Emissions.put("FREIGHT", freightCO2);
+		
+		totalCO2Emissions.put("COMBINED", carCO2 + freightCO2);
+	
+		return totalCO2Emissions;
+	}
+	
 	/**
 	 * Calculate peak-hour link point capacities (PCU/lane/hr).
 	 * @return Peak-hour link point capacities.
@@ -3509,6 +3543,49 @@ public class RoadNetworkAssignment {
 			for (int i=1; i<header.size(); i++)	{
 				EnergyType energy = EnergyType.valueOf(header.get(i));
 				record.add(String.format("%.2f", energyConsumptions.get(energy)));
+			}
+			csvFilePrinter.printRecord(record);
+		} catch (Exception e) {
+			LOGGER.error(e);
+		} finally {
+			try {
+				fileWriter.flush();
+				fileWriter.close();
+				csvFilePrinter.close();
+			} catch (IOException e) {
+				LOGGER.error(e);
+			}
+		}
+	}
+	
+	/**
+	 * Saves total CO2 emissions to an output file.
+	 * @param year Year of the assignment.
+	 * @param outputFile Output file name (with path).
+	 */
+	public void saveTotalCO2Emissions(int year, String outputFile) {
+		
+		LOGGER.debug("Saving CO2 emissions file.");
+
+		//calculate CO2 emissions
+		HashMap<String, Double> totalCO2Emissions = this.calculateCO2Emissions();
+
+		String NEW_LINE_SEPARATOR = "\n";
+		ArrayList<String> header = new ArrayList<String>();
+		header.add("year");
+		for (String key: totalCO2Emissions.keySet()) header.add(key);
+		FileWriter fileWriter = null;
+		CSVPrinter csvFilePrinter = null;
+		CSVFormat csvFileFormat = CSVFormat.DEFAULT.withRecordSeparator(NEW_LINE_SEPARATOR);
+		try {
+			fileWriter = new FileWriter(outputFile);
+			csvFilePrinter = new CSVPrinter(fileWriter, csvFileFormat);
+			csvFilePrinter.printRecord(header);
+			ArrayList<String> record = new ArrayList<String>();
+			record.add(Integer.toString(year));
+			for (int i=1; i<header.size(); i++)	{
+				String key = header.get(i);
+				record.add(String.format("%.2f", totalCO2Emissions.get(key)));
 			}
 			csvFilePrinter.printRecord(record);
 		} catch (Exception e) {

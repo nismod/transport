@@ -76,6 +76,7 @@ public class EstimatedODMatrixTest {
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
 				
 		final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
+		final String unitCO2EmissionsFile = props.getProperty("unitCO2EmissionsFile");
 		final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
 		final String AVFractionsFile = props.getProperty("autonomousVehiclesFile");
 		final String vehicleTypeToPCUFile = props.getProperty("vehicleTypeToPCUFile");
@@ -88,6 +89,7 @@ public class EstimatedODMatrixTest {
 		//create a road network assignment
 		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, 
 															InputFileReader.readEnergyUnitCostsFile(energyUnitCostsFile).get(BASE_YEAR),
+															InputFileReader.readUnitCO2EmissionFile(unitCO2EmissionsFile).get(BASE_YEAR),
 															InputFileReader.readEngineTypeFractionsFile(engineTypeFractionsFile).get(BASE_YEAR),
 															InputFileReader.readAVFractionsFile(AVFractionsFile).get(BASE_YEAR),
 															InputFileReader.readVehicleTypeToPCUFile(vehicleTypeToPCUFile),

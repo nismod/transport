@@ -70,6 +70,7 @@ public class DemandModelTest {
 		final String congestionChargingFileName = props.getProperty("congestionChargingFile");
 
 		final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
+		final String unitCO2EmissionsFile = props.getProperty("unitCO2EmissionsFile");
 		final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
 		final String AVFractionsFile = props.getProperty("autonomousVehiclesFile");
 		
@@ -201,7 +202,7 @@ public class DemandModelTest {
 		rsg.printStatistics();
 		
 		//the main demand model
-		DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, freightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, engineTypeFractionsFile, AVFractionsFile, interventions, rsg, props);
+		DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, freightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, unitCO2EmissionsFile, engineTypeFractionsFile, AVFractionsFile, interventions, rsg, props);
 		
 		//copy base-year engine fractions
 		//for (int year = 2015; year < 2025; year++) {
@@ -302,6 +303,11 @@ public class DemandModelTest {
 		System.out.println("Predicted (2016) total energy consumptions:");
 		System.out.println(rna2016.calculateEnergyConsumptions());
 		
+		System.out.println("Base-year (2015) total CO2 emissions:");
+		System.out.println(rna2015.calculateCO2Emissions());
+		System.out.println("Predicted (2016) total CO2 emissions:");
+		System.out.println(rna2016.calculateCO2Emissions());
+				
 		System.out.println("Base-year (2015) peak-hour link point capacities:");
 		System.out.println(rna2015.calculatePeakLinkPointCapacities());
 		System.out.println("Predicted (2016) peak-hour link point capacities:");

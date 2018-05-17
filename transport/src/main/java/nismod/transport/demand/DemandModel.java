@@ -67,6 +67,7 @@ public class DemandModel {
 	private HashMap<Integer, HashMap<String, Double>> yearToZoneToGVA;
 	private HashMap<Integer, RoadNetworkAssignment> yearToRoadNetworkAssignment;
 	private HashMap<Integer, HashMap<EnergyType, Double>> yearToEnergyUnitCosts;
+	private HashMap<Integer, HashMap<EnergyType, Double>> yearToUnitCO2Emissions;
 	private HashMap<Integer, HashMap<VehicleType, HashMap<EngineType, Double>>> yearToEngineTypeFractions;
 	private HashMap<Integer, HashMap<VehicleType, Double>> yearToAVFractions;
 	//private HashMap<Integer, HashMap<Integer, Double>> yearToCongestionCharges;
@@ -90,13 +91,14 @@ public class DemandModel {
 	 * @param elasticitiesFile Elasticities file name.
 	 * @param elasticitiesFreightFile Elasticities freight file name.
 	 * @param energyUnitCostsFile Energy unit costs file name.
+	 * @param unitCO2EmissionFile Unit CO2 emission file name.
 	 * @param engineTypeFractionsFile Engine type fractions file.
 	 * @param autonomousVehiclesFractionsFile Autonomous vehicles fractions file.
 	 * @param interventions List of interventions.
 	 * @param rsg Route Set Generator with routes for both cars and freight.
 	 * @param props Properties file.
 	 */
-	public DemandModel(RoadNetwork roadNetwork, String baseYearODMatrixFile, String baseYearFreightMatrixFile, String populationFile, String GVAFile, String elasticitiesFile, String elasticitiesFreightFile, String energyUnitCostsFile, String engineTypeFractionsFile, String autonomousVehiclesFractionsFile, List<Intervention> interventions, RouteSetGenerator rsg, Properties props) throws FileNotFoundException, IOException {
+	public DemandModel(RoadNetwork roadNetwork, String baseYearODMatrixFile, String baseYearFreightMatrixFile, String populationFile, String GVAFile, String elasticitiesFile, String elasticitiesFreightFile, String energyUnitCostsFile, String unitCO2EmissionsFile, String engineTypeFractionsFile, String autonomousVehiclesFractionsFile, List<Intervention> interventions, RouteSetGenerator rsg, Properties props) throws FileNotFoundException, IOException {
 
 		this.yearToPassengerODMatrix = new HashMap<Integer, ODMatrix>();
 		this.yearToFreightODMatrix = new HashMap<Integer, FreightMatrix>();
@@ -108,6 +110,7 @@ public class DemandModel {
 		this.yearToZoneToGVA = new HashMap<Integer, HashMap<String, Double>>();
 		this.yearToRoadNetworkAssignment = new HashMap<Integer, RoadNetworkAssignment>();
 		this.yearToEnergyUnitCosts = new HashMap<Integer, HashMap<EnergyType, Double>>();
+		this.yearToUnitCO2Emissions = new HashMap<Integer, HashMap<EnergyType, Double>>();
 		this.yearToEngineTypeFractions = new HashMap<Integer, HashMap<VehicleType, HashMap<EngineType, Double>>>();
 		this.yearToAVFractions = new HashMap<Integer, HashMap<VehicleType, Double>>();
 		this.yearToCongestionCharges = new HashMap<Integer, HashMap<String, MultiKeyMap>>();
@@ -137,6 +140,8 @@ public class DemandModel {
 		this.yearToZoneToGVA = InputFileReader.readGVAFile(GVAFile);
 		
 		this.yearToEnergyUnitCosts = InputFileReader.readEnergyUnitCostsFile(energyUnitCostsFile);
+		
+		this.yearToUnitCO2Emissions = InputFileReader.readUnitCO2EmissionFile(unitCO2EmissionsFile);
 		
 		this.yearToEngineTypeFractions = InputFileReader.readEngineTypeFractionsFile(engineTypeFractionsFile);
 		
@@ -233,7 +238,8 @@ public class DemandModel {
 				
 				//create a network assignment and assign the demand
 				rna = new RoadNetworkAssignment(this.roadNetwork, 
-												this.yearToEnergyUnitCosts.get(fromYear), 
+												this.yearToEnergyUnitCosts.get(fromYear),
+												this.yearToUnitCO2Emissions.get(fromYear),
 												this.yearToEngineTypeFractions.get(fromYear), 
 												this.yearToAVFractions.get(fromYear),
 												this.vehicleTypeToPCU,
@@ -379,7 +385,8 @@ public class DemandModel {
 				if (predictedRna == null)
 					//assign predicted year - using link travel times from fromYear
 					predictedRna = new RoadNetworkAssignment(this.roadNetwork, 
-															 this.yearToEnergyUnitCosts.get(predictedYear), 
+															 this.yearToEnergyUnitCosts.get(predictedYear),
+															 this.yearToUnitCO2Emissions.get(predictedYear),
 															 this.yearToEngineTypeFractions.get(predictedYear), 
 															 this.yearToAVFractions.get(predictedYear),
 															 this.vehicleTypeToPCU,
@@ -395,7 +402,8 @@ public class DemandModel {
 				else
 					//using latest link travel times
 					predictedRna = new RoadNetworkAssignment(this.roadNetwork, 
-															 this.yearToEnergyUnitCosts.get(predictedYear), 
+															 this.yearToEnergyUnitCosts.get(predictedYear),
+															 this.yearToUnitCO2Emissions.get(predictedYear),
 															 this.yearToEngineTypeFractions.get(predictedYear), 
 															 this.yearToAVFractions.get(predictedYear),
 															 this.vehicleTypeToPCU,
@@ -464,7 +472,8 @@ public class DemandModel {
 				
 				//assign predicted year again using latest link travel times
 				predictedRna = new RoadNetworkAssignment(this.roadNetwork, 
-														 this.yearToEnergyUnitCosts.get(predictedYear), 
+														 this.yearToEnergyUnitCosts.get(predictedYear),
+														 this.yearToUnitCO2Emissions.get(predictedYear),
 														 this.yearToEngineTypeFractions.get(predictedYear), 
 														 this.yearToAVFractions.get(predictedYear),
 														 this.vehicleTypeToPCU,
@@ -724,6 +733,7 @@ public class DemandModel {
 		String costSkimMatrixFreightFile = this.props.getProperty("costSkimMatrixFreightFile");
 		String vehicleKilometresFile = this.props.getProperty("vehicleKilometresFile");
 		String energyConsumptionsFile = this.props.getProperty("energyConsumptionsFile");
+		String totalCO2EmissionsFile = this.props.getProperty("totalCO2EmissionsFile");
 		String tripsFile = this.props.getProperty("tripsFile");
 	
 		if (year == Integer.parseInt(baseYear)) { //rename output files for base year
@@ -754,6 +764,9 @@ public class DemandModel {
 		
 		outputFile = file.getPath() + File.separator +  energyConsumptionsFile;
 		this.yearToRoadNetworkAssignment.get(year).saveTotalEnergyConsumptions(year, outputFile);
+		
+		outputFile = file.getPath() + File.separator +  totalCO2EmissionsFile;
+		this.yearToRoadNetworkAssignment.get(year).saveTotalCO2Emissions(year, outputFile);
 	
 		outputFile = file.getPath() + File.separator +  assignmentResultsFile;
 		this.yearToRoadNetworkAssignment.get(year).saveAssignmentResults(year, outputFile);

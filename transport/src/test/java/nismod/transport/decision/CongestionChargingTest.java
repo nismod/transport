@@ -62,6 +62,7 @@ public class CongestionChargingTest {
 		final String congestionChargingFile = "./src/test/resources/testdata/interventions/congestionChargingSouthampton.properties";
 		
 		final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
+		final String unitCO2EmissionsFile = props.getProperty("unitCO2EmissionsFile");
 		final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
 		final String AVFractionsFile = props.getProperty("autonomousVehiclesFile");
 
@@ -80,7 +81,7 @@ public class CongestionChargingTest {
 		rsg.readRoutesBinary(freightRoutesFile);
 		rsg.printStatistics();
 		
-		DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, engineTypeFractionsFile, AVFractionsFile, interventions, rsg, props);
+		DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, unitCO2EmissionsFile, engineTypeFractionsFile, AVFractionsFile, interventions, rsg, props);
 
 		System.out.println("Base-year congestion charging: ");
 		System.out.println(dm.getCongestionCharges(2015));
@@ -135,6 +136,7 @@ public class CongestionChargingTest {
 		final String congestionChargingFile = props.getProperty("congestionChargingFile");
 
 		final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
+		final String unitCO2EmissionsFile = props.getProperty("unitCO2EmissionsFile");
 		final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
 		final String AVFractionsFile = props.getProperty("autonomousVehiclesFile");
 		
@@ -161,7 +163,7 @@ public class CongestionChargingTest {
 		interventions.add(cg2);
 		interventions.add(cg3);
 		
-		DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, engineTypeFractionsFile, AVFractionsFile, interventions, null, props);
+		DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, unitCO2EmissionsFile, engineTypeFractionsFile, AVFractionsFile, interventions, null, props);
 		
 		System.out.println("Base-year congestion charging: ");
 		System.out.println(dm.getCongestionCharges(2015));
