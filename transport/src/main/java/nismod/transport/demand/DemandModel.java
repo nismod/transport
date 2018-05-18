@@ -431,12 +431,28 @@ public class DemandModel {
 					String destinationZone = (String) mk.getKey(1);
 
 					double oldFlow = predictedPassengerODMatrix.getFlow(originZone, destinationZone);
-
-					double oldODTravelTime = this.yearToTimeSkimMatrix.get(predictedYear).getCost(originZone, destinationZone);
-					double newODTravelTime = tsm.getCost(originZone, destinationZone);
-					double oldODTravelCost = this.yearToCostSkimMatrix.get(predictedYear).getCost(originZone, destinationZone);
-					double newODTravelCost = csm.getCost(originZone, destinationZone);
-
+					
+					if (this.yearToTimeSkimMatrix.get(predictedYear) == null) LOGGER.error("No time skim matrix in the demand model.");
+					if (this.yearToCostSkimMatrix.get(predictedYear) == null) LOGGER.error("No cost skim matrix in the demand model.");
+										
+					Double oldODTravelTime = this.yearToTimeSkimMatrix.get(predictedYear).getCost(originZone, destinationZone);
+					Double newODTravelTime = tsm.getCost(originZone, destinationZone);
+					Double oldODTravelCost = this.yearToCostSkimMatrix.get(predictedYear).getCost(originZone, destinationZone);
+					Double newODTravelCost = csm.getCost(originZone, destinationZone);
+					
+					if (oldODTravelTime == null) LOGGER.warn("Unknown old travel time between zone {} and zone {}.", originZone, destinationZone);
+					if (newODTravelTime == null) LOGGER.warn("Unknown new travel time between zone {} and zone {}.", originZone, destinationZone);
+					if (oldODTravelCost == null) LOGGER.warn("Unknown old travel cost between zone {} and zone {}.", originZone, destinationZone);
+					if (newODTravelCost == null) LOGGER.warn("Unknown new travel cost between zone {} and zone {}.", originZone, destinationZone);
+					if (oldODTravelTime == null || newODTravelTime == null)	{ //if either is undefined assume the ratio is 1, i.e. not affecting the prediction
+						oldODTravelTime = 1.0;
+						newODTravelTime = 1.0;
+					}
+					if (oldODTravelCost == null || newODTravelCost == null) { 
+						oldODTravelCost = 1.0;
+						newODTravelCost = 1.0;
+					}
+					
 					double predictedflow = oldFlow * Math.pow(newODTravelTime / oldODTravelTime, elasticities.get(ElasticityTypes.TIME)) *
 							Math.pow(newODTravelCost / oldODTravelCost, elasticities.get(ElasticityTypes.COST));
 
@@ -455,10 +471,23 @@ public class DemandModel {
 
 					double oldFlow = predictedFreightODMatrix.getFlow(origin, destination, vehicleType);
 
-					double oldODTravelTime = this.yearToTimeSkimMatrixFreight.get(predictedYear).getCost(origin, destination, vehicleType);
-					double newODTravelTime = tsmf.getCost(origin, destination, vehicleType);
-					double oldODTravelCost = this.yearToCostSkimMatrixFreight.get(predictedYear).getCost(origin, destination, vehicleType);
-					double newODTravelCost = csmf.getCost(origin, destination, vehicleType);
+					Double oldODTravelTime = this.yearToTimeSkimMatrixFreight.get(predictedYear).getCost(origin, destination, vehicleType);
+					Double newODTravelTime = tsmf.getCost(origin, destination, vehicleType);
+					Double oldODTravelCost = this.yearToCostSkimMatrixFreight.get(predictedYear).getCost(origin, destination, vehicleType);
+					Double newODTravelCost = csmf.getCost(origin, destination, vehicleType);
+					
+					if (oldODTravelTime == null) LOGGER.warn("Unknown old travel time between freight zone {} and freight zone {} for vehicle {}.", origin, destination, vehicleType);
+					if (newODTravelTime == null) LOGGER.warn("Unknown new travel time between freight zone {} and freight zone {} for vehicle {}.", origin, destination, vehicleType);
+					if (oldODTravelCost == null) LOGGER.warn("Unknown old travel cost between freight zone {} and freight zone {} for vehicle {}.", origin, destination, vehicleType);
+					if (newODTravelCost == null) LOGGER.warn("Unknown new travel cost between freight zone {} and freight zone {} for vehicle {}.", origin, destination, vehicleType);
+					if (oldODTravelTime == null || newODTravelTime == null)	{ //if either is undefined assume the ratio is 1, i.e. not affecting the prediction
+						oldODTravelTime = 1.0;
+						newODTravelTime = 1.0;
+					}
+					if (oldODTravelCost == null || newODTravelCost == null) { 
+						oldODTravelCost = 1.0;
+						newODTravelCost = 1.0;
+					}
 
 					double predictedflow = oldFlow * Math.pow(newODTravelTime / oldODTravelTime, elasticitiesFreight.get(ElasticityTypes.TIME)) *
 							Math.pow(newODTravelCost / oldODTravelCost, elasticitiesFreight.get(ElasticityTypes.COST));

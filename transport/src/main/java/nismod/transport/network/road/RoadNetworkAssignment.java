@@ -2530,8 +2530,15 @@ public class RoadNetworkAssignment {
 	 */
 	public void assignFlowsAndUpdateLinkTravelTimes(ODMatrix passengerODM, FreightMatrix freightODM, RouteSetGenerator rsg, Properties params, double weight) {
 
-		this.assignPassengerFlowsRouteChoice(passengerODM, rsg, params);
-		this.assignFreightFlowsRouteChoice(freightODM, rsg, params);
+		final Boolean flagUseRouteChoiceModel = Boolean.parseBoolean(params.getProperty("USE_ROUTE_CHOICE_MODEL"));
+		
+		if (flagUseRouteChoiceModel) {
+			this.assignPassengerFlowsRouteChoice(passengerODM, rsg, params);
+			this.assignFreightFlowsRouteChoice(freightODM, rsg, params);
+		} else {
+			this.assignPassengerFlowsRouting(passengerODM, rsg);
+			this.assignFreightFlowsRouting(freightODM, rsg);
+		}
 		this.updateLinkVolumeInPCU();
 		this.updateLinkVolumeInPCUPerTimeOfDay();
 		this.updateLinkVolumePerVehicleType();

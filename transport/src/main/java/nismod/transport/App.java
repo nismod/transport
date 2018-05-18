@@ -209,7 +209,7 @@ public class App {
 
 				final String passengerRoutesFile = props.getProperty("passengerRoutesFile");
 				final String freightRoutesFile = props.getProperty("freightRoutesFile");
-
+				
 				//load interventions
 				List<Intervention> interventions = new ArrayList<Intervention>();
 				RoadExpansion re = new RoadExpansion(roadExpansionFile);
@@ -221,8 +221,12 @@ public class App {
 				interventions.add(cc);
 				
 				RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, props);
-				rsg.readRoutesBinary(passengerRoutesFile);
-				rsg.readRoutesBinary(freightRoutesFile);
+				
+				final Boolean flagUseRouteChoiceModel = Boolean.parseBoolean(props.getProperty("USE_ROUTE_CHOICE_MODEL"));
+				if (flagUseRouteChoiceModel) { //if route choice version used, load pre-generated routes
+					rsg.readRoutesBinary(passengerRoutesFile);
+					rsg.readRoutesBinary(freightRoutesFile);
+				}
 
 				//the main demand model
 				DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, unitCO2EmissionsFile, engineTypeFractionsFile, AVFractionsFile, interventions, rsg, props);
