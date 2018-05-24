@@ -96,11 +96,6 @@
 		 	   <version>1.5</version>
 		</dependency>
 		<dependency>
- 		  <groupId>org.jfree</groupId>
-	  	  <artifactId>jfreesvg</artifactId>
-	  	  <version>3.3</version>
-		</dependency>
-		<dependency>
     		<groupId>com.jgoodies</groupId>
     		<artifactId>jgoodies-forms</artifactId>
     		<version>1.8.0</version>
@@ -177,6 +172,19 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+      			<groupId>org.codehaus.mojo</groupId>
+        		<artifactId>license-maven-plugin</artifactId>
+        		<version>1.16</version>
+        		<executions>
+         			<execution>
+            		<id>download-licenses</id>
+           				<goals>
+             				<goal>download-licenses</goal>
+           				</goals>
+         			</execution>
+       			</executions>
+     		</plugin>
 		</plugins>
 	</build>
 	

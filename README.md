@@ -16,21 +16,27 @@ The transport sector has various links with other sectors:
 [<img alt="Interdependencies" src="images/interdependencies.jpg" style="max-width:500px"/>](images/interdependencies.jpg)
 
 The model is currently focusing on interdependencies with the energy sector:
-*	The fuel price from the energy sector is used in the traffic flow prediction.
-*	The transport model provides information about fuel consumption to the energy sector.
+* The fuel price from the energy sector is used in the traffic flow prediction.
+* The transport model provides information about fuel consumption to the energy sector.
 
 The implementation uses an open source library *GeoTools* for geospatial processing:
 http://www.geotools.org/about.html
+
+Test resources contain a small amount of data and shapefiles that come with the following licencing and copyright statemens:
+* Open Government Licence (http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/).
+* Contains National Statistics data © Crown copyright and database right 2012.
+* Contains Ordnance Survey data © Crown copyright and database right 2012.
+These files are used in the test classes and should also be consulted to understand the required formats of the input files.
 
 ## Contact information
 
 * Milan Lovric lovric.milan@gmail.com / M.Lovric@soton.ac.uk (Modelling and development)
 * Manuel Buitrago mbm1d15@soton.ac.uk (Seaports and freight)
-* James Pritchard j.a.pritchard@soton.ac.uk (Environmental emissions)
 * Simon Blainey S.P.Blainey@soton.ac.uk (MISTRAL Co-Lead)
 
 ## How to run the model
 
+0. Install Java Development Kit version 8 from: http://www.oracle.com.
 1. Install *Eclipse IDE for Java Developers*: https://eclipse.org/downloads/.
 2. Run Eclipse and choose the workspace folder.
 3. Import the existing Maven project from the local git folder where the code has been cloned. In Eclipse: *File -> Import -> Maven -> Existing Maven Projects.* Wait until all Maven dependencies (specified in the *pom.xml* file) are downloaded. If the *pom.xml* file has been changed, the Maven project should be first updated (*Alt+F5*).
@@ -39,6 +45,8 @@ http://www.geotools.org/about.html
 
 [<img alt="Configuration" src="images/configuration.jpg" style="max-width:500px" />](images/configuration.jpg)
 
-6. To build the project and run the main model in the command prompt, type:
- * mvn package
- * java -cp target/transport-0.0.1-SNAPSHOT-main.jar nismod.transport.App ./path/to/config.properties
+6. Alternatively, to build the project and run the main model in the command prompt:
+ * Make sure the java home environment variable is set for the operating system and pointing to the directory where Java Development Kit has been installed.
+ * Download maven, install it and set the environment variables: http://maven.apache.org/. Then type:
+ * mvn clean install
+ * java -cp target/transport-0.0.1-SNAPSHOT-main.jar nismod.transport.App -c ./path/to/yourOwnConfig.properties
