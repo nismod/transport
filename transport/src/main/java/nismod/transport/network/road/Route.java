@@ -20,7 +20,7 @@ import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 
 /**
- * Route is a sequence of directed edges with a choice utility
+ * Route is a sequence of directed edges with a choice utility.
  * @author Milan Lovric
  *
  */
@@ -148,6 +148,7 @@ public class Route {
 	/**
 	 * Calculates the route travel time based on link travel times.
 	 * @param linkTravelTime Link travel times.
+	 * @param avgIntersectionDelay Average intersection delay (in minutes).
 	 */
 	public void calculateTravelTime(Map<Integer, Double> linkTravelTime, double avgIntersectionDelay) {
 		
@@ -176,6 +177,13 @@ public class Route {
 	
 	/**
 	 * Calculates the cost of the route.
+	 * @param vht Vehicle type.
+	 * @param et Engine type.
+	 * @param linkTravelTime Link travel times.
+	 * @param energyConsumptionParameters Base year energy consumption parameters.
+	 * @param relativeFuelEfficiency Relative fuel efficiency (compared to base year).
+	 * @param energyUnitCosts Energy unit costs.
+	 * @param linkCharges Congestion charges.
 	 */
 	public void calculateCost(VehicleType vht, EngineType et, Map<Integer, Double> linkTravelTime, HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParameters, HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency, HashMap<EnergyType, Double> energyUnitCosts, HashMap<String, HashMap<Integer, Double>> linkCharges) {
 
@@ -213,6 +221,12 @@ public class Route {
 	
 	/**
 	 * Calculates energy consumption of the route.
+	 * @param vht Vehicle type.
+	 * @param et Energy type.
+	 * @param linkTravelTime Link travel time.
+	 * @param energyConsumptionParameters Base year energy consumption parameters.
+	 * @param relativeFuelEfficiency Relative fuel efficiency compared to base year.
+	 * @return Consumption for each type.
 	 */
 	public HashMap<EnergyType, Double> calculateConsumption(VehicleType vht, EngineType et, Map<Integer, Double> linkTravelTime, HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParameters, HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency) {
 
@@ -336,10 +350,10 @@ public class Route {
 	 * @param vht Vehicle type.
 	 * @param et Engine type.
 	 * @param linkTravelTime Link travel times.
-	 * @param avgIntersectionDelay Average intersection delay.
 	 * @param energyConsumptionParameters Energy consumption parameters (A, B, C, D) for a combination of vehicle type and engine type.
 	 * @param relativeFuelEfficiency Relative fuel efficiency compared to the base year.
-	 * @param unitCost Unit cost of fuel.
+	 * @param energyUnitCosts Energy unit costs.
+	 * @param linkCharges Congestion charges.
 	 * @param params Route choice parameters.
 	 */
 	public void calculateUtility(VehicleType vht, EngineType et, Map<Integer, Double> linkTravelTime, HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParameters, HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency, HashMap<EnergyType, Double> energyUnitCosts, HashMap<String, HashMap<Integer, Double>> linkCharges, Properties params) {		
@@ -380,16 +394,30 @@ public class Route {
 		this.utility = utility;
 	}
 	
+	/**
+	 * Checks if route is empty or not.
+	 * @return True if route is empty.
+	 */
 	public boolean isEmpty() {
 		
 		return (this.edges.isEmpty() && this.singleNode == null);
 	}
 	
+	/**
+	 * Checks if route contains the edge.
+	 * @param edge Edge object.
+	 * @return True if route contains the edge.
+	 */
 	public boolean contains(Edge edge) {
 		
 		return this.edges.contains(edge);
 	}
 	
+	/**
+	 * Checks if route contains the edge.
+	 * @param edgeID Edge id.
+	 * @return True if route contains the edge.
+	 */
 	public boolean contains(int edgeID) {
 		
 		for (Edge edge: this.edges)
@@ -397,21 +425,37 @@ public class Route {
 		return false;
 	}
 
+	/**
+	 * Getter method for route length.
+	 * @return Route length.
+	 */
 	public Double getLength() {
 		
 		return length;
 	}
 	
+	/**
+	 * Getter method for route time.
+	 * @return Route time.
+	 */
 	public Double getTime() {
 	
 		return time;
 	}
 	
+	/**
+	 * Getter method for route cost.
+	 * @return Route cost.
+	 */
 	public Double getCost() {
 		
 		return cost;
 	}
 	
+	/**
+	 * Getter method for number of intersections.
+	 * @return Number of intersections.
+	 */
 	public int getNumberOfIntersections() {
 		
 		if (this.isEmpty())
@@ -420,6 +464,10 @@ public class Route {
 			return (this.edges.size() - 1);
 	}
 	
+	/**
+	 * Getter method for route utility.
+	 * @return Route utility.
+	 */
 	public Double getUtility() {
 		
 		//if (this.utility == null) 
@@ -427,17 +475,29 @@ public class Route {
 		return utility;
 	}
 	
+	/**
+	 * Setter method for route utility.
+	 * @param utility Route utility.
+	 */
 	public void setUtility(double utility) {
 		
 		this.utility = utility;
 	}
 	
+	/**
+	 * Getter method for route origin node.
+	 * @return Origin node.
+	 */
 	public DirectedNode getOriginNode() {
 		
 		if (edges.isEmpty()) 	return (DirectedNode) this.singleNode;
 		else 					return this.edges.get(0).getInNode();
 	}
 	
+	/**
+	 * Getter method for destination node.
+	 * @return Destination node.
+	 */
 	public DirectedNode getDestinationNode() {
 		if (edges.isEmpty()) 	return (DirectedNode) this.singleNode;
 		else					return this.edges.get(edges.size() - 1).getOutNode();	
@@ -448,6 +508,10 @@ public class Route {
 //		return id;
 //	}
 	
+	/**
+	 * Checks if route is valid (successive edges in the route are connected in a directional way).
+	 * @return True if route is valid.
+	 */
 	public boolean isValid() {
 		
 		//if (this.edges.size() == 1) return true; //single node route still considered valid!
@@ -507,6 +571,10 @@ public class Route {
 		return sb.toString();
 	}
 	
+	/**
+	 * Gets formatted string representation of the route.
+	 * @return Route as a string.
+	 */
 	public String getFormattedString() {
 		
 		if (edges.isEmpty() && this.singleNode == null) return null;

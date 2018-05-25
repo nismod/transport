@@ -22,7 +22,8 @@ import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.utility.RandomSingleton;
 
 /**
- * Implements SPSA optimisation algorithm (Simultaneous Perturbation Stochastic Approximation). 
+ * Implements SPSA optimisation algorithm (Simultaneous Perturbation Stochastic Approximation).
+ * This version optimises OD matrix and start/end node probabilities simultaneously.
  * http://www.jhuapl.edu/SPSA/
  * @author Milan Lovric
   */

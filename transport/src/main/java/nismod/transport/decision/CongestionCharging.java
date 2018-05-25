@@ -22,7 +22,7 @@ import nismod.transport.demand.DemandModel;
 
 /**
  * Intervention that implements link-based congestion charge
- * that depends on vehicle type and time of day.
+ * which depends on the vehicle type and time of day when trip is made.
  * @author Milan Lovric
  */
 public class CongestionCharging extends Intervention {
@@ -32,7 +32,8 @@ public class CongestionCharging extends Intervention {
 	private String name = null;
 
 	/**
-	 * @param props
+	 * Constructor.
+	 * @param props Properties object.
 	 */
 	public CongestionCharging(Properties props) {
 		
@@ -40,7 +41,8 @@ public class CongestionCharging extends Intervention {
 	}
 	
 	/**
-	 * @param fileName
+	 * Constructor.
+	 * @param fileName Path to the input properties file.
 	 */
 	public CongestionCharging(String fileName) {
 		
@@ -150,6 +152,8 @@ public class CongestionCharging extends Intervention {
 	 * Reads congestion charge file which contains charges that depend on vehicle type and time of day (hour).
 	 * @param fileName File name.
 	 * @return Map with congestion charges.
+	 * @throws FileNotFoundException if any.
+	 * @throws IOException if any.
 	 */
 	public MultiKeyMap readCongestionChargeFile (String fileName) throws FileNotFoundException, IOException {
 

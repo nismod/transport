@@ -23,7 +23,7 @@ import javax.swing.UIManager;
 import javax.swing.plaf.ColorUIResource;
 
 /**
- * Main GUI for the Show-case Demo
+ * Main GUI for the Show-case Demo.
  * @author Milan Lovric
   */
 public class LandingGUI {
@@ -71,6 +71,7 @@ public class LandingGUI {
 	
 	/**
 	 * Launch the application.
+	 * @param args Arguments.
 	 */
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {

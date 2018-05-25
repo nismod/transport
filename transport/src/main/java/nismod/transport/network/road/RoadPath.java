@@ -12,7 +12,7 @@ import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedNode;
 
 /**
- * A directed path (a list of directed nodes)
+ * Directed path (a list of directed nodes).
  * @author Milan Lovric
  *
  */

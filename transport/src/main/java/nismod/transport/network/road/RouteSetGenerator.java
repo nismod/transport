@@ -31,17 +31,8 @@ import nismod.transport.utility.RandomSingleton;
 import nismod.transport.zone.Zoning;
 
 /**
- * RouteSetGenerator can generate, save and read route sets for route choice.
+ * RouteSetGenerator can generate, save and read route sets for the route choice.
  * @author Milan Lovric
- *
- */
-/**
- * @author Milan Lovric
- *
- */
-/**
- * @author Milan Lovric
- *
  */
 public class RouteSetGenerator {
 	
@@ -677,15 +668,15 @@ public class RouteSetGenerator {
 	
 	/**
 	 * Generates routes between two freight zones.
-	 * A freight zone can be either an LAD (<= 1032) or a point.
+	 * A freight zone can be either an LAD (&lt;= 1032) or a point.
 	 * Zone ID ranges from the BYFM DfT model:
 	 * <ul>
-	 * 		<li>England: 1 - 867</li>
-	 * 		<li>Wales: 901 - 922</li>
-	 * 		<li>Scotland: 1001 - 1032</li>
-	 * 		<li>Freight airports: 1111 - 1115</li>
-	 * 		<li>Major distribution centres: 1201 - 1256</li>
-	 * 		<li>Freight ports: 1301 - 1388</li>
+	 * 		<li>England: 1 - 867
+	 * 		<li>Wales: 901 - 922
+	 * 		<li>Scotland: 1001 - 1032
+	 * 		<li>Freight airports: 1111 - 1115
+	 * 		<li>Major distribution centres: 1201 - 1256
+	 * 		<li>Freight ports: 1301 - 1388
 	 * </ul> 
 	 * @param originFreightZone Origin freight zone.
 	 * @param destinationFreightZone Destination freight zone.
@@ -732,7 +723,7 @@ public class RouteSetGenerator {
 	
 	/**
 	 * Generates routes between two freight zones.
-	 * A freight zone can be either an LAD (<= 1032) or a point.
+	 * A freight zone can be either an LAD (&lt;= 1032) or a point.
 	 * Zone ID ranges from the BYFM DfT model:
 	 * <ul>
 	 * 		<li>England: 1 - 867</li>

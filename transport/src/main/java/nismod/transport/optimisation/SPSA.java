@@ -14,7 +14,8 @@ import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.utility.RandomSingleton;
 
 /**
- * Implements SPSA optimisation algorithm (Simultaneous Perturbation Stochastic Approximation). 
+ * Implements SPSA optimisation algorithm (Simultaneous Perturbation Stochastic Approximation).
+ * This version optimises the cells of the OD matrix.
  * http://www.jhuapl.edu/SPSA/
  * @author Milan Lovric
   */
@@ -133,6 +134,10 @@ public class SPSA {
 		
 	}
 	
+	/**
+	 * Getter function for the optimisation result (OD matrix).
+	 * @return Estimated OD matrix.
+	 */
 	public RealODMatrix getThetaEstimate() {
 		
 		return this.thetaEstimate;

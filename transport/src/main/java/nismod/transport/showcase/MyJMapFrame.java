@@ -16,7 +16,6 @@ package nismod.transport.showcase;
  *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *    Lesser General Public License for more details.
  */
-//package org.geotools.swing;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -76,7 +75,11 @@ import net.miginfocom.swing.MigLayout;
  * @source $URL$
  * @version $Id$
  */
-public class JMapFrameDemo extends JFrame {
+/**
+ * Modified JMapFrame from GeoTools to allow access to the getToolBar method.
+ * @author Milan Lovric
+ */
+public class MyJMapFrame extends JFrame {
     
     /* 
      * The following toolbar button names are primarily for unit testing
@@ -172,7 +175,7 @@ public class JMapFrameDemo extends JFrame {
     }
     
     private static void doShowMap(MapContent content) {
-        final JMapFrameDemo frame = new JMapFrameDemo(content);
+        final MyJMapFrame frame = new MyJMapFrame(content);
         frame.enableStatusBar(true);
         frame.enableToolBar(true);
         frame.initComponents();
@@ -184,7 +187,7 @@ public class JMapFrameDemo extends JFrame {
      * Default constructor. Creates a {@code JMapFrame} with
      * no map content or renderer set
      */
-    public JMapFrameDemo() {
+    public MyJMapFrame() {
         this(null);
     }
 
@@ -193,7 +196,7 @@ public class JMapFrameDemo extends JFrame {
      *
      * @param content the map content
      */
-    public JMapFrameDemo(MapContent content) {
+    public MyJMapFrame(MapContent content) {
         super(content == null ? "" : content.getTitle());
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 

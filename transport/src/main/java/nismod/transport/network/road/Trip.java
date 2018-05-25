@@ -16,7 +16,7 @@ import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 
 /**
- * This class stores information about a trip. 
+ * This class stores information about a performed trip. 
  * @author Milan Lovric
  *
  */
@@ -70,7 +70,7 @@ public class Trip {
 	 * @param hour Time of day.
 	 * @param origin Origin zone for freight trips (null for passenger trips).
 	 * @param destination Destination zone for freight trips (null for passenger trips).
-	 * @param multipliyer Multiplies the same trip.
+	 * @param multiplier Multiplies the same trip.
 	 */
 	public Trip(VehicleType vehicle, EngineType engine, Route route, TimeOfDay hour, Integer origin, Integer destination, int multiplier) {
 		

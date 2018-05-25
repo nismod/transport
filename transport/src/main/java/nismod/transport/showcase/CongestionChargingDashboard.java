@@ -164,6 +164,7 @@ public class CongestionChargingDashboard extends JFrame {
 
 	/**
 	 * Launch the application.
+	 * @param args Arguments.
 	 */
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
@@ -180,8 +181,8 @@ public class CongestionChargingDashboard extends JFrame {
 
 	/**
 	 * Create the frame.
-	 * @throws IOException 
-	 * @throws AWTException 
+	 * @throws IOException if any.
+	 * @throws AWTException if any.
 	 */
 	public CongestionChargingDashboard() throws IOException, AWTException {
 		//setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -479,8 +480,8 @@ public class CongestionChargingDashboard extends JFrame {
 						//panel_2.doLayout();
 						//panel_2.repaint();
 
-						((JMapFrameDemo)rightFrame).getToolBar().setBackground(LandingGUI.LIGHT_GRAY); //to set toolbar background
-						((JMapFrameDemo)rightFrame).getToolBar().setBorder(BorderFactory.createLineBorder(LandingGUI.LIGHT_GRAY, 1));
+						((MyJMapFrame)rightFrame).getToolBar().setBackground(LandingGUI.LIGHT_GRAY); //to set toolbar background
+						((MyJMapFrame)rightFrame).getToolBar().setBorder(BorderFactory.createLineBorder(LandingGUI.LIGHT_GRAY, 1));
 
 						rightFrame.setVisible(true);
 						rightFrame.setVisible(false);
@@ -1236,8 +1237,8 @@ public class CongestionChargingDashboard extends JFrame {
 
 		HashMap<Integer, Double> capacityBefore = rnaBefore.calculateDirectionAveragedPeakLinkCapacityUtilisation();
 		JFrame leftFrame = NetworkVisualiserDemo.visualise(roadNetwork, "Capacity Utilisation Before Intervention", capacityBefore, "CapUtil", shapefilePathBefore);
-		((JMapFrameDemo)leftFrame).getToolBar().setBackground(LandingGUI.LIGHT_GRAY); //to set toolbar background
-		((JMapFrameDemo)leftFrame).getToolBar().setBorder(BorderFactory.createLineBorder(LandingGUI.LIGHT_GRAY, 1));
+		((MyJMapFrame)leftFrame).getToolBar().setBackground(LandingGUI.LIGHT_GRAY); //to set toolbar background
+		((MyJMapFrame)leftFrame).getToolBar().setBorder(BorderFactory.createLineBorder(LandingGUI.LIGHT_GRAY, 1));
 		//Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		//leftFrame.setSize(screenSize.width / 2, (int)Math.round(screenSize.height * 0.65));
 		//leftFrame.setLocation(0, 0);
@@ -1254,7 +1255,7 @@ public class CongestionChargingDashboard extends JFrame {
 		panel_1.setComponentZOrder(labelPanel1, 0);
 		labelPanel1.setForeground(LandingGUI.DARK_GRAY);
 		labelPanel1.setFont(new Font("Lato", Font.BOLD, 16));
-		JMapPane pane = ((JMapFrameDemo)leftFrame).getMapPane();
+		JMapPane pane = ((MyJMapFrame)leftFrame).getMapPane();
 
 		//		JLabel labelAfter = new JLabel("After Policy Intervention");
 		//		labelAfter.setBounds(1601, 11, 331, 20);

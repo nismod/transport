@@ -37,8 +37,12 @@ public class RebalancedODMatrix extends RealODMatrix {
 	private List<Double> RMSNvalues;
 
 	/**
-	 * Constructor for rebalanced OD matrix that uses network assignment and traffic counts for matrix rebalancing.
-	 * @param rna
+	 * Constructor for a rebalanced OD matrix that uses network assignment and traffic counts for matrix rebalancing.
+	 * @param origins List of origin zones.
+	 * @param destinations List of destination zones.
+	 * @param rna Road network assignment.
+	 * @param rsg Route set generator.
+	 * @param zoning Zoning system.
 	 */
 	public RebalancedODMatrix(List<String> origins, List<String> destinations, RoadNetworkAssignment rna, RouteSetGenerator rsg, Zoning zoning) {
 
@@ -128,6 +132,10 @@ public class RebalancedODMatrix extends RealODMatrix {
 	
 	
 	
+	/**
+	 * Calculates scaling factors for OD pairs.
+	 * @return Scaling factors.
+	 */
 	public RealODMatrix getScalingFactors() {
 		
 		List<Trip> tripList = this.rna.getTripList();
@@ -322,35 +330,4 @@ public class RebalancedODMatrix extends RealODMatrix {
 		
 		return this.RMSNvalues;
 	}
-	
-//	/**
-//	 * Prints the matrix as a formatted table.
-//	 */
-//	@Override
-//	public void printMatrixFormatted() {
-//
-//		List<String> firstKeyList = this.getOrigins();
-//		List<String> secondKeyList = this.getDestinations();
-//		//System.out.println(firstKeyList);
-//		//System.out.println(secondKeyList);
-//
-//		//formatted print
-//		System.out.print("origin    "); for (String s: secondKeyList) System.out.printf("%10s",s);	System.out.println("  Product.");
-//		for (String o: firstKeyList) {
-//			System.out.printf("%-10s", o);
-//			for (String s: secondKeyList) System.out.printf("%10.2f", this.getFlow(o,s));
-//			System.out.printf("%10d\n", this.productions.get(o));
-//		}
-//		System.out.print("Attract.  "); for (String s: secondKeyList) System.out.printf("%10d", this.attractions.get(s));
-//		System.out.println();
-//	}
-//	
-//	@Override
-//	public void printMatrixFormatted(String message) {
-//		
-//		System.out.println(message);
-//		this.printMatrixFormatted();
-//	}
-	
-
 }

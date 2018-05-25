@@ -9,6 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
+ * Abstract class for a disruption.
  * @author Milan Lovric
  *
  */
@@ -72,6 +73,9 @@ public abstract class Disruption {
 		return endYear;
 	}
 
+	/**
+	 * @return The state of the disruption (installed or not).
+	 */
 	public boolean getState() {
 
 		return installed;

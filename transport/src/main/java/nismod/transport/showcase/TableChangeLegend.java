@@ -10,6 +10,10 @@ import javax.swing.border.LineBorder;
 
 import org.geotools.brewer.color.ColorBrewer;
 
+/**
+ * Table change legend (vertical) to include in the dashboards.
+ * @author Milan Lovric
+ */
 public class TableChangeLegend extends JPanel {
 	
 	public static final Font LEGEND_FONT = new Font("Lato", Font.BOLD, 14);

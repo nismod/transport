@@ -24,7 +24,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
- * Origin-destination matrix
+ * Origin-destination matrix with real values.
  * @author Milan Lovric
  *
  */
@@ -42,6 +42,8 @@ public class RealODMatrix {
 	/**
 	 * Constructor that reads OD matrix from an input csv file.
 	 * @param fileName Path to the input file.
+	 * @throws FileNotFoundException if any.
+	 * @throws IOException if any.
 	 */
 	public RealODMatrix(String fileName) throws FileNotFoundException, IOException {
 		
@@ -252,7 +254,7 @@ public class RealODMatrix {
 	
 	/**
 	 * Scales matrix values with another matrix (element-wise multiplication).
-	 * @param factor Scaling factor.
+	 * @param scalingMatrix Scaling matrix.
 	 */
 	public void scaleMatrixValue(RealODMatrix scalingMatrix) {
 		
@@ -280,6 +282,10 @@ public class RealODMatrix {
 		}
 	}
 	
+	/**
+	 * Prints message followed by the formatted matrix.
+	 * @param s Message.
+	 */
 	public void printMatrixFormatted(String s) {
 		
 		
@@ -291,7 +297,7 @@ public class RealODMatrix {
 	 * Creates a unit OD matrix for given lists of origin and destination zones.
 	 * @param origins List of origin zones.
 	 * @param destinations List of destination zones.
-	 * @return
+	 * @return Unit OD matrix.
 	 */
 	public static RealODMatrix createUnitMatrix(List<String> origins, List<String> destinations) {
 		
@@ -352,6 +358,7 @@ public class RealODMatrix {
 	
 	/**
 	 * Saves the matrix into a csv file.
+	 * @param outputFile Path to the output file.
 	 */
 	public void saveMatrixFormatted(String outputFile) {
 		

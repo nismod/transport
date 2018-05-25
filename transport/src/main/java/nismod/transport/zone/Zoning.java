@@ -25,7 +25,7 @@ import com.vividsolutions.jts.geom.Point;
 import nismod.transport.network.road.RoadNetwork;
 
 /**
- * For mapping zones (e.g. TEMPRO) to the nodes of the road network.
+ * For mapping Tempro zones to the nodes of the road network.
  * @author Milan Lovric
   */
 public class Zoning {
@@ -55,10 +55,11 @@ public class Zoning {
 	private HashMap<String, NodeMatrix> zoneToNodeMatrix; //mapsTempro zones to a matrix of join node probabilities (for tempro zones that have multiple contained nodes)
 		
 	/**
-	 * @param zonesUrl
-	 * @param nodesUrl
-	 * @param rn
-	 * @throws IOException
+	 * Constructor for the zoning system.
+	 * @param zonesUrl Url for the zones shapefile.
+	 * @param nodesUrl Url for the nodes shapefile.
+	 * @param rn Road network.
+	 * @throws IOException if any.
 	 */
 	public Zoning(URL zonesUrl, URL nodesUrl, RoadNetwork rn) throws IOException {
 	

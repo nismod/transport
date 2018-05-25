@@ -21,7 +21,6 @@ package nismod.transport.visualisation;
  * for LineString and MultiLineString geometries. This is used in the NetworkVisualiser
  * to specify the width of the road link, which otherwise would have been too thin (a default width of 1.0).
  * @author Milan Lovric
- *
  */
 
 import java.awt.Color;
@@ -81,6 +80,12 @@ import com.vividsolutions.jts.geom.Polygon;
  *
  *
  * @source $URL$
+ */
+/**
+ * Modified StyleGenerator from GeoTools to allow specifying the width of the line symbolizer
+ * for LineString and MultiLineString geometries. This is used in the NetworkVisualiser
+ * to specify the width of the road link, which otherwise would have been too thin (a default width of 1.0).
+ * @author Milan Lovric
  */
 public class MyStyleGenerator {
     private static final java.util.logging.Logger LOGGER = org.geotools.util.logging.Logging.getLogger("org.geotools.brewer.color");

@@ -23,7 +23,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
- * Skim matrix for freight
+ * Skim matrix for storing inter-zonal travel times or costs (for freight vehicles).
  * @author Milan Lovric
  *
  */
@@ -41,6 +41,8 @@ public class SkimMatrixFreight {
 	/**
 	 * Constructor that reads freight skim matrix from an input csv file.
 	 * @param fileName Path to the input file.
+	 * @throws FileNotFoundException if any.
+	 * @throws IOException if any.
 	 */
 	public SkimMatrixFreight(String fileName) throws FileNotFoundException, IOException {
 		
@@ -132,6 +134,7 @@ public class SkimMatrixFreight {
 	
 	/**
 	 * Saves the matrix into a csv file.
+	 * @param outputFile Path to the output file.
 	 */
 	public void saveMatrixFormatted(String outputFile) {
 		
@@ -196,7 +199,7 @@ public class SkimMatrixFreight {
 				
 	/**
 	 * Gets the keyset of the multimap.
-	 * @return
+	 * @return Keyset.
 	 */
 	public Set<MultiKey> getKeySet() {
 		
@@ -205,7 +208,7 @@ public class SkimMatrixFreight {
 	
 	/**
 	 * Gets average OD cost (ignores empty matrix cells).
-	 * @return
+	 * @return Average cost.
 	 */
 	public double getAverageCost() {
 		
@@ -219,7 +222,7 @@ public class SkimMatrixFreight {
 	/**
 	 * Gets average OD cost weighted by demand.
 	 * @param flows The demand as an origin-destination matrix.
-	 * @return
+	 * @return Average cost.
 	 */
 	public double getAverageCost(FreightMatrix flows) {
 		

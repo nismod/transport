@@ -32,7 +32,7 @@ import nismod.transport.showcase.LandingGUI;
 import nismod.transport.utility.ConfigReader;
 
 /**
- * NISMOD V2.0.0 Transport Model
+ * NISMOD V2.0.0 Transport Model.
  * @author Milan Lovric
  *
  */

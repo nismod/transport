@@ -23,7 +23,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
- * Origin-destination freight matrix
+ * Origin-destination matrix for freight vehicles (following the format of DfT's BYFM 2006 study).
  * @author Milan Lovric
  *
  */
@@ -41,6 +41,8 @@ public class FreightMatrix {
 	/**
 	 * Constructor that reads OD matrix from an input csv file.
 	 * @param fileName Path to the input file.
+	 * @throws FileNotFoundException if any.
+	 * @throws IOException if any.
 	 */
 	public FreightMatrix(String fileName) throws FileNotFoundException, IOException {
 		
@@ -241,6 +243,7 @@ public class FreightMatrix {
 	
 	/**
 	 * Saves the matrix into a csv file.
+	 * @param outputFile Path to the output file.
 	 */
 	public void saveMatrixFormatted(String outputFile) {
 		

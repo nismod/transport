@@ -1,12 +1,5 @@
 package nismod.transport.network.road;
 
-/**
- * Modified AStarShortestPathFinder from GeoTools to allow for routing in directed graphs.
- * It uses modified version of the AStarIterator (MyAStarIterators) which respects edge directions.
- * If AStar cannot find a path, getPath() returns null as opposed to throwing a WrongPathException.
- * @author Milan Lovric
- *
- */
 import org.geotools.graph.path.Path;
 import org.geotools.graph.structure.Graph;
 import org.geotools.graph.structure.Graphable;
@@ -25,8 +18,13 @@ import nismod.transport.network.road.MyAStarIterator.AStarFunctions;
  * @author GermÃ¡n E. Trouillet, Francisco G. MalbrÃ¡n. Universidad Nacional de CÃ³rdoba (UNC)
  *
  *
- *
  * @source $URL$
+ */
+/**
+ * Modified AStarShortestPathFinder from GeoTools to allow for routing in directed graphs.
+ * It uses modified version of the AStarIterator (MyAStarIterators) which respects edge directions.
+ * If AStar cannot find a path, getPath() returns null as opposed to throwing a WrongPathException.
+ * @author Milan Lovric
  */
 public class MyAStarShortestPathFinder implements GraphWalker {
         /** Graphs to calculate paths for **/

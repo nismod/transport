@@ -16,7 +16,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
- * Node to node matrix with joint probability (used for assigning inter-zonal TEMPRo flows between the nodes contained in that zone). 
+ * Node to node matrix with joint probability (used for assigning inter-zonal Tempro flows between the nodes contained in that zone). 
  * @author Milan Lovric
  *
  */
@@ -212,7 +212,7 @@ public class NodeMatrix {
 	
 	/**
 	 * Scales matrix values with another matrix (element-wise multiplication).
-	 * @param factor Scaling factor.
+	 * @param scalingMatrix Scaling matrix.
 	 */
 	public void scaleMatrixValue(NodeMatrix scalingMatrix) {
 		
@@ -240,6 +240,10 @@ public class NodeMatrix {
 //		}
 //	}
 	
+	/**
+	 * Prints formatted matrix with a message.
+	 * @param s Message.
+	 */
 	public void printMatrixFormatted(String s) {
 		
 		System.out.println(s);
@@ -250,7 +254,7 @@ public class NodeMatrix {
 	 * Creates a unit OD matrix for given lists of origin and destination zones.
 	 * @param origins List of origin zones.
 	 * @param destinations List of destination zones.
-	 * @return
+	 * @return Unit OD matrix.
 	 */
 	public static NodeMatrix createUnitMatrix(List<Integer> origins, List<Integer> destinations) {
 		
@@ -311,6 +315,7 @@ public class NodeMatrix {
 	
 	/**
 	 * Saves the matrix into a csv file.
+	 * @param outputFile Path to the output file.
 	 */
 	public void saveMatrixFormatted(String outputFile) {
 		
