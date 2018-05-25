@@ -1,12 +1,5 @@
 package nismod.transport.network.road;
 
-/**
- * Modified AStarIterator from GeoTools to allow for correct routing in directed graphs.
- * The main change is in he step (cont) function of the AStar algorithm, by looking only at
- * outRelated nodes (thus respecting the edge direction) as opposed to all related nodes.
- * @author Milan Lovric
- *
- */
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -61,6 +54,13 @@ import org.geotools.graph.util.PriorityQueue;
  *
  * @author GermÃ¡n E. Trouillet, Francisco G. MalbrÃ¡n. Universidad Nacional de CÃ³rdoba (UNC)
  * @source $URL$
+ */
+/**
+ * Modified AStarIterator from GeoTools to allow for correct routing in directed graphs.
+ * The main change is in he step (cont) function of the AStar algorithm, by looking only at
+ * outRelated nodes (thus respecting the edge direction) as opposed to all related nodes.
+ * @author Milan Lovric
+ *
  */
 public class MyAStarIterator extends SourceGraphIterator{
         /** function necesaries for A Star algorithm*/

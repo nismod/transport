@@ -26,7 +26,7 @@ import org.apache.logging.log4j.Logger;
 import nismod.transport.zone.Zoning;
 
 /**
- * Origin-destination matrix
+ * Origin-destination matrix for passenger vehicles.
  * @author Milan Lovric
  *
  */
@@ -44,6 +44,8 @@ public class ODMatrix {
 	/**
 	 * Constructor that reads OD matrix from an input csv file.
 	 * @param fileName Path to the input file.
+	 * @throws FileNotFoundException if any.
+	 * @throws IOException if any.
 	 */
 	public ODMatrix(String fileName) throws FileNotFoundException, IOException {
 		
@@ -309,7 +311,7 @@ public class ODMatrix {
 	 * Creates a unit OD matrix for given lists of origin and destination zones.
 	 * @param origins List of origin zones.
 	 * @param destinations List of destination zones.
-	 * @return
+	 * @return Unit OD matrix.
 	 */
 	public static ODMatrix createUnitMatrix(List<String> origins, List<String> destinations) {
 		
@@ -340,7 +342,7 @@ public class ODMatrix {
 	
 	/**
 	 * Creates a quadratic unit OD matrix for a given lists of zones.
-	 * @param origins Set of origin zones.
+	 * @param zones Set of origin zones.
 	 * @return Unit OD matrix.
 	 */
 	public static ODMatrix createUnitMatrix(Set<String> zones) {
@@ -358,8 +360,8 @@ public class ODMatrix {
 	/**
 	 * Sums the elements of a matrix subset (provided as two lists of origins and destinations).
 	 * @param origins List of origin zones (a subset).
-	 * @param destinations List of desintation zones (a subset).
-	 * @return
+	 * @param destinations List of destination zones (a subset).
+	 * @return Sum of the subset.
 	 */
 	public int sumMatrixSubset(List<String> origins, List<String> destinations) {
 		
@@ -372,10 +374,10 @@ public class ODMatrix {
 	}
 	
 	/**
+	 * Creates tempro OD matrix from LAD OD matrix.
 	 * @param ladODMatrix LAD to LAD OD matrix.
-	 * @param temproWeights TEMPro ODMatrix used as weights to disaggregate LAD matrix.
+	 * @param baseTempro TEMPro ODMatrix used as weights to disaggregate LAD matrix.
 	 * @param zoning Zoning system with mapping between TEMPro and LAD zones.
-	 * 
 	 * @return TEMPro based OD matrix.
 	 */
 	public static ODMatrix createTEMProFromLadMatrix(ODMatrix ladODMatrix, ODMatrix baseTempro, Zoning zoning) {
@@ -409,7 +411,6 @@ public class ODMatrix {
 	/**
 	 * @param temproMatrix TEMPro ODMatrix used as weights to disaggregate LAD matrix.
 	 * @param zoning Zoning system with mapping between TEMPro and LAD zones.
-	 * 
 	 * @return LAD based OD matrix.
 	 */
 	public static ODMatrix createLadMatrixFromTEMProMatrix(ODMatrix temproMatrix, Zoning zoning) {
@@ -449,6 +450,7 @@ public class ODMatrix {
 	
 	/**
 	 * Saves the matrix into a csv file.
+	 * @param outputFile Path to the output file.
 	 */
 	public void saveMatrixFormatted(String outputFile) {
 		

@@ -15,7 +15,7 @@ import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.zone.Zoning;
 
 /**
- * This class stores information about a trip. 
+ * This class stores information about a performed trip (when using the Tempro zoning system). 
  * @author Milan Lovric
  *
  */
@@ -33,8 +33,8 @@ public class TripTempro extends Trip {
 	 * @param engine Engine type.
 	 * @param route Route.
 	 * @param hour Time of day.
-	 * @param originTemproZone Origin tempro zone ID.
-	 * @param destinationTemproZone Destination tempro zone ID.
+	 * @param originTemproZoneID Origin tempro zone ID.
+	 * @param destinationTemproZoneID Destination tempro zone ID.
 	 * @param zoning Zoning system.
 	 */
 	public TripTempro (VehicleType vehicle, EngineType engine, Route route, TimeOfDay hour, Integer originTemproZoneID, Integer destinationTemproZoneID, Zoning zoning) {
@@ -51,8 +51,8 @@ public class TripTempro extends Trip {
 	 * @param engine Engine type.
 	 * @param route Route.
 	 * @param hour Time of day.
-	 * @param originTemproZone Origin tempro zone ID.
-	 * @param destinationTemproZone Destination tempro zone ID.
+	 * @param originTemproZoneID Origin tempro zone ID.
+	 * @param destinationTemproZoneID Destination tempro zone ID.
 	 * @param zoning Zoning system.
 	 * @param multiplier Multiplies the same trip.
 	 */

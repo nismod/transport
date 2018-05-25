@@ -22,7 +22,6 @@ import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 /**
  * InputFileReader reads input files and provides them as various data structures required by other classes.
  * @author Milan Lovric
- *
  */
 public class InputFileReader {
 	

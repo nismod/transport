@@ -4,6 +4,7 @@
 package nismod.transport.network.road;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Serializable;
@@ -66,7 +67,7 @@ import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Point;
 
 /**
- * A routable road network built from the shapefiles.
+ * Routable road network built from the shapefiles.
  * @author Milan Lovric
  *
  */
@@ -116,16 +117,18 @@ public class RoadNetwork {
 	public int numberOfLanesARoad; //for one direction
 		
 	/**
-	 * @param zonesUrl Url for the shapefile with zone polygons
-	 * @param networkUrl Url for the shapefile with road network
-	 * @param nodesUrl Url for the shapefile with nodes
-	 * @param AADFurl Url for the shapefile with AADF counts
-	 * @param areaCodeFileName Path to the file with census output areas
-	 * @param areaCodeNearestNodeFile Path to the file with nearest nodes to output area centroids
-	 * @param workplaceZoneFileName Path to the file with workplace zones
-	 * @param workplaceZoneNearestNodeFile Path to the file with nearest nodes to workplace zone centroids
-	 * @param freightZoneToLADfile Path to the file with freight zone to LAD mapping
-	 * @param freightZoneNearestNodeFile Path to the file with nearest nodes to freight zones that are points
+	 * @param zonesUrl Url for the shapefile with zone polygons.
+	 * @param networkUrl Url for the shapefile with road network.
+	 * @param nodesUrl Url for the shapefile with nodes.
+	 * @param AADFurl Url for the shapefile with AADF counts.
+	 * @param areaCodeFileName Path to the file with census output areas.
+	 * @param areaCodeNearestNodeFile Path to the file with nearest nodes to output area centroids.
+	 * @param workplaceZoneFileName Path to the file with workplace zones.
+	 * @param workplaceZoneNearestNodeFile Path to the file with nearest nodes to workplace zone centroids.
+	 * @param freightZoneToLADfile Path to the file with freight zone to LAD mapping.
+	 * @param freightZoneNearestNodeFile Path to the file with nearest nodes to freight zones that are points.
+	 * @param params Properties with parameters from the config file.
+	 * @throws IOException if any.
 	 */
 	public RoadNetwork(URL zonesUrl, URL networkUrl, URL nodesUrl, URL AADFurl, String areaCodeFileName, String areaCodeNearestNodeFile, String workplaceZoneFileName, String workplaceZoneNearestNodeFile, String freightZoneToLADfile, String freightZoneNearestNodeFile, Properties params) throws IOException {
 
@@ -221,6 +224,11 @@ public class RoadNetwork {
 		}
 	}
 
+	/**
+	 * Replaces edge IDs in the road network object with fixed edge IDs provided in a shapefile.
+	 * @param networkShapeFile Path to the shapefile with the network with edge IDs.
+	 * @throws IOException if any.
+	 */
 	public void replaceNetworkEdgeIDs(URL networkShapeFile) throws IOException {
 		
 		LOGGER.info("Replacing network edges IDs with persistent ones...");
@@ -300,8 +308,9 @@ public class RoadNetwork {
 	}
 		
 	/**
-	 * Exports a directed multigraph representation of the network as a shapefile.
-	 * @param fileName The name of the output shapefile.
+	* Exports a directed multigraph representation of the network as a shapefile.
+	* @param fileName The name of the output shapefile.
+	* @throws IOException if any.
 	*/
 	public void exportToShapefile(String fileName) throws IOException {
 
@@ -438,7 +447,7 @@ public class RoadNetwork {
 	 * @param linkDataLabel The label of the link data.
 	 * @param shapefilePath The path to the shapefile into which data will be stored.
 	 * @return Feature collection.
-	 * @throws IOException
+	 * @throws IOException if any.
 	 */
 	public SimpleFeatureCollection createNetworkFeatureCollection(Map<Integer, Double> linkData, String linkDataLabel, String shapefilePath) throws IOException {
 
@@ -826,7 +835,7 @@ public class RoadNetwork {
 	
 	/**
 	 * This adds edge (including its object) to the network - useful for restoring from a list of removed edges (e.g. during disruption).
-	 * @param edge
+	 * @param edge Edge to be added to the network.
 	 */
 	public void addRoadLink(Edge edge) {
 		
@@ -854,6 +863,10 @@ public class RoadNetwork {
 		this.createNodeBlacklists();
 	}
 	
+	/**
+	 * Removes an edge from the road network.
+	 * @param edge Edge to remove from the road network.
+	 */
 	public void removeRoadLink(Edge edge) {
 		
 		BasicDirectedLineGraphBuilder graphBuilder = new BasicDirectedLineGraphBuilder();

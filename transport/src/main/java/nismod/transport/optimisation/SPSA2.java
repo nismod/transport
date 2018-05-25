@@ -13,8 +13,10 @@ import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.utility.RandomSingleton;
 
 /**
- * Implements SPSA optimisation algorithm (Simultaneous Perturbation Stochastic Approximation). 
- * http://www.jhuapl.edu/SPSA/
+ * Implements SPSA optimisation algorithm (Simultaneous Perturbation Stochastic Approximation).
+ * This version of the algorithm keeps OD matrix constant, but optimises start and end node probabilities
+ * (the probability of a trip starting/ending at a particular node within LAD).
+ * http://www.jhuapl.edu/SPSA/ 
  * @author Milan Lovric
   */
 public class SPSA2 {
@@ -49,8 +51,10 @@ public class SPSA2 {
 	
 	/**
 	 * Initialise the SPSA algorithm with starting values.
-	 * @param rna Road network assignment.
-	 * @param initialTheta Initial node probabilities.
+	 * @param rna Road network assignment
+	 * @param odm Origin-destination matrix.
+	 * @param initialThetaStart Initial start node probabilities.
+	 * @param initialThetaEnd Initial end node probabilities.
 	 * @param a SPSA parameter.
 	 * @param A SPSA parameter.
 	 * @param c SPSA parameter.
@@ -231,7 +235,7 @@ public class SPSA2 {
 	/**
 	 * Calculate the loss function for a given theta (node probabilities).
 	 * @param thetaStart Start node probabilities.
-	 * @param thestEnd End node probabilities.
+	 * @param thetaEnd End node probabilities.
 	 * @return RMSN for the difference between volumes and traffic counts.
 	 */
 	private double lossFunction(HashMap<Integer, Double> thetaStart, HashMap<Integer, Double> thetaEnd) {

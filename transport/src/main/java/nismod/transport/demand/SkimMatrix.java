@@ -23,7 +23,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
- * Skim matrix
+ * Skim matrix for storing inter-zonal travel times or costs (for passenger vehicles).
  * @author Milan Lovric
  *
  */
@@ -41,6 +41,8 @@ public class SkimMatrix {
 	/**
 	 * Constructor that reads skim matrix from an input csv file.
 	 * @param fileName Path to the input file.
+	 * @throws FileNotFoundException if any.
+	 * @throws IOException if any.
 	 */
 	public SkimMatrix(String fileName) throws FileNotFoundException, IOException {
 		
@@ -181,6 +183,7 @@ public class SkimMatrix {
 	
 	/**
 	 * Saves the matrix into a csv file.
+	 * @param outputFile Path to the output file.
 	 */
 	public void saveMatrixFormatted(String outputFile) {
 		
@@ -242,7 +245,7 @@ public class SkimMatrix {
 		
 	/**
 	 * Gets the keyset of the multimap.
-	 * @return
+	 * @return Keyset.
 	 */
 	public Set<MultiKey> getKeySet() {
 		
@@ -251,7 +254,7 @@ public class SkimMatrix {
 	
 	/**
 	 * Gets average OD cost.
-	 * @return
+	 * @return Average cost.
 	 */
 	public double getAverageCost() {
 		
@@ -264,7 +267,7 @@ public class SkimMatrix {
 	
 	/**
 	 * Gets sum of OD costs.
-	 * @return
+	 * @return Sum of costs.
 	 */
 	public double getSumOfCosts() {
 		
@@ -277,7 +280,7 @@ public class SkimMatrix {
 	/**
 	 * Gets average OD cost weighted by demand.
 	 * @param flows The demand as an origin-destination matrix.
-	 * @return
+	 * @return Average cost.
 	 */
 	public double getAverageCost(ODMatrix flows) {
 		
@@ -297,7 +300,7 @@ public class SkimMatrix {
 	/**
 	 * Gets sum of costs weighted by demand.
 	 * @param flows The demand as an origin-destination matrix.
-	 * @return
+	 * @return Sum of costs.
 	 */
 	public double getSumOfCosts(ODMatrix flows) {
 		

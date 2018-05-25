@@ -56,6 +56,7 @@ public class NetworkVisualiser {
 	 * Visualises the road network as loaded from the shapefiles.
 	 * @param roadNetwork Road network.
 	 * @param mapTitle Map title for the window.
+	 * @throws IOException if any.
 	 */
 	public static void visualise(RoadNetwork roadNetwork, String mapTitle) throws IOException {
 		
@@ -180,6 +181,7 @@ public class NetworkVisualiser {
 	 * @param linkData Data used to classify and colour road links.
 	 * @param linkDataLabel Label describing the link data used.
 	 * @param shapefilePath The path to the shapefile into which data will be stored.
+	 * @throws IOException if any.
 	 */
 	public static void visualise(RoadNetwork roadNetwork, String mapTitle, Map<Integer, Double> linkData, String linkDataLabel, String shapefilePath) throws IOException {
 		
@@ -318,6 +320,7 @@ public class NetworkVisualiser {
 	 * @param linkDataLabel Label describing the link data used.
 	 * @param shapefilePath The path to the shapefile into which data will be stored.
 	 * @param congestionChargeZoneUrl The path to the shapefile with the congestion charge zone boundary.
+	 * @throws IOException if any.
 	 */
 	public static void visualise(RoadNetwork roadNetwork, String mapTitle, Map<Integer, Double> linkData, String linkDataLabel, String shapefilePath, URL congestionChargeZoneUrl) throws IOException {
 		

@@ -8,6 +8,10 @@ import java.util.Properties;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/**
+ * Configuration file reader.
+ * @author Milan Lovric
+ */
 public class ConfigReader {
 	
 	private final static Logger LOGGER = LogManager.getLogger(ConfigReader.class);
@@ -16,6 +20,11 @@ public class ConfigReader {
 		// TODO Auto-generated constructor stub
 	}
 
+	/**
+	 * Reads properties from the configuration file.
+	 * @param configFile Path to the configuration file.
+	 * @return Loaded properties.
+	 */
 	public static Properties getProperties(String configFile) {
 		
 	

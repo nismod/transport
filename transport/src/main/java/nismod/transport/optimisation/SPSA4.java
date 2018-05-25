@@ -16,9 +16,9 @@ import nismod.transport.utility.RandomSingleton;
 import nismod.transport.zone.Zoning;
 
 /**
- * Implements SPSA optimisation algorithm (Simultaneous Perturbation Stochastic Approximation). 
+ * Implements SPSA optimisation algorithm (Simultaneous Perturbation Stochastic Approximation).
+ * This version optimises Tempro level OD matrix.
  * http://www.jhuapl.edu/SPSA/
- * This version works on TEMPRO zones.
  * @author Milan Lovric
   */
 public class SPSA4 {
@@ -53,6 +53,7 @@ public class SPSA4 {
 	 * Initialise the SPSA algorithm with starting values.
 	 * @param rna Road network assignment.
 	 * @param zoning Zoning system for tempro zones.
+	 * @param rsg Route set generator with routes to be used in assignment.
 	 * @param initialTheta Initial OD matrix.
 	 * @param a SPSA parameter.
 	 * @param A SPSA parameter.
@@ -146,6 +147,10 @@ public class SPSA4 {
 		
 	}
 	
+	/**
+	 * Getter function for the optimisation result (OD matrix).
+	 * @return Estimated OD matrix.
+	 */
 	public RealODMatrix getThetaEstimate() {
 		
 		return this.thetaEstimate;

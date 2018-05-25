@@ -39,7 +39,7 @@ import nismod.transport.zone.NodeMatrix;
 import nismod.transport.zone.Zoning;
 
 /**
- * Network assignment of origin-destination flows
+ * Network assignment of origin-destination flows.
  * @author Milan Lovric
  */
 public class RoadNetworkAssignment {
@@ -2526,6 +2526,8 @@ public class RoadNetworkAssignment {
 	 * Finally, updates link travel times using weighted averaging.
 	 * @param passengerODM Passenger origin-destination matrix.
 	 * @param freightODM Freight origin-destination matrix.
+	 * @param rsg Route set generator object with routes to be used for the assignment (if route choice used) or an object in which to store routes (if routing used).
+	 * @param params Parameters from the config file.
 	 * @param weight Weighting parameter.
 	 */
 	public void assignFlowsAndUpdateLinkTravelTimes(ODMatrix passengerODM, FreightMatrix freightODM, RouteSetGenerator rsg, Properties params, double weight) {
@@ -2549,7 +2551,7 @@ public class RoadNetworkAssignment {
 	 * Iterates assignment and travel time update a fixed number of times.
 	 * @param passengerODM Passenger origin-destination matrix.
 	 * @param freightODM Freight origin-destination matrix.
-	 * @param rsg Route set generator.
+	 * @param rsg Route set generator object with routes to be used for the assignment (if route choice used) or an object in which to store routes (if routing used).
 	 * @param weight Weighting parameter.
 	 * @param iterations Number of iterations.
 	 */
@@ -2566,6 +2568,8 @@ public class RoadNetworkAssignment {
 	 * Iterates assignment and travel time update a fixed number of times.
 	 * @param passengerODM Passenger origin-destination matrix.
 	 * @param freightODM Freight origin-destination matrix.
+	 * @param rsg Route set generator object with routes to be used for the assignment (if route choice used) or an object in which to store routes (if routing used).
+	 * @param params Parameters from the config file.
 	 * @param weight Weighting parameter.
 	 * @param iterations Number of iterations.
 	 */
@@ -3880,7 +3884,7 @@ public class RoadNetworkAssignment {
 	
 	/**
 	 * Setter method for node probabilities.
-	 * @param Node probabilities.
+	 * @param startNodeProbabilities Node probabilities.
 	 */
 	public void setStartNodeProbabilities(HashMap<Integer, Double> startNodeProbabilities) {
 
@@ -3889,7 +3893,7 @@ public class RoadNetworkAssignment {
 
 	/**
 	 * Setter method for node probabilities.
-	 * @param Node probabilities.
+	 * @param endNodeProbabilities Node probabilities.
 	 */
 	public void setEndNodeProbabilities(HashMap<Integer, Double> endNodeProbabilities) {
 
@@ -4038,7 +4042,7 @@ public class RoadNetworkAssignment {
 
 	/**
 	 * Setter method for the energy unit cost.
-	 * @param engineType The type of a car engine.
+	 * @param energyType The type of a car engine.
 	 * @param energyUnitCost The cost of 1 L (of fuel) or 1 kWh (of electricity) in £.
 	 */
 	public void setEnergyUnitCost (EnergyType energyType, double energyUnitCost) {
@@ -4069,7 +4073,7 @@ public class RoadNetworkAssignment {
 	
 	/**
 	 * Setter method for fractional assignment.
-	 * @param double assignmentFraction Assignment fraction (<= 1.0).
+	 * @param assignmentFraction Assignment fraction (&lt;= 1.0).
 	 */
 	public void setAssignmentFraction (double assignmentFraction) {
 

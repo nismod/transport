@@ -95,6 +95,8 @@ public class EstimatedODMatrix extends RealODMatrix {
 	 * @param distanceSkimMatrix Distance skim matrix
 	 * @param binLimitsKm Bin limits in km
 	 * @param observedTripLengthDistribution Observed trip length distribution (normalised).
+	 * @throws FileNotFoundException if any.
+	 * @throws IOException if any.
 	 */
 	public EstimatedODMatrix(String fileName, SkimMatrix distanceSkimMatrix, final double[] binLimitsKm, final double[] observedTripLengthDistribution) throws FileNotFoundException, IOException {
 
@@ -147,7 +149,8 @@ public class EstimatedODMatrix extends RealODMatrix {
 	
 	/**
 	 * Constructor for estimated OD matrix that uses network assignment and traffic counts for matrix rebalancing.
-	 * @param rna
+	 * @param zones List of zones.
+	 * @param rna Road network assignment.
 	 */
 	public EstimatedODMatrix(List<String> zones, RoadNetworkAssignment rna) {
 
@@ -261,6 +264,10 @@ public class EstimatedODMatrix extends RealODMatrix {
 		this.printMatrixFormatted("OD matrix after scaling:");
 	}
 	
+	/**
+	 * Calculates scaling factors for OD pairs.
+	 * @return Scaling factors.
+	 */
 	public RealODMatrix getScalingFactors() {
 		
 		List<Trip> tripList = this.rna.getTripList();
@@ -422,6 +429,9 @@ public class EstimatedODMatrix extends RealODMatrix {
 		System.out.println();
 	}
 	
+	/**
+	 * Prints the message and the matrix as a formatted table.
+	 */
 	@Override
 	public void printMatrixFormatted(String message) {
 		

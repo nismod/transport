@@ -9,6 +9,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
+ * Creates only one instance of the random number generator that can be used throughout the whole model.
+ * Simulation results can then be reproduced by using the same seed.
  * @author Milan Lovric
  *
  */
@@ -24,23 +26,40 @@ public class RandomSingleton {
 		generator = new Random(1234);
 	}
 	
-	public static RandomSingleton getInstance () {
+	/**
+	 * Getter for the singleton instance of the random number generator.
+	 * @return Random number generator.
+	 */
+	public static RandomSingleton getInstance() {
 		
 		if (instance == null) instance = new RandomSingleton();
 		
 		return instance;
 	}
 	
+	/**
+	 * Generates a pseudorandom real number between 0 and 1.
+	 * @return Pseudorandom real double.
+	 */
 	public double nextDouble() { 
 	
 		return generator.nextDouble(); 
 	} 
 	
+	/**
+	 * Generates a pseudorandom whole number smallet than the bound.
+	 * @param bound Upper bound.
+	 * @return Pseudorandom whole number.
+	 */
 	public int nextInt(int bound) { 
 		
 		return generator.nextInt(bound); 
 	}
 	
+	/**
+	 * Setter method for the seed of the random number generator.
+	 * @param seed Seed of the random number generator.
+	 */
 	public void setSeed(long seed) {
 		
 		generator = new Random(seed);

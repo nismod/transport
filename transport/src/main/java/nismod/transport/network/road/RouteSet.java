@@ -21,7 +21,7 @@ import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.utility.RandomSingleton;
 
 /**
- * RouteSet is a choice set of possible routes between origin and destination node.
+ * RouteSet is a choice set of possible routes between an origin and a destination node.
  * @author Milan Lovric
  *
  */
@@ -176,7 +176,13 @@ public class RouteSet {
 	
 	/**
 	 * Re-calculates utilities for all the routes.
+	 * @param vht Vehicle type.
+	 * @param et Engine type.
 	 * @param linkTravelTime Link travel times.
+	 * @param energyConsumptionParameters Base year energy consumption parameters.
+	 * @param relativeFuelEfficiency Relative fuel efficiency compared to the base year.
+	 * @param energyUnitCosts Energy unit costs.
+	 * @param linkCharges Congestion charges.
 	 * @param params Route choice parameters.
 	 */
 	public void calculateUtilities(VehicleType vht, EngineType et, Map<Integer, Double> linkTravelTime, HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParameters, HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency, HashMap<EnergyType, Double> energyUnitCosts, HashMap<String, HashMap<Integer, Double>> linkCharges, Properties params) {
@@ -232,6 +238,10 @@ public class RouteSet {
 		return this.probabilities;
 	}
 	
+	/**
+	 * Getter method for choice utilities.
+	 * @return Choice utilities.
+	 */
 	public ArrayList<Double> getUtilities() {
 		
 		ArrayList<Double> utilities = new ArrayList<Double>();
@@ -389,18 +399,27 @@ public class RouteSet {
 		this.params = params;
 	}
 	
+	/**
+	 * Prints statistic for the route set (choice set size for each node pair).
+	 */
 	public void printStatistics() {
 		
 		System.out.printf("Statistics for route set from %d to %d: %d distinct routes. \n", this.originNode.getID(), this.destinationNode.getID(), this.choiceSet.size());
 		
 	}
 	
+	/**
+	 * Prints probabilities for the route set.
+	 */
 	public void printProbabilities() {
 
 		System.out.println("Probabilities: ");
 		System.out.println(this.probabilities);
 	}
 	
+	/**
+	 * Prints utilities for the route set.
+	 */
 	public void printUtilities() {
 
 		System.out.println("Utilities: ");

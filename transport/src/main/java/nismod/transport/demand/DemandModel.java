@@ -5,18 +5,13 @@ package nismod.transport.demand;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
-import java.util.Set;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.map.MultiKeyMap;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -33,7 +28,7 @@ import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.utility.InputFileReader;
 
 /**
- * Demand prediction model.
+ * Main demand prediction model (elasticity-based).
  * @author Milan Lovric
   */
 public class DemandModel {
@@ -91,12 +86,14 @@ public class DemandModel {
 	 * @param elasticitiesFile Elasticities file name.
 	 * @param elasticitiesFreightFile Elasticities freight file name.
 	 * @param energyUnitCostsFile Energy unit costs file name.
-	 * @param unitCO2EmissionFile Unit CO2 emission file name.
+	 * @param unitCO2EmissionsFile Unit CO2 emissions file name.
 	 * @param engineTypeFractionsFile Engine type fractions file.
 	 * @param autonomousVehiclesFractionsFile Autonomous vehicles fractions file.
 	 * @param interventions List of interventions.
 	 * @param rsg Route Set Generator with routes for both cars and freight.
 	 * @param props Properties file.
+	 * @throws FileNotFoundException if any.
+	 * @throws IOException if any.
 	 */
 	public DemandModel(RoadNetwork roadNetwork, String baseYearODMatrixFile, String baseYearFreightMatrixFile, String populationFile, String GVAFile, String elasticitiesFile, String elasticitiesFreightFile, String energyUnitCostsFile, String unitCO2EmissionsFile, String engineTypeFractionsFile, String autonomousVehiclesFractionsFile, List<Intervention> interventions, RouteSetGenerator rsg, Properties props) throws FileNotFoundException, IOException {
 
@@ -658,8 +655,8 @@ public class DemandModel {
 	
 	/**
 	 * Setter method for congestion charges (overrides them).
-	 * @param year
-	 * @param congestionCharges
+	 * @param year Year of the congestion charges.
+	 * @param congestionCharges Congestion charges.
 	 */
 	public void setCongestionCharges(int year, HashMap<String, MultiKeyMap> congestionCharges) {
 		
@@ -668,8 +665,8 @@ public class DemandModel {
 
 	/**
 	 * Getter method for congestion charges.
-	 * @param year
-	 * @return
+	 * @param year Year of the congestion charges.
+	 * @return Congestion charges.
 	 */
 	public HashMap<String, MultiKeyMap> getCongestionCharges(int year) {
 		
@@ -678,9 +675,9 @@ public class DemandModel {
 	
 	/**
 	 * Adds congestion charges to the list of the existing ones.
-	 * @param year
-	 * @param policyName
-	 * @param congestionCharges
+	 * @param year Year of the policy.
+	 * @param policyName Name of the policy.
+	 * @param congestionCharges Congestion charges.
 	 */
 	public void addCongestionCharges(int year, String policyName, MultiKeyMap congestionCharges) {
 		
@@ -693,8 +690,8 @@ public class DemandModel {
 	
 	/**
 	 * Removes congestion charges from the list of existing ones.
-	 * @param year
-	 * @param policyName
+	 * @param year Year of the congestion charges.
+	 * @param policyName Name of the policy.
 	 */
 	public void removeCongestionCharges(int year, String policyName) {
 		
