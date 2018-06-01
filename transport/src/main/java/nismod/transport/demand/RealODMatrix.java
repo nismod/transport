@@ -151,8 +151,9 @@ public class RealODMatrix {
 	
 	/**
 	 * Prints the matrix as a formatted table.
+	 * @param precision Number of decimal places for the matrix value.
 	 */
-	public void printMatrixFormatted() {
+	public void printMatrixFormatted(int precision) {
 		
 		List<String> firstKeyList = this.getOrigins();
 		List<String> secondKeyList = this.getDestinations();
@@ -164,7 +165,7 @@ public class RealODMatrix {
 		System.out.println();
 		for (String o: firstKeyList) {
 			System.out.printf("%-10s", o);
-			for (String s: secondKeyList) System.out.printf("%10.2f", this.getFlow(o,s));
+			for (String s: secondKeyList) System.out.printf("%10." + precision + "f", this.getFlow(o,s));
 			System.out.println();
 		}
 	}
@@ -285,12 +286,13 @@ public class RealODMatrix {
 	/**
 	 * Prints message followed by the formatted matrix.
 	 * @param s Message.
+	 * @param precision Number of decimal places.
 	 */
-	public void printMatrixFormatted(String s) {
+	public void printMatrixFormatted(String s, int precision) {
 		
 		
 		System.out.println(s);
-		this.printMatrixFormatted();
+		this.printMatrixFormatted(precision);
 	}
 	
 	/**

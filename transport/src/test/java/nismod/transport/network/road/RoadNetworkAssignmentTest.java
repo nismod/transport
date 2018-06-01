@@ -58,8 +58,8 @@ public class RoadNetworkAssignmentTest {
 	public static void main( String[] args ) throws IOException	{
 		
 		
-		//final String configFile = "./src/main/config/config.properties";
-		final String configFile = "./src/test/config/testConfig.properties";
+		final String configFile = "./src/main/full/config/config.properties";
+		//final String configFile = "./src/test/config/testConfig.properties";
 		Properties props = ConfigReader.getProperties(configFile);
 		
 		final String areaCodeFileName = props.getProperty("areaCodeFileName");
@@ -125,6 +125,9 @@ public class RoadNetworkAssignmentTest {
 															null,
 															null,
 															props);
+		
+		/*
+		
 		
 		//set assignment fraction
 		rna.setAssignmentFraction(0.1);
@@ -212,7 +215,7 @@ public class RoadNetworkAssignmentTest {
 		System.out.printf("RMSN for counts (3.0 expansion factor): %.2f%% %n", rna.calculateRMSNforExpandedSimulatedVolumes(3.0));
 		System.out.printf("RMSN for counts (4.0 expansion factor): %.2f%% %n", rna.calculateRMSNforExpandedSimulatedVolumes(4.0));
 	
-/*		
+		
 		
 		//clear the routes
 		rsg.clearRoutes();
@@ -223,6 +226,8 @@ public class RoadNetworkAssignmentTest {
 		//clear the trip list
 		rna.resetTripStorages();
 				
+				
+		*/
 		
 		// FREIGHT ASSIGNMENT //
 		
@@ -233,10 +238,12 @@ public class RoadNetworkAssignmentTest {
 		FreightMatrix freightMatrix = new FreightMatrix(freightMatrixFile);
 		freightMatrix.printMatrixFormatted();
 		
-		timeNow = System.currentTimeMillis();
+		//read routes
+		long timeNow = System.currentTimeMillis();
 		//rsg.readRoutes("./src/main/resources/data/routesFreight/routesFreight.txt");
 		//rsg.readRoutesBinary("./src/main/resources/data/freightRoutes/freightRoutes.dat");
 		//rsg.readRoutesBinaryWithoutValidityCheck("./src/main/resources/data/freightRoutesTop5/freightRoutesTop5.dat");
+		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, props);
 		rsg.readRoutesBinaryWithoutValidityCheck(freightRoutesFile);
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Freight routes read in %d seconds.\n", timeNow / 1000);
@@ -245,15 +252,12 @@ public class RoadNetworkAssignmentTest {
  		//assign freight flows
 		timeNow = System.currentTimeMillis();
 //		roadNetworkAssignment.assignFreightFlows(freightMatrix);
-		rna.assignFreightFlowsRouteChoice(freightMatrix, rsg, params);
+		rna.assignFreightFlowsRouteChoice(freightMatrix, rsg, props);
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Freight flows assigned in %d seconds.\n", timeNow / 1000);
 		
 		//roadNetworkAssignment.saveAssignmentResults(2015, "assignment2015passengerAndFreigh.csv");
-		
-		//expand the results if fractional assignment was used
-		rna.expandTripList();
-				
+
 		
 //		//for (int i = 0; i < 5; i++) {
 //		for (int i = 0; i < 1; i++) {
@@ -277,7 +281,7 @@ public class RoadNetworkAssignmentTest {
 		System.out.println(roadNetwork.getZoneToNodes());
 		
 		System.out.println("Trip list: ");
-		tripList = rna.getTripList();
+		List<Trip> tripList = rna.getTripList();
 		Frequency freq = new Frequency();
 		for (Trip trip: tripList) {
 			//System.out.println(trip.toString());
@@ -352,7 +356,7 @@ public class RoadNetworkAssignmentTest {
   
   
   
- */
+ 
 	}
 
 	@Test

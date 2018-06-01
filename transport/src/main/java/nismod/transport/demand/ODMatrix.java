@@ -434,6 +434,19 @@ public class ODMatrix {
 		return ladMatrix;
 	}
 	
+	/**
+	 * Deletes all inter-zonal flows to/from a particular zone (leaving only intra-zonal flows)
+	 * @param zone Zone for which inter-zonal flows need to be deleted from the origin-destination matrix.
+	 */
+	public void deleteInterzonalFlows(String zone) {
+		
+		for (String origin: this.getOrigins())
+			for (String destination: this.getDestinations())
+				if (origin.equals(zone) || destination.equals(zone)) {
+				this.setFlow(origin, destination, 0);
+			}
+	}
+	
 	@Override
 	public ODMatrix clone() {
 

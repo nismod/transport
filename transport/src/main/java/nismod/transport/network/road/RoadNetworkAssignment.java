@@ -486,7 +486,7 @@ public class RoadNetworkAssignment {
 						//RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTime);
 						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, (HashMap<Integer, Double>)this.linkTravelTimePerTimeOfDay.get(hour));
 						if (fastestPath == null) {
-							LOGGER.warn("Not even aStar could find a route!");
+							LOGGER.warn("Not even aStar could find a route between node {} and node {}!", originNode, destinationNode);
 							continue;
 						}
 
@@ -503,7 +503,7 @@ public class RoadNetworkAssignment {
 
 				} catch (Exception e) {
 					LOGGER.error(e);
-					LOGGER.error("Couldnt find path from node {} to node {}!", from.getID(), to.getID());
+					LOGGER.error("Couldn't find path from node {} to node {}!", from.getID(), to.getID());
 				}
 			}//for each trip
 		}//for each OD pair
@@ -896,11 +896,11 @@ public class RoadNetworkAssignment {
 				Route chosenRoute = null;
 				RouteSet fetchedRouteSet = rsg.getRouteSet(originNode.intValue(), destinationNode.intValue());
 				if (fetchedRouteSet == null) {
-					LOGGER.warn("Can't fetch the route set between nodes {} and {}!", originNode, destinationNode);
+//					LOGGER.warn("Can't fetch the route set between nodes {} and {}!", originNode, destinationNode);
 
 					if (!flagAStarIfEmptyRouteSet)	continue;
 					else { //try finding a path with aStar
-						LOGGER.debug("Trying the astar!");
+//						LOGGER.debug("Trying the astar!");
 
 						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(originNode);
 						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(destinationNode);
@@ -2250,8 +2250,8 @@ public class RoadNetworkAssignment {
 
 				} else if (originNode != null && destinationNode != null) { //point to point
 
-					if (!flagIntrazonalAssignmentReplacement && originNode == destinationNode) 
-						LOGGER.warn("Origin and destination node are the same, but there is no replacement!");
+					if (originNode == destinationNode) 
+						LOGGER.debug("Point-to-point freight trip in which both points are mapped to the same network node.");
 				}
 
 				if (originNode == null) LOGGER.warn("Could not find origin node for a freight trip!");
@@ -2262,9 +2262,11 @@ public class RoadNetworkAssignment {
 				if (fetchedRouteSet == null) {
 					LOGGER.warn("Can't fetch the route set between nodes {} and {}!", originNode, destinationNode);
 
-					if (!flagAStarIfEmptyRouteSet)	continue;
+					if (!flagAStarIfEmptyRouteSet && originNode != destinationNode)	continue;
 					else { //try finding a path with aStar
-						LOGGER.debug("Trying the astar!");
+						
+						if (originNode == destinationNode) 	LOGGER.trace("Generating a single node trip because origin and destination node are the same.");
+						else 								LOGGER.debug("Trying the astar to find a missing route from origin to destination node.");
 
 						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(originNode);
 						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(destinationNode);
@@ -2284,25 +2286,37 @@ public class RoadNetworkAssignment {
 						rsg.addRoute(chosenRoute);
 					}
 				} else { //there is a route set
-
-					//if (fetchedRouteSet.getProbabilities() == null) {
-					//probabilities need to be calculated for this route set before a choice can be made
-					fetchedRouteSet.setLinkTravelTime(this.linkTravelTimePerTimeOfDay.get(hour));
-					fetchedRouteSet.setParameters(routeChoiceParameters);
 					
-					//fetch congestion charge for the vehicle type
-					HashMap<String, HashMap<Integer, Double>> linkCharges = new HashMap<String, HashMap<Integer, Double>>();
-					if (this.congestionCharges != null) 
-						for (String policyName: this.congestionCharges.keySet())
-							linkCharges.put(policyName, (HashMap<Integer, Double>) this.congestionCharges.get(policyName).get(vht, hour));
+					//if only one route in the route set, do not calculate utilities and probabilities, but choose that route
+					if (fetchedRouteSet.getSize() == 1) {
+						
+						LOGGER.trace("There is just one route in the route set, so choosing that route.");
+						//choose that route
+						chosenRoute = fetchedRouteSet.getChoiceSet().get(0);
 
-					fetchedRouteSet.calculateUtilities(vht, engine, this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions, this.relativeFuelEfficiencies, this.energyUnitCosts, linkCharges, routeChoiceParameters);
-					fetchedRouteSet.calculateProbabilities(this.linkTravelTimePerTimeOfDay.get(hour), routeChoiceParameters);
-					fetchedRouteSet.sortRoutesOnUtility();
-					//}
+					} else { //choose a route using a discrete-choice model
 
-					//choose the route
-					chosenRoute = fetchedRouteSet.choose(routeChoiceParameters);
+						LOGGER.trace("There are multiple route in the route set, so choosing with a route-choice model.");
+						//if (fetchedRouteSet.getProbabilities() == null) {
+						//probabilities need to be calculated for this route set before a choice can be made
+						fetchedRouteSet.setLinkTravelTime(this.linkTravelTimePerTimeOfDay.get(hour));
+						fetchedRouteSet.setParameters(routeChoiceParameters);
+
+						//fetch congestion charge for the vehicle type
+						HashMap<String, HashMap<Integer, Double>> linkCharges = new HashMap<String, HashMap<Integer, Double>>();
+						if (this.congestionCharges != null) 
+							for (String policyName: this.congestionCharges.keySet())
+								linkCharges.put(policyName, (HashMap<Integer, Double>) this.congestionCharges.get(policyName).get(vht, hour));
+
+						fetchedRouteSet.calculateUtilities(vht, engine, this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions, this.relativeFuelEfficiencies, this.energyUnitCosts, linkCharges, routeChoiceParameters);
+						fetchedRouteSet.calculateProbabilities(this.linkTravelTimePerTimeOfDay.get(hour), routeChoiceParameters);
+						fetchedRouteSet.sortRoutesOnUtility();
+						//}
+
+						//choose the route
+						chosenRoute = fetchedRouteSet.choose(routeChoiceParameters);
+					}
+					
 					if (chosenRoute == null) {
 						LOGGER.warn("No chosen route between nodes {} and {}!", originNode, destinationNode);
 						continue;
@@ -4103,11 +4117,12 @@ public class RoadNetworkAssignment {
 	}
 
 	/**
-	 * Resets route storages for passengers and freight.
+	 * Reset trip list for passengers and freight.
 	 */
 	public void resetTripStorages () {
 
-		this.tripList = new ArrayList<Trip>();
+		this.tripList.clear();
+		//this.tripList = new ArrayList<Trip>();
 	}
 
 	/**

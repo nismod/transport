@@ -265,7 +265,7 @@ public class SPSATest {
 		//odmatrix.setFlow("E06000045", "E06000045", 70000);
 		//odmatrix.setFlow("E06000045", "E06000045", 72930);
 		temproODMatrix.scaleMatrixValue(0.5);
-		temproODMatrix.printMatrixFormatted("Initial passenger matrix:");
+		temproODMatrix.printMatrixFormatted("Initial passenger matrix:", 2);
 		
 		//double a = 10000;
 		double a = 1000;
@@ -297,7 +297,7 @@ public class SPSATest {
 		optimiser.initialise(rna, zoning, rsg, temproODMatrix, a, A, c, alpha, gamma);
 		optimiser.runSPSA(100);
 
-		optimiser.getThetaEstimate().printMatrixFormatted("Final OD matrix:");
+		optimiser.getThetaEstimate().printMatrixFormatted("Final OD matrix:", 2);
 		
 		System.out.printf("Final RMSN: %.2f%% %n", optimiser.lossFunction());
 		System.out.printf("Final RMSN: %.2f%% %n", rna.calculateRMSNforExpandedSimulatedVolumes(1.0));

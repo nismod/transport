@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.logging.log4j.LogManager;
@@ -20,7 +21,7 @@ import nismod.transport.zone.NodeMatrix;
 import nismod.transport.zone.Zoning;
 
 /**
- * Origin-destination matrix created by directly scaling flows using traffic counts.
+ * Origin-destination matrix (LAD based) created by directly scaling flows using traffic counts.
  * @author Milan Lovric
  *
  */
@@ -32,8 +33,7 @@ public class RebalancedODMatrix extends RealODMatrix {
 	private List<String> destinations;
 	private RoadNetworkAssignment rna;
 	private RouteSetGenerator rsg;
-	private Zoning zoning;
-	
+	private Properties params;
 	private List<Double> RMSNvalues;
 
 	/**
@@ -42,9 +42,8 @@ public class RebalancedODMatrix extends RealODMatrix {
 	 * @param destinations List of destination zones.
 	 * @param rna Road network assignment.
 	 * @param rsg Route set generator.
-	 * @param zoning Zoning system.
 	 */
-	public RebalancedODMatrix(List<String> origins, List<String> destinations, RoadNetworkAssignment rna, RouteSetGenerator rsg, Zoning zoning) {
+	public RebalancedODMatrix(List<String> origins, List<String> destinations, RoadNetworkAssignment rna, RouteSetGenerator rsg, Properties params) {
 
 		super();
 		
@@ -52,7 +51,7 @@ public class RebalancedODMatrix extends RealODMatrix {
 		this.origins = new ArrayList<String>();
 		this.destinations = new ArrayList<String>();
 		this.rsg = rsg;
-		this.zoning = zoning;
+		this.params = params;
 		this.RMSNvalues = new ArrayList<Double>();
 		
 		
@@ -67,8 +66,14 @@ public class RebalancedODMatrix extends RealODMatrix {
 	 */
 	public void iterate(int number) {
 
-		for (int i=0; i<number; i++) 
+		for (int i=0; i<number; i++) {
+			this.assignAndCalculateRMSN();
 			this.scaleToTrafficCounts();
+			this.saveMatrixFormatted("ODMafterIteration" + i + ".csv");
+		}
+		
+		//assign ones more to get the latest RMSN
+		this.assignAndCalculateRMSN();
 	}
 
 
@@ -79,57 +84,48 @@ public class RebalancedODMatrix extends RealODMatrix {
 
 		for (String origin: this.getOrigins()) 
 			for (String destination: this.getDestinations())
-				this.setFlow(origin, destination, 1);
+				this.setFlow(origin, destination, 1.0);
 	}
 
+	
+	/**
+	 * Assigns OD matrix and calculates RMSN with traffic counts.
+	 */
+	public void assignAndCalculateRMSN() {
+		
+		this.rna.resetLinkVolumes();
+		this.rna.resetTripStorages();
+		ODMatrix odm = new ODMatrix(this);
+		//	odm.printMatrixFormatted();
+		
+		final Boolean flagUseRouteChoiceModel = Boolean.parseBoolean(params.getProperty("USE_ROUTE_CHOICE_MODEL"));
+		
+		if (flagUseRouteChoiceModel) {
+			rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
+		} else {
+			rna.assignPassengerFlowsRouting(odm, rsg);
+		}
+		rna.updateLinkVolumeInPCU();
+		rna.updateLinkVolumeInPCUPerTimeOfDay();
+		rna.updateLinkVolumePerVehicleType();
+		rna.updateLinkTravelTimes(0.9);
+		
+		double RMSN = this.rna.calculateRMSNforSimulatedVolumes();
+		this.RMSNvalues.add(RMSN);
+		LOGGER.info("RMSN before scaling = {}", RMSN);
+	}
+	
 	/**
 	 * Scales OD matrix to traffic counts.
 	 */
 	public void scaleToTrafficCounts() {
 			
-		this.rna.resetLinkVolumes();
-		this.rna.resetTripStorages();
-		ODMatrix odm = new ODMatrix(this);
-		
-		odm.printMatrixFormatted();
-		
-		this.rna.assignPassengerFlowsTempro(odm, zoning, rsg);
-		this.rna.updateLinkVolumePerVehicleType();
-		
-		double RMSN = this.rna.calculateRMSNforSimulatedVolumes();
-		this.RMSNvalues.add(RMSN);
-		System.out.printf("RMSN before scaling = %.2f%% %n", RMSN);
-		
 		RealODMatrix sf = this.getScalingFactors();
-		sf.printMatrixFormatted("Scaling factors:");
+		sf.printMatrixFormatted("Scaling factors:", 5);
 		
 		this.scaleMatrixValue(sf);
-		this.printMatrixFormatted("OD matrix after scaling:");
-		
-		//this.modifyNodeMatrixProbabilitiesForInterzonalTrips();
+	//	this.printMatrixFormatted("OD matrix after scaling:", 2);
 	}
-	
-	/**
-	 * Scales OD matrix to traffic counts.
-	 */
-	public void scaleNodeMatricesToTrafficCounts() {
-			
-		this.rna.resetLinkVolumes();
-		this.rna.resetTripStorages();
-		ODMatrix odm = new ODMatrix(this);
-		
-		odm.printMatrixFormatted();
-		
-		this.rna.assignPassengerFlowsTempro(odm, zoning, rsg);
-		this.rna.updateLinkVolumePerVehicleType();
-		
-		double RMSN = this.rna.calculateRMSNforSimulatedVolumes();
-		this.RMSNvalues.add(RMSN);
-		System.out.printf("RMSN before scaling = %.2f%% %n", RMSN);
-		
-		this.modifyNodeMatrixProbabilitiesForInterzonalTrips();
-	}
-	
 	
 	
 	/**
@@ -139,14 +135,14 @@ public class RebalancedODMatrix extends RealODMatrix {
 	public RealODMatrix getScalingFactors() {
 		
 		List<Trip> tripList = this.rna.getTripList();
-		System.out.println("Trip list size: " + tripList.size());
+		LOGGER.trace("Trip list size: {}", tripList.size());
 		
 		Map<Integer, Integer> volumes = this.rna.getLinkVolumePerVehicleType().get(VehicleType.CAR);
 		Map<Integer, Integer> counts = this.rna.getAADFCarTrafficCounts();
 		Map<Integer, Double> linkFactors = new HashMap<Integer, Double>();
 		
-		System.out.println("volumes = " + volumes);
-		System.out.println("counts = " + counts);
+		LOGGER.trace("volumes = {}", volumes);
+		LOGGER.trace("counts = {}", counts);
 				
 		//scaling link factors can only be calculated for links that have counts and flow > 0
 		for (Integer edgeID: volumes.keySet()) {
@@ -156,20 +152,19 @@ public class RebalancedODMatrix extends RealODMatrix {
 			if (volume == 0.0) continue; //also skip as it would create infinite factor
 			linkFactors.put(edgeID, 1.0 * count / volume);
 		}
-		System.out.println("link factors = " + linkFactors);
+		LOGGER.trace("link factors = {}", linkFactors);
 		
 		RealODMatrix factors = new RealODMatrix();
 		ODMatrix counter = new ODMatrix();
 		RealODMatrix scalingFactors = new RealODMatrix();
 		
 		for (Trip t: tripList) 
-			if (t instanceof TripTempro && t.getVehicle().equals(VehicleType.CAR))	{
+			if (t.getVehicle().equals(VehicleType.CAR))	{
 				
-				TripTempro temproTrip = (TripTempro) t;
-				int multiplier = temproTrip.getMultiplier();
+				int multiplier = t.getMultiplier();  
 			
-				String originZone = temproTrip.getOriginTemproZone();
-				String destinationZone = temproTrip.getDestinationTemproZone();
+				String originZone = t.getOriginLAD(rna.getRoadNetwork().getNodeToZone());
+				String destinationZone = t.getDestinationLAD(rna.getRoadNetwork().getNodeToZone());
 				Route route = t.getRoute();
 				
 				//get current factor and count
@@ -202,104 +197,6 @@ public class RebalancedODMatrix extends RealODMatrix {
 		}
 		
 		return scalingFactors;
-	}
-	
-	public void modifyNodeMatrixProbabilitiesForInterzonalTrips() {
-		
-		List<Trip> tripList = this.rna.getTripList();
-		System.out.println("Trip list size: " + tripList.size());
-		
-		Map<Integer, Integer> volumes = this.rna.getLinkVolumePerVehicleType().get(VehicleType.CAR);
-		Map<Integer, Integer> counts = this.rna.getAADFCarTrafficCounts();
-		Map<Integer, Double> linkFactors = new HashMap<Integer, Double>();
-		
-		System.out.println("volumes = " + volumes);
-		System.out.println("counts = " + counts);
-				
-		//scaling link factors can only be calculated for links that have counts and flow > 0
-		for (Integer edgeID: volumes.keySet()) {
-			Integer count = counts.get(edgeID);
-			Integer volume = volumes.get(edgeID);
-			if (count == null) continue; //skip link with no count (e.g. ferry lines)
-			if (volume == 0.0) continue; //also skip as it would create infinite factor
-			linkFactors.put(edgeID, 1.0 * count / volume);
-		}
-		System.out.println("link factors = " + linkFactors);
-		
-		
-		HashMap<String, NodeMatrix> zoneToSumFactors = new HashMap<String, NodeMatrix>();
-		HashMap<String, NodeMatrix> zoneToCounters = new HashMap<String, NodeMatrix>();
-		HashMap<String, NodeMatrix> zoneToScalingFactors = new HashMap<String, NodeMatrix>();		
-		
-		for (String zone: zoning.getZoneToNodeMatrix().keySet()) {
-			zoneToSumFactors.put(zone, new NodeMatrix());
-			zoneToCounters.put(zone, new NodeMatrix());
-			zoneToScalingFactors.put(zone, new NodeMatrix());
-		}
-		
-		for (Trip t: tripList) 
-			if (t instanceof TripTempro && t.getVehicle().equals(VehicleType.CAR))	{
-				
-				TripTempro temproTrip = (TripTempro) t;
-			
-				String originZone = temproTrip.getOriginTemproZone();
-				String destinationZone = temproTrip.getDestinationTemproZone();
-				Route route = t.getRoute();
-				int multiplier = temproTrip.getMultiplier();
-				
-				//only if inter-zonal
-				if (!originZone.equals(destinationZone)) continue; //skip if not inter-zonal
-				
-				if (zoning.getZoneToNodeMatrix().get(originZone) == null) continue; //skip if no NodeMatrix (too few nodes).
-				
-				Integer originNode = temproTrip.getOriginNode().getID();
-				Integer destinationNode = temproTrip.getDestinationNode().getID();
-								
-				//get current sum factor and count NodeMatrix
-				NodeMatrix sum = zoneToSumFactors.get(originZone); 
-				NodeMatrix count = zoneToCounters.get(originZone);
-				
-				double s = sum.getValue(originNode, destinationNode);
-				double c = count.getValue(originNode, destinationNode);
-				
-				for (DirectedEdge edge: route.getEdges())
-					if (linkFactors.get(edge.getID()) != null){
-					s += linkFactors.get(edge.getID() * multiplier);
-					c += multiplier;
-					}
-				
-				//update factor sum and count
-				sum.setValue(originNode, destinationNode, s);
-				count.setValue(originNode, destinationNode, c);
-			}
-		
-		//calculate scaling factors by dividing factor sum and counter
-		for (String zone: zoning.getZoneToNodeMatrix().keySet()) {
-			NodeMatrix sum = zoneToSumFactors.get(zone); 
-			NodeMatrix count = zoneToCounters.get(zone);
-			NodeMatrix scaling = zoneToScalingFactors.get(zone);
-			
-			for (Object mk: sum.getKeySet()) {
-				Integer originNode = (Integer) ((MultiKey)mk).getKey(0);
-				Integer destinationNode = (Integer) ((MultiKey)mk).getKey(1);
-				double scalingFactor;
-				if (count.getValue(originNode, destinationNode) == 0) 
-					scalingFactor = 1.0; //there were no (non-empty) routes between these two zones
-				else 
-					scalingFactor = 1.0 * sum.getValue(originNode, destinationNode) / count.getValue(originNode, destinationNode);
-				scaling.setValue(originNode, destinationNode, scalingFactor);
-			}		
-		}
-
-		for (String zone: zoning.getZoneToNodeMatrix().keySet()) {
-			zoning.getZoneToNodeMatrix().get(zone).printMatrixFormatted(zone);
-			zoneToScalingFactors.get(zone).printMatrixFormatted("scaling factors:");
-			zoning.getZoneToNodeMatrix().get(zone).scaleMatrixValue(zoneToScalingFactors.get(zone));
-			zoning.getZoneToNodeMatrix().get(zone).printMatrixFormatted("after scaling");
-			zoning.getZoneToNodeMatrix().get(zone).normaliseWithZeroDiagonal();
-			zoning.getZoneToNodeMatrix().get(zone).printMatrixFormatted("after normalising:");
-		}
-		
 	}
 	
 	/**
