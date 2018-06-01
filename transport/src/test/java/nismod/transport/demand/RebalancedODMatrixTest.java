@@ -11,31 +11,37 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
+import org.geotools.graph.structure.DirectedEdge;
+import org.jfree.data.category.DefaultCategoryDataset;
 import org.junit.Test;
 
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
+import nismod.transport.network.road.Route;
+import nismod.transport.network.road.RouteSet;
 import nismod.transport.network.road.RouteSetGenerator;
+import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.utility.ConfigReader;
 import nismod.transport.utility.InputFileReader;
+import nismod.transport.visualisation.LineVisualiser;
+import nismod.transport.visualisation.NetworkVisualiser;
 import nismod.transport.zone.Zoning;
 
 /**
- * Tests for the EstimatedODMatrix class
+ * Tests for the RebalancedODMatrix class
  * @author Milan Lovric
  *
  */
-public class EstimatedODMatrixTest {
+public class RebalancedODMatrixTest {
 	
 	public static void main( String[] args ) throws FileNotFoundException, IOException {
 		
-		double[] BIN_LIMITS_KM = {0.0, 0.621371, 1.242742, 3.106855, 6.21371, 15.534275, 31.06855, 62.1371, 93.20565, 155.34275, 217.47985};
-		double[] OTLD = {0.05526, 0.16579, 0.34737, 0.21053, 0.15789, 0.03947, 0.01579, 0.00432, 0.00280, 0.00063, 0.00014};
-		
-		//final String configFile = "./src/main/config/config.properties";
-		final String configFile = "./src/test/config/testConfig.properties";
+		final String configFile = "./src/main/full/config/config.properties";
+		//final String configFile = "./src/test/config/testConfig.properties";
 		//final String configFile = "./src/test/config/miniTestConfig.properties";
 		Properties props = ConfigReader.getProperties(configFile);
 		
@@ -59,7 +65,6 @@ public class EstimatedODMatrixTest {
 		final String freightRoutesFile = props.getProperty("freightRoutesFile");
 		
 		final String outputFolder = props.getProperty("outputFolder");
-		final String assignmentResultsFile = props.getProperty("assignmentResultsFile");
 		
 		//create output directory
 	     File file = new File(outputFolder);
@@ -102,52 +107,124 @@ public class EstimatedODMatrixTest {
 															null,
 															null,
 															props);
-		
-		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
-		
-		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
-		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
-		
-		ODMatrix temproODM = ODMatrix.createUnitMatrix(zoning.getZoneCodeToIDMap().keySet());
-		rna.assignPassengerFlowsTempro(temproODM, zoning, rsg);
-		rna.calculateDistanceSkimMatrixTempro().printMatrixFormatted();
-				
-		//SkimMatrix distanceSkimMatrix = new SkimMatrix("./distanceSkimMatrix.csv");
-		SkimMatrix distanceSkimMatrix = rna.calculateDistanceSkimMatrixTempro();
-				
-		//EstimatedODMatrix odmpa = new EstimatedODMatrix("./src/main/resources/data/passengerProductionsAttractions.csv", distanceSkimMatrix, BIN_LIMITS_KM, OTLD);
-		final String productionsAttractionsTemproFile = props.getProperty("productionsAttractionsTemproFile");
-		EstimatedODMatrix odmpa = new EstimatedODMatrix(productionsAttractionsTemproFile, distanceSkimMatrix, BIN_LIMITS_KM, OTLD);
 
-		odmpa.printMatrixFormatted(2);
-		odmpa.getBinIndexMatrix().printMatrixFormatted("Bin index matrix:");
+		//create route set generator
+		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
+		//rsg.readRoutesBinaryWithoutValidityCheck(passengerRoutesFile);
+		rsg.printStatistics();
 		
-		odmpa.createUnitMatrix();
-		odmpa.printMatrixFormatted("Unit matrix:", 2);
+		roadNetwork.sortGravityNodes();
+
+		ODMatrix passengerODM = new ODMatrix(baseYearODMatrixFile);
+		passengerODM = ODMatrix.createUnitMatrix(passengerODM.getOrigins(), passengerODM.getDestinations());
+		passengerODM.deleteInterzonalFlows("E06000053"); //delete flows from/to Isle of Scilly
+				
+		passengerODM.printMatrixFormatted("Initial OD matrix:");
 		
-		odmpa.scaleToProductions();
-		odmpa.printMatrixFormatted("Scaled to productions:", 2);
+		RebalancedODMatrix rodm = new RebalancedODMatrix(passengerODM.getOrigins(), passengerODM.getDestinations(), rna, rsg, props);
+		rodm.printMatrixFormatted("Initial rebalanced matrix:", 2);
 		
-		odmpa.scaleToAttractions();
-		odmpa.printMatrixFormatted("Scaled to attractions:", 2);
+		rodm.iterate(10);
 		
-		//odmpa.deleteInterzonalFlows("E06000053");
-		//odmpa.printMatrixFormatted("After deleting interzonal flows for zone E06000053");
+		//round values
+		ODMatrix odm = new ODMatrix(rodm);
+		odm.printMatrixFormatted("Rounded values:");
+		odm.saveMatrixFormatted("rebalancedODM2.csv");
+
 		
-		odmpa.scaleToObservedTripLenghtDistribution();
-		odmpa.printMatrixFormatted("Scaled to observed trip length distribution:", 2);
+		DefaultCategoryDataset lineDataset = new DefaultCategoryDataset();
+		List<Double> RMSNvalues = rodm.getRMSNvalues();
+		for (int i = 0; i < RMSNvalues.size(); i++) lineDataset.addValue(RMSNvalues.get(i), "RMSN", Integer.toString(i));
+		LineVisualiser line = new LineVisualiser(lineDataset, "RMSN values");
+		line.setSize(600, 400);
+		line.setVisible(true);
+		line.saveToPNG("rebalancing.png");
 		
-		for (int i=0; i<10; i++) odmpa.iterate();
+	
+		//NetworkVisualiser.visualise(roadNetwork, "Network with count comparison", rna.calculateDirectionAveragedAbsoluteDifferenceCarCounts(), "CountDiff", null);
 		
-		odmpa.printMatrixFormatted("After 10 further iterations:", 2);
-		//odmpa.saveMatrixFormatted(outputFolder + "balancedTemproODMatrix.csv");
-		ODMatrix estimatedODM = new ODMatrix(odmpa);
 		
-		rna.resetTripStorages();
+		/*
+		
+		
+//		ODMatrix temproODM = ODMatrix.createUnitMatrix(zoning.getZoneCodeToIDMap().keySet());
+		RealODMatrix temproODM = RealODMatrix.createUnitMatrix(zoning.getZoneCodeToIDMap().keySet());
+//		RebalancedODMatrix rodm = new RebalancedODMatrix(temproODM.getOrigins(), temproODM.getDestinations(), rna, rsg, zoning);
+//		
+//		rodm.iterate(100);
+		
+		//round values
+		ODMatrix odm = new ODMatrix(temproODM);
+
+		//reset as we are re-using the same road network assignment
 		rna.resetLinkVolumes();
-		rna.assignPassengerFlowsTempro(estimatedODM, zoning, rsg);
-		double RMSN = rna.calculateRMSNforSimulatedVolumes();
-		System.out.printf("RMSN = %.2f%% %n", RMSN);
+		rna.resetTripStorages();
+
+		//assign passenger flows
+		rna.assignPassengerFlowsTempro(odm, zoning, rsg); //routing version with tempro zones
+		rna.expandTripList(); //if fractional assignment used
+		rna.updateLinkVolumePerVehicleType(); //used in RMSN calculation
+				
+		for (int i=0; i<30; i++) {
+
+
+			List<String> origins = temproODM.getOrigins();
+			List<String> destinations = temproODM.getDestinations();
+
+			for (String origin: origins)
+				for (String destination: destinations) {
+					double flow = temproODM.getFlow(origin, destination);
+					if (flow >= 1.0) {
+						Integer originNode = zoning.getZoneToNearestNodeIDMap().get(origin);
+						Integer destinationNode = zoning.getZoneToNearestNodeIDMap().get(destination);
+						RouteSet rs = rsg.getRouteSet(originNode, destinationNode);
+						if (rs == null) {
+							System.err.printf("Cannot fetch route set between node %d and node %d! %n", originNode, destinationNode);
+							continue;
+						}
+
+						Route foundRoute = null;
+						if (rs != null) foundRoute = rs.getChoiceSet().get(0);
+
+						double averageCorrectionFactor = 0.0;
+						int edgeCounter = 0;
+						for (DirectedEdge edge: foundRoute.getEdges()) {
+
+							double linkVolume = rna.getLinkVolumePerVehicleType().get(VehicleType.CAR).get(edge.getID());
+							Integer expectedCount = roadNetwork.getAADFCarTrafficCounts().get(edge.getID());
+							if (expectedCount == null) continue; //no counts
+							double correctionFactor = expectedCount / linkVolume;
+							averageCorrectionFactor += correctionFactor;
+							edgeCounter++;
+						}
+						if (edgeCounter == 0) continue; //there is no correction factor
+						averageCorrectionFactor /= edgeCounter;
+
+						double newflow = flow * averageCorrectionFactor;
+						temproODM.setFlow(origin, destination, newflow);
+					}
+				}
+
+			temproODM.printMatrixFormatted("Matrix after scaling: ");
+
+			//round values
+			odm = new ODMatrix(temproODM);
+
+			//reset as we are re-using the same road network assignment
+			rna.resetLinkVolumes();
+			rna.resetTripStorages();
+
+			//assign passenger flows
+			rna.assignPassengerFlowsTempro(odm, zoning, rsg); //routing version with tempro zones
+			rna.expandTripList(); //if fractional assignment used
+			rna.updateLinkVolumePerVehicleType(); //used in RMSN calculation
+
+			//calculate RMSN
+			double RMSN = rna.calculateRMSNforSimulatedVolumes();
+			System.out.println("RMSN after scaling = " +  RMSN);
+
+		}
+		*/
 	}
 
 	@Test

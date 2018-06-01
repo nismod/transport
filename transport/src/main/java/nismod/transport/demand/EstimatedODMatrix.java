@@ -258,10 +258,10 @@ public class EstimatedODMatrix extends RealODMatrix {
 		System.out.printf("RMSN before scaling = %.2f%% %n", RMSN);
 		
 		RealODMatrix sf = this.getScalingFactors();
-		sf.printMatrixFormatted("Scaling factors:");
+		sf.printMatrixFormatted("Scaling factors:", 4);
 		
 		this.scaleMatrixValue(sf);
-		this.printMatrixFormatted("OD matrix after scaling:");
+		this.printMatrixFormatted("OD matrix after scaling:", 2);
 	}
 	
 	/**
@@ -411,7 +411,7 @@ public class EstimatedODMatrix extends RealODMatrix {
 	 * Prints the matrix as a formatted table.
 	 */
 	@Override
-	public void printMatrixFormatted() {
+	public void printMatrixFormatted(int precision) {
 
 		List<String> firstKeyList = this.getOrigins();
 		List<String> secondKeyList = this.getDestinations();
@@ -422,7 +422,7 @@ public class EstimatedODMatrix extends RealODMatrix {
 		System.out.print("origin    "); for (String s: secondKeyList) System.out.printf("%10s",s);	System.out.println("  Product.");
 		for (String o: firstKeyList) {
 			System.out.printf("%-10s", o);
-			for (String s: secondKeyList) System.out.printf("%10.2f", this.getFlow(o,s));
+			for (String s: secondKeyList) System.out.printf("%10." + precision + "f", this.getFlow(o,s));
 			System.out.printf("%10d\n", this.productions.get(o));
 		}
 		System.out.print("Attract.  "); for (String s: secondKeyList) System.out.printf("%10d", this.attractions.get(s));
@@ -433,10 +433,10 @@ public class EstimatedODMatrix extends RealODMatrix {
 	 * Prints the message and the matrix as a formatted table.
 	 */
 	@Override
-	public void printMatrixFormatted(String message) {
+	public void printMatrixFormatted(String message, int precision) {
 		
 		System.out.println(message);
-		this.printMatrixFormatted();
+		this.printMatrixFormatted(precision);
 	}
 	
 	/**
@@ -450,5 +450,5 @@ public class EstimatedODMatrix extends RealODMatrix {
 				this.setFlow(zone, zone2, 0.0);
 				this.setFlow(zone2,  zone, 0.0);
 			}
-		}
+	}
 }

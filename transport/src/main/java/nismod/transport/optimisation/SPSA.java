@@ -92,13 +92,13 @@ public class SPSA {
 						
 			//generate deltas	
 			this.generateDeltas(thetaEstimate.getKeySet());
-			deltas.printMatrixFormatted("Deltas: ");
+			deltas.printMatrixFormatted("Deltas: ", 1);
 
 			//calculate shifted thetas
 			RealODMatrix thetaPlus = this.shiftTheta(thetaEstimate, ck, deltas);
 			RealODMatrix thetaMinus = this.shiftTheta(thetaEstimate, -1 * ck, deltas);
-			thetaPlus.printMatrixFormatted("Theta plus: ");
-			thetaMinus.printMatrixFormatted("Theta minus: ");
+			thetaPlus.printMatrixFormatted("Theta plus: ", 2);
+			thetaMinus.printMatrixFormatted("Theta minus: ", 2);
 			
 			//evaluate loss function
 			double yPlus = this.lossFunction(thetaPlus);
@@ -107,11 +107,11 @@ public class SPSA {
 						
 			//approximate gradient
 			this.approximateGradient(yPlus, yMinus, ck, deltas);
-			gradientApproximation.printMatrixFormatted("Gradient approximation: ");
+			gradientApproximation.printMatrixFormatted("Gradient approximation: ", 5);
 			
 			//estimate new theta
 			this.updateThetaEstimate(thetaEstimate, ak, gradientApproximation);
-			thetaEstimate.printMatrixFormatted("New theta estimate: ");
+			thetaEstimate.printMatrixFormatted("New theta estimate: ", 2);
 			
 			k++;
 
