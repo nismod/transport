@@ -374,11 +374,13 @@ public class RoadNetworkAssignment {
 				if (this.roadNetwork.isBlacklistedAsEndNode(destinationNode)) 
 					listOfDestinationNodes.remove(destinationNode);
 	
-			//for each trip
-			int flow = (int) Math.round(passengerODM.getFlow(originZone, destinationZone) * this.assignmentFraction);
+			//calculate number of trip assignments
+			int flow = (int) Math.floor(passengerODM.getFlow(originZone, destinationZone) * this.assignmentFraction); //assigned fractionally and later augmented
+			int remainder = passengerODM.getFlow(originZone, destinationZone) - (int) Math.round(flow / this.assignmentFraction); //remainder of trips will be assigned individually (each trip)
 			counterTotalFlow += passengerODM.getFlow(originZone, destinationZone);
 
-			for (int i=0; i<flow; i++) {
+			//for each trip
+			for (int i=0; i < (flow + remainder); i++) {
 
 				//choose time of day
 				double cumulativeProbability = 0.0;
@@ -494,7 +496,8 @@ public class RoadNetworkAssignment {
 						rsg.addRoute(foundRoute); //add to the route set
 					}
 
-					int multiplier = (int) Math.round(1 / this.assignmentFraction);
+					int multiplier = 1;
+					if (i < flow) multiplier = (int) Math.round(1 / this.assignmentFraction);
 					counterAssignedTrips += multiplier;
 
 					//store trip in trip list
@@ -563,11 +566,13 @@ public class RoadNetworkAssignment {
 				if (this.roadNetwork.isBlacklistedAsEndNode(destinationNode)) 
 					listOfDestinationNodes.remove(destinationNode);
 	
-			//for each trip
-			int flow = (int) Math.round(passengerODM.getFlow(originZone, destinationZone) * this.assignmentFraction);
+			//calculate number of trip assignments
+			int flow = (int) Math.floor(passengerODM.getFlow(originZone, destinationZone) * this.assignmentFraction); //assigned fractionally and later augmented
+			int remainder = passengerODM.getFlow(originZone, destinationZone) - (int) Math.round(flow / this.assignmentFraction); //remainder of trips will be assigned individually (each trip)
 			counterTotalFlow += passengerODM.getFlow(originZone, destinationZone);
 
-			for (int i=0; i<flow; i++) {
+			//for each trip
+			for (int i=0; i < (flow + remainder); i++) {
 
 				//choose time of day
 				double cumulativeProbability = 0.0;
@@ -684,7 +689,8 @@ public class RoadNetworkAssignment {
 						rsg.addRoute(foundRoute); //add to the route set
 					}
 
-					int multiplier = (int) Math.round(1 / this.assignmentFraction);
+					int multiplier = 1;
+					if (i < flow) multiplier = (int) Math.round(1 / this.assignmentFraction);
 					counterAssignedTrips += multiplier;
 
 					//store trip in trip list
@@ -752,11 +758,13 @@ public class RoadNetworkAssignment {
 				if (this.roadNetwork.getEndNodeBlacklist().contains(destinationNode)) 
 					listOfDestinationNodes.remove(destinationNode);
 
-			//for each trip
-			int flow = (int) Math.round(passengerODM.getFlow(originZone, destinationZone) * this.assignmentFraction);
+			//calculate number of trip assignments
+			int flow = (int) Math.floor(passengerODM.getFlow(originZone, destinationZone) * this.assignmentFraction); //assigned fractionally and later augmented
+			int remainder = passengerODM.getFlow(originZone, destinationZone) - (int) Math.round(flow / this.assignmentFraction); //remainder of trips will be assigned individually (each trip)
 			counterTotalFlow += passengerODM.getFlow(originZone, destinationZone);
 
-			for (int i=0; i<flow; i++) {
+			//for each trip
+			for (int i=0; i < (flow + remainder); i++) {
 
 				//choose time of day
 				double cumulativeProbability = 0.0;
@@ -955,9 +963,8 @@ public class RoadNetworkAssignment {
 					continue;
 				}
 
-				int multiplier = (int) Math.round(1 / this.assignmentFraction);
-				
-				//there is a chosenRoute
+				int multiplier = 1;
+				if (i < flow) multiplier = (int) Math.round(1 / this.assignmentFraction);
 				counterAssignedTrips += multiplier;
 
 				//store trip in trip list
@@ -1020,11 +1027,13 @@ public class RoadNetworkAssignment {
 			*/
 	
 	
-			//for each trip
-			int flow = (int) Math.round(passengerODM.getFlow(originZone, destinationZone) * this.assignmentFraction);
+			//calculate number of trip assignments
+			int flow = (int) Math.floor(passengerODM.getFlow(originZone, destinationZone) * this.assignmentFraction); //assigned fractionally and later augmented
+			int remainder = passengerODM.getFlow(originZone, destinationZone) - (int) Math.round(flow / this.assignmentFraction); //remainder of trips will be assigned individually (each trip)
 			counterTotalFlow += passengerODM.getFlow(originZone, destinationZone);
 
-			for (int i=0; i<flow; i++) {
+			//for each trip
+			for (int i=0; i < (flow + remainder); i++) {
 
 				//choose time of day
 				double cumulativeProbability = 0.0;
@@ -1225,7 +1234,8 @@ public class RoadNetworkAssignment {
 						rsg.addRoute(foundRoute); //add to the route set
 					}
 
-					int multiplier = (int) Math.round(1 / this.assignmentFraction);
+					int multiplier = 1;
+					if (i < flow) multiplier = (int) Math.round(1 / this.assignmentFraction);
 					counterAssignedTrips += multiplier;
 
 					//store trip in trip list
@@ -1294,11 +1304,13 @@ public class RoadNetworkAssignment {
 			*/
 	
 	
-			//for each trip
-			int flow = (int) Math.round(passengerODM.getFlow(originZone, destinationZone) * this.assignmentFraction);
+			//calculate number of trip assignments
+			int flow = (int) Math.floor(passengerODM.getFlow(originZone, destinationZone) * this.assignmentFraction); //assigned fractionally and later augmented
+			int remainder = passengerODM.getFlow(originZone, destinationZone) - (int) Math.round(flow / this.assignmentFraction); //remainder of trips will be assigned individually (each trip)
 			counterTotalFlow += passengerODM.getFlow(originZone, destinationZone);
 
-			for (int i=0; i<flow; i++) {
+			//for each trip
+			for (int i=0; i < (flow + remainder); i++) {
 
 				//choose time of day
 				double cumulativeProbability = 0.0;
@@ -1467,10 +1479,9 @@ public class RoadNetworkAssignment {
 					continue;
 				}
 
-				int multiplier = (int) Math.round(1 / this.assignmentFraction);
-				
-				//there is a chosenRoute
-				counterAssignedTrips+= multiplier;
+				int multiplier = 1;
+				if (i < flow) multiplier = (int) Math.round(1 / this.assignmentFraction);
+				counterAssignedTrips += multiplier;
 
 				//store trip in trip list
 				Integer originZoneID = zoning.getZoneCodeToIDMap().get(originZone);
@@ -1526,11 +1537,13 @@ public class RoadNetworkAssignment {
 			int destination = (int) mk.getKey(1);
 			int vehicleType = (int) mk.getKey(2);
 
-			//for each trip
-			int flow = (int) Math.round(freightMatrix.getFlow(origin, destination, vehicleType) * this.assignmentFraction);
+			//calculate number of trip assignments
+			int flow = (int) Math.floor(freightMatrix.getFlow(origin, destination, vehicleType) * this.assignmentFraction); //assigned fractionally and later augmented
+			int remainder = freightMatrix.getFlow(origin, destination, vehicleType)  - (int) Math.round(flow / this.assignmentFraction); //remainder of trips will be assigned individually (each trip)
 			counterTotalFlow += freightMatrix.getFlow(origin, destination, vehicleType);
 
-			for (int i=0; i<flow; i++) {
+			//for each trip
+			for (int i=0; i < (flow + remainder); i++) {
 
 				//choose time of day
 				double cumulativeProbability = 0.0;
@@ -1703,7 +1716,9 @@ public class RoadNetworkAssignment {
 						foundRoute = new Route(fastestPath);
 					}
 
-					int multiplier = (int) Math.round(1 / this.assignmentFraction);
+					int multiplier = 1;
+					if (i < flow) multiplier = (int) Math.round(1 / this.assignmentFraction);
+					counterAssignedTrips += multiplier;
 					
 					//trip was assigned
 					counterAssignedTrips += multiplier;
@@ -1768,11 +1783,13 @@ public class RoadNetworkAssignment {
 			int destination = (int) mk.getKey(1);
 			int vehicleType = (int) mk.getKey(2);
 
-			//for each trip
-			int flow = (int) Math.round(freightMatrix.getFlow(origin, destination, vehicleType) * this.assignmentFraction);
+			//calculate number of trip assignments
+			int flow = (int) Math.floor(freightMatrix.getFlow(origin, destination, vehicleType) * this.assignmentFraction); //assigned fractionally and later augmented
+			int remainder = freightMatrix.getFlow(origin, destination, vehicleType)  - (int) Math.round(flow / this.assignmentFraction); //remainder of trips will be assigned individually (each trip)
 			counterTotalFlow += freightMatrix.getFlow(origin, destination, vehicleType);
 
-			for (int i=0; i<flow; i++) {
+			//for each trip
+			for (int i=0; i < (flow + remainder); i++) {
 
 				//choose time of day
 				double cumulativeProbability = 0.0;
@@ -1946,9 +1963,8 @@ public class RoadNetworkAssignment {
 						foundRoute = new Route(fastestPath);
 					}
 
-					int multiplier = (int) Math.round(1 / this.assignmentFraction);
-					
-					//trip was assigned
+					int multiplier = 1;
+					if (i < flow) multiplier = (int) Math.round(1 / this.assignmentFraction);
 					counterAssignedTrips += multiplier;
 
 					//store trip in trip list
@@ -2003,11 +2019,13 @@ public class RoadNetworkAssignment {
 			int destination = (int) mk.getKey(1);
 			int vehicleType = (int) mk.getKey(2);
 
-			//for each trip
-			int flow = (int) Math.round(freightMatrix.getFlow(origin, destination, vehicleType) * this.assignmentFraction);
+			//calculate number of trip assignments
+			int flow = (int) Math.floor(freightMatrix.getFlow(origin, destination, vehicleType) * this.assignmentFraction); //assigned fractionally and later augmented
+			int remainder = freightMatrix.getFlow(origin, destination, vehicleType)  - (int) Math.round(flow / this.assignmentFraction); //remainder of trips will be assigned individually (each trip)
 			counterTotalFlow += freightMatrix.getFlow(origin, destination, vehicleType);
 
-			for (int i=0; i<flow; i++) {
+			//for each trip
+			for (int i=0; i < (flow + remainder); i++) {
 
 				//choose time of day
 				double cumulativeProbability = 0.0;
@@ -2328,9 +2346,8 @@ public class RoadNetworkAssignment {
 					continue;
 				}
 
-				int multiplier = (int) Math.round(1 / this.assignmentFraction);
-				
-				//there is a chosenRoute
+				int multiplier = 1;
+				if (i < flow) multiplier = (int) Math.round(1 / this.assignmentFraction);
 				counterAssignedTrips += multiplier;
 
 				//check to which LAD chosen origin and destination nodes belong to!
