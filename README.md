@@ -50,3 +50,19 @@ These files are used in the test classes and should also be consulted to underst
  * Download maven, install it and set the environment variables: http://maven.apache.org/. Then type:
  * mvn clean install
  * java -cp target/transport-0.0.1-SNAPSHOT-main.jar nismod.transport.App -c ./path/to/yourOwnConfig.properties
+
+## How to generate docs
+
+1. Install [javasphinx](http://bronto.github.io/javasphinx/)
+
+    `$ pip install javasphinx`
+
+2. Generate java API docs
+
+    `javasphinx-apidoc -o docs/ --title='transport' transport/src/main/java/`
+
+3. Build documentation
+
+    `sphinx-build -b html docs/ docs/build/`
+
+Documentation can now be opened from `docs/build/index.html`
