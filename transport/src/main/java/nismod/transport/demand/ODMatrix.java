@@ -442,7 +442,7 @@ public class ODMatrix {
 		
 		for (String origin: this.getOrigins())
 			for (String destination: this.getDestinations())
-				if (origin.equals(zone) || destination.equals(zone)) {
+				if (origin.equals(zone) && !destination.equals(zone) || !origin.equals(zone) && destination.equals(zone)) { //this will leave intra-zonal flow
 				this.setFlow(origin, destination, 0);
 			}
 	}
