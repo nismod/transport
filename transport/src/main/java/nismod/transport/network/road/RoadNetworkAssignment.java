@@ -681,7 +681,7 @@ public class RoadNetworkAssignment {
 						//RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTime);
 						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, (HashMap<Integer, Double>)this.linkTravelTimePerTimeOfDay.get(hour));
 						if (fastestPath == null) {
-							LOGGER.warn("Not even aStar could find a route!");
+							LOGGER.warn("Not even aStar could find a route between node {} and node {}!", originNode, destinationNode);
 							continue;
 						}
 
@@ -916,7 +916,7 @@ public class RoadNetworkAssignment {
 						//RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTime);
 						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
 						if (fastestPath == null) {
-							LOGGER.warn("Not even aStar could find a route!");
+							LOGGER.warn("Not even aStar could find a route between node {} and node {}!", originNode, destinationNode);
 							continue;
 						}
 						chosenRoute = new Route(fastestPath);
@@ -929,29 +929,41 @@ public class RoadNetworkAssignment {
 					}
 				} else { //there is a route set
 
-					//if (fetchedRouteSet.getProbabilities() == null) {
-					//probabilities need to be calculated for this route set before a choice can be made
-					fetchedRouteSet.setLinkTravelTime(this.linkTravelTimePerTimeOfDay.get(hour));
-					fetchedRouteSet.setParameters(routeChoiceParameters);
+					//if only one route in the route set, do not calculate utilities and probabilities, but choose that route
+					if (fetchedRouteSet.getSize() == 1) {
 
-					//fetch congestion charge for the vehicle type
-					//HashMap<String, HashMap<Integer, Double>> linkCharges = null;
-					HashMap<String, HashMap<Integer, Double>> linkCharges = new HashMap<String, HashMap<Integer, Double>>();
-					if (this.congestionCharges != null) 
-						for (String policyName: this.congestionCharges.keySet()) {
-							//System.out.println("Policy = " + policyName);
-							//System.out.println("vht = " + vht + " hour = " + hour);
-							//System.out.println("Congestion charges: " + (HashMap<Integer, Double>) this.congestionCharges.get(policyName).get(vht, hour));
-							linkCharges.put(policyName, (HashMap<Integer, Double>) this.congestionCharges.get(policyName).get(vht, hour));
-						}
-			
-					fetchedRouteSet.calculateUtilities(vht, engine, this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions, this.relativeFuelEfficiencies, this.energyUnitCosts, linkCharges, routeChoiceParameters);
-					fetchedRouteSet.calculateProbabilities(this.linkTravelTimePerTimeOfDay.get(hour), routeChoiceParameters);
-					fetchedRouteSet.sortRoutesOnUtility();
-					//}
+						LOGGER.trace("There is just one route in the route set, so choosing that route.");
+						//choose that route
+						chosenRoute = fetchedRouteSet.getChoiceSet().get(0);
 
-					//choose the route
-					chosenRoute = fetchedRouteSet.choose(routeChoiceParameters);
+					} else { //choose a route using a discrete-choice model
+
+						LOGGER.trace("There are multiple route in the route set, so choosing with a route-choice model.");
+						//if (fetchedRouteSet.getProbabilities() == null) {
+						//probabilities need to be calculated for this route set before a choice can be made
+						fetchedRouteSet.setLinkTravelTime(this.linkTravelTimePerTimeOfDay.get(hour));
+						fetchedRouteSet.setParameters(routeChoiceParameters);
+
+						//fetch congestion charge for the vehicle type
+						//HashMap<String, HashMap<Integer, Double>> linkCharges = null;
+						HashMap<String, HashMap<Integer, Double>> linkCharges = new HashMap<String, HashMap<Integer, Double>>();
+						if (this.congestionCharges != null) 
+							for (String policyName: this.congestionCharges.keySet()) {
+								//System.out.println("Policy = " + policyName);
+								//System.out.println("vht = " + vht + " hour = " + hour);
+								//System.out.println("Congestion charges: " + (HashMap<Integer, Double>) this.congestionCharges.get(policyName).get(vht, hour));
+								linkCharges.put(policyName, (HashMap<Integer, Double>) this.congestionCharges.get(policyName).get(vht, hour));
+							}
+
+						fetchedRouteSet.calculateUtilities(vht, engine, this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions, this.relativeFuelEfficiencies, this.energyUnitCosts, linkCharges, routeChoiceParameters);
+						fetchedRouteSet.calculateProbabilities(this.linkTravelTimePerTimeOfDay.get(hour), routeChoiceParameters);
+						fetchedRouteSet.sortRoutesOnUtility();
+						//}
+
+						//choose the route
+						chosenRoute = fetchedRouteSet.choose(routeChoiceParameters);
+					}
+
 					if (chosenRoute == null) {
 						LOGGER.warn("No chosen route between nodes {} and {}!", originNode, destinationNode);
 						continue;
@@ -1226,7 +1238,7 @@ public class RoadNetworkAssignment {
 						//RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTime);
 						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, (HashMap<Integer, Double>)this.linkTravelTimePerTimeOfDay.get(hour));
 						if (fastestPath == null) {
-							LOGGER.warn("Not even aStar could find a route!");
+							LOGGER.warn("Not even aStar could find a route between node {} and node {}!", originNode, destinationNode);
 							continue;
 						}
 
@@ -1436,7 +1448,7 @@ public class RoadNetworkAssignment {
 						//RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTime);
 						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
 						if (fastestPath == null) {
-							LOGGER.warn("Not even aStar could find a route!");
+							LOGGER.warn("Not even aStar could find a route between node {} and node {}!", originNode, destinationNode);
 							continue;
 						}
 						chosenRoute = new Route(fastestPath);
@@ -1693,7 +1705,7 @@ public class RoadNetworkAssignment {
 
 						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
 						if (fastestPath == null) {
-							LOGGER.warn("Not even aStar could find a route!");
+							LOGGER.warn("Not even aStar could find a route between node {} and node {}!", originNode, destinationNode);
 							continue;
 						}
 
@@ -1940,7 +1952,7 @@ public class RoadNetworkAssignment {
 
 						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
 						if (fastestPath == null) {
-							LOGGER.warn("Not even aStar could find a route!");
+							LOGGER.warn("Not even aStar could find a route between node {} and node {}!", originNode, destinationNode);
 							continue;
 						}
 
@@ -2291,7 +2303,7 @@ public class RoadNetworkAssignment {
 
 						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
 						if (fastestPath == null) {
-							LOGGER.warn("Not even aStar could find a route!");
+							LOGGER.warn("Not even aStar could find a route between node {} and node {}!", originNode, destinationNode);
 							continue;
 						}
 						chosenRoute = new Route(fastestPath);
