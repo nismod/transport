@@ -110,7 +110,9 @@ public class RebalancedODMatrixTest {
 
 		//create route set generator
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
-		//rsg.readRoutesBinaryWithoutValidityCheck(passengerRoutesFile);
+		rsg.readRoutesBinaryWithoutValidityCheck(passengerRoutesFile);
+		rsg.printStatistics();
+		rsg.generateRouteSetZoneToZone("E06000053", "E06000053");
 		rsg.printStatistics();
 		
 		roadNetwork.sortGravityNodes();
@@ -118,13 +120,13 @@ public class RebalancedODMatrixTest {
 		ODMatrix passengerODM = new ODMatrix(baseYearODMatrixFile);
 		passengerODM = ODMatrix.createUnitMatrix(passengerODM.getOrigins(), passengerODM.getDestinations());
 		passengerODM.deleteInterzonalFlows("E06000053"); //delete flows from/to Isle of Scilly
-				
 		passengerODM.printMatrixFormatted("Initial OD matrix:");
 		
 		RebalancedODMatrix rodm = new RebalancedODMatrix(passengerODM.getOrigins(), passengerODM.getDestinations(), rna, rsg, props);
+		rodm.deleteInterzonalFlows("E06000053");
 		rodm.printMatrixFormatted("Initial rebalanced matrix:", 2);
 		
-		rodm.iterate(10);
+		rodm.iterate(50);
 		
 		//round values
 		ODMatrix odm = new ODMatrix(rodm);
