@@ -859,13 +859,30 @@ public class RoadNetworkAssignmentTest {
 		System.out.println(rna.calculateEnergyConsumptions());
 		
 		System.out.println("Vehicle kilometres:");
+		rna.updateLinkVolumeInPCU();
 		System.out.println(rna.calculateVehicleKilometres());
 		
 		//rna.saveZonalCarEnergyConsumptions(2015, 0.85 , "testZonalCarEnergyConsumptions.csv");
 		//rna.saveAssignmentResults(2015, "testAssignmentResults.csv");
 		
+		//calculate RMSN statistic
 		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforSimulatedVolumes());
-		
+				
+		//calculate GEH statistic
+		rna.updateLinkVolumePerVehicleType();
+		HashMap<Integer, Double> GEH = rna.calculateGEHStatisticForCarCounts();
+				
+		int validFlows = 0;
+		int suspiciousFlows = 0;
+		int invalidFlows = 0;
+		for (Integer edgeID: GEH.keySet()) {
+			if (GEH.get(edgeID) < 5.0) validFlows++;
+			else if (GEH.get(edgeID) < 10.0) suspiciousFlows++;
+			else invalidFlows++;
+		}
+		System.out.printf("Percentage of edges with valid flows (GEH < 5.0) is: %.0f%% %n", (double) validFlows / GEH.size() * 100);
+		System.out.printf("Percentage of edges with suspicious flows (5.0 <= GEH < 10.0) is: %.0f%% %n", (double) suspiciousFlows / GEH.size() * 100);
+		System.out.printf("Percentage of edges with invalid flows (GEH >= 10.0) is: %.0f%% %n", (double) invalidFlows / GEH.size() * 100);		
 		
 		//TEST ASSIGNMENT WITH ROUTE CHOICE
 		System.out.println("\n\n*** Testing assignment with route choice ***");
@@ -948,7 +965,6 @@ public class RoadNetworkAssignmentTest {
 		Frequency freq = new Frequency();
 		for (Trip trip: tripList) {
 			System.out.println(trip.toString());
-			
 			freq.addValue(trip.getEngine());
 		}
 		

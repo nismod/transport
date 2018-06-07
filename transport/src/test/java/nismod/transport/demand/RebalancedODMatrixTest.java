@@ -118,6 +118,13 @@ public class RebalancedODMatrixTest {
 		roadNetwork.sortGravityNodes();
 
 		ODMatrix passengerODM = new ODMatrix(baseYearODMatrixFile);
+//		rna.assignPassengerFlowsRouteChoice(passengerODM, rsg, props);
+//		rna.updateLinkVolumePerVehicleType();
+//		rna.printRMSNstatistic();
+//		rna.printGEHstatistic();
+//		rna.resetLinkVolumes();
+//		rna.resetTripStorages();
+				
 		passengerODM = ODMatrix.createUnitMatrix(passengerODM.getOrigins(), passengerODM.getDestinations());
 		passengerODM.deleteInterzonalFlows("E06000053"); //delete flows from/to Isle of Scilly
 		passengerODM.printMatrixFormatted("Initial OD matrix:");
@@ -132,7 +139,6 @@ public class RebalancedODMatrixTest {
 		ODMatrix odm = new ODMatrix(rodm);
 		odm.printMatrixFormatted("Rounded values:");
 		odm.saveMatrixFormatted("rebalancedODM2.csv");
-
 		
 		DefaultCategoryDataset lineDataset = new DefaultCategoryDataset();
 		List<Double> RMSNvalues = rodm.getRMSNvalues();

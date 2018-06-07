@@ -112,7 +112,9 @@ public class RebalancedODMatrix extends RealODMatrix {
 		
 		double RMSN = this.rna.calculateRMSNforSimulatedVolumes();
 		this.RMSNvalues.add(RMSN);
-		LOGGER.info("RMSN before scaling = {}", RMSN);
+		this.rna.printRMSNstatistic();
+		//LOGGER.info("RMSN before scaling = {}%", RMSN);
+		this.rna.printGEHstatistic();
 	}
 	
 	/**
