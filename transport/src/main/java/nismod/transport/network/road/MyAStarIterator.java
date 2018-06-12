@@ -4,6 +4,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 
+import org.geotools.graph.structure.DirectedGraphable;
 import org.geotools.graph.structure.DirectedNode;
 import org.geotools.graph.structure.Graph;
 import org.geotools.graph.structure.Graphable;
@@ -115,8 +116,8 @@ public class MyAStarIterator extends SourceGraphIterator{
         * @see org.geotools.graph.traverse.GraphIterator#cont(Graphable)
         */
         public void cont(Graphable current, GraphTraversal traversal) {
-                //Node currdn = (Node) current;
-        		DirectedNode currdn = (DirectedNode) current;
+                Node currdn = (Node) current;
+        		//DirectedNode currdn = (DirectedNode) current;
                 AStarNode currAsn;
                 AStarNode nextAsn;
 
@@ -127,8 +128,9 @@ public class MyAStarIterator extends SourceGraphIterator{
                 }
                 currAsn.close();
                 //for (Iterator itr = currdn.getRelated(); itr.hasNext();) {
-                for (Iterator itr = currdn.getOutRelated(); itr.hasNext();) {
-                        Node next = (Node) itr.next();
+                //for (Iterator itr = currdn.getOutRelated(); itr.hasNext();) {
+                for (Iterator itr = getRelated(current); itr.hasNext();) {
+                	Node next = (Node) itr.next();
                         if (m_nodemap.containsKey(next)) {
                                 nextAsn = (AStarNode) m_nodemap.get(next);
                                 if(!nextAsn.isClosed()) {
@@ -175,6 +177,14 @@ public class MyAStarIterator extends SourceGraphIterator{
                         return(n1.getF() < n2.getF() ? -1 : n1.getF() > n2.getF() ? 1 : 0);
                 }
         };
+        
+        protected Iterator getRelated(Graphable current) {
+            if (current instanceof DirectedGraphable) {
+                return ((DirectedGraphable) current).getOutRelated();
+            } else {
+                return (current.getRelated());
+            }
+        }
 
         /**
         * Internal data structure used to track node costs, and parent nodes.

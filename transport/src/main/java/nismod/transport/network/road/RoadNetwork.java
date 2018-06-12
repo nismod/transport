@@ -1086,11 +1086,10 @@ public class RoadNetwork {
 					return null;
 				}
 			} catch (WrongPathException e) {
-				LOGGER.warn("Could not find the shortest path using astar. {}", e);
+				//LOGGER.warn("Could not find the shortest path using astar. {}", e.getMessage());
 				path = null;
 			} catch (Exception e) {
-				LOGGER.warn(e);
-				LOGGER.warn("Could not find the shortest path using astar.");
+				LOGGER.warn("Could not find the shortest path using astar. {}", e.getMessage());
 				path = null;
 			} 
 

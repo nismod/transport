@@ -101,8 +101,8 @@ public class MyAStarShortestPathFinder implements GraphWalker {
                 }
                 //System.out.printf("Comparing last %d with source %d \n",  path.getLast().getID(), m_iterator.getSource().getID());
                 if (!path.getLast().equals(m_iterator.getSource())) {
-                //       throw new WrongPathException("getPath: The path obtained doesn't begin correctly");
-                	return null;
+                       throw new WrongPathException("getPath: The path obtained doesn't begin correctly");
+                //	return null;
                 }
                 return(path);
         }
