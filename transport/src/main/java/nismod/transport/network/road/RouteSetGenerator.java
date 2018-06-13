@@ -487,7 +487,7 @@ public class RouteSetGenerator {
 	 * @param sliceIndex Index of the OD matrix slice for which to generate routes [1..N].
 	 * @param sliceNumber Number of slices to divide matrix into (N).
 	 */
-	public void generateRouteSetForODMatrix(ODMatrix matrix, int sliceIndex, int sliceNumber) {
+	public void generateRouteSetForODMatrixTempro(ODMatrix matrix, Zoning zoning, int sliceIndex, int sliceNumber) {
 		
 		List<String> origins = matrix.getOrigins();
 		List<String> destinations = matrix.getDestinations();
@@ -497,17 +497,17 @@ public class RouteSetGenerator {
 		
 		if (sliceIndex < sliceNumber) {
 			for (int i = (sliceIndex - 1) * originsPerSlice; i < sliceIndex * originsPerSlice && i < origins.size(); i++) {
-				String originLAD = origins.get(i);
-				for (String destinationLAD: destinations) 
-					if (matrix.getFlow(originLAD, destinationLAD) != 0)
-						this.generateRouteSetZoneToZone(originLAD, destinationLAD);
+				String originZone = origins.get(i);
+				for (String destinationZone: destinations) 
+					if (matrix.getFlow(originZone, destinationZone) != 0)
+						this.generateRouteSetZoneToZoneTempro(originZone, destinationZone, zoning);
 			}
 		} else { //for the last slice there may be more origins, so go all the way to the end of the list
 			for (int i = (sliceIndex - 1) * originsPerSlice; i < origins.size(); i++) {
-				String originLAD = origins.get(i);
-				for (String destinationLAD: destinations) 
-					if (matrix.getFlow(originLAD, destinationLAD) != 0)
-						this.generateRouteSetZoneToZone(originLAD, destinationLAD);
+				String originZone = origins.get(i);
+				for (String destinationZone: destinations) 
+					if (matrix.getFlow(originZone, destinationZone) != 0)
+						this.generateRouteSetZoneToZoneTempro(originZone, destinationZone, zoning);
 			}
 		}
 	}
@@ -540,6 +540,37 @@ public class RouteSetGenerator {
 				for (String destinationLAD: destinations) 
 					if (matrix.getFlow(originLAD, destinationLAD) != 0)
 						this.generateRouteSetZoneToZone(originLAD, destinationLAD, topNodes);
+			}
+		}
+	}
+	
+	/**
+	 * Generates routes for a slice of the Tempro OD matrix (useful for cluster computing).
+	 * @param matrix Origin-destination matrix.
+	 * @param sliceIndex Index of the OD matrix slice for which to generate routes [1..N].
+	 * @param sliceNumber Number of slices to divide matrix into (N).
+	 */
+	public void generateRouteSetForODMatrix(ODMatrix matrix, int sliceIndex, int sliceNumber) {
+		
+		List<String> origins = matrix.getOrigins();
+		List<String> destinations = matrix.getDestinations();
+		
+		int originsPerSlice = (int) Math.floor(1.0 * origins.size() / sliceNumber); //the last slice may have a different number of origins
+		//int originsInLastSlice = origins.size() - (sliceNumber - 1) * originsPerSlice;
+		
+		if (sliceIndex < sliceNumber) {
+			for (int i = (sliceIndex - 1) * originsPerSlice; i < sliceIndex * originsPerSlice && i < origins.size(); i++) {
+				String originLAD = origins.get(i);
+				for (String destinationLAD: destinations) 
+					if (matrix.getFlow(originLAD, destinationLAD) != 0)
+						this.generateRouteSetZoneToZone(originLAD, destinationLAD);
+			}
+		} else { //for the last slice there may be more origins, so go all the way to the end of the list
+			for (int i = (sliceIndex - 1) * originsPerSlice; i < origins.size(); i++) {
+				String originLAD = origins.get(i);
+				for (String destinationLAD: destinations) 
+					if (matrix.getFlow(originLAD, destinationLAD) != 0)
+						this.generateRouteSetZoneToZone(originLAD, destinationLAD);
 			}
 		}
 	}

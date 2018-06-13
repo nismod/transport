@@ -26,10 +26,12 @@ import nismod.transport.decision.RoadExpansion;
 import nismod.transport.demand.DemandModel;
 import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.ODMatrix;
+import nismod.transport.demand.RebalancedTemproODMatrix;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.showcase.LandingGUI;
 import nismod.transport.utility.ConfigReader;
+import nismod.transport.zone.Zoning;
 
 /**
  * NISMOD V2.0.0 Transport Model.
@@ -66,6 +68,16 @@ public class App {
 				.valueSeparator(' ')
 				.build();
 		options.addOption(passengerRoutes);
+		
+		Option temproRoutes = Option.builder("t")
+				.longOpt("temproRoutes")
+				.argName("SLICE_INDEX> <SLICE_NUMBER")
+				.hasArg()
+				.numberOfArgs(2)
+				.desc("Generate routes for tempro passenger demand.")
+				.valueSeparator(' ')
+				.build();
+		options.addOption(temproRoutes);
 
 		Option freightRoutes = Option.builder("f")
 				.longOpt("freightRoutes")
@@ -154,6 +166,34 @@ public class App {
 					routes.generateRouteSetForODMatrix(passengerODM, Integer.parseInt(sliceIndex), Integer.parseInt(sliceNumber));
 					routes.saveRoutesBinary(file.getPath() + "routes" + sliceIndex + "of" + sliceNumber + ".dat", false);
 				}
+				System.exit(0);
+			}
+			
+			if (line.hasOption("t")) {
+
+				String[] values = line.getOptionValues("temproRoutes");
+
+				final String sliceIndex = values[0];
+				final String sliceNumber = values[1];
+				RouteSetGenerator routes;
+
+				//roadNetwork.sortGravityNodes();
+				routes = new RouteSetGenerator(roadNetwork, props);
+				
+				final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
+				final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
+				Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
+				
+				//final String baseYearODMatrixFile = props.getProperty("baseYearODMatrixFile");
+				//ODMatrix temproODM = new ODMatrix(baseYearODMatrixFile);
+					
+				ODMatrix temproODM = ODMatrix.createUnitMatrix(zoning.getZoneCodeToIDMap().keySet());
+				temproODM.deleteInterzonalFlows("E02006781"); //Isle of Scilly in Tempro
+
+				//generate between all nodes
+				LOGGER.info("Generating routes for slice {} out of {}.", sliceIndex, sliceNumber);
+				routes.generateRouteSetForODMatrixTempro(temproODM, zoning, Integer.parseInt(sliceIndex), Integer.parseInt(sliceNumber));
+				routes.saveRoutesBinary(file.getPath() + "TemproRoutes" + sliceIndex + "of" + sliceNumber + ".dat", false);
 				System.exit(0);
 			}
 
