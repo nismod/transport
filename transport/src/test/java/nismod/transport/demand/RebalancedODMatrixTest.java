@@ -125,11 +125,11 @@ public class RebalancedODMatrixTest {
 //		rna.resetLinkVolumes();
 //		rna.resetTripStorages();
 				
-		passengerODM = ODMatrix.createUnitMatrix(passengerODM.getOrigins(), passengerODM.getDestinations());
+		passengerODM = ODMatrix.createUnitMatrix(passengerODM.getSortedOrigins(), passengerODM.getSortedDestinations());
 		passengerODM.deleteInterzonalFlows("E06000053"); //delete flows from/to Isle of Scilly
 		passengerODM.printMatrixFormatted("Initial OD matrix:");
 		
-		RebalancedODMatrix rodm = new RebalancedODMatrix(passengerODM.getOrigins(), passengerODM.getDestinations(), rna, rsg, props);
+		RebalancedODMatrix rodm = new RebalancedODMatrix(passengerODM.getSortedOrigins(), passengerODM.getSortedDestinations(), rna, rsg, props);
 		rodm.deleteInterzonalFlows("E06000053");
 		rodm.printMatrixFormatted("Initial rebalanced matrix:", 2);
 		

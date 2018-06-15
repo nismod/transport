@@ -165,8 +165,8 @@ public class ODMatrix {
 	 */
 	public void printMatrixFormatted() {
 		
-		List<String> firstKeyList = this.getOrigins();
-		List<String> secondKeyList = this.getDestinations();
+		List<String> firstKeyList = this.getSortedOrigins();
+		List<String> secondKeyList = this.getSortedDestinations();
 		//System.out.println(firstKeyList);
 		//System.out.println(secondKeyList);
 	
@@ -205,10 +205,13 @@ public class ODMatrix {
 	 * Gets the sorted list of origins.
 	 * @return List of origins.
 	 */
-	public List<String> getOrigins() {
+	public List<String> getSortedOrigins() {
 		
+		LOGGER.debug("Getting the sorted origins.");
+			
 		Set<String> firstKey = new HashSet<String>();
 		
+		LOGGER.debug("Extracting row keysets.");
 		//extract row keysets
 		for (Object mk: matrix.keySet()) {
 			String origin = (String) ((MultiKey)mk).getKey(0);
@@ -216,8 +219,10 @@ public class ODMatrix {
 		}
 		//put them into a list and sort them
 		List<String> firstKeyList = new ArrayList(firstKey);
+		LOGGER.debug("Sorting the origins.");
 		Collections.sort(firstKeyList);
 		
+		LOGGER.debug("Origins sorted and returned.");
 		return firstKeyList;
 	}
 	
@@ -225,7 +230,55 @@ public class ODMatrix {
 	 * Gets the sorted list of destinations.
 	 * @return List of destinations.
 	 */
-	public List<String> getDestinations() {
+	public List<String> getSortedDestinations() {
+		
+		LOGGER.debug("Getting the sorted destinations.");
+		
+		Set<String> secondKey = new HashSet<String>();
+		
+		LOGGER.debug("Extracting column keysets.");
+		//extract column keysets
+		for (Object mk: matrix.keySet()) {
+			String destination = (String) ((MultiKey)mk).getKey(1);
+			secondKey.add(destination);
+		}
+		//put them into a list and sort them
+		List<String> secondKeyList = new ArrayList(secondKey);
+		LOGGER.debug("Sorting the destinations.");
+		Collections.sort(secondKeyList);
+		
+		LOGGER.debug("Destinations sorted and returned.");
+		return secondKeyList;
+	}
+	
+	/**
+	 * Gets the sorted list of origins.
+	 * @return List of origins.
+	 */
+	public List<String> getUnsortedOrigins() {
+		
+		LOGGER.debug("Getting the unsorted origins.");
+			
+		Set<String> firstKey = new HashSet<String>();
+				
+		//extract row keysets
+		for (Object mk: matrix.keySet()) {
+			String origin = (String) ((MultiKey)mk).getKey(0);
+			firstKey.add(origin);
+		}
+		//put them into a list
+		List<String> firstKeyList = new ArrayList(firstKey);
+				
+		return firstKeyList;
+	}
+	
+	/**
+	 * Gets the sorted list of destinations.
+	 * @return List of destinations.
+	 */
+	public List<String> getUnsortedDestinations() {
+		
+		LOGGER.debug("Getting the unsorted destinations.");
 		
 		Set<String> secondKey = new HashSet<String>();
 		
@@ -234,9 +287,8 @@ public class ODMatrix {
 			String destination = (String) ((MultiKey)mk).getKey(1);
 			secondKey.add(destination);
 		}
-		//put them into a list and sort them
+		//put them into a list
 		List<String> secondKeyList = new ArrayList(secondKey);
-		Collections.sort(secondKeyList);
 		
 		return secondKeyList;
 	}
@@ -347,16 +399,20 @@ public class ODMatrix {
 	 */
 	public static ODMatrix createUnitMatrix(Set<String> zones) {
 		
+		LOGGER.debug("Creating the unit matrix for a {}x{} zones.", zones.size(), zones.size());
+		
+		System.gc();
+		
 		ODMatrix odm = new ODMatrix();
 		
 		for (String origin: zones)
 			for (String destination: zones)
 				odm.setFlow(origin, destination, 1);
-		
+	
+		LOGGER.debug("Done creating the unit matrix.");
 		return odm;
 	}
-	
-	
+		
 	/**
 	 * Sums the elements of a matrix subset (provided as two lists of origins and destinations).
 	 * @param origins List of origin zones (a subset).
@@ -440,11 +496,20 @@ public class ODMatrix {
 	 */
 	public void deleteInterzonalFlows(String zone) {
 		
-		for (String origin: this.getOrigins())
-			for (String destination: this.getDestinations())
+		LOGGER.debug("Deleting inter-zonal flows from/to zone {}...", zone);
+		
+		List<String> origins = this.getUnsortedOrigins();
+		List<String> destinations = this.getUnsortedDestinations();
+		
+		
+		for (String origin: origins)
+			for (String destination: destinations)
 				if (origin.equals(zone) && !destination.equals(zone) || !origin.equals(zone) && destination.equals(zone)) { //this will leave intra-zonal flow
 				this.setFlow(origin, destination, 0);
-			}
+		}
+		
+		LOGGER.debug("Done deleting inter-zonal flows.");
+		
 	}
 	
 	@Override

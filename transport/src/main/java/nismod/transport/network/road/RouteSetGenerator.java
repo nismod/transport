@@ -489,8 +489,8 @@ public class RouteSetGenerator {
 	 */
 	public void generateRouteSetForODMatrixTempro(ODMatrix matrix, Zoning zoning, int sliceIndex, int sliceNumber) {
 		
-		List<String> origins = matrix.getOrigins();
-		List<String> destinations = matrix.getDestinations();
+		List<String> origins = matrix.getSortedOrigins();
+		List<String> destinations = matrix.getSortedDestinations();
 		
 		int originsPerSlice = (int) Math.floor(1.0 * origins.size() / sliceNumber); //the last slice may have a different number of origins
 		//int originsInLastSlice = origins.size() - (sliceNumber - 1) * originsPerSlice;
@@ -521,8 +521,8 @@ public class RouteSetGenerator {
 	 */
 	public void generateRouteSetForODMatrix(ODMatrix matrix, int sliceIndex, int sliceNumber, int topNodes) {
 		
-		List<String> origins = matrix.getOrigins();
-		List<String> destinations = matrix.getDestinations();
+		List<String> origins = matrix.getSortedOrigins();
+		List<String> destinations = matrix.getSortedDestinations();
 		
 		int originsPerSlice = (int) Math.floor(1.0 * origins.size() / sliceNumber); //the last slice may have a different number of origins
 		//int originsInLastSlice = origins.size() - (sliceNumber - 1) * originsPerSlice;
@@ -552,8 +552,8 @@ public class RouteSetGenerator {
 	 */
 	public void generateRouteSetForODMatrix(ODMatrix matrix, int sliceIndex, int sliceNumber) {
 		
-		List<String> origins = matrix.getOrigins();
-		List<String> destinations = matrix.getDestinations();
+		List<String> origins = matrix.getSortedOrigins();
+		List<String> destinations = matrix.getSortedDestinations();
 		
 		int originsPerSlice = (int) Math.floor(1.0 * origins.size() / sliceNumber); //the last slice may have a different number of origins
 		//int originsInLastSlice = origins.size() - (sliceNumber - 1) * originsPerSlice;

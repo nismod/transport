@@ -40,8 +40,8 @@ public class RebalancedTemproODMatrixTest {
 	
 	public static void main( String[] args ) throws FileNotFoundException, IOException {
 		
-		//final String configFile = "./src/main/config/config.properties";
-		final String configFile = "./src/test/config/testConfig.properties";
+		final String configFile = "./src/main/full/config/config.properties";
+		//final String configFile = "./src/test/config/testConfig.properties";
 		//final String configFile = "./src/test/config/miniTestConfig.properties";
 		Properties props = ConfigReader.getProperties(configFile);
 		
@@ -65,7 +65,6 @@ public class RebalancedTemproODMatrixTest {
 		final String freightRoutesFile = props.getProperty("freightRoutesFile");
 		
 		final String outputFolder = props.getProperty("outputFolder");
-		final String assignmentResultsFile = props.getProperty("assignmentResultsFile");
 		
 		//create output directory
 	     File file = new File(outputFolder);
@@ -113,6 +112,11 @@ public class RebalancedTemproODMatrixTest {
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
 		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
 		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
+		//rsg.readRoutesBinaryWithoutValidityCheck(passengerRoutesFile);
+		//rsg.printStatistics();
+		//rsg.generateRouteSetZoneToZone("E06000053", "E06000053");
+		//rsg.generateRouteSetZoneToZoneTempro("E02006781", "E02006781", zoning);
+		//rsg.printStatistics();
 		
 		//change the zone to node mapping a bit
 //		zoning.getZoneToNearestNodeIDMap().put("E02003553", 9);
@@ -125,12 +129,15 @@ public class RebalancedTemproODMatrixTest {
 //		zoning.getZoneToNearestNodeIDMap().put("E02003569", 102);
 //		zoning.getZoneToNearestNodeIDMap().put("E02003567", 96);
 		
+		/*
+		
 		System.out.println("Number of TEMPRO zones: " + zoning.getZoneToNearestNodeIDMap().size());
 		System.out.println("Number of nodes: " + zoning.getNodeToZoneMap().size());
 		System.out.println("Zones to nearest Nodes: " + zoning.getZoneToNearestNodeIDMap());
 		System.out.println("Zones to nearest nodes distances: " + zoning.getZoneToNearestNodeDistanceMap());
 		System.out.println(zoning.getZoneToNearestNodeIDMap().keySet());
 		System.out.println("Nodes to zones in which they are located: " + zoning.getNodeToZoneMap());
+		
 		
 		//check if any zones are assigned to nodes that belong to other zones (which is possible if they are closer to the centroid).
 		int counter = 0;
@@ -145,11 +152,12 @@ public class RebalancedTemproODMatrixTest {
 		System.out.println("Number of cross-assigned zones: " + counter);
 		System.out.println("Tempro zone to LAD zone map: " + zoning.getZoneToLADMap());
 		System.out.println("Tempro zone code to tempro zone ID map: " + zoning.getZoneCodeToIDMap());
-		System.out.println("Tempro zone ID to tempro zone code map: " + zoning.getZoneIDToCodeMap());
+		System.out.println("Tempro zone ID to tempro zone code map: " + zoning.getZoneIDToCodeMap()); //oout of memory java heap space!
 		System.out.println(zoning.getZoneToSortedListOfNodeAndDistancePairs());
 		System.out.println(zoning.getZoneToListOfContaintedNodes());
+		*/
 		
-		
+		/*
 		ODMatrix temproODM = ODMatrix.createUnitMatrix(zoning.getZoneCodeToIDMap().keySet());
 		rna.assignPassengerFlowsTempro(temproODM, zoning, rsg);
 		rna.calculateDistanceSkimMatrixTempro().printMatrixFormatted();
@@ -162,7 +170,7 @@ public class RebalancedTemproODMatrixTest {
 		
 		//save routes binary
 		//rsg.saveRoutesBinary(outputFolder + "routesTempro.dat", false);
-				
+		*/	
 		
 		/*
 		
@@ -195,23 +203,51 @@ public class RebalancedTemproODMatrixTest {
 			 
 		*/
 		
+		//roadNetwork.sortGravityNodes(); //probably not relevant
 		
-//		ODMatrix temproODM = ODMatrix.createUnitMatrix(zoning.getZoneCodeToIDMap().keySet());
+		ODMatrix temproODM = ODMatrix.createUnitMatrix(zoning.getZoneCodeToIDMap().keySet());
+		temproODM.deleteInterzonalFlows("E02006781");
+		temproODM.saveMatrixFormatted("fullscaleTemproUnitMatrix.csv");
+	
+		
+		/*
+		
+		
 //		ODMatrix todm = new ODMatrix(outputFolder + "balancedTemproODMatrix.csv");
 //		RealODMatrix temproODM = RealODMatrix.createUnitMatrix(zoning.getZoneCodeToIDMap().keySet());
-		RebalancedTemproODMatrix rodm = new RebalancedTemproODMatrix(temproODM.getOrigins(), temproODM.getDestinations(), rna, rsg, zoning);
+			
+		RebalancedTemproODMatrix rodm = new RebalancedTemproODMatrix(temproODM.getOrigins(), temproODM.getDestinations(), rna, rsg, zoning, props);
+		
+		temproODM = null;
+		
+		rodm.deleteInterzonalFlows("E02006781"); //Isle of Scilly in Tempro
+		rodm.printMatrixFormatted("Initial rebalanced matrix:", 2);
 		
 		//TODO
 		//set rodm to todm
 		
-		rodm.iterate(30);
+		rodm.iterate(10);
 		
-		for (int i=0; i<30; i++)	rodm.scaleNodeMatricesToTrafficCounts();
+		//for (int i=0; i<30; i++)	rodm.scaleNodeMatricesToTrafficCounts();
 		
 		
 		//round values
 		ODMatrix odm = new ODMatrix(rodm);
+		odm.printMatrixFormatted("Rounded values:");
+		odm.saveMatrixFormatted("rebalancedODMtempro.csv");
 		
+		DefaultCategoryDataset lineDataset = new DefaultCategoryDataset();
+		List<Double> RMSNvalues = rodm.getRMSNvalues();
+		for (int i = 0; i < RMSNvalues.size(); i++) lineDataset.addValue(RMSNvalues.get(i), "RMSN", Integer.toString(i));
+		LineVisualiser line = new LineVisualiser(lineDataset, "RMSN values");
+		line.setSize(600, 400);
+		line.setVisible(true);
+		line.saveToPNG("rebalancing.png");
+		
+		*/
+		
+		
+		/*
 		
 		//increase particular interzonal flows
 		//odm.setFlow("E02003554", "E02003554", 300);
@@ -259,6 +295,8 @@ public class RebalancedTemproODMatrixTest {
 		//NetworkVisualiser.visualise(roadNetwork, "Network with count comparison", rna.calculateDirectionAveragedAbsoluteDifferenceCarCounts(), "CountDiff", null);
 		NetworkVisualiser.visualise(roadNetwork, "Network with count comparison", rna.calculateDirectionAveragedAbsoluteDifferenceCarCounts(), "CountDiff", null, temproUrl);
 		
+		
+		*/
 		
 		/*
 		

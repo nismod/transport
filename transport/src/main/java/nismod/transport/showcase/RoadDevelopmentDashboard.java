@@ -546,18 +546,18 @@ public class RoadDevelopmentDashboard extends JFrame {
 				}
 
 				//update after tables
-				int rows = predictedODM.getOrigins().size();
-				int columns = predictedODM.getDestinations().size();
+				int rows = predictedODM.getSortedOrigins().size();
+				int columns = predictedODM.getSortedDestinations().size();
 				Object[][] data = new Object[rows][columns + 1];
 				for (int i = 0; i < rows; i++) {
-					data[i][0] = zoning.getLADToName().get(predictedODM.getOrigins().get(i));
+					data[i][0] = zoning.getLADToName().get(predictedODM.getSortedOrigins().get(i));
 					for (int j = 0; j < columns; j++) {
-						data[i][j+1] = predictedODM.getFlow(predictedODM.getOrigins().get(i), predictedODM.getDestinations().get(j));
+						data[i][j+1] = predictedODM.getFlow(predictedODM.getSortedOrigins().get(i), predictedODM.getSortedDestinations().get(j));
 					}
 				}
 				String[] labels = new String[columns + 1];
 				labels[0] = "ORIG \\ DEST";
-				for (int j = 0; j < columns; j++) labels[j+1] = zoning.getLADToName().get(predictedODM.getDestinations().get(j));
+				for (int j = 0; j < columns; j++) labels[j+1] = zoning.getLADToName().get(predictedODM.getSortedDestinations().get(j));
 				table_2.setModel(new DefaultTableModel(data, labels));
 
 
@@ -1294,18 +1294,18 @@ public class RoadDevelopmentDashboard extends JFrame {
 		
 		//update tables
 
-		int rows = odm.getOrigins().size();
-		int columns = odm.getDestinations().size();
+		int rows = odm.getSortedOrigins().size();
+		int columns = odm.getSortedDestinations().size();
 		Object[][] data = new Object[rows][columns + 1];
 		for (int i = 0; i < rows; i++) {
-			data[i][0] = zoning.getLADToName().get(odm.getOrigins().get(i));
+			data[i][0] = zoning.getLADToName().get(odm.getSortedOrigins().get(i));
 			for (int j = 0; j < columns; j++) {
-				data[i][j+1] = odm.getFlow(odm.getOrigins().get(i), odm.getDestinations().get(j));
+				data[i][j+1] = odm.getFlow(odm.getSortedOrigins().get(i), odm.getSortedDestinations().get(j));
 			}
 		}
 		String[] labels = new String[columns + 1];
 		labels[0] = "ORIG\\DEST";
-		for (int j = 0; j < columns; j++) labels[j+1] = zoning.getLADToName().get(odm.getDestinations().get(j));
+		for (int j = 0; j < columns; j++) labels[j+1] = zoning.getLADToName().get(odm.getSortedDestinations().get(j));
 		table.setModel(new DefaultTableModel(data, labels));
 
 		SkimMatrix sm = rnaBefore.calculateTimeSkimMatrix();

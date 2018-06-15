@@ -86,8 +86,8 @@ public class ODMatrixTest {
 		
 		assertEquals("An element of the cloned matrix is correct", 987, copy.getFlow("4",  "4"));
 		
-		System.out.println("Origins: " + passengerODMatrix.getOrigins());
-		System.out.println("Destinations: " + passengerODMatrix.getDestinations());
+		System.out.println("Origins: " + passengerODMatrix.getSortedOrigins());
+		System.out.println("Destinations: " + passengerODMatrix.getSortedDestinations());
 		System.out.println("Trip starts: " + passengerODMatrix.calculateTripStarts());
 		System.out.println("Trip ends: " + passengerODMatrix.calculateTripEnds());
 		
@@ -120,8 +120,8 @@ public class ODMatrixTest {
 				
 		assertTrue("All matrix elements are correct", condition);
 		
-		System.out.println("Origins: " + passengerODMatrix2.getOrigins());
-		System.out.println("Destinations: " + passengerODMatrix2.getDestinations());
+		System.out.println("Origins: " + passengerODMatrix2.getSortedOrigins());
+		System.out.println("Destinations: " + passengerODMatrix2.getSortedDestinations());
 		System.out.println("Trip starts: " + passengerODMatrix2.calculateTripStarts());
 		System.out.println("Trip ends: " + passengerODMatrix2.calculateTripEnds());
 		

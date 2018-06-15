@@ -633,7 +633,7 @@ public class RoadNetworkAssignmentTest {
 		
 		rna.calculateDistanceSkimMatrixTempro().printMatrixFormatted();
 		
-		ODMatrix temproODM2 = ODMatrix.createUnitMatrix(temproODM.getOrigins());
+		ODMatrix temproODM2 = ODMatrix.createUnitMatrix(temproODM.getSortedOrigins());
 		rna.resetTripStorages();
 		rna.assignPassengerFlowsTempro(temproODM2, zoning, rsg);
 		rna.calculateDistanceSkimMatrixTempro().printMatrixFormatted();
@@ -1040,7 +1040,7 @@ public class RoadNetworkAssignmentTest {
 		rna.assignPassengerFlowsTempro(temproODM, zoning, rsg);
 		rna.calculateDistanceSkimMatrixTempro().printMatrixFormatted();
 		
-		ODMatrix temproODM2 = ODMatrix.createUnitMatrix(temproODM.getOrigins());
+		ODMatrix temproODM2 = ODMatrix.createUnitMatrix(temproODM.getSortedOrigins());
 		rna.resetTripStorages();
 		rna.assignPassengerFlowsTempro(temproODM2, zoning, rsg);
 		rna.calculateDistanceSkimMatrixTempro().printMatrixFormatted();

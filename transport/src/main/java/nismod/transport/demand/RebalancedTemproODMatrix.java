@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.logging.log4j.LogManager;
@@ -33,7 +34,7 @@ public class RebalancedTemproODMatrix extends RealODMatrix {
 	private RoadNetworkAssignment rna;
 	private RouteSetGenerator rsg;
 	private Zoning zoning;
-	
+	private Properties params;
 	private List<Double> RMSNvalues;
 
 	/**
@@ -44,7 +45,7 @@ public class RebalancedTemproODMatrix extends RealODMatrix {
 	 * @param rsg Route set generator.
 	 * @param zoning Zoning system.
 	 */
-	public RebalancedTemproODMatrix(List<String> origins, List<String> destinations, RoadNetworkAssignment rna, RouteSetGenerator rsg, Zoning zoning) {
+	public RebalancedTemproODMatrix(List<String> origins, List<String> destinations, RoadNetworkAssignment rna, RouteSetGenerator rsg, Zoning zoning, Properties params) {
 
 		super();
 		
@@ -53,9 +54,9 @@ public class RebalancedTemproODMatrix extends RealODMatrix {
 		this.destinations = new ArrayList<String>();
 		this.rsg = rsg;
 		this.zoning = zoning;
+		this.params = params;
 		this.RMSNvalues = new ArrayList<Double>();
-		
-		
+				
 		for (String zone: origins) this.origins.add(zone);
 		for (String zone: destinations) this.destinations.add(zone);
 		this.createUnitMatrix();
@@ -67,8 +68,14 @@ public class RebalancedTemproODMatrix extends RealODMatrix {
 	 */
 	public void iterate(int number) {
 
-		for (int i=0; i<number; i++) 
+		for (int i=0; i<number; i++) {
+			this.assignAndCalculateRMSN();
 			this.scaleToTrafficCounts();
+			this.saveMatrixFormatted("temproODMafterIteration" + i + ".csv");
+		}
+		
+		//assign ones more to get the latest RMSN
+		this.assignAndCalculateRMSN();
 	}
 
 
@@ -81,37 +88,53 @@ public class RebalancedTemproODMatrix extends RealODMatrix {
 			for (String destination: this.getDestinations())
 				this.setFlow(origin, destination, 1);
 	}
+	
+	/**
+	 * Assigns OD matrix and calculates RMSN with traffic counts.
+	 */
+	public void assignAndCalculateRMSN() {
+		
+		this.rna.resetLinkVolumes();
+		this.rna.resetTripStorages();
+		ODMatrix odm = new ODMatrix(this);
+		//	odm.printMatrixFormatted();
+		
+		final Boolean flagUseRouteChoiceModel = Boolean.parseBoolean(params.getProperty("USE_ROUTE_CHOICE_MODEL"));
+		
+		if (flagUseRouteChoiceModel) {
+			this.rna.assignPassengerFlowsRouteChoiceTempro(odm, zoning, rsg, params);
+		} else {
+			this.rna.assignPassengerFlowsTempro(odm, zoning, rsg);
+		}
+		rna.updateLinkVolumeInPCU();
+		rna.updateLinkVolumeInPCUPerTimeOfDay();
+		rna.updateLinkVolumePerVehicleType();
+		rna.updateLinkTravelTimes(0.9);
+		
+		double RMSN = this.rna.calculateRMSNforSimulatedVolumes();
+		this.RMSNvalues.add(RMSN);
+		this.rna.printRMSNstatistic();
+		//LOGGER.info("RMSN before scaling = {}%", RMSN);
+		this.rna.printGEHstatistic();
+	}
 
 	/**
 	 * Scales OD matrix to traffic counts.
 	 */
 	public void scaleToTrafficCounts() {
 			
-		this.rna.resetLinkVolumes();
-		this.rna.resetTripStorages();
-		ODMatrix odm = new ODMatrix(this);
-		
-		odm.printMatrixFormatted();
-		
-		this.rna.assignPassengerFlowsTempro(odm, zoning, rsg);
-		this.rna.updateLinkVolumePerVehicleType();
-		
-		double RMSN = this.rna.calculateRMSNforSimulatedVolumes();
-		this.RMSNvalues.add(RMSN);
-		System.out.printf("RMSN before scaling = %.2f%% %n", RMSN);
-		
 		RealODMatrix sf = this.getScalingFactors();
 		sf.printMatrixFormatted("Scaling factors:", 5);
 		
 		this.scaleMatrixValue(sf);
-		this.printMatrixFormatted("OD matrix after scaling:", 2);
-		
+		//this.printMatrixFormatted("OD matrix after scaling:", 2);
 		//this.modifyNodeMatrixProbabilitiesForInterzonalTrips();
 	}
 	
 	/**
 	 * Scales OD matrix to traffic counts.
 	 */
+	/*
 	public void scaleNodeMatricesToTrafficCounts() {
 			
 		this.rna.resetLinkVolumes();
@@ -129,9 +152,8 @@ public class RebalancedTemproODMatrix extends RealODMatrix {
 		
 		this.modifyNodeMatrixProbabilitiesForInterzonalTrips();
 	}
-	
-	
-	
+	*/
+		
 	/**
 	 * Calculates scaling factors for OD pairs.
 	 * @return Scaling factors.
@@ -139,14 +161,14 @@ public class RebalancedTemproODMatrix extends RealODMatrix {
 	public RealODMatrix getScalingFactors() {
 		
 		List<Trip> tripList = this.rna.getTripList();
-		System.out.println("Trip list size: " + tripList.size());
+		LOGGER.trace("Trip list size: {}", tripList.size());
 		
 		Map<Integer, Integer> volumes = this.rna.getLinkVolumePerVehicleType().get(VehicleType.CAR);
 		Map<Integer, Integer> counts = this.rna.getAADFCarTrafficCounts();
 		Map<Integer, Double> linkFactors = new HashMap<Integer, Double>();
 		
-		System.out.println("volumes = " + volumes);
-		System.out.println("counts = " + counts);
+		LOGGER.trace("volumes = {}", volumes);
+		LOGGER.trace("counts = {}", counts);
 				
 		//scaling link factors can only be calculated for links that have counts and flow > 0
 		for (Integer edgeID: volumes.keySet()) {
@@ -156,7 +178,7 @@ public class RebalancedTemproODMatrix extends RealODMatrix {
 			if (volume == 0.0) continue; //also skip as it would create infinite factor
 			linkFactors.put(edgeID, 1.0 * count / volume);
 		}
-		System.out.println("link factors = " + linkFactors);
+		LOGGER.trace("link factors = {}", linkFactors);
 		
 		RealODMatrix factors = new RealODMatrix();
 		ODMatrix counter = new ODMatrix();
@@ -204,6 +226,7 @@ public class RebalancedTemproODMatrix extends RealODMatrix {
 		return scalingFactors;
 	}
 	
+	/*
 	public void modifyNodeMatrixProbabilitiesForInterzonalTrips() {
 		
 		List<Trip> tripList = this.rna.getTripList();
@@ -299,8 +322,8 @@ public class RebalancedTemproODMatrix extends RealODMatrix {
 			zoning.getZoneToNodeMatrix().get(zone).normaliseWithZeroDiagonal();
 			zoning.getZoneToNodeMatrix().get(zone).printMatrixFormatted("after normalising:");
 		}
-		
 	}
+	*/
 	
 	/**
 	 * Gets the list of origins.

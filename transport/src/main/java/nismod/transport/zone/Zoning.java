@@ -62,6 +62,8 @@ public class Zoning {
 	 * @throws IOException if any.
 	 */
 	public Zoning(URL zonesUrl, URL nodesUrl, RoadNetwork rn) throws IOException {
+		
+		LOGGER.info("Creating the Tempro zoning system.");
 	
 		this.zonesShapefile = new ShapefileDataStore(zonesUrl);
 		this.nodesShapefile = new ShapefileDataStore(nodesUrl);
@@ -73,19 +75,32 @@ public class Zoning {
 		SimpleFeatureCollection zonesFeatureCollection = cache4.getFeatures();
 		
 		//map codes and IDs
+		LOGGER.debug("Mapping Tempro zones IDs to their ONS codes...");
 		mapCodesAndIDs(zonesFeatureCollection);
-		//map zones to nodes
+		
+		//map zones to nearest nodes
+		LOGGER.debug("Mapping Tempro zones to the nearest node...");
 		mapZonesToNodes(zonesFeatureCollection);
+		
 		//map nodes to zones
+		LOGGER.debug("Mapping nodes to Tempro zones in which they are located...");
 		mapNodesToZones(zonesFeatureCollection);
 		
+		//map zones to all the nodes, including the distance
+		LOGGER.debug("Mapping Tempro zones to all the nodes, including distance...");
 		mapZonesToNodesAndDistances(zonesFeatureCollection);
+		
+		//map zones to nodes contained within zone
+		LOGGER.debug("Mapping Tempro zones to a list of nodes contained within that zone...");
 		mapZonesToContainedNodes();
 		
+		//map LADs to contained Tempro zones
+		LOGGER.debug("Mapping LADs to a list of contained Tempro zones...");
 		mapLADsToContainedZones();
 		
-		mapZoneToNodeMatrices();
+		//mapZoneToNodeMatrices();
 		
+		LOGGER.debug("Done creating the zoning system.");
 	}
 	
 	/**
@@ -382,15 +397,15 @@ public class Zoning {
 		return this.zoneToListOfContainedNodes;
 	}
 	
-	/**
-	 * Getter for tempro zone to node matrix of contained nodes.
-	 * @return Node matrix of contained nodes (with joint probabilities).
-	 */
-	public HashMap<String, NodeMatrix> getZoneToNodeMatrix() {
-		
-		return this.zoneToNodeMatrix;
-	}
-	
+//	/**
+//	 * Getter for tempro zone to node matrix of contained nodes.
+//	 * @return Node matrix of contained nodes (with joint probabilities).
+//	 */
+//	public HashMap<String, NodeMatrix> getZoneToNodeMatrix() {
+//		
+//		return this.zoneToNodeMatrix;
+//	}
+//	
 	/**
 	 * Getter for LAD to list of contained tempro zones mapping.
 	 * @return LAD to list of contained zones.

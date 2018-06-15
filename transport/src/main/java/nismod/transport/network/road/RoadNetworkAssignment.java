@@ -1108,11 +1108,11 @@ public class RoadNetworkAssignment {
 						destinationNode = originNode;
 					} else	{
 		
-						/*
+						
 						//simply pick random
 						originNode = listOfContainedNodes.get(rng.nextInt(listOfContainedNodes.size()));
 						destinationNode = listOfContainedNodes.get(rng.nextInt(listOfContainedNodes.size()));
-						*/
+						
 						
 						/*
 						//choose based on gravitating population
@@ -1138,6 +1138,7 @@ public class RoadNetworkAssignment {
 						}
 						*/
 						
+						/*
 						//pick OD pair based on NodeMatrix
 						NodeMatrix nm = zoning.getZoneToNodeMatrix().get(originZone);
 						cumulativeProbability = 0.0;
@@ -1152,6 +1153,7 @@ public class RoadNetworkAssignment {
 								break;
 							}
 						}
+						*/
 					}
 								
 					if (originNode == null) LOGGER.warn("Origin node was not chosen for zone {}", originZone);
