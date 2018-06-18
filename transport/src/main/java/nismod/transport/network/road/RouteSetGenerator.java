@@ -944,6 +944,8 @@ public class RouteSetGenerator {
 	 */
 	public void saveRoutesBinary(String fileName, boolean append) {
 		
+		LOGGER.info("Saving the routes into a binary file.");
+		
         FileOutputStream outputStream = null;
         BufferedOutputStream bufferedStream = null;
         DataOutputStream dataStream = null;

@@ -23,6 +23,8 @@ import org.apache.commons.csv.CSVRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.vividsolutions.jts.geom.Point;
+
 import nismod.transport.zone.Zoning;
 
 /**
@@ -343,6 +345,18 @@ public class ODMatrix {
 	}
 	
 	/**
+	 * Gets sum of all the flows.
+	 * @return Sum of flows.
+	 */
+	public double getSumOfFlows() {
+		
+		int sumOfFlows = 0;
+		for (Object flow: matrix.values()) sumOfFlows += (int) flow;
+		
+		return sumOfFlows;
+	}
+	
+	/**
 	 * Creates a new OD matrix (a matrix subset) for given lists of origin and destination zones.
 	 * @param origins List of origin zones.
 	 * @param destinations List of destination zones.
@@ -399,7 +413,7 @@ public class ODMatrix {
 	 */
 	public static ODMatrix createUnitMatrix(Set<String> zones) {
 		
-		LOGGER.debug("Creating the unit matrix for a {}x{} zones.", zones.size(), zones.size());
+		LOGGER.info("Creating the unit matrix for {} x {} zones.", zones.size(), zones.size());
 		
 		System.gc();
 		
@@ -408,6 +422,35 @@ public class ODMatrix {
 		for (String origin: zones)
 			for (String destination: zones)
 				odm.setFlow(origin, destination, 1);
+	
+		LOGGER.debug("Done creating the unit matrix.");
+		return odm;
+	}
+	
+	/**
+	 * Creates a unit OD matrix for a given lists of zones with a distance threshold.
+	 * If straight line distance between origin and destination zone centroids is larger than threshold that flow is zero.
+	 * @param zones Set of origin zones.
+	 * @param centroids List of zone centroids.
+	 * @param threshold Distance threshold in [m].
+	 * @return Unit OD matrix.
+	 */
+	public static ODMatrix createSparseUnitMatrix(Set<String> zones, HashMap<String, Point> centroids, double threshold) {
+		
+		LOGGER.info("Creating the sparse unit matrix for {} x {} zones with threshold set to {}.", zones.size(), zones.size(), threshold);
+		
+		System.gc();
+		
+		ODMatrix odm = new ODMatrix();
+		
+		for (String origin: zones) {
+			for (String destination: zones) {
+				Point originCentroid = centroids.get(origin);
+				Point destinationCentroid = centroids.get(destination);
+				if (originCentroid.isWithinDistance(destinationCentroid, threshold))
+					odm.setFlow(origin, destination, 1);
+			}
+		}
 	
 		LOGGER.debug("Done creating the unit matrix.");
 		return odm;

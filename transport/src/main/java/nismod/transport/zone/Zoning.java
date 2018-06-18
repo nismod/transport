@@ -39,6 +39,8 @@ public class Zoning {
 	private HashMap<String, Integer> zoneToNearestNodeID;
 	private HashMap<String, Double> zoneToNearestNodeDistance;
 	
+	private HashMap<String, Point> zoneToCentroid;
+	
 	private HashMap<String, List<Pair<Integer, Double>>> zoneToSortedListOfNodeAndDistancePairs;
 	
 	private HashMap<Integer, String> nodeToZoneInWhichLocated; //maps node to Tempro zone in which it is located
@@ -190,6 +192,8 @@ public class Zoning {
 	 * @param zonesFeatureCollection Feature collection with the zones.
 	 */
 	private void mapZonesToNodesAndDistances(SimpleFeatureCollection zonesFeatureCollection) {
+		
+		this.zoneToCentroid = new HashMap<String, Point>();
 
 		this.zoneToSortedListOfNodeAndDistancePairs = new HashMap<String, List<Pair<Integer, Double>>>();
 
@@ -205,6 +209,7 @@ public class Zoning {
 				this.zoneToSortedListOfNodeAndDistancePairs.put(zoneID, list);
 								
 				Point centroid = polygon.getCentroid();
+				this.zoneToCentroid.put(zoneID, centroid);
 
 				Iterator nodeIter = (Iterator) this.rn.getNetwork().getNodes().iterator();
 				while (nodeIter.hasNext()) {
@@ -422,5 +427,14 @@ public class Zoning {
 	public HashMap<String, String> getLADToName() {
 		
 		return this.LADToName;
+	}
+	
+	/**
+	 * Getter for tempro zone to its centroid mapping.
+	 * @return Tempro zone to centroid mapping.
+	 */
+	public HashMap<String, Point> getZoneToCentroid() {
+		
+		return this.zoneToCentroid;
 	}
 }

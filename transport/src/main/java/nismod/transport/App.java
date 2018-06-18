@@ -184,11 +184,11 @@ public class App {
 				final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
 				Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
 				
-				//final String baseYearODMatrixFile = props.getProperty("baseYearODMatrixFile");
-				//ODMatrix temproODM = new ODMatrix(baseYearODMatrixFile);
+				final String temproODMatrixFile = props.getProperty("temproODMatrixFile");
+				ODMatrix temproODM = new ODMatrix(temproODMatrixFile);
 					
-				ODMatrix temproODM = ODMatrix.createUnitMatrix(zoning.getZoneCodeToIDMap().keySet());
-				temproODM.deleteInterzonalFlows("E02006781"); //Isle of Scilly in Tempro
+				//ODMatrix temproODM = ODMatrix.createUnitMatrix(zoning.getZoneCodeToIDMap().keySet());
+				//temproODM.deleteInterzonalFlows("E02006781"); //Isle of Scilly in Tempro
 
 				//generate between all nodes
 				LOGGER.info("Generating routes for slice {} out of {}.", sliceIndex, sliceNumber);
