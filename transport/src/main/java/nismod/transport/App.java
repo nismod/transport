@@ -193,6 +193,7 @@ public class App {
 				//generate between all nodes
 				LOGGER.info("Generating routes for slice {} out of {}.", sliceIndex, sliceNumber);
 				routes.generateRouteSetForODMatrixTempro(temproODM, zoning, Integer.parseInt(sliceIndex), Integer.parseInt(sliceNumber));
+				LOGGER.debug(routes.getStatistics());
 				routes.saveRoutesBinary(file.getPath() + "TemproRoutes" + sliceIndex + "of" + sliceNumber + ".dat", false);
 				System.exit(0);
 			}

@@ -851,6 +851,17 @@ public class RouteSetGenerator {
 	}
 	
 	/**
+	 * Gets route set statistics in a string.
+	 * @return Route set statistics.
+	 */
+	public String getStatistics() {
+
+		String s = this.getNumberOfRouteSets() + " route sets and " + this.getNumberOfRoutes() + " routes.";
+	
+		return s;
+	}
+	
+	/**
 	 * Gets the numbers of route sets (OD pairs).
 	 * @return Number of route sets.
 	 */

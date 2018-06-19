@@ -211,7 +211,27 @@ public class RebalancedTemproODMatrixTest {
 		//temproODM.deleteInterzonalFlows("E02006781"); //Isle of Scilly
 		//temproODM.saveMatrixFormatted("fullScaleTemproUnitMatrix.csv");
 		
-		ODMatrix temproODM = ODMatrix.createSparseUnitMatrix(zoning.getZoneCodeToIDMap().keySet(), zoning.getZoneToCentroid(), 200000);
+		
+		ODMatrix temproODM = ODMatrix.createSparseUnitMatrix(zoning.getZoneCodeToIDMap().keySet(), zoning.getZoneToCentroid(), 10000);
+		//System.out.println("Sparse unit matrix: " + temproODM.getSumOfFlows());
+		temproODM.deleteInterzonalFlows("E02006781");
+		System.out.println("Sparse unit matrix after inter-zonal deletion with 10 km threshold: " + temproODM.getSumOfFlows());
+		temproODM.saveMatrixFormatted("fullSCaleTemproSparseUnitMatrix10km.csv");
+		
+		temproODM = ODMatrix.createSparseUnitMatrix(zoning.getZoneCodeToIDMap().keySet(), zoning.getZoneToCentroid(), 100000);
+		//System.out.println("Sparse unit matrix: " + temproODM.getSumOfFlows());
+		temproODM.deleteInterzonalFlows("E02006781");
+		System.out.println("Sparse unit matrix after inter-zonal deletion with 100 km threshold: " + temproODM.getSumOfFlows());
+		temproODM.saveMatrixFormatted("fullSCaleTemproSparseUnitMatrix100km.csv");
+		
+		temproODM = ODMatrix.createSparseUnitMatrix(zoning.getZoneCodeToIDMap().keySet(), zoning.getZoneToCentroid(), 150000);
+		//System.out.println("Sparse unit matrix: " + temproODM.getSumOfFlows());
+		temproODM.deleteInterzonalFlows("E02006781");
+		System.out.println("Sparse unit matrix after inter-zonal deletion with 150 km threshold: " + temproODM.getSumOfFlows());
+		temproODM.saveMatrixFormatted("fullSCaleTemproSparseUnitMatrix150km.csv");
+		
+		/*
+		temproODM = ODMatrix.createSparseUnitMatrix(zoning.getZoneCodeToIDMap().keySet(), zoning.getZoneToCentroid(), 200000);
 		//System.out.println("Sparse unit matrix: " + temproODM.getSumOfFlows());
 		temproODM.deleteInterzonalFlows("E02006781");
 		System.out.println("Sparse unit matrix after inter-zonal deletion with 200 km threshold: " + temproODM.getSumOfFlows());
@@ -234,6 +254,8 @@ public class RebalancedTemproODMatrixTest {
 		temproODM.deleteInterzonalFlows("E02006781");
 		System.out.println("Sparse unit matrix after inter-zonal deletion with 500 km threshold: " + temproODM.getSumOfFlows());
 		temproODM.saveMatrixFormatted("fullSCaleTemproSparseUnitMatrix500km.csv");
+		
+		*/
 			
 		/*
 //		ODMatrix todm = new ODMatrix(outputFolder + "balancedTemproODMatrix.csv");
