@@ -63,7 +63,7 @@ Build jar containing all dependencies and zip (see `Makefile` for details):
     make
 
 Upload model and test data to the NISMOD file server, update the
-[`nismod/nismod`](https://github.com/nismod/nismod) configuration and provision
+[`nismod/nismod2`](https://github.com/nismod/nismod2) configuration and provision
 script as necessary.
 
 
