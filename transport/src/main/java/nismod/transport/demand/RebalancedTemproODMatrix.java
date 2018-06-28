@@ -1,5 +1,7 @@
 package nismod.transport.demand;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -63,6 +65,28 @@ public class RebalancedTemproODMatrix extends RealODMatrix {
 	}
 
 	/**
+	 * Constructor for a rebalanced OD matrix that uses network assignment and traffic counts for matrix rebalancing.
+	 * @param fileName Path to the file with the initial OD matrix. 
+	 * @param rna Road network assignment.
+	 * @param rsg Route set generator.
+	 * @param zoning Zoning system.
+	 * @throws IOException if any.
+	 * @throws FileNotFoundException if any. 
+	 */
+	public RebalancedTemproODMatrix(String fileName, RoadNetworkAssignment rna, RouteSetGenerator rsg, Zoning zoning, Properties params) throws FileNotFoundException, IOException {
+
+		super(fileName);
+		
+		this.rna = rna;
+		this.origins = this.getOrigins(); //expensive operation, so copy to local field
+		this.destinations = this.getDestinations(); //expensive operation, so copy to local field
+		this.rsg = rsg;
+		this.zoning = zoning;
+		this.params = params;
+		this.RMSNvalues = new ArrayList<Double>();
+	}
+	
+	/**
 	 * Iterates scaling to traffic counts.
 	 * @param number Number of iterations.
 	 */
@@ -86,7 +110,7 @@ public class RebalancedTemproODMatrix extends RealODMatrix {
 
 		for (String origin: this.getOrigins()) 
 			for (String destination: this.getDestinations())
-				this.setFlow(origin, destination, 1);
+				this.setFlow(origin, destination, 1.0);
 	}
 	
 	/**

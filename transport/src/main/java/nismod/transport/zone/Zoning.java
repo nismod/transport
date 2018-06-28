@@ -30,6 +30,8 @@ import nismod.transport.network.road.RoadNetwork;
   */
 public class Zoning {
 	
+	public static int MAX_NEAREST_NODES = 1; //the number of nearest nodes to each Tempro zone to consider
+	
 	private final static Logger LOGGER = LogManager.getLogger(Zoning.class);
 	
 	private ShapefileDataStore zonesShapefile;
@@ -88,10 +90,11 @@ public class Zoning {
 		LOGGER.debug("Mapping nodes to Tempro zones in which they are located...");
 		mapNodesToZones(zonesFeatureCollection);
 		
-		//map zones to all the nodes, including the distance
+		//map zones to all the nodes, including the distance - requires quite a bit of memory (especially storing the Pairs)
+		//the result is then truncated to contain only MAX_NEAREST_NODES
 		LOGGER.debug("Mapping Tempro zones to all the nodes, including distance...");
 		mapZonesToNodesAndDistances(zonesFeatureCollection);
-		
+				
 		//map zones to nodes contained within zone
 		LOGGER.debug("Mapping Tempro zones to a list of nodes contained within that zone...");
 		mapZonesToContainedNodes();
@@ -237,8 +240,12 @@ public class Zoning {
 				};
 				
 				Collections.sort(list, c);
-					
-			} 
+				
+				//truncate the list to keep only MAX_NEAREST_NODES
+				int k = list.size();
+				if (k > MAX_NEAREST_NODES)
+					list.subList(MAX_NEAREST_NODES, k).clear();
+				} 
 		} finally {
 			//feature iterator is a live connection that must be closed
 			iter.close();

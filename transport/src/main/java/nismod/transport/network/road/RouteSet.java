@@ -155,7 +155,7 @@ public class RouteSet {
 		
 		//all routes need to have a utility calculated
 		for (Route r: choiceSet) {
-			if (r.getUtility() == null) 
+			if (Double.compare(r.getUtility(), 0.0d) == 0)
 				//System.err.printf("Route %d does not have a calculated utility! %n", r.getID());
 				System.err.printf("Route does not have a calculated utility! %n");
 			else

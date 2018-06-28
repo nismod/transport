@@ -65,7 +65,7 @@ public class RoadNetworkAssignment {
 	public double nodesProbabilityWeightingFreight; //manipulates probabilities of nodes for the node choice
 	public double assignmentFraction; //the fraction of vehicle flows to actually assign, with later results expansion to 100%
 	public boolean flagUseRouteChoiceModel; //use route-choice model (true) or routing with A-Star (false)
-	public int topTemproNodes = 2;
+	public int topTemproNodes = 1;
 
 	private static RandomSingleton rng = RandomSingleton.getInstance();
 

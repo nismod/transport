@@ -42,10 +42,10 @@ public class Route {
 //	private static int counter = 0;
 //	private int id;
 	private ArrayList<DirectedEdge> edges;
-	private Double length;
-	private Double time;
-	private Double cost;
-	private Double utility;
+	private double length;
+	private double time;
+	private double cost;
+	private double utility;
 	private Node singleNode;
 	
 	public Route() {
@@ -357,7 +357,8 @@ public class Route {
 	 * @param params Route choice parameters.
 	 */
 	public void calculateUtility(VehicleType vht, EngineType et, Map<Integer, Double> linkTravelTime, HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParameters, HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency, HashMap<EnergyType, Double> energyUnitCosts, HashMap<String, HashMap<Integer, Double>> linkCharges, Properties params) {		
-		if (this.length == null) this.calculateLength(); //calculate only once (length is not going to change)
+		if (Double.compare(this.length, 0.0d) == 0) 
+			this.calculateLength(); //calculate only once (length is not going to change)
 				
 		double avgIntersectionDelay;
 		if (params == null) { //use default parameters
@@ -429,7 +430,7 @@ public class Route {
 	 * Getter method for route length.
 	 * @return Route length.
 	 */
-	public Double getLength() {
+	public double getLength() {
 		
 		return length;
 	}
@@ -438,7 +439,7 @@ public class Route {
 	 * Getter method for route time.
 	 * @return Route time.
 	 */
-	public Double getTime() {
+	public double getTime() {
 	
 		return time;
 	}
@@ -447,7 +448,7 @@ public class Route {
 	 * Getter method for route cost.
 	 * @return Route cost.
 	 */
-	public Double getCost() {
+	public double getCost() {
 		
 		return cost;
 	}
@@ -468,7 +469,7 @@ public class Route {
 	 * Getter method for route utility.
 	 * @return Route utility.
 	 */
-	public Double getUtility() {
+	public double getUtility() {
 		
 		//if (this.utility == null) 
 		//	System.err.println("Route utility needs to be first calculated using link travel time and other variables!");

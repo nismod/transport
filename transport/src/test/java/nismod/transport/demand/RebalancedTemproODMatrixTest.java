@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.geotools.graph.structure.DirectedEdge;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.junit.Test;
@@ -37,6 +39,8 @@ import nismod.transport.zone.Zoning;
  *
  */
 public class RebalancedTemproODMatrixTest {
+	
+	private final static Logger LOGGER = LogManager.getLogger(RebalancedTemproODMatrixTest.class);
 	
 	public static void main( String[] args ) throws FileNotFoundException, IOException {
 		
@@ -63,6 +67,7 @@ public class RebalancedTemproODMatrixTest {
 		
 		final String passengerRoutesFile = props.getProperty("passengerRoutesFile");
 		final String freightRoutesFile = props.getProperty("freightRoutesFile");
+		final String temproRoutesFile = props.getProperty("temproRoutesFile");
 		
 		final String outputFolder = props.getProperty("outputFolder");
 		
@@ -112,8 +117,10 @@ public class RebalancedTemproODMatrixTest {
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
 		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
 		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
-		//rsg.readRoutesBinaryWithoutValidityCheck(passengerRoutesFile);
-		//rsg.printStatistics();
+		
+		//read tempro routes
+		rsg.readRoutesBinaryWithoutValidityCheck(temproRoutesFile);
+		LOGGER.debug(rsg.getStatistics());
 		//rsg.generateRouteSetZoneToZone("E06000053", "E06000053");
 		//rsg.generateRouteSetZoneToZoneTempro("E02006781", "E02006781", zoning);
 		//rsg.printStatistics();
@@ -212,6 +219,8 @@ public class RebalancedTemproODMatrixTest {
 		//temproODM.saveMatrixFormatted("fullScaleTemproUnitMatrix.csv");
 		
 		
+		//CREATING SPARSE TEMPRO OD MATRICES
+		/*
 		ODMatrix temproODM = ODMatrix.createSparseUnitMatrix(zoning.getZoneCodeToIDMap().keySet(), zoning.getZoneToCentroid(), 10000);
 		//System.out.println("Sparse unit matrix: " + temproODM.getSumOfFlows());
 		temproODM.deleteInterzonalFlows("E02006781");
@@ -229,6 +238,8 @@ public class RebalancedTemproODMatrixTest {
 		temproODM.deleteInterzonalFlows("E02006781");
 		System.out.println("Sparse unit matrix after inter-zonal deletion with 150 km threshold: " + temproODM.getSumOfFlows());
 		temproODM.saveMatrixFormatted("fullSCaleTemproSparseUnitMatrix150km.csv");
+		*/
+		
 		
 		/*
 		temproODM = ODMatrix.createSparseUnitMatrix(zoning.getZoneCodeToIDMap().keySet(), zoning.getZoneToCentroid(), 200000);
@@ -257,6 +268,19 @@ public class RebalancedTemproODMatrixTest {
 		
 		*/
 			
+		final String temproODMatrixFile = props.getProperty("temproODMatrixFile");
+		RebalancedTemproODMatrix rodm = new RebalancedTemproODMatrix(temproODMatrixFile, rna, rsg, zoning, props);
+		
+		rodm.iterate(10); //all matrices will be saved, the latest one is the one
+		
+		DefaultCategoryDataset lineDataset = new DefaultCategoryDataset();
+		List<Double> RMSNvalues = rodm.getRMSNvalues();
+		for (int i = 0; i < RMSNvalues.size(); i++) lineDataset.addValue(RMSNvalues.get(i), "RMSN", Integer.toString(i));
+		LineVisualiser line = new LineVisualiser(lineDataset, "RMSN values");
+		line.setSize(600, 400);
+		line.setVisible(true);
+		line.saveToPNG("temproRebalancing.png");
+		
 		/*
 //		ODMatrix todm = new ODMatrix(outputFolder + "balancedTemproODMatrix.csv");
 //		RealODMatrix temproODM = RealODMatrix.createUnitMatrix(zoning.getZoneCodeToIDMap().keySet());
