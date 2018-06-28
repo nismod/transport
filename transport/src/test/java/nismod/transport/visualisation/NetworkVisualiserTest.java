@@ -24,7 +24,7 @@ public class NetworkVisualiserTest {
 		final String configFile = "./src/test/config/testConfig.properties";
 		//final String configFile = "./src/main/config/config.properties";
 		Properties props = ConfigReader.getProperties(configFile);
-		
+
 		final String areaCodeFileName = props.getProperty("areaCodeFileName");
 		final String areaCodeNearestNodeFile = props.getProperty("areaCodeNearestNodeFile");
 		final String workplaceZoneFileName = props.getProperty("workplaceZoneFileName");
@@ -51,9 +51,9 @@ public class NetworkVisualiserTest {
 		final String baseFuelConsumptionRatesFile = props.getProperty("baseFuelConsumptionRatesFile");
 		final String relativeFuelEfficiencyFile = props.getProperty("relativeFuelEfficiencyFile");
 		final int BASE_YEAR = Integer.parseInt(props.getProperty("baseYear"));
-	
+
 		//create a road network assignment
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, 
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork,
 															InputFileReader.readEnergyUnitCostsFile(energyUnitCostsFile).get(BASE_YEAR),
 															InputFileReader.readUnitCO2EmissionFile(unitCO2EmissionsFile).get(BASE_YEAR),
 															InputFileReader.readEngineTypeFractionsFile(engineTypeFractionsFile).get(BASE_YEAR),
@@ -70,12 +70,12 @@ public class NetworkVisualiserTest {
 															props);
 		ODMatrix odm = new ODMatrix("./src/test/resources/testdata/csvfiles/passengerODM.csv");
 		rna.assignPassengerFlowsRouting(odm, null);
-		
+
 		final URL congestionChargeZoneUrl = new URL("file://src/test/resources/testdata/shapefiles/congestionChargingZone.shp");
 		String shapefilePath = "./temp/networkWithDailyVolume.shp";
 		String shapefilePath2 = "./temp/networkWithCountComparison.shp";
 		String shapefilePath3 = "./temp/networkWithCountComparison.shp";
-		
+
 		rna.updateLinkVolumeInPCU();
 		rna.updateLinkVolumePerVehicleType();
 		Map<Integer, Double> dailyVolume = rna.getLinkVolumeInPCU();
@@ -84,6 +84,6 @@ public class NetworkVisualiserTest {
 		NetworkVisualiserDemo.visualise(roadNetwork, "Network with capacity utilisation", rna.calculateDirectionAveragedPeakLinkCapacityUtilisation(), "CapUtil", shapefilePath);
 //		NetworkVisualiser.visualise(roadNetwork, "Network with count comparison", rna.calculateDirectionAveragedAbsoluteDifferenceCarCounts(), "AbsDiffCounts", shapefilePath2);
 //		NetworkVisualiser.visualise(roadNetwork, "Network with count comparison", rna.calculateDirectionAveragedAbsoluteDifferenceCarCounts(), "AbsDiffCounts", shapefilePath3, congestionChargeZoneUrl);
-		
+
 	}
 }

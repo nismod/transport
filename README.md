@@ -48,8 +48,24 @@ These files are used in the test classes and should also be consulted to underst
 6. Alternatively, to build the project and run the main model in the command prompt:
  * Make sure the java home environment variable is set for the operating system and pointing to the directory where Java Development Kit has been installed.
  * Download maven, install it and set the environment variables: http://maven.apache.org/. Then type:
- * mvn clean install
- * java -cp target/transport-0.0.1-SNAPSHOT-main.jar nismod.transport.App -c ./path/to/yourOwnConfig.properties
+ * `mvn clean install`
+ * `java -cp target/transport-0.0.1-SNAPSHOT-main-jar-with-dependencies.jar nismod.transport.App -c ./path/to/config.properties`
+
+
+## Deploy the model for NISMOD
+
+Tag the model version for release:
+
+     git tag -a v2.0.0-alpha-2 -m "Alpha release for NISMOD 2.0.1"
+
+Build jar containing all dependencies and zip (see `Makefile` for details):
+
+    make
+
+Upload model and test data to the NISMOD file server, update the
+[`nismod/nismod2`](https://github.com/nismod/nismod2) configuration and provision
+script as necessary.
+
 
 ## How to generate docs
 
