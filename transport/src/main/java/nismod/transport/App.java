@@ -18,6 +18,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jfree.data.category.DefaultCategoryDataset;
 
 import nismod.transport.decision.CongestionCharging;
 import nismod.transport.decision.Intervention;
@@ -28,9 +29,12 @@ import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.ODMatrix;
 import nismod.transport.demand.RebalancedTemproODMatrix;
 import nismod.transport.network.road.RoadNetwork;
+import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.showcase.LandingGUI;
 import nismod.transport.utility.ConfigReader;
+import nismod.transport.utility.InputFileReader;
+import nismod.transport.visualisation.LineVisualiser;
 import nismod.transport.zone.Zoning;
 
 /**
@@ -48,7 +52,8 @@ public class App {
 
 		Options options = new Options();
 		options.addOption("h", "help", false, "Show help.")
-		.addOption("d", "demo", false, "Run the Showcase Demo");
+		.addOption("d", "demo", false, "Run the Showcase Demo.")
+		.addOption("r", "run", false, "Run the main demand model.");
 
 		Option configFile = Option.builder("c")
 				.longOpt("configFile")
@@ -88,6 +93,16 @@ public class App {
 				.valueSeparator(' ')
 				.build();
 		options.addOption(freightRoutes);
+		
+		Option matrixEstimation = Option.builder("m")
+				.longOpt("matrixEstimation")
+				.argName("ITERATIONS")
+				.hasArg()
+				.numberOfArgs(1)
+				.desc("Estimate Tempro-level origin-destination matrix.")
+				.valueSeparator(' ')
+				.build();
+		options.addOption(matrixEstimation);
 
 		// create the parser
 		CommandLineParser parser = new DefaultParser();
@@ -144,7 +159,7 @@ public class App {
 			if (line.hasOption("p")) {
 
 				String[] values = line.getOptionValues("passengerRoutes");
-
+				
 				final String sliceIndex = values[0];
 				final String sliceNumber = values[1];
 				final String topNodes = values[2];
@@ -169,7 +184,7 @@ public class App {
 				System.exit(0);
 			}
 			
-			if (line.hasOption("t")) {
+			else if (line.hasOption("t")) {
 
 				String[] values = line.getOptionValues("temproRoutes");
 
@@ -198,7 +213,7 @@ public class App {
 				System.exit(0);
 			}
 
-			if (line.hasOption("f")) {
+			else if (line.hasOption("f")) {
 
 				String[] values = line.getOptionValues("freightRoutes");
 
@@ -225,9 +240,68 @@ public class App {
 				System.exit(0);
 			}
 
-			if (line.hasOption("d")) LandingGUI.main(null);
+			else if (line.hasOption("d")) LandingGUI.main(null);
+			
+			else if (line.hasOption("m")) {
+				
+				String[] values = line.getOptionValues("matrixEstimation");
+				final String iterations = values[0];
+						
+				//create route set generator
+				RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, props);
+				final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
+				final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
+				Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
 
-			else { //run the main demand prediction model
+				//read tempro routes
+				final String temproRoutesFile = props.getProperty("temproRoutesFile");
+				rsg.readRoutesBinaryWithoutValidityCheck(temproRoutesFile);
+				LOGGER.debug(rsg.getStatistics());
+				
+				final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
+				final String unitCO2EmissionsFile = props.getProperty("unitCO2EmissionsFile");
+				final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
+				final String AVFractionsFile = props.getProperty("autonomousVehiclesFile");
+				final String vehicleTypeToPCUFile = props.getProperty("vehicleTypeToPCUFile");
+				final String timeOfDayDistributionFile = props.getProperty("timeOfDayDistributionFile");
+				final String timeOfDayDistributionFreightFile = props.getProperty("timeOfDayDistributionFreightFile");
+				final String baseFuelConsumptionRatesFile = props.getProperty("baseFuelConsumptionRatesFile");
+				final String relativeFuelEfficiencyFile = props.getProperty("relativeFuelEfficiencyFile");
+				final int BASE_YEAR = Integer.parseInt(props.getProperty("baseYear"));
+			
+				//create a road network assignment
+				RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, 
+																	InputFileReader.readEnergyUnitCostsFile(energyUnitCostsFile).get(BASE_YEAR),
+																	InputFileReader.readUnitCO2EmissionFile(unitCO2EmissionsFile).get(BASE_YEAR),
+																	InputFileReader.readEngineTypeFractionsFile(engineTypeFractionsFile).get(BASE_YEAR),
+																	InputFileReader.readAVFractionsFile(AVFractionsFile).get(BASE_YEAR),
+																	InputFileReader.readVehicleTypeToPCUFile(vehicleTypeToPCUFile),
+																	InputFileReader.readEnergyConsumptionParamsFile(baseFuelConsumptionRatesFile),
+																	InputFileReader.readRelativeFuelEfficiencyFile(relativeFuelEfficiencyFile).get(BASE_YEAR),
+																	InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFile).get(BASE_YEAR),
+																	InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFreightFile).get(BASE_YEAR),
+																	null,
+																	null,
+																	null,
+																	null,
+																	props);
+				
+				final String temproODMatrixFile = props.getProperty("temproODMatrixFile");
+				RebalancedTemproODMatrix rodm = new RebalancedTemproODMatrix(temproODMatrixFile, rna, rsg, zoning, props);
+				
+				rodm.iterate(Integer.parseInt(iterations)); //all matrices will be saved, the latest one is the one
+				
+				DefaultCategoryDataset lineDataset = new DefaultCategoryDataset();
+				List<Double> RMSNvalues = rodm.getRMSNvalues();
+				for (int i = 0; i < RMSNvalues.size(); i++) lineDataset.addValue(RMSNvalues.get(i), "RMSN", Integer.toString(i));
+				LineVisualiser graph = new LineVisualiser(lineDataset, "RMSN values");
+				graph.setSize(600, 400);
+				graph.setVisible(true);
+				graph.saveToPNG("temproRebalancing.png");
+				
+			}
+
+			else if (line.hasOption("r")) { //run the main demand prediction model
 
 				final String fromYear = props.getProperty("fromYear");
 				final String predictedYear = props.getProperty("predictedYear");
