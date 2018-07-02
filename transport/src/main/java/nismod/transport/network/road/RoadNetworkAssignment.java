@@ -29,7 +29,7 @@ import org.geotools.graph.structure.Node;
 import org.opengis.feature.simple.SimpleFeature;
 
 import nismod.transport.demand.FreightMatrix;
-import nismod.transport.demand.ODMatrix;
+import nismod.transport.demand.AssignableODMatrix;
 import nismod.transport.demand.SkimMatrix;
 import nismod.transport.demand.SkimMatrixFreight;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
@@ -337,7 +337,7 @@ public class RoadNetworkAssignment {
 	 * @param rsg To store routes during the assignment (reduces the number of routing calls).
 	 */
 	@SuppressWarnings("unused")
-	public void assignPassengerFlowsRouting(ODMatrix passengerODM, RouteSetGenerator rsg) {
+	public void assignPassengerFlowsRouting(AssignableODMatrix passengerODM, RouteSetGenerator rsg) {
 
 		LOGGER.info("Assigning the passenger flows from the passenger matrix...");
 
@@ -375,9 +375,9 @@ public class RoadNetworkAssignment {
 					listOfDestinationNodes.remove(destinationNode);
 
 			//calculate number of trip assignments
-			int flow = (int) Math.floor(passengerODM.getFlow(originZone, destinationZone) * this.assignmentFraction); //assigned fractionally and later augmented
-			int remainder = passengerODM.getFlow(originZone, destinationZone) - (int) Math.round(flow / this.assignmentFraction); //remainder of trips will be assigned individually (each trip)
-			counterTotalFlow += passengerODM.getFlow(originZone, destinationZone);
+			int flow = (int) Math.floor(passengerODM.getIntFlow(originZone, destinationZone) * this.assignmentFraction); //assigned fractionally and later augmented
+			int remainder = passengerODM.getIntFlow(originZone, destinationZone) - (int) Math.round(flow / this.assignmentFraction); //remainder of trips will be assigned individually (each trip)
+			counterTotalFlow += passengerODM.getIntFlow(originZone, destinationZone);
 
 			//for each trip
 			for (int i=0; i < (flow + remainder); i++) {
@@ -524,7 +524,7 @@ public class RoadNetworkAssignment {
 	 * @param routeStorage Stores routes for each hour of the day separately.
 	 */
 	@SuppressWarnings("unused")
-	public void assignPassengerFlowsHourlyRouting(ODMatrix passengerODM, HashMap<TimeOfDay, RouteSetGenerator> routeStorage) {
+	public void assignPassengerFlowsHourlyRouting(AssignableODMatrix passengerODM, HashMap<TimeOfDay, RouteSetGenerator> routeStorage) {
 
 		LOGGER.info("Assigning the passenger flows from the passenger matrix...");
 
@@ -567,9 +567,9 @@ public class RoadNetworkAssignment {
 					listOfDestinationNodes.remove(destinationNode);
 
 			//calculate number of trip assignments
-			int flow = (int) Math.floor(passengerODM.getFlow(originZone, destinationZone) * this.assignmentFraction); //assigned fractionally and later augmented
-			int remainder = passengerODM.getFlow(originZone, destinationZone) - (int) Math.round(flow / this.assignmentFraction); //remainder of trips will be assigned individually (each trip)
-			counterTotalFlow += passengerODM.getFlow(originZone, destinationZone);
+			int flow = (int) Math.floor(passengerODM.getIntFlow(originZone, destinationZone) * this.assignmentFraction); //assigned fractionally and later augmented
+			int remainder = passengerODM.getIntFlow(originZone, destinationZone) - (int) Math.round(flow / this.assignmentFraction); //remainder of trips will be assigned individually (each trip)
+			counterTotalFlow += passengerODM.getIntFlow(originZone, destinationZone);
 
 			//for each trip
 			for (int i=0; i < (flow + remainder); i++) {
@@ -717,7 +717,7 @@ public class RoadNetworkAssignment {
 	 * @param routeChoiceParameters Route choice parameters.
 	 */
 	//@SuppressWarnings("unused")
-	public void assignPassengerFlowsRouteChoice(ODMatrix passengerODM, RouteSetGenerator rsg, Properties routeChoiceParameters) {
+	public void assignPassengerFlowsRouteChoice(AssignableODMatrix passengerODM, RouteSetGenerator rsg, Properties routeChoiceParameters) {
 
 		LOGGER.info("Assigning the passenger flows from the passenger matrix...");
 
@@ -725,7 +725,7 @@ public class RoadNetworkAssignment {
 		if (rsg == null) { LOGGER.warn("Route set generator is null! Skipping assignment."); return; }
 		if (routeChoiceParameters == null) { LOGGER.warn("Route choice parameters are null! Skipping assignment."); return; }
 
-		final int totalExpectedFlow = passengerODM.getTotalFlow();
+		final int totalExpectedFlow = passengerODM.getTotalIntFlow();
 		this.tripList = new ArrayList<Trip>(totalExpectedFlow); //use expected flow as array list initial capacity
 
 		//counters to calculate percentage of assignment success
@@ -759,9 +759,9 @@ public class RoadNetworkAssignment {
 					listOfDestinationNodes.remove(destinationNode);
 
 			//calculate number of trip assignments
-			int flow = (int) Math.floor(passengerODM.getFlow(originZone, destinationZone) * this.assignmentFraction); //assigned fractionally and later augmented
-			int remainder = passengerODM.getFlow(originZone, destinationZone) - (int) Math.round(flow / this.assignmentFraction); //remainder of trips will be assigned individually (each trip)
-			counterTotalFlow += passengerODM.getFlow(originZone, destinationZone);
+			int flow = (int) Math.floor(passengerODM.getIntFlow(originZone, destinationZone) * this.assignmentFraction); //assigned fractionally and later augmented
+			int remainder = passengerODM.getIntFlow(originZone, destinationZone) - (int) Math.round(flow / this.assignmentFraction); //remainder of trips will be assigned individually (each trip)
+			counterTotalFlow += passengerODM.getIntFlow(originZone, destinationZone);
 
 			//for each trip
 			for (int i=0; i < (flow + remainder); i++) {
@@ -1000,7 +1000,7 @@ public class RoadNetworkAssignment {
 	 * @param rsg Route set (here new routes will be stored).
 	 */
 	@SuppressWarnings("unused")
-	public void assignPassengerFlowsTempro(ODMatrix passengerODM, Zoning zoning, RouteSetGenerator rsg) {
+	public void assignPassengerFlowsTempro(AssignableODMatrix passengerODM, Zoning zoning, RouteSetGenerator rsg) {
 
 		LOGGER.info("Assigning the passenger flows from the tempro passenger matrix...");
 
@@ -1040,9 +1040,9 @@ public class RoadNetworkAssignment {
 
 
 			//calculate number of trip assignments
-			int flow = (int) Math.floor(passengerODM.getFlow(originZone, destinationZone) * this.assignmentFraction); //assigned fractionally and later augmented
-			int remainder = passengerODM.getFlow(originZone, destinationZone) - (int) Math.round(flow / this.assignmentFraction); //remainder of trips will be assigned individually (each trip)
-			counterTotalFlow += passengerODM.getFlow(originZone, destinationZone);
+			int flow = (int) Math.floor(passengerODM.getIntFlow(originZone, destinationZone) * this.assignmentFraction); //assigned fractionally and later augmented
+			int remainder = passengerODM.getIntFlow(originZone, destinationZone) - (int) Math.round(flow / this.assignmentFraction); //remainder of trips will be assigned individually (each trip)
+			counterTotalFlow += passengerODM.getIntFlow(originZone, destinationZone);
 
 			//for each trip
 			for (int i=0; i < (flow + remainder); i++) {
@@ -1279,7 +1279,7 @@ public class RoadNetworkAssignment {
 	 * @param routeChoiceParameters Route choice parameters.
 	 */
 	@SuppressWarnings("unused")
-	public void assignPassengerFlowsRouteChoiceTempro(ODMatrix passengerODM, Zoning zoning, RouteSetGenerator rsg, Properties routeChoiceParameters) {
+	public void assignPassengerFlowsRouteChoiceTempro(AssignableODMatrix passengerODM, Zoning zoning, RouteSetGenerator rsg, Properties routeChoiceParameters) {
 
 		LOGGER.info("Assigning the passenger flows from the tempro passenger matrix...");
 
@@ -1319,9 +1319,9 @@ public class RoadNetworkAssignment {
 
 
 			//calculate number of trip assignments
-			int flow = (int) Math.floor(passengerODM.getFlow(originZone, destinationZone) * this.assignmentFraction); //assigned fractionally and later augmented
-			int remainder = passengerODM.getFlow(originZone, destinationZone) - (int) Math.round(flow / this.assignmentFraction); //remainder of trips will be assigned individually (each trip)
-			counterTotalFlow += passengerODM.getFlow(originZone, destinationZone);
+			int flow = (int) Math.floor(passengerODM.getIntFlow(originZone, destinationZone) * this.assignmentFraction); //assigned fractionally and later augmented
+			int remainder = passengerODM.getIntFlow(originZone, destinationZone) - (int) Math.round(flow / this.assignmentFraction); //remainder of trips will be assigned individually (each trip)
+			counterTotalFlow += passengerODM.getIntFlow(originZone, destinationZone);
 
 			//for each trip
 			for (int i=0; i < (flow + remainder); i++) {
@@ -2567,7 +2567,7 @@ public class RoadNetworkAssignment {
 	 * @param rsg Route set generator to store fastest routes generated during the assignment (but could be pregenerated too).
 	 * @param weight Weighting parameter.
 	 */
-	public void assignFlowsAndUpdateLinkTravelTimes(ODMatrix passengerODM, FreightMatrix freightODM, RouteSetGenerator rsg, double weight) {
+	public void assignFlowsAndUpdateLinkTravelTimes(AssignableODMatrix passengerODM, FreightMatrix freightODM, RouteSetGenerator rsg, double weight) {
 
 		this.assignPassengerFlowsRouting(passengerODM, rsg);
 		this.assignFreightFlowsRouting(freightODM, rsg);
@@ -2587,7 +2587,7 @@ public class RoadNetworkAssignment {
 	 * @param params Parameters from the config file.
 	 * @param weight Weighting parameter.
 	 */
-	public void assignFlowsAndUpdateLinkTravelTimes(ODMatrix passengerODM, FreightMatrix freightODM, RouteSetGenerator rsg, Properties params, double weight) {
+	public void assignFlowsAndUpdateLinkTravelTimes(AssignableODMatrix passengerODM, FreightMatrix freightODM, RouteSetGenerator rsg, Properties params, double weight) {
 
 		final Boolean flagUseRouteChoiceModel = Boolean.parseBoolean(params.getProperty("USE_ROUTE_CHOICE_MODEL"));
 
@@ -2612,7 +2612,7 @@ public class RoadNetworkAssignment {
 	 * @param weight Weighting parameter.
 	 * @param iterations Number of iterations.
 	 */
-	public void assignFlowsAndUpdateLinkTravelTimesIterated(ODMatrix passengerODM, FreightMatrix freightODM, RouteSetGenerator rsg, double weight, int iterations) {
+	public void assignFlowsAndUpdateLinkTravelTimesIterated(AssignableODMatrix passengerODM, FreightMatrix freightODM, RouteSetGenerator rsg, double weight, int iterations) {
 
 		for (int i=0; i<iterations; i++) {
 			this.resetLinkVolumes(); //link volumes must be reset or they would compound across all iterations
@@ -2630,7 +2630,7 @@ public class RoadNetworkAssignment {
 	 * @param weight Weighting parameter.
 	 * @param iterations Number of iterations.
 	 */
-	public void assignFlowsAndUpdateLinkTravelTimesIterated(ODMatrix passengerODM, FreightMatrix freightODM, RouteSetGenerator rsg, Properties params, double weight, int iterations) {
+	public void assignFlowsAndUpdateLinkTravelTimesIterated(AssignableODMatrix passengerODM, FreightMatrix freightODM, RouteSetGenerator rsg, Properties params, double weight, int iterations) {
 
 		for (int i=0; i<iterations; i++) {
 			this.resetLinkVolumes(); //link volumes must be reset or they would compound across all iterations

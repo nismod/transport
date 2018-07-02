@@ -28,7 +28,7 @@ import org.apache.logging.log4j.Logger;
  * @author Milan Lovric
  *
  */
-public class RealODMatrix {
+public class RealODMatrix implements AssignableODMatrix {
 	
 	private final static Logger LOGGER = LogManager.getLogger(RealODMatrix.class);
 	
@@ -47,6 +47,8 @@ public class RealODMatrix {
 	 */
 	public RealODMatrix(String fileName) throws FileNotFoundException, IOException {
 		
+		LOGGER.info("Reading OD matrix from file: {}", fileName);
+		
 		matrix = new MultiKeyMap();
 		CSVParser parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
 		//System.out.println(parser.getHeaderMap().toString());
@@ -63,7 +65,8 @@ public class RealODMatrix {
 				this.setFlow(record.get(0), destination, flow);			
 			}
 		}
-		parser.close(); 
+		parser.close();
+		LOGGER.debug("Finished reading OD matrix from file.");
 	}
 	
 	/**
@@ -77,6 +80,17 @@ public class RealODMatrix {
 		Double flow = (Double) matrix.get(originZone, destinationZone);
 		if (flow == null) return 0.0;
 		else return flow;
+	}
+	
+	/**
+	 * Gets the flow for a given origin-destination pair, rounded to a whole number.
+	 * @param originZone Origin zone.
+	 * @param destinationZone Destination zone.
+	 * @return Origin-destination flow.
+	 */
+	public int getIntFlow(String originZone, String destinationZone) {
+		
+		return (int) Math.round(getFlow(originZone, destinationZone));
 	}
 	
 	/**
@@ -97,6 +111,22 @@ public class RealODMatrix {
 		
 		//we need to store all values (even 0 and negative, as this is used for deltas in the SPSA algorithm!
 		matrix.put(originZone,  destinationZone, flow);
+	}
+	
+	/**
+	 * Gets sum of all the (rounded) flows in the matrix.
+	 * @return Sum of all the (rounded) flows in the matrix (i.e. number of trips).
+	 */
+	public int getTotalIntFlow() {
+		
+		int totalFlow = 0;
+		for (MultiKey mk: this.getKeySet()) {
+			String origin = (String) mk.getKey(0);
+			String destination = (String) mk.getKey(1);
+			totalFlow += this.getIntFlow(origin, destination);
+		}
+	
+		return totalFlow;
 	}
 	
 	/**

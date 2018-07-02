@@ -271,6 +271,8 @@ public class RebalancedTemproODMatrixTest {
 		final String temproODMatrixFile = props.getProperty("temproODMatrixFile");
 		RebalancedTemproODMatrix rodm = new RebalancedTemproODMatrix(temproODMatrixFile, rna, rsg, zoning, props);
 		
+		System.out.println("Created rodm");
+		
 		rodm.iterate(10); //all matrices will be saved, the latest one is the one
 		
 		DefaultCategoryDataset lineDataset = new DefaultCategoryDataset();

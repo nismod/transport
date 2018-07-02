@@ -32,7 +32,7 @@ import nismod.transport.zone.Zoning;
  * @author Milan Lovric
  *
  */
-public class ODMatrix {
+public class ODMatrix implements AssignableODMatrix {
 	
 	private final static Logger LOGGER = LogManager.getLogger(ODMatrix.class);
 	
@@ -51,6 +51,8 @@ public class ODMatrix {
 	 */
 	public ODMatrix(String fileName) throws FileNotFoundException, IOException {
 		
+		LOGGER.info("Reading OD matrix from file: {}", fileName);
+		
 		matrix = new MultiKeyMap();
 		CSVParser parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
 		//System.out.println(parser.getHeaderMap().toString());
@@ -67,7 +69,8 @@ public class ODMatrix {
 				this.setFlow(record.get(0), destination, flow);			
 			}
 		}
-		parser.close(); 
+		parser.close();
+		LOGGER.debug("Finished reading OD matrix from file.");
 	}
 	
 	/**
@@ -95,6 +98,17 @@ public class ODMatrix {
 		Integer flow = (Integer) matrix.get(originZone, destinationZone);
 		if (flow == null) return 0;
 		else return flow;
+	}
+	
+	/**
+	 * Gets the flow for a given origin-destination pair as a whole number.
+	 * @param originZone Origin zone.
+	 * @param destinationZone Destination zone.
+	 * @return Origin-destination flow.
+	 */
+	public int getIntFlow(String originZone, String destinationZone) {
+		
+		return getFlow(originZone, destinationZone);
 	}
 	
 	/**
@@ -309,6 +323,15 @@ public class ODMatrix {
 		}
 	
 		return totalFlow;
+	}
+	
+	/**
+	 * Gets sum of all the flows in the matrix.
+	 * @return Sum of all the flows in the matrix (i.e. number of trips).
+	 */
+	public int getTotalIntFlow() {
+		
+		return getTotalFlow();
 	}
 	
 	/**

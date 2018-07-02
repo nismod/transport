@@ -120,15 +120,15 @@ public class RebalancedTemproODMatrix extends RealODMatrix {
 		
 		this.rna.resetLinkVolumes();
 		this.rna.resetTripStorages();
-		ODMatrix odm = new ODMatrix(this);
+		//ODMatrix odm = new ODMatrix(this);
 		//	odm.printMatrixFormatted();
 		
 		final Boolean flagUseRouteChoiceModel = Boolean.parseBoolean(params.getProperty("USE_ROUTE_CHOICE_MODEL"));
 		
 		if (flagUseRouteChoiceModel) {
-			this.rna.assignPassengerFlowsRouteChoiceTempro(odm, zoning, rsg, params);
+			this.rna.assignPassengerFlowsRouteChoiceTempro(this, zoning, rsg, params);
 		} else {
-			this.rna.assignPassengerFlowsTempro(odm, zoning, rsg);
+			this.rna.assignPassengerFlowsTempro(this, zoning, rsg);
 		}
 		rna.updateLinkVolumeInPCU();
 		rna.updateLinkVolumeInPCUPerTimeOfDay();
