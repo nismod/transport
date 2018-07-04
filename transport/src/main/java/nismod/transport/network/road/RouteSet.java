@@ -33,8 +33,6 @@ public class RouteSet {
 	private DirectedNode destinationNode;
 	private List<Route> choiceSet;
 	private ArrayList<Double> probabilities;
-	private Map<Integer, Double> linkTravelTime;
-	private Properties params;
 	
 	/**
 	 * Constructor.
@@ -45,19 +43,6 @@ public class RouteSet {
 		this.originNode = originNode;
 		this.destinationNode = destinationNode;
 		
-		choiceSet = new ArrayList<Route>();
-	}
-	
-	/**
-	 * Constructor.
-	 * @param originNode Origin node.
-	 * @param destinationNode Destination node.
-	 * @param linkTravelTime Link travel times.
-	 */
-	public RouteSet(DirectedNode originNode, DirectedNode destinationNode, HashMap<Integer, Double> linkTravelTime) {
-		this.originNode = originNode;
-		this.destinationNode = destinationNode;
-		this.linkTravelTime = linkTravelTime;
 		choiceSet = new ArrayList<Route>();
 	}
 	
@@ -109,25 +94,6 @@ public class RouteSet {
 	}
 		
 	/**
-	 * Sorts routes on their utility in a descending order.
-	 */
-	public void sortRoutesOnUtility() {
-
-		Comparator<Route> c = new Comparator<Route>() {
-		public int compare(Route r, Route r2) {
-		    	Double utility = r.getUtility();
-		       	Double utility2 = r2.getUtility();
-		       	return utility2.compareTo(utility);
-		    	}
-		};
-		
-		Collections.sort(choiceSet, c);
-		
-		//need to re-calculate probabilities as the order of the choice set has changed
-		this.calculateProbabilities();
-	}
-	
-	/**
 	 * Prints the entire choice set.
 	 */
 	public void printChoiceSet() {
@@ -142,12 +108,8 @@ public class RouteSet {
 	 * @param linkTravelTime Link travel times.
 	 * @param params Route choice parameters.
 	 */
-	public void calculateProbabilities(Map<Integer, Double> linkTravelTime, Properties params) {
+	public void calculateProbabilities() {
 		
-		//store arguments into instance fields
-		this.linkTravelTime = linkTravelTime;
-		this.params = params;
-				
 		ArrayList<Double> probabilities = new ArrayList<Double>();
 		for (Route r: choiceSet) probabilities.add(0.0);
 		
@@ -157,7 +119,7 @@ public class RouteSet {
 		for (Route r: choiceSet) {
 			if (Double.compare(r.getUtility(), 0.0d) == 0)
 				//System.err.printf("Route %d does not have a calculated utility! %n", r.getID());
-				System.err.printf("Route does not have a calculated utility! %n");
+				LOGGER.warn("Route does not have a calculated utility!");
 			else
 				sum += Math.exp(r.getUtility());
 		}
@@ -187,46 +149,15 @@ public class RouteSet {
 	 */
 	public void calculateUtilities(VehicleType vht, EngineType et, Map<Integer, Double> linkTravelTime, HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParameters, HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency, HashMap<EnergyType, Double> energyUnitCosts, HashMap<String, HashMap<Integer, Double>> linkCharges, Properties params) {
 		
-		//store arguments into instance fields
-		this.linkTravelTime = linkTravelTime;
-		this.params = params;
-		
 		//re-calculate utility for all the routes
 		for (Route r: choiceSet)
 			r.calculateUtility(vht, et, linkTravelTime, energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, linkCharges, params);
 		
 		//correct for correlation with path-size
 		this.correctUtilitiesWithPathSize();
-	}
-	
-//	/**
-//	 * Re-calculates utilities for all the routes.
-//	 */
-//	public void calculateUtilities() {
-//		
-//		//re-calculate utility for all the routes
-//		for (Route r: choiceSet)
-//			r.calculateUtility(this.linkTravelTime, consumptionPer100km, unitCost, this.params);
-//		
-//		//correct for correlation with path-size
-//		this.correctUtilitiesWithPathSize();
-//	}
-	
-	/**
-	 * Calculates choice probabilities using logit formula.
-	 */
-	public void calculateProbabilities() {
 		
-		if (this.linkTravelTime == null) { 
-			System.err.println("Before calculating probabilities of a choice set, set link travel times to be used for the calculation!");
-			return;
-		}
-		if (this.params == null) { 
-			System.err.println("Before calculating probabilities of a choice set, set parameter values to be used for the calculation!");
-			return;
-		}
-				
-		calculateProbabilities(this.linkTravelTime, this.params);
+		//sort routes on utility (optional)
+		this.sortRoutesOnUtility();
 	}
 	
 	/**
@@ -256,7 +187,7 @@ public class RouteSet {
 	/**
 	 * Correct each route's utility with path size (measure of correlation with other routes in the choice set)
 	 */
-	public void correctUtilitiesWithPathSize() {
+	private void correctUtilitiesWithPathSize() {
 		
 		for (Route i: this.choiceSet) {
 			
@@ -309,6 +240,25 @@ public class RouteSet {
 	}
 	
 	/**
+	 * Sorts routes on their utility in a descending order.
+	 */
+	private void sortRoutesOnUtility() {
+
+		Comparator<Route> c = new Comparator<Route>() {
+		public int compare(Route r, Route r2) {
+		    	Double utility = r.getUtility();
+		       	Double utility2 = r2.getUtility();
+		       	return utility2.compareTo(utility);
+		    	}
+		};
+		
+		Collections.sort(choiceSet, c);
+		
+		//need to re-calculate probabilities as the order of the choice set has changed
+		//this.calculateProbabilities();
+	}
+	
+	/**
 	 * Chooses a route based on the probabilities.
 	 * @param params Parameters of the route choice model.
 	 * @return Chosen route.
@@ -317,10 +267,10 @@ public class RouteSet {
 		
 		//probabilities must be calculated at least once
 		if (probabilities == null) {
-			this.calculateProbabilities(this.linkTravelTime, params);
-			this.sortRoutesOnUtility();
+			LOGGER.error("Cannot choose the route before the choice probabilities are calculated!");
+			return null;
 		}
-		
+				
 		RandomSingleton rng = RandomSingleton.getInstance();
 			
 		//choose route
@@ -379,24 +329,6 @@ public class RouteSet {
 	public int getSize() {
 
 		return this.choiceSet.size();
-	}
-	
-	/**
-	 * Setter method for link travel times.
-	 * @param linkTravelTime Link travel times.
-	 */
-	public void setLinkTravelTime(Map<Integer, Double> linkTravelTime) {
-		
-		this.linkTravelTime = linkTravelTime;
-	}
-	
-	/**
-	 * Setter method for route choice parameters.
-	 * @param params Parameters of the route choice model.
-	 */
-	public void setParameters(Properties params) {
-		
-		this.params = params;
 	}
 	
 	/**

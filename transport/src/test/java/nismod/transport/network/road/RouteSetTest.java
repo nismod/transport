@@ -139,8 +139,6 @@ public class RouteSetTest {
 		rs.printStatistics();
 				
 		//rs.calculateUtilities(roadNetwork.getFreeFlowTravelTime(), params);
-		rs.setLinkTravelTime(roadNetwork.getFreeFlowTravelTime());
-		rs.setParameters(params);
 		rs.calculateUtilities(VehicleType.CAR, EngineType.PHEV_PETROL, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null, params);
 		rs.printUtilities();
 	
@@ -159,7 +157,6 @@ public class RouteSetTest {
 		System.out.printf("The sum of probabilites is: %.12f.%n", probabilitySum);
 		assertEquals("The sum of probabilities is 1.0", 1.0, probabilitySum, EPSILON);
 		
-		rs.sortRoutesOnUtility();
 		rs.printUtilities();
 		rs.printProbabilities();
 
@@ -202,9 +199,8 @@ public class RouteSetTest {
 		//all routes need to have re-calculated utility and path size after the new route is added!
 		rs.calculateUtilities(VehicleType.CAR, EngineType.PHEV_PETROL, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null, params);
 		rs.printUtilities();
-		rs.calculateProbabilities(roadNetwork.getFreeFlowTravelTime(), params);
+		rs.calculateProbabilities();
 		rs.printProbabilities();
-		rs.sortRoutesOnUtility();
 		rs.printChoiceSet();
 		rs.printUtilities();
 		rs.printProbabilities();

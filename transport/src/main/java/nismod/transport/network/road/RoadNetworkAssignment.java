@@ -941,8 +941,6 @@ public class RoadNetworkAssignment {
 						LOGGER.trace("There are multiple route in the route set, so choosing with a route-choice model.");
 						//if (fetchedRouteSet.getProbabilities() == null) {
 						//probabilities need to be calculated for this route set before a choice can be made
-						fetchedRouteSet.setLinkTravelTime(this.linkTravelTimePerTimeOfDay.get(hour));
-						fetchedRouteSet.setParameters(routeChoiceParameters);
 
 						//fetch congestion charge for the vehicle type
 						//HashMap<String, HashMap<Integer, Double>> linkCharges = null;
@@ -956,8 +954,7 @@ public class RoadNetworkAssignment {
 							}
 
 						fetchedRouteSet.calculateUtilities(vht, engine, this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions, this.relativeFuelEfficiencies, this.energyUnitCosts, linkCharges, routeChoiceParameters);
-						fetchedRouteSet.calculateProbabilities(this.linkTravelTimePerTimeOfDay.get(hour), routeChoiceParameters);
-						fetchedRouteSet.sortRoutesOnUtility();
+						fetchedRouteSet.calculateProbabilities();
 						//}
 
 						//choose the route
@@ -1475,8 +1472,6 @@ public class RoadNetworkAssignment {
 						LOGGER.trace("There are multiple route in the route set, so choosing with a route-choice model.");
 						//if (fetchedRouteSet.getProbabilities() == null) {
 						//probabilities need to be calculated for this route set before a choice can be made
-						fetchedRouteSet.setLinkTravelTime(this.linkTravelTimePerTimeOfDay.get(hour));
-						fetchedRouteSet.setParameters(routeChoiceParameters);
 
 						//fetch congestion charge for the vehicle type
 						//HashMap<String, HashMap<Integer, Double>> linkCharges = null;
@@ -1486,8 +1481,7 @@ public class RoadNetworkAssignment {
 								linkCharges.put(policyName, (HashMap<Integer, Double>) this.congestionCharges.get(policyName).get(vht, hour));
 
 						fetchedRouteSet.calculateUtilities(vht, engine, this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions, this.relativeFuelEfficiencies, this.energyUnitCosts, linkCharges, routeChoiceParameters);
-						fetchedRouteSet.calculateProbabilities(this.linkTravelTimePerTimeOfDay.get(hour), routeChoiceParameters);
-						fetchedRouteSet.sortRoutesOnUtility();
+						fetchedRouteSet.calculateProbabilities();
 						//}
 
 						//choose the route
@@ -2343,8 +2337,6 @@ public class RoadNetworkAssignment {
 						LOGGER.trace("There are multiple route in the route set, so choosing with a route-choice model.");
 						//if (fetchedRouteSet.getProbabilities() == null) {
 						//probabilities need to be calculated for this route set before a choice can be made
-						fetchedRouteSet.setLinkTravelTime(this.linkTravelTimePerTimeOfDay.get(hour));
-						fetchedRouteSet.setParameters(routeChoiceParameters);
 
 						//fetch congestion charge for the vehicle type
 						HashMap<String, HashMap<Integer, Double>> linkCharges = new HashMap<String, HashMap<Integer, Double>>();
@@ -2353,10 +2345,8 @@ public class RoadNetworkAssignment {
 								linkCharges.put(policyName, (HashMap<Integer, Double>) this.congestionCharges.get(policyName).get(vht, hour));
 
 						fetchedRouteSet.calculateUtilities(vht, engine, this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions, this.relativeFuelEfficiencies, this.energyUnitCosts, linkCharges, routeChoiceParameters);
-						fetchedRouteSet.calculateProbabilities(this.linkTravelTimePerTimeOfDay.get(hour), routeChoiceParameters);
-						fetchedRouteSet.sortRoutesOnUtility();
-						//}
-
+						fetchedRouteSet.calculateProbabilities();
+				
 						//choose the route
 						chosenRoute = fetchedRouteSet.choose(routeChoiceParameters);
 					}
