@@ -206,5 +206,27 @@ public class RouteSetTest {
 		rs.printProbabilities();
 		Route chosenRoute = rs.choose(params);
 		System.out.println("Chosen route: " + chosenRoute.toString());
+		
+		//create a one-node route
+		Route r5 = new Route();
+		rp = new RoadPath();
+		rp.add(n1);
+		System.out.println(rp.toString());
+		System.out.println(rp.buildEdges());
+
+		r5 = new Route(rp);
+		System.out.println("Valid: " + r5.isValid());
+		System.out.println("Empty: " + r5.isEmpty());
+		System.out.println(r5.toString());
+		System.out.println(r5.getFormattedString());
+		
+		rs = new RouteSet(n1, n1);
+		rs.addRoute(r5);
+		rs.printChoiceSet();
+		rs.printStatistics();
+		rs.calculateUtilities(VehicleType.CAR, EngineType.PHEV_PETROL, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null, params);
+		rs.printUtilities();
+		rs.calculateProbabilities();
+		rs.printProbabilities();
 	}
 }

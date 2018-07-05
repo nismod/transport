@@ -111,28 +111,36 @@ public class RouteSet {
 	public void calculateProbabilities() {
 		
 		ArrayList<Double> probabilities = new ArrayList<Double>();
-		for (Route r: choiceSet) probabilities.add(0.0);
-		
-		double sum = 0.0;
-		
-		//all routes need to have a utility calculated
-		for (Route r: choiceSet) {
-			if (Double.compare(r.getUtility(), 0.0d) == 0)
-				//System.err.printf("Route %d does not have a calculated utility! %n", r.getID());
-				LOGGER.warn("Route does not have a calculated utility!");
-			else
-				sum += Math.exp(r.getUtility());
-		}
-		
-		for (int index = 0; index < choiceSet.size(); index++) {
-			double probability = Math.exp(choiceSet.get(index).getUtility()) / sum;
-			probabilities.set(index, probability);
-		}
-		/*
+
+		//if just one route in the route set, set probability to 1.0
+		if (choiceSet.size() == 1) probabilities.add(1.0);
+
+		else { //otherwise calculate probabilities using logit formula
+
+			for (Route r: choiceSet) probabilities.add(0.0);
+			double sum = 0.0;
+
+			//all routes need to have a utility calculated
+			for (Route r: choiceSet) {
+				if (!r.getEdges().isEmpty() && Double.compare(r.getUtility(), 0.0d) == 0)
+					//System.err.printf("Route %d does not have a calculated utility! %n", r.getID());
+					LOGGER.warn("Route with edges does not have a calculated utility! Probabilities will be wrongly calculated.");
+				else
+					sum += Math.exp(r.getUtility());
+			}
+
+			for (int index = 0; index < choiceSet.size(); index++) {
+				double probability = Math.exp(choiceSet.get(index).getUtility()) / sum;
+				probabilities.set(index, probability);
+			}
+			/*
 		System.out.println("Utility / Probability");
 		for (int index = 0; index < choiceSet.size(); index++)
 			System.out.printf("%.2f / %.2f \n", choiceSet.get(index).getUtility(), probabilities.get(index));
-		*/
+			 */
+
+		}
+
 		this.probabilities = probabilities;
 	}
 	
@@ -190,6 +198,8 @@ public class RouteSet {
 	private void correctUtilitiesWithPathSize() {
 		
 		for (Route i: this.choiceSet) {
+			
+			if (i.getEdges().isEmpty()) continue; //do not calculate for single node routes without edges (pathSize will be zero)
 			
 			double pathSize = 0.0;
 			for (DirectedEdge a: i.getEdges()) {

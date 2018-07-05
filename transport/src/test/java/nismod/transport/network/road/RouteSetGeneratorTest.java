@@ -26,6 +26,7 @@ import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedGraph;
 import org.geotools.graph.structure.DirectedNode;
 import org.geotools.graph.structure.Edge;
+import org.geotools.graph.structure.Node;
 import org.junit.Test;
 import org.opengis.feature.simple.SimpleFeature;
 
@@ -249,6 +250,13 @@ public class RouteSetGeneratorTest {
 		
 		routes.saveRoutes("testRoutesASCII.txt", false);
 		routes.saveRoutesBinary("testRoutesBinary.dat", false);
+		
+		//add single node routes
+		rsg2.clearRoutes();
+		rsg2.generateSingleNodeRoutes();
+		rsg2.printStatistics();
+		//rsg2.printChoiceSets();
+		assertEquals("The number of single node routes should equal the number of nodes in the graph", roadNetwork.getNodeIDtoNode().size(), rsg2.getNumberOfRoutes());
 	}
 
 	@Test

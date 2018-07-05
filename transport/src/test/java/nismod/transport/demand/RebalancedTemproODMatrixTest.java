@@ -118,6 +118,9 @@ public class RebalancedTemproODMatrixTest {
 		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
 		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
 		
+		//generate single node routes
+		rsg.generateSingleNodeRoutes();
+		LOGGER.debug(rsg.getStatistics());
 		//read tempro routes
 		rsg.readRoutesBinaryWithoutValidityCheck(temproRoutesFile);
 		LOGGER.debug(rsg.getStatistics());

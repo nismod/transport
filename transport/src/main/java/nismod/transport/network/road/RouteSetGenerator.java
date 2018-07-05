@@ -24,6 +24,7 @@ import org.apache.logging.log4j.Logger;
 import org.geotools.graph.build.line.BasicDirectedLineGraphBuilder;
 import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedNode;
+import org.geotools.graph.structure.Node;
 
 import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.ODMatrix;
@@ -806,6 +807,22 @@ public class RouteSetGenerator {
 					this.roadNetwork.getZoneToNodes().get(originLAD);
 			for (int i= 0; i < topNodes && i < originNodes.size(); i++)			this.generateRouteSetNodeToNode(originNodes.get(i), destinationNode);
 		} else LOGGER.warn("Problem in generating route set for freight!");
+	}
+	
+	/**
+	 * Generates single nodes routes.
+	 */
+	public void generateSingleNodeRoutes() {
+		
+		LOGGER.info("Generating single node routes for the whole network...");
+		
+		for (Node n: roadNetwork.getNodeIDtoNode().values()) {
+			RoadPath rp = new RoadPath();
+			rp.add(n);
+			Route r = new Route(rp);
+			//this.addRoute(r);
+			this.addRouteWithoutValidityCheck(r);
+		}
 	}
 	
 	/**

@@ -253,6 +253,10 @@ public class App {
 				final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
 				Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
 
+				//generate single node routes
+				rsg.generateSingleNodeRoutes();
+				LOGGER.debug(rsg.getStatistics());
+				
 				//read tempro routes
 				final String temproRoutesFile = props.getProperty("temproRoutesFile");
 				rsg.readRoutesBinaryWithoutValidityCheck(temproRoutesFile);

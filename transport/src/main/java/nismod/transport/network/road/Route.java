@@ -357,6 +357,14 @@ public class Route {
 	 * @param params Route choice parameters.
 	 */
 	public void calculateUtility(VehicleType vht, EngineType et, Map<Integer, Double> linkTravelTime, HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParameters, HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency, HashMap<EnergyType, Double> energyUnitCosts, HashMap<String, HashMap<Integer, Double>> linkCharges, Properties params) {		
+		
+		//if a single node route, utility is zero
+		if (this.edges.isEmpty() && this.singleNode != null) {
+			this.utility = 0;
+			return;
+		}
+		
+		//otherwise
 		if (Double.compare(this.length, 0.0d) == 0) 
 			this.calculateLength(); //calculate only once (length is not going to change)
 				
@@ -459,7 +467,7 @@ public class Route {
 	 */
 	public int getNumberOfIntersections() {
 		
-		if (this.isEmpty())
+		if (this.edges.isEmpty())
 			return 0;
 		else 
 			return (this.edges.size() - 1);
