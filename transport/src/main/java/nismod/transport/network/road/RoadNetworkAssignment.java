@@ -351,14 +351,15 @@ public class RoadNetworkAssignment {
 		long counterAssignedTrips = 0;
 		long counterTotalFlow = 0;
 
-		//for each OD pair from the passengerODM		
-		for (MultiKey mk: passengerODM.getKeySet()) {
-			//System.out.println(mk);
-			//System.out.println("origin = " + mk.getKey(0));
-			//System.out.println("destination = " + mk.getKey(1));
-			String originZone = (String)mk.getKey(0);
-			String destinationZone = (String)mk.getKey(1);
-
+		List<String> origins = passengerODM.getOrigins();
+		List<String> destinations = passengerODM.getDestinations();
+		
+		//for each OD pair from the passengerODM
+		for (String originZone: origins)
+			for (String destinationZone: destinations) {
+				
+			if (passengerODM.getIntFlow(originZone, destinationZone) == 0) continue;	
+				
 			List<Integer> listOfOriginNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(originZone)); //the list is already sorted
 			List<Integer> listOfDestinationNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(destinationZone)); //the list is already sorted
 
@@ -509,8 +510,8 @@ public class RoadNetworkAssignment {
 					LOGGER.error("Couldn't find path from node {} to node {}!", from.getID(), to.getID());
 				}
 			}//for each trip
-		}//for each OD pair
-
+		}//for each destination pair
+	
 		LOGGER.debug("Total flow: {}", counterTotalFlow);
 		LOGGER.debug("Total assigned trips: {}", counterAssignedTrips);
 		LOGGER.debug("Succesfully assigned trips: {}", 100.0* counterAssignedTrips / counterTotalFlow);
@@ -543,14 +544,15 @@ public class RoadNetworkAssignment {
 		long counterAssignedTrips = 0;
 		long counterTotalFlow = 0;
 
-		//for each OD pair from the passengerODM		
-		for (MultiKey mk: passengerODM.getKeySet()) {
-			//System.out.println(mk);
-			//System.out.println("origin = " + mk.getKey(0));
-			//System.out.println("destination = " + mk.getKey(1));
-			String originZone = (String)mk.getKey(0);
-			String destinationZone = (String)mk.getKey(1);
-
+		List<String> origins = passengerODM.getOrigins();
+		List<String> destinations = passengerODM.getDestinations();
+		
+		//for each OD pair from the passengerODM
+		for (String originZone: origins)
+			for (String destinationZone: destinations) {
+				
+			if (passengerODM.getIntFlow(originZone, destinationZone) == 0) continue;	
+			
 			List<Integer> listOfOriginNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(originZone)); //the list is already sorted
 			List<Integer> listOfDestinationNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(destinationZone)); //the list is already sorted
 
@@ -735,13 +737,15 @@ public class RoadNetworkAssignment {
 		//sort nodes based on the gravitating population
 		this.roadNetwork.sortGravityNodes();
 
-		//for each OD pair from the passengerODM		
-		for (MultiKey mk: passengerODM.getKeySet()) {
-			//System.out.println(mk);
-			//System.out.println("origin = " + mk.getKey(0));
-			//System.out.println("destination = " + mk.getKey(1));
-			String originZone = (String)mk.getKey(0);
-			String destinationZone = (String)mk.getKey(1);
+		List<String> origins = passengerODM.getOrigins();
+		List<String> destinations = passengerODM.getDestinations();
+		
+		//for each OD pair from the passengerODM
+		for (String originZone: origins)
+			for (String destinationZone: destinations) {
+				
+			if (passengerODM.getIntFlow(originZone, destinationZone) == 0) continue;	
+			
 
 			List<Integer> listOfOriginNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(originZone)); //the list is already sorted
 			List<Integer> listOfDestinationNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(destinationZone)); //the list is already sorted
@@ -1009,13 +1013,15 @@ public class RoadNetworkAssignment {
 		long counterAssignedTrips = 0;
 		long counterTotalFlow = 0;
 
-		//for each OD pair from the passengerODM		
-		for (MultiKey mk: passengerODM.getKeySet()) {
-			//System.out.println(mk);
-			//System.out.println("origin = " + mk.getKey(0));
-			//System.out.println("destination = " + mk.getKey(1));
-			String originZone = (String)mk.getKey(0);
-			String destinationZone = (String)mk.getKey(1);
+		List<String> origins = passengerODM.getOrigins();
+		List<String> destinations = passengerODM.getDestinations();
+		
+		//for each OD pair from the passengerODM
+		for (String originZone: origins)
+			for (String destinationZone: destinations) {
+				
+			if (passengerODM.getIntFlow(originZone, destinationZone) == 0) continue;	
+			
 
 			/*
 			List<Integer> listOfOriginNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(originZone)); //the list is already sorted
@@ -1288,13 +1294,15 @@ public class RoadNetworkAssignment {
 		long counterAssignedTrips = 0;
 		long counterTotalFlow = 0;
 
-		//for each OD pair from the passengerODM		
-		for (MultiKey mk: passengerODM.getKeySet()) {
-			//System.out.println(mk);
-			//System.out.println("origin = " + mk.getKey(0));
-			//System.out.println("destination = " + mk.getKey(1));
-			String originZone = (String)mk.getKey(0);
-			String destinationZone = (String)mk.getKey(1);
+		List<String> origins = passengerODM.getOrigins();
+		List<String> destinations = passengerODM.getDestinations();
+		
+		//for each OD pair from the passengerODM
+		for (String originZone: origins)
+			for (String destinationZone: destinations) {
+				
+			if (passengerODM.getIntFlow(originZone, destinationZone) == 0) continue;	
+			
 
 			/*
 			List<Integer> listOfOriginNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(originZone)); //the list is already sorted

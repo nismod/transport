@@ -10,12 +10,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.collections4.keyvalue.MultiKey;
-import org.apache.commons.collections4.map.MultiKeyMap;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
@@ -23,20 +20,28 @@ import org.apache.commons.csv.CSVRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import nismod.transport.zone.Zoning;
+
 /**
- * Origin-destination matrix with real values.
+ * Origin-destination matrix with real values, memory use optimised for Tempro.
  * @author Milan Lovric
  *
  */
-public class RealODMatrix implements AssignableODMatrix {
+public class RealODMatrix2 implements AssignableODMatrix {
 	
-	private final static Logger LOGGER = LogManager.getLogger(RealODMatrix.class);
+	public static final int MAX_ZONES = 7700;
 	
-	private MultiKeyMap matrix;
+	private final static Logger LOGGER = LogManager.getLogger(RealODMatrix2.class);
 	
-	public RealODMatrix() {
+	private double[][] matrix;
+	
+	private Zoning zoning;
+	
+	public RealODMatrix2(Zoning zoning) {
 		
-		matrix = new MultiKeyMap();
+		this.zoning = zoning;
+		int maxZones = Collections.max(zoning.getZoneIDToCodeMap().keySet()); //find maximum index
+		matrix = new double[maxZones][maxZones];
 	}
 	
 	/**
@@ -45,11 +50,14 @@ public class RealODMatrix implements AssignableODMatrix {
 	 * @throws FileNotFoundException if any.
 	 * @throws IOException if any.
 	 */
-	public RealODMatrix(String fileName) throws FileNotFoundException, IOException {
+	public RealODMatrix2(String fileName, Zoning zoning) throws FileNotFoundException, IOException {
 		
 		LOGGER.info("Reading OD matrix from file: {}", fileName);
 		
-		matrix = new MultiKeyMap();
+		this.zoning = zoning;
+		int maxZones = Collections.max(zoning.getZoneIDToCodeMap().keySet());
+		matrix = new double[maxZones][maxZones];
+		
 		CSVParser parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
 		//System.out.println(parser.getHeaderMap().toString());
 		Set<String> keySet = parser.getHeaderMap().keySet();
@@ -77,9 +85,11 @@ public class RealODMatrix implements AssignableODMatrix {
 	 */
 	public double getFlow(String originZone, String destinationZone) {
 		
-		Double flow = (Double) matrix.get(originZone, destinationZone);
-		if (flow == null) return 0.0;
-		else return flow;
+		int i = this.zoning.getZoneCodeToIDMap().get(originZone) - 1;
+		int j = this.zoning.getZoneCodeToIDMap().get(destinationZone) - 1;
+		
+		return this.matrix[i][j];
+		
 	}
 	
 	/**
@@ -109,8 +119,10 @@ public class RealODMatrix implements AssignableODMatrix {
 				matrix.removeMultiKey(originZone, destinationZone);
 		*/
 		
-		//we need to store all values (even 0 and negative, as this is used for deltas in the SPSA algorithm!
-		matrix.put(originZone,  destinationZone, flow);
+		int i = this.zoning.getZoneCodeToIDMap().get(originZone) - 1;
+		int j = this.zoning.getZoneCodeToIDMap().get(destinationZone) - 1;
+
+		matrix[i][j] = flow;
 	}
 	
 	/**
@@ -120,12 +132,11 @@ public class RealODMatrix implements AssignableODMatrix {
 	public int getTotalIntFlow() {
 		
 		int totalFlow = 0;
-		for (MultiKey mk: this.getKeySet()) {
-			String origin = (String) mk.getKey(0);
-			String destination = (String) mk.getKey(1);
-			totalFlow += this.getIntFlow(origin, destination);
-		}
-	
+		
+		for (int i=0; i<matrix.length; i++)
+			for (int j=0; j<matrix[0].length; j++)
+				totalFlow += matrix[i][j];
+			
 		return totalFlow;
 	}
 	
@@ -137,14 +148,15 @@ public class RealODMatrix implements AssignableODMatrix {
 		
 		HashMap<String, Integer> tripStarts = new HashMap<String, Integer>();
 		
-		for (Object mk: matrix.keySet()) {
-			String origin = (String) ((MultiKey)mk).getKey(0);
-			String destination = (String) ((MultiKey)mk).getKey(1);
-	
-			Integer number = tripStarts.get(origin);
-			if (number == null) number = 0;
-			number += (int) Math.round(this.getFlow(origin, destination));
-			tripStarts.put(origin, number);
+		for (int i=0; i<matrix.length; i++) {
+			String origin = zoning.getZoneIDToCodeMap().get(i);
+			for (int j=0; j<matrix[0].length; j++) {
+				String destination = zoning.getZoneIDToCodeMap().get(j);
+				Integer number = tripStarts.get(origin);
+				if (number == null) number = 0;
+				number += (int) Math.round(this.getFlow(origin, destination));
+				tripStarts.put(origin, number);
+			}
 		}
 		
 		return tripStarts;
@@ -158,14 +170,15 @@ public class RealODMatrix implements AssignableODMatrix {
 		
 		HashMap<String, Integer> tripEnds = new HashMap<String, Integer>();
 		
-		for (Object mk: matrix.keySet()) {
-			String origin = (String) ((MultiKey)mk).getKey(0);
-			String destination = (String) ((MultiKey)mk).getKey(1);
-	
-			Integer number = tripEnds.get(destination);
-			if (number == null) number = 0;
-			number += (int) Math.round(this.getFlow(origin, destination));
-			tripEnds.put(destination, number);
+		for (int j=0; j<matrix[0].length; j++) {
+			String destination = zoning.getZoneIDToCodeMap().get(j);
+			for (int i=0; j<matrix.length; i++) {
+				String origin = zoning.getZoneIDToCodeMap().get(i);
+				Integer number = tripEnds.get(destination);
+				if (number == null) number = 0;
+				number += (int) Math.round(this.getFlow(origin, destination));
+				tripEnds.put(destination, number);
+			}
 		}
 		
 		return tripEnds;
@@ -201,29 +214,15 @@ public class RealODMatrix implements AssignableODMatrix {
 	}
 	
 	/**
-	 * Gets the keyset of the multimap.
-	 * @return Key set.
-	 */
-	public Set<MultiKey> getKeySet() {
-		
-		return matrix.keySet();
-	}
-	
-	/**
 	 * Gets the sorted list of origins.
 	 * @return List of origins.
 	 */
 	public List<String> getOrigins() {
 		
-		Set<String> firstKey = new HashSet<String>();
+		Set<String> firstKey = zoning.getZoneCodeToIDMap().keySet();
 		
-		//extract row keysets
-		for (Object mk: matrix.keySet()) {
-			String origin = (String) ((MultiKey)mk).getKey(0);
-			firstKey.add(origin);
-		}
 		//put them into a list and sort them
-		List<String> firstKeyList = new ArrayList(firstKey);
+		List<String> firstKeyList = new ArrayList<String>(firstKey);
 		Collections.sort(firstKeyList);
 		
 		return firstKeyList;
@@ -235,15 +234,9 @@ public class RealODMatrix implements AssignableODMatrix {
 	 */
 	public List<String> getDestinations() {
 		
-		Set<String> secondKey = new HashSet<String>();
-		
-		//extract column keysets
-		for (Object mk: matrix.keySet()) {
-			String destination = (String) ((MultiKey)mk).getKey(1);
-			secondKey.add(destination);
-		}
+		Set<String> secondKey = zoning.getZoneCodeToIDMap().keySet();
 		//put them into a list and sort them
-		List<String> secondKeyList = new ArrayList(secondKey);
+		List<String> secondKeyList = new ArrayList<String>(secondKey);
 		Collections.sort(secondKeyList);
 		
 		return secondKeyList;
@@ -254,15 +247,14 @@ public class RealODMatrix implements AssignableODMatrix {
 	 * @param other The other matrix.
 	 * @return Sum of absolute differences.
 	 */
-	public double getAbsoluteDifference(RealODMatrix other) {
+	public double getAbsoluteDifference(RealODMatrix2 other) {
 		
 		double difference = 0.0;
-		for (MultiKey mk: other.getKeySet()) {
-			String origin = (String) mk.getKey(0);
-			String destination = (String) mk.getKey(1);
-			difference += Math.abs(this.getFlow(origin, destination) - other.getFlow(origin, destination));
-		}
-	
+		
+		for (int i=0; i<matrix.length; i++)
+			for (int j=0; j<matrix[0].length; j++)
+				difference += Math.abs(matrix[i][j] - other.matrix[i][j]);
+
 		return difference;
 	}
 	
@@ -272,32 +264,21 @@ public class RealODMatrix implements AssignableODMatrix {
 	 */
 	public void scaleMatrixValue(double factor) {
 		
-		for (MultiKey mk: this.getKeySet()) {
-			String origin = (String) mk.getKey(0);
-			String destination = (String) mk.getKey(1);
-			double flow = this.getFlow(origin, destination);
-			flow = flow * factor;
-			//this.setFlow(origin, destination, (int) Math.round(flow));
-			this.setFlow(origin, destination, flow);
-			
-		}		
+		for (int i=0; i<matrix.length; i++)
+			for (int j=0; j<matrix[0].length; j++)
+				matrix[i][j] *= factor;
+
 	}
 	
 	/**
 	 * Scales matrix values with another matrix (element-wise multiplication).
 	 * @param scalingMatrix Scaling matrix.
 	 */
-	public void scaleMatrixValue(RealODMatrix scalingMatrix) {
+	public void scaleMatrixValue(RealODMatrix2 scalingMatrix) {
 		
-		for (MultiKey mk: this.getKeySet()) {
-			String origin = (String) mk.getKey(0);
-			String destination = (String) mk.getKey(1);
-			double flow = this.getFlow(origin, destination);
-			double scalingFactor = scalingMatrix.getFlow(origin, destination);
-			flow = flow * scalingFactor;
-			//this.setFlow(origin, destination, (int) Math.round(flow));
-			this.setFlow(origin, destination, flow);
-		}		
+		for (int i=0; i<matrix.length; i++)
+			for (int j=0; j<matrix[0].length; j++)
+				matrix[i][j] *= scalingMatrix.matrix[i][j];		
 	}
 	
 	/**
@@ -305,12 +286,29 @@ public class RealODMatrix implements AssignableODMatrix {
 	 */
 	public void roundMatrixValues() {
 
-		for (MultiKey mk: this.getKeySet()) {
-			String origin = (String) mk.getKey(0);
-			String destination = (String) mk.getKey(1);
-			double flow = (int) Math.round(this.getFlow(origin, destination));
-			this.setFlow(origin, destination, flow);
-		}
+		for (int i=0; i<matrix.length; i++)
+			for (int j=0; j<matrix[0].length; j++)
+				matrix[i][j] = Math.round(matrix[i][j]);	
+	}
+	
+	/**
+	 * Floor OD matrix values.
+	 */
+	public void floorMatrixValues() {
+
+		for (int i=0; i<matrix.length; i++)
+			for (int j=0; j<matrix[0].length; j++)
+				matrix[i][j] = Math.floor(matrix[i][j]);	
+	}
+	
+	/**
+	 * Ceil OD matrix values.
+	 */
+	public void ceilMatrixValues() {
+
+		for (int i=0; i<matrix.length; i++)
+			for (int j=0; j<matrix[0].length; j++)
+				matrix[i][j] = Math.ceil(matrix[i][j]);	
 	}
 	
 	/**
@@ -319,7 +317,6 @@ public class RealODMatrix implements AssignableODMatrix {
 	 * @param precision Number of decimal places.
 	 */
 	public void printMatrixFormatted(String s, int precision) {
-		
 		
 		System.out.println(s);
 		this.printMatrixFormatted(precision);
@@ -331,9 +328,9 @@ public class RealODMatrix implements AssignableODMatrix {
 	 * @param destinations List of destination zones.
 	 * @return Unit OD matrix.
 	 */
-	public static RealODMatrix createUnitMatrix(List<String> origins, List<String> destinations) {
+	public static RealODMatrix2 createUnitMatrix(List<String> origins, List<String> destinations, Zoning zoning) {
 		
-		RealODMatrix odm = new RealODMatrix();
+		RealODMatrix2 odm = new RealODMatrix2(zoning);
 		
 		for (String origin: origins)
 			for (String destination: destinations)
@@ -347,9 +344,9 @@ public class RealODMatrix implements AssignableODMatrix {
 	 * @param zones List of zones.
 	 * @return Unit OD matrix.
 	 */
-	public static RealODMatrix createUnitMatrix(List<String> zones) {
+	public static RealODMatrix2 createUnitMatrix(List<String> zones, Zoning zoning) {
 		
-		RealODMatrix odm = new RealODMatrix();
+		RealODMatrix2 odm = new RealODMatrix2(zoning);
 		
 		for (String origin: zones)
 			for (String destination: zones)
@@ -363,13 +360,29 @@ public class RealODMatrix implements AssignableODMatrix {
 	 * @param zones Set of zones.
 	 * @return Unit OD matrix.
 	 */
-	public static RealODMatrix createUnitMatrix(Set<String> zones) {
+	public static RealODMatrix2 createUnitMatrix(Set<String> zones, Zoning zoning) {
 		
-		RealODMatrix odm = new RealODMatrix();
+		RealODMatrix2 odm = new RealODMatrix2(zoning);
 		
 		for (String origin: zones)
 			for (String destination: zones)
 				odm.setFlow(origin, destination, 1.0);
+		
+		return odm;
+	}
+	
+	/**
+	 * Creates a quadratic unit OD matrix for a given lists of zones.
+	 * @param zones Set of zones.
+	 * @return Unit OD matrix.
+	 */
+	public static RealODMatrix2 createUnitMatrix(Zoning zoning) {
+		
+		RealODMatrix2 odm = new RealODMatrix2(zoning);
+
+		for (int i=0; i<odm.matrix.length; i++)
+			for (int j=0; j<odm.matrix[0].length; j++)
+				odm.matrix[i][j] = 1.0;
 		
 		return odm;
 	}
@@ -388,15 +401,13 @@ public class RealODMatrix implements AssignableODMatrix {
 	}
 	
 	@Override
-	public RealODMatrix clone() {
+	public RealODMatrix2 clone() {
 
-		RealODMatrix odm = new RealODMatrix();
+		RealODMatrix2 odm = new RealODMatrix2(this.zoning);
 		
-		for (MultiKey mk: this.getKeySet()) {
-			String origin = (String) mk.getKey(0);
-			String destination = (String) mk.getKey(1);
-			odm.setFlow(origin, destination, this.getFlow(origin, destination));
-		}
+		for (int i=0; i<odm.matrix.length; i++)
+			for (int j=0; j<odm.matrix[0].length; j++)
+				odm.matrix[i][j] = this.matrix[i][j];
 
 		return odm;
 	}
@@ -409,24 +420,8 @@ public class RealODMatrix implements AssignableODMatrix {
 		
 		LOGGER.info("Saving OD matrix to a csv file...");
 		
-		Set<String> firstKey = new HashSet<String>();
-		Set<String> secondKey = new HashSet<String>();
-		
-		//extract row and column keysets
-		for (Object mk: matrix.keySet()) {
-			String origin = (String) ((MultiKey)mk).getKey(0);
-			String destination = (String) ((MultiKey)mk).getKey(1);
-			firstKey.add(origin);
-			secondKey.add(destination);
-		}
-	
-		//put them to a list and sort them
-		List<String> firstKeyList = new ArrayList<String>(firstKey);
-		List<String> secondKeyList = new ArrayList<String>(secondKey);
-		Collections.sort(firstKeyList);
-		Collections.sort(secondKeyList);
-		//System.out.println(firstKeyList);
-		//System.out.println(secondKeyList);
+		List<String> firstKeyList = this.getOrigins();
+		List<String> secondKeyList = this.getDestinations();
 	
 		String NEW_LINE_SEPARATOR = "\n";
 		ArrayList<String> header = new ArrayList<String>();

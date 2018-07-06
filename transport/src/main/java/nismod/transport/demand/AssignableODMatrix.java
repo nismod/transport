@@ -48,9 +48,16 @@ public interface AssignableODMatrix {
 	 */
 	public int getTotalIntFlow();
 	
+	
 	/**
-	 * Gets the keyset of the multimap.
-	 * @return Key set.
+	 * Gets the list of origins.
+	 * @return List of origin zones.
 	 */
-	public Set<MultiKey> getKeySet();
+	public List<String> getOrigins();
+	
+	/**
+	 * Gets the list of destinations.
+	 * @return List of destination zones.
+	 */
+	public List<String> getDestinations();
 }

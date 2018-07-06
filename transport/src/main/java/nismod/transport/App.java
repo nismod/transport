@@ -302,7 +302,6 @@ public class App {
 				graph.setSize(600, 400);
 				graph.setVisible(true);
 				graph.saveToPNG("temproRebalancing.png");
-				
 			}
 
 			else if (line.hasOption("r")) { //run the main demand prediction model

@@ -27,7 +27,7 @@ import nismod.transport.zone.Zoning;
  * @author Milan Lovric
  *
  */
-public class RebalancedTemproODMatrix extends RealODMatrix {
+public class RebalancedTemproODMatrix extends RealODMatrix2 {
 	
 	private final static Logger LOGGER = LogManager.getLogger(RebalancedTemproODMatrix.class);
 	
@@ -49,7 +49,7 @@ public class RebalancedTemproODMatrix extends RealODMatrix {
 	 */
 	public RebalancedTemproODMatrix(List<String> origins, List<String> destinations, RoadNetworkAssignment rna, RouteSetGenerator rsg, Zoning zoning, Properties params) {
 
-		super();
+		super(zoning);
 		
 		this.rna = rna;
 		this.origins = new ArrayList<String>();
@@ -75,11 +75,11 @@ public class RebalancedTemproODMatrix extends RealODMatrix {
 	 */
 	public RebalancedTemproODMatrix(String fileName, RoadNetworkAssignment rna, RouteSetGenerator rsg, Zoning zoning, Properties params) throws FileNotFoundException, IOException {
 
-		super(fileName);
+		super(fileName, zoning);
 		
 		this.rna = rna;
-		this.origins = this.getOrigins(); //expensive operation, so copy to local field
-		this.destinations = this.getDestinations(); //expensive operation, so copy to local field
+		this.origins = super.getOrigins(); //expensive operation, so copy to local field
+		this.destinations = super.getDestinations(); //expensive operation, so copy to local field
 		this.rsg = rsg;
 		this.zoning = zoning;
 		this.params = params;
@@ -147,7 +147,7 @@ public class RebalancedTemproODMatrix extends RealODMatrix {
 	 */
 	public void scaleToTrafficCounts() {
 			
-		RealODMatrix sf = this.getScalingFactors();
+		RealODMatrix2 sf = this.getScalingFactors();
 		sf.printMatrixFormatted("Scaling factors:", 5);
 		
 		this.scaleMatrixValue(sf);
@@ -182,7 +182,7 @@ public class RebalancedTemproODMatrix extends RealODMatrix {
 	 * Calculates scaling factors for OD pairs.
 	 * @return Scaling factors.
 	 */
-	public RealODMatrix getScalingFactors() {
+	public RealODMatrix2 getScalingFactors() {
 		
 		List<Trip> tripList = this.rna.getTripList();
 		LOGGER.trace("Trip list size: {}", tripList.size());
@@ -204,9 +204,9 @@ public class RebalancedTemproODMatrix extends RealODMatrix {
 		}
 		LOGGER.trace("link factors = {}", linkFactors);
 		
-		RealODMatrix factors = new RealODMatrix();
-		ODMatrix counter = new ODMatrix();
-		RealODMatrix scalingFactors = new RealODMatrix();
+		RealODMatrix2 factors = new RealODMatrix2(zoning);
+		RealODMatrix2 counter = new RealODMatrix2(zoning);
+		RealODMatrix2 scalingFactors = new RealODMatrix2(zoning);
 		
 		for (Trip t: tripList) 
 			if (t instanceof TripTempro && t.getVehicle().equals(VehicleType.CAR))	{
@@ -220,7 +220,7 @@ public class RebalancedTemproODMatrix extends RealODMatrix {
 				
 				//get current factor and count
 				double factor = factors.getFlow(originZone, destinationZone); 
-				int count = counter.getFlow(originZone, destinationZone);
+				double count = counter.getFlow(originZone, destinationZone);
 				
 				for (DirectedEdge edge: route.getEdges())
 					if (linkFactors.get(edge.getID()) != null){
@@ -234,15 +234,14 @@ public class RebalancedTemproODMatrix extends RealODMatrix {
 			}
 		
 		//calculate scaling factors by dividing factor sum and counter
-		for (Object mk: factors.getKeySet()) {
-			String originZone = (String) ((MultiKey)mk).getKey(0);
-			String destinationZone = (String) ((MultiKey)mk).getKey(1);
-	
-			double scalingFactor;
-			if (counter.getFlow(originZone, destinationZone) == 0) 
-				scalingFactor = 1.0; //there were no (non-empty) routes between these two zones
-			else 
-				scalingFactor = 1.0 * factors.getFlow(originZone, destinationZone) / counter.getFlow(originZone, destinationZone);
+		for (String originZone: origins)
+			for (String destinationZone: destinations) {
+
+				double scalingFactor;
+				if (Double.compare(counter.getIntFlow(originZone, destinationZone), 0.0d) == 0) 
+					scalingFactor = 1.0; //there were no (non-empty) routes between these two zones
+				else 
+					scalingFactor = 1.0 * factors.getFlow(originZone, destinationZone) / counter.getFlow(originZone, destinationZone);
 		
 			scalingFactors.setFlow(originZone, destinationZone, scalingFactor);
 		}
