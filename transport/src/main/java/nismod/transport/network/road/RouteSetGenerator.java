@@ -26,6 +26,8 @@ import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedNode;
 import org.geotools.graph.structure.Node;
 
+import com.vividsolutions.jts.geom.Point;
+
 import nismod.transport.demand.AssignableODMatrix;
 import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.ODMatrix;
@@ -234,16 +236,30 @@ public class RouteSetGenerator {
 	 */
 	public void generateRouteSetWithRandomLinkEliminationRestricted(int origin, int destination) {
 
-		RandomSingleton rng = RandomSingleton.getInstance();
-		
 		if (params == null) {
 			LOGGER.error("Route set generator does not have required parameters!");
 			return;
-		}
+		} else {
 		
-		final Integer routeLimit = Integer.parseInt(params.getProperty("ROUTE_LIMIT"));
-		final Integer generationLimit = Integer.parseInt(params.getProperty("GENERATION_LIMIT"));
+			final Integer routeLimit = Integer.parseInt(params.getProperty("ROUTE_LIMIT"));
+			final Integer generationLimit = Integer.parseInt(params.getProperty("GENERATION_LIMIT"));
+			this.generateRouteSetWithRandomLinkEliminationRestricted(origin, destination, routeLimit, generationLimit);
+		}
+	}
 
+	/**
+	 * Generates a route set between two nodes using the random link elimination method -
+	 * It first finds the fastest path and then blocks random links within the fastest path and tries to find an alternative path.
+	 * The search is limited by the total number of path finding calls and the required number of generated paths.
+	 * @param origin Origin node ID.
+	 * @param destination Destination node ID.
+	 * @param routeLimit Maximum allowed number of generated routes.
+	 * @param generationLimit Number of generation trials to get a potentially new route.
+	 */
+	public void generateRouteSetWithRandomLinkEliminationRestricted(int origin, int destination, int routeLimit, int generationLimit) {
+
+		RandomSingleton rng = RandomSingleton.getInstance();
+		
 		//do not generate route set if origin or destination node is blacklisted as no routes are possible
 		if (this.roadNetwork.isBlacklistedAsStartNode(origin) || this.roadNetwork.isBlacklistedAsEndNode(destination)) return;
 		
@@ -370,7 +386,7 @@ public class RouteSetGenerator {
 			}
 		}
 	}
-
+	
 	/**
 	 * Generates routes between all combinations of nodes from two LAD zones
 	 * @param originLAD Origin LAD.
@@ -388,7 +404,7 @@ public class RouteSetGenerator {
 	}
 	
 	/**
-	 * Generates routes between all combinations of nodes from two LAD zones
+	 * Generates routes between the nearest nodes of two Tempro zones.
 	 * @param originZone Origin Tempro zone.
 	 * @param destinationZone Destination Tempro zone.
 	 * @param zoning Tempro zoning system.
@@ -407,6 +423,50 @@ public class RouteSetGenerator {
 		this.generateRouteSetNodeToNode(originNode, destinationNode);
 	}
 	
+	/**
+	 * Generates routes between the nearest nodes of two Tempro zones.
+	 * @param originZone Origin Tempro zone.
+	 * @param destinationZone Destination Tempro zone.
+	 * @param zoning Tempro zoning system.
+	 */
+	public void generateRouteSetZoneToZoneTemproDistanceBased(String originZone, String destinationZone, Zoning zoning) {
+		
+		if (params == null) {
+			LOGGER.error("Route set generator does not have required parameters!");
+			return;
+		}
+		
+		final int generationLimit = Integer.parseInt(params.getProperty("GENERATION_LIMIT"));
+		
+//		List<Integer> originNodes = this.roadNetwork.getZoneToNodes().get(originLAD);
+//		List<Integer> destinationNodes = this.roadNetwork.getZoneToNodes().get(destinationLAD);
+//		//System.out.printf("Generating routes from %s (%d nodes) to %s (%d nodes) %n", originLAD, originNodes.size(), destinationLAD, destinationNodes.size());
+//		for (Integer origin: originNodes)
+//			for (Integer destination: destinationNodes)
+//				if (origin != destination) 					
+//					this.generateRouteSetNodeToNode(origin, destination);
+		int originNode = zoning.getZoneToNearestNodeIDMap().get(originZone);
+		int destinationNode = zoning.getZoneToNearestNodeIDMap().get(destinationZone);
+		
+		RouteSet fetchedRouteSet = this.getRouteSet(originNode, destinationNode);
+		//generate only if it does not already exist
+		if (fetchedRouteSet == null) {
+			Point originCentroid = zoning.getZoneToCentroid().get(originZone);
+			Point destinationCentroid = zoning.getZoneToCentroid().get(destinationZone);
+			
+			double centroidDistance = originCentroid.distance(destinationCentroid);
+			int routeLimit = 0;
+			if (centroidDistance <= 500000 && centroidDistance > 400000) routeLimit = 1;
+			else if (centroidDistance <= 400000 && centroidDistance > 300000) routeLimit = 2;
+			else if (centroidDistance <= 300000 && centroidDistance > 200000) routeLimit = 3;
+			else if (centroidDistance <= 200000 && centroidDistance > 100000) routeLimit = 4;
+			else if (centroidDistance <= 100000) routeLimit = 5;
+			
+			LOGGER.trace("Route limit for centroidDistance = {} km is: {}", centroidDistance/1000, routeLimit);
+			generateRouteSetWithRandomLinkEliminationRestricted(originNode, destinationNode, routeLimit, generationLimit);
+		}
+	}
+		
 	/**
 	 * Generates routes between top N nodes (sorted by gravitating population) from two LAD zones.
 	 * If origin and destination LAD are the same (i.e., intra-zonal), then use all the nodes
@@ -511,6 +571,38 @@ public class RouteSetGenerator {
 				for (String destinationZone: destinations) 
 					if (matrix.getIntFlow(originZone, destinationZone) != 0)
 						this.generateRouteSetZoneToZoneTempro(originZone, destinationZone, zoning);
+			}
+		}
+	}
+	
+	/**
+	 * Generates routes for a slice of the OD matrix (useful for cluster computing).
+	 * The number of routes increases the smaller the distance between two Tempro zones.
+	 * @param matrix Origin-destination matrix.
+	 * @param sliceIndex Index of the OD matrix slice for which to generate routes [1..N].
+	 * @param sliceNumber Number of slices to divide matrix into (N).
+	 */
+	public void generateRouteSetForODMatrixTemproDistanceBased(RealODMatrix2 matrix, Zoning zoning, int sliceIndex, int sliceNumber) {
+		
+		List<String> origins = matrix.getSortedOrigins();
+		List<String> destinations = matrix.getSortedDestinations();
+		
+		int originsPerSlice = (int) Math.floor(1.0 * origins.size() / sliceNumber); //the last slice may have a different number of origins
+		//int originsInLastSlice = origins.size() - (sliceNumber - 1) * originsPerSlice;
+		
+		if (sliceIndex < sliceNumber) {
+			for (int i = (sliceIndex - 1) * originsPerSlice; i < sliceIndex * originsPerSlice && i < origins.size(); i++) {
+				String originZone = origins.get(i);
+				for (String destinationZone: destinations) 
+					if (matrix.getIntFlow(originZone, destinationZone) != 0)
+						this.generateRouteSetZoneToZoneTemproDistanceBased(originZone, destinationZone, zoning);
+			}
+		} else { //for the last slice there may be more origins, so go all the way to the end of the list
+			for (int i = (sliceIndex - 1) * originsPerSlice; i < origins.size(); i++) {
+				String originZone = origins.get(i);
+				for (String destinationZone: destinations) 
+					if (matrix.getIntFlow(originZone, destinationZone) != 0)
+						this.generateRouteSetZoneToZoneTemproDistanceBased(originZone, destinationZone, zoning);
 			}
 		}
 	}
