@@ -148,7 +148,7 @@ public class RebalancedTemproODMatrix extends RealODMatrix2 {
 	public void scaleToTrafficCounts() {
 			
 		RealODMatrix2 sf = this.getScalingFactors();
-		sf.printMatrixFormatted("Scaling factors:", 5);
+		//sf.printMatrixFormatted("Scaling factors:", 5);
 		
 		this.scaleMatrixValue(sf);
 		//this.printMatrixFormatted("OD matrix after scaling:", 2);
