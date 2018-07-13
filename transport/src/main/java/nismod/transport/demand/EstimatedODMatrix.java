@@ -413,8 +413,8 @@ public class EstimatedODMatrix extends RealODMatrix {
 	@Override
 	public void printMatrixFormatted(int precision) {
 
-		List<String> firstKeyList = this.getOrigins();
-		List<String> secondKeyList = this.getDestinations();
+		List<String> firstKeyList = this.getSortedOrigins();
+		List<String> secondKeyList = this.getSortedDestinations();
 		//System.out.println(firstKeyList);
 		//System.out.println(secondKeyList);
 

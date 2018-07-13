@@ -27,6 +27,7 @@ import nismod.transport.decision.RoadExpansion;
 import nismod.transport.demand.DemandModel;
 import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.ODMatrix;
+import nismod.transport.demand.RealODMatrix2;
 import nismod.transport.demand.RebalancedTemproODMatrix;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
@@ -200,7 +201,8 @@ public class App {
 				Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
 				
 				final String temproODMatrixFile = props.getProperty("temproODMatrixFile");
-				ODMatrix temproODM = new ODMatrix(temproODMatrixFile);
+				//ODMatrix temproODM = new ODMatrix(temproODMatrixFile);
+				RealODMatrix2 temproODM = new RealODMatrix2(temproODMatrixFile, zoning);
 					
 				//ODMatrix temproODM = ODMatrix.createUnitMatrix(zoning.getZoneCodeToIDMap().keySet());
 				//temproODM.deleteInterzonalFlows("E02006781"); //Isle of Scilly in Tempro

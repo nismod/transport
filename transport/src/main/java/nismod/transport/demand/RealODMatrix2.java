@@ -198,8 +198,8 @@ public class RealODMatrix2 implements AssignableODMatrix {
 	 */
 	public void printMatrixFormatted(int precision) {
 		
-		List<String> firstKeyList = this.getOrigins();
-		List<String> secondKeyList = this.getDestinations();
+		List<String> firstKeyList = this.getSortedOrigins();
+		List<String> secondKeyList = this.getSortedDestinations();
 		//System.out.println(firstKeyList);
 		//System.out.println(secondKeyList);
 	
@@ -217,7 +217,7 @@ public class RealODMatrix2 implements AssignableODMatrix {
 	 * Gets the sorted list of origins.
 	 * @return List of origins.
 	 */
-	public List<String> getOrigins() {
+	public List<String> getSortedOrigins() {
 		
 		Set<String> firstKey = zoning.getZoneCodeToIDMap().keySet();
 		
@@ -232,12 +232,39 @@ public class RealODMatrix2 implements AssignableODMatrix {
 	 * Gets the sorted list of destinations.
 	 * @return List of destinations.
 	 */
-	public List<String> getDestinations() {
+	public List<String> getSortedDestinations() {
 		
 		Set<String> secondKey = zoning.getZoneCodeToIDMap().keySet();
 		//put them into a list and sort them
 		List<String> secondKeyList = new ArrayList<String>(secondKey);
 		Collections.sort(secondKeyList);
+		
+		return secondKeyList;
+	}
+	
+	/**
+	 * Gets the unsorted list of origins.
+	 * @return List of origins.
+	 */
+	public List<String> getUnsortedOrigins() {
+		
+		Set<String> firstKey = zoning.getZoneCodeToIDMap().keySet();
+		
+		//put them into a list
+		List<String> firstKeyList = new ArrayList<String>(firstKey);
+		
+		return firstKeyList;
+	}
+	
+	/**
+	 * Gets the unsorted list of destinations.
+	 * @return List of destinations.
+	 */
+	public List<String> getUnsortedDestinations() {
+		
+		Set<String> secondKey = zoning.getZoneCodeToIDMap().keySet();
+		//put them into a list and sort them
+		List<String> secondKeyList = new ArrayList<String>(secondKey);
 		
 		return secondKeyList;
 	}
@@ -393,8 +420,8 @@ public class RealODMatrix2 implements AssignableODMatrix {
 	 */
 	public void deleteInterzonalFlows(String zone) {
 		
-		for (String origin: this.getOrigins())
-			for (String destination: this.getDestinations())
+		for (String origin: this.getSortedOrigins())
+			for (String destination: this.getSortedDestinations())
 				if (origin.equals(zone) && !destination.equals(zone) || !origin.equals(zone) && destination.equals(zone)) { //this will leave intra-zonal flow
 				this.setFlow(origin, destination, 0);
 			}
@@ -420,8 +447,8 @@ public class RealODMatrix2 implements AssignableODMatrix {
 		
 		LOGGER.info("Saving OD matrix to a csv file...");
 		
-		List<String> firstKeyList = this.getOrigins();
-		List<String> secondKeyList = this.getDestinations();
+		List<String> firstKeyList = this.getSortedOrigins();
+		List<String> secondKeyList = this.getSortedDestinations();
 	
 		String NEW_LINE_SEPARATOR = "\n";
 		ArrayList<String> header = new ArrayList<String>();

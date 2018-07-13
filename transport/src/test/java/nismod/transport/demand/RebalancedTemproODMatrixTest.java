@@ -118,6 +118,14 @@ public class RebalancedTemproODMatrixTest {
 		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
 		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
 		
+		
+		
+		final String temproODMatrixFile = props.getProperty("temproODMatrixFile");
+		//RealODMatrix rm = new RealODMatrix(temproODMatrixFile);
+		RealODMatrix2 rm2 = new RealODMatrix2(temproODMatrixFile, zoning);
+		rm2.saveMatrixFormatted("testingSparse200kmMatrix.csv");
+				
+		
 		//generate single node routes
 		rsg.generateSingleNodeRoutes();
 		LOGGER.debug(rsg.getStatistics());
@@ -271,7 +279,7 @@ public class RebalancedTemproODMatrixTest {
 		
 		*/
 			
-		final String temproODMatrixFile = props.getProperty("temproODMatrixFile");
+//		final String temproODMatrixFile = props.getProperty("temproODMatrixFile");
 		RebalancedTemproODMatrix rodm = new RebalancedTemproODMatrix(temproODMatrixFile, rna, rsg, zoning, props);
 		
 		System.out.println("Created rodm");

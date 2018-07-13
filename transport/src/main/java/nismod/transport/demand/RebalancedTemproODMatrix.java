@@ -78,8 +78,8 @@ public class RebalancedTemproODMatrix extends RealODMatrix2 {
 		super(fileName, zoning);
 		
 		this.rna = rna;
-		this.origins = super.getOrigins(); //expensive operation, so copy to local field
-		this.destinations = super.getDestinations(); //expensive operation, so copy to local field
+		this.origins = super.getSortedOrigins(); //expensive operation, so copy to local field
+		this.destinations = super.getSortedDestinations(); //expensive operation, so copy to local field
 		this.rsg = rsg;
 		this.zoning = zoning;
 		this.params = params;
@@ -108,8 +108,8 @@ public class RebalancedTemproODMatrix extends RealODMatrix2 {
 	 */
 	public void createUnitMatrix() {
 
-		for (String origin: this.getOrigins()) 
-			for (String destination: this.getDestinations())
+		for (String origin: this.getSortedOrigins()) 
+			for (String destination: this.getSortedDestinations())
 				this.setFlow(origin, destination, 1.0);
 	}
 	
@@ -353,7 +353,7 @@ public class RebalancedTemproODMatrix extends RealODMatrix2 {
 	 * @return List of origins.
 	 */
 	@Override
-	public List<String> getOrigins() {
+	public List<String> getSortedOrigins() {
 		
 		return this.origins;
 	}
@@ -363,7 +363,7 @@ public class RebalancedTemproODMatrix extends RealODMatrix2 {
 	 * @return List of destinations.
 	 */
 	@Override
-	public List<String> getDestinations() {
+	public List<String> getSortedDestinations() {
 		
 		return this.destinations;
 	}

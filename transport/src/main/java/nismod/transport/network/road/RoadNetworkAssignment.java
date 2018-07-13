@@ -351,8 +351,8 @@ public class RoadNetworkAssignment {
 		long counterAssignedTrips = 0;
 		long counterTotalFlow = 0;
 
-		List<String> origins = passengerODM.getOrigins();
-		List<String> destinations = passengerODM.getDestinations();
+		List<String> origins = passengerODM.getUnsortedOrigins();
+		List<String> destinations = passengerODM.getUnsortedDestinations();
 		
 		//for each OD pair from the passengerODM
 		for (String originZone: origins)
@@ -544,8 +544,8 @@ public class RoadNetworkAssignment {
 		long counterAssignedTrips = 0;
 		long counterTotalFlow = 0;
 
-		List<String> origins = passengerODM.getOrigins();
-		List<String> destinations = passengerODM.getDestinations();
+		List<String> origins = passengerODM.getUnsortedOrigins();
+		List<String> destinations = passengerODM.getUnsortedDestinations();
 		
 		//for each OD pair from the passengerODM
 		for (String originZone: origins)
@@ -737,8 +737,8 @@ public class RoadNetworkAssignment {
 		//sort nodes based on the gravitating population
 		this.roadNetwork.sortGravityNodes();
 
-		List<String> origins = passengerODM.getOrigins();
-		List<String> destinations = passengerODM.getDestinations();
+		List<String> origins = passengerODM.getUnsortedOrigins();
+		List<String> destinations = passengerODM.getUnsortedDestinations();
 		
 		//for each OD pair from the passengerODM
 		for (String originZone: origins)
@@ -1013,8 +1013,8 @@ public class RoadNetworkAssignment {
 		long counterAssignedTrips = 0;
 		long counterTotalFlow = 0;
 
-		List<String> origins = passengerODM.getOrigins();
-		List<String> destinations = passengerODM.getDestinations();
+		List<String> origins = passengerODM.getUnsortedOrigins();
+		List<String> destinations = passengerODM.getUnsortedDestinations();
 		
 		//for each OD pair from the passengerODM
 		for (String originZone: origins)
@@ -1294,8 +1294,8 @@ public class RoadNetworkAssignment {
 		long counterAssignedTrips = 0;
 		long counterTotalFlow = 0;
 
-		List<String> origins = passengerODM.getOrigins();
-		List<String> destinations = passengerODM.getDestinations();
+		List<String> origins = passengerODM.getUnsortedOrigins();
+		List<String> destinations = passengerODM.getUnsortedDestinations();
 		
 		//for each OD pair from the passengerODM
 		for (String originZone: origins)

@@ -82,8 +82,8 @@ public class RebalancedODMatrix extends RealODMatrix {
 	 */
 	public void createUnitMatrix() {
 
-		for (String origin: this.getOrigins()) 
-			for (String destination: this.getDestinations())
+		for (String origin: this.origins) 
+			for (String destination: this.destinations)
 				this.setFlow(origin, destination, 1.0);
 	}
 
@@ -201,25 +201,25 @@ public class RebalancedODMatrix extends RealODMatrix {
 		return scalingFactors;
 	}
 	
-	/**
-	 * Gets the list of origins.
-	 * @return List of origins.
-	 */
-	@Override
-	public List<String> getOrigins() {
-		
-		return this.origins;
-	}
-	
-	/**
-	 * Gets the list of destinations.
-	 * @return List of destinations.
-	 */
-	@Override
-	public List<String> getDestinations() {
-		
-		return this.destinations;
-	}
+//	/**
+//	 * Gets the list of origins.
+//	 * @return List of origins.
+//	 */
+//	@Override
+//	public List<String> getOrigins() {
+//		
+//		return this.origins;
+//	}
+//	
+//	/**
+//	 * Gets the list of destinations.
+//	 * @return List of destinations.
+//	 */
+//	@Override
+//	public List<String> getDestinations() {
+//		
+//		return this.destinations;
+//	}
 	
 	/**
 	 * Gets the list of RMSN values over all performed rebalancing iterations.

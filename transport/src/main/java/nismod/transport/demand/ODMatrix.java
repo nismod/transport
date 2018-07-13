@@ -80,8 +80,8 @@ public class ODMatrix implements AssignableODMatrix {
 	public ODMatrix(RealODMatrix realMatrix) {
 		
 		matrix = new MultiKeyMap();
-		for (String o: realMatrix.getOrigins())
-			for (String d: realMatrix.getDestinations()) {
+		for (String o: realMatrix.getUnsortedOrigins())
+			for (String d: realMatrix.getUnsortedDestinations()) {
 				int flow = (int) Math.round(realMatrix.getFlow(o, d));
 				this.setFlow(o, d, flow);
 			}
@@ -169,46 +169,6 @@ public class ODMatrix implements AssignableODMatrix {
 	}
 	
 	/**
-	 * Gets the sorted list of origins.
-	 * @return List of origins.
-	 */
-	public List<String> getOrigins() {
-		
-		Set<String> firstKey = new HashSet<String>();
-		
-		//extract row keysets
-		for (Object mk: matrix.keySet()) {
-			String origin = (String) ((MultiKey)mk).getKey(0);
-			firstKey.add(origin);
-		}
-		//put them into a list and sort them
-		List<String> firstKeyList = new ArrayList(firstKey);
-		Collections.sort(firstKeyList);
-		
-		return firstKeyList;
-	}
-	
-	/**
-	 * Gets the sorted list of destinations.
-	 * @return List of destinations.
-	 */
-	public List<String> getDestinations() {
-		
-		Set<String> secondKey = new HashSet<String>();
-		
-		//extract column keysets
-		for (Object mk: matrix.keySet()) {
-			String destination = (String) ((MultiKey)mk).getKey(1);
-			secondKey.add(destination);
-		}
-		//put them into a list and sort them
-		List<String> secondKeyList = new ArrayList(secondKey);
-		Collections.sort(secondKeyList);
-		
-		return secondKeyList;
-	}
-	
-	/**
 	 * Prints the full matrix.
 	 */
 	public void printMatrix() {
@@ -267,7 +227,7 @@ public class ODMatrix implements AssignableODMatrix {
 			
 		Set<String> firstKey = new HashSet<String>();
 		
-		LOGGER.debug("Extracting row keysets.");
+		LOGGER.trace("Extracting row keysets.");
 		//extract row keysets
 		for (Object mk: matrix.keySet()) {
 			String origin = (String) ((MultiKey)mk).getKey(0);
@@ -275,10 +235,10 @@ public class ODMatrix implements AssignableODMatrix {
 		}
 		//put them into a list and sort them
 		List<String> firstKeyList = new ArrayList(firstKey);
-		LOGGER.debug("Sorting the origins.");
+		LOGGER.trace("Sorting the origins.");
 		Collections.sort(firstKeyList);
 		
-		LOGGER.debug("Origins sorted and returned.");
+		LOGGER.trace("Origins sorted and returned.");
 		return firstKeyList;
 	}
 	
@@ -313,7 +273,7 @@ public class ODMatrix implements AssignableODMatrix {
 	 */
 	public List<String> getUnsortedOrigins() {
 		
-		LOGGER.debug("Getting the unsorted origins.");
+		LOGGER.trace("Getting the unsorted origins.");
 			
 		Set<String> firstKey = new HashSet<String>();
 				
@@ -334,7 +294,7 @@ public class ODMatrix implements AssignableODMatrix {
 	 */
 	public List<String> getUnsortedDestinations() {
 		
-		LOGGER.debug("Getting the unsorted destinations.");
+		LOGGER.trace("Getting the unsorted destinations.");
 		
 		Set<String> secondKey = new HashSet<String>();
 		

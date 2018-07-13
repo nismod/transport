@@ -48,16 +48,27 @@ public interface AssignableODMatrix {
 	 */
 	public int getTotalIntFlow();
 	
-	
 	/**
-	 * Gets the list of origins.
+	 * Gets the unsorted list of origins.
 	 * @return List of origin zones.
 	 */
-	public List<String> getOrigins();
+	public List<String> getUnsortedOrigins();
 	
 	/**
-	 * Gets the list of destinations.
+	 * Gets the unsorted list of destinations.
 	 * @return List of destination zones.
 	 */
-	public List<String> getDestinations();
+	public List<String> getUnsortedDestinations();
+	
+	/**
+	 * Gets the sorted list of origins.
+	 * @return List of origin zones.
+	 */
+	public List<String> getSortedOrigins();
+	
+	/**
+	 * Gets the sroted list of destinations.
+	 * @return List of destination zones.
+	 */
+	public List<String> getSortedDestinations();
 }

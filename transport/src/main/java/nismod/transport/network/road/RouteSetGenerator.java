@@ -26,8 +26,10 @@ import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedNode;
 import org.geotools.graph.structure.Node;
 
+import nismod.transport.demand.AssignableODMatrix;
 import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.ODMatrix;
+import nismod.transport.demand.RealODMatrix2;
 import nismod.transport.utility.RandomSingleton;
 import nismod.transport.zone.Zoning;
 
@@ -488,7 +490,7 @@ public class RouteSetGenerator {
 	 * @param sliceIndex Index of the OD matrix slice for which to generate routes [1..N].
 	 * @param sliceNumber Number of slices to divide matrix into (N).
 	 */
-	public void generateRouteSetForODMatrixTempro(ODMatrix matrix, Zoning zoning, int sliceIndex, int sliceNumber) {
+	public void generateRouteSetForODMatrixTempro(RealODMatrix2 matrix, Zoning zoning, int sliceIndex, int sliceNumber) {
 		
 		List<String> origins = matrix.getSortedOrigins();
 		List<String> destinations = matrix.getSortedDestinations();
@@ -500,14 +502,14 @@ public class RouteSetGenerator {
 			for (int i = (sliceIndex - 1) * originsPerSlice; i < sliceIndex * originsPerSlice && i < origins.size(); i++) {
 				String originZone = origins.get(i);
 				for (String destinationZone: destinations) 
-					if (matrix.getFlow(originZone, destinationZone) != 0)
+					if (matrix.getIntFlow(originZone, destinationZone) != 0)
 						this.generateRouteSetZoneToZoneTempro(originZone, destinationZone, zoning);
 			}
 		} else { //for the last slice there may be more origins, so go all the way to the end of the list
 			for (int i = (sliceIndex - 1) * originsPerSlice; i < origins.size(); i++) {
 				String originZone = origins.get(i);
 				for (String destinationZone: destinations) 
-					if (matrix.getFlow(originZone, destinationZone) != 0)
+					if (matrix.getIntFlow(originZone, destinationZone) != 0)
 						this.generateRouteSetZoneToZoneTempro(originZone, destinationZone, zoning);
 			}
 		}
