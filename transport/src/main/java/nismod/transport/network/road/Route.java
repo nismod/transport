@@ -1,6 +1,5 @@
 package nismod.transport.network.road;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +14,7 @@ import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Node;
 import org.opengis.feature.simple.SimpleFeature;
 
+import gnu.trove.list.array.TIntArrayList;
 import nismod.transport.network.road.RoadNetworkAssignment.EnergyType;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
@@ -28,29 +28,33 @@ public class Route {
 	
 	private final static Logger LOGGER = LogManager.getLogger(Route.class);
 	
-	//default route-choice parameters
-	public static final double PARAM_TIME = -1.5;
-	public static final double PARAM_LENGTH = -1.0;
-	public static final double PARAM_COST = -3.6;
-	public static final double PARAM_INTERSECTIONS = -0.1;
-
-	public static final double AVERAGE_INTERSECTION_DELAY = 0.8; //[min] 
+//	//default route-choice parameters
+//	public static final double PARAM_TIME = -1.5;
+//	public static final double PARAM_LENGTH = -1.0;
+//	public static final double PARAM_COST = -3.6;
+//	public static final double PARAM_INTERSECTIONS = -0.1;
+//
+//	public static final double AVERAGE_INTERSECTION_DELAY = 0.8; //[min] 
 	
 	//initial route size for arraylist
 	public static final int INITIAL_ROUTE_CAPACITY = 10;
 
 //	private static int counter = 0;
 //	private int id;
-	private ArrayList<DirectedEdge> edges;
+	
+	private TIntArrayList edges; //optimised list of edge IDs
 	private double length;
 	private double time;
 	private double cost;
 	private double utility;
 	private Node singleNode;
 	
-	public Route() {
+	private static RoadNetwork roadNetwork;
 	
-		this.edges = new ArrayList<DirectedEdge>(INITIAL_ROUTE_CAPACITY);
+	public Route(RoadNetwork roadNetwork) {
+	
+		this.roadNetwork = roadNetwork;
+		this.edges = new TIntArrayList(INITIAL_ROUTE_CAPACITY);
 //		this.id = ++Route.counter;
 	}
 	
@@ -58,8 +62,8 @@ public class Route {
 	 * Construtor from a given path.
 	 * @param path A path from which to construct a route.
 	 */
-	public Route(RoadPath path) {
-
+	public Route(RoadPath path, RoadNetwork roadNetwork) {
+		
 		if (path == null) {
 			System.err.println("Route constructur: Path is null!");
 			return;
@@ -70,6 +74,7 @@ public class Route {
 			return;
 		}
 		
+		this.roadNetwork = roadNetwork;
 		List<DirectedEdge> builtEdges = (List<DirectedEdge>) path.getEdges(); //builds edges
 		
 		if (builtEdges == null) {
@@ -85,7 +90,10 @@ public class Route {
 			}
 		}
 		
-		this.edges = (ArrayList<DirectedEdge>) builtEdges; //store reference to the already built list
+		this.roadNetwork = roadNetwork;
+		
+		this.edges = new TIntArrayList(INITIAL_ROUTE_CAPACITY);
+		for (DirectedEdge edge: builtEdges) this.edges.add(edge.getID()); 
 			
 //		this.id = ++Route.counter;
 		//System.out.println("Constructing a route from path (nodes): " + path.toString());
@@ -100,9 +108,9 @@ public class Route {
 	
 	/**
 	 * Getter method for the list of edges.
-	 * @return List of edges.
+	 * @return List of edge IDs.
 	 */
-	public List<DirectedEdge> getEdges() {
+	public TIntArrayList getEdges() {
 		
 		return	this.edges;
 	}
@@ -123,15 +131,17 @@ public class Route {
 	 */
 	public boolean addEdge(DirectedEdge edge) {
 
-		if (this.edges.isEmpty()) this.edges.add(edge);
+		if (this.edges.isEmpty()) this.edges.add(edge.getID());
 		else {
-			DirectedEdge lastEdge = this.edges.get(this.edges.size()-1);
+			int lastEdgeID = this.edges.get(this.edges.size()-1);
+			DirectedEdge lastEdge = (DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(lastEdgeID);
 			if (!lastEdge.getOutNode().equals(edge.getInNode())) {
 //				System.err.printf("Trying to add an edge %d that is not connected to the last edge %d in the route (id = %d)\n", edge.getID(), lastEdge.getID(), this.getID());
-				System.err.printf("(%d)-%d->(%d), (%d)-%d->(%d)", lastEdge.getInNode().getID(), lastEdge.getID(), lastEdge.getOutNode().getID(), edge.getInNode().getID(), edge.getID(), edge.getOutNode().getID());
+//				System.err.printf("(%d)-%d->(%d), (%d)-%d->(%d)", lastEdge.getInNode().getID(), lastEdge.getID(), lastEdge.getOutNode().getID(), edge.getInNode().getID(), edge.getID(), edge.getOutNode().getID());
+				LOGGER.warn("Trying to add a non-connected edge: ({})-{}->({}), ({})-{}->({}).", lastEdge.getInNode().getID(), lastEdge.getID(), lastEdge.getOutNode().getID(), edge.getInNode().getID(), edge.getID(), edge.getOutNode().getID());
 				return false;
 			} else
-				this.edges.add(edge);
+				this.edges.add(edge.getID());
 		}
 		return true;
 	}
@@ -142,7 +152,16 @@ public class Route {
 	 */
 	public void addEdgeWithoutValidityCheck(DirectedEdge edge) {
 
-		this.edges.add(edge);
+		this.edges.add(edge.getID());
+	}
+	
+	/**
+	 * Adds a directed edge to the end of the current route.
+	 * @param edge Directed edge to be added.
+	 */
+	public void addEdgeWithoutValidityCheck(int edgeID) {
+
+		this.edges.add(edgeID);
 	}
 	
 	/**
@@ -153,8 +172,8 @@ public class Route {
 	public void calculateTravelTime(Map<Integer, Double> linkTravelTime, double avgIntersectionDelay) {
 		
 		double travelTime = 0.0;
-		for (DirectedEdge edge: edges) {
-			double time = linkTravelTime.get(edge.getID());
+		for (int edgeID: edges.toArray()) {
+			double time = linkTravelTime.get(edgeID);
 			travelTime += time;
 		}
 		travelTime += this.getNumberOfIntersections() * avgIntersectionDelay;
@@ -167,10 +186,8 @@ public class Route {
 	public void calculateLength(){
 	
 		double length = 0.0;
-		for (DirectedEdge edge: edges) {
-			SimpleFeature sf = (SimpleFeature) edge.getObject();
-			double len = (double) sf.getAttribute("LenNet"); //in [km]
-			length += len;
+		for (int edgeID: edges.toArray()) {
+			length += roadNetwork.getEdgeLength(edgeID);
 		}
 		this.length = length;
 	}
@@ -198,7 +215,7 @@ public class Route {
 		for (EnergyType energy: EnergyType.values()) fuelCost +=  routeConsumptions.get(energy) * energyUnitCosts.get(energy);
 		
 		double tollCost = 0.0;
-		for (DirectedEdge edge: edges) {
+		for (int edgeID: edges.toArray()) {
 
 			if (linkCharges != null)
 				for (String policyName: linkCharges.keySet()) {
@@ -209,8 +226,8 @@ public class Route {
 						flags.put(policyName, true);
 						continue; //skip this policy then
 					}
-					if (charges.containsKey(edge.getID())) {
-						tollCost += charges.get(edge.getID());
+					if (charges.containsKey(edgeID)) {
+						tollCost += charges.get(edgeID);
 						flags.put(policyName, true);
 					}
 				}
@@ -234,30 +251,31 @@ public class Route {
 		HashMap<String, Double> parameters, parametersFuel, parametersElectricity;
 
 		for (EnergyType energy: EnergyType.values()) routeConsumptions.put(energy, 0.0);
-		
+
 		if (et == EngineType.PHEV_PETROL) {
-		
+
 			parametersFuel = energyConsumptionParameters.get(Pair.of(vht, EngineType.ICE_PETROL));
 			parametersElectricity = energyConsumptionParameters.get(Pair.of(vht, EngineType.BEV));
 			double relativeEfficiencyFuel = relativeFuelEfficiency.get(Pair.of(vht, EngineType.ICE_PETROL));
 			double relativeEfficiencyElectricity = relativeFuelEfficiency.get(Pair.of(vht, EngineType.BEV));
-					
+
 			double fuelConsumption = 0.0;
 			double electricityConsumption = 0.0;
-			for (DirectedEdge edge: edges) {
-				
+			for (int edgeID: edges.toArray()) {
+
+				DirectedEdge edge = (DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(edgeID);
 				SimpleFeature sf = (SimpleFeature) edge.getObject();
 				double len = (double) sf.getAttribute("LenNet"); //in [km]
-				double time = linkTravelTime.get(edge.getID()); //in [min]
+				double time = linkTravelTime.get(edgeID); //in [min]
 				String cat = (String) sf.getAttribute("RCat"); //road category (PM, PR, Pu, PU, TM, TR, Tu, TU), use Pu, PU, Tu, TU as urban, otherwise rural
 				double speed = len / (time / 60);
-			
+
 				//if no roadCategory information, assume it is ferry and skip
 				if (cat == null) {
 					LOGGER.trace("No road category information. Assuming it is ferry and skipping for consumption calculation.");
 					continue;
 				}
-		
+
 				//if edge is urban use electricity
 				if (cat.toUpperCase().charAt(1) == 'U')
 					electricityConsumption += len * (parametersElectricity.get("A") / speed + parametersElectricity.get("B") + parametersElectricity.get("C") * speed + parametersElectricity.get("D") * speed  * speed);
@@ -270,28 +288,29 @@ public class Route {
 			//store
 			routeConsumptions.put(EnergyType.ELECTRICITY, electricityConsumption);
 			routeConsumptions.put(EnergyType.PETROL, fuelConsumption);
-					
+
 		} else if (et == EngineType.PHEV_DIESEL) {
 			parametersFuel = energyConsumptionParameters.get(Pair.of(vht, EngineType.ICE_DIESEL));
 			parametersElectricity = energyConsumptionParameters.get(Pair.of(vht, EngineType.BEV));
 			double relativeEfficiencyFuel = relativeFuelEfficiency.get(Pair.of(vht, EngineType.ICE_DIESEL));
 			double relativeEfficiencyElectricity = relativeFuelEfficiency.get(Pair.of(vht, EngineType.BEV));
-			
+
 			double fuelConsumption = 0.0;
 			double electricityConsumption = 0.0;
-			for (DirectedEdge edge: edges) {
+			for (int edgeID: edges.toArray()) {
+				DirectedEdge edge = (DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(edgeID);
 				SimpleFeature sf = (SimpleFeature) edge.getObject();
 				double len = (double) sf.getAttribute("LenNet"); //in [km]
 				double time = linkTravelTime.get(edge.getID()); //in [min]
 				String cat = (String) sf.getAttribute("RCat"); //road category (PM, PR, Pu, PU, TM, TR, Tu, TU), use Pu, PU, Tu, TU as urban, otherwise rural
 				double speed = len / (time / 60);
-				
+
 				//if no roadCategory information, assume it is ferry and skip
 				if (cat == null) {
 					LOGGER.trace("No road category information. Assuming it is ferry and skipping for consumption calculation.");
 					continue;
 				}
-		
+
 				//if edge is urban use electricity
 				if (cat.toUpperCase().charAt(1) == 'U')
 					electricityConsumption += len * (parametersElectricity.get("A") / speed + parametersElectricity.get("B") + parametersElectricity.get("C") * speed + parametersElectricity.get("D") * speed  * speed);
@@ -304,26 +323,27 @@ public class Route {
 			//store
 			routeConsumptions.put(EnergyType.ELECTRICITY, electricityConsumption);
 			routeConsumptions.put(EnergyType.DIESEL, fuelConsumption);
-			
+
 		} else {
-			
+
 			parameters = energyConsumptionParameters.get(Pair.of(vht, et));
 			double relativeEfficiency = relativeFuelEfficiency.get(Pair.of(vht, et));
-			
+
 			double consumption = 0.0;
-			for (DirectedEdge edge: edges) {
+			for (int edgeID: edges.toArray()) {
+				DirectedEdge edge = (DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(edgeID);
 				SimpleFeature sf = (SimpleFeature) edge.getObject();
 				double len = (double) sf.getAttribute("LenNet"); //in [km]
 				double time = linkTravelTime.get(edge.getID()); //in [min]
 				String cat = (String) sf.getAttribute("RCat"); //road category (PM, PR, Pu, PU, TM, TR, Tu, TU), use Pu, PU, Tu, TU as urban, otherwise rural
 				double speed = len / (time / 60);
-				
+
 				//if no roadCategory information, assume it is ferry and skip
 				if (cat == null) {
 					LOGGER.trace("No road category information. Assuming it is ferry and skipping for consumption calculation.");
 					continue;
 				}
-		
+
 				consumption += len * (parameters.get("A") / speed + parameters.get("B") + parameters.get("C") * speed + parameters.get("D") * speed  * speed);
 			}
 			//apply relative fuel efficiency
@@ -340,10 +360,10 @@ public class Route {
 			else if (et == EngineType.BEV)
 				routeConsumptions.put(EnergyType.ELECTRICITY, consumption);
 		}
-			
+
 		return routeConsumptions;
 	}
-		
+
 	
 	/**
 	 * Calculates the utility of the route.
@@ -368,12 +388,7 @@ public class Route {
 		if (Double.compare(this.length, 0.0d) == 0) 
 			this.calculateLength(); //calculate only once (length is not going to change)
 				
-		double avgIntersectionDelay;
-		if (params == null) { //use default parameters
-			avgIntersectionDelay = AVERAGE_INTERSECTION_DELAY;
-		} else {
-			avgIntersectionDelay = Double.parseDouble(params.getProperty("AVERAGE_INTERSECTION_DELAY"));
-		}
+		double avgIntersectionDelay = Double.parseDouble(params.getProperty("AVERAGE_INTERSECTION_DELAY"));
 	
 		this.calculateTravelTime(linkTravelTime, avgIntersectionDelay); //always (re)calculate
 		
@@ -384,20 +399,10 @@ public class Route {
 		double cost = this.getCost();
 		int intersec = this.getNumberOfIntersections();
 		
-		double paramTime, paramLength, paramCost, paramIntersections;
-		if (params == null) { //use default parameters
-			paramTime = PARAM_TIME;
-			paramLength = PARAM_LENGTH;
-			paramCost = PARAM_COST;
-			paramIntersections = PARAM_INTERSECTIONS;
-			avgIntersectionDelay = AVERAGE_INTERSECTION_DELAY;
-		} else {
-			paramTime = Double.parseDouble(params.getProperty("TIME"));
-			paramLength = Double.parseDouble(params.getProperty("LENGTH"));
-			paramCost = Double.parseDouble(params.getProperty("COST"));
-			paramIntersections = Double.parseDouble(params.getProperty("INTERSECTIONS"));
-			avgIntersectionDelay = Double.parseDouble(params.getProperty("AVERAGE_INTERSECTION_DELAY"));
-		}
+		double paramTime = Double.parseDouble(params.getProperty("TIME"));
+		double paramLength = Double.parseDouble(params.getProperty("LENGTH"));
+		double paramCost = Double.parseDouble(params.getProperty("COST"));
+		double paramIntersections = Double.parseDouble(params.getProperty("INTERSECTIONS"));
 		
 		double utility = paramTime * time + paramLength * length + paramCost * cost + paramIntersections * intersec;  
 		this.utility = utility;
@@ -419,7 +424,7 @@ public class Route {
 	 */
 	public boolean contains(Edge edge) {
 		
-		return this.edges.contains(edge);
+		return this.edges.contains(edge.getID());
 	}
 	
 	/**
@@ -429,9 +434,7 @@ public class Route {
 	 */
 	public boolean contains(int edgeID) {
 		
-		for (Edge edge: this.edges)
-			if (edge.getID() == edgeID) return true;
-		return false;
+		return this.edges.contains(edgeID);
 	}
 
 	/**
@@ -499,8 +502,13 @@ public class Route {
 	 */
 	public DirectedNode getOriginNode() {
 		
-		if (edges.isEmpty()) 	return (DirectedNode) this.singleNode;
-		else 					return this.edges.get(0).getInNode();
+		if (edges.isEmpty())
+			return (DirectedNode) this.singleNode;
+		else {
+			int firstEdgeID = this.edges.get(0);
+			DirectedEdge firstEdge = (DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(firstEdgeID);
+			return firstEdge.getInNode();
+		}
 	}
 	
 	/**
@@ -508,8 +516,13 @@ public class Route {
 	 * @return Destination node.
 	 */
 	public DirectedNode getDestinationNode() {
-		if (edges.isEmpty()) 	return (DirectedNode) this.singleNode;
-		else					return this.edges.get(edges.size() - 1).getOutNode();	
+		if (edges.isEmpty())
+			return (DirectedNode) this.singleNode;
+		else {
+			int lastEdgeID = this.edges.get(edges.size() - 1);
+			DirectedEdge lastEdge = (DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(lastEdgeID);
+			return lastEdge.getOutNode();	
+		}
 	}
 	
 //	public int getID() {
@@ -526,8 +539,12 @@ public class Route {
 		//if (this.edges.size() == 1) return true; //single node route still considered valid!
 		
 		for (int i = 1; i < this.edges.size(); i++) {
-			DirectedEdge edge1 = this.edges.get(i-1);
-			DirectedEdge edge2 = this.edges.get(i);
+			int edgeID1 = this.edges.get(i-1);
+			int edgeID2 = this.edges.get(i);
+			
+			DirectedEdge edge1 = (DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(edgeID1);
+			DirectedEdge edge2 = (DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(edgeID2);
+			
 			if (!edge1.getOutNode().equals(edge2.getInNode())) return false; //if edges are not connected
 		}
 		return true;
@@ -562,7 +579,8 @@ public class Route {
 			sb.append(this.getDestinationNode().getID());
 			sb.append(")");
 		} else {
-			for (DirectedEdge edge: edges) {
+			for (int edgeID: edges.toArray()) {
+				DirectedEdge edge = (DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(edgeID);
 				sb.append("(");
 				sb.append(edge.getInNode().getID());
 				sb.append(")-");
@@ -573,7 +591,9 @@ public class Route {
 				//sb.append(")");
 			}
 			sb.append("(");
-			sb.append(edges.get(edges.size()-1).getOutNode());
+			int lastEdgeID = edges.get(edges.size()-1);
+			DirectedEdge lastEdge = (DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(lastEdgeID);
+			sb.append(lastEdge.getOutNode());
 			sb.append(")");
 		}
 
@@ -596,8 +616,27 @@ public class Route {
 		sb.append(this.getDestinationNode().getID());
 		sb.append(":");
 				
-		for (DirectedEdge edge: edges) {
-			sb.append(edge.getID());
+		for (int edgeID: edges.toArray()) {
+			sb.append(edgeID);
+			sb.append("-");
+		}
+		sb.delete(sb.length()-1, sb.length()); //delete last dash
+		
+		return sb.toString();
+	}
+	
+	/**
+	 * Gets formatted string representation of the route using edge IDs only.
+	 * @return Route as a string.
+	 */
+	public String getFormattedStringEdgeIDsOnly() {
+		
+		if (edges.isEmpty() && this.singleNode == null) return null;
+		
+		StringBuilder sb = new StringBuilder();
+		
+		for (int edgeID: edges.toArray()) {
+			sb.append(edgeID);
 			sb.append("-");
 		}
 		sb.delete(sb.length()-1, sb.length()); //delete last dash

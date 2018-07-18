@@ -126,11 +126,11 @@ public class RoadNetworkAssignmentTest {
 															null,
 															props);
 		
-		/*
+		
 		
 		
 		//set assignment fraction
-		rna.setAssignmentFraction(0.1);
+		//rna.setAssignmentFraction(0.1);
 
 		//assign passenger flows
 		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
@@ -138,8 +138,11 @@ public class RoadNetworkAssignmentTest {
 		odm.printMatrixFormatted("Passenger matrix:");
 
 		//read routes
+		long timeNow = System.currentTimeMillis();
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
 		rsg.readRoutesBinaryWithoutValidityCheck(passengerRoutesFile);
+		timeNow = System.currentTimeMillis() - timeNow;
+		System.out.printf("Routes read in %d milliseconds.\n", timeNow);
 		rsg.printStatistics();
 		
 		//set route choice parameters
@@ -157,7 +160,7 @@ public class RoadNetworkAssignmentTest {
 		}
 		
 		//assign passenger flows
-		long timeNow = System.currentTimeMillis();
+		timeNow = System.currentTimeMillis();
 		//rna.assignPassengerFlowsHourlyRouting(odm, routeStorage);
 		//for (TimeOfDay hour: TimeOfDay.values()) {
 		//	routeStorage.get(hour).printStatistics();
@@ -227,8 +230,8 @@ public class RoadNetworkAssignmentTest {
 		rna.resetTripStorages();
 				
 				
-		*/
 		
+		/*
 		// FREIGHT ASSIGNMENT //
 		
 		//sort nodes based on workplace zone population!
@@ -258,6 +261,7 @@ public class RoadNetworkAssignmentTest {
 		
 		//roadNetworkAssignment.saveAssignmentResults(2015, "assignment2015passengerAndFreigh.csv");
 
+		*/
 		
 //		//for (int i = 0; i < 5; i++) {
 //		for (int i = 0; i < 1; i++) {
@@ -281,7 +285,7 @@ public class RoadNetworkAssignmentTest {
 		System.out.println(roadNetwork.getZoneToNodes());
 		
 		System.out.println("Trip list: ");
-		List<Trip> tripList = rna.getTripList();
+		tripList = rna.getTripList();
 		Frequency freq = new Frequency();
 		for (Trip trip: tripList) {
 			//System.out.println(trip.toString());

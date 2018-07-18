@@ -51,10 +51,10 @@ public class RouteSetTest {
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
 		
 		//create routes
-		Route r1 = new Route();
-		Route r2 = new Route();
-		Route r3 = new Route();
-		Route r4 = new Route();
+		Route r1 = new Route(roadNetwork);
+		Route r2 = new Route(roadNetwork);
+		Route r3 = new Route(roadNetwork);
+		Route r4 = new Route(roadNetwork);
 		
 		DirectedNode n1 = (DirectedNode) roadNetwork.getNodeIDtoNode().get(7);
 		DirectedNode n2 = (DirectedNode) roadNetwork.getNodeIDtoNode().get(8);
@@ -98,7 +98,7 @@ public class RouteSetTest {
 		DirectedNode originNode = (DirectedNode)roadNetwork.getNodeIDtoNode().get(7);
 		DirectedNode destinationNode = (DirectedNode)roadNetwork.getNodeIDtoNode().get(40);
 		
-		RouteSet rs = new RouteSet(originNode, destinationNode);
+		RouteSet rs = new RouteSet(roadNetwork);
 		
 		//set route choice parameters
 		Properties params = new Properties();
@@ -169,8 +169,8 @@ public class RouteSetTest {
 			probabilitySum += probability;
 		
 		//check that probabilities are also sorted after sorting the utilities
-		ArrayList<Double> sorted = new ArrayList<Double>(rs.getProbabilities());
-		Collections.sort(sorted, Collections.reverseOrder());
+		double[] sorted = rs.getProbabilities();
+		Arrays.sort(sorted);
 		assertEquals ("Probabilities list is sorted", sorted, rs.getProbabilities());
 		
 		int[] choiceFrequency = new int[4];
@@ -190,7 +190,7 @@ public class RouteSetTest {
 			DirectedEdge e = (DirectedEdge) o;
 			System.out.println(e.getInNode() + "->" + e.getOutNode());
 		}
-		Route newRoute = new Route(rp);
+		Route newRoute = new Route(rp, roadNetwork);
 		System.out.println(newRoute.isValid());
 		
 		rs.addRoute(newRoute);
@@ -208,19 +208,19 @@ public class RouteSetTest {
 		System.out.println("Chosen route: " + chosenRoute.toString());
 		
 		//create a one-node route
-		Route r5 = new Route();
+		Route r5 = new Route(roadNetwork);
 		rp = new RoadPath();
 		rp.add(n1);
 		System.out.println(rp.toString());
 		System.out.println(rp.buildEdges());
 
-		r5 = new Route(rp);
+		r5 = new Route(rp, roadNetwork);
 		System.out.println("Valid: " + r5.isValid());
 		System.out.println("Empty: " + r5.isEmpty());
 		System.out.println(r5.toString());
 		System.out.println(r5.getFormattedString());
 		
-		rs = new RouteSet(n1, n1);
+		rs = new RouteSet(roadNetwork);
 		rs.addRoute(r5);
 		rs.printChoiceSet();
 		rs.printStatistics();

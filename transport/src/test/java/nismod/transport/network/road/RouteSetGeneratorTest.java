@@ -14,6 +14,7 @@ import java.io.PrintStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -314,7 +315,7 @@ public class RouteSetGeneratorTest {
 			System.out.println(rp);
 			System.out.println("Is it valid: " + rp.isValid());
 			System.out.println(rp.buildEdges());
-			Route route = new Route(rp);
+			Route route = new Route(rp, roadNetwork);
 			System.out.println(route.isValid());
 			System.out.println(route.getFormattedString());
 		} else {
@@ -323,13 +324,16 @@ public class RouteSetGeneratorTest {
 		
 		assertNull("RoadPath should be null after removing important edge", rp);
 			
-		rsg.printChoiceSets();
+		//rsg.printChoiceSets(); //this will not work as routes are not consistent with the roadNetwork after edge removal
+		
 		//remove routes
 		List<Route> removedRoutes = new ArrayList<Route>();
 		rsg.removeRoutesWithEdge(90, removedRoutes);
 		rsg.printChoiceSets();
+		
 		System.out.println("Removed routes:");
-		System.out.println(removedRoutes);
+		for (Route r: removedRoutes)
+			System.out.println(r.getFormattedStringEdgeIDsOnly());
 		assertTrue("Choice set should be empty", rsg.getRouteSet(31, 82).getChoiceSet().isEmpty());
 	}
 	

@@ -11,9 +11,7 @@ import java.util.Properties;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedNode;
-import org.opengis.feature.simple.SimpleFeature;
 
 import nismod.transport.network.road.RoadNetworkAssignment.EnergyType;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
@@ -29,19 +27,22 @@ public class RouteSet {
 	
 	private final static Logger LOGGER = LogManager.getLogger(RouteSet.class);
 	
-	private DirectedNode originNode;
-	private DirectedNode destinationNode;
+	//private DirectedNode originNode;
+	//private DirectedNode destinationNode;
 	private List<Route> choiceSet;
-	private ArrayList<Double> probabilities;
+	//private ArrayList<Double> probabilities;
+	private double[] probabilities;
+	private RoadNetwork roadNetwork;
 	
 	/**
 	 * Constructor.
 	 * @param originNode Origin node.
 	 * @param destinationNode Destination node.
 	 */
-	public RouteSet(DirectedNode originNode, DirectedNode destinationNode) {
-		this.originNode = originNode;
-		this.destinationNode = destinationNode;
+	public RouteSet(RoadNetwork roadNetwork) {
+		//this.originNode = originNode;
+		//this.destinationNode = destinationNode;
+		this.roadNetwork = roadNetwork;
 		
 		choiceSet = new ArrayList<Route>();
 	}
@@ -55,19 +56,24 @@ public class RouteSet {
 		//TODO
 		//test route validity
 		if (!route.isValid()) {
-			//System.err.println("Trying to add a non-valid route to the choice set. Ignoring request.");
+			LOGGER.warn("Trying to add a non-valid route to the choice set. Ignoring request.");
 			return;
 		}
 		//test that origin and destination nodes match the first and the last node of the route
-		if (!route.getOriginNode().equals(this.originNode) || !route.getDestinationNode().equals(this.destinationNode)) {
-			//System.err.println("Trying to add a route with wrong origin/destination node to the choice set. Ignoring request.");
-			return;
-		}
-		for (Route r: choiceSet)
-			if (r.equals(route)) {
-				//System.err.println("Trying to add a duplicate route to the choice set. Ignoring request.");
+		if (!this.choiceSet.isEmpty()) { //if not empty
+
+			//check that origin and destination nodes are ok
+			if (!route.getOriginNode().equals(this.getOriginNode()) || !route.getDestinationNode().equals(this.getDestinationNode())) {
+				LOGGER.warn("Trying to add a route with wrong origin/destination node to the choice set. Ignoring request.");
 				return;
 			}
+			//check that route does not already exist
+			for (Route r: choiceSet)
+				if (r.equals(route)) {
+					LOGGER.trace("Trying to add a duplicate route to the choice set. Ignoring request.");
+					return;
+				}
+		}
 		//add route to the choice set
 		choiceSet.add(route);
 	}
@@ -80,15 +86,51 @@ public class RouteSet {
 		
 		//TODO
 		//test that origin and destination nodes match the first and the last node of the route
-		if (!route.getOriginNode().equals(this.originNode) || !route.getDestinationNode().equals(this.destinationNode)) {
-			//System.err.println("Trying to add a route with wrong origin/destination node to the choice set. Ignoring request.");
-			return;
-		}
-		for (Route r: choiceSet)
-			if (r.equals(route)) {
-				//System.err.println("Trying to add a duplicate route to the choice set. Ignoring request.");
+		if (!this.choiceSet.isEmpty()) { //if not empty
+
+			//check that origin and destination nodes are ok
+			if (!route.getOriginNode().equals(this.getOriginNode()) || !route.getDestinationNode().equals(this.getDestinationNode())) {
+				LOGGER.warn("Trying to add a route with wrong origin/destination node to the choice set. Ignoring request.");
 				return;
 			}
+			//check that route does not already exist
+			for (Route r: choiceSet)
+				if (r.equals(route)) {
+					LOGGER.trace("Trying to add a duplicate route to the choice set. Ignoring request.");
+					return;
+				}
+		}
+		//add route to the choice set
+		choiceSet.add(route);
+	}
+	
+	/**
+	 * Adds a route to the choice set.
+	 * @param route Route to be added.
+	 */
+	public void addRouteWithoutValidityAndEndNodesCheck(Route route) {
+		
+		//TODO
+		//test that origin and destination nodes match the first and the last node of the route
+		if (!this.choiceSet.isEmpty()) { //if not empty
+
+			//check that route does not already exist
+			for (Route r: choiceSet)
+				if (r.equals(route)) {
+					LOGGER.trace("Trying to add a duplicate route to the choice set. Ignoring request.");
+					return;
+				}
+		}
+		//add route to the choice set
+		choiceSet.add(route);
+	}
+	
+	/**
+	 * Adds a route to the choice set.
+	 * @param route Route to be added.
+	 */
+	public void addRouteWithoutAnyChecks(Route route) {
+		
 		//add route to the choice set
 		choiceSet.add(route);
 	}
@@ -98,7 +140,9 @@ public class RouteSet {
 	 */
 	public void printChoiceSet() {
 		
-		System.out.printf("Choice set for origin node %d and destination node %d: \n", originNode.getID(), destinationNode.getID());
+		if (this.choiceSet.isEmpty()) return;
+		
+		System.out.printf("Choice set for origin node %d and destination node %d: \n", getOriginNode().getID(), getDestinationNode().getID());
 		for (Route r: choiceSet) 
 			System.out.println(r.toString());
 	}
@@ -110,14 +154,13 @@ public class RouteSet {
 	 */
 	public void calculateProbabilities() {
 		
-		ArrayList<Double> probabilities = new ArrayList<Double>();
+		probabilities = new double[choiceSet.size()];
 
 		//if just one route in the route set, set probability to 1.0
-		if (choiceSet.size() == 1) probabilities.add(1.0);
+		if (choiceSet.size() == 1) probabilities[0] = 1.0;
 
 		else { //otherwise calculate probabilities using logit formula
 
-			for (Route r: choiceSet) probabilities.add(0.0);
 			double sum = 0.0;
 
 			//all routes need to have a utility calculated
@@ -131,7 +174,7 @@ public class RouteSet {
 
 			for (int index = 0; index < choiceSet.size(); index++) {
 				double probability = Math.exp(choiceSet.get(index).getUtility()) / sum;
-				probabilities.set(index, probability);
+				probabilities[index] = probability;
 			}
 			/*
 		System.out.println("Utility / Probability");
@@ -172,8 +215,19 @@ public class RouteSet {
 	 * Getter method for choice probabilities.
 	 * @return Choice probabilities.
 	 */
-	public ArrayList<Double> getProbabilities() {
-		
+	public ArrayList<Double> getProbabilitiesAsList() {
+
+		ArrayList<Double> arrayList = new ArrayList<Double>(this.probabilities.length);
+		for (double p: this.probabilities) arrayList.add(p);
+		return arrayList;
+	}
+	
+	/**
+	 * Getter method for choice probabilities.
+	 * @return Choice probabilities.
+	 */
+	public double[] getProbabilities() {
+
 		return this.probabilities;
 	}
 	
@@ -202,10 +256,11 @@ public class RouteSet {
 			if (i.getEdges().isEmpty()) continue; //do not calculate for single node routes without edges (pathSize will be zero)
 			
 			double pathSize = 0.0;
-			for (DirectedEdge a: i.getEdges()) {
-
-				SimpleFeature sf = (SimpleFeature) a.getObject();
-				double edgeLength = (double) sf.getAttribute("LenNet"); //in [km]
+			for (int a: i.getEdges().toArray()) {
+				
+				//SimpleFeature sf = (SimpleFeature) a.getObject();
+				//double edgeLength = (double) sf.getAttribute("LenNet"); //in [km]
+				double edgeLength = roadNetwork.getEdgeLength(a);
 				double firstTerm = edgeLength / i.getLength();
 
 				double secondTerm = 0.0;
@@ -230,10 +285,11 @@ public class RouteSet {
 
 		Route i = this.choiceSet.get(routeIndex);
 		double pathSize = 0.0;
-		for (DirectedEdge a: i.getEdges()) {
+		for (int a: i.getEdges().toArray()) {
 
-			SimpleFeature sf = (SimpleFeature) a.getObject();
-			double edgeLength = (double) sf.getAttribute("LenNet"); //in [km]
+			//SimpleFeature sf = (SimpleFeature) a.getObject();
+			//double edgeLength = (double) sf.getAttribute("LenNet"); //in [km]
+			double edgeLength = roadNetwork.getEdgeLength(a);
 			double firstTerm = edgeLength / i.getLength();
 
 			double secondTerm = 0.0;
@@ -288,7 +344,7 @@ public class RouteSet {
 		double random = rng.nextDouble();
 		int chosenIndex = -1;
 		for (int index = 0; index < choiceSet.size(); index++) {
-			cumulativeProbability += this.probabilities.get(index);
+			cumulativeProbability += this.probabilities[index];
 			if (Double.compare(cumulativeProbability, random) > 0) {
 				chosenIndex = index;
 				break;
@@ -313,7 +369,11 @@ public class RouteSet {
 	 */
 	public DirectedNode getOriginNode() {
 		
-		return this.originNode;
+		DirectedNode originNode = null;
+		if (this.choiceSet != null)
+			originNode = this.choiceSet.get(0).getOriginNode(); //get first edge and its origin node
+				
+		return originNode;
 	}
 	
 	/**
@@ -321,7 +381,11 @@ public class RouteSet {
 	 */
 	public DirectedNode getDestinationNode() {
 		
-		return this.destinationNode;
+		DirectedNode destinationNode = null;
+		if (this.choiceSet != null)
+			destinationNode = this.choiceSet.get(0).getDestinationNode(); //get first route and its destination node
+				
+		return destinationNode;
 	}
 	
 	/**
@@ -346,7 +410,7 @@ public class RouteSet {
 	 */
 	public void printStatistics() {
 		
-		System.out.printf("Statistics for route set from %d to %d: %d distinct routes. \n", this.originNode.getID(), this.destinationNode.getID(), this.choiceSet.size());
+		System.out.printf("Statistics for route set from %d to %d: %d distinct routes. \n", this.getOriginNode().getID(), this.getDestinationNode().getID(), this.choiceSet.size());
 		
 	}
 	

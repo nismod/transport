@@ -273,10 +273,14 @@ public class Trip {
 		MultiKeyMap charges = congestionCharges.get(policyName);
 		HashMap<Integer, Double> linkCharges = (HashMap<Integer, Double>) charges.get(this.vehicle, this.hour);
 		
-		for (DirectedEdge edge: this.route.getEdges()) {
+		for (int edgeID: this.route.getEdges().toArray()) {
 			//if (linkCharges.containsKey(edge.getID()) && linkCharges.get(edge.getID()) > 0.0) return true;
-			if (linkCharges.containsKey(edge.getID())) return true; //we actually do not care if the charging is applied
+			if (linkCharges.containsKey(edgeID)) return true; //we actually do not care if the charging is applied
 		}
+//		for (int edgeID: this.route.getEdges()) {
+//			//if (linkCharges.containsKey(edge.getID()) && linkCharges.get(edge.getID()) > 0.0) return true;
+//			if (linkCharges.containsKey(edgeID)) return true; //we actually do not care if the charging is applied
+//		}
 		
 		return false;
 	}

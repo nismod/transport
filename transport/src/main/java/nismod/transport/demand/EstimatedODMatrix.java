@@ -294,8 +294,8 @@ public class EstimatedODMatrix extends RealODMatrix {
 				double factor = factors.getFlow(originLAD, destinationLAD); 
 				int count = counter.getFlow(originLAD, destinationLAD);
 				
-				for (DirectedEdge edge: route.getEdges()) {
-					factor += linkFactors.get(edge.getID()) * multiplier;
+				for (int edgeID: route.getEdges().toArray()) {
+					factor += linkFactors.get(edgeID) * multiplier;
 					count += multiplier;
 				}
 				

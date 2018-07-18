@@ -28,7 +28,6 @@ import org.geotools.graph.structure.Node;
 
 import com.vividsolutions.jts.geom.Point;
 
-import nismod.transport.demand.AssignableODMatrix;
 import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.ODMatrix;
 import nismod.transport.demand.RealODMatrix2;
@@ -90,7 +89,7 @@ public class RouteSetGenerator {
 		
 		RouteSet set = getRouteSet(origin, destination);
 		if (set == null) {
-			set = new RouteSet(route.getOriginNode(),route.getDestinationNode());
+			set = new RouteSet(roadNetwork);
 			routes.put(origin, destination, set);
 		}
 		set.addRoute(route);
@@ -113,10 +112,12 @@ public class RouteSetGenerator {
 		
 		RouteSet set = getRouteSet(origin, destination);
 		if (set == null) {
-			set = new RouteSet(route.getOriginNode(),route.getDestinationNode());
+			set = new RouteSet(roadNetwork);
 			routes.put(origin, destination, set);
 		}
 		set.addRouteWithoutValidityCheck(route);
+		//set.addRouteWithoutValidityAndEndNodesCheck(route);
+		//set.addRouteWithoutAnyChecks(route);
 	}
 	
 	/**
@@ -194,7 +195,7 @@ public class RouteSetGenerator {
 		//System.out.println(fastestPath.toString());
 		//System.out.println("Path validity: " + fastestPath.isValid());
 		
-		Route fastestRoute = new Route(fastestPath);
+		Route fastestRoute = new Route(fastestPath, roadNetwork);
 		//System.out.println("Route validity: " + fastestRoute.isValid());
 		//rs.addRoute(fastestRoute);
 		//rs.printChoiceSet();
@@ -216,7 +217,7 @@ public class RouteSetGenerator {
 			if (path != null) {
 				//System.out.println(path.toString());
 				//System.out.println("Path validity: " + path.isValid());
-				Route route = new Route(path);
+				Route route = new Route(path, roadNetwork);
 				//System.out.println(route);
 				//rs.addRoute(route);
 				if (route.getOriginNode().equals(originNode) && route.getDestinationNode().equals(destinationNode))
@@ -269,7 +270,7 @@ public class RouteSetGenerator {
 		if (origin == destination) {
 			RoadPath rp = new RoadPath();
 			rp.add(roadNetwork.getNodeIDtoNode().get(origin));
-			Route route = new Route(rp);
+			Route route = new Route(rp, roadNetwork);
 			this.addRoute(route);
 			return;
 		}
@@ -289,7 +290,7 @@ public class RouteSetGenerator {
 		//System.out.println("RoadPath " + fastestPath.toString());
 		//System.out.println("Path validity: " + fastestPath.isValid());
 
-		Route fastestRoute = new Route(fastestPath);
+		Route fastestRoute = new Route(fastestPath, roadNetwork);
 		//System.out.println("Route: " + fastestRoute.getFormattedString());
 		//System.out.println("Route validity: " + fastestRoute.isValid());
 		//System.out.println("Route origin node: " + fastestRoute.getOriginNode().getID());
@@ -335,7 +336,7 @@ public class RouteSetGenerator {
 				if (path != null) {
 					//System.out.println("Nodes: " + path.toString());
 					//System.out.println("Path validity: " + path.isValid());
-					Route route = new Route(path);
+					Route route = new Route(path, roadNetwork);
 					//System.out.println("Route: " + route.getFormattedString());
 					//rs.addRoute(route);
 					if (route.getOriginNode().equals(originNode) && route.getDestinationNode().equals(destinationNode))
@@ -373,7 +374,7 @@ public class RouteSetGenerator {
 				if (path != null) {
 					//System.out.println("Nodes: " + path.toString());
 					//System.out.println("Path validity: " + path.isValid());
-					Route route = new Route(path);
+					Route route = new Route(path, roadNetwork);
 					//System.out.println("Route: " + route.getFormattedString());
 					//rs.addRoute(route);
 					if (route.getOriginNode().equals(originNode) && route.getDestinationNode().equals(destinationNode))
@@ -913,7 +914,7 @@ public class RouteSetGenerator {
 		for (Node n: roadNetwork.getNodeIDtoNode().values()) {
 			RoadPath rp = new RoadPath();
 			rp.add(n);
-			Route r = new Route(rp);
+			Route r = new Route(rp, roadNetwork);
 			//this.addRoute(r);
 			this.addRouteWithoutValidityCheck(r);
 		}
@@ -947,7 +948,6 @@ public class RouteSetGenerator {
 		for (Object mk: routes.keySet()) {
 			int origin = (int) ((MultiKey)mk).getKey(0);
 			int destination = (int) ((MultiKey)mk).getKey(1);
-		
 			((RouteSet)routes.get(origin, destination)).printChoiceSet();
 		}
 	}
@@ -1080,8 +1080,8 @@ public class RouteSetGenerator {
 				RouteSet rs = (RouteSet)value;
 				//iterate over all routes and save only edges (start/end nodes are redundant information)
 				for (Route route: rs.getChoiceSet()) {
-					for (DirectedEdge edge: route.getEdges())
-						dataStream.writeInt(edge.getID());
+					for (int edgeID: route.getEdges().toArray())
+						dataStream.writeInt(edgeID);
 					dataStream.writeInt(0);
 				}
 			}
@@ -1123,7 +1123,7 @@ public class RouteSetGenerator {
 		    	if (splitLine.length > 2) { //only if there are edges
 		    		String edges[] = splitLine[2].split("-");
 		    		//System.out.println(Arrays.toString(edges));
-		    		Route route = new Route();
+		    		Route route = new Route(roadNetwork);
 		    		boolean success = false;
 		    		for (String edge: edges) {
 		    			success = route.addEdge((DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(Integer.parseInt(edge)));
@@ -1168,7 +1168,7 @@ public class RouteSetGenerator {
 		    	if (splitLine.length > 2) { //only if there are edges
 		    		String edges[] = splitLine[2].split("-");
 		    		//System.out.println(Arrays.toString(edges));
-		    		Route route = new Route();
+		    		Route route = new Route(roadNetwork);
 		    		for (String edge: edges)
 		    			route.addEdgeWithoutValidityCheck((DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(Integer.parseInt(edge)));
 		    		//System.out.println(route.getFormattedString());
@@ -1207,7 +1207,7 @@ public class RouteSetGenerator {
 			buff = new BufferedInputStream(input);
 			data = new DataInputStream(buff);
 			
-			Route route = new Route();
+			Route route = new Route(roadNetwork);
 			//boolean success = true;
 			while (true) { 
 				int edgeID = data.readInt();
@@ -1223,7 +1223,7 @@ public class RouteSetGenerator {
 					else counterBadRoutes++;
 					//create new route if there are more bytes
 					//if (data.available() > 0) route = new Route();
-					route = new Route();
+					route = new Route(roadNetwork);
 					//success = true;
 				}
 			}
@@ -1259,11 +1259,11 @@ public class RouteSetGenerator {
 			buff = new BufferedInputStream(input);
 			data = new DataInputStream(buff);
 			
-			Route route = new Route();
+			Route route = new Route(roadNetwork);
 			while (true) { 
 				int edgeID = data.readInt();
 				if (edgeID != 0) { //keep adding edge to the route
-					route.addEdgeWithoutValidityCheck((DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(edgeID));
+					route.addEdgeWithoutValidityCheck(edgeID);
 				} else {
 					//trim to size
 					route.trimToSize();
@@ -1271,7 +1271,7 @@ public class RouteSetGenerator {
 					this.addRouteWithoutValidityCheck(route);
 					//create new route if there are more bytes
 					//if (data.available() > 0) route = new Route();
-					route = new Route();
+					route = new Route(roadNetwork);
 				}
 			}
 		} catch (EOFException e) {

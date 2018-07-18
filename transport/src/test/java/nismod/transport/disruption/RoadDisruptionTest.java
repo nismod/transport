@@ -1,14 +1,12 @@
 package nismod.transport.disruption;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -17,6 +15,7 @@ import org.junit.Test;
 import nismod.transport.demand.ODMatrix;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
+import nismod.transport.network.road.Route;
 import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.utility.ConfigReader;
 import nismod.transport.utility.InputFileReader;
@@ -79,7 +78,9 @@ public class RoadDisruptionTest {
 		rsg.printChoiceSets();
 		rsg.printStatistics();
 		System.out.println("Disrupted edges: " + rd3.getListOfDisruptedEdgesIDs());
-		System.out.println("Removed routes: " + rd3.getListOfRemovedRoutes());
+		System.out.println("Removed routes: ");
+		for (Route r: rd3.getListOfRemovedRoutes())
+				System.out.println(r.getFormattedStringEdgeIDsOnly());
 
 		final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
 		final String unitCO2EmissionsFile = props.getProperty("unitCO2EmissionsFile");
@@ -285,8 +286,10 @@ public class RoadDisruptionTest {
 		rsg.printChoiceSets();
 		rsg.printStatistics();
 		System.out.println("Disrupted edges: " + rd3.getListOfDisruptedEdgesIDs());
-		System.out.println("Removed routes: " + rd3.getListOfRemovedRoutes());
-
+		System.out.println("Removed routes: ");
+		for (Route r: rd3.getListOfRemovedRoutes())
+				System.out.println(r.getFormattedStringEdgeIDsOnly());
+	
 		final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
 		final String unitCO2EmissionsFile = props.getProperty("unitCO2EmissionsFile");
 		final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");

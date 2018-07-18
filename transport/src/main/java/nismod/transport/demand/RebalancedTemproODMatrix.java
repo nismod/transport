@@ -222,9 +222,9 @@ public class RebalancedTemproODMatrix extends RealODMatrix2 {
 				double factor = factors.getFlow(originZone, destinationZone); 
 				double count = counter.getFlow(originZone, destinationZone);
 				
-				for (DirectedEdge edge: route.getEdges())
-					if (linkFactors.get(edge.getID()) != null){
-					factor += linkFactors.get(edge.getID()) * multiplier;
+				for (int edgeID: route.getEdges().toArray())
+					if (linkFactors.get(edgeID) != null){
+					factor += linkFactors.get(edgeID) * multiplier;
 					count += multiplier;
 					}
 				

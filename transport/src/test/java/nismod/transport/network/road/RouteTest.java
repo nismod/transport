@@ -45,10 +45,10 @@ public class RouteTest {
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
 				
 		//create routes
-		Route r1 = new Route();
-		Route r2 = new Route();
-		Route r3 = new Route();
-		Route r4 = new Route();
+		Route r1 = new Route(roadNetwork);
+		Route r2 = new Route(roadNetwork);
+		Route r3 = new Route(roadNetwork);
+		Route r4 = new Route(roadNetwork);
 		
 		DirectedNode n1 = (DirectedNode) roadNetwork.getNodeIDtoNode().get(7);
 		DirectedNode n2 = (DirectedNode) roadNetwork.getNodeIDtoNode().get(8);
@@ -252,13 +252,13 @@ public class RouteTest {
 		assertEquals("Utility should be correctly calculated", utility, calculatedUtility, EPSILON);
 		
 		//create a one-node route
-		Route r5 = new Route();
+		Route r5 = new Route(roadNetwork);
 		RoadPath rp = new RoadPath();
 		rp.add(n1);
 		System.out.println(rp.toString());
 		System.out.println(rp.buildEdges());
 
-		r5 = new Route(rp);
+		r5 = new Route(rp, roadNetwork);
 		System.out.println("Valid: " + r5.isValid());
 		System.out.println("Empty: " + r5.isEmpty());
 		System.out.println(r5.toString());

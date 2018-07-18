@@ -89,7 +89,7 @@ public class RoadNetworkAssignment {
 
 	public static enum VehicleType {
 		CAR(0), ARTIC(1), RIGID(2), VAN(3), CAR_AV(4), ARTIC_AV(5), RIGID_AV(6), VAN_AV(7);
-		private int value; 
+		int value; 
 		private VehicleType(int value) { this.value = value; } 
 		public int getValue() { return this.value; } 
 	};
@@ -493,7 +493,7 @@ public class RoadNetworkAssignment {
 							continue;
 						}
 
-						foundRoute = new Route(fastestPath);
+						foundRoute = new Route(fastestPath, roadNetwork);
 						rsg.addRoute(foundRoute); //add to the route set
 					}
 
@@ -687,7 +687,7 @@ public class RoadNetworkAssignment {
 							continue;
 						}
 
-						foundRoute = new Route(fastestPath);
+						foundRoute = new Route(fastestPath, roadNetwork);
 						rsg.addRoute(foundRoute); //add to the route set
 					}
 
@@ -923,7 +923,7 @@ public class RoadNetworkAssignment {
 							LOGGER.warn("Not even aStar could find a route between node {} and node {}!", originNode, destinationNode);
 							continue;
 						}
-						chosenRoute = new Route(fastestPath);
+						chosenRoute = new Route(fastestPath, roadNetwork);
 						if (chosenRoute.isEmpty()) {
 							LOGGER.warn("Empty route between nodes {} and {}!", originNode, destinationNode);
 							continue;
@@ -1247,7 +1247,7 @@ public class RoadNetworkAssignment {
 							continue;
 						}
 
-						foundRoute = new Route(fastestPath);
+						foundRoute = new Route(fastestPath, roadNetwork);
 						rsg.addRoute(foundRoute); //add to the route set
 					}
 
@@ -1458,7 +1458,7 @@ public class RoadNetworkAssignment {
 							LOGGER.warn("Not even aStar could find a route between node {} and node {}!", originNode, destinationNode);
 							continue;
 						}
-						chosenRoute = new Route(fastestPath);
+						chosenRoute = new Route(fastestPath, roadNetwork);
 						if (chosenRoute.isEmpty()) {
 							LOGGER.warn("Empty route between nodes {} and {}!", originNode, destinationNode);
 							continue;
@@ -1725,7 +1725,7 @@ public class RoadNetworkAssignment {
 							continue;
 						}
 
-						foundRoute = new Route(fastestPath);
+						foundRoute = new Route(fastestPath, roadNetwork);
 						rsg.addRoute(foundRoute); //add to the route set
 					}
 
@@ -1741,7 +1741,7 @@ public class RoadNetworkAssignment {
 							continue;
 						}
 
-						foundRoute = new Route(fastestPath);
+						foundRoute = new Route(fastestPath, roadNetwork);
 					}
 
 					int multiplier = 1;
@@ -1972,7 +1972,7 @@ public class RoadNetworkAssignment {
 							continue;
 						}
 
-						foundRoute = new Route(fastestPath);
+						foundRoute = new Route(fastestPath, roadNetwork);
 						rsg.addRoute(foundRoute); //add to the route set
 					}
 
@@ -1988,7 +1988,7 @@ public class RoadNetworkAssignment {
 							continue;
 						}
 
-						foundRoute = new Route(fastestPath);
+						foundRoute = new Route(fastestPath, roadNetwork);
 					}
 
 					int multiplier = 1;
@@ -2322,7 +2322,7 @@ public class RoadNetworkAssignment {
 							LOGGER.warn("Not even aStar could find a route between node {} and node {}!", originNode, destinationNode);
 							continue;
 						}
-						chosenRoute = new Route(fastestPath);
+						chosenRoute = new Route(fastestPath, roadNetwork);
 						if (chosenRoute.isEmpty()) {
 							LOGGER.warn("Empty route between nodes {} and {}!", originNode, destinationNode);
 							continue;
@@ -4186,11 +4186,11 @@ public class RoadNetworkAssignment {
 		for (Trip trip: tripList) {
 			int multiplier = trip.getMultiplier();
 			Map<Integer, Double> hourlyMap = map.get(trip.getTimeOfDay());
-			for (Edge edge: trip.getRoute().getEdges()) {
-				Double currentCount = hourlyMap.get(edge.getID());
+			for (int edgeID: trip.getRoute().getEdges().toArray()) {
+				Double currentCount = hourlyMap.get(edgeID);
 				if (currentCount == null) currentCount = 0.0;
 				currentCount += this.vehicleTypeToPCU.get(trip.getVehicle()) * multiplier; //add PCU of the vehicle
-				hourlyMap.put(edge.getID(), currentCount);
+				hourlyMap.put(edgeID, currentCount);
 			}
 		}
 
@@ -4225,11 +4225,11 @@ public class RoadNetworkAssignment {
 
 		for (Trip trip: tripList) {
 			int multiplier = trip.getMultiplier();
-			for (Edge edge: trip.getRoute().getEdges()) {
-				Double currentCount = map.get(edge.getID());
+			for (int edgeID: trip.getRoute().getEdges().toArray()) {
+				Double currentCount = map.get(edgeID);
 				if (currentCount == null) currentCount = 0.0;
 				currentCount += this.vehicleTypeToPCU.get(trip.getVehicle()) * multiplier; //add PCU of the vehicle
-				map.put(edge.getID(), currentCount);
+				map.put(edgeID, currentCount);
 			}
 		}
 
@@ -4269,11 +4269,11 @@ public class RoadNetworkAssignment {
 		for (Trip trip: tripList) {
 			int multiplier = trip.getMultiplier();
 			Map<Integer, Integer> vehicleMap = map.get(trip.getVehicle());
-			for (Edge edge: trip.getRoute().getEdges()) {
-				Integer currentCount = vehicleMap.get(edge.getID());
+			for (int edgeID: trip.getRoute().getEdges().toArray()) {
+				Integer currentCount = vehicleMap.get(edgeID);
 				if (currentCount == null) currentCount = 0;
 				currentCount += multiplier;
-				vehicleMap.put(edge.getID(), currentCount);
+				vehicleMap.put(edgeID, currentCount);
 			}
 		}
 
