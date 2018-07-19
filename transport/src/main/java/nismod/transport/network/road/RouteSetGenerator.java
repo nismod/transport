@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
+import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.map.MultiKeyMap;
@@ -1100,6 +1101,54 @@ public class RouteSetGenerator {
 			}
 		}
 	}
+	
+	/**
+	 * Saves all route sets into a binary file.
+	 * It also uses unsigned short (2 Bytes, which has a max. value of 65535).
+	 * @param fileName File name.
+	 * @param append Whether to append to an existing file.
+	 */
+	public void saveRoutesBinaryShort(String fileName, boolean append) {
+		
+		LOGGER.info("Saving the routes into a binary file.");
+		
+        FileOutputStream outputStream = null;
+        BufferedOutputStream bufferedStream = null;
+        DataOutputStream dataStream = null;
+		try {
+			outputStream = new FileOutputStream(fileName, append);
+			bufferedStream = new BufferedOutputStream(outputStream);
+			dataStream = new DataOutputStream(bufferedStream);
+			//iterate over all route sets
+			for (Object value: routes.values()) {
+				RouteSet rs = (RouteSet)value;
+				//iterate over all routes and save only edges (start/end nodes are redundant information)
+				for (Route route: rs.getChoiceSet()) {
+					for (int edgeID: route.getEdges().toArray()) {
+						if (edgeID > 65535) {
+							LOGGER.error("Edge ID larger than 65535 cannot be stored as short. Use saveRoutesBinary method instead.");
+							return;
+						}
+						dataStream.writeShort(edgeID);
+					}
+					dataStream.writeShort(0);
+				}
+			}
+		} catch (Exception e) {
+			LOGGER.error(e);
+		} finally {
+			try {
+				dataStream.flush();
+				dataStream.close();
+				bufferedStream.flush();
+				bufferedStream.close();
+				outputStream.flush();
+				outputStream.close();
+			} catch (IOException e) {
+				LOGGER.error(e);
+			}
+		}
+	}
 		
 	/**
 	 * Reads route sets from a text file.
@@ -1281,6 +1330,101 @@ public class RouteSetGenerator {
 		} finally {
 			try {
 				input.close();
+				buff.close();
+				data.close();
+			} catch (IOException e) {
+				LOGGER.error(e);
+			}
+		}
+	}
+	
+	/**
+	 * Reads route sets from a text file.
+	 * @param fileName File name.
+	 */
+	public void readRoutesBinaryShortWithoutValidityCheck(String fileName) {
+		
+		LOGGER.info("Reading pre-generated routes from " + fileName);
+		
+		FileInputStream input = null;
+		BufferedInputStream buff = null;
+		DataInputStream data = null;
+		try {
+			input = new FileInputStream(fileName);
+			buff = new BufferedInputStream(input);
+			data = new DataInputStream(buff);
+			
+			Route route = new Route(roadNetwork);
+			while (true) { 
+				int edgeID = data.readUnsignedShort();
+				if (edgeID != 0) { //keep adding edge to the route
+					route.addEdgeWithoutValidityCheck(edgeID);
+				} else {
+					//trim to size
+					route.trimToSize();
+					//add route to the route set if all edge additions have been successful
+					this.addRouteWithoutValidityCheck(route);
+					//create new route if there are more bytes
+					//if (data.available() > 0) route = new Route();
+					route = new Route(roadNetwork);
+				}
+			}
+		} catch (EOFException e) {
+			LOGGER.debug("End of the binary route file reached.");
+		} catch (Exception e) {
+			LOGGER.error(e);
+		} finally {
+			try {
+				input.close();
+				buff.close();
+				data.close();
+			} catch (IOException e) {
+				LOGGER.error(e);
+			}
+		}
+	}
+	
+	/**
+	 * Reads route sets from a text file.
+	 * @param fileName File name.
+	 */
+	public void readRoutesBinaryGZIPpedWithoutValidityCheck(String fileName) {
+		
+		LOGGER.info("Reading pre-generated routes from " + fileName);
+
+		FileInputStream input = null;
+		GZIPInputStream gzip = null;
+		BufferedInputStream buff = null;
+		DataInputStream data = null;
+		try {
+			input = new FileInputStream(fileName);
+			gzip = new GZIPInputStream(input);
+			buff = new BufferedInputStream(gzip);
+			data = new DataInputStream(buff);
+			
+			Route route = new Route(roadNetwork);
+			while (true) { 
+				int edgeID = data.readInt();
+				if (edgeID != 0) { //keep adding edge to the route
+					route.addEdgeWithoutValidityCheck(edgeID);
+				} else {
+					//trim to size
+					route.trimToSize();
+					//add route to the route set if all edge additions have been successful
+					this.addRouteWithoutValidityCheck(route);
+					//create new route if there are more bytes
+					//if (data.available() > 0) route = new Route();
+					route = new Route(roadNetwork);
+				}
+			}
+		} catch (EOFException e) {
+			LOGGER.debug("End of the binary route file reached.");
+		} catch (Exception e) {
+			LOGGER.error(e);
+		} finally {
+			try {
+				input.close();
+				gzip.close();
 				buff.close();
 				data.close();
 			} catch (IOException e) {

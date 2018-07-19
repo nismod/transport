@@ -68,7 +68,10 @@ public class RouteSetGeneratorTest {
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
 		roadNetwork.makeEdgesAdmissible();
-		
+			
+		System.out.println("Edge Ids:");
+		System.out.println(roadNetwork.getEdgeIDtoEdge().keySet());
+				
 		//load base year matrices
 		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
 		FreightMatrix fm = new FreightMatrix(baseYearFreightMatrixFile);
@@ -98,9 +101,18 @@ public class RouteSetGeneratorTest {
 		System.out.printf("Freight routes generated in %d seconds.\n", timeNow / 1000);
 		
 		rsg.printStatistics();
-		rsg.printChoiceSets();
+		//rsg.printChoiceSets();
+		
 		rsg.saveRoutesBinary("miniFreightRoutes.dat", false);
-					
+		rsg.saveRoutesBinaryShort("miniFreightRoutesShort.dat", false);
+		
+		rsg.clearRoutes();
+		
+		rsg.readRoutesBinaryShortWithoutValidityCheck("miniFreightRoutesShort.dat");
+		rsg.printStatistics();
+		
+		rsg.clearRoutes();
+		
 		//timeNow = System.currentTimeMillis();
 		//rsg.readRoutesBinaryWithoutValidityCheck("./src/main/resources/data/freightRoutes/freightRoutes.dat");
 		//timeNow = System.currentTimeMillis() - timeNow;
