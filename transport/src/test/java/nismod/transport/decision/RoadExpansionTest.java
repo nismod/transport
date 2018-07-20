@@ -43,13 +43,15 @@ public class RoadExpansionTest {
 		final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
 		final URL AADFurl = new URL(props.getProperty("AADFurl"));
 
-		final String roadExpansionFileName = props.getProperty("roadExpansionFile");
+		final String roadExpansionFileName = "./src/test/resources/testdata/interventions/roadExpansion.properties";
 		
 		//create a road network
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
-	
+		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
+		
 		List<Intervention> interventions = new ArrayList<Intervention>();
 		Properties props2 = new Properties();
+		props2.setProperty("type", "RoadExpansion");
 		props2.setProperty("startYear", "2016");
 		props2.setProperty("endYear", "2025");
 		props2.setProperty("fromNode", "57");

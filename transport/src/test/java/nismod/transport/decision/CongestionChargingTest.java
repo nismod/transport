@@ -58,7 +58,6 @@ public class CongestionChargingTest {
 		final String passengerRoutesFile = props.getProperty("passengerRoutesFile");
 		final String freightRoutesFile = props.getProperty("freightRoutesFile");
 
-		//final String congestionChargingFile = props.getProperty("congestionChargingFile");
 		final String congestionChargingFile = "./src/test/resources/testdata/interventions/congestionChargingSouthampton.properties";
 		
 		final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
@@ -133,7 +132,7 @@ public class CongestionChargingTest {
 		final String elasticitiesFile = props.getProperty("elasticitiesFile");
 		final String elasticitiesFreightFile = props.getProperty("elasticitiesFreightFile");
 
-		final String congestionChargingFile = props.getProperty("congestionChargingFile");
+		final String congestionChargingFile = "./src/test/resources/testdata/interventions/congestionCharging.properties";
 
 		final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
 		final String unitCO2EmissionsFile = props.getProperty("unitCO2EmissionsFile");
@@ -144,6 +143,7 @@ public class CongestionChargingTest {
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 	
 		Properties props2 = new Properties();
+		props2.setProperty("type", "congestionCharging");
 		props2.setProperty("startYear", "2016");
 		props2.setProperty("endYear", "2025");
 		props2.setProperty("listOfCongestionChargedEdgeIDs", "561, 562,	574"); //space and tab added on purpose

@@ -44,13 +44,15 @@ public class RoadDevelopmentTest {
 		final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
 		final URL AADFurl = new URL(props.getProperty("AADFurl"));
 
-		final String roadDevelopmentFileName = props.getProperty("roadDevelopmentFile");
+		final String roadDevelopmentFileName = "./src/test/resources/testdata/interventions/roadDevelopment.properties";
 		
 		//create a road network
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
+		//roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
 		
 		List<Intervention> interventions = new ArrayList<Intervention>();
 		Properties props2 = new Properties();
+		props2.setProperty("type", "RoadDevelopment");
 		props2.setProperty("startYear", "2016");
 		props2.setProperty("endYear", "2025");
 		props2.setProperty("fromNode", "63");
@@ -119,10 +121,4 @@ public class RoadDevelopmentTest {
 		}
 		assertTrue("Intervention should be installed", rd.getState());
 	}
-	
-	
-	
-	
-	
-	
 }

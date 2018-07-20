@@ -23,10 +23,14 @@ public abstract class Intervention {
 	protected Properties props;
 	protected boolean installed;
 	
+	//enumerate possible intervention types
+	public static enum InterventionType {
+		RoadExpansion, RoadDevelopment, CongestionCharging
+	}
+	
 	protected Intervention (Properties props) {
 		
 		this.props = props;
-		
 		this.installed = false;
 	}
 	

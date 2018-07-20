@@ -2,6 +2,7 @@ package nismod.transport;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -22,6 +23,7 @@ import org.jfree.data.category.DefaultCategoryDataset;
 
 import nismod.transport.decision.CongestionCharging;
 import nismod.transport.decision.Intervention;
+import nismod.transport.decision.Intervention.InterventionType;
 import nismod.transport.decision.RoadDevelopment;
 import nismod.transport.decision.RoadExpansion;
 import nismod.transport.demand.DemandModel;
@@ -35,6 +37,7 @@ import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.showcase.LandingGUI;
 import nismod.transport.utility.ConfigReader;
 import nismod.transport.utility.InputFileReader;
+import nismod.transport.utility.PropertiesReader;
 import nismod.transport.visualisation.LineVisualiser;
 import nismod.transport.zone.Zoning;
 
@@ -155,6 +158,7 @@ public class App {
 				roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 				roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
 				roadNetwork.makeEdgesAdmissible();
+
 			}
 
 			if (line.hasOption("p")) {
@@ -332,14 +336,40 @@ public class App {
 				
 				//load interventions
 				List<Intervention> interventions = new ArrayList<Intervention>();
-				RoadExpansion re = new RoadExpansion(roadExpansionFile);
-				RoadDevelopment rd = new RoadDevelopment(roadDevelopmentFile);
-				CongestionCharging cc = new CongestionCharging(congestionChargingFile);
 				
-				interventions.add(re);
-				interventions.add(rd);
-				interventions.add(cc);
-				
+				for (Object o: props.keySet()) {
+					String key = (String) o;
+					if (key.startsWith("interventionFile")) {
+						//System.out.println(key);
+						String interventionFile = props.getProperty(key);
+						Properties p = PropertiesReader.getProperties(interventionFile);
+						String type = p.getProperty("type");
+						//System.out.println(type);
+						
+						//check if the intervention type is among allowed intervention types
+						boolean typeFound = false;
+						for (InterventionType it: Intervention.InterventionType.values())
+							if (it.name().equals(type)) {
+								typeFound = true;
+								break;
+							}
+						if (!typeFound) {
+							LOGGER.error("Type of intervention '{}' is not among allowed interventon types.", type);
+							return;
+						}
+												
+						//create appropriate intervention object through reflection
+						Class<?> clazz = Class.forName("nismod.transport.decision." + type);
+						Constructor<?> constructor = clazz.getConstructor(String.class);
+						Object instance = constructor.newInstance(interventionFile);
+											
+						//add intervention to the list of interventions
+						interventions.add((Intervention)instance);
+						
+						LOGGER.info("{} intervention added to the intervention list. Path to the intervention file: {}", type, interventionFile);
+					}
+				}
+			
 				RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, props);
 				
 				final Boolean flagUseRouteChoiceModel = Boolean.parseBoolean(props.getProperty("USE_ROUTE_CHOICE_MODEL"));
