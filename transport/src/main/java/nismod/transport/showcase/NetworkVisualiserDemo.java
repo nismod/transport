@@ -19,6 +19,7 @@ import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 
 import org.geotools.brewer.color.ColorBrewer;
+import org.geotools.brewer.color.StyleGenerator;
 import org.geotools.data.CachingFeatureSource;
 import org.geotools.data.shapefile.ShapefileDataStore;
 import org.geotools.data.simple.SimpleFeatureCollection;
@@ -51,7 +52,6 @@ import nismod.transport.demand.ODMatrix;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.utility.ConfigReader;
-import nismod.transport.visualisation.MyStyleGenerator;
 import nismod.transport.visualisation.NetworkVisualiser;
 
 /**
@@ -280,18 +280,16 @@ public class NetworkVisualiserDemo {
 
 		// Use MyStyleGenerator to make a set of rules for the Classifier
 		// assigning features the correct colour based on traffic volume
-		FeatureTypeStyle style = MyStyleGenerator.createFeatureTypeStyle(
+		FeatureTypeStyle style = StyleGenerator.createFeatureTypeStyle(
 				groups,
 				propertyExpression,
 				coloursReversed,
 				"Generated FeatureTypeStyle for RdYlGn",
 				featureCollection.getSchema().getGeometryDescriptor(),
-				MyStyleGenerator.ELSEMODE_IGNORE,
+				StyleGenerator.ELSEMODE_IGNORE,
 				0.95f,
-				4.0f,
 				null);
-		//stroke);
-
+			
 		//create a map
 		MapContent map = new MapContent();
 		//set windows title
@@ -438,17 +436,15 @@ public class NetworkVisualiserDemo {
 
 		// Use MyStyleGenerator to make a set of rules for the Classifier
 		// assigning features the correct colour based on traffic volume
-		FeatureTypeStyle style = MyStyleGenerator.createFeatureTypeStyle(
+		FeatureTypeStyle style = StyleGenerator.createFeatureTypeStyle(
 				groups,
 				propertyExpression,
 				coloursReversed,
 				"Generated FeatureTypeStyle for RdYlGn",
 				featureCollection.getSchema().getGeometryDescriptor(),
-				MyStyleGenerator.ELSEMODE_IGNORE,
+				StyleGenerator.ELSEMODE_IGNORE,
 				0.95f,
-				4.0f,
 				null);
-		//stroke);
 
 		//create a map
 		MapContent map = new MapContent();
@@ -590,17 +586,15 @@ public class NetworkVisualiserDemo {
 
 		// Use MyStyleGenerator to make a set of rules for the Classifier
 		// assigning features the correct colour based on traffic volume
-		FeatureTypeStyle style = MyStyleGenerator.createFeatureTypeStyle(
+		FeatureTypeStyle style = StyleGenerator.createFeatureTypeStyle(
 				groups,
 				propertyExpression,
 				coloursReversed,
 				"Generated FeatureTypeStyle for RdYlGn",
 				featureCollection.getSchema().getGeometryDescriptor(),
-				MyStyleGenerator.ELSEMODE_IGNORE,
+				StyleGenerator.ELSEMODE_IGNORE,
 				0.95f,
-				4.0f,
 				null);
-		//stroke);
 
 		//create a map
 		MapContent map = new MapContent();
@@ -741,17 +735,15 @@ public class NetworkVisualiserDemo {
 
 		// Use MyStyleGenerator to make a set of rules for the Classifier
 		// assigning features the correct colour based on traffic volume
-		FeatureTypeStyle style = MyStyleGenerator.createFeatureTypeStyle(
+		FeatureTypeStyle style = StyleGenerator.createFeatureTypeStyle(
 				groups,
 				propertyExpression,
 				coloursReversed,
 				"Generated FeatureTypeStyle for RdYlGn",
 				featureCollection.getSchema().getGeometryDescriptor(),
-				MyStyleGenerator.ELSEMODE_IGNORE,
+				StyleGenerator.ELSEMODE_IGNORE,
 				0.95f,
-				4.0f,
 				null);
-		//stroke);
 
 		//create a map
 		MapContent map = new MapContent();

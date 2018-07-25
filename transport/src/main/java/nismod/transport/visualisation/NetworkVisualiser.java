@@ -13,6 +13,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 
 import org.geotools.brewer.color.ColorBrewer;
+import org.geotools.brewer.color.StyleGenerator;
 import org.geotools.data.shapefile.ShapefileDataStore;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.factory.CommonFactoryFinder;
@@ -23,7 +24,10 @@ import org.geotools.map.MapContent;
 import org.geotools.renderer.GTRenderer;
 import org.geotools.styling.FeatureTypeStyle;
 import org.geotools.styling.Font;
+import org.geotools.styling.LineSymbolizer;
+import org.geotools.styling.LineSymbolizerImpl;
 import org.geotools.styling.PolygonSymbolizer;
+import org.geotools.styling.Rule;
 import org.geotools.styling.SLD;
 import org.geotools.styling.Style;
 import org.geotools.styling.StyleBuilder;
@@ -45,9 +49,11 @@ import nismod.transport.network.road.RoadNetwork;
  * @author Milan Lovric
   */
 public class NetworkVisualiser {
-	
-	private final static Logger LOGGER = Logger.getLogger(NetworkVisualiser.class.getName());
 
+	private final static Logger LOGGER = Logger.getLogger(NetworkVisualiser.class.getName());
+	
+	public final static float ROAD_LINK_WIDTH = 4.0f;
+	
 	protected NetworkVisualiser() {
 
 	}
@@ -90,7 +96,7 @@ public class NetworkVisualiser {
 		map.addLayer(zonesLayer);
 
 		//create style for road network
-		Style networkStyle = SLD.createLineStyle(Color.GREEN, 4.0f, "RoadNumber", font2);
+		Style networkStyle = SLD.createLineStyle(Color.GREEN, ROAD_LINK_WIDTH, "RoadNumber", font2);
 
 		//add network layer to the map
 		FeatureLayer networkLayer;
@@ -213,19 +219,24 @@ public class NetworkVisualiser {
 	    StyleFactory styleFactory = CommonFactoryFinder.getStyleFactory(null);
 	    FilterFactory filterFactory = CommonFactoryFinder.getFilterFactory(null);
 
-	    // Use MyStyleGenerator to make a set of rules for the Classifier
-	    // assigning features the correct colour based on traffic volume
-	    FeatureTypeStyle style = MyStyleGenerator.createFeatureTypeStyle(
+	    // Use StyleGenerator to make a set of rules for the Classifier
+	    // assigning features the correct colour based on the link data
+	    FeatureTypeStyle style = StyleGenerator.createFeatureTypeStyle(
 	            groups,
 	            propertyExpression,
 	            coloursReversed,
 	            "Generated FeatureTypeStyle for RdYlGn",
 	            featureCollection.getSchema().getGeometryDescriptor(),
-	            MyStyleGenerator.ELSEMODE_IGNORE,
+	            StyleGenerator.ELSEMODE_IGNORE,
 	            0.95f,
-	            4.0f,
 	            null);
-	            //stroke);
+	            	    
+	    //modify the stroke width for all the rules in the style (to increase the width of road links)
+	    for (Rule rule: style.rules()) {
+	    	Symbolizer symb = rule.symbolizers().get(0);
+	    	LineSymbolizer lsymb = (LineSymbolizer) symb;
+	    	lsymb.getStroke().setWidth(ff.literal(ROAD_LINK_WIDTH));
+	    }
 	    
 		//create a map
 		MapContent map = new MapContent();
@@ -352,19 +363,24 @@ public class NetworkVisualiser {
 	    StyleFactory styleFactory = CommonFactoryFinder.getStyleFactory(null);
 	    FilterFactory filterFactory = CommonFactoryFinder.getFilterFactory(null);
 
-	    // Use MyStyleGenerator to make a set of rules for the Classifier
-	    // assigning features the correct colour based on traffic volume
-	    FeatureTypeStyle style = MyStyleGenerator.createFeatureTypeStyle(
+	    // Use StyleGenerator to make a set of rules for the Classifier
+	    // assigning features the correct colour based on the link data
+	    FeatureTypeStyle style = StyleGenerator.createFeatureTypeStyle(
 	            groups,
 	            propertyExpression,
 	            coloursReversed,
 	            "Generated FeatureTypeStyle for RdYlGn",
 	            featureCollection.getSchema().getGeometryDescriptor(),
-	            MyStyleGenerator.ELSEMODE_IGNORE,
+	            StyleGenerator.ELSEMODE_IGNORE,
 	            0.95f,
-	            4.0f,
 	            null);
-	            //stroke);
+	            	    
+	    //modify the stroke width for all the rules in the style (to increase the width of road links)
+	    for (Rule rule: style.rules()) {
+	    	Symbolizer symb = rule.symbolizers().get(0);
+	    	LineSymbolizer lsymb = (LineSymbolizer) symb;
+	    	lsymb.getStroke().setWidth(ff.literal(ROAD_LINK_WIDTH));
+	    }
 	    
 		//create a map
 		MapContent map = new MapContent();

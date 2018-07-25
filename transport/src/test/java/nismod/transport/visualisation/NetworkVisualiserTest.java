@@ -73,17 +73,21 @@ public class NetworkVisualiserTest {
 
 		final URL congestionChargeZoneUrl = new URL("file://src/test/resources/testdata/shapefiles/congestionChargingZone.shp");
 		String shapefilePath = "./temp/networkWithDailyVolume.shp";
-		String shapefilePath2 = "./temp/networkWithCountComparison.shp";
+		String shapefilePath2 = "./temp/networkWithCapacityUtilisation.shp";
 		String shapefilePath3 = "./temp/networkWithCountComparison.shp";
+		String shapefilePath4 = "./temp/networkWithCountComparison.shp";
 
 		rna.updateLinkVolumeInPCU();
 		rna.updateLinkVolumePerVehicleType();
 		Map<Integer, Double> dailyVolume = rna.getLinkVolumeInPCU();
-		NetworkVisualiserDemo.visualise(roadNetwork, "Network from shapefiles");
-//		NetworkVisualiser.visualise(roadNetwork, "Network with traffic volume", dailyVolume, "DayVolume", shapefilePath);
-		NetworkVisualiserDemo.visualise(roadNetwork, "Network with capacity utilisation", rna.calculateDirectionAveragedPeakLinkCapacityUtilisation(), "CapUtil", shapefilePath);
-//		NetworkVisualiser.visualise(roadNetwork, "Network with count comparison", rna.calculateDirectionAveragedAbsoluteDifferenceCarCounts(), "AbsDiffCounts", shapefilePath2);
-//		NetworkVisualiser.visualise(roadNetwork, "Network with count comparison", rna.calculateDirectionAveragedAbsoluteDifferenceCarCounts(), "AbsDiffCounts", shapefilePath3, congestionChargeZoneUrl);
-
+		
+		System.out.println(dailyVolume);
+		
+		
+//		NetworkVisualiserDemo.visualise(roadNetwork, "Network from shapefiles");
+//		NetworkVisualiserDemo.visualise(roadNetwork, "Network with capacity utilisation", rna.calculateDirectionAveragedPeakLinkCapacityUtilisation(), "CapUtil", shapefilePath);
+		NetworkVisualiser.visualise(roadNetwork, "Network with traffic volume", dailyVolume, "DayVolume", shapefilePath);
+//		NetworkVisualiser.visualise(roadNetwork, "Network with count comparison", rna.calculateDirectionAveragedAbsoluteDifferenceCarCounts(), "AbsDiffCounts", shapefilePath3);
+//		NetworkVisualiser.visualise(roadNetwork, "Network with count comparison", rna.calculateDirectionAveragedAbsoluteDifferenceCarCounts(), "AbsDiffCounts", shapefilePath4, congestionChargeZoneUrl);
 	}
 }
