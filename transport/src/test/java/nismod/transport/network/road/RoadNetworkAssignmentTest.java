@@ -174,6 +174,14 @@ public class RoadNetworkAssignmentTest {
 		rna.updateLinkVolumePerVehicleType();
 		rna.updateLinkTravelTimes();
 		
+		rna.saveZonalVehicleKilometres(2015, "zonalvkms.csv");
+		rna.saveZonalVehicleKilometresWithAccessEgress(2015, "zonalvkmsAccessEgress.csv");
+		
+		System.out.println(rna.calculateZonalVehicleKilometresPerVehicleType());
+		System.out.println(rna.calculateZonalVehicleKilometresPerVehicleTypeFromTripList(false));
+		System.out.println(rna.calculateZonalVehicleKilometresPerVehicleTypeFromTripList(true));
+		
+		
 		//rna.saveLinkTravelTimes(2015, "linkTravelTimes.csv");
 		//rna.saveTotalEnergyConsumptions(2015, "totalEnergy.csv");
 		//rna.saveZonalCarEnergyConsumptions(2015, 0.5, "zonalEnergy.csv");
@@ -218,6 +226,8 @@ public class RoadNetworkAssignmentTest {
 		System.out.printf("RMSN for counts (3.0 expansion factor): %.2f%% %n", rna.calculateRMSNforExpandedSimulatedVolumes(3.0));
 		System.out.printf("RMSN for counts (4.0 expansion factor): %.2f%% %n", rna.calculateRMSNforExpandedSimulatedVolumes(4.0));
 	
+		
+		
 		
 		
 		//clear the routes
@@ -357,10 +367,8 @@ public class RoadNetworkAssignmentTest {
 //		for (double expansionFactor = 0.1; expansionFactor < 5.0; expansionFactor += 0.1) {
 //			System.out.printf("Expansion factor: %.2f RMSN for counts: %.2f%% %n", expansionFactor, rna.calculateRMSNforExpandedSimulatedVolumes(expansionFactor));
 //		}
-  
-  
-  
- 
+  		
+
 	}
 
 	@Test
@@ -544,8 +552,10 @@ public class RoadNetworkAssignmentTest {
 		rna.updateLinkVolumePerVehicleType();
 		
 		System.out.println("Vehicle kilometres:");
-		System.out.println(rna.calculateVehicleKilometres());
-		
+		System.out.println(rna.calculateZonalVehicleKilometresPerVehicleType());
+		System.out.println(rna.calculateZonalVehicleKilometresPerVehicleTypeFromTripList(false));
+		System.out.println(rna.calculateZonalVehicleKilometresPerVehicleTypeFromTripList(true));
+			
 		System.out.println("Link volumes in PCU:");
 		System.out.println(rna.getLinkVolumeInPCU());
 		
@@ -557,7 +567,25 @@ public class RoadNetworkAssignmentTest {
 			vehicleKilometres += volume * length; 
 		}
 		System.out.println("Total vehicle-kilometres: " + vehicleKilometres);
-		assertEquals("Vehicle kilometres are correct", vehicleKilometres, rna.calculateVehicleKilometres().get("E06000045"), EPSILON);
+		assertEquals("Vehicle kilometres are correct", vehicleKilometres, rna.calculateZonalVehicleKilometresPerVehicleType().get("E06000045").get(VehicleType.CAR), EPSILON);
+		
+		double vehicleKilometresWithAccessEgress = 0.0;
+		for (Trip trip: rna.getTripList()) {
+			int originNode = trip.getOriginNode().getID();
+			int destinationNode = trip.getDestinationNode().getID();
+			double access = roadNetwork.getNodeToAverageAccessEgressDistance().get(originNode) / 1000;
+			double egress = roadNetwork.getNodeToAverageAccessEgressDistance().get(destinationNode) / 1000;
+			int volume = trip.getMultiplier();
+			vehicleKilometresWithAccessEgress += volume * (access + egress); 
+			
+			for (int edgeID: trip.getRoute().getEdges().toArray()) {
+				double length = roadNetwork.getEdgeLength(edgeID);
+				vehicleKilometresWithAccessEgress += volume * length; 
+			}
+		
+		}
+		System.out.println("Total vehicle-kilometres: " + vehicleKilometresWithAccessEgress);
+		assertEquals("Vehicle kilometres with access and egress are correct", vehicleKilometresWithAccessEgress, rna.calculateZonalVehicleKilometresPerVehicleTypeFromTripList(true).get("E06000045").get(VehicleType.CAR), EPSILON*100);
 		
 		System.out.println("Trip list: ");
 		ArrayList<Trip> tripList = rna.getTripList();
@@ -667,7 +695,11 @@ public class RoadNetworkAssignmentTest {
 		//create a road network
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
-			
+		
+		//these were not mapped because the count point falls on the river between the two zones
+		roadNetwork.getEdgeToZone().put(718, "E07000091"); //New Forest
+		roadNetwork.getEdgeToZone().put(719, "E07000091");
+					
 		final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
 		final String unitCO2EmissionsFile = props.getProperty("unitCO2EmissionsFile");
 		final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
@@ -864,7 +896,7 @@ public class RoadNetworkAssignmentTest {
 		
 		System.out.println("Vehicle kilometres:");
 		rna.updateLinkVolumeInPCU();
-		System.out.println(rna.calculateVehicleKilometres());
+		System.out.println(rna.calculateZonalVehicleKilometresPerVehicleType());
 		
 		//rna.saveZonalCarEnergyConsumptions(2015, 0.85 , "testZonalCarEnergyConsumptions.csv");
 		//rna.saveAssignmentResults(2015, "testAssignmentResults.csv");
@@ -934,7 +966,9 @@ public class RoadNetworkAssignmentTest {
 		rna.updateLinkVolumePerVehicleType();
 
 		System.out.println("Vehicle kilometres:");
-		System.out.println(rna.calculateVehicleKilometres());
+		System.out.println(rna.calculateZonalVehicleKilometresPerVehicleType());
+		System.out.println(rna.calculateZonalVehicleKilometresPerVehicleTypeFromTripList(false));
+		System.out.println(rna.calculateZonalVehicleKilometresPerVehicleTypeFromTripList(true));
 
 		System.out.println("Link volumes in PCU:");
 		System.out.println(rna.getLinkVolumeInPCU());
@@ -954,11 +988,10 @@ public class RoadNetworkAssignmentTest {
 					}
 					double length = roadNetwork.getEdgeLength(edgeID);
 					zonalVehicleKilometres += volume * length;
-					continue;
 				}
 			}
 			System.out.printf("Total vehicle-kilometres for zone %s: %f %n", zone, zonalVehicleKilometres);
-			assertEquals("Zonal vehicle kilometres are correct", zonalVehicleKilometres, rna.calculateVehicleKilometres().get(zone), EPSILON);
+			assertEquals("Zonal vehicle kilometres are correct", zonalVehicleKilometres, rna.calculateZonalVehicleKilometresPerVehicleType().get(zone).get(VehicleType.CAR), EPSILON);
 		}
 		
 		//TEST TRIP LIST
@@ -1048,6 +1081,10 @@ public class RoadNetworkAssignmentTest {
 		rna.resetTripStorages();
 		rna.assignPassengerFlowsTempro(temproODM2, zoning, rsg);
 		rna.calculateDistanceSkimMatrixTempro().printMatrixFormatted();
+		
+		rna.calculateLinkVolumePerVehicleType(rna.getTripList());
+		System.out.println(rna.calculateZonalVehicleKilometresPerVehicleTypeFromTemproTripList(false));
+		System.out.println(rna.calculateZonalVehicleKilometresPerVehicleTypeFromTemproTripList(true));
 	}
 	
 	@Test

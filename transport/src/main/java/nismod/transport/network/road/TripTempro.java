@@ -186,4 +186,13 @@ public class TripTempro extends Trip {
 		
 		return CO2;
 	}
+	
+	/**
+	 * Getter for the zoning system.
+	 * @return Zoning.
+	 */
+	public Zoning getZoning() {
+		
+		return this.zoning;
+	}
 }
