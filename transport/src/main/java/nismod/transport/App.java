@@ -322,10 +322,6 @@ public class App {
 				final String elasticitiesFile = props.getProperty("elasticitiesFile");
 				final String elasticitiesFreightFile = props.getProperty("elasticitiesFreightFile");
 
-				final String roadExpansionFile = props.getProperty("roadExpansionFile");
-				final String roadDevelopmentFile = props.getProperty("roadDevelopmentFile");
-				final String congestionChargingFile = props.getProperty("congestionChargingFile");
-
 				final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
 				final String unitCO2EmissionsFile = props.getProperty("unitCO2EmissionsFile");
 				final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");

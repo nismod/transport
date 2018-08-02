@@ -4,7 +4,6 @@
 package nismod.transport.network.road;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Serializable;
@@ -1563,6 +1562,12 @@ public class RoadNetwork {
 		//set the instance field with the generated directed graph
 		this.network = (DirectedGraph) graphBuilder.getGraph();
 
+		LOGGER.info("Creating direct access maps for nodes and edges...");
+		
+		createDirectAccessNodeMap();
+		createDirectAccessEdgeMap();
+		createEdgeToOtherDirectionEdgeMap();
+		
 		LOGGER.info("Mapping nodes to LAD zones...");
 		
 		//map the nodes to zones
@@ -1572,11 +1577,6 @@ public class RoadNetwork {
 		
 		//map the edges to zones
 		mapEdgesToZones(zonesFeatureCollection);
-		
-		LOGGER.info("Creating direct access maps for nodes and edges...");
-		createDirectAccessNodeMap();
-		createDirectAccessEdgeMap();
-		createEdgeToOtherDirectionEdgeMap();
 		
 		LOGGER.info("Populating blacklists with unallowed starting/ending node IDs...");
 		createNodeBlacklists();
@@ -1804,8 +1804,6 @@ public class RoadNetwork {
 								zoneToNodes.put((String) sf.getAttribute("CODE"), listOfNodes);
 							}
 							listOfNodes.add(node.getID());
-							
-							continue;
 						}
 				}
 			} 
@@ -1817,6 +1815,7 @@ public class RoadNetwork {
 	
 	/**
 	 * Maps the edges of the graph to the zone codes.
+	 * Some edges may remain unmapped to a zone, e.g. edges for which both nodes and the count point fall outside any polygon.
 	 * @param zonesFeatureCollection Feature collection with the zones.
 	 */
 	private void mapEdgesToZones(SimpleFeatureCollection zonesFeatureCollection) {
@@ -1837,13 +1836,35 @@ public class RoadNetwork {
 					//if edge already mapped to zone, skip that edge
 					if (this.edgeToZone.containsKey(edge.getID())) continue;
 					
+					//check if one of the nodes of the edge are not mapped to any zone as this indicates potential problems
+					//(e.g. when a node is on the bridge, so it is not contained within any zonal polygon).
+					String zone1 = this.nodeToZone.get(edge.getNodeA().getID());
+					String zone2 = this.nodeToZone.get(edge.getNodeB().getID());
+					
+					//if one node falls outside any zonal polygon, then assign edge to the zone of the other node
+					if (zone1 == null && zone2 != null) {
+						this.edgeToZone.put(edge.getID(), zone2);
+						continue;
+					}
+					if (zone2 == null && zone1 != null) {
+						this.edgeToZone.put(edge.getID(), zone1);
+						continue;
+					}
+					//if both nodes fall to the same zone, assign to that zone
+					if (zone1 != null && zone2 != null && zone1.equals(zone2)) {
+						this.edgeToZone.put(edge.getID(), zone1);
+						continue;
+					}
+					
+					//decide zone from the location of the count point object
+					String countPointZone = null;
 					SimpleFeature sf = (SimpleFeature)edge.getObject();
-
 					if (sf.getDefaultGeometry() instanceof Point) { //TODO this will ignore ferries, but also new road links!
 						Point countPoint = (Point) sf.getDefaultGeometry();
 
 						if (polygon.contains(countPoint)) {
-							this.edgeToZone.put(edge.getID(), (String) featureZone.getAttribute("CODE"));
+							countPointZone = (String) featureZone.getAttribute("CODE");
+							this.edgeToZone.put(edge.getID(), countPointZone);
 							continue;
 						}
 					}

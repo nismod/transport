@@ -4103,8 +4103,9 @@ public class RoadNetworkAssignment {
 	}
 
 	/**
-	 * Calculates vehicle kilometres in each LAD.
-	 * Includes access and egress (for LAD-based model).
+	 * Calculates vehicle kilometres in each LAD and per vehicle type.
+	 * Optionally includes access and egress (for LAD-based model).
+	 * @param includeAccessEgress True if access and egress should be included in the calculation.
 	 * @return Vehicle kilometres.
 	 */
 	public Map<String, Map<VehicleType, Double>> calculateZonalVehicleKilometresPerVehicleTypeFromTripList(boolean includeAccessEgress) {
@@ -4118,32 +4119,92 @@ public class RoadNetworkAssignment {
 
 			//for each edge of the route add vehkm depending on the zone of the edge
 			for (int edgeID: trip.getRoute().getEdges().toArray()) {
+				
+				//link length
+				double length = roadNetwork.getEdgeLength(edgeID);
 
 				//get zone
-				String zone = roadNetwork.getEdgeToZone().get(edgeID);
-				//check if ferry
-				DirectedEdge edge = (DirectedEdge)this.roadNetwork.getEdgeIDtoEdge().get(edgeID);
-				SimpleFeature sf = (SimpleFeature)edge.getObject();
-				String roadNumber = (String) sf.getAttribute("RoadNumber");
-				if (zone == null) {
-					if (roadNumber.charAt(0) != 'F') LOGGER.warn("Edge {} is not a ferry edge, but it is not mapped to any zone!", edgeID);
-					continue; //skipping this edge
-				}
+				String zone = this.roadNetwork.getEdgeToZone().get(edgeID);
+				if (zone != null) { //edge to zone mapping exists for this edge
+					//fetch current map for the zone
+					Map<VehicleType, Double> map = vehicleKilometres.get(zone);
+					if (map == null) {
+						map = new HashMap<VehicleType, Double>();
+						vehicleKilometres.put(zone, map);
+					}
 
-				//fetch current map for the zone
-				Map<VehicleType, Double> map = vehicleKilometres.get(zone);
-				if (map == null) {
-					map = new HashMap<VehicleType, Double>();
-					vehicleKilometres.put(zone, map);
-				}
+					//fetch current value for the vehicle type
+					Double vehkm = vehicleKilometres.get(zone).get(vht);
+					if (vehkm == null) vehkm = 0.0;
+					//volume of vehicles is equal to the multiplier
+					vehkm += multiplier * length;
+					
+					//store new value
+					vehicleKilometres.get(zone).put(vht, vehkm);
+				} else { //zone == null
+					//check if ferry
+					DirectedEdge edge = (DirectedEdge)this.roadNetwork.getEdgeIDtoEdge().get(edgeID);
+					SimpleFeature sf = (SimpleFeature)edge.getObject();
+					String roadNumber = (String) sf.getAttribute("RoadNumber");
+					if (roadNumber.charAt(0) != 'F') {
+						LOGGER.trace("Edge {} is not a ferry edge, but it is not mapped to any zone!", edgeID);
 
-				//fetch current value for the vehicle type
-				Double vehkm = vehicleKilometres.get(zone).get(vht);
-				if (vehkm == null) vehkm = 0.0;
-				vehkm += roadNetwork.getEdgeLength(edgeID) * multiplier;
+						//we will split vehicle kilometres between two zones
+						String zone1 = null, zone2 = null;
 
-				//store new value
-				vehicleKilometres.get(zone).put(vht, vehkm);
+						//get zones of edge nodes
+						String zoneA = this.roadNetwork.getNodeToZone().get(edge.getNodeA().getID());
+						String zoneB = this.roadNetwork.getNodeToZone().get(edge.getNodeB().getID());
+						if (zoneA != null && zoneB != null) {
+							zone1 = zoneA;
+							zone2 = zoneB;
+						} else if (zoneA == null && zoneB == null) {
+							//use nodes of neighbouring edges
+							for (Object o: edge.getNodeA().getEdges()) {
+								Edge e = (Edge)o;
+								if (e.getID() != edge.getID()) {
+									zone1 = this.roadNetwork.getEdgeToZone().get(e.getID());
+									break;
+								}
+							}
+							for (Object o: edge.getNodeB().getEdges()) {
+								Edge e = (Edge)o;
+								if (e.getID() != edge.getID()) {
+									zone2 = this.roadNetwork.getEdgeToZone().get(e.getID());
+									break;
+								}
+							}
+						}
+						LOGGER.trace("Splitting vehicle kilometres for edge {} between zone {} and zone {}.", edge.getID(), zone1, zone2);
+						//fetch current map for the zone
+						Map<VehicleType, Double> map = vehicleKilometres.get(zone1);
+						if (map == null) {
+							map = new HashMap<VehicleType, Double>();
+							vehicleKilometres.put(zone1, map);
+						}
+						//fetch current value
+						Double vehkm = vehicleKilometres.get(zone1).get(vht);
+						if (vehkm == null) vehkm = 0.0;
+						//volume of vehicles is equal to the multiplier
+						vehkm += multiplier * length / 2.0;
+						//store new value
+						vehicleKilometres.get(zone1).put(vht, vehkm);
+						
+						//fetch current map for the zone
+						map = vehicleKilometres.get(zone2);
+						if (map == null) {
+							map = new HashMap<VehicleType, Double>();
+							vehicleKilometres.put(zone2, map);
+						}
+						//fetch current value
+						vehkm = vehicleKilometres.get(zone2).get(vht);
+						if (vehkm == null) vehkm = 0.0;
+						//volume of vehicles is equal to the multiplier
+						vehkm += multiplier * length / 2.0;
+						//store new value
+						vehicleKilometres.get(zone2).put(vht, vehkm);
+					}//if not ferry
+				}//zone is null
 			}//edge loop
 
 			if (includeAccessEgress) {
@@ -4151,8 +4212,12 @@ public class RoadNetworkAssignment {
 				//get origin node
 				Node originNode = trip.getOriginNode();
 				if (originNode == null) LOGGER.error("Trip does not have origin node!");
-				Double access = roadNetwork.getNodeToAverageAccessEgressDistance().get(originNode.getID()) / 1000; //km
-				if (access == null) LOGGER.error("Node {} does not have access length!", originNode.getID());
+				Double access = roadNetwork.getNodeToAverageAccessEgressDistance().get(originNode.getID());
+				if (access == null) {
+					LOGGER.warn("Node {} does not have access length! Assume zero access.", originNode.getID());
+					access = 0.0;
+				}
+				else access /= 1000; //km
 				String accessZone = roadNetwork.getNodeToZone().get(originNode.getID());
 								
 				//fetch current map
@@ -4172,8 +4237,12 @@ public class RoadNetworkAssignment {
 
 				Node destinationNode = trip.getDestinationNode();
 				if (destinationNode == null) LOGGER.error("Trip does not have destination node!");
-				Double egress = roadNetwork.getNodeToAverageAccessEgressDistance().get(destinationNode.getID()) / 1000; //km
-				if (egress == null) LOGGER.error("Node {} does not have egress length!", destinationNode.getID());
+				Double egress = roadNetwork.getNodeToAverageAccessEgressDistance().get(destinationNode.getID());
+				if (egress == null) {
+					LOGGER.warn("Node {} does not have egress length! Assume zero egress.", destinationNode.getID());
+					egress = 0.0;
+				}
+				else egress /= 1000; //km
 				String egressZone = roadNetwork.getNodeToZone().get(destinationNode.getID());
 
 				//fetch current map
@@ -4211,8 +4280,10 @@ public class RoadNetworkAssignment {
 				Integer edgeID = pair.getKey();
 				Integer volume = pair.getValue();
 				if (volume == 0) LOGGER.debug("0 volume!");
+
+				//get zone
 				String zone = this.roadNetwork.getEdgeToZone().get(edgeID);
-				if (zone != null) { //zone will be null for ferries
+				if (zone != null) { //edge to zone mapping exists for this edge
 					//fetch current map
 					Map<VehicleType, Double> map = vehicleKilometres.get(zone);
 					if (map == null) {
@@ -4222,28 +4293,75 @@ public class RoadNetworkAssignment {
 
 					//fetch current value
 					Double vehkm = vehicleKilometres.get(zone).get(vht);
-					LOGGER.debug("Current vehkm: {}", vehkm);
 					if (vehkm == null) vehkm = 0.0;
 					//get edge length
 					double length = roadNetwork.getEdgeLength(edgeID);
-					if (Double.compare(length, 0.0) == 0) LOGGER.debug("0 edge length!");
-					LOGGER.debug("edge ID: {}", edgeID);
-					LOGGER.debug("volume: {}", volume);
-					LOGGER.debug("length: {}", length);
+					if (Double.compare(length, 0.0) == 0) LOGGER.warn("0 edge length!");
 					vehkm += volume * length;
 					//store new value
 					vehicleKilometres.get(zone).put(vht, vehkm);
-				} else
-					LOGGER.debug("Edge {} is mapped to a null zone", edgeID);
-			}
-		}
+				} else { //zone == null
+					//check if ferry
+					DirectedEdge edge = (DirectedEdge)this.roadNetwork.getEdgeIDtoEdge().get(edgeID);
+					SimpleFeature sf = (SimpleFeature)edge.getObject();
+					String roadNumber = (String) sf.getAttribute("RoadNumber");
+					if (roadNumber.charAt(0) != 'F') {
+						LOGGER.debug("Edge {} is not a ferry edge, but it is not mapped to any zone!", edgeID);
+
+						//we will split vehicle kilometres between two zones
+						String zone1 = null, zone2 = null;
+
+						//get zones of edge nodes
+						String zoneA = this.roadNetwork.getNodeToZone().get(edge.getNodeA().getID());
+						String zoneB = this.roadNetwork.getNodeToZone().get(edge.getNodeB().getID());
+						if (zoneA != null && zoneB != null) {
+							zone1 = zoneA;
+							zone2 = zoneB;
+						} else if (zoneA == null && zoneB == null) {
+							//use nodes of neighbouring edges
+							for (Object o: edge.getNodeA().getEdges()) {
+								Edge e = (Edge)o;
+								if (e.getID() != edge.getID()) {
+									zone1 = this.roadNetwork.getEdgeToZone().get(e.getID());
+									break;
+								}
+							}
+							for (Object o: edge.getNodeB().getEdges()) {
+								Edge e = (Edge)o;
+								if (e.getID() != edge.getID()) {
+									zone2 = this.roadNetwork.getEdgeToZone().get(e.getID());
+									break;
+								}
+							}
+						}
+						LOGGER.debug("Splitting vehicle kilometres for edge {} between zone {} and zone {}.", edge.getID(), zone1, zone2);
+						//fetch current value
+						Double vehkm = vehicleKilometres.get(zone1).get(vht);
+						if (vehkm == null) vehkm = 0.0;
+						//get edge length
+						double length = roadNetwork.getEdgeLength(edgeID);
+						vehkm += volume * length / 2.0;
+						//store new value
+						vehicleKilometres.get(zone1).put(vht, vehkm);
+						//fetch current value
+						vehkm = vehicleKilometres.get(zone2).get(vht);
+						if (vehkm == null) vehkm = 0.0;
+						//get edge length
+						vehkm += volume * length / 2.0;
+						//store new value
+						vehicleKilometres.get(zone2).put(vht, vehkm);
+					}//if not ferry
+				}//zone is null
+			}//link volume entry
+		}//vehicle type
 
 		return vehicleKilometres;
 	}
-	
+
 	/**
-	 * Calculates vehicle kilometres in each LAD using Tempro trips.
-	 * Includes access and egress (for Tempro-based model).
+	 * Calculates vehicle kilometres in each LAD using Tempro-based trips.
+	 * Optionally includes access and egress (for Tempro-based model).
+	 * @param includeAccessEgress True if access and egress should be included in the calculation.
 	 * @return Vehicle kilometres.
 	 */
 	public Map<String, Map<VehicleType, Double>> calculateZonalVehicleKilometresPerVehicleTypeFromTemproTripList(boolean includeAccessEgress) {
@@ -4269,7 +4387,7 @@ public class RoadNetworkAssignment {
 				SimpleFeature sf = (SimpleFeature)edge.getObject();
 				String roadNumber = (String) sf.getAttribute("RoadNumber");
 				if (zone == null) {
-					if (roadNumber.charAt(0) != 'F') LOGGER.warn("Edge {} is not a ferry edge, but it is not mapped to any zone!", edgeID);
+					if (roadNumber.charAt(0) != 'F') LOGGER.debug("Edge {} is not a ferry edge, but it is not mapped to any zone!", edgeID);
 					continue; //skipping this edge
 				}
 
