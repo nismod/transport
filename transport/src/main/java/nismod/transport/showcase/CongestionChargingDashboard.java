@@ -7,7 +7,6 @@ import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.Image;
-import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.Robot;
 import java.awt.Toolkit;
@@ -15,40 +14,29 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Dictionary;
-import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
-import java.util.Set;
 
-import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
 import javax.swing.JSlider;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
 import javax.swing.ToolTipManager;
-import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 import javax.swing.border.Border;
 import javax.swing.plaf.ColorUIResource;
@@ -58,10 +46,10 @@ import javax.swing.table.TableCellRenderer;
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.map.MultiKeyMap;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.sanselan.ImageReadException;
+import org.apache.sanselan.Sanselan;
 import org.geotools.brewer.color.BrewerPalette;
 import org.geotools.brewer.color.ColorBrewer;
-import org.geotools.graph.structure.DirectedEdge;
-import org.geotools.graph.structure.DirectedNode;
 import org.geotools.swing.JMapFrame;
 import org.geotools.swing.JMapPane;
 import org.jfree.chart.ChartFactory;
@@ -72,28 +60,25 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.BarRenderer;
 import org.jfree.chart.renderer.category.StandardBarPainter;
 import org.jfree.data.category.DefaultCategoryDataset;
-import org.opengis.feature.simple.SimpleFeature;
 
 import nismod.transport.decision.CongestionCharging;
 import nismod.transport.decision.Intervention;
-import nismod.transport.decision.RoadExpansion;
 import nismod.transport.demand.DemandModel;
 import nismod.transport.demand.DemandModel.ElasticityTypes;
 import nismod.transport.demand.ODMatrix;
 import nismod.transport.demand.SkimMatrix;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
-import nismod.transport.network.road.RouteSetGenerator;
-import nismod.transport.network.road.Trip;
 import nismod.transport.network.road.RoadNetworkAssignment.EnergyType;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
+import nismod.transport.network.road.RouteSetGenerator;
+import nismod.transport.network.road.Trip;
 import nismod.transport.utility.ConfigReader;
 import nismod.transport.utility.InputFileReader;
 import nismod.transport.utility.RandomSingleton;
 import nismod.transport.zone.Zoning;
-import javax.swing.JSeparator;
 
 /**
  * Dashboard for the road expansion policy intervention.
@@ -604,10 +589,13 @@ public class CongestionChargingDashboard extends JFrame {
 		File imgRoad = new File("./src/test/resources/images/tollGateIcon.png");
 		BufferedImage bufferedImageRoad = null;
 		try {
-			bufferedImageRoad = ImageIO.read(imgRoad);
+			bufferedImageRoad = Sanselan.getBufferedImage(imgRoad);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
+		} catch (ImageReadException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		//BufferedImage subImage = bufferedImage.getSubimage(0, 10, bufferedImage.getWidth(), bufferedImage.getHeight() - 20); //trimming
 		Image newimgRoad = bufferedImageRoad.getScaledInstance(80, 80, java.awt.Image.SCALE_SMOOTH); //scaling  
@@ -794,51 +782,6 @@ public class CongestionChargingDashboard extends JFrame {
 		scrollPane_2.setToolTipText("This shows the impact on demand.");
 		scrollPane_2.setBounds(AFTER_MAP_X + TABLE_LABEL_WIDTH + AFTER_TABLE_SHIFT, MAP_HEIGHT + 100, 416, 90);
 		contentPane.add(scrollPane_2);
-
-		/*
-		//total demand panel (before)
-		JPanel panel_3 = new JPanel();
-		panel_3.setLayout(null);
-		panel_3.setBorder(TABLE_BORDER);
-		panel_3.setBackground(Color.WHITE);
-		panel_3.setBounds(scrollPane.getX() + scrollPane.getWidth() - 1, scrollPane.getY(), 222, scrollPane.getHeight());
-		contentPane.add(panel_3);
-
-		totalDemandBefore = new JTextField();
-		totalDemandBefore.setHorizontalAlignment(SwingConstants.RIGHT);
-		totalDemandBefore.setFont(new Font("Lato", Font.BOLD, 24));
-		totalDemandBefore.setColumns(5);
-		totalDemandBefore.setBorder(TOTAL_DEMAND_BORDER);
-		totalDemandBefore.setBounds(86, 37, 114, 31);
-		panel_3.add(totalDemandBefore);
-
-		JLabel label_1 = new JLabel("(Total Number of Trips)");
-		label_1.setFont(new Font("Lato", Font.BOLD, 11));
-		label_1.setBounds(86, 11, 126, 14);
-		panel_3.add(label_1);
-
-		JLabel label_2 = new JLabel("Demand");
-		label_2.setFont(new Font("Lato", Font.BOLD, 14));
-		label_2.setBounds(15, 9, 66, 14);
-		panel_3.add(label_2);
-
-		File img = new File("./src/test/resources/images/car.png");
-		BufferedImage bufferedImage = null;
-		try {
-			bufferedImage = ImageIO.read(img);
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		BufferedImage subImage = bufferedImage.getSubimage(10, 20, bufferedImage.getWidth() - 10, bufferedImage.getHeight() - 20); //trimming
-		Image newimg = subImage.getScaledInstance(70, 70, java.awt.Image.SCALE_SMOOTH); //scaling
-		ImageIcon icon = new ImageIcon(newimg);
-
-		JLabel label_3 = new JLabel(icon);
-		label_3.setBounds(10, 30, 70, 45);
-		panel_3.add(label_3);
-		 */
-
 	}
 
 
@@ -1006,52 +949,6 @@ public class CongestionChargingDashboard extends JFrame {
 			}
 		});
 
-		/*
-		//total demand panel (after)
-		JPanel panel = new JPanel();
-		panel.setBorder(TABLE_BORDER);
-		panel.setBackground(Color.WHITE);
-		panel.setBounds(scrollPane_2.getX() + scrollPane_2.getWidth() - 1, scrollPane_2.getY(), 222, scrollPane_2.getHeight());
-		contentPane.add(panel);
-		panel.setLayout(null);
-
-		totalDemandAfter = new JTextField();
-		totalDemandAfter.setBounds(86, 37, 114, 31);
-		totalDemandAfter.setFont(new Font("Lato", Font.BOLD, 24));
-		totalDemandAfter.setHorizontalAlignment(SwingConstants.RIGHT);
-		totalDemandAfter.setText("70000");
-		panel.add(totalDemandAfter);
-		totalDemandAfter.setColumns(5);
-		totalDemandAfter.setBorder(TOTAL_DEMAND_BORDER);
-
-		JLabel lblNewLabel = new JLabel("(Total Number of Trips)");
-		lblNewLabel.setFont(new Font("Lato", Font.BOLD, 11));
-		lblNewLabel.setBounds(86, 11, 126, 14);
-		panel.add(lblNewLabel);
-
-		JLabel lblDemand = new JLabel("Demand");
-		lblDemand.setFont(new Font("Lato", Font.BOLD, 14));
-		lblDemand.setBounds(15, 11, 66, 14);
-		panel.add(lblDemand);
-
-		File img = new File("./src/test/resources/images/car.png");
-		BufferedImage bufferedImage = null;
-		try {
-			bufferedImage = ImageIO.read(img);
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		BufferedImage subImage = bufferedImage.getSubimage(10, 20, bufferedImage.getWidth() - 10, bufferedImage.getHeight() - 20); //trimming
-		Image newimg = subImage.getScaledInstance(70, 70, java.awt.Image.SCALE_SMOOTH); //scaling
-		ImageIcon icon = new ImageIcon(newimg);
-
-		JLabel lblNewLabel_1 = new JLabel(icon);
-		lblNewLabel_1.setBounds(10, 30, 70, 45);
-		panel.add(lblNewLabel_1);
-
-		 */
-
 		JPanel tableChangeLegendHorizontal = new TableChangeLegendHorizontal();
 		tableChangeLegendHorizontal.setBounds(scrollPane_3.getX() - 19, scrollPane_3.getY() + scrollPane_3.getHeight() + TABLE_ROW_HEIGHT, 450, 29);
 		contentPane.add(tableChangeLegendHorizontal);
@@ -1078,10 +975,13 @@ public class CongestionChargingDashboard extends JFrame {
 		File imgCars = new File("./src/test/resources/images/cars.png");
 		BufferedImage bufferedImageCars = null;
 		try {
-			bufferedImageCars = ImageIO.read(imgCars);
+			bufferedImageCars = Sanselan.getBufferedImage(imgCars);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
+		} catch (ImageReadException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		BufferedImage subImageCars = bufferedImageCars.getSubimage(0, 20, bufferedImageCars.getWidth(), bufferedImageCars.getHeight() - 20); //trimming
 		Image newimgCars = subImageCars.getScaledInstance(100, 100, java.awt.Image.SCALE_SMOOTH); //scaling
@@ -1116,10 +1016,13 @@ public class CongestionChargingDashboard extends JFrame {
 		File imgClock = new File("./src/test/resources/images/clock.png");
 		BufferedImage bufferedImageClock = null;
 		try {
-			bufferedImageClock = ImageIO.read(imgClock);
+			bufferedImageClock = Sanselan.getBufferedImage(imgClock);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
+		} catch (ImageReadException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		BufferedImage subImageClock = bufferedImageClock.getSubimage(0, 20, bufferedImageCars.getWidth(), bufferedImageCars.getHeight() - 20); //trimming
 		Image newimgClock = subImageClock.getScaledInstance(75, 75, java.awt.Image.SCALE_SMOOTH); //scaling
@@ -1408,10 +1311,13 @@ public class CongestionChargingDashboard extends JFrame {
 		File img = new File("./src/test/resources/images/car.png");
 		BufferedImage bufferedImage = null;
 		try {
-			bufferedImage = ImageIO.read(img);
+			bufferedImage = Sanselan.getBufferedImage(img);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
+		} catch (ImageReadException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		BufferedImage subImage = bufferedImage.getSubimage(10, 20, bufferedImage.getWidth() - 10, bufferedImage.getHeight() - 20); //trimming
 		Image newimg = subImage.getScaledInstance(65, 65, java.awt.Image.SCALE_SMOOTH); //scaling

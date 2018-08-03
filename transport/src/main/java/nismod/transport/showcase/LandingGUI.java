@@ -12,7 +12,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 
-import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -21,6 +20,9 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.plaf.ColorUIResource;
+
+import org.apache.sanselan.ImageReadException;
+import org.apache.sanselan.Sanselan;
 
 /**
  * Main GUI for the Show-case Demo.
@@ -118,7 +120,10 @@ public class LandingGUI {
 		File img = new File("./src/test/resources/images/roadIcon.png");
 		BufferedImage bufferedImage = null;
 		try {
-			bufferedImage = ImageIO.read(img);
+			bufferedImage = Sanselan.getBufferedImage(img);
+		} catch (ImageReadException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -130,8 +135,11 @@ public class LandingGUI {
 		File img2 = new File("./src/test/resources/images/roadworksIcon.png");
 		BufferedImage bufferedImage2 = null;
 		try {
-			bufferedImage2 = ImageIO.read(img2);
+			bufferedImage2 = Sanselan.getBufferedImage(img2);
 		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (ImageReadException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
@@ -142,8 +150,11 @@ public class LandingGUI {
 		File img3 = new File("./src/test/resources/images/tollGateIcon.png");
 		BufferedImage bufferedImage3 = null;
 		try {
-			bufferedImage3 = ImageIO.read(img3);
+			bufferedImage3 = Sanselan.getBufferedImage(img3);
 		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (ImageReadException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}

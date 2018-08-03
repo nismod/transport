@@ -7,7 +7,6 @@ import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.Image;
-import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.Robot;
 import java.awt.Toolkit;
@@ -15,9 +14,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -26,13 +23,11 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
-import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
@@ -40,11 +35,11 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
 import javax.swing.JSlider;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
 import javax.swing.ToolTipManager;
 import javax.swing.UIManager;
 import javax.swing.border.Border;
@@ -54,9 +49,10 @@ import javax.swing.table.TableCellRenderer;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.sanselan.ImageReadException;
+import org.apache.sanselan.Sanselan;
 import org.geotools.brewer.color.BrewerPalette;
 import org.geotools.brewer.color.ColorBrewer;
-import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedNode;
 import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Node;
@@ -75,22 +71,19 @@ import org.opengis.feature.simple.SimpleFeature;
 import com.vividsolutions.jts.geom.Point;
 
 import nismod.transport.decision.RoadDevelopment;
-import nismod.transport.decision.RoadExpansion;
-import nismod.transport.demand.DemandModel;
 import nismod.transport.demand.DemandModel.ElasticityTypes;
 import nismod.transport.demand.ODMatrix;
 import nismod.transport.demand.SkimMatrix;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
-import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.network.road.RoadNetworkAssignment.EnergyType;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
+import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.utility.ConfigReader;
 import nismod.transport.utility.InputFileReader;
 import nismod.transport.zone.Zoning;
-import javax.swing.JSeparator;
 
 /**
  * Dashboard for the road development policy intervention.
@@ -648,10 +641,13 @@ public class RoadDevelopmentDashboard extends JFrame {
 		File imgRoad = new File("./src/test/resources/images/roadworksIcon.png");
 		BufferedImage bufferedImageRoad = null;
 		try {
-			bufferedImageRoad = ImageIO.read(imgRoad);
+			bufferedImageRoad = Sanselan.getBufferedImage(imgRoad);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
+		} catch (ImageReadException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		//BufferedImage subImage = bufferedImage.getSubimage(0, 10, bufferedImage.getWidth(), bufferedImage.getHeight() - 20); //trimming
 		Image newimgRoad = bufferedImageRoad.getScaledInstance(80, 80, java.awt.Image.SCALE_SMOOTH); //scaling  
@@ -864,10 +860,13 @@ public class RoadDevelopmentDashboard extends JFrame {
 		File img = new File("./src/test/resources/images/car.png");
 		BufferedImage bufferedImage = null;
 		try {
-			bufferedImage = ImageIO.read(img);
+			bufferedImage = Sanselan.getBufferedImage(img);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
+		} catch (ImageReadException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		BufferedImage subImage = bufferedImage.getSubimage(10, 20, bufferedImage.getWidth() - 10, bufferedImage.getHeight() - 20); //trimming
 		Image newimg = subImage.getScaledInstance(70, 70, java.awt.Image.SCALE_SMOOTH); //scaling
@@ -1060,10 +1059,13 @@ public class RoadDevelopmentDashboard extends JFrame {
 		File img = new File("./src/test/resources/images/car.png");
 		BufferedImage bufferedImage = null;
 		try {
-			bufferedImage = ImageIO.read(img);
+			bufferedImage = Sanselan.getBufferedImage(img);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
+		} catch (ImageReadException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		BufferedImage subImage = bufferedImage.getSubimage(10, 20, bufferedImage.getWidth() - 10, bufferedImage.getHeight() - 20); //trimming
 		Image newimg = subImage.getScaledInstance(70, 70, java.awt.Image.SCALE_SMOOTH); //scaling
@@ -1100,10 +1102,13 @@ public class RoadDevelopmentDashboard extends JFrame {
 		File imgCars = new File("./src/test/resources/images/cars.png");
 		BufferedImage bufferedImageCars = null;
 		try {
-			bufferedImageCars = ImageIO.read(imgCars);
+			bufferedImageCars = Sanselan.getBufferedImage(imgCars);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
+		} catch (ImageReadException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		BufferedImage subImageCars = bufferedImageCars.getSubimage(0, 20, bufferedImageCars.getWidth(), bufferedImageCars.getHeight() - 20); //trimming
 		Image newimgCars = subImageCars.getScaledInstance(100, 100, java.awt.Image.SCALE_SMOOTH); //scaling
@@ -1138,10 +1143,13 @@ public class RoadDevelopmentDashboard extends JFrame {
 		File imgClock = new File("./src/test/resources/images/clock.png");
 		BufferedImage bufferedImageClock = null;
 		try {
-			bufferedImageClock = ImageIO.read(imgClock);
+			bufferedImageClock = Sanselan.getBufferedImage(imgClock);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
+		} catch (ImageReadException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		BufferedImage subImageClock = bufferedImageClock.getSubimage(0, 20, bufferedImageCars.getWidth(), bufferedImageCars.getHeight() - 20); //trimming
 		Image newimgClock = subImageClock.getScaledInstance(75, 75, java.awt.Image.SCALE_SMOOTH); //scaling

@@ -8,7 +8,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
-import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
@@ -16,6 +15,9 @@ import javax.swing.SwingUtilities;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.sanselan.ImageFormat;
+import org.apache.sanselan.ImageWriteException;
+import org.apache.sanselan.Sanselan;
 import org.geotools.brewer.color.BrewerPalette;
 import org.geotools.brewer.color.ColorBrewer;
 import org.jfree.chart.ChartFactory;
@@ -120,7 +122,7 @@ public class PieChartVisualiser extends JFrame {
 		//ChartUtils.saveChartAsPNG(new File("pie_chart.png"), chart, 600, 400);
 	}
 	
-	public void saveToPNG(String fileName) throws IOException {
+	public void saveToPNG(String fileName) throws IOException, ImageWriteException {
 		
 		BufferedImage img = new BufferedImage(this.getWidth(), this.getHeight(), BufferedImage.TYPE_INT_RGB);
 		Graphics2D g2d = img.createGraphics();
@@ -134,7 +136,7 @@ public class PieChartVisualiser extends JFrame {
 		g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 		g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		ImageIO.write(img, "png", new File(fileName));
+		Sanselan.writeImage(img, new File(fileName), ImageFormat.IMAGE_FORMAT_PNG , null);
 			
 		g2d.dispose();
 	}

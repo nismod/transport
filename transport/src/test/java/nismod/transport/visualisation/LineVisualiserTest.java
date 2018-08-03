@@ -2,6 +2,7 @@ package nismod.transport.visualisation;
 
 import java.io.IOException;
 
+import org.apache.sanselan.ImageWriteException;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.general.DefaultPieDataset;
 
@@ -11,7 +12,7 @@ import org.jfree.data.general.DefaultPieDataset;
  */
 public class LineVisualiserTest {
 	
-	public static void main( String[] args ) throws IOException	{
+	public static void main( String[] args ) throws IOException, ImageWriteException	{
 		
 		DefaultCategoryDataset lineDataset = new DefaultCategoryDataset();
 		

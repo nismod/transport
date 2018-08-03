@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.sanselan.ImageWriteException;
 import org.geotools.graph.structure.DirectedEdge;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.junit.Test;
@@ -38,7 +39,7 @@ import nismod.transport.zone.Zoning;
  */
 public class RebalancedODMatrixTest {
 	
-	public static void main( String[] args ) throws FileNotFoundException, IOException {
+	public static void main( String[] args ) throws FileNotFoundException, IOException, ImageWriteException {
 		
 		final String configFile = "./src/main/full/config/config.properties";
 		//final String configFile = "./src/test/config/testConfig.properties";

@@ -17,6 +17,7 @@ import java.util.Properties;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.sanselan.ImageWriteException;
 import org.geotools.graph.structure.DirectedEdge;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.junit.Test;
@@ -42,7 +43,7 @@ public class RebalancedTemproODMatrixTest {
 	
 	private final static Logger LOGGER = LogManager.getLogger(RebalancedTemproODMatrixTest.class);
 	
-	public static void main( String[] args ) throws FileNotFoundException, IOException {
+	public static void main( String[] args ) throws FileNotFoundException, IOException, ImageWriteException {
 		
 		final String configFile = "./src/main/full/config/config.properties";
 		//final String configFile = "./src/test/config/testConfig.properties";

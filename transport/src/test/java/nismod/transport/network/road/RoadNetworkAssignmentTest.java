@@ -176,7 +176,7 @@ public class RoadNetworkAssignmentTest {
 		
 		rna.saveZonalVehicleKilometres(2015, "zonalvkms.csv");
 		rna.saveZonalVehicleKilometresWithAccessEgress(2015, "zonalvkmsAccessEgress.csv");
-		
+				
 		System.out.println(rna.calculateZonalVehicleKilometresPerVehicleType());
 		System.out.println(rna.calculateZonalVehicleKilometresPerVehicleTypeFromTripList(false));
 		System.out.println(rna.calculateZonalVehicleKilometresPerVehicleTypeFromTripList(true));
@@ -229,6 +229,7 @@ public class RoadNetworkAssignmentTest {
 		
 		
 		
+		/*
 		
 		//clear the routes
 		rsg.clearRoutes();
@@ -241,7 +242,6 @@ public class RoadNetworkAssignmentTest {
 				
 				
 		
-		/*
 		// FREIGHT ASSIGNMENT //
 		
 		//sort nodes based on workplace zone population!
@@ -271,7 +271,6 @@ public class RoadNetworkAssignmentTest {
 		
 		//roadNetworkAssignment.saveAssignmentResults(2015, "assignment2015passengerAndFreigh.csv");
 
-		*/
 		
 //		//for (int i = 0; i < 5; i++) {
 //		for (int i = 0; i < 1; i++) {
@@ -368,6 +367,7 @@ public class RoadNetworkAssignmentTest {
 //			System.out.printf("Expansion factor: %.2f RMSN for counts: %.2f%% %n", expansionFactor, rna.calculateRMSNforExpandedSimulatedVolumes(expansionFactor));
 //		}
   		
+  		*/
 
 	}
 
