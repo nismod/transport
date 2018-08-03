@@ -39,6 +39,7 @@ import javax.swing.JSeparator;
 import javax.swing.JSlider;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.JToolBar;
 import javax.swing.SwingConstants;
 import javax.swing.ToolTipManager;
 import javax.swing.UIManager;
@@ -509,26 +510,30 @@ public class RoadExpansionDashboard extends JFrame {
 					rightFrame.setVisible(true);
 					//rightFrame.repaint();
 					
-					((MyJMapFrame)rightFrame).getToolBar().setBackground(LandingGUI.LIGHT_GRAY); //to set toolbar background
-					((MyJMapFrame)rightFrame).getToolBar().setBorder(BorderFactory.createLineBorder(LandingGUI.LIGHT_GRAY, 1));
-					
-					/*
-					JMapPane pane = ((JMapFrameDemo)rightFrame).getMapPane();
-					//((JMapFrameDemo)rightFrame).getToolBar().setBackground(GUI.TOOLBAR); //to set toolbar background
-					System.out.println("component: " + ((JMapFrameDemo)rightFrame).getToolBar().getComponent(8).toString());
-					reset = (JButton) ((JMapFrameDemo)rightFrame).getToolBar().getComponent(8);
-					//reset.setBackground(Color.BLUE); //set icon background
-					//reset.setBorderPainted(false); //remove border
-					JButton minus = (JButton) ((JMapFrameDemo)rightFrame).getToolBar().getComponent(2);
-					//minus.setBackground(Color.GREEN); //set icon background
-					 */
-					
 					//panel_2.removeAll();
 					panel_2.add(rightFrame.getContentPane(), 0);
 					panel_2.setLayout(null);
 					//contentPane.setComponentZOrder(labelAfter, 0);
 					//panel_2.doLayout();
 					//panel_2.repaint();
+					
+					//find JPanel
+					JPanel jp = null;
+					for (Component comp: rightFrame.getContentPane().getComponents())
+						if (comp instanceof JPanel) {
+							jp = (JPanel) comp;
+							break;
+						}
+					//find toolbar
+					JToolBar tb = null;
+					for (Component comp: jp.getComponents())
+						if (comp instanceof JToolBar) {
+							tb = (JToolBar) comp;
+							break;
+						}
+					tb.setBackground(LandingGUI.LIGHT_GRAY); //to set toolbar background
+					tb.setBorder(BorderFactory.createLineBorder(LandingGUI.LIGHT_GRAY, 1));
+	
 					
 					rightFrame.setVisible(true);
 					rightFrame.setVisible(false);
@@ -1266,8 +1271,7 @@ public class RoadExpansionDashboard extends JFrame {
 
 		HashMap<Integer, Double> capacityBefore = rnaBefore.calculateDirectionAveragedPeakLinkCapacityUtilisation();
 		JFrame leftFrame = NetworkVisualiserDemo.visualise(roadNetwork, "Capacity Utilisation Before Intervention", capacityBefore, "CapUtil", shapefilePathBefore);
-		((MyJMapFrame)leftFrame).getToolBar().setBackground(LandingGUI.LIGHT_GRAY); //to set toolbar background
-		((MyJMapFrame)leftFrame).getToolBar().setBorder(BorderFactory.createLineBorder(LandingGUI.LIGHT_GRAY, 1));
+	
 		//Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		//leftFrame.setSize(screenSize.width / 2, (int)Math.round(screenSize.height * 0.65));
 		//leftFrame.setLocation(0, 0);
@@ -1277,6 +1281,24 @@ public class RoadExpansionDashboard extends JFrame {
 			
 		leftFrame.setVisible(true);
 		leftFrame.setVisible(false);
+		
+		//find JPanel in leftFrame
+		JPanel jp = null;
+		for (Component comp: leftFrame.getContentPane().getComponents())
+			if (comp instanceof JPanel) {
+				jp = (JPanel) comp;
+				break;
+			}
+		//find toolbar
+		JToolBar tb = null;
+		for (Component comp: jp.getComponents())
+			if (comp instanceof JToolBar) {
+				tb = (JToolBar) comp;
+				break;
+			}
+		tb.setBackground(LandingGUI.LIGHT_GRAY); //to set toolbar background
+		tb.setBorder(BorderFactory.createLineBorder(LandingGUI.LIGHT_GRAY, 1));
+		
 
 		JLabel labelPanel1 = new JLabel("Before Policy Intervention");
 		labelPanel1.setBounds(301, 11, 331, 20);
@@ -1284,15 +1306,7 @@ public class RoadExpansionDashboard extends JFrame {
 		panel_1.setComponentZOrder(labelPanel1, 0);
 		labelPanel1.setForeground(LandingGUI.DARK_GRAY);
 		labelPanel1.setFont(new Font("Lato", Font.BOLD, 16));
-//		JMapPane pane = ((JMapFrameDemo)leftFrame).getMapPane();
-		
-//		JLabel labelAfter = new JLabel("After Policy Intervention");
-//		labelAfter.setBounds(1601, 11, 331, 20);
-//		contentPane.add(labelAfter);
-//		labelAfter.setForeground(Color.RED);
-//		labelAfter.setFont(new Font("Lato", Font.BOLD, 16));
-//		contentPane.setComponentZOrder(labelAfter, 0);
-		
+	
 		labelPanel2 = new JLabel("After Policy Intervention");
 		labelPanel2.setBounds(301, 11, 331, 20);
 		panel_2.add(labelPanel2);

@@ -32,7 +32,9 @@ import org.geotools.map.MapContent;
 import org.geotools.renderer.GTRenderer;
 import org.geotools.styling.FeatureTypeStyle;
 import org.geotools.styling.Font;
+import org.geotools.styling.LineSymbolizer;
 import org.geotools.styling.PolygonSymbolizer;
+import org.geotools.styling.Rule;
 import org.geotools.styling.SLD;
 import org.geotools.styling.Style;
 import org.geotools.styling.StyleBuilder;
@@ -61,6 +63,8 @@ import nismod.transport.visualisation.NetworkVisualiser;
 public class NetworkVisualiserDemo {
 
 	private final static Logger LOGGER = Logger.getLogger(NetworkVisualiserDemo.class.getName());
+	
+	public final static float ROAD_LINK_WIDTH = 4.0f;
 
 	/**
 	 * @param args Arguments.
@@ -147,7 +151,7 @@ public class NetworkVisualiserDemo {
 		map.addLayer(zonesLayer);
 
 		//create style for road network
-		Style networkStyle = SLD.createLineStyle(Color.GREEN, 4.0f, "RoadNumber", font2);
+		Style networkStyle = SLD.createLineStyle(Color.GREEN, ROAD_LINK_WIDTH, "RoadNumber", font2);
 
 		//add network layer to the map
 		FeatureLayer networkLayer;
@@ -289,6 +293,13 @@ public class NetworkVisualiserDemo {
 				StyleGenerator.ELSEMODE_IGNORE,
 				0.95f,
 				null);
+		
+	    //modify the stroke width for all the rules in the style (to increase the width of road links)
+	    for (Rule rule: style.rules()) {
+	    	Symbolizer symb = rule.symbolizers().get(0);
+	    	LineSymbolizer lsymb = (LineSymbolizer) symb;
+	    	lsymb.getStroke().setWidth(ff.literal(ROAD_LINK_WIDTH));
+	    }
 			
 		//create a map
 		MapContent map = new MapContent();
@@ -344,7 +355,7 @@ public class NetworkVisualiserDemo {
 		map.addLayer(AADFlayer);
 
 		//show the map in JMapFrame
-		MyJMapFrame show = new MyJMapFrame(map);
+		JMapFrame show = new JMapFrame(map);
 		//JMapFrameDemo show2 = new JMapFrameDemo(map);
 		//show2.setVisible(true);
 
@@ -445,6 +456,13 @@ public class NetworkVisualiserDemo {
 				StyleGenerator.ELSEMODE_IGNORE,
 				0.95f,
 				null);
+		
+	    //modify the stroke width for all the rules in the style (to increase the width of road links)
+	    for (Rule rule: style.rules()) {
+	    	Symbolizer symb = rule.symbolizers().get(0);
+	    	LineSymbolizer lsymb = (LineSymbolizer) symb;
+	    	lsymb.getStroke().setWidth(ff.literal(ROAD_LINK_WIDTH));
+	    }
 
 		//create a map
 		MapContent map = new MapContent();
@@ -500,7 +518,7 @@ public class NetworkVisualiserDemo {
 		map.addLayer(AADFlayer);
 
 		//show the map in JMapFrame
-		MyJMapFrame show = new MyJMapFrame(map);
+		JMapFrame show = new JMapFrame(map);
 		//JMapFrameDemo show2 = new JMapFrameDemo(map);
 		//show2.setVisible(true);
 
@@ -595,6 +613,13 @@ public class NetworkVisualiserDemo {
 				StyleGenerator.ELSEMODE_IGNORE,
 				0.95f,
 				null);
+		
+	    //modify the stroke width for all the rules in the style (to increase the width of road links)
+	    for (Rule rule: style.rules()) {
+	    	Symbolizer symb = rule.symbolizers().get(0);
+	    	LineSymbolizer lsymb = (LineSymbolizer) symb;
+	    	lsymb.getStroke().setWidth(ff.literal(ROAD_LINK_WIDTH));
+	    }
 
 		//create a map
 		MapContent map = new MapContent();
@@ -650,7 +675,7 @@ public class NetworkVisualiserDemo {
 		map.addLayer(AADFlayer);
 
 		//show the map in JMapFrame
-		MyJMapFrame show = new MyJMapFrame(map);
+		JMapFrame show = new JMapFrame(map);
 		//JMapFrameDemo show2 = new JMapFrameDemo(map);
 		//show2.setVisible(true);
 
@@ -744,6 +769,13 @@ public class NetworkVisualiserDemo {
 				StyleGenerator.ELSEMODE_IGNORE,
 				0.95f,
 				null);
+		
+	    //modify the stroke width for all the rules in the style (to increase the width of road links)
+	    for (Rule rule: style.rules()) {
+	    	Symbolizer symb = rule.symbolizers().get(0);
+	    	LineSymbolizer lsymb = (LineSymbolizer) symb;
+	    	lsymb.getStroke().setWidth(ff.literal(ROAD_LINK_WIDTH));
+	    }
 
 		//create a map
 		MapContent map = new MapContent();
@@ -809,7 +841,7 @@ public class NetworkVisualiserDemo {
 		map.addLayer(AADFlayer);
 
 		//show the map in JMapFrame
-		MyJMapFrame show = new MyJMapFrame(map);
+		JMapFrame show = new JMapFrame(map);
 
 		//show.getContentPane()
 
