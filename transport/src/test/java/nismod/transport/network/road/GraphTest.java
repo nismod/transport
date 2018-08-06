@@ -181,40 +181,6 @@ public class GraphTest {
 			e.printStackTrace();
 		}
 
-		//find the shortest path using my AStar algorithm
-		try {
-			System.out.printf("\nFinding the shortest path from node %d to node %d using my AStar:\n", node1.getID(), node4.getID());
-			MyAStarShortestPathFinder aStarPathFinder = new MyAStarShortestPathFinder(graph, node1, node4, getMyAstarFunctions(node4));
-			aStarPathFinder.calculate();
-			Path aStarPath = aStarPathFinder.getPath();
-			if (aStarPath != null) {
-				aStarPath.reverse();
-				System.out.println(aStarPath);
-				System.out.println("The path as a list of nodes: " + aStarPath);
-				List listOfEdges = aStarPath.getEdges();
-				System.out.println("The path as a list of edges: " + listOfEdges);
-				double sum = 0;
-				for (Object o: listOfEdges) {
-					DirectedEdge e = (DirectedEdge) o;
-					System.out.print(e.getID() + "|" + e.getNodeA() + "->" + e.getNodeB() + "|");
-					double length = (double) e.getObject();;
-					System.out.println(length);
-					sum += length;
-				}
-				System.out.printf("Sum of edge lengths: %.3f\n\n", sum);
-				
-				//compare with expected values
-				int[] expectedNodeList = new int[] {1, 2, 3, 4};
-				int[] expectedEdgeList = new int[] {12, 23, 34};
-				assertEquals("The list of nodes in the shortest path is correct", Arrays.toString(expectedNodeList), aStarPath.toString());
-				assertEquals("The list of edges in the shortest path is correct", Arrays.toString(expectedEdgeList), listOfEdges.toString());
-				assertEquals("The shortest path length is correct", 3.0, sum, EPSILON);
-			} else
-				System.out.println("Could not find the shortest path using my AStar.");
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
 		//remove edge
 		//edge2.setObject(Double.POSITIVE_INFINITY);
 		//edge2.setObject(Double.MAX_VALUE);
@@ -245,11 +211,12 @@ public class GraphTest {
 		assertNull("There should be no shortest path after edge removal", path);
 
 		//find the shortest path using AStar algorithm
+		Path aStarPath = null;
 		try {
 			System.out.printf("\nFinding the shortest path from node %d to node %d using AStar:\n", node1.getID(), node4.getID());
 			AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(graph, node1, node4, getAstarFunctions(node4));
 			aStarPathFinder.calculate();
-			Path aStarPath = aStarPathFinder.getPath();
+			aStarPath = aStarPathFinder.getPath();
 			if (aStarPath != null) {
 				aStarPath.reverse();
 				System.out.println(aStarPath);
@@ -268,38 +235,8 @@ public class GraphTest {
 			} else
 				System.out.println("Could not find the shortest path using AStar.");
 		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		//find the shortest path using my AStar algorithm
-		Path aStarPath = null;
-		try {
-			System.out.printf("\nFinding the shortest path from node %d to node %d using my AStar:\n", node1.getID(), node4.getID());
-			MyAStarShortestPathFinder aStarPathFinder = new MyAStarShortestPathFinder(graph, node1, node4, getMyAstarFunctions(node4));
-			aStarPathFinder.calculate();
-			aStarPath = aStarPathFinder.getPath();
-			if (aStarPath != null) {
-				aStarPath.reverse();
-				System.out.println(aStarPath);
-				System.out.println("The path as a list of nodes: " + aStarPath);
-				List listOfEdges = aStarPath.getEdges();
-				System.out.println("The path as a list of edges: " + listOfEdges);
-				double sum = 0;
-				for (Object o: listOfEdges) {
-					DirectedEdge e = (DirectedEdge) o;
-					System.out.print(e.getID() + "|" + e.getNodeA() + "->" + e.getNodeB() + "|");
-					double length = (double) e.getObject();;
-					System.out.println(length);
-					sum += length;
-				}
-				System.out.printf("Sum of edge lengths: %.3f\n\n", sum);
-			} else
-				System.out.println("Could not find the shortest path using my AStar.");
-						
-		} catch (WrongPathException e) {
 			System.err.println("Could not find the shortest path using my AStar.");
-		} catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		assertNull("There should be no shortest path after edge removal", aStarPath);
 	}
@@ -329,40 +266,6 @@ public class GraphTest {
 				return 0.0; //equivalent to Dijkstra
 			}
 		};
-		return aStarFunctions;
-	}
-
-	/** Getter method for the AStar functions (edge cost and heuristic function) based on distance.
-	 * @param to Destination node.
-	 * @return AStar functions.
-	 */
-	private static MyAStarIterator.AStarFunctions getMyAstarFunctions(Node destinationNode) {
-
-		MyAStarIterator.AStarFunctions aStarFunctions = new  MyAStarIterator.AStarFunctions(destinationNode){
-
-			@Override
-			public double cost(MyAStarIterator.AStarNode aStarNode1, MyAStarIterator.AStarNode aStarNode2) {
-
-				System.out.printf("Inspecting the cost from node %d to node %d \n", aStarNode1.getNode().getID(), aStarNode2.getNode().getID());
-				//Edge edge = aStarNode1.getNode().getEdge(aStarNode2.getNode()); // does not work, a directed version must be used!
-				Edge edge = ((DirectedNode) aStarNode1.getNode()).getOutEdge((DirectedNode) aStarNode2.getNode());
-				if (edge == null) {
-					//no edge found in that direction (set maximum weight)
-					System.out.printf("No edge found from node %d to node %d \n", aStarNode1.getNode().getID(), aStarNode2.getNode().getID());
-					return Double.POSITIVE_INFINITY;
-				} else {
-					double cost = (double) edge.getObject();  //use actual physical length
-					return cost;
-				}
-			}
-
-			@Override
-			public double h(Node node) {
-
-				return 0.0; //equivalent to Dijkstra
-			}
-		};
-
 		return aStarFunctions;
 	}
 }

@@ -476,7 +476,7 @@ public class RoadNetworkTest {
 
 			System.out.printf("Finding the shortest path from %d to %d using astar: \n", from.getID(), to.getID());
 
-			MyAStarShortestPathFinder aStarPathFinder = new MyAStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctions(to));
+			AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctions(to));
 			aStarPathFinder.calculate();
 			Path aStarPath;
 			aStarPath = aStarPathFinder.getPath();
@@ -518,7 +518,7 @@ public class RoadNetworkTest {
 	
 		//reverse path
 		try {
-			MyAStarShortestPathFinder aStarPathFinder = new MyAStarShortestPathFinder(rn, to, from, roadNetwork.getAstarFunctions(to));
+			AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, to, from, roadNetwork.getAstarFunctions(to));
 			aStarPathFinder.calculate();
 			Path aStarPath = aStarPathFinder.getPath();
 			aStarPath.reverse();
@@ -573,7 +573,7 @@ public class RoadNetworkTest {
 
 			System.out.printf("Finding the shortest path from %d to %d using astar: \n", from.getID(), to.getID());
 
-			MyAStarShortestPathFinder aStarPathFinder = new MyAStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctions(to));
+			AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctions(to));
 			aStarPathFinder.calculate();
 			Path aStarPath;
 			aStarPath = aStarPathFinder.getPath();
@@ -1502,7 +1502,7 @@ public class RoadNetworkTest {
 
 		//find the shortest path using AStar algorithm
 		try {
-			MyAStarShortestPathFinder aStarPathFinder = new MyAStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctions(to));
+			AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctions(to));
 			aStarPathFinder.calculate();
 			Path aStarPath;
 			aStarPath = aStarPathFinder.getPath();
@@ -1538,7 +1538,7 @@ public class RoadNetworkTest {
 
 		//reverse path
 		try {
-			MyAStarShortestPathFinder aStarPathFinder = new MyAStarShortestPathFinder(rn, to, from, roadNetwork.getAstarFunctions(to));
+			AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, to, from, roadNetwork.getAstarFunctions(to));
 			aStarPathFinder.calculate();
 			Path aStarPath = aStarPathFinder.getPath();
 			aStarPath.reverse();

@@ -40,6 +40,7 @@ import org.geotools.geometry.jts.JTSFactoryFinder;
 import org.geotools.graph.build.feature.FeatureGraphGenerator;
 import org.geotools.graph.build.line.BasicDirectedLineGraphBuilder;
 import org.geotools.graph.build.line.DirectedLineStringGraphGenerator;
+import org.geotools.graph.path.AStarShortestPathFinder;
 import org.geotools.graph.path.DijkstraShortestPathFinder;
 import org.geotools.graph.path.Path;
 import org.geotools.graph.structure.DirectedEdge;
@@ -48,6 +49,7 @@ import org.geotools.graph.structure.DirectedNode;
 import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Graph;
 import org.geotools.graph.structure.Node;
+import org.geotools.graph.traverse.standard.AStarIterator;
 import org.geotools.graph.traverse.standard.DijkstraIterator;
 import org.geotools.graph.traverse.standard.DijkstraIterator.EdgeWeighter;
 import org.geotools.referencing.CRS;
@@ -945,12 +947,12 @@ public class RoadNetwork {
 	 * @param destinationNode Destination node.
 	 * @return AStar functions.
 	 */
-	public MyAStarIterator.AStarFunctions getAstarFunctions(Node destinationNode) {
+	public AStarIterator.AStarFunctions getAstarFunctions(Node destinationNode) {
 
-		MyAStarIterator.AStarFunctions aStarFunctions = new  MyAStarIterator.AStarFunctions(destinationNode){
+		AStarIterator.AStarFunctions aStarFunctions = new  AStarIterator.AStarFunctions(destinationNode){
 
 			@Override
-			public double cost(MyAStarIterator.AStarNode aStarNode1, MyAStarIterator.AStarNode aStarNode2) {
+			public double cost(AStarIterator.AStarNode aStarNode1, AStarIterator.AStarNode aStarNode2) {
 
 				//Edge edge = aStarNode1.getNode().getEdge(aStarNode2.getNode()); // does not work, a directed version must be used!
 				Edge edge = ((DirectedNode) aStarNode1.getNode()).getOutEdge((DirectedNode) aStarNode2.getNode());
@@ -985,12 +987,12 @@ public class RoadNetwork {
 	 * @param linkTravelTime Link travel times to use for edge weighting.
 	 * @return AStar functions.
 	 */
-	public MyAStarIterator.AStarFunctions getAstarFunctionsTime(Node destinationNode, Map<Integer, Double> linkTravelTime) {
+	public AStarIterator.AStarFunctions getAstarFunctionsTime(Node destinationNode, Map<Integer, Double> linkTravelTime) {
 
-		MyAStarIterator.AStarFunctions aStarFunctions = new  MyAStarIterator.AStarFunctions(destinationNode){
+			AStarIterator.AStarFunctions aStarFunctions = new  AStarIterator.AStarFunctions(destinationNode){
 			
 			@Override
-			public double cost(MyAStarIterator.AStarNode aStarNode1, MyAStarIterator.AStarNode aStarNode2) {
+			public double cost(AStarIterator.AStarNode aStarNode1, AStarIterator.AStarNode aStarNode2) {
 
 				//Edge edge = aStarNode1.getNode().getEdge(aStarNode2.getNode()); // does not work, a directed version must be used!
 				Edge edge = ((DirectedNode) aStarNode1.getNode()).getOutEdge((DirectedNode) aStarNode2.getNode());
@@ -1063,7 +1065,7 @@ public class RoadNetwork {
 			//find the shortest path using AStar algorithm
 			try {
 				//System.out.printf("Finding the shortest path from %d to %d using astar: \n", from.getID(), to.getID());
-				MyAStarShortestPathFinder aStarPathFinder = new MyAStarShortestPathFinder(this.network, from, to, this.getAstarFunctionsTime(to, linkTravelTime));
+				AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(this.network, from, to, this.getAstarFunctionsTime(to, linkTravelTime));
 				aStarPathFinder.calculate();
 				Path aStarPath;
 				aStarPath = aStarPathFinder.getPath();
@@ -1084,16 +1086,16 @@ public class RoadNetwork {
 					//System.err.println("Could not find the shortest path using astar.");
 					return null;
 				}
-			} catch (WrongPathException e) {
-				//LOGGER.warn("Could not find the shortest path using astar. {}", e.getMessage());
-				path = null;
+//			} catch (WrongPathException e) {
+//				//LOGGER.warn("Could not find the shortest path using astar. {}", e.getMessage());
+//				path = null;
 			} catch (Exception e) {
-				LOGGER.warn("Could not find the shortest path using astar. {}", e.getMessage());
+				LOGGER.trace("Could not find the shortest path using astar. {}", e.getMessage());
 				path = null;
 			} 
 
 		if (path != null && !path.isValid()) {
-			LOGGER.warn("Fastest path from {} to {} exists, but is not valid!", from.getID(), to.getID());
+			LOGGER.debug("Fastest path from {} to {} exists, but is not valid!", from.getID(), to.getID());
 			return null;
 		}
 		return path;
