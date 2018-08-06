@@ -26,7 +26,7 @@ import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedNode;
 import org.geotools.graph.structure.Node;
 
-import com.vividsolutions.jts.geom.Point;
+import org.locationtech.jts.geom.Point;
 
 import gnu.trove.map.hash.TIntObjectHashMap;
 import nismod.transport.demand.FreightMatrix;

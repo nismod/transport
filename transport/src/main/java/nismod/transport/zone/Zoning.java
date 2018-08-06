@@ -19,8 +19,8 @@ import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.graph.structure.Node;
 import org.opengis.feature.simple.SimpleFeature;
 
-import com.vividsolutions.jts.geom.MultiPolygon;
-import com.vividsolutions.jts.geom.Point;
+import org.locationtech.jts.geom.MultiPolygon;
+import org.locationtech.jts.geom.Point;
 
 import nismod.transport.network.road.RoadNetwork;
 

@@ -69,7 +69,7 @@ import org.jfree.chart.renderer.category.StandardBarPainter;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.opengis.feature.simple.SimpleFeature;
 
-import com.vividsolutions.jts.geom.Point;
+import org.locationtech.jts.geom.Point;
 
 import nismod.transport.decision.RoadDevelopment;
 import nismod.transport.demand.DemandModel.ElasticityTypes;

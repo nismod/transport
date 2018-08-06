@@ -3005,7 +3005,7 @@ public class RoadNetworkAssignment {
 
 		return consumptions;
 	}
-
+		
 	/**
 	 * Calculates spatial energy consumption for car vehicles for each energy type (in litres/kg for fuels and in kWh for electricity).
 	 * @param originZoneEnergyWeight Percentage of energy consumption assigned to origin zone (the rest assigned to destination zone).
@@ -3043,6 +3043,39 @@ public class RoadNetworkAssignment {
 
 				zonalConsumptions.get(et).put(originLAD, currentConsumptionOrigin);
 				zonalConsumptions.get(et).put(destinationLAD, currentConsumptionDestination);
+			}
+		}
+
+		return zonalConsumptions;
+	}
+	
+	/**
+	 * Calculates origin-destination energy consumption for car vehicles for each energy type (in litres/kg for fuels and in kWh for electricity).
+	 * @return Zonal consumption for each energy type.
+	 */
+	public HashMap<EnergyType, SkimMatrix> calculateODCarEnergyConsumptions() {
+
+		//initialise hashmaps
+		HashMap<EnergyType, SkimMatrix> zonalConsumptions = new HashMap<EnergyType, SkimMatrix>();
+		for (EnergyType energy: EnergyType.values()) {
+			SkimMatrix consumption = new SkimMatrix();
+			zonalConsumptions.put(energy, consumption);
+		}
+
+		for (Trip trip: this.tripList) {
+			if (trip.getVehicle() != VehicleType.CAR && trip.getVehicle() != VehicleType.CAR_AV) continue; //skip freight vehicles
+
+			HashMap<EnergyType, Double> tripConsumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyConsumptions, this.relativeFuelEfficiencies);
+
+			String originLAD = trip.getOriginLAD(this.roadNetwork.getNodeToZone());
+			String destinationLAD = trip.getDestinationLAD(this.roadNetwork.getNodeToZone());
+			int multiplier = trip.getMultiplier();
+
+			for (EnergyType et: EnergyType.values()) {
+				Double currentConsumption = zonalConsumptions.get(et).getCost(originLAD, destinationLAD);
+				if (currentConsumption == null) currentConsumption = 0.0;
+				currentConsumption += tripConsumption.get(et) * multiplier;
+				zonalConsumptions.get(et).setCost(originLAD, destinationLAD, currentConsumption);
 			}
 		}
 
@@ -3715,6 +3748,19 @@ public class RoadNetworkAssignment {
 				LOGGER.error(e);
 			}
 		}
+	}
+	
+	/**
+	 * Saves origin-destination matrix of car electricity consumption.
+	 * @param outputFile Output file name (with path).
+	 */
+	public void saveOriginDestinationCarElectricityConsumption(String outputFile) {
+		
+		//calculate OD energy consumptions
+		HashMap<EnergyType, SkimMatrix> energyConsumptions = this.calculateODCarEnergyConsumptions();
+		
+		energyConsumptions.get(EnergyType.ELECTRICITY).saveMatrixFormatted(outputFile);
+		
 	}
 
 	/**

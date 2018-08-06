@@ -181,6 +181,9 @@ public class RoadNetworkAssignmentTest {
 		System.out.println(rna.calculateZonalVehicleKilometresPerVehicleTypeFromTripList(false));
 		System.out.println(rna.calculateZonalVehicleKilometresPerVehicleTypeFromTripList(true));
 		
+		rna.saveZonalCarEnergyConsumptions(2015, 0.5, "zonalEnergyConsumptions.csv");
+		rna.saveOriginDestinationCarElectricityConsumption("ODElectricityConsumtions.csv");
+		
 		
 		//rna.saveLinkTravelTimes(2015, "linkTravelTimes.csv");
 		//rna.saveTotalEnergyConsumptions(2015, "totalEnergy.csv");
