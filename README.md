@@ -33,6 +33,7 @@ These files are used in the test classes and should also be consulted to underst
 * Milan Lovric lovric.milan@gmail.com / M.Lovric@soton.ac.uk (Modelling and development)
 * Manuel Buitrago mbm1d15@soton.ac.uk (Seaports and freight)
 * Simon Blainey S.P.Blainey@soton.ac.uk (MISTRAL Co-Lead)
+* John Preston J.M.Preston@soton.ac.uk (MISTRAL Co-Lead)
 
 ## How to run the model
 
