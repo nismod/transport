@@ -119,7 +119,6 @@ public class RoadNetworkAssignment {
 	private Map<Integer, Double> linkVolumesInPCU;
 	private Map<VehicleType, Map<Integer, Integer>> linkVolumesPerVehicleType;
 	private Map<TimeOfDay, Map<Integer, Double>> linkVolumesInPCUPerTimeOfDay;
-	private HashMap<Integer, Double> linkFreeFlowTravelTime;
 	//private HashMap<Integer, Double> linkTravelTime;
 	private Map<TimeOfDay, Map<Integer, Double>> linkTravelTimePerTimeOfDay;
 
@@ -181,21 +180,19 @@ public class RoadNetworkAssignment {
 			HashMap<Integer, Integer> map = new HashMap<Integer, Integer>();
 			linkVolumesPerVehicleType.put(vht, map);
 		}
-		this.linkFreeFlowTravelTime = new HashMap<Integer, Double>();
 		this.linkTravelTimePerTimeOfDay = new HashMap<TimeOfDay, Map<Integer, Double>>();
 		for (TimeOfDay hour: TimeOfDay.values()) {
 			HashMap<Integer, Double> map = new HashMap<Integer, Double>();
 			linkTravelTimePerTimeOfDay.put(hour, map);
 		}
 		this.tripList = new ArrayList<Trip>();
-		this.linkFreeFlowTravelTime = roadNetwork.getFreeFlowTravelTime();
 
 		if (defaultLinkTravelTime == null) { //use free flow
 			LOGGER.debug("No link travel time provided, using free-flow link travel time.");
 			for (TimeOfDay hour: TimeOfDay.values()) {
 				Map<Integer, Double> hourlyMap = this.linkTravelTimePerTimeOfDay.get(hour);
-				for (Integer edgeID: this.linkFreeFlowTravelTime.keySet())
-					hourlyMap.put(edgeID, this.linkFreeFlowTravelTime.get(edgeID));
+				for (Integer edgeID: this.roadNetwork.getFreeFlowTravelTime().keySet())
+					hourlyMap.put(edgeID, this.roadNetwork.getFreeFlowTravelTime().get(edgeID));
 			}
 		}
 		else //otherwise copy
@@ -2391,84 +2388,11 @@ public class RoadNetworkAssignment {
 	}
 
 	/**
-	 * Updates link travel times per time of day
+	 * Updates link travel times per time of day.
 	 */
 	public void updateLinkTravelTimes() {
 
-		double congestedTravelTime;
-
-		this.linkVolumesInPCUPerTimeOfDay = this.calculateLinkVolumeInPCUPerTimeOfDay(this.tripList); //calculate link volumes per time of day
-
-		//iterate through all the edges in the graph
-		Iterator iter = roadNetwork.getNetwork().getEdges().iterator();
-		HashMap<Integer, Integer> numberOfLanes = roadNetwork.getNumberOfLanes();
-		while(iter.hasNext()) {
-
-			Edge edge = (Edge) iter.next();
-			SimpleFeature sf = (SimpleFeature) edge.getObject();
-			String roadNumber = (String) sf.getAttribute("RoadNumber");
-			double roadLength = (double) sf.getAttribute("LenNet"); //[km]
-
-			//iterate through all times of day
-			for (TimeOfDay hour: TimeOfDay.values()) {
-
-				Map<Integer, Double> hourlyVolumes = this.linkVolumesInPCUPerTimeOfDay.get(hour);
-				Double linkVolumeInPCU = hourlyVolumes.get(edge.getID());
-				if (linkVolumeInPCU == null) linkVolumeInPCU = 0.0;
-
-				/*
-				//Bureau of Public Roads (1964) formulation
-				if (roadNumber.charAt(0) == 'M') //motorway
-					congestedTravelTime = linkFreeFlowTravelTime.get(edge.getID())*(1 + ALPHA * Math.pow(PEAK_HOUR_PERCENTAGE * linkVolumeInPCU / numberOfLanes.get(edge.getID()) / MAXIMUM_CAPACITY_M_ROAD, BETA_M_ROAD));
-				else if (roadNumber.charAt(0) == 'A') //A-road
-					congestedTravelTime = linkFreeFlowTravelTime.get(edge.getID())*(1 + ALPHA * Math.pow(PEAK_HOUR_PERCENTAGE * linkVolumeInPCU / numberOfLanes.get(edge.getID()) / MAXIMUM_CAPACITY_A_ROAD, BETA_A_ROAD));
-				else //ferry
-					congestedTravelTime = linkFreeFlowTravelTime.get(edge.getID());
-				 */
-
-				//Speed-flow curves from FORGE (Department for Transport, 2005)
-				if (roadNumber.charAt(0) == 'M') {//motorway
-
-					double flow = linkVolumeInPCU / numberOfLanes.get(edge.getID());
-					double speed = 0.0;
-					if (flow < 1398) speed = ((69.96 - 71.95) / 1398 * flow + 71.95) * 1.609344; //[kph]
-					else if (flow < 2330) speed = ((34.55 - 69.96) / (2330 - 1398) * (flow - 1398) + 69.96) * 1.609344; //[kph]
-					else {
-						//flow higher than maximum (user over-capacity formula from WebTAG)
-						double E = flow / 2330;
-						double B = 0.5;
-						double speedC = 34.55;
-						double tc = roadLength / speedC; //h
-						speed = roadLength / (tc + B * (E - 1.0));
-						//System.out.println("Overcapacity speed:  " + speed);
-					}
-
-					congestedTravelTime = roadLength / speed * 60; //[min]
-
-				} else if (roadNumber.charAt(0) == 'A') {//A-road
-
-					double flow = linkVolumeInPCU / numberOfLanes.get(edge.getID());
-					double speed = 0.0;
-					if (flow < 1251) speed = ((50.14 - 56.05) / 1251 * flow + 56.05) * 1.609344; //[kph]
-					else if (flow < 1740) speed = ((27.22 - 50.14) / (1740 - 1251) * (flow - 1251) + 50.14) * 1.609344; //[kph]
-					else {
-						//flow higher than maximum (user over-capacity formula from WebTAG)
-						double E = flow / 1740;
-						double B = 0.5;
-						double speedC = 27.22;
-						double tc = roadLength / speedC; //h
-						speed = roadLength / (tc + B * (E - 1.0));
-						//System.out.println("Overcapacity speed:  " + speed);
-					}
-					congestedTravelTime = roadLength / speed * 60;
-
-				} else //ferry
-					congestedTravelTime = linkFreeFlowTravelTime.get(edge.getID()); //ferry travel time is fixed
-
-				Map<Integer, Double> hourlyTimes = this.linkTravelTimePerTimeOfDay.get(hour);
-				hourlyTimes.put(edge.getID(), congestedTravelTime);
-			}
-		}
+		this.updateLinkTravelTimes(1.0);
 	}
 
 	/**
@@ -2545,15 +2469,23 @@ public class RoadNetworkAssignment {
 					congestedTravelTime = roadLength / speed * 60;
 
 				} else //ferry
-					congestedTravelTime = linkFreeFlowTravelTime.get(edge.getID()); //ferry travel time is fixed
-
-				Double oldLinkTravelTime = this.linkTravelTimePerTimeOfDay.get(hour).get(edge.getID());
-				congestedTravelTime = weight * congestedTravelTime + (1 - weight) * oldLinkTravelTime;
+					congestedTravelTime = this.roadNetwork.getFreeFlowTravelTime().get(edge.getID()); //ferry travel time is fixed
 
 				Map<Integer, Double> hourlyTimes = this.linkTravelTimePerTimeOfDay.get(hour);
-				hourlyTimes.put(edge.getID(), congestedTravelTime);
-			}
-		}
+				if (hourlyTimes == null) LOGGER.error("No hourly travel times for hour {}", hour);
+				
+				Double oldLinkTravelTime = hourlyTimes.get(edge.getID());
+				if (oldLinkTravelTime == null) {
+					//fetch from the road network, which was likely modified by a road development intervention
+					oldLinkTravelTime = this.roadNetwork.getFreeFlowTravelTime().get(edge.getID());
+					if (oldLinkTravelTime == null) LOGGER.error("No link travel time for edge {}", edge.getID());
+				}
+				
+				double averagedCongestedTravelTime = weight * congestedTravelTime + (1 - weight) * oldLinkTravelTime; //averaging
+				hourlyTimes.put(edge.getID(), averagedCongestedTravelTime);
+				
+			}//for time of day
+		}//while edges
 	}
 
 	/** 
@@ -3443,7 +3375,7 @@ public class RoadNetworkAssignment {
 				SimpleFeature feature = (SimpleFeature)edge.getObject();
 				String roadNumber = (String) feature.getAttribute("RoadNumber");
 				record.add(roadNumber);
-				record.add(Double.toString(this.linkFreeFlowTravelTime.get(edge.getID())));
+				record.add(Double.toString(this.roadNetwork.getFreeFlowTravelTime().get(edge.getID())));
 				record.add(Double.toString(this.linkTravelTimePerTimeOfDay.get(TimeOfDay.EIGHTAM).get(edge.getID())));
 				Integer linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edge.getID());
 				if (linkVolume == null) record.add(Integer.toString(0));
@@ -3931,7 +3863,7 @@ public class RoadNetworkAssignment {
 				record.clear();
 				record.add(Integer.toString(year));
 				record.add(Integer.toString(edge.getID()));
-				record.add(Double.toString(this.linkFreeFlowTravelTime.get(edge.getID())));
+				record.add(Double.toString(this.roadNetwork.getFreeFlowTravelTime().get(edge.getID())));
 				for (TimeOfDay hour: TimeOfDay.values())
 					record.add(Double.toString(this.linkTravelTimePerTimeOfDay.get(hour).get(edge.getID())));
 				csvFilePrinter.printRecord(record);
@@ -3982,7 +3914,7 @@ public class RoadNetworkAssignment {
 	 */
 	public HashMap<Integer, Double> getLinkFreeFlowTravelTimes() {
 
-		return this.linkFreeFlowTravelTime;
+		return this.roadNetwork.getFreeFlowTravelTime();
 	}
 
 	/**
