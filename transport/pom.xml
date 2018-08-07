@@ -134,6 +134,7 @@
     		<version>1.15.1</version>
 		</dependency>
 	</dependencies>
+	
 	<repositories>
 		<repository>
 			<id>maven2-repository.dev.java.net</id>
@@ -196,13 +197,56 @@
         		<version>1.16</version>
         		<executions>
          			<execution>
-            		<id>download-licenses</id>
+            			<id>download-licenses</id>
            				<goals>
              				<goal>download-licenses</goal>
            				</goals>
          			</execution>
        			</executions>
      		</plugin>
+			<plugin>
+    			<groupId>org.jacoco</groupId>
+    			<artifactId>jacoco-maven-plugin</artifactId>
+    			<version>0.8.1</version>
+    			<executions>
+        			<execution>
+	            		<id>pre-unit-test</id>
+            			<goals>
+	                		<goal>prepare-agent</goal>
+            			</goals>
+            			<configuration>
+            	    		<destFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</destFile>
+                			<propertyName>surefireArgLine</propertyName>
+            			</configuration>
+       				</execution>
+        			<execution>
+            			<id>post-unit-test</id>
+            			<phase>test</phase>
+            			<goals>
+	                		<goal>report</goal>
+            			</goals>
+            			<configuration>
+                			<excludes>
+        						<exclude>nismod/transport/showcase/**/*</exclude>
+        						<exclude>nismod/transport/visualisation/**/*</exclude>
+        						<exclude>nismod/transport/optimisation/**/*</exclude>
+		        				<exclude>nismod/transport/App.class</exclude>
+        					  </excludes>
+                			<dataFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</dataFile>
+                			<outputDirectory>${project.reporting.outputDirectory}/jacoco-ut</outputDirectory>
+            			</configuration>
+        			</execution>
+    			</executions>
+			</plugin>
+			<plugin>
+		    	<groupId>org.apache.maven.plugins</groupId>
+		    	<artifactId>maven-surefire-plugin</artifactId>
+		    	<version>2.15</version>
+		    	<configuration>
+		        	<argLine>${surefireArgLine}</argLine>
+		        	<skipTests>${skip.unit.tests}</skipTests>
+		    	</configuration>
+			</plugin>
 		</plugins>
 	</build>
 	
@@ -221,4 +265,5 @@
 			</plugin>
 		</plugins>
     </reporting>
+    
 </project>
