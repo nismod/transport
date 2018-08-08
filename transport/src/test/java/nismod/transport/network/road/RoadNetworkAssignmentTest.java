@@ -3,11 +3,10 @@
  */
 package nismod.transport.network.road;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.closeTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.hamcrest.Matchers.closeTo;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -15,7 +14,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -23,29 +21,18 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
-import org.apache.commons.collections4.map.MultiKeyMap;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.math3.stat.Frequency;
-import org.geotools.graph.path.Path;
-import org.geotools.graph.structure.DirectedNode;
-import org.geotools.graph.structure.Edge;
-import org.hamcrest.Matcher;
-import org.hamcrest.MatcherAssert;
 import org.junit.Test;
-import org.opengis.feature.simple.SimpleFeature;
-
-import com.google.inject.matcher.Matchers;
 
 import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.ODMatrix;
-import nismod.transport.demand.SkimMatrix;
+import nismod.transport.demand.RealODMatrix2;
 import nismod.transport.demand.SkimMatrixFreight;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.utility.ConfigReader;
 import nismod.transport.utility.InputFileReader;
-import nismod.transport.visualisation.NetworkVisualiser;
 import nismod.transport.zone.Zoning;
 
 /**
@@ -80,9 +67,9 @@ public class RoadNetworkAssignmentTest {
 		
 		final String passengerRoutesFile = props.getProperty("passengerRoutesFile");
 		final String freightRoutesFile = props.getProperty("freightRoutesFile");
-		
+		final String temproRoutesFile = props.getProperty("temproRoutesFile");
+			
 		final String outputFolder = props.getProperty("outputFolder");
-		final String assignmentResultsFile = props.getProperty("assignmentResultsFile");
 		
 		//create output directory
 	     File file = new File(outputFolder);
@@ -131,12 +118,18 @@ public class RoadNetworkAssignmentTest {
 		
 		//set assignment fraction
 		//rna.setAssignmentFraction(0.1);
+		
+		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
+		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
 
 		//assign passenger flows
-		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
+		//ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
+		RealODMatrix2 odm = RealODMatrix2.createUnitMatrix(zoning);
+		odm.deleteInterzonalFlows("E02006781"); //Isle of Scilly in Tempro
+		
 		//odm.scaleMatrixValue(8.0);
-		odm.printMatrixFormatted("Passenger matrix:");
-
+		odm.printMatrixFormatted("Tempro unit OD matrix:", 2);
+		
 		//read routes
 		long timeNow = System.currentTimeMillis();
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
@@ -145,6 +138,15 @@ public class RoadNetworkAssignmentTest {
 		System.out.printf("Routes read in %d milliseconds.\n", timeNow);
 		rsg.printStatistics();
 		
+		//read routes
+		timeNow = System.currentTimeMillis();
+		rsg.readRoutesBinaryWithoutValidityCheck(temproRoutesFile);
+		timeNow = System.currentTimeMillis() - timeNow;
+		System.out.printf("Routes read in %d milliseconds.\n", timeNow);
+		rsg.printStatistics();
+		
+		rsg.generateSingleNodeRoutes();
+		
 		//set route choice parameters
 		Properties params = new Properties();
 		params.setProperty("TIME", "-1.5");
@@ -152,37 +154,46 @@ public class RoadNetworkAssignmentTest {
 		params.setProperty("COST", "-3.6");
 		params.setProperty("INTERSECTIONS", "-0.1");
 		params.setProperty("AVERAGE_INTERSECTION_DELAY", "0.8");
+		params.setProperty("DISTANCE_THRESHOLD", "200000.0");
 		
 		
-		HashMap<TimeOfDay, RouteSetGenerator> routeStorage = new HashMap<TimeOfDay, RouteSetGenerator>();
-		for (TimeOfDay hour: TimeOfDay.values()) {
-			routeStorage.put(hour, new RouteSetGenerator(roadNetwork));
-		}
-		
+//		HashMap<TimeOfDay, RouteSetGenerator> routeStorage = new HashMap<TimeOfDay, RouteSetGenerator>();
+//		for (TimeOfDay hour: TimeOfDay.values()) {
+//			routeStorage.put(hour, new RouteSetGenerator(roadNetwork));
+//		}
+//		
 		//assign passenger flows
 		timeNow = System.currentTimeMillis();
 		//rna.assignPassengerFlowsHourlyRouting(odm, routeStorage);
 		//for (TimeOfDay hour: TimeOfDay.values()) {
 		//	routeStorage.get(hour).printStatistics();
 		//}
-		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
+		
+		//rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
+		rna.assignPassengerFlowsRouteChoiceTemproDistanceBased(odm, zoning, rsg, params);
+		
+		
+		
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Passenger flows assigned in %d seconds.\n", timeNow / 1000);
 		
-		rna.updateLinkVolumeInPCU();
-		rna.updateLinkVolumeInPCUPerTimeOfDay();
-		rna.updateLinkVolumePerVehicleType();
-		rna.updateLinkTravelTimes();
+		rna.printRMSNstatistic();
+		rna.printGEHstatistic();
 		
-		rna.saveZonalVehicleKilometres(2015, "zonalvkms.csv");
-		rna.saveZonalVehicleKilometresWithAccessEgress(2015, "zonalvkmsAccessEgress.csv");
-				
-		System.out.println(rna.calculateZonalVehicleKilometresPerVehicleType());
-		System.out.println(rna.calculateZonalVehicleKilometresPerVehicleTypeFromTripList(false));
-		System.out.println(rna.calculateZonalVehicleKilometresPerVehicleTypeFromTripList(true));
-		
-		rna.saveZonalCarEnergyConsumptions(2015, 0.5, "zonalEnergyConsumptions.csv");
-		rna.saveOriginDestinationCarElectricityConsumption("ODElectricityConsumtions.csv");
+//		rna.updateLinkVolumeInPCU();
+//		rna.updateLinkVolumeInPCUPerTimeOfDay();
+//		rna.updateLinkVolumePerVehicleType();
+//		rna.updateLinkTravelTimes();
+//		
+//		rna.saveZonalVehicleKilometres(2015, "zonalvkms.csv");
+//		rna.saveZonalVehicleKilometresWithAccessEgress(2015, "zonalvkmsAccessEgress.csv");
+//				
+//		System.out.println(rna.calculateZonalVehicleKilometresPerVehicleType());
+//		System.out.println(rna.calculateZonalVehicleKilometresPerVehicleTypeFromTripList(false));
+//		System.out.println(rna.calculateZonalVehicleKilometresPerVehicleTypeFromTripList(true));
+//		
+//		rna.saveZonalCarEnergyConsumptions(2015, 0.5, "zonalEnergyConsumptions.csv");
+//		rna.saveOriginDestinationCarElectricityConsumption("ODElectricityConsumtions.csv");
 		
 		
 		//rna.saveLinkTravelTimes(2015, "linkTravelTimes.csv");
@@ -196,6 +207,8 @@ public class RoadNetworkAssignmentTest {
 		//roadNetworkAssignment.saveAssignmentResults(2015, "assignmentResults.csv");
 		
 		//roadNetworkAssignment.saveZonalVehicleKilometres(2015, "zonalVehicleKilometres.csv");
+		
+		/*
 		
 		//do some trip list processing
 		timeNow = System.currentTimeMillis();
@@ -230,7 +243,7 @@ public class RoadNetworkAssignmentTest {
 		System.out.printf("RMSN for counts (4.0 expansion factor): %.2f%% %n", rna.calculateRMSNforExpandedSimulatedVolumes(4.0));
 	
 		
-		
+		*/
 		
 		/*
 		
@@ -502,6 +515,15 @@ public class RoadNetworkAssignmentTest {
 		
 		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforSimulatedVolumes());
 		
+		//hourly assignment with routing
+		rna.resetLinkVolumes();
+		rna.resetTripStorages();
+		rna.assignPassengerFlowsHourlyRouting(odm, null);
+	
+		rna.calculateDistanceSkimMatrixTempro().printMatrixFormatted();
+		rna.calculateLADTripEnds();
+		rna.calculateLADTripStarts();
+					
 		//TEST ASSIGNMENT WITH ROUTE CHOICE
 		System.out.println("\n\n*** Testing assignment with route choice ***");
 		
@@ -670,7 +692,13 @@ public class RoadNetworkAssignmentTest {
 		
 		ODMatrix temproODM2 = ODMatrix.createUnitMatrix(temproODM.getSortedOrigins());
 		rna.resetTripStorages();
+		rna.resetLinkVolumes();
 		rna.assignPassengerFlowsTempro(temproODM2, zoning, rsg);
+		rna.calculateDistanceSkimMatrixTempro().printMatrixFormatted();
+		
+		rna.resetLinkVolumes();
+		rna.resetTripStorages();
+		rna.assignPassengerFlowsRouteChoiceTempro(temproODM2, zoning, rsg, params);
 		rna.calculateDistanceSkimMatrixTempro().printMatrixFormatted();
 	}
 	
@@ -923,6 +951,35 @@ public class RoadNetworkAssignmentTest {
 		System.out.printf("Percentage of edges with suspicious flows (5.0 <= GEH < 10.0) is: %.0f%% %n", (double) suspiciousFlows / GEH.size() * 100);
 		System.out.printf("Percentage of edges with invalid flows (GEH >= 10.0) is: %.0f%% %n", (double) invalidFlows / GEH.size() * 100);		
 		
+		//TEST HOURLY ASSIGNMENT WITH ROUTING
+		
+		//hourly assignment
+		rna.resetLinkVolumes();
+		rna.resetTripStorages();
+		rna.assignPassengerFlowsHourlyRouting(odm, null);
+	
+		//TEST COUNTERS OF TRIP STARTS/ENDS
+		System.out.println("\n\n*** Testing trip starts/ends for hourly assignment with routing ***");
+		
+		System.out.println("Trip starts: " + rna.calculateLADTripStarts());
+		System.out.println("Trip ends: " + rna.calculateLADTripEnds());
+		System.out.println("OD matrix:");
+		odm.printMatrixFormatted();
+		System.out.println("Trip starts from OD matrix: " + odm.calculateTripStarts());
+		System.out.println("Trip ends from OD matrix: " + odm.calculateTripEnds());
+		
+		//trip starts and trip ends should match OD flows
+		tripStarts = rna.calculateLADTripStarts();
+		tripStartsFromODM = odm.calculateTripStarts();
+		for (String LAD: tripStarts.keySet()) {
+			assertEquals("Trip starts should match flows from each LAD", tripStarts.get(LAD), tripStartsFromODM.get(LAD));
+		}
+		tripEnds = rna.calculateLADTripEnds();
+		tripEndsFromODM = odm.calculateTripEnds();
+		for (String LAD: tripEnds.keySet()) {
+			assertEquals("Trip ends should match flows to each LAD", tripEnds.get(LAD), tripEndsFromODM.get(LAD));		
+		}
+		
 		//TEST ASSIGNMENT WITH ROUTE CHOICE
 		System.out.println("\n\n*** Testing assignment with route choice ***");
 		rna.resetLinkVolumes();
@@ -956,11 +1013,34 @@ public class RoadNetworkAssignmentTest {
 		params.setProperty("COST", "-3.6");
 		params.setProperty("INTERSECTIONS", "-3.1");
 		params.setProperty("AVERAGE_INTERSECTION_DELAY", "0.8");
+		params.setProperty("DISTANCE_THRESHOLD", "20000.0");
 		
 		//rsg.calculateAllUtilities(rna.getLinkTravelTimes(), params);
 		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
 
 		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforSimulatedVolumes());
+		
+		//TEST COUNTERS OF TRIP STARTS/ENDS
+		System.out.println("\n\n*** Testing trip starts/ends for assignment with route choice ***");
+		
+		System.out.println("Trip starts: " + rna.calculateLADTripStarts());
+		System.out.println("Trip ends: " + rna.calculateLADTripEnds());
+		System.out.println("OD matrix:");
+		odm.printMatrixFormatted();
+		System.out.println("Trip starts from OD matrix: " + odm.calculateTripStarts());
+		System.out.println("Trip ends from OD matrix: " + odm.calculateTripEnds());
+		
+		//trip starts and trip ends should match OD flows
+		tripStarts = rna.calculateLADTripStarts();
+		tripStartsFromODM = odm.calculateTripStarts();
+		for (String LAD: tripStarts.keySet()) {
+			assertEquals("Trip starts should match flows from each LAD", tripStarts.get(LAD), tripStartsFromODM.get(LAD));
+		}
+		tripEnds = rna.calculateLADTripEnds();
+		tripEndsFromODM = odm.calculateTripEnds();
+		for (String LAD: tripEnds.keySet()) {
+			assertEquals("Trip ends should match flows to each LAD", tripEnds.get(LAD), tripEndsFromODM.get(LAD));		
+		}
 		
 		//TEST VEHICLE KILOMETRES
 		System.out.println("\n\n*** Testing vehicle kilometres ***");
@@ -1063,7 +1143,7 @@ public class RoadNetworkAssignmentTest {
 		
 		
 		//TEST ASSIGNMENT WITH TEMPRO ZONES
-		System.out.println("\n\n*** Testing assignment with route choice ***");
+		System.out.println("\n\n*** Testing assignment with tempro zones ***");
 		rna.resetLinkVolumes();
 		rna.resetTripStorages();
 		
@@ -1088,6 +1168,40 @@ public class RoadNetworkAssignmentTest {
 		rna.calculateLinkVolumePerVehicleType(rna.getTripList());
 		System.out.println(rna.calculateZonalVehicleKilometresPerVehicleTypeFromTemproTripList(false));
 		System.out.println(rna.calculateZonalVehicleKilometresPerVehicleTypeFromTemproTripList(true));
+		
+		rna.resetTripStorages();
+		rna.resetLinkVolumes();
+		rna.assignPassengerFlowsRouteChoiceTempro(temproODM2, zoning, rsg, params);
+		rna.calculateDistanceSkimMatrixTempro().printMatrixFormatted();
+		
+		rsg.generateSingleNodeRoutes();
+		rna.resetTripStorages();
+		rna.resetLinkVolumes();
+		rna.assignPassengerFlowsRouteChoiceTemproDistanceBased(temproODM2, zoning, rsg, params);
+		rna.calculateDistanceSkimMatrixTempro().printMatrixFormatted();
+		
+		//TEST COUNTERS OF TRIP STARTS/ENDS
+		System.out.println("\n\n*** Testing LAD trip starts/ends for assignment with tempro route choice ***");
+		
+		System.out.println("Trip starts: " + rna.calculateLADTripStarts());
+		System.out.println("Trip ends: " + rna.calculateLADTripEnds());
+		System.out.println("Tempro to LAD OD matrix:");
+		ODMatrix t2odm = ODMatrix.createLadMatrixFromTEMProMatrix(temproODM2, zoning);
+		t2odm.printMatrixFormatted();
+		System.out.println("Trip starts from OD matrix: " + t2odm.calculateTripStarts());
+		System.out.println("Trip ends from OD matrix: " + t2odm.calculateTripEnds());
+		
+		//trip starts and trip ends should match OD flows
+		tripStarts = rna.calculateLADTripStarts();
+		tripStartsFromODM = t2odm.calculateTripStarts();
+		for (String LAD: tripStarts.keySet()) {
+			assertEquals("Trip starts should match flows from each LAD", tripStarts.get(LAD), tripStartsFromODM.get(LAD));
+		}
+		tripEnds = rna.calculateLADTripEnds();
+		tripEndsFromODM = t2odm.calculateTripEnds();
+		for (String LAD: tripEnds.keySet()) {
+			assertEquals("Trip ends should match flows to each LAD", tripEnds.get(LAD), tripEndsFromODM.get(LAD));		
+		}
 	}
 	
 	@Test

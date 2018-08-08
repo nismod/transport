@@ -62,30 +62,51 @@ public class TripTempro extends Trip {
 		this.zoning = zoning;
 	}
 	
+	/**
+	 * Gets trip origin zone (LAD), from tempro to LAD mapping (not from route nodes).
+	 * @return Trip origin zone.
+	 */
+	public String getOriginLAD() {
+		
+		String originTemproZone = this.zoning.getZoneIDToCodeMap().get(this.origin);
+		String originLADZone = this.zoning.getZoneToLADMap().get(originTemproZone);
+		return originLADZone;
+	}
 	
-//	There should be mapping from Tempro to LAD zones in the Zoning class	
-//	/**
-//	 * Gets trip origin zone (LAD).
-//	 * @param nodeToZoneMap Mapping from nodes to zones.
-//	 * @return Trip origin zone.
-//	 */
-//	public String getOriginLAD(Map<Integer, String> nodeToZoneMap) {
-//		
-//		int originNode = this.getOriginNode().getID();
-//		return nodeToZoneMap.get(originNode);
-//	}
-//	
-//	
-//	/**
-//	 * Gets trip destination zone (LAD).
-//	 * @param nodeToZoneMap Mapping from nodes to zones.
-//	 * @return Trip destination zone.
-//	 */
-//	public String getDestinationLAD(Map<Integer, String> nodeToZoneMap) {
-//		
-//		int destinationNode = this.getDestinationNode().getID();
-//		return nodeToZoneMap.get(destinationNode);
-//	}
+	
+	/**
+	 * Gets trip destination zone (LAD), from tempro to LAD mapping (not from route nodes).
+	 * @return Trip destination zone.
+	 */
+	public String getDestinationLAD() {
+		
+		String destinationTemproZone = this.zoning.getZoneIDToCodeMap().get(this.destination);
+		String destinationLADZone = this.zoning.getZoneToLADMap().get(destinationTemproZone);
+		return destinationLADZone;
+	}
+	
+	/**
+	 * Gets trip origin zone (LAD), from tempro to LAD mapping (not from route nodes).
+	 * @param nodeToZoneMap Mapping from nodes to zones.
+	 * @return Trip origin zone.
+	 */
+	@Override
+	public String getOriginLAD(Map<Integer, String> nodeToZoneMap) {
+		
+		return this.getOriginLAD();
+	}
+	
+	
+	/**
+	 * Gets trip destination zone (LAD), from tempro to LAD mapping (not from route nodes).
+	 * @param nodeToZoneMap Mapping from nodes to zones.
+	 * @return Trip destination zone.
+	 */
+	@Override
+	public String getDestinationLAD(Map<Integer, String> nodeToZoneMap) {
+		
+		return this.getDestinationLAD();
+	}
 	
 	/**
 	 * Gets trip origin tempro zone code.
@@ -147,7 +168,7 @@ public class TripTempro extends Trip {
 		//double cost = distance / 100 * energyConsumptionsPer100km.get(this.engine) * energyUnitCosts.get(this.engine);
 		
 		//fetch congestion charge for the vehicle type
-		HashMap<String, HashMap<Integer, Double>> linkCharges = null;
+		HashMap<String, HashMap<Integer, Double>> linkCharges = new HashMap<String, HashMap<Integer, Double>>();
 		if (congestionCharges != null) 
 			for (String policyName: congestionCharges.keySet())
 				linkCharges.put(policyName, (HashMap<Integer, Double>) congestionCharges.get(policyName).get(this.vehicle, this.hour));

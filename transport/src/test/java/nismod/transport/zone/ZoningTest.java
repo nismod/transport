@@ -23,8 +23,8 @@ public class ZoningTest {
 	public static void main(String[] args) throws IOException {
 
 		
-		//final String configFile = "./src/main/config/config.properties";
-		final String configFile = "./src/test/config/testConfig.properties";
+		final String configFile = "./src/main/full/config/config.properties";
+		//final String configFile = "./src/test/config/testConfig.properties";
 		Properties props = ConfigReader.getProperties(configFile);
 		
 		final String areaCodeFileName = props.getProperty("areaCodeFileName");
@@ -93,12 +93,25 @@ public class ZoningTest {
 		System.out.println(zoning.getZoneToSortedListOfNodeAndDistancePairs());
 		System.out.println(zoning.getZoneToListOfContaintedNodes());
 		
+		double[][] matrix = zoning.getZoneToNodeDistanceMatrix();
+		System.out.println("matrix length: " + matrix.length);
+		System.out.println("matrix width: " + matrix[0].length);
+		System.out.println("number of tempro zones: " + zoning.getZoneIDToCodeMap().size());
+		System.out.println("number of nodes: " + zoning.getNodeToZoneMap().size());
+		
+		
+//		for (int i = 0; i < matrix.length; i++) {
+//			for (int j = 0; j < matrix[i].length; j++)
+//				System.out.print(matrix[i][j] + " ");
+//			System.out.println();
+//		}
+		
 //		System.out.println(zoning.getZoneToNodeMatrix());
 //		for (String zone: zoning.getZoneToNodeMatrix().keySet()) {
 //			zoning.getZoneToNodeMatrix().get(zone).printMatrixFormatted(zone);
 //		}
 		
-		System.out.println("LAD to Tempro zone map: " + zoning.getLADToListOfContainedZones());
+		//System.out.println("LAD to Tempro zone map: " + zoning.getLADToListOfContainedZones());
 	}
 	
 	@Test

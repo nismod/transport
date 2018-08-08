@@ -45,11 +45,13 @@ public class Zoning {
 	
 	private HashMap<String, List<Pair<Integer, Double>>> zoneToSortedListOfNodeAndDistancePairs;
 	
-	private HashMap<Integer, String> nodeToZoneInWhichLocated; //maps node to Tempro zone in which it is located
+	private double[][] zoneToNodeDistanceMatrix;
+	
+	private HashMap<Integer, String> nodeToZoneInWhichLocated; //maps node to Tempro zone in which it is located //TODO There are unmapped nodes (outside polygons)!
 	private HashMap<String, List<Integer>> zoneToListOfContainedNodes; //maps Tempro zone to a list of nodes within that zone (if they exist)
 	
 	private HashMap<String, String> zoneToLAD; //maps Tempro zone to LAD zone
-	private HashMap<String, List<String>> LADToListOfContainedZones; //maps LAD zones to a list of contained Temrpo zones
+	private HashMap<String, List<String>> LADToListOfContainedZones; //maps LAD zones to a list of contained Tempro zones
 	
 	private HashMap<String, String> LADToName; //maps LAD code to LAD name
 	
@@ -94,6 +96,10 @@ public class Zoning {
 		//the result is then truncated to contain only MAX_NEAREST_NODES
 		LOGGER.debug("Mapping Tempro zones to all the nodes, including distance...");
 		mapZonesToNodesAndDistances(zonesFeatureCollection);
+		
+		//calculating zone to all nodes distance matrix
+		LOGGER.debug("Mapping Tempro zones to all the nodes, distance matrix...");
+		mapZonesToNodesAndDistanceMatrix(zonesFeatureCollection);
 				
 		//map zones to nodes contained within zone
 		LOGGER.debug("Mapping Tempro zones to a list of nodes contained within that zone...");
@@ -102,7 +108,7 @@ public class Zoning {
 		//map LADs to contained Tempro zones
 		LOGGER.debug("Mapping LADs to a list of contained Tempro zones...");
 		mapLADsToContainedZones();
-		
+			
 		//mapZoneToNodeMatrices();
 		
 		LOGGER.debug("Done creating the zoning system.");
@@ -246,6 +252,46 @@ public class Zoning {
 				if (k > MAX_NEAREST_NODES)
 					list.subList(MAX_NEAREST_NODES, k).clear();
 				} 
+		} finally {
+			//feature iterator is a live connection that must be closed
+			iter.close();
+		}
+	}
+	
+	/**
+	 * Maps zones to all the nodes of the network and distances, sorted by distance.
+	 * @param zonesFeatureCollection Feature collection with the zones.
+	 */
+	private void mapZonesToNodesAndDistanceMatrix(SimpleFeatureCollection zonesFeatureCollection) {
+		
+		int maxZones = Collections.max(this.getZoneIDToCodeMap().keySet()); //find maximum index
+		int maxNodes = Collections.max(this.rn.getNodeIDtoNode().keySet()); //find maximum node id
+		this.zoneToNodeDistanceMatrix = new double[maxZones][maxNodes];
+		
+		//iterate through the zones and through the nodes
+		SimpleFeatureIterator iter = zonesFeatureCollection.features();
+		try {
+			while (iter.hasNext()) {
+				SimpleFeature sf = iter.next();
+				MultiPolygon polygon = (MultiPolygon) sf.getDefaultGeometry();
+				String zoneID = (String) sf.getAttribute("Zone_Code");
+				Point centroid = polygon.getCentroid();
+		
+				Iterator nodeIter = (Iterator) this.rn.getNetwork().getNodes().iterator();
+				while (nodeIter.hasNext()) {
+
+					Node node = (Node) nodeIter.next();
+					
+					//if node is blacklisted as either start or end node, do not consider that node
+					if (rn.isBlacklistedAsStartNode(node.getID()) || rn.isBlacklistedAsEndNode(node.getID())) continue;
+					
+					SimpleFeature sfn = (SimpleFeature) node.getObject();
+					Point point = (Point) sfn.getDefaultGeometry();
+					double distanceToNode = centroid.distance(point);
+					
+					this.zoneToNodeDistanceMatrix[this.temproCodeToID.get(zoneID) - 1][node.getID() - 1] = distanceToNode;
+				}
+			}
 		} finally {
 			//feature iterator is a live connection that must be closed
 			iter.close();
@@ -407,6 +453,15 @@ public class Zoning {
 	public HashMap<String, List<Integer>> getZoneToListOfContaintedNodes() {
 		
 		return this.zoneToListOfContainedNodes;
+	}
+	
+	/**
+	 * Getter for tempro zone to all nodes distance matrix.
+	 * @return Zone to node distance matrix.
+	 */
+	public double[][] getZoneToNodeDistanceMatrix() {
+		
+		return this.zoneToNodeDistanceMatrix;
 	}
 	
 //	/**
