@@ -182,6 +182,16 @@ public class SkimMatrix {
 	}
 	
 	/**
+	 * Prints the matrix as a formatted table, with a print message.
+	 * @param s Print message
+	 */
+	public void printMatrixFormatted(String s) {
+				
+		System.out.println(s);
+		this.printMatrixFormatted();
+	}
+	
+	/**
 	 * Saves the matrix into a csv file.
 	 * @param outputFile Path to the output file.
 	 */

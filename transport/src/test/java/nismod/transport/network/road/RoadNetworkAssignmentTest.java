@@ -1372,6 +1372,15 @@ public class RoadNetworkAssignmentTest {
 			int flow = fm.getFlow(origin, destination, vehicle);
 			assertEquals("The number of paths equals the flow", flow, counter);
 		}
+		
+		//hourly assignment with routing
+		rna.resetLinkVolumes();
+		rna.resetTripStorages();
+		rna.assignFreightFlowsHourlyRouting(fm, null);
+		
+		rna.calculateDistanceSkimMatrixFreight().printMatrixFormatted();
+		rna.calculateFreightLADTripEnds();
+		rna.calculateFreightLADTripStarts();
 	}
 	
 	//@Test

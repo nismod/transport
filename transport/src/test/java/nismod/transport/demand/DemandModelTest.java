@@ -4,6 +4,7 @@
 package nismod.transport.demand;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -17,6 +18,7 @@ import java.util.Properties;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.geotools.graph.path.Path;
+import org.junit.Test;
 
 import nismod.transport.decision.CongestionCharging;
 import nismod.transport.decision.Intervention;
@@ -29,6 +31,7 @@ import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.utility.ConfigReader;
+import nismod.transport.utility.InputFileReader;
 
 /**
  * @author Milan Lovric
@@ -328,6 +331,114 @@ public class DemandModelTest {
 		//dm.saveAssignmentResults(2015, "assignment2015noInterventionFull.csv");
 		//dm.saveAssignmentResults(2016, "assignment2016electrificationFull.csv");
 		//roadNetwork2.exportToShapefile("networkFullModel");
+	}
+	
+	@Test
+	public void test() throws IOException {
+
+		final String configFile = "./src/test/config/testConfig.properties";
+		Properties props = ConfigReader.getProperties(configFile);
 		
+		final String areaCodeFileName = props.getProperty("areaCodeFileName");
+		final String areaCodeNearestNodeFile = props.getProperty("areaCodeNearestNodeFile");
+		final String workplaceZoneFileName = props.getProperty("workplaceZoneFileName");
+		final String workplaceZoneNearestNodeFile = props.getProperty("workplaceZoneNearestNodeFile");
+		final String freightZoneToLADfile = props.getProperty("freightZoneToLADfile");
+		final String freightZoneNearestNodeFile = props.getProperty("freightZoneNearestNodeFile");
+
+		final URL zonesUrl = new URL(props.getProperty("zonesUrl"));
+		final URL networkUrl = new URL(props.getProperty("networkUrl"));
+		final URL networkUrlFixedEdgeIDs = new URL(props.getProperty("networkUrlFixedEdgeIDs"));
+		final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
+		final URL AADFurl = new URL(props.getProperty("AADFurl"));
+
+		//create a road network
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
+		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
+		
+		//these were not mapped because the count point falls on the river between the two zones
+		roadNetwork.getEdgeToZone().put(718, "E07000091"); //New Forest
+		roadNetwork.getEdgeToZone().put(719, "E07000091");
+					
+		final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
+		final String unitCO2EmissionsFile = props.getProperty("unitCO2EmissionsFile");
+		final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
+		final String AVFractionsFile = props.getProperty("autonomousVehiclesFile");
+
+		final String baseYearODMatrixFile = props.getProperty("baseYearODMatrixFile");
+		final String freightMatrixFile = props.getProperty("baseYearFreightMatrixFile");
+		final String populationFile = props.getProperty("populationFile");
+		final String GVAFile = props.getProperty("GVAFile");
+		final String elasticitiesFile = props.getProperty("elasticitiesFile");
+		final String elasticitiesFreightFile = props.getProperty("elasticitiesFreightFile");
+
+		final String passengerRoutesFile = props.getProperty("passengerRoutesFile");
+		final String freightRoutesFile = props.getProperty("freightRoutesFile");
+		
+		//read routes
+		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
+		rsg.readRoutesBinaryWithoutValidityCheck(passengerRoutesFile);
+		rsg.printStatistics();
+		rsg.readRoutesBinaryWithoutValidityCheck(freightRoutesFile);
+		rsg.printStatistics();
+		
+		//the main demand model
+		DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, freightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, unitCO2EmissionsFile, engineTypeFractionsFile, AVFractionsFile, null, rsg, props);
+		
+		//copy base-year engine fractions
+		//for (int year = 2015; year < 2025; year++) {
+		for (int year = 2015; year < 2016; year++) {
+			HashMap<VehicleType, HashMap<EngineType, Double>> map = new HashMap<VehicleType, HashMap<EngineType, Double>>();
+			map.putAll(dm.getEngineTypeFractions(2015));
+			dm.setEngineTypeFractions(year, map);
+		}
+	
+		dm.predictHighwayDemand(2016, 2015);
+
+		RoadNetworkAssignment rna2015 = dm.getRoadNetworkAssignment(2015);
+		RoadNetworkAssignment rna2016 = dm.getRoadNetworkAssignment(2016);
+		System.out.println("Base-year (2015) car energy consumptions:");
+		System.out.println(rna2015.calculateCarEnergyConsumptions());
+		System.out.println("Predicted (2016) car energy consumptions:");
+		System.out.println(rna2016.calculateCarEnergyConsumptions());
+		
+		ODMatrix odm2015 = dm.getPassengerDemand(2015);
+		ODMatrix odm2016 = dm.getPassengerDemand(2016);
+		SkimMatrix tm2015 = dm.getTimeSkimMatrix(2015);
+		SkimMatrix tm2016 = dm.getTimeSkimMatrix(2016);
+		SkimMatrix cm2015 = dm.getCostSkimMatrix(2015);
+		SkimMatrix cm2016 = dm.getCostSkimMatrix(2016);
+
+		odm2015.printMatrixFormatted("2015 demand:");
+		odm2016.printMatrixFormatted("2016 demand:");
+		tm2015.printMatrixFormatted("2015 travel time:");
+		tm2016.printMatrixFormatted("2016 travel time:");
+		cm2015.printMatrixFormatted("2015 travel cost:");
+		cm2016.printMatrixFormatted("2016 travel cost:");
+		
+		HashMap<Integer, HashMap<String, Integer>> population = InputFileReader.readPopulationFile(populationFile);
+		HashMap<String, Integer> pop2015 = population.get(2015);
+		HashMap<String, Integer> pop2016 = population.get(2016);
+		
+		for (String originZone: odm2016.getSortedOrigins())
+			for (String destinationZone: odm2016.getSortedDestinations()) {
+				int flow2015 = odm2015.getFlow(originZone, destinationZone);
+				int flow2016 = odm2016.getFlow(originZone, destinationZone);
+				
+				double time2015 = tm2015.getCost(originZone, destinationZone);
+				double time2016 = tm2016.getCost(originZone, destinationZone);
+				double cost2015 = cm2015.getCost(originZone, destinationZone);
+				double cost2016 = cm2016.getCost(originZone, destinationZone);
+				int po2015 = pop2015.get(originZone);
+				int pd2015 = pop2015.get(destinationZone);
+				int po2016 = pop2016.get(originZone);
+				int pd2016 = pop2016.get(destinationZone);
+				
+				//if the population has increased and costs have decreased, the flow should increase
+				if (po2016 > po2015 && pd2016 > pd2015 && time2016 < time2015 && cost2016 < cost2015) {
+					System.out.printf("Origin = %s destination = %s %n", originZone, destinationZone);
+					assertTrue("Flow should increase", flow2016 >= flow2015);
+				}
+			}
 	}
 }
