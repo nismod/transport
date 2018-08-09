@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
@@ -27,17 +28,17 @@ import nismod.transport.zone.Zoning;
  * @author Milan Lovric
  *
  */
-public class RealODMatrix2 implements AssignableODMatrix {
+public class RealODMatrixTempro implements AssignableODMatrix {
 	
 	public static final int MAX_ZONES = 7700;
 	
-	private final static Logger LOGGER = LogManager.getLogger(RealODMatrix2.class);
+	private final static Logger LOGGER = LogManager.getLogger(RealODMatrixTempro.class);
 	
 	private double[][] matrix;
 	
 	private Zoning zoning;
 	
-	public RealODMatrix2(Zoning zoning) {
+	public RealODMatrixTempro(Zoning zoning) {
 		
 		this.zoning = zoning;
 		int maxZones = Collections.max(zoning.getZoneIDToCodeMap().keySet()); //find maximum index
@@ -50,7 +51,7 @@ public class RealODMatrix2 implements AssignableODMatrix {
 	 * @throws FileNotFoundException if any.
 	 * @throws IOException if any.
 	 */
-	public RealODMatrix2(String fileName, Zoning zoning) throws FileNotFoundException, IOException {
+	public RealODMatrixTempro(String fileName, Zoning zoning) throws FileNotFoundException, IOException {
 		
 		LOGGER.info("Reading OD matrix from file: {}", fileName);
 		
@@ -274,7 +275,7 @@ public class RealODMatrix2 implements AssignableODMatrix {
 	 * @param other The other matrix.
 	 * @return Sum of absolute differences.
 	 */
-	public double getAbsoluteDifference(RealODMatrix2 other) {
+	public double getAbsoluteDifference(RealODMatrixTempro other) {
 		
 		double difference = 0.0;
 		
@@ -301,7 +302,7 @@ public class RealODMatrix2 implements AssignableODMatrix {
 	 * Scales matrix values with another matrix (element-wise multiplication).
 	 * @param scalingMatrix Scaling matrix.
 	 */
-	public void scaleMatrixValue(RealODMatrix2 scalingMatrix) {
+	public void scaleMatrixValue(RealODMatrixTempro scalingMatrix) {
 		
 		for (int i=0; i<matrix.length; i++)
 			for (int j=0; j<matrix[0].length; j++)
@@ -353,11 +354,12 @@ public class RealODMatrix2 implements AssignableODMatrix {
 	 * Creates a unit OD matrix for given lists of origin and destination zones.
 	 * @param origins List of origin zones.
 	 * @param destinations List of destination zones.
+	 * @param zoning Zoning system.
 	 * @return Unit OD matrix.
 	 */
-	public static RealODMatrix2 createUnitMatrix(List<String> origins, List<String> destinations, Zoning zoning) {
+	public static RealODMatrixTempro createUnitMatrix(List<String> origins, List<String> destinations, Zoning zoning) {
 		
-		RealODMatrix2 odm = new RealODMatrix2(zoning);
+		RealODMatrixTempro odm = new RealODMatrixTempro(zoning);
 		
 		for (String origin: origins)
 			for (String destination: destinations)
@@ -371,25 +373,9 @@ public class RealODMatrix2 implements AssignableODMatrix {
 	 * @param zones List of zones.
 	 * @return Unit OD matrix.
 	 */
-	public static RealODMatrix2 createUnitMatrix(List<String> zones, Zoning zoning) {
+	public static RealODMatrixTempro createUnitMatrix(List<String> zones, Zoning zoning) {
 		
-		RealODMatrix2 odm = new RealODMatrix2(zoning);
-		
-		for (String origin: zones)
-			for (String destination: zones)
-				odm.setFlow(origin, destination, 1.0);
-		
-		return odm;
-	}
-	
-	/**
-	 * Creates a quadratic unit OD matrix for a given lists of zones.
-	 * @param zones Set of zones.
-	 * @return Unit OD matrix.
-	 */
-	public static RealODMatrix2 createUnitMatrix(Set<String> zones, Zoning zoning) {
-		
-		RealODMatrix2 odm = new RealODMatrix2(zoning);
+		RealODMatrixTempro odm = new RealODMatrixTempro(zoning);
 		
 		for (String origin: zones)
 			for (String destination: zones)
@@ -401,17 +387,121 @@ public class RealODMatrix2 implements AssignableODMatrix {
 	/**
 	 * Creates a quadratic unit OD matrix for a given lists of zones.
 	 * @param zones Set of zones.
+	 * @param zoning Zoning system.
 	 * @return Unit OD matrix.
 	 */
-	public static RealODMatrix2 createUnitMatrix(Zoning zoning) {
+	public static RealODMatrixTempro createUnitMatrix(Set<String> zones, Zoning zoning) {
 		
-		RealODMatrix2 odm = new RealODMatrix2(zoning);
+		RealODMatrixTempro odm = new RealODMatrixTempro(zoning);
+		
+		for (String origin: zones)
+			for (String destination: zones)
+				odm.setFlow(origin, destination, 1.0);
+		
+		return odm;
+	}
+	
+	/**
+	 * Creates a quadratic unit OD matrix.
+	 * @param zoning Zoning system.
+	 * @return Unit OD matrix.
+	 */
+	public static RealODMatrixTempro createUnitMatrix(Zoning zoning) {
+		
+		RealODMatrixTempro odm = new RealODMatrixTempro(zoning);
 
 		for (int i=0; i<odm.matrix.length; i++)
 			for (int j=0; j<odm.matrix[0].length; j++)
 				odm.matrix[i][j] = 1.0;
 		
 		return odm;
+	}
+	
+	/**
+	 * Sums the elements of a matrix subset (provided as two lists of origins and destinations).
+	 * @param origins List of origin zones (a subset).
+	 * @param destinations List of destination zones (a subset).
+	 * @return Sum of the subset.
+	 */
+	public double sumMatrixSubset(List<String> origins, List<String> destinations) {
+		
+		double sum = 0.0;
+		for (String origin: origins)
+			for (String destination: destinations)
+				sum += this.getFlow(origin, destination);
+		
+		return sum;
+	}
+	
+	/**
+	 * Creates tempro OD matrix from LAD OD matrix.
+	 * @param ladODMatrix LAD to LAD OD matrix.
+	 * @param baseTempro TEMPro ODMatrix used as weights to disaggregate LAD matrix.
+	 * @param zoning Zoning system with mapping between TEMPro and LAD zones.
+	 * @return TEMPro based OD matrix.
+	 */
+	public static RealODMatrixTempro createTEMProFromLadMatrix(RealODMatrix ladODMatrix, RealODMatrixTempro baseTempro, Zoning zoning) {
+		
+		RealODMatrixTempro temproMatrix = new RealODMatrixTempro(zoning);
+		
+		for (MultiKey mk: ladODMatrix.getKeySet()) {
+			String originLAD = (String) mk.getKey(0);
+			String destinationLAD = (String) mk.getKey(1);
+			
+			double ladFlow = ladODMatrix.getFlow(originLAD, destinationLAD);
+					
+			//get tempro zones contained within originLAD and destinationLAD
+			List<String> temproOrigins = zoning.getLADToListOfContainedZones().get(originLAD);
+			List<String> temproDestinations = zoning.getLADToListOfContainedZones().get(destinationLAD);
+			
+			//sum all elements of the base tempro submatrix
+			double temproSum = baseTempro.sumMatrixSubset(temproOrigins, temproDestinations);
+			
+			//disaggregate LAD flow using the weights of the underlying tempro submatrix
+			for (String origin: temproOrigins)
+				for (String destination: temproDestinations) {
+					double temproFlow = 0.0;
+					if (temproSum > 0.0) temproFlow = baseTempro.getFlow(origin, destination) / temproSum * ladFlow;
+					temproMatrix.setFlow(origin, destination, temproFlow);
+				}
+		}
+		
+		return temproMatrix;
+	}
+	
+	/**
+	 * Creates real-valued LAD OD matrix from real-valued TEMPro OD matrix.
+	 * @param temproMatrix TEMPro ODMatrix which should be aggregated to LAD matrix.
+	 * @param zoning Zoning system with mapping between TEMPro and LAD zones.
+	 * @return LAD based real-valued OD matrix.
+	 */
+	public static RealODMatrix createLadMatrixFromTEMProMatrix(RealODMatrixTempro temproMatrix, Zoning zoning) {
+		
+		RealODMatrix ladMatrix = new RealODMatrix();
+			
+		for (int i=0; i<temproMatrix.matrix.length; i++)
+			for (int j=0; j<temproMatrix.matrix[0].length; j++) {
+							
+				String originTempro = zoning.getZoneIDToCodeMap().get(i + 1);
+				String destinationTempro = zoning.getZoneIDToCodeMap().get(j + 1);
+				
+				if (originTempro == null || destinationTempro == null) continue; //this will only occur for test datasets
+				
+				double flow = temproMatrix.matrix[i][j];
+				
+				String originLAD = zoning.getZoneToLADMap().get(originTempro);
+				String destinationLAD = zoning.getZoneToLADMap().get(destinationTempro);
+				
+				if (originLAD == null) LOGGER.warn("originLAD is null!");
+				if (destinationLAD == null) LOGGER.warn("destinationLAD is null!");
+				
+				Double flowLAD = ladMatrix.getFlow(originLAD, destinationLAD);
+				if (flowLAD == null) flowLAD = 0.0;
+				flowLAD += flow;
+				ladMatrix.setFlow(originLAD, destinationLAD, flowLAD);
+			}
+		
+		return ladMatrix;
 	}
 	
 	/**
@@ -428,9 +518,9 @@ public class RealODMatrix2 implements AssignableODMatrix {
 	}
 	
 	@Override
-	public RealODMatrix2 clone() {
+	public RealODMatrixTempro clone() {
 
-		RealODMatrix2 odm = new RealODMatrix2(this.zoning);
+		RealODMatrixTempro odm = new RealODMatrixTempro(this.zoning);
 		
 		for (int i=0; i<odm.matrix.length; i++)
 			for (int j=0; j<odm.matrix[0].length; j++)

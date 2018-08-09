@@ -7,7 +7,6 @@ import org.apache.commons.collections4.map.MultiKeyMap;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedNode;
 
 import nismod.transport.network.road.RoadNetworkAssignment.EnergyType;

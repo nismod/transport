@@ -123,7 +123,7 @@ public class RebalancedTemproODMatrixTest {
 		
 		final String temproODMatrixFile = props.getProperty("temproODMatrixFile");
 		//RealODMatrix rm = new RealODMatrix(temproODMatrixFile);
-		RealODMatrix2 rm2 = new RealODMatrix2(temproODMatrixFile, zoning);
+		RealODMatrixTempro rm2 = new RealODMatrixTempro(temproODMatrixFile, zoning);
 		rm2.saveMatrixFormatted("testingSparse200kmMatrix.csv");
 				
 		

@@ -15,7 +15,6 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.geotools.graph.structure.DirectedEdge;
 
 import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;

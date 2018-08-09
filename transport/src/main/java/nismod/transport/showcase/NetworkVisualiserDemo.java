@@ -1,9 +1,7 @@
 package nismod.transport.showcase;
 
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.RenderingHints;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.net.URL;
@@ -15,15 +13,11 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
-import javax.swing.JPanel;
-import javax.swing.JSplitPane;
 
 import org.geotools.brewer.color.ColorBrewer;
 import org.geotools.brewer.color.StyleGenerator;
-import org.geotools.data.CachingFeatureSource;
 import org.geotools.data.shapefile.ShapefileDataStore;
 import org.geotools.data.simple.SimpleFeatureCollection;
-import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.filter.function.Classifier;
@@ -43,18 +37,15 @@ import org.geotools.styling.Symbolizer;
 import org.geotools.styling.TextSymbolizer;
 import org.geotools.swing.JMapFrame;
 import org.geotools.swing.action.SafeAction;
-import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.filter.FilterFactory;
 import org.opengis.filter.FilterFactory2;
 import org.opengis.filter.expression.Function;
 import org.opengis.filter.expression.PropertyName;
 
-import nismod.transport.decision.CongestionCharging;
 import nismod.transport.demand.ODMatrix;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.utility.ConfigReader;
-import nismod.transport.visualisation.NetworkVisualiser;
 
 /**
  * For visualising the road network.

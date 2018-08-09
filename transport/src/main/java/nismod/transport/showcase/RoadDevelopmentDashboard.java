@@ -58,7 +58,6 @@ import org.geotools.graph.structure.DirectedNode;
 import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Node;
 import org.geotools.swing.JMapFrame;
-import org.geotools.swing.JMapPane;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -67,9 +66,8 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.BarRenderer;
 import org.jfree.chart.renderer.category.StandardBarPainter;
 import org.jfree.data.category.DefaultCategoryDataset;
-import org.opengis.feature.simple.SimpleFeature;
-
 import org.locationtech.jts.geom.Point;
+import org.opengis.feature.simple.SimpleFeature;
 
 import nismod.transport.decision.RoadDevelopment;
 import nismod.transport.demand.DemandModel.ElasticityTypes;

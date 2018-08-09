@@ -8,10 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.geotools.graph.structure.DirectedEdge;
 
 import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
@@ -19,7 +17,6 @@ import nismod.transport.network.road.Route;
 import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.network.road.Trip;
 import nismod.transport.network.road.TripTempro;
-import nismod.transport.zone.NodeMatrix;
 import nismod.transport.zone.Zoning;
 
 /**
@@ -27,7 +24,7 @@ import nismod.transport.zone.Zoning;
  * @author Milan Lovric
  *
  */
-public class RebalancedTemproODMatrix extends RealODMatrix2 {
+public class RebalancedTemproODMatrix extends RealODMatrixTempro {
 	
 	private final static Logger LOGGER = LogManager.getLogger(RebalancedTemproODMatrix.class);
 	
@@ -147,7 +144,7 @@ public class RebalancedTemproODMatrix extends RealODMatrix2 {
 	 */
 	public void scaleToTrafficCounts() {
 			
-		RealODMatrix2 sf = this.getScalingFactors();
+		RealODMatrixTempro sf = this.getScalingFactors();
 		//sf.printMatrixFormatted("Scaling factors:", 5);
 		
 		this.scaleMatrixValue(sf);
@@ -182,7 +179,7 @@ public class RebalancedTemproODMatrix extends RealODMatrix2 {
 	 * Calculates scaling factors for OD pairs.
 	 * @return Scaling factors.
 	 */
-	public RealODMatrix2 getScalingFactors() {
+	public RealODMatrixTempro getScalingFactors() {
 		
 		List<Trip> tripList = this.rna.getTripList();
 		LOGGER.trace("Trip list size: {}", tripList.size());
@@ -204,9 +201,9 @@ public class RebalancedTemproODMatrix extends RealODMatrix2 {
 		}
 		LOGGER.trace("link factors = {}", linkFactors);
 		
-		RealODMatrix2 factors = new RealODMatrix2(zoning);
-		RealODMatrix2 counter = new RealODMatrix2(zoning);
-		RealODMatrix2 scalingFactors = new RealODMatrix2(zoning);
+		RealODMatrixTempro factors = new RealODMatrixTempro(zoning);
+		RealODMatrixTempro counter = new RealODMatrixTempro(zoning);
+		RealODMatrixTempro scalingFactors = new RealODMatrixTempro(zoning);
 		
 		for (Trip t: tripList) 
 			if (t instanceof TripTempro && t.getVehicle().equals(VehicleType.CAR))	{

@@ -522,7 +522,8 @@ public class ODMatrix implements AssignableODMatrix {
 			//disaggregate LAD flow using the weights of the underlying tempro submatrix
 			for (String origin: temproOrigins)
 				for (String destination: temproDestinations) {
-					int temproFlow = (int) Math.round(1.0 * baseTempro.getFlow(origin, destination) / temproSum * ladFlow);
+					int temproFlow = 0;
+					if (temproSum > 0) temproFlow = (int) Math.round(1.0 * baseTempro.getFlow(origin, destination) / temproSum * ladFlow);
 					temproMatrix.setFlow(origin, destination, temproFlow);
 				}
 		}
@@ -531,6 +532,7 @@ public class ODMatrix implements AssignableODMatrix {
 	}
 	
 	/**
+	 * Creates LAD OD matrix from TEMPro OD matrix.
 	 * @param temproMatrix TEMPro ODMatrix used as weights to disaggregate LAD matrix.
 	 * @param zoning Zoning system with mapping between TEMPro and LAD zones.
 	 * @return LAD based OD matrix.

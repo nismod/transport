@@ -31,7 +31,7 @@ import org.locationtech.jts.geom.Point;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.ODMatrix;
-import nismod.transport.demand.RealODMatrix2;
+import nismod.transport.demand.RealODMatrixTempro;
 import nismod.transport.utility.RandomSingleton;
 import nismod.transport.zone.Zoning;
 
@@ -569,7 +569,7 @@ public class RouteSetGenerator{
 	 * @param sliceIndex Index of the OD matrix slice for which to generate routes [1..N].
 	 * @param sliceNumber Number of slices to divide matrix into (N).
 	 */
-	public void generateRouteSetForODMatrixTempro(RealODMatrix2 matrix, Zoning zoning, int sliceIndex, int sliceNumber) {
+	public void generateRouteSetForODMatrixTempro(RealODMatrixTempro matrix, Zoning zoning, int sliceIndex, int sliceNumber) {
 		
 		List<String> origins = matrix.getSortedOrigins();
 		List<String> destinations = matrix.getSortedDestinations();
@@ -601,7 +601,7 @@ public class RouteSetGenerator{
 	 * @param sliceIndex Index of the OD matrix slice for which to generate routes [1..N].
 	 * @param sliceNumber Number of slices to divide matrix into (N).
 	 */
-	public void generateRouteSetForODMatrixTemproDistanceBased(RealODMatrix2 matrix, Zoning zoning, int sliceIndex, int sliceNumber) {
+	public void generateRouteSetForODMatrixTemproDistanceBased(RealODMatrixTempro matrix, Zoning zoning, int sliceIndex, int sliceNumber) {
 		
 		List<String> origins = matrix.getSortedOrigins();
 		List<String> destinations = matrix.getSortedDestinations();

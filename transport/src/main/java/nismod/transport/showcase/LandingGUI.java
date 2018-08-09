@@ -10,7 +10,6 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -18,8 +17,6 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
-import javax.swing.UIManager;
-import javax.swing.plaf.ColorUIResource;
 
 import org.apache.sanselan.ImageReadException;
 import org.apache.sanselan.Sanselan;

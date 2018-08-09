@@ -9,16 +9,12 @@ import java.util.Properties;
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.geotools.graph.structure.DirectedEdge;
 
 import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.network.road.Route;
 import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.network.road.Trip;
-import nismod.transport.network.road.TripTempro;
-import nismod.transport.zone.NodeMatrix;
-import nismod.transport.zone.Zoning;
 
 /**
  * Origin-destination matrix (LAD based) created by directly scaling flows using traffic counts.

@@ -26,7 +26,7 @@ import org.junit.Test;
 
 import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.ODMatrix;
-import nismod.transport.demand.RealODMatrix2;
+import nismod.transport.demand.RealODMatrixTempro;
 import nismod.transport.demand.SkimMatrixFreight;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
@@ -124,7 +124,7 @@ public class RoadNetworkAssignmentTest {
 
 		//assign passenger flows
 		//ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
-		RealODMatrix2 odm = RealODMatrix2.createUnitMatrix(zoning);
+		RealODMatrixTempro odm = RealODMatrixTempro.createUnitMatrix(zoning);
 		odm.deleteInterzonalFlows("E02006781"); //Isle of Scilly in Tempro
 		
 		//odm.scaleMatrixValue(8.0);

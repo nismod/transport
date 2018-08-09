@@ -25,7 +25,6 @@ import org.geotools.renderer.GTRenderer;
 import org.geotools.styling.FeatureTypeStyle;
 import org.geotools.styling.Font;
 import org.geotools.styling.LineSymbolizer;
-import org.geotools.styling.LineSymbolizerImpl;
 import org.geotools.styling.PolygonSymbolizer;
 import org.geotools.styling.Rule;
 import org.geotools.styling.SLD;
@@ -41,7 +40,6 @@ import org.opengis.filter.FilterFactory2;
 import org.opengis.filter.expression.Function;
 import org.opengis.filter.expression.PropertyName;
 
-import nismod.transport.decision.CongestionCharging;
 import nismod.transport.network.road.RoadNetwork;
 
 /**

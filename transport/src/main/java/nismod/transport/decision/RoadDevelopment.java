@@ -9,7 +9,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Node;
-import org.opengis.feature.simple.SimpleFeature;
 
 import nismod.transport.demand.DemandModel;
 import nismod.transport.network.road.RoadNetwork;
