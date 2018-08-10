@@ -98,15 +98,25 @@ public class App {
 				.build();
 		options.addOption(freightRoutes);
 		
-		Option matrixEstimation = Option.builder("m")
-				.longOpt("matrixEstimation")
+		Option estimateMatrix = Option.builder("e")
+				.longOpt("estimateMatrix")
 				.argName("ITERATIONS")
 				.hasArg()
 				.numberOfArgs(1)
 				.desc("Estimate Tempro-level origin-destination matrix.")
 				.valueSeparator(' ')
 				.build();
-		options.addOption(matrixEstimation);
+		options.addOption(estimateMatrix);
+		
+		Option mergeRoutes = Option.builder("m")
+				.longOpt("mergeRoutes")
+				.argName("ROUTES_INPUT_FILE_1> <ROUTES_INPUT_FILE_2> <ROUTES_OUTPUT_FILE")
+				.hasArg()
+				.numberOfArgs(3)
+				.desc("Merge two route files into one (without duplicates).")
+				.valueSeparator(' ')
+				.build();
+		options.addOption(mergeRoutes);
 
 		// create the parser
 		CommandLineParser parser = new DefaultParser();
@@ -245,12 +255,32 @@ public class App {
 				}
 				System.exit(0);
 			}
+			
+			if (line.hasOption("m")) {
+
+				String[] values = line.getOptionValues("mergeRoutes");
+				
+				final String routesInputFile1 = values[0];
+				final String routesInputFile2 = values[1];
+				final String routeOutputFile = values[2];
+				RouteSetGenerator routes;
+
+				roadNetwork.sortGravityNodes();
+				routes = new RouteSetGenerator(roadNetwork, props);
+				
+				routes.readRoutesBinary(routesInputFile1);
+				routes.readRoutesBinary(routesInputFile2);
+				routes.saveRoutesBinary(routeOutputFile, false);
+				//routes.saveRoutesBinary(file.getPath() + "mergedRoutes.dat", false);
+	
+				System.exit(0);
+			}
 
 			else if (line.hasOption("d")) LandingGUI.main(null);
 			
-			else if (line.hasOption("m")) {
+			else if (line.hasOption("e")) {
 				
-				String[] values = line.getOptionValues("matrixEstimation");
+				String[] values = line.getOptionValues("estimateMatrix");
 				final String iterations = values[0];
 						
 				//create route set generator
