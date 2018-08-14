@@ -1076,6 +1076,7 @@ public class RouteSetGenerator{
 			} catch (IOException e) {
 				LOGGER.error(e);
 			}
+			LOGGER.debug("Routes successfully saved into a text file.");
 		}
 	}
 	
@@ -1116,6 +1117,7 @@ public class RouteSetGenerator{
 			} catch (IOException e) {
 				LOGGER.error(e);
 			}
+			LOGGER.debug("Routes successfully saved into a binary file.");
 		}
 	}
 	
@@ -1163,6 +1165,7 @@ public class RouteSetGenerator{
 			} catch (IOException e) {
 				LOGGER.error(e);
 			}
+			LOGGER.debug("Routes successfully saved into a binary file.");
 		}
 	}
 		

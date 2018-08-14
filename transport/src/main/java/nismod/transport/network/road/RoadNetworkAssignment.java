@@ -1715,8 +1715,9 @@ public class RoadNetworkAssignment {
 					//make a choice based on the gravitating population size
 					int originNodesToConsider = interzonalTopNodes<listOfOriginNodes.size()?interzonalTopNodes:listOfOriginNodes.size();
 					int destinationNodesToConsider = interzonalTopNodes<listOfDestinationNodes.size()?interzonalTopNodes:listOfDestinationNodes.size();
+					
+					/*
 					//sums of gravitating population
-
 					double sum = 0.0;
 					for (int j=0; j<originNodesToConsider; j++) sum += startNodeProbabilities.get(listOfOriginNodes.get(j)); 
 					//choose origin node
@@ -1729,7 +1730,24 @@ public class RoadNetworkAssignment {
 							break;
 						}
 					}
+					*/
+					
+					//chose the node out of the top nodes in the LAD that is the closest to the tempro zone!
+					double minDistance = Double.MAX_VALUE;
+					for (int j=0; j<originNodesToConsider; j++) {
+									
+						Integer nodeID = listOfOriginNodes.get(j);
+						
+						int originZoneID = zoning.getZoneCodeToIDMap().get(originZone);
+						double distance = zoning.getZoneToNodeDistanceMatrix()[originZoneID - 1][nodeID - 1];
 
+						if (distance < minDistance) {
+							minDistance = distance;
+							originNode = nodeID;
+						}
+					}
+									
+					/*	
 					sum = 0.0;
 					for (int j=0; j<destinationNodesToConsider; j++) sum += endNodeProbabilities.get(listOfDestinationNodes.get(j)); 
 					//choose destination node
@@ -1740,6 +1758,22 @@ public class RoadNetworkAssignment {
 						if (Double.compare(cumulativeProbability, random) > 0) {
 							destinationNode = node;
 							break;
+						}
+					}
+					*/
+					
+					//chose the node out of the top nodes in the LAD that is the closest to the tempro zone!
+					minDistance = Double.MAX_VALUE;
+					for (int j=0; j<destinationNodesToConsider; j++) {
+									
+						Integer nodeID = listOfDestinationNodes.get(j);
+						
+						int destinationZoneID = zoning.getZoneCodeToIDMap().get(destinationZone);
+						double distance = zoning.getZoneToNodeDistanceMatrix()[destinationZoneID - 1][nodeID - 1];
+
+						if (distance < minDistance) {
+							minDistance = distance;
+							destinationNode = nodeID;
 						}
 					}
 

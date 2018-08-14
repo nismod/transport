@@ -509,12 +509,34 @@ public class RealODMatrixTempro implements AssignableODMatrix {
 	 * @param zone Zone for which inter-zonal flows need to be deleted from the origin-destination matrix.
 	 */
 	public void deleteInterzonalFlows(String zone) {
+
+		LOGGER.debug("Deleting inter-zonal flows from/to zone {}...", zone);
 		
-		for (String origin: this.getSortedOrigins())
-			for (String destination: this.getSortedDestinations())
+		List<String> origins = this.getUnsortedOrigins();
+		List<String> destinations = this.getUnsortedDestinations();
+		
+		
+		for (String origin: origins)
+			for (String destination: destinations)
 				if (origin.equals(zone) && !destination.equals(zone) || !origin.equals(zone) && destination.equals(zone)) { //this will leave intra-zonal flow
 				this.setFlow(origin, destination, 0);
-			}
+		}
+		
+		LOGGER.debug("Done deleting inter-zonal flows.");
+	}
+	
+	/**
+	 * Gets sum of all the flows.
+	 * @return Sum of flows.
+	 */
+	public double getSumOfFlows() {
+		
+		double sumOfFlows = 0.0;
+		for (int i=0; i<this.matrix.length; i++)
+			for (int j=0; j<this.matrix[0].length; j++)
+				sumOfFlows += this.matrix[i][j];
+		
+		return sumOfFlows;
 	}
 	
 	@Override

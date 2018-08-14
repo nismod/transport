@@ -284,9 +284,11 @@ public class RoadNetwork {
 	 * Overrides actual edge lengths with straight line distances, when they are smaller than straight line distances.
 	 */
 	public void makeEdgesAdmissible() {
+	
+		LOGGER.info("Checking the admissibility of edge lenghts by comparing them to a straight line distance.");
 		
+		int counter = 0;
 		for (Object o: this.network.getEdges()) {
-			
 			DirectedEdge edge = (DirectedEdge) o;
 			DirectedNode fromNode = edge.getInNode();
 			DirectedNode toNode = edge.getOutNode();
@@ -301,11 +303,14 @@ public class RoadNetwork {
 			Point point2 = (Point)sf2.getDefaultGeometry();
 			double distance = point.distance(point2) / 1000.0; //straight line distance (from metres to kilometres)!
 			if (length < distance) {
-				LOGGER.printf(Level.DEBUG, "The length of the edge (%.2f) is smaller than the straight line distance (%.2f)!", length, distance);
-				LOGGER.debug("I am overriding actual distance for edge ({})-{}->({})", fromNode.getID(), edge.getID(), toNode.getID());
+				LOGGER.printf(Level.TRACE, "The length of the edge (%.2f) is smaller than the straight line distance (%.2f)!", length, distance);
+				LOGGER.trace("I am overriding actual distance for edge ({})-{}->({})", fromNode.getID(), edge.getID(), toNode.getID());
 				feature.setAttribute("LenNet", distance);
+				counter++;
 			}
 		}
+		if (counter > 0)
+			LOGGER.debug("{} edge lengths were corrected with a calculated straight line distance.", counter);
 	}
 		
 	/**

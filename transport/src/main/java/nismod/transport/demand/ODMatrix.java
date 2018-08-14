@@ -371,7 +371,7 @@ public class ODMatrix implements AssignableODMatrix {
 	 * Gets sum of all the flows.
 	 * @return Sum of flows.
 	 */
-	public double getSumOfFlows() {
+	public int getSumOfFlows() {
 		
 		int sumOfFlows = 0;
 		for (Object flow: matrix.values()) sumOfFlows += (int) flow;

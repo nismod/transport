@@ -148,6 +148,7 @@ public class Zoning {
 
 		this.zoneToNearestNodeID = new HashMap<String, Integer>();
 		this.zoneToNearestNodeDistance = new HashMap<String, Double>();
+		this.zoneToCentroid = new HashMap<String, Point>();
 		
 		this.zoneToLAD = new HashMap<String, String>();
 		this.LADToName = new HashMap<String, String>();
@@ -167,6 +168,8 @@ public class Zoning {
 				this.LADToName.put(ladID, ladName);
 				
 				Point centroid = polygon.getCentroid();
+				this.zoneToCentroid.put(zoneID, centroid);
+				
 				double minDistance = Double.MAX_VALUE;
 				Integer nearestNodeID = null;
 
@@ -202,8 +205,6 @@ public class Zoning {
 	 */
 	private void mapZonesToNodesAndDistances(SimpleFeatureCollection zonesFeatureCollection) {
 		
-		this.zoneToCentroid = new HashMap<String, Point>();
-
 		this.zoneToSortedListOfNodeAndDistancePairs = new HashMap<String, List<Pair<Integer, Double>>>();
 
 		//iterate through the zones and through the nodes
@@ -218,8 +219,7 @@ public class Zoning {
 				this.zoneToSortedListOfNodeAndDistancePairs.put(zoneID, list);
 								
 				Point centroid = polygon.getCentroid();
-				this.zoneToCentroid.put(zoneID, centroid);
-
+		
 				Iterator nodeIter = (Iterator) this.rn.getNetwork().getNodes().iterator();
 				while (nodeIter.hasNext()) {
 

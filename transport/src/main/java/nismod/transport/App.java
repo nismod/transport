@@ -265,7 +265,7 @@ public class App {
 				final String routeOutputFile = values[2];
 				RouteSetGenerator routes;
 
-				roadNetwork.sortGravityNodes();
+				//roadNetwork.sortGravityNodes();
 				routes = new RouteSetGenerator(roadNetwork, props);
 				
 				routes.readRoutesBinary(routesInputFile1);
@@ -282,6 +282,8 @@ public class App {
 				
 				String[] values = line.getOptionValues("estimateMatrix");
 				final String iterations = values[0];
+				
+				roadNetwork.sortGravityNodes();
 						
 				//create route set generator
 				RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, props);
