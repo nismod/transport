@@ -1202,6 +1202,10 @@ public class RoadNetworkAssignmentTest {
 		for (String LAD: tripEnds.keySet()) {
 			assertEquals("Trip ends should match flows to each LAD", tripEnds.get(LAD), tripEndsFromODM.get(LAD));		
 		}
+		
+		
+		
+		
 	}
 	
 	@Test

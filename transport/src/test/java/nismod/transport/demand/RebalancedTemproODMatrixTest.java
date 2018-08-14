@@ -121,6 +121,16 @@ public class RebalancedTemproODMatrixTest {
 		
 		
 		
+		//CREATING UNIT TEMPRO MATRIX
+		
+		RealODMatrixTempro temproODM = RealODMatrixTempro.createUnitMatrix(zoning.getZoneCodeToIDMap().keySet(), zoning);
+		//System.out.println("Sparse unit matrix: " + temproODM.getSumOfFlows());
+		temproODM.deleteInterzonalFlows("E02006781");
+		System.out.println("Unit matrix after inter-zonal deletion: " + temproODM.getSumOfFlows());
+		temproODM.saveMatrixFormatted("fullSCaleTemproUnitMatrix.csv");
+				
+		
+		/*
 		final String temproODMatrixFile = props.getProperty("temproODMatrixFile");
 		//RealODMatrix rm = new RealODMatrix(temproODMatrixFile);
 		RealODMatrixTempro rm2 = new RealODMatrixTempro(temproODMatrixFile, zoning);
@@ -136,7 +146,9 @@ public class RebalancedTemproODMatrixTest {
 		//rsg.generateRouteSetZoneToZone("E06000053", "E06000053");
 		//rsg.generateRouteSetZoneToZoneTempro("E02006781", "E02006781", zoning);
 		//rsg.printStatistics();
-		
+	
+		 */
+		 		
 		//change the zone to node mapping a bit
 //		zoning.getZoneToNearestNodeIDMap().put("E02003553", 9);
 //		zoning.getZoneToNearestNodeIDMap().put("E02003559", 8);
@@ -279,7 +291,8 @@ public class RebalancedTemproODMatrixTest {
 		temproODM.saveMatrixFormatted("fullSCaleTemproSparseUnitMatrix500km.csv");
 		
 		*/
-			
+		
+		/*
 //		final String temproODMatrixFile = props.getProperty("temproODMatrixFile");
 		RebalancedTemproODMatrix rodm = new RebalancedTemproODMatrix(temproODMatrixFile, rna, rsg, zoning, props);
 		
@@ -294,6 +307,7 @@ public class RebalancedTemproODMatrixTest {
 		line.setSize(600, 400);
 		line.setVisible(true);
 		line.saveToPNG("temproRebalancing.png");
+		*/
 		
 		/*
 //		ODMatrix todm = new ODMatrix(outputFolder + "balancedTemproODMatrix.csv");

@@ -1,16 +1,23 @@
 package nismod.transport.zone;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Properties;
 
+import org.apache.commons.lang3.tuple.Pair;
+import org.geotools.graph.structure.Node;
 import org.junit.Test;
+import org.locationtech.jts.geom.Point;
+import org.opengis.feature.simple.SimpleFeature;
 
-import nismod.transport.demand.ODMatrix;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.utility.ConfigReader;
 
@@ -149,6 +156,88 @@ public class ZoningTest {
 		assertEquals("Zone E02003568 is mapped to the correct node", 30, zoning.getZoneToNearestNodeIDMap().get("E02003568").intValue());
 		
 		System.out.println(zoning.getZoneToSortedListOfNodeAndDistancePairs());
+		
+		System.out.println(zoning.getLADToListOfContainedZones());
+		assertEquals("Tempro zone E02004794 is mapped to correct LAD zone", "E07000091", zoning.getZoneToLADMap().get("E02004794"));
+		
+		assertEquals("LAD zone Eastleigh contains correct number of Tempro zones", 15 ,zoning.getLADToListOfContainedZones().get("E07000086").size());
+		assertEquals("LAD zone Isle of Wight contains correct number of Tempro zones", 18, zoning.getLADToListOfContainedZones().get("E06000046").size());
+		assertEquals("LAD zone New Forest contains correct number of Tempro zones", 23, zoning.getLADToListOfContainedZones().get("E07000091").size());
+		assertEquals("LAD zone Southampton contains correct number of Tempro zones", 32, zoning.getLADToListOfContainedZones().get("E06000045").size());
+		
+		System.out.println(zoning.getLADToName());
+		System.out.println(zoning.getNodeToZoneMap());
+		
+		int size1 = roadNetwork.getNodeIDtoNode().size();
+		int size2 = zoning.getNodeToZoneMap().size();
+		assertEquals("All nodes from roadNetwork are mapped to Tempro zones", size1, size2);
+		
+		assertNull("Zone E02003593 contains no nodes", zoning.getZoneToListOfContaintedNodes().get("E02003593"));
+		
+		List<Integer> listOfNodes = zoning.getZoneToListOfContaintedNodes().get("E02003554");
+		Collections.sort(listOfNodes);
+		int[] expectedNodeList = new int[] {9, 40, 55};
+		assertEquals("The list of nodes in the tempro zone is correct", Arrays.toString(expectedNodeList), listOfNodes.toString());
+			
+		Point centroid = zoning.getZoneToCentroid().get("E02003559");
+		int nearestNodeID = zoning.getZoneToNearestNodeIDMap().get("E02003559");
+		assertEquals("Nearest node ID is correct", 40, nearestNodeID);
+		Node nearestNode = roadNetwork.getNodeIDtoNode().get(nearestNodeID);
+		SimpleFeature sfn = (SimpleFeature) nearestNode.getObject();
+		Point point = (Point) sfn.getDefaultGeometry();
+		double DELTA = 0.000001;
+		double distance = zoning.getZoneToNearestNodeDistanceMap().get("E02003559");
+		double expectedDistance = centroid.distance(point);
+		assertEquals("Distance to nearest node is correct", expectedDistance, distance, DELTA);
+		
+		int zoneID = zoning.getZoneCodeToIDMap().get("E02003559");
+		double distance2 = zoning.getZoneToNodeDistanceMatrix()[zoneID-1][nearestNodeID-1];
+		assertEquals("Distance to nearest node is correct", expectedDistance, distance2, DELTA);
+	
+		Pair<Integer, Double> pair = zoning.getZoneToSortedListOfNodeAndDistancePairs().get("E02003559").get(0);
+		assertEquals("Nearest node ID is correct", 40, (int)pair.getLeft());
+		assertEquals("Distance to nearest node is correct", expectedDistance, (double)pair.getRight(), DELTA);
+
+		//testing tempro zone mapping to the nearest node out of LAD top 5 nodes
+		
+		roadNetwork.sortGravityNodes();
+		String originZone = "E02004779";
+		String originLAD = zoning.getZoneToLADMap().get(originZone); //E07000091
+		
+		List<Integer> listOfOriginNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(originLAD)); //the list is already sorted
+		System.out.println(listOfOriginNodes);
+		System.out.println(listOfOriginNodes.subList(0, 5));
+		
+		int[] expectedTopNodesList = new int[] {63, 117, 97, 6, 91};
+		assertEquals("The list of top 5 nodes is correct", Arrays.toString(expectedTopNodesList), listOfOriginNodes.subList(0, 5).toString());
+		
+		//removing blacklisted nodes
+		for (Integer on: roadNetwork.getZoneToNodes().get(originLAD))
+			//check if any of the nodes is blacklisted
+			if (roadNetwork.getStartNodeBlacklist().contains(on)) 
+				listOfOriginNodes.remove(on);
+
+		int originNode = 0;
+		int interzonalTopNodes = 5;
+		//make a choice based on the gravitating population size
+		int originNodesToConsider = interzonalTopNodes<listOfOriginNodes.size()?interzonalTopNodes:listOfOriginNodes.size();
+
+		//chose the node out of the top nodes in the LAD that is the closest to the tempro zone!
+		double minDistance = Double.MAX_VALUE;
+		for (int j=0; j<originNodesToConsider; j++) {
+						
+			Integer nodeID = listOfOriginNodes.get(j);
+			int originZoneID = zoning.getZoneCodeToIDMap().get(originZone);
+			double dist = zoning.getZoneToNodeDistanceMatrix()[originZoneID - 1][nodeID - 1];
+
+			System.out.printf("Distance to node %d is %f %n", nodeID, dist);
+			if (dist < minDistance) {
+				minDistance = dist;
+				originNode = nodeID;
+			}
+		}
+		System.out.printf("Minimum distance is to node %d and it equals %f %n", originNode, minDistance);
+		assertEquals("The closest node among the top nodes is correct", 6, originNode);
 	}
 	
 	@Test
