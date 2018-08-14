@@ -238,6 +238,9 @@ public class ZoningTest {
 		}
 		System.out.printf("Minimum distance is to node %d and it equals %f %n", originNode, minDistance);
 		assertEquals("The closest node among the top nodes is correct", 6, originNode);
+
+		assertEquals("The closest node among the top nodes is correct", 6, zoning.getZoneToNearestNodeIDFromLADTopNodesMap().get(originZone).intValue());
+		
 	}
 	
 	@Test

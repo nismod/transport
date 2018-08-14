@@ -1618,56 +1618,7 @@ public class RoadNetworkAssignment {
 				}
 				if (engine == null) LOGGER.warn("Engine type not chosen!");
 
-				//choose origin/destination nodes based on the gravitating population
-				//the choice with replacement means that possibly: destination node = origin node
-				//the choice without replacement means that destination node has to be different from origin node
-
-				//choose origin node
-
-				/*
-				cumulativeProbability = 0.0;
-				Integer originNode = null;
-				random = rng.nextDouble();
-				for (Integer node: listOfOriginNodes) {
-					cumulativeProbability += startNodeProbabilities.get(node);
-					if (Double.compare(cumulativeProbability, random) > 0) {
-						originNode = node;
-						break;
-					}
-				}
-
-				if (originNode == null) System.err.println("Origin node was not chosen!");
-				 */
-
-				//choose destination node
-				/*
-				cumulativeProbability = 0.0;
-				Integer destinationNode = null;
-				random = rng.nextDouble();
-				//if intrazonal trip and replacement is not allowed, the probability of the originNode should be 0 so it cannot be chosen again
-				//also, in that case it is important to rescale other node probabilities (now that the originNode is removed) by dividing with (1.0 - p(originNode))!
-				if (!flagIntrazonalAssignmentReplacement && originZone.equals(destinationZone) && listOfDestinationNodes.contains(originNode)) { //no replacement and intra-zonal trip
-					for (Integer node: listOfDestinationNodes) {
-						if (node.intValue() == originNode.intValue()) continue; //skip if the node is the same as origin
-						cumulativeProbability += endNodeProbabilities.get(node) / (1.0 - endNodeProbabilities.get(originNode));
-						if (Double.compare(cumulativeProbability, random) > 0) {
-							destinationNode = node;
-							break;
-						}
-					}
-				} else	{ //inter-zonal trip (or intra-zonal with replacement)
-					for (Integer node: listOfDestinationNodes) {
-						cumulativeProbability += endNodeProbabilities.get(node);
-						if (Double.compare(cumulativeProbability, random) > 0) {
-							destinationNode = node;
-							break;
-						}
-					}
-				}	
-
-				if (destinationNode == null) System.err.println("Destination node was not chosen!");
-				 */
-
+				//choose origin and destination node
 				Integer originNode = null, destinationNode = null;
 				
 				Point originCentroid = zoning.getZoneToCentroid().get(originZone);
@@ -1682,103 +1633,26 @@ public class RoadNetworkAssignment {
 					originNode = zoning.getZoneToNearestNodeIDMap().get(originZone);
 					if (originNode == null) LOGGER.warn("Origin node was not chosen for zone {}", originZone);
 
-					if (this.roadNetwork.isBlacklistedAsStartNode(originNode)) 
-						LOGGER.warn("Origin node is blacklisted! node: {}", originNode);
+					//if (this.roadNetwork.isBlacklistedAsStartNode(originNode)) 
+					//	LOGGER.warn("Origin node is blacklisted! node: {}", originNode);
 					
 					destinationNode = zoning.getZoneToNearestNodeIDMap().get(destinationZone);
 					if (destinationNode == null) LOGGER.warn("Destination node was not chosen for zone {}", destinationZone);
 				
-					if (this.roadNetwork.isBlacklistedAsEndNode(destinationNode)) 
-						LOGGER.warn("Destination node is blacklisted! node: {}", destinationNode);
+					//if (this.roadNetwork.isBlacklistedAsEndNode(destinationNode)) 
+					//	LOGGER.warn("Destination node is blacklisted! node: {}", destinationNode);
 					
 				} else { //otherwise use one of the nodes from the LAD zone
 					
 					String originLAD = zoning.getZoneToLADMap().get(originZone);
 					String destinationLAD = zoning.getZoneToLADMap().get(destinationZone);
 					
-					List<Integer> listOfOriginNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(originLAD)); //the list is already sorted
-					List<Integer> listOfDestinationNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(destinationLAD)); //the list is already sorted
-
-					//removing blacklisted nodes
-					for (Integer on: roadNetwork.getZoneToNodes().get(originLAD))
-						//check if any of the nodes is blacklisted
-						if (this.roadNetwork.getStartNodeBlacklist().contains(on)) 
-							listOfOriginNodes.remove(on);
-
-					//removing blacklisted nodes
-					for (Integer dn: roadNetwork.getZoneToNodes().get(destinationLAD))
-						//check if any of the nodes is blacklisted
-						if (this.roadNetwork.getEndNodeBlacklist().contains(dn)) 
-							listOfDestinationNodes.remove(dn);
-
-
-					//make a choice based on the gravitating population size
-					int originNodesToConsider = interzonalTopNodes<listOfOriginNodes.size()?interzonalTopNodes:listOfOriginNodes.size();
-					int destinationNodesToConsider = interzonalTopNodes<listOfDestinationNodes.size()?interzonalTopNodes:listOfDestinationNodes.size();
-					
-					/*
-					//sums of gravitating population
-					double sum = 0.0;
-					for (int j=0; j<originNodesToConsider; j++) sum += startNodeProbabilities.get(listOfOriginNodes.get(j)); 
-					//choose origin node
-					cumulativeProbability = 0.0;
-					random = rng.nextDouble();
-					for (Integer node: listOfOriginNodes) {
-						cumulativeProbability += startNodeProbabilities.get(node) / sum; //scale with sum
-						if (Double.compare(cumulativeProbability, random) > 0) {
-							originNode = node;
-							break;
-						}
-					}
-					*/
-					
-					//chose the node out of the top nodes in the LAD that is the closest to the tempro zone!
-					double minDistance = Double.MAX_VALUE;
-					for (int j=0; j<originNodesToConsider; j++) {
-									
-						Integer nodeID = listOfOriginNodes.get(j);
-						
-						int originZoneID = zoning.getZoneCodeToIDMap().get(originZone);
-						double distance = zoning.getZoneToNodeDistanceMatrix()[originZoneID - 1][nodeID - 1];
-
-						if (distance < minDistance) {
-							minDistance = distance;
-							originNode = nodeID;
-						}
-					}
-									
-					/*	
-					sum = 0.0;
-					for (int j=0; j<destinationNodesToConsider; j++) sum += endNodeProbabilities.get(listOfDestinationNodes.get(j)); 
-					//choose destination node
-					cumulativeProbability = 0.0;
-					random = rng.nextDouble();
-					for (Integer node: listOfDestinationNodes) {
-						cumulativeProbability += endNodeProbabilities.get(node) / sum; //scale with sum
-						if (Double.compare(cumulativeProbability, random) > 0) {
-							destinationNode = node;
-							break;
-						}
-					}
-					*/
-					
-					//chose the node out of the top nodes in the LAD that is the closest to the tempro zone!
-					minDistance = Double.MAX_VALUE;
-					for (int j=0; j<destinationNodesToConsider; j++) {
-									
-						Integer nodeID = listOfDestinationNodes.get(j);
-						
-						int destinationZoneID = zoning.getZoneCodeToIDMap().get(destinationZone);
-						double distance = zoning.getZoneToNodeDistanceMatrix()[destinationZoneID - 1][nodeID - 1];
-
-						if (distance < minDistance) {
-							minDistance = distance;
-							destinationNode = nodeID;
-						}
-					}
-
-					if (originNode == null) LOGGER.warn("Origin node for inter-zonal trip was not chosen!");
-					if (destinationNode == null) LOGGER.warn("Destination node for inter-zonal trip was not chosen!");
+					//use precomputed nearest nodes from the zoning
+					originNode = zoning.getZoneToNearestNodeIDFromLADTopNodesMap().get(originZone);
+					destinationNode = zoning.getZoneToNearestNodeIDFromLADTopNodesMap().get(destinationZone);
+			
+					if (originNode == null) LOGGER.warn("Origin node was not chosen for zone {}", originZone);
+					if (destinationNode == null) LOGGER.warn("Destination node was not chosen for zone {}", destinationZone);
 				}
 
 				Route chosenRoute = null;

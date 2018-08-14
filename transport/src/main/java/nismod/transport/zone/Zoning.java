@@ -31,6 +31,7 @@ import nismod.transport.network.road.RoadNetwork;
 public class Zoning {
 	
 	public static int MAX_NEAREST_NODES = 1; //the number of nearest nodes to each Tempro zone to consider
+	public static int TOP_LAD_NODES = 5; //when mapping Tempro zone to top LAD nodes based on the gravitating population
 	
 	private final static Logger LOGGER = LogManager.getLogger(Zoning.class);
 	
@@ -40,6 +41,7 @@ public class Zoning {
 	
 	private HashMap<String, Integer> zoneToNearestNodeID;
 	private HashMap<String, Double> zoneToNearestNodeDistance;
+	private HashMap<String, Integer> zoneToNearestNodeIDFromLADTopNodes;
 	
 	private HashMap<String, Point> zoneToCentroid;
 	
@@ -101,6 +103,10 @@ public class Zoning {
 		LOGGER.debug("Mapping Tempro zones to all the nodes, distance matrix...");
 		mapZonesToNodesAndDistanceMatrix(zonesFeatureCollection);
 				
+		//map zones to nearest nodes from LAD top nodes
+		LOGGER.debug("Mapping Tempro zones to the nearest node among the LAD top nodes...");
+		mapZonesToLADTopNodes(zonesFeatureCollection);
+		
 		//map zones to nodes contained within zone
 		LOGGER.debug("Mapping Tempro zones to a list of nodes contained within that zone...");
 		mapZonesToContainedNodes();
@@ -298,6 +304,65 @@ public class Zoning {
 		}
 	}
 	
+	/**
+	 * Maps zones to nearest nodes of the network.
+	 * @param zonesFeatureCollection Feature collection with the zones.
+	 */
+	private void mapZonesToLADTopNodes(SimpleFeatureCollection zonesFeatureCollection) {
+
+		this.zoneToNearestNodeIDFromLADTopNodes = new HashMap<String, Integer>();
+
+		this.rn.sortGravityNodes(); //to get top nodes for each LAD
+		
+		//iterate through the zones and through the nodes
+		SimpleFeatureIterator iter = zonesFeatureCollection.features();
+		try {
+			while (iter.hasNext()) {
+				SimpleFeature sf = iter.next();
+				String zoneCode = (String) sf.getAttribute("Zone_Code");
+									
+				double minDistance = Double.MAX_VALUE;
+				Integer nearestNodeID = null;
+		
+				//iterate over all LADs (not only LAD to which Tempro zone belongs!) and all of their top nodes
+				for (String zoneLAD: this.LADToName.keySet()) {
+					
+					List<Integer> nodesList = this.rn.getZoneToNodes().get(zoneLAD); //all nodes within LAD
+					int nodesToConsider = TOP_LAD_NODES<nodesList.size()?TOP_LAD_NODES:nodesList.size(); //because LAD might have less nodes than TOP_LAD_NODES
+					List<Integer> topNodesList = nodesList.subList(0, nodesToConsider); //take sublist of top nodes
+					
+					//iterate over top nodes
+					for (int topNodeID: topNodesList) {
+						
+						//if node is blacklisted as either start or end node, do not consider that node
+						if (rn.isBlacklistedAsStartNode(topNodeID) || rn.isBlacklistedAsEndNode(topNodeID)) {
+							LOGGER.trace("Skipping top node {} because it is blacklisted.", topNodeID);
+							continue;
+						}
+						
+						double distanceZoneToNode = this.zoneToNodeDistanceMatrix[this.temproCodeToID.get(zoneCode)-1][topNodeID-1];
+						if (distanceZoneToNode < minDistance) {
+							minDistance = distanceZoneToNode;
+							nearestNodeID = topNodeID;
+						}
+					}
+				}
+				
+				if (nearestNodeID == null) 
+					LOGGER.error("The nearest node for Tempro zone {} is null!", zoneCode);
+				if (this.rn.isBlacklistedAsStartNode(nearestNodeID))
+					LOGGER.warn("The nearest node {} for Tempro zone {} is blacklisted as start node!", nearestNodeID, zoneCode);
+				if (this.rn.isBlacklistedAsEndNode(nearestNodeID))
+					LOGGER.warn("The nearest node {} for Tempro zone {} is blacklisted as end node!", nearestNodeID, zoneCode);
+								
+				this.zoneToNearestNodeIDFromLADTopNodes.put(zoneCode, nearestNodeID);
+			} 
+		} finally {
+			//feature iterator is a live connection that must be closed
+			iter.close();
+		}
+	}
+	
 	private void mapZonesToContainedNodes () {
 		
 		this.zoneToListOfContainedNodes = new HashMap<String, List<Integer>>();
@@ -405,7 +470,15 @@ public class Zoning {
 	public HashMap<String, Integer> getZoneToNearestNodeIDMap() {
 		
 		return this.zoneToNearestNodeID;
+	}
+	
+	/**
+	 * Getter for zone centroid to nearest node ID among top LAD nodes mapping.
+	 * @return Zone to node map.
+	 */
+	public HashMap<String, Integer> getZoneToNearestNodeIDFromLADTopNodesMap() {
 		
+		return this.zoneToNearestNodeIDFromLADTopNodes;
 	}
 	
 	/**
@@ -415,7 +488,6 @@ public class Zoning {
 	public HashMap<String, Double> getZoneToNearestNodeDistanceMap() {
 		
 		return this.zoneToNearestNodeDistance;
-		
 	}
 	
 	/**
