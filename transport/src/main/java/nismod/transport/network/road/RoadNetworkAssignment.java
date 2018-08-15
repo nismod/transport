@@ -1533,6 +1533,8 @@ public class RoadNetworkAssignment {
 	public void assignPassengerFlowsRouteChoiceTemproDistanceBased(AssignableODMatrix passengerODM, Zoning zoning, RouteSetGenerator rsg, Properties routeChoiceParameters) {
 
 		LOGGER.info("Assigning the passenger flows from the tempro passenger matrix using a combined tempro/LAD route set...");
+		
+		final double distanceThreshold = Double.parseDouble(routeChoiceParameters.getProperty("DISTANCE_THRESHOLD"));
 
 		//to store routes generated during the assignment
 		//RouteSetGenerator rsg = new RouteSetGenerator(this.roadNetwork);
@@ -1549,7 +1551,12 @@ public class RoadNetworkAssignment {
 		for (String originZone: origins)
 			for (String destinationZone: destinations) {
 				
-			if (passengerODM.getIntFlow(originZone, destinationZone) == 0) continue;	
+			if (passengerODM.getIntFlow(originZone, destinationZone) == 0) continue;
+			
+			Point originCentroid = zoning.getZoneToCentroid().get(originZone);
+			Point destinationCentroid = zoning.getZoneToCentroid().get(destinationZone);
+				
+			final double centroidDistance = originCentroid.distance(destinationCentroid);
 			
 
 			/*
@@ -1621,13 +1628,6 @@ public class RoadNetworkAssignment {
 				//choose origin and destination node
 				Integer originNode = null, destinationNode = null;
 				
-				Point originCentroid = zoning.getZoneToCentroid().get(originZone);
-				Point destinationCentroid = zoning.getZoneToCentroid().get(destinationZone);
-					
-				double centroidDistance = originCentroid.distance(destinationCentroid);
-				
-				double distanceThreshold = Double.parseDouble(routeChoiceParameters.getProperty("DISTANCE_THRESHOLD"));
-								
 				if (centroidDistance <= distanceThreshold) { //use nodes nearest to the tempro zone centroid
 					
 					originNode = zoning.getZoneToNearestNodeIDMap().get(originZone);
