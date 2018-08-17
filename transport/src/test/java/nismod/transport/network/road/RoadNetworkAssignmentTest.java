@@ -513,6 +513,30 @@ public class RoadNetworkAssignmentTest {
 			if (freeFlow > actual)	assertThat(actual, closeTo(freeFlow, PRECISION));
 		}
 		
+		//test saving and reading link travel times per time of day
+		rna.saveLinkTravelTimes(2015, "miniTestLinkTravelTimes.csv");
+		Map<TimeOfDay, Map<Integer, Double>> loadedLinkTravelTimes = InputFileReader.readLinkTravelTimeFile(2015, "miniTestLinkTravelTimes.csv");
+		//System.out.println(loadedLinkTravelTimes);
+		Map<TimeOfDay, Map<Integer, Double>> linkTravelTimes = rna.getLinkTravelTimes();
+		
+		//compare them
+		final double PRECISION = 1e-6;
+		for (TimeOfDay hour: linkTravelTimes.keySet()) {
+			Map<Integer, Double> linkTimes = linkTravelTimes.get(hour);
+			Map<Integer, Double> loadedLinkTimes = loadedLinkTravelTimes.get(hour);
+			for (int edgeID: linkTimes.keySet()) 
+				assertEquals("Link travel time is correct", linkTimes.get(edgeID), loadedLinkTimes.get(edgeID), PRECISION);			
+		}
+		
+		rna.loadLinkTravelTimes(2015, "miniTestLinkTravelTimes.csv");
+		linkTravelTimes = rna.getLinkTravelTimes();
+		for (TimeOfDay hour: loadedLinkTravelTimes.keySet()) {
+			Map<Integer, Double> linkTimes = linkTravelTimes.get(hour);
+			Map<Integer, Double> loadedLinkTimes = loadedLinkTravelTimes.get(hour);
+			for (int edgeID: loadedLinkTimes.keySet()) 
+				assertEquals("Link travel time is correct", linkTimes.get(edgeID), loadedLinkTimes.get(edgeID), PRECISION);			
+		}
+					
 		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforSimulatedVolumes());
 		
 		//hourly assignment with routing

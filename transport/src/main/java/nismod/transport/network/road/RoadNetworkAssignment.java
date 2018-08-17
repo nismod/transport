@@ -33,6 +33,7 @@ import nismod.transport.demand.AssignableODMatrix;
 import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.SkimMatrix;
 import nismod.transport.demand.SkimMatrixFreight;
+import nismod.transport.utility.InputFileReader;
 import nismod.transport.utility.RandomSingleton;
 import nismod.transport.zone.Zoning;
 
@@ -4096,6 +4097,23 @@ public class RoadNetworkAssignment {
 			} catch (IOException e) {
 				LOGGER.error(e);
 			}
+		}
+	}
+	
+	/**
+	 * Loads link travel times from a file.
+	 * @param year Year of the assignment.
+	 * @param fileName Input file name (with path).
+	 */
+	public void loadLinkTravelTimes(int year, String fileName) {
+
+		Map<TimeOfDay, Map<Integer, Double>> linkTravelTime = InputFileReader.readLinkTravelTimeFile(year, fileName);
+		
+		//store/overwrite into the defaultLinkTravelTime
+		for (TimeOfDay hour: TimeOfDay.values()) {
+			Map<Integer, Double> hourlyMap = this.linkTravelTimePerTimeOfDay.get(hour);
+			for (Integer edgeID: linkTravelTime.get(hour).keySet())
+				hourlyMap.put(edgeID, linkTravelTime.get(hour).get(edgeID));
 		}
 	}
 

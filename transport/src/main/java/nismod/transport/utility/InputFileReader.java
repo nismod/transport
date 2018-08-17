@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.csv.CSVFormat;
@@ -534,5 +535,65 @@ public class InputFileReader {
 		LOGGER.debug(yearToRelativeFuelEfficiency);
 		
 		return yearToRelativeFuelEfficiency;
+	}
+	
+	/**
+	 * Reads link travel time file.
+	 * @param year Year of the assignment.
+	 * @param fileName File name.
+	 * @return Link travel time per time of day.
+	 */
+	public static Map<TimeOfDay, Map<Integer, Double>> readLinkTravelTimeFile(int year, String fileName){
+
+		Map<Integer, Map<TimeOfDay, Map<Integer, Double>>> yearToLinkTravelTimePerTimeOfDay = new HashMap<Integer, Map<TimeOfDay, Map<Integer, Double>>>();
+		
+		CSVParser parser = null;
+		try {
+			parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
+			//System.out.println(parser.getHeaderMap().toString());
+			Set<String> keySet = parser.getHeaderMap().keySet();
+			keySet.remove("year");
+			keySet.remove("edgeID");
+			keySet.remove("freeFlow");
+			//System.out.println("keySet = " + keySet);
+			for (CSVRecord record : parser) {
+				//System.out.println(record);
+				int yearFromFile = Integer.parseInt(record.get(0));
+				int edgeID = Integer.parseInt(record.get(1));
+				//double freeFlow = Double.parseDouble(record.get(2)); //ignore
+							
+				Map<TimeOfDay, Map<Integer, Double>> linkTravelTimePerTimeOfDay = yearToLinkTravelTimePerTimeOfDay.get(yearFromFile);
+				if (linkTravelTimePerTimeOfDay == null) {
+					linkTravelTimePerTimeOfDay = new HashMap<TimeOfDay, Map<Integer, Double>>();
+					yearToLinkTravelTimePerTimeOfDay.put(yearFromFile, linkTravelTimePerTimeOfDay);					
+				}
+				for (String key: keySet) {
+					TimeOfDay hour = TimeOfDay.valueOf(key);
+					Double travelTime = Double.parseDouble(record.get(key));
+
+					Map<Integer, Double> linkTravelTimeMap = linkTravelTimePerTimeOfDay.get(hour);
+					if (linkTravelTimeMap == null) {
+						linkTravelTimeMap = new HashMap<Integer, Double>();
+						linkTravelTimePerTimeOfDay.put(hour, linkTravelTimeMap);
+					}
+					linkTravelTimeMap.put(edgeID, travelTime);
+				}//hour
+			}//record
+		} catch (FileNotFoundException e) {
+			LOGGER.error(e);
+		} catch (IOException e) {
+			LOGGER.error(e);
+		} finally {
+			try {
+				parser.close();
+			} catch (IOException e) {
+				LOGGER.error(e);
+			}
+		}
+		
+		LOGGER.trace("Link travel time:");
+		LOGGER.trace(yearToLinkTravelTimePerTimeOfDay.get(year));
+
+		return yearToLinkTravelTimePerTimeOfDay.get(year);
 	}
 }

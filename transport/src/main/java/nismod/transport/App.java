@@ -7,6 +7,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.cli.CommandLine;
@@ -33,6 +34,7 @@ import nismod.transport.demand.RealODMatrixTempro;
 import nismod.transport.demand.RebalancedTemproODMatrix;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
+import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.showcase.LandingGUI;
 import nismod.transport.utility.ConfigReader;
@@ -309,8 +311,13 @@ public class App {
 				final String timeOfDayDistributionFreightFile = props.getProperty("timeOfDayDistributionFreightFile");
 				final String baseFuelConsumptionRatesFile = props.getProperty("baseFuelConsumptionRatesFile");
 				final String relativeFuelEfficiencyFile = props.getProperty("relativeFuelEfficiencyFile");
+				final String defaultLinkTravelTimeFile = props.getProperty("defaultLinkTravelTimeFile");
 				final int BASE_YEAR = Integer.parseInt(props.getProperty("baseYear"));
 			
+				Map<TimeOfDay, Map<Integer, Double>> defaultLinkTravelTime = null;
+				if (defaultLinkTravelTimeFile != null) 
+					defaultLinkTravelTime = InputFileReader.readLinkTravelTimeFile(BASE_YEAR, defaultLinkTravelTimeFile);
+				
 				//create a road network assignment
 				RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, 
 																	InputFileReader.readEnergyUnitCostsFile(energyUnitCostsFile).get(BASE_YEAR),
@@ -322,7 +329,7 @@ public class App {
 																	InputFileReader.readRelativeFuelEfficiencyFile(relativeFuelEfficiencyFile).get(BASE_YEAR),
 																	InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFile).get(BASE_YEAR),
 																	InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFreightFile).get(BASE_YEAR),
-																	null,
+																	defaultLinkTravelTime,
 																	null,
 																	null,
 																	null,
