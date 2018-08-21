@@ -45,8 +45,8 @@ public class RoadNetworkAssignmentTest {
 	public static void main( String[] args ) throws IOException	{
 		
 		
-		final String configFile = "./src/main/full/config/config.properties";
-		//final String configFile = "./src/test/config/testConfig.properties";
+		//final String configFile = "./src/main/full/config/config.properties";
+		final String configFile = "./src/test/config/testConfig.properties";
 		Properties props = ConfigReader.getProperties(configFile);
 		
 		final String areaCodeFileName = props.getProperty("areaCodeFileName");
@@ -121,26 +121,34 @@ public class RoadNetworkAssignmentTest {
 		
 		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
 		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
-
+		
+		
+		
 		//assign passenger flows
-		//ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
-		RealODMatrixTempro odm = RealODMatrixTempro.createUnitMatrix(zoning);
-		odm.deleteInterzonalFlows("E02006781"); //Isle of Scilly in Tempro
+		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
+		
+		/*
+		//RealODMatrixTempro odm = RealODMatrixTempro.createUnitMatrix(zoning);
+		//odm.deleteInterzonalFlows("E02006781"); //Isle of Scilly in Tempro
+		final String temproODMatrixFile = props.getProperty("temproODMatrixFile");
+		RealODMatrixTempro odm = new RealODMatrixTempro(temproODMatrixFile, zoning);
+		*/
 		
 		//odm.scaleMatrixValue(8.0);
-		odm.printMatrixFormatted("Tempro unit OD matrix:", 2);
+		//odm.printMatrixFormatted("Tempro unit OD matrix:", 2);
 		
 		//read routes
 		long timeNow = System.currentTimeMillis();
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
-		rsg.readRoutesBinaryWithoutValidityCheck(passengerRoutesFile);
-		timeNow = System.currentTimeMillis() - timeNow;
-		System.out.printf("Routes read in %d milliseconds.\n", timeNow);
-		rsg.printStatistics();
+//		rsg.readRoutesBinaryWithoutValidityCheck(passengerRoutesFile);
+//		timeNow = System.currentTimeMillis() - timeNow;
+//		System.out.printf("Routes read in %d milliseconds.\n", timeNow);
+//		rsg.printStatistics();
 		
 		//read routes
 		timeNow = System.currentTimeMillis();
-		rsg.readRoutesBinaryWithoutValidityCheck(temproRoutesFile);
+//		rsg.readRoutesBinaryWithoutValidityCheck(temproRoutesFile);
+		rsg.readRoutesBinaryWithoutValidityCheck(passengerRoutesFile);
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Routes read in %d milliseconds.\n", timeNow);
 		rsg.printStatistics();
@@ -169,16 +177,21 @@ public class RoadNetworkAssignmentTest {
 		//	routeStorage.get(hour).printStatistics();
 		//}
 		
-		//rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
-		rna.assignPassengerFlowsRouteChoiceTemproDistanceBased(odm, zoning, rsg, params);
+		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
+		//rna.assignPassengerFlowsRouteChoiceTemproDistanceBased(odm, zoning, rsg, params);
 		
 		
 		
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Passenger flows assigned in %d seconds.\n", timeNow / 1000);
 		
+		rna.updateLinkVolumeInPCU();
+		rna.updateLinkVolumeInPCUPerTimeOfDay();
+		rna.updateLinkVolumePerVehicleType();
+		
 		rna.printRMSNstatistic();
 		rna.printGEHstatistic();
+		rna.printHourlyGEHstatistic();
 		
 //		rna.updateLinkVolumeInPCU();
 //		rna.updateLinkVolumeInPCUPerTimeOfDay();
@@ -973,7 +986,9 @@ public class RoadNetworkAssignmentTest {
 		}
 		System.out.printf("Percentage of edges with valid flows (GEH < 5.0) is: %.0f%% %n", (double) validFlows / GEH.size() * 100);
 		System.out.printf("Percentage of edges with suspicious flows (5.0 <= GEH < 10.0) is: %.0f%% %n", (double) suspiciousFlows / GEH.size() * 100);
-		System.out.printf("Percentage of edges with invalid flows (GEH >= 10.0) is: %.0f%% %n", (double) invalidFlows / GEH.size() * 100);		
+		System.out.printf("Percentage of edges with invalid flows (GEH >= 10.0) is: %.0f%% %n", (double) invalidFlows / GEH.size() * 100);
+		
+		rna.printGEHstatistic();
 		
 		//TEST HOURLY ASSIGNMENT WITH ROUTING
 		

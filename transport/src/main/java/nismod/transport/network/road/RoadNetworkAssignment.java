@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -19,6 +20,7 @@ import org.apache.commons.collections4.map.MultiKeyMap;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.geotools.graph.structure.DirectedEdge;
@@ -108,8 +110,8 @@ public class RoadNetworkAssignment {
 	private HashMap<VehicleType, HashMap<EngineType, Double>> engineTypeFractions;
 	private HashMap<VehicleType, Double> AVFractions;
 
-	private HashMap<TimeOfDay, Double> timeOfDayDistribution;
-	private HashMap<TimeOfDay, Double> timeOfDayDistributionFreight;
+	private Map<TimeOfDay, Double> timeOfDayDistribution;
+	private Map<TimeOfDay, Double> timeOfDayDistributionFreight;
 
 	private HashMap<EnergyType, Double> unitCO2Emissions;
 
@@ -164,8 +166,8 @@ public class RoadNetworkAssignment {
 			HashMap<VehicleType, Double> vehicleTypeToPCU,
 			HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParams,
 			HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiencies,
-			HashMap<TimeOfDay, Double> timeOfDayDistribution,
-			HashMap<TimeOfDay, Double> timeOfDayDistributionFreight, 
+			Map<TimeOfDay, Double> timeOfDayDistribution,
+			Map<TimeOfDay, Double> timeOfDayDistributionFreight, 
 			Map<TimeOfDay, Map<Integer, Double>> defaultLinkTravelTime, 
 			HashMap<String, Double> areaCodeProbabilities, 
 			HashMap<String, Double> workplaceZoneProbabilities,
@@ -179,7 +181,7 @@ public class RoadNetworkAssignment {
 			HashMap<Integer, Integer> map = new HashMap<Integer, Integer>();
 			linkVolumesPerVehicleType.put(vht, map);
 		}
-		this.linkTravelTimePerTimeOfDay = new HashMap<TimeOfDay, Map<Integer, Double>>();
+		this.linkTravelTimePerTimeOfDay = new LinkedHashMap<TimeOfDay, Map<Integer, Double>>();
 		for (TimeOfDay hour: TimeOfDay.values()) {
 			HashMap<Integer, Double> map = new HashMap<Integer, Double>();
 			linkTravelTimePerTimeOfDay.put(hour, map);
@@ -521,7 +523,7 @@ public class RoadNetworkAssignment {
 	 * @param routeStorage Stores routes for each hour of the day separately.
 	 */
 	@SuppressWarnings("unused")
-	public void assignPassengerFlowsHourlyRouting(AssignableODMatrix passengerODM, HashMap<TimeOfDay, RouteSetGenerator> routeStorage) {
+	public void assignPassengerFlowsHourlyRouting(AssignableODMatrix passengerODM, Map<TimeOfDay, RouteSetGenerator> routeStorage) {
 
 		LOGGER.info("Assigning the passenger flows from the passenger matrix...");
 
@@ -1997,7 +1999,7 @@ public class RoadNetworkAssignment {
 	 * @param routeStorage Route storage (stores fastest routes separately for each hour of the day).
 	 */
 	@SuppressWarnings("unused")
-	public void assignFreightFlowsHourlyRouting(FreightMatrix freightMatrix, HashMap<TimeOfDay, RouteSetGenerator> routeStorage) {
+	public void assignFreightFlowsHourlyRouting(FreightMatrix freightMatrix, Map<TimeOfDay, RouteSetGenerator> routeStorage) {
 
 
 		LOGGER.info("Assigning the vehicle flows from the freight matrix...");
@@ -3491,7 +3493,7 @@ public class RoadNetworkAssignment {
 	 */
 	public Map<TimeOfDay, Map<Integer, Double>> getCopyOfLinkTravelTimes() {
 
-		Map<TimeOfDay, Map<Integer, Double>> linkTravelTimes = new HashMap<TimeOfDay, Map<Integer, Double>>();
+		Map<TimeOfDay, Map<Integer, Double>> linkTravelTimes = new LinkedHashMap<TimeOfDay, Map<Integer, Double>>();
 		for (TimeOfDay hour: TimeOfDay.values()) {
 			Map<Integer, Double> hourlyMap = new HashMap<Integer, Double>();
 			for (Integer edge: this.linkTravelTimePerTimeOfDay.get(hour).keySet())
@@ -4754,7 +4756,7 @@ public class RoadNetworkAssignment {
 		}
 
 		//reset link volumes per time of day
-		this.linkVolumesInPCUPerTimeOfDay = new HashMap<TimeOfDay, Map<Integer, Double>>();
+		this.linkVolumesInPCUPerTimeOfDay = new LinkedHashMap<TimeOfDay, Map<Integer, Double>>();
 		for (TimeOfDay hour: TimeOfDay.values()) {
 			Map<Integer, Double> hourlyMap = new HashMap<Integer, Double>();
 			this.linkVolumesInPCUPerTimeOfDay.put(hour, hourlyMap);
@@ -4781,7 +4783,7 @@ public class RoadNetworkAssignment {
 
 		//Long countOfPetrolTrips2 = tripList.parallelStream().filter(t -> t.getEngine() == EngineType.PETROL).count();
 
-		Map<TimeOfDay, Map<Integer, Double>> map = new HashMap<TimeOfDay, Map<Integer, Double>>();
+		Map<TimeOfDay, Map<Integer, Double>> map = new LinkedHashMap<TimeOfDay, Map<Integer, Double>>();
 		for (TimeOfDay hour: TimeOfDay.values()) {
 			Map<Integer, Double> hourlyMap = new HashMap<Integer, Double>();
 			map.put(hour, hourlyMap);
@@ -5183,6 +5185,120 @@ public class RoadNetworkAssignment {
 		LOGGER.info("Percentage of edges with suspicious flows (5.0 <= GEH < 10.0) is: {}%", Math.round((double) suspiciousFlows / GEH.size() * 100));
 		LOGGER.info("Percentage of edges with invalid flows (GEH >= 10.0) is: {}%", Math.round((double) invalidFlows / GEH.size() * 100));		
 	}
+	
+	/**
+	 * Calculates GEH statistic for simulated and observed hourly flow.
+	 * It uses linkVolumesInPCUPerTimeOfDay, so make sure only car flows have been assigned. 
+	 * For combined counts, takes the average of the two differences.
+	 * The formula is taken from WebTAG Unit M3.1.
+	 * @param hour Hour for which to calculate GEH statistics.
+	 * @return GEH statistic for simulated and observed hourly car flows.
+	 */
+	public HashMap<Integer, Double> calculateGEHStatisticPerTimeOfDay (TimeOfDay hour) {
+		
+		HashMap<Integer, Double> GEH = new HashMap<Integer, Double>();
+
+		Iterator iter = this.roadNetwork.getNetwork().getEdges().iterator();
+		ArrayList<Long> checkedCP = new ArrayList<Long>(); 
+
+		while (iter.hasNext()) {
+			DirectedEdge edge = (DirectedEdge) iter.next();
+			SimpleFeature sf = (SimpleFeature) edge.getObject(); 
+			String roadNumber = (String) sf.getAttribute("RoadNumber");
+
+			if (roadNumber.charAt(0) != 'M' && roadNumber.charAt(0) != 'A') continue; //ferry
+
+			Long countPoint = (long) sf.getAttribute("CP");
+
+			String direction = (String) sf.getAttribute("iDir");
+			char dir = direction.charAt(0);
+
+			//ignore combined counts 'C' for now
+			if (dir == 'N' || dir == 'S' || dir == 'W' || dir == 'E') {
+
+				long carCount = (long) sf.getAttribute("FdCar");
+				double carVolume;
+				Double carVolumeFetch = this.linkVolumesInPCUPerTimeOfDay.get(hour).get(edge.getID());
+				if (carVolumeFetch == null) carVolume = 0.0;
+				else 						carVolume = carVolumeFetch;
+
+				double carFlowSimulated = carVolume;
+				double carFlowObserved = carCount * this.timeOfDayDistribution.get(hour);
+				double geh = Math.abs(carFlowSimulated - carFlowObserved) / Math.sqrt((carFlowSimulated + carFlowObserved) / 2.0);
+
+				GEH.put(edge.getID(), geh);
+			}
+
+			if (dir == 'C' && !checkedCP.contains(countPoint)) { //for combined counts check if this countPoint has been processed already
+
+				//get combined count
+				long carCount = (long) sf.getAttribute("FdCar");
+
+				//get volumes for this direction
+				double carVolume;
+				Double carVolumeFetch = this.linkVolumesInPCUPerTimeOfDay.get(hour).get(edge.getID());
+				if (carVolumeFetch == null) carVolume = 0.0;
+				else 						carVolume = carVolumeFetch;
+
+				//get volumes for other direction (if exists)
+				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(edge.getID());
+				double carVolume2;
+				Double carVolumeFetch2 = this.linkVolumesInPCUPerTimeOfDay.get(hour).get(edge2);
+				if (carVolumeFetch2 == null) carVolume2 = 0.0;
+				else 						 carVolume2 = carVolumeFetch2;
+
+				checkedCP.add(countPoint);
+
+				double carFlowSimulated = carVolume + carVolume2;
+				double carFlowObserved = carCount * this.timeOfDayDistribution.get(hour);
+				double geh = Math.abs(carFlowSimulated - carFlowObserved) / Math.sqrt((carFlowSimulated + carFlowObserved) / 2.0);
+
+				GEH.put(edge.getID(), geh);
+				if (edge2 != null) GEH.put(edge2, geh); //store in other direction too
+			}
+		}
+
+		return GEH;
+	}
+	
+	
+	/**
+	 * Prints GEH statistics for comparison between simulated and observed hourly car flows.
+	 */
+	public void printHourlyGEHstatistic() {
+		
+		Map<TimeOfDay, Triple<Integer, Integer, Integer>> hourlyGEHTriples = new LinkedHashMap<TimeOfDay, Triple<Integer, Integer, Integer>>();
+
+		for (TimeOfDay hour: TimeOfDay.values()) {
+			
+			HashMap<Integer, Double> GEH = this.calculateGEHStatisticPerTimeOfDay(hour);
+			int validFlows = 0;
+			int suspiciousFlows = 0;
+			int invalidFlows = 0;
+			for (Integer edgeID: GEH.keySet()) {
+				if (GEH.get(edgeID) < 5.0) validFlows++;
+				else if (GEH.get(edgeID) < 10.0) suspiciousFlows++;
+				else invalidFlows++;
+			}
+			
+			double valid = (double) validFlows / GEH.size() * 100;
+			double suspicious = (double) suspiciousFlows / GEH.size() * 100;
+			double invalid = (double) invalidFlows / GEH.size() * 100;
+			
+			/*
+			LOGGER.info("GEH statistic for hour: {}", hour);
+			LOGGER.info("Percentage of edges with valid flows (GEH < 5.0) is: {}%", Math.round(valid));
+			LOGGER.info("Percentage of edges with suspicious flows (5.0 <= GEH < 10.0) is: {}%", Math.round(suspicious));
+			LOGGER.info("Percentage of edges with invalid flows (GEH >= 10.0) is: {}%", Math.round(invalid));
+			*/
+			
+			Triple<Integer, Integer, Integer> t = Triple.of((int)Math.round(valid), (int)Math.round(suspicious), (int)Math.round(invalid));
+			hourlyGEHTriples.put(hour, t);
+		}
+		LOGGER.info("GEH statistic per hour (valid %, suspicious %, invalid %):");
+		LOGGER.info(hourlyGEHTriples.toString());
+	}
+	
 
 	/**
 	 * Prints RMSN statistic for comparison between simulated daily car volumes and observed daily traffic counts.

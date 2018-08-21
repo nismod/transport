@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
@@ -121,8 +122,8 @@ public class RoadDevelopmentDashboard extends JFrame {
 	private static HashMap<VehicleType, Double> vehicleTypeToPCU;
 	private static HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> baseFuelConsumptionRates;
 	private static HashMap<Integer, HashMap<Pair<VehicleType, EngineType>, Double>> relativeFuelEfficiency;
-	private static HashMap<Integer, HashMap<TimeOfDay, Double>> timeOfDayDistribution;
-	private static HashMap<Integer, HashMap<TimeOfDay, Double>> timeOfDayDistributionFreight;
+	private static Map<Integer, Map<TimeOfDay, Double>> timeOfDayDistribution;
+	private static Map<Integer, Map<TimeOfDay, Double>> timeOfDayDistributionFreight;
 	private static HashMap<Integer, HashMap<EnergyType, Double>> yearToEnergyUnitCosts;
 	private static HashMap<Integer, HashMap<EnergyType, Double>> yearToUnitCO2Emissions;
 	private static HashMap<Integer, HashMap<VehicleType, HashMap<EngineType, Double>>> yearToEngineTypeFractions;

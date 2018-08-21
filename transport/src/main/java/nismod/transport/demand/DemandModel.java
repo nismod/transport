@@ -8,6 +8,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
@@ -50,8 +51,8 @@ public class DemandModel {
 	private HashMap<VehicleType, Double> vehicleTypeToPCU;
 	private HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> baseFuelConsumptionRates;
 	private HashMap<Integer, HashMap<Pair<VehicleType, EngineType>, Double>> yearToRelativeFuelEfficiencies;
-	private HashMap<Integer, HashMap<TimeOfDay, Double>> yearToTimeOfDayDistribution;
-	private HashMap<Integer, HashMap<TimeOfDay, Double>> yearToTimeOfDayDistributionFreight;
+	private Map<Integer, Map<TimeOfDay, Double>> yearToTimeOfDayDistribution;
+	private Map<Integer, Map<TimeOfDay, Double>> yearToTimeOfDayDistributionFreight;
 	private HashMap<Integer, ODMatrix> yearToPassengerODMatrix; //passenger demand
 	private HashMap<Integer, FreightMatrix> yearToFreightODMatrix; //freight demand
 	private HashMap<Integer, SkimMatrix> yearToTimeSkimMatrix;

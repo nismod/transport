@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -203,9 +204,9 @@ public class InputFileReader {
 	 * @param fileName File name.
 	 * @return Time of day distribution.
 	 */
-	public static HashMap<Integer, HashMap<TimeOfDay, Double>> readTimeOfDayDistributionFile (String fileName) {
+	public static Map<Integer, Map<TimeOfDay, Double>> readTimeOfDayDistributionFile (String fileName) {
 
-		HashMap<Integer, HashMap<TimeOfDay, Double>> map = new HashMap<Integer, HashMap<TimeOfDay, Double>>();
+		Map<Integer, Map<TimeOfDay, Double>> map = new HashMap<Integer, Map<TimeOfDay, Double>>();
 		CSVParser parser = null;
 		try {
 			parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
@@ -216,7 +217,7 @@ public class InputFileReader {
 			for (CSVRecord record : parser) {
 				//System.out.println(record);
 				int year = Integer.parseInt(record.get(0));
-				HashMap<TimeOfDay, Double> timeDistribution = new HashMap<TimeOfDay, Double>();
+				Map<TimeOfDay, Double> timeDistribution = new LinkedHashMap<TimeOfDay, Double>();
 				
 				for (String key: keySet) {
 					TimeOfDay hour = TimeOfDay.valueOf(key);
@@ -564,7 +565,7 @@ public class InputFileReader {
 							
 				Map<TimeOfDay, Map<Integer, Double>> linkTravelTimePerTimeOfDay = yearToLinkTravelTimePerTimeOfDay.get(yearFromFile);
 				if (linkTravelTimePerTimeOfDay == null) {
-					linkTravelTimePerTimeOfDay = new HashMap<TimeOfDay, Map<Integer, Double>>();
+					linkTravelTimePerTimeOfDay = new LinkedHashMap<TimeOfDay, Map<Integer, Double>>();
 					yearToLinkTravelTimePerTimeOfDay.put(yearFromFile, linkTravelTimePerTimeOfDay);					
 				}
 				for (String key: keySet) {

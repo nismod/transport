@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.swing.BorderFactory;
@@ -52,7 +53,6 @@ import org.apache.sanselan.Sanselan;
 import org.geotools.brewer.color.BrewerPalette;
 import org.geotools.brewer.color.ColorBrewer;
 import org.geotools.swing.JMapFrame;
-import org.geotools.swing.JMapPane;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -79,7 +79,6 @@ import nismod.transport.network.road.Trip;
 import nismod.transport.utility.ConfigReader;
 import nismod.transport.utility.InputFileReader;
 import nismod.transport.utility.RandomSingleton;
-import nismod.transport.visualisation.NetworkVisualiser;
 import nismod.transport.zone.Zoning;
 
 /**
@@ -119,8 +118,8 @@ public class CongestionChargingDashboard extends JFrame {
 	private static HashMap<VehicleType, Double> vehicleTypeToPCU;
 	private static HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> baseFuelConsumptionRates;
 	private static HashMap<Integer, HashMap<Pair<VehicleType, EngineType>, Double>> relativeFuelEfficiency;
-	private static HashMap<Integer, HashMap<TimeOfDay, Double>> timeOfDayDistribution;
-	private static HashMap<Integer, HashMap<TimeOfDay, Double>> timeOfDayDistributionFreight;
+	private static Map<Integer, Map<TimeOfDay, Double>> timeOfDayDistribution;
+	private static Map<Integer, Map<TimeOfDay, Double>> timeOfDayDistributionFreight;
 	private static HashMap<Integer, HashMap<EnergyType, Double>> yearToEnergyUnitCosts;
 	private static HashMap<Integer, HashMap<EnergyType, Double>> yearToUnitCO2Emissions;
 	private static HashMap<Integer, HashMap<VehicleType, HashMap<EngineType, Double>>> yearToEngineTypeFractions;
