@@ -1,5 +1,7 @@
-# Transport
+﻿# Transport
 [![Build Status](https://travis-ci.com/nismod/transport.svg?token=zHcMSQsYgUFq9yhr52P7&branch=master)](https://travis-ci.com/nismod/transport)
+[![Code Coverage](https://img.shields.io/codecov/c/github/nismod/transport/master.svg)](https://codecov.io/github/nismod/transport?branch=master)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 This is the home of the transport model code for NISMOD v2.0.0.
 
