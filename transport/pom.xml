@@ -12,7 +12,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<geotools.version>20-SNAPSHOT</geotools.version>
+		<geotools.version>20-RC</geotools.version>
 	</properties>
 
 	<dependencies>
@@ -131,7 +131,7 @@
 		<dependency>
 	    	<groupId>org.locationtech.jts</groupId>
     		<artifactId>jts-core</artifactId>
-    		<version>1.15.1</version>
+    		<version>1.16.0-RC1</version>
 		</dependency>
 	</dependencies>
 	
