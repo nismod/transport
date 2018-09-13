@@ -5,10 +5,12 @@ package nismod.transport.demand;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -17,6 +19,19 @@ import org.junit.Test;
  *
  */
 public class SkimMatrixTest {
+	
+	@BeforeClass
+	public static void initialise() {
+	
+	    File file = new File("./temp");
+	    if (!file.exists()) {
+	        if (file.mkdir()) {
+	            System.out.println("Temp directory is created.");
+	        } else {
+	            System.err.println("Failed to create temp directory.");
+	        }
+	    }
+	}
 
 	@Test
 	public void test() throws FileNotFoundException, IOException {
@@ -41,6 +56,6 @@ public class SkimMatrixTest {
 		//skimMatrix.setCost("E06000046", "E06000046", 6.2);
 		
 		skimMatrix.printMatrixFormatted();
-		skimMatrix.saveMatrixFormatted("skimMatrix.csv");
+		skimMatrix.saveMatrixFormatted("./temp/skimMatrix.csv");
 	}
 }

@@ -326,8 +326,9 @@ public class RoadNetwork {
 		}
 
 		//get an output file name and create the new shapefile
-		File newFile = getNewShapeFile(fileName);
-
+		//File newFile = getNewShapeFile(fileName);
+		File newFile = new File(fileName);
+		
 		ShapefileDataStoreFactory dataStoreFactory = new ShapefileDataStoreFactory();
 		Map<String, Serializable> params = new HashMap<>();
 		params.put("url", newFile.toURI().toURL());

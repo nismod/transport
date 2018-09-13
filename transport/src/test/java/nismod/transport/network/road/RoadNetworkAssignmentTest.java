@@ -22,6 +22,7 @@ import java.util.Properties;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.math3.stat.Frequency;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import nismod.transport.demand.FreightMatrix;
@@ -43,7 +44,6 @@ import nismod.transport.zone.Zoning;
 public class RoadNetworkAssignmentTest {
 
 	public static void main( String[] args ) throws IOException	{
-		
 		
 		//final String configFile = "./src/main/full/config/config.properties";
 		final String configFile = "./src/test/config/testConfig.properties";
@@ -397,7 +397,19 @@ public class RoadNetworkAssignmentTest {
 //		}
   		
   		*/
-
+	}
+	
+	@BeforeClass
+	public static void initialise() {
+	
+	    File file = new File("./temp");
+	    if (!file.exists()) {
+	        if (file.mkdir()) {
+	            System.out.println("Temp directory is created.");
+	        } else {
+	            System.err.println("Failed to create temp directory.");
+	        }
+	    }
 	}
 
 	@Test
@@ -527,8 +539,8 @@ public class RoadNetworkAssignmentTest {
 		}
 		
 		//test saving and reading link travel times per time of day
-		rna.saveLinkTravelTimes(2015, "miniTestLinkTravelTimes.csv");
-		Map<TimeOfDay, Map<Integer, Double>> loadedLinkTravelTimes = InputFileReader.readLinkTravelTimeFile(2015, "miniTestLinkTravelTimes.csv");
+		rna.saveLinkTravelTimes(2015, "./temp/miniTestLinkTravelTimes.csv");
+		Map<TimeOfDay, Map<Integer, Double>> loadedLinkTravelTimes = InputFileReader.readLinkTravelTimeFile(2015, "./temp/miniTestLinkTravelTimes.csv");
 		//System.out.println(loadedLinkTravelTimes);
 		Map<TimeOfDay, Map<Integer, Double>> linkTravelTimes = rna.getLinkTravelTimes();
 		
@@ -541,7 +553,7 @@ public class RoadNetworkAssignmentTest {
 				assertEquals("Link travel time is correct", linkTimes.get(edgeID), loadedLinkTimes.get(edgeID), PRECISION);			
 		}
 		
-		rna.loadLinkTravelTimes(2015, "miniTestLinkTravelTimes.csv");
+		rna.loadLinkTravelTimes(2015, "./temp/miniTestLinkTravelTimes.csv");
 		linkTravelTimes = rna.getLinkTravelTimes();
 		for (TimeOfDay hour: loadedLinkTravelTimes.keySet()) {
 			Map<Integer, Double> linkTimes = linkTravelTimes.get(hour);
@@ -990,6 +1002,18 @@ public class RoadNetworkAssignmentTest {
 		
 		rna.printGEHstatistic();
 		
+		//various differences between volumes and counts
+		rna.calculateDifferenceCarCounts();
+		rna.calculateAbsDifferenceCarCounts();
+		rna.calculateMADforExpandedSimulatedVolumes(1.0);
+		rna.calculateGEHStatisticPerTimeOfDay(TimeOfDay.EIGHTAM);
+		
+		//densities, capacities, capacity utilisation
+		rna.calculatePeakLinkDensities();
+		rna.calculatePeakLinkPointCapacities();
+		rna.calculatePeakLinkCapacityUtilisation();
+		rna.calculateDirectionAveragedPeakLinkCapacityUtilisation();
+		
 		//TEST HOURLY ASSIGNMENT WITH ROUTING
 		
 		//hourly assignment
@@ -1242,9 +1266,17 @@ public class RoadNetworkAssignmentTest {
 			assertEquals("Trip ends should match flows to each LAD", tripEnds.get(LAD), tripEndsFromODM.get(LAD));		
 		}
 		
-		
-		
-		
+		//SAVING METHODS
+		rna.saveAssignmentResults(2015, "./temp/testAssignmentResults.csv");
+		rna.saveHourlyCarVolumes(2015, "./temp/testHourlyCarVolumes.csv");
+		rna.saveLinkTravelTimes(2015, "./temp/testLinkTravelTimes.csv");
+		rna.saveOriginDestinationCarElectricityConsumption("./temp/testODCarElectricityConsumption.csv");
+		rna.savePeakLinkPointCapacities(2015, "./temp/testPeakLinkPointCapacities.csv");
+		rna.saveTotalCO2Emissions(2015, "./temp/testTotalCO2Emissions.csv");
+		rna.saveTotalEnergyConsumptions(2015, "./temp/testTotalEnergyConsumptions.csv");
+		rna.saveZonalCarEnergyConsumptions(2015, 0.5, "./temp/testZonalCarEnergyConsumptions.csv");
+		rna.saveZonalVehicleKilometres(2015, "./temp/testZonalVehicleKilometres.csv");
+		rna.saveZonalVehicleKilometresWithAccessEgress(2015, "./temp/testZonalVehicleKilometresWithAccessEgress.csv");
 	}
 	
 	@Test
@@ -1308,7 +1340,7 @@ public class RoadNetworkAssignmentTest {
 		FreightMatrix fm = new FreightMatrix(baseYearFreightMatrixFile);
 		fm.printMatrixFormatted();
 		rna.assignFreightFlowsRouting(fm, null);
-		//rna.saveAssignmentResults(2015, "testAssignmentResultsWithFreight.csv");
+		rna.saveAssignmentResults(2015, "./temp/testAssignmentResultsWithFreight.csv");
 		
 		//TEST OUTPUT AREA PROBABILITIES
 		System.out.println("\n\n*** Testing workplace zone probabilities ***");
@@ -1420,6 +1452,17 @@ public class RoadNetworkAssignmentTest {
 		rna.resetLinkVolumes();
 		rna.resetTripStorages();
 		rna.assignFreightFlowsHourlyRouting(fm, null);
+		
+		//hourly assignment with routing
+		rna.resetLinkVolumes();
+		rna.resetTripStorages();
+		
+		//read freight routes
+		final String freightRoutesFile = props.getProperty("freightRoutesFile");
+		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, props);
+		rsg.readRoutesBinaryWithoutValidityCheck(freightRoutesFile);
+				
+		rna.assignFreightFlowsRouteChoice(fm, rsg, props);
 		
 		rna.calculateDistanceSkimMatrixFreight().printMatrixFormatted();
 		rna.calculateFreightLADTripEnds();

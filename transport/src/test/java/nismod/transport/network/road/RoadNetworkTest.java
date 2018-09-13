@@ -7,6 +7,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,6 +27,7 @@ import org.geotools.graph.structure.DirectedGraph;
 import org.geotools.graph.structure.DirectedNode;
 import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Node;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.opengis.feature.simple.SimpleFeature;
 
@@ -124,6 +126,19 @@ public class RoadNetworkTest {
 //		roadNetwork3.exportToShapefile("fullOutputNetwork");
 	}
 
+	@BeforeClass
+	public static void initialise() {
+	
+	    File file = new File("./temp");
+	    if (!file.exists()) {
+	        if (file.mkdir()) {
+	            System.out.println("Temp directory is created.");
+	        } else {
+	            System.err.println("Failed to create temp directory.");
+	        }
+	    }
+	}
+	
 	@Test
 	public void miniTest() throws IOException {
 
@@ -1094,6 +1109,9 @@ public class RoadNetworkTest {
 		assertEquals("The list of edges in the shortest path is correct", Arrays.toString(expectedEdgeList), listOfEdges.toString());
 		assertEquals("The shortest path length equals the sum of edge lengths", sum, pathFinder.getCost(to), EPSILON);
 		assertEquals("The shortest path length is correct", 8.8, pathFinder.getCost(to), EPSILON);
+		
+		//export to shapefile
+		roadNetwork.exportToShapefile("./temp/testNetwork.shp");
 	}
 
 	//@Test

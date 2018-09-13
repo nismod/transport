@@ -28,6 +28,7 @@ import org.geotools.graph.structure.DirectedGraph;
 import org.geotools.graph.structure.DirectedNode;
 import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Node;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.opengis.feature.simple.SimpleFeature;
 
@@ -145,6 +146,19 @@ public class RouteSetGeneratorTest {
 		//f.close();
 	}
 
+	@BeforeClass
+	public static void initialise() {
+	
+	    File file = new File("./temp");
+	    if (!file.exists()) {
+	        if (file.mkdir()) {
+	            System.out.println("Temp directory is created.");
+	        } else {
+	            System.err.println("Failed to create temp directory.");
+	        }
+	    }
+	}
+	
 	@Test
 	public void test() throws IOException {
 
@@ -248,17 +262,17 @@ public class RouteSetGeneratorTest {
 		//assertEquals("The sum of routes generated across OD matrix slices is equal to the total", totalRoutes, routes1 + routes2 + routes3);
 		
 		rsg.printChoiceSets();
-		rsg.saveRoutes("testRoutesASCII.txt",  false);
-		rsg.saveRoutesBinary("testRoutesBinary.dat",  false);
+		rsg.saveRoutes("./temp/testRoutesASCII.txt",  false);
+		rsg.saveRoutesBinary("./temp/testRoutesBinary.dat",  false);
 				
 		RouteSetGenerator rsg2 = new RouteSetGenerator(roadNetwork, params);
 		//rsg2.readRoutes("testRoutesASCII.txt");
-		rsg2.readRoutesWithoutValidityCheck("testRoutesASCII.txt");
+		rsg2.readRoutesWithoutValidityCheck("./temp/testRoutesASCII.txt");
 		rsg2.printChoiceSets();
 		
 		rsg2.clearRoutes();
 		//rsg2.readRoutesBinary("testRoutesBinary.dat");
-		rsg2.readRoutesBinaryWithoutValidityCheck("testRoutesBinary.dat");
+		rsg2.readRoutesBinaryWithoutValidityCheck("./temp/testRoutesBinary.dat");
 		rsg2.printChoiceSets();
 		
 		routes.saveRoutes("testRoutesASCII.txt", false);
