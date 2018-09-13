@@ -75,7 +75,7 @@ public class RoadDisruptionTest {
 		
 		//install road disruption
 		rd3.install(rsg);
-		rsg.printChoiceSets();
+		//rsg.printChoiceSets();
 		rsg.printStatistics();
 		System.out.println("Disrupted edges: " + rd3.getListOfDisruptedEdgesIDs());
 		System.out.println("Removed routes: ");
@@ -139,7 +139,7 @@ public class RoadDisruptionTest {
 		NetworkVisualiser.visualise(roadNetwork, "Network with traffic volume", dailyVolume, "DayVolume", null);
 		
 		rd3.uninstall(rsg);
-		rsg.printChoiceSets();
+		//rsg.printChoiceSets();
 		rsg.printStatistics();
 		
 		rna.resetLinkVolumes();

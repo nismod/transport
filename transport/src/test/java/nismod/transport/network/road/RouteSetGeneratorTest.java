@@ -216,7 +216,7 @@ public class RouteSetGeneratorTest {
 		
 		routes.clearRoutes();
 		routes.generateRouteSetForODMatrix(passengerODM, 10);
-		routes.printChoiceSets();
+		//routes.printChoiceSets();
 		routes.printStatistics();
 		
 		//generate all route sets
@@ -472,7 +472,7 @@ public class RouteSetGeneratorTest {
 		System.out.printf("%d route sets, %d routes \n", totalRouteSets, totalRoutes);
 		System.out.printf("%d route sets from slices, %d routes from slices \n", totalRouteSetsFromSlices, totalRoutesFromSlices);
 		
-		rsg.printChoiceSets();
+		//rsg.printChoiceSets();
 		
 		assertEquals("The number of route sets generated across freight matrix slices is equal to the total number of route sets", totalRouteSets, totalRouteSetsFromSlices);
 		
