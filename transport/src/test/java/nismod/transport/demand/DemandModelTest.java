@@ -388,7 +388,7 @@ public class DemandModelTest {
 			dm.setEngineTypeFractions(year, map);
 		}
 	
-		dm.predictHighwayDemand(2016, 2015);
+		dm.predictHighwayDemands(2016, 2015);
 
 		RoadNetworkAssignment rna2015 = dm.getRoadNetworkAssignment(2015);
 		RoadNetworkAssignment rna2016 = dm.getRoadNetworkAssignment(2016);
@@ -435,5 +435,8 @@ public class DemandModelTest {
 					assertTrue("Flow should increase", flow2016 >= flow2015);
 				}
 			}
+		
+		dm.saveAllResults(2016, 2015);
+		
 	}
 }

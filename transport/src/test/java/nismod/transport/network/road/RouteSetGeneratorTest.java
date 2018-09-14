@@ -34,9 +34,11 @@ import org.opengis.feature.simple.SimpleFeature;
 
 import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.ODMatrix;
+import nismod.transport.demand.RealODMatrixTempro;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.utility.ConfigReader;
 import nismod.transport.utility.InputFileReader;
+import nismod.transport.zone.Zoning;
 
 public class RouteSetGeneratorTest {
 
@@ -210,6 +212,10 @@ public class RouteSetGeneratorTest {
 		routes.printStatistics();
 		 */
 		
+		routes.generateRouteSetWithLinkElimination(116, 106);
+		routes.printStatistics();
+		routes.clearRoutes();
+		
 		routes.generateRouteSetWithRandomLinkEliminationRestricted(116, 106);
 		routes.printChoiceSets();
 		routes.printStatistics();
@@ -266,17 +272,50 @@ public class RouteSetGeneratorTest {
 		rsg.saveRoutesBinary("./temp/testRoutesBinary.dat",  false);
 				
 		RouteSetGenerator rsg2 = new RouteSetGenerator(roadNetwork, params);
-		//rsg2.readRoutes("testRoutesASCII.txt");
-		rsg2.readRoutesWithoutValidityCheck("./temp/testRoutesASCII.txt");
-		rsg2.printChoiceSets();
+		rsg2.readRoutes("./temp/testRoutesASCII.txt");
+		int ns1 = rsg2.getNumberOfRouteSets();
+		int nr1 = rsg2.getNumberOfRoutes();
 		
 		rsg2.clearRoutes();
-		//rsg2.readRoutesBinary("testRoutesBinary.dat");
-		rsg2.readRoutesBinaryWithoutValidityCheck("./temp/testRoutesBinary.dat");
-		rsg2.printChoiceSets();
+		rsg2.readRoutesWithoutValidityCheck("./temp/testRoutesASCII.txt");
+		int ns2 = rsg2.getNumberOfRouteSets();
+		int nr2 = rsg2.getNumberOfRoutes();
 		
-		routes.saveRoutes("testRoutesASCII.txt", false);
-		routes.saveRoutesBinary("testRoutesBinary.dat", false);
+		assertEquals("Number of route sets is the same", ns1, ns2);
+		assertEquals("Number of route is the same", nr1, nr2);
+		
+		rsg2.clearRoutes();
+		rsg2.readRoutesBinary("./temp/testRoutesBinary.dat");
+		ns1 = rsg2.getNumberOfRouteSets();
+		nr1 = rsg2.getNumberOfRoutes();
+		
+		rsg2.clearRoutes();
+		rsg2.readRoutesBinaryWithoutValidityCheck("./temp/testRoutesBinary.dat");
+		ns2 = rsg2.getNumberOfRouteSets();
+		nr2 = rsg2.getNumberOfRoutes();
+		
+		assertEquals("Number of route sets is the same", ns1, ns2);
+		assertEquals("Number of route is the same", nr1, nr2);
+		
+		rsg2.clearRoutes();
+		rsg2.readRoutesWithoutValidityCheck("./temp/testRoutesASCII.txt");
+		ns2 = rsg2.getNumberOfRouteSets();
+		nr2 = rsg2.getNumberOfRoutes();
+		
+		assertEquals("Number of route sets is the same", ns1, ns2);
+		assertEquals("Number of route is the same", nr1, nr2);
+		
+		rsg2.saveRoutesBinaryShort("./temp/testRoutesBinaryShort.dat", false);
+		rsg2.clearRoutes();
+		rsg2.readRoutesBinaryShortWithoutValidityCheck("./temp/testRoutesBinaryShort.dat");
+		int ns3 = rsg2.getNumberOfRouteSets();
+		int nr3 = rsg2.getNumberOfRoutes();
+				
+		assertEquals("Number of route sets is the same", ns3, ns2);
+		assertEquals("Number of route is the same", nr3, nr2);
+		
+		routes.saveRoutes("./temp/testRoutesASCII.txt", false);
+		routes.saveRoutesBinary("./temp/testRoutesBinary.dat", false);
 		
 		//add single node routes
 		rsg2.clearRoutes();
@@ -284,6 +323,34 @@ public class RouteSetGeneratorTest {
 		rsg2.printStatistics();
 		//rsg2.printChoiceSets();
 		assertEquals("The number of single node routes should equal the number of nodes in the graph", roadNetwork.getNodeIDtoNode().size(), rsg2.getNumberOfRoutes());
+		
+		
+		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
+		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
+		
+		rsg2.clearRoutes();
+		
+		ODMatrix tempro1 = new ODMatrix();
+		tempro1.setFlow("E02004800", "E02003552", 1);
+		tempro1.setFlow("E02004800", "E02003553", 2);
+		tempro1.setFlow("E02004801", "E02003552", 3);
+		tempro1.setFlow("E02004801", "E02003553", 4);
+		rsg2.generateRouteSetForODMatrixTempro(tempro1, zoning);
+		rsg2.printStatistics();
+		
+		RealODMatrixTempro tempro = new RealODMatrixTempro(zoning);
+		tempro.setFlow("E02004800", "E02003552", 1.0);
+		tempro.setFlow("E02004800", "E02003553", 2.0);
+		tempro.setFlow("E02004801", "E02003552", 3.0);
+		tempro.setFlow("E02004801", "E02003553", 4.0);
+			
+		rsg2.clearRoutes();
+		rsg2.generateRouteSetForODMatrixTempro(tempro, zoning, 1, 1);
+		rsg2.printStatistics();
+		
+		rsg2.clearRoutes();
+		rsg2.generateRouteSetForODMatrixTemproDistanceBased(tempro, zoning, 1, 1);
+		rsg2.printStatistics();
 	}
 
 	@Test

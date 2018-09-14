@@ -59,8 +59,6 @@ public class Zoning {
 	
 	private HashMap<String, Integer> temproCodeToID;
 	private HashMap<Integer, String> temproIDToCode;
-	
-	private HashMap<String, NodeMatrix> zoneToNodeMatrix; //mapsTempro zones to a matrix of join node probabilities (for tempro zones that have multiple contained nodes)
 		
 	/**
 	 * Constructor for the zoning system.
@@ -376,20 +374,6 @@ public class Zoning {
 				this.zoneToListOfContainedNodes.put(zoneCode, listOfNodes);
 			}
 			listOfNodes.add(nodeID);
-		}
-	}
-	
-	private void mapZoneToNodeMatrices() {
-		
-		this.zoneToNodeMatrix = new HashMap<String, NodeMatrix>();
-		
-		for (String zone: this.zoneToListOfContainedNodes.keySet()) {
-			if (this.zoneToListOfContainedNodes.get(zone).size() >= 2) {
-				NodeMatrix nm = NodeMatrix.createUnitMatrix(this.zoneToListOfContainedNodes.get(zone));
-				nm.normaliseWithZeroDiagonal();
-				//nm.normalise();
-				this.zoneToNodeMatrix.put(zone, nm);
-			}
 		}
 	}
 	
