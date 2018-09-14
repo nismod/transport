@@ -412,9 +412,18 @@ public class App {
 					rsg.readRoutesBinary(passengerRoutesFile);
 					rsg.readRoutesBinary(freightRoutesFile);
 				}
+				
+				final String assignmentType = props.getProperty("ASSIGNMENT_TYPE").toLowerCase();
+				//create zoning system if necessary
+				Zoning zoning = null;
+				if (assignmentType.equals("tempro") || assignmentType.equals("combined")) {
+					final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
+					final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
+					zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
+				}
 
 				//the main demand model
-				DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, unitCO2EmissionsFile, engineTypeFractionsFile, AVFractionsFile, interventions, rsg, props);
+				DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, unitCO2EmissionsFile, engineTypeFractionsFile, AVFractionsFile, interventions, rsg, zoning, props);
 				dm.predictHighwayDemands(Integer.parseInt(predictedYear), Integer.parseInt(fromYear));
 				dm.saveAllResults(Integer.parseInt(predictedYear), Integer.parseInt(fromYear));
 			}

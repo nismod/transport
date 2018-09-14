@@ -2730,25 +2730,52 @@ public class RoadNetworkAssignment {
 
 	/** 
 	 * Assigns passenger and freight origin-destination matrix to the road network
-	 * using the fastest path based on the current values in the linkTravelTime field.
+	 * using specification in the config file.
 	 * Finally, updates link travel times using weighted averaging.
 	 * @param passengerODM Passenger origin-destination matrix.
 	 * @param freightODM Freight origin-destination matrix.
 	 * @param rsg Route set generator object with routes to be used for the assignment (if route choice used) or an object in which to store routes (if routing used).
+	 * @param zoning Zoning system (necessary for 'tempro' and 'combined' assignment types).
 	 * @param params Parameters from the config file.
 	 * @param weight Weighting parameter.
 	 */
-	public void assignFlowsAndUpdateLinkTravelTimes(AssignableODMatrix passengerODM, FreightMatrix freightODM, RouteSetGenerator rsg, Properties params, double weight) {
+	public void assignFlowsAndUpdateLinkTravelTimes(AssignableODMatrix passengerODM, FreightMatrix freightODM, RouteSetGenerator rsg, Zoning zoning, Properties params, double weight) {
 
+		final String assignmentType = params.getProperty("ASSIGNMENT_TYPE").toLowerCase();
 		final Boolean flagUseRouteChoiceModel = Boolean.parseBoolean(params.getProperty("USE_ROUTE_CHOICE_MODEL"));
 
+		//assign passenger demand
+		if (assignmentType.equals("lad")) {
+			if (flagUseRouteChoiceModel) {
+				this.assignPassengerFlowsRouteChoice(passengerODM, rsg, params);
+			} else {
+				this.assignPassengerFlowsRouting(passengerODM, rsg);
+			}
+		} if (assignmentType.equals("tempro")) {
+			if (flagUseRouteChoiceModel) {
+				this.assignPassengerFlowsRouteChoiceTempro(passengerODM, zoning, rsg, params);
+			} else {
+				this.assignPassengerFlowsTempro(passengerODM, zoning, rsg);
+			}
+		} if (assignmentType.equals("combined")) {
+			this.assignPassengerFlowsRouteChoiceTemproDistanceBased(passengerODM, zoning, rsg, params);
+			if (flagUseRouteChoiceModel) {
+				this.assignPassengerFlowsRouteChoiceTempro(passengerODM, zoning, rsg, params);
+			} else {
+				this.assignPassengerFlowsTempro(passengerODM, zoning, rsg);
+			}
+		} else {
+			LOGGER.error("Unkown assignment type in the config file. Allowed values: 'lad', 'tempro', 'combined'");
+			return;
+		}
+		
+		//assign freight demand
 		if (flagUseRouteChoiceModel) {
-			this.assignPassengerFlowsRouteChoice(passengerODM, rsg, params);
 			this.assignFreightFlowsRouteChoice(freightODM, rsg, params);
 		} else {
-			this.assignPassengerFlowsRouting(passengerODM, rsg);
 			this.assignFreightFlowsRouting(freightODM, rsg);
 		}
+		
 		this.updateLinkVolumeInPCU();
 		this.updateLinkVolumeInPCUPerTimeOfDay();
 		this.updateLinkVolumePerVehicleType();
@@ -2777,16 +2804,17 @@ public class RoadNetworkAssignment {
 	 * @param passengerODM Passenger origin-destination matrix.
 	 * @param freightODM Freight origin-destination matrix.
 	 * @param rsg Route set generator object with routes to be used for the assignment (if route choice used) or an object in which to store routes (if routing used).
+	 * @param zoning Zoning system (necessary for 'tempro' and 'combined' assignment types).
 	 * @param params Parameters from the config file.
 	 * @param weight Weighting parameter.
 	 * @param iterations Number of iterations.
 	 */
-	public void assignFlowsAndUpdateLinkTravelTimesIterated(AssignableODMatrix passengerODM, FreightMatrix freightODM, RouteSetGenerator rsg, Properties params, double weight, int iterations) {
+	public void assignFlowsAndUpdateLinkTravelTimesIterated(AssignableODMatrix passengerODM, FreightMatrix freightODM, RouteSetGenerator rsg, Zoning zoning, Properties params, double weight, int iterations) {
 
 		for (int i=0; i<iterations; i++) {
 			this.resetLinkVolumes(); //link volumes must be reset or they would compound across all iterations
 			this.resetTripStorages(); //clear route storages
-			this.assignFlowsAndUpdateLinkTravelTimes(passengerODM, freightODM, rsg, params, weight);
+			this.assignFlowsAndUpdateLinkTravelTimes(passengerODM, freightODM, rsg, zoning, params, weight);
 		}
 	}
 

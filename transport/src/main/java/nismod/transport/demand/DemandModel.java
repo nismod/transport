@@ -27,6 +27,7 @@ import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.utility.InputFileReader;
+import nismod.transport.zone.Zoning;
 
 /**
  * Main demand prediction model (elasticity-based).
@@ -72,10 +73,10 @@ public class DemandModel {
 	
 	private RouteSetGenerator rsg;
 	private Properties props;
-	
 	private List<Intervention> interventions;
-	
 	private RoadNetwork roadNetwork;
+	private Zoning zoning;
+	private RealODMatrixTempro temproMatrixTemplate;
 
 	/**
 	 * The constructor for the demand prediction model.
@@ -92,11 +93,12 @@ public class DemandModel {
 	 * @param autonomousVehiclesFractionsFile Autonomous vehicles fractions file.
 	 * @param interventions List of interventions.
 	 * @param rsg Route Set Generator with routes for both cars and freight.
+	 * @param zoning Zoning system (used for 'tempro' and 'combined' assignment type).
 	 * @param props Properties file.
 	 * @throws FileNotFoundException if any.
 	 * @throws IOException if any.
 	 */
-	public DemandModel(RoadNetwork roadNetwork, String baseYearODMatrixFile, String baseYearFreightMatrixFile, String populationFile, String GVAFile, String elasticitiesFile, String elasticitiesFreightFile, String energyUnitCostsFile, String unitCO2EmissionsFile, String engineTypeFractionsFile, String autonomousVehiclesFractionsFile, List<Intervention> interventions, RouteSetGenerator rsg, Properties props) throws FileNotFoundException, IOException {
+	public DemandModel(RoadNetwork roadNetwork, String baseYearODMatrixFile, String baseYearFreightMatrixFile, String populationFile, String GVAFile, String elasticitiesFile, String elasticitiesFreightFile, String energyUnitCostsFile, String unitCO2EmissionsFile, String engineTypeFractionsFile, String autonomousVehiclesFractionsFile, List<Intervention> interventions, RouteSetGenerator rsg, Zoning zoning, Properties props) throws FileNotFoundException, IOException {
 
 		this.yearToPassengerODMatrix = new HashMap<Integer, ODMatrix>();
 		this.yearToFreightODMatrix = new HashMap<Integer, FreightMatrix>();
@@ -117,6 +119,7 @@ public class DemandModel {
 		this.props = props;
 		this.roadNetwork = roadNetwork;
 		this.interventions = interventions;
+		this.zoning = zoning;
 
 		//read base-year passenger matrix
 		ODMatrix passengerODMatrix = new ODMatrix(baseYearODMatrixFile);
@@ -159,6 +162,14 @@ public class DemandModel {
 		this.yearToTimeOfDayDistribution = InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFile);
 		this.yearToTimeOfDayDistributionFreight = InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFreightFile);
 		this.yearToRelativeFuelEfficiencies = InputFileReader.readRelativeFuelEfficiencyFile(relativeFuelEfficiencyFile);
+		
+		//load Tempro matrix template if necessary
+		final String assignmentType = props.getProperty("ASSIGNMENT_TYPE").toLowerCase();
+		if (assignmentType.equals("tempro") || assignmentType.equals("combined")) {
+			
+			final String temproODMatrixFile = props.getProperty("temproODMatrixFile");
+			this.temproMatrixTemplate = new RealODMatrixTempro(temproODMatrixFile, this.zoning);
+		}
 	}
 	
 	
@@ -250,7 +261,16 @@ public class DemandModel {
 												null, 
 												this.yearToCongestionCharges.get(fromYear),
 												this.props);
-				rna.assignFlowsAndUpdateLinkTravelTimesIterated(this.yearToPassengerODMatrix.get(fromYear), this.yearToFreightODMatrix.get(fromYear), this.rsg, this.props, LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);
+				
+				AssignableODMatrix passengerODM;
+				//if tempro or combined assignment used, disaggregate LAD-based matrix to tempro level using the template
+				final String assignmentType = props.getProperty("ASSIGNMENT_TYPE").toLowerCase();
+				if (assignmentType.equals("tempro") || assignmentType.equals("combined")) {
+					passengerODM = RealODMatrixTempro.createTEMProFromLadMatrix(this.yearToPassengerODMatrix.get(fromYear), this.temproMatrixTemplate, zoning);
+				} else
+					passengerODM = this.yearToPassengerODMatrix.get(fromYear);
+						
+				rna.assignFlowsAndUpdateLinkTravelTimesIterated(passengerODM, this.yearToFreightODMatrix.get(fromYear), this.rsg, this.zoning, this.props, LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);
 				yearToRoadNetworkAssignment.put(fromYear, rna);
 		
 				//calculate skim matrices
@@ -414,8 +434,15 @@ public class DemandModel {
 															 predictedRna.getWorkplaceZoneProbabilities(),
 															 this.yearToCongestionCharges.get(predictedYear),
 															 this.props);
-
-				predictedRna.assignFlowsAndUpdateLinkTravelTimesIterated(predictedPassengerODMatrix, predictedFreightODMatrix, this.rsg, this.props, LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);
+				
+				AssignableODMatrix predictedPassengerODMatrixToAssign;
+				//if tempro or combined assignment used, disaggregate LAD-based matrix to tempro level using the template
+				final String assignmentType = props.getProperty("ASSIGNMENT_TYPE").toLowerCase();
+				if (assignmentType.equals("tempro") || assignmentType.equals("combined")) {
+					predictedPassengerODMatrixToAssign = RealODMatrixTempro.createTEMProFromLadMatrix(predictedPassengerODMatrix, this.temproMatrixTemplate, zoning);
+				} else
+					predictedPassengerODMatrixToAssign = predictedPassengerODMatrix;
+				predictedRna.assignFlowsAndUpdateLinkTravelTimesIterated(predictedPassengerODMatrixToAssign, predictedFreightODMatrix, this.rsg, this.zoning, this.props, LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);
 				
 				//update skim matrices for predicted year after the assignment
 				tsm = predictedRna.calculateTimeSkimMatrix();
@@ -516,7 +543,13 @@ public class DemandModel {
 				//predictedRna.resetLinkVolumes();
 				//predictedRna.assignPassengerFlows(predictedPassengerODMatrix);
 				//predictedRna.updateLinkTravelTimes(ALPHA_LINK_TRAVEL_TIME_AVERAGING);
-				predictedRna.assignFlowsAndUpdateLinkTravelTimesIterated(predictedPassengerODMatrix, predictedFreightODMatrix, this.rsg, this.props, LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);				
+				
+				//if tempro or combined assignment used, disaggregate LAD-based matrix to tempro level using the template
+				if (assignmentType.equals("tempro") || assignmentType.equals("combined")) {
+					predictedPassengerODMatrixToAssign = RealODMatrixTempro.createTEMProFromLadMatrix(predictedPassengerODMatrix, this.temproMatrixTemplate, zoning);
+				} else
+					predictedPassengerODMatrixToAssign = predictedPassengerODMatrix;
+				predictedRna.assignFlowsAndUpdateLinkTravelTimesIterated(predictedPassengerODMatrixToAssign, predictedFreightODMatrix, this.rsg, this.zoning, this.props, LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);				
 				
 				//store skim matrices into hashmaps
 				yearToTimeSkimMatrix.put(predictedYear, tsm);

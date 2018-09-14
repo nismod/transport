@@ -461,7 +461,43 @@ public class RealODMatrixTempro implements AssignableODMatrix {
 			for (String origin: temproOrigins)
 				for (String destination: temproDestinations) {
 					double temproFlow = 0.0;
-					if (temproSum > 0.0) temproFlow = baseTempro.getFlow(origin, destination) / temproSum * ladFlow;
+					if (temproSum > 0.0) temproFlow = baseTempro.getFlow(origin, destination) * ladFlow / temproSum;
+					temproMatrix.setFlow(origin, destination, temproFlow);
+				}
+		}
+		
+		return temproMatrix;
+	}
+	
+	/**
+	 * Creates tempro OD matrix from LAD OD matrix.
+	 * @param ladODMatrix LAD to LAD OD matrix.
+	 * @param baseTempro TEMPro ODMatrix used as weights to disaggregate LAD matrix.
+	 * @param zoning Zoning system with mapping between TEMPro and LAD zones.
+	 * @return TEMPro based OD matrix.
+	 */
+	public static RealODMatrixTempro createTEMProFromLadMatrix(ODMatrix ladODMatrix, RealODMatrixTempro baseTempro, Zoning zoning) {
+		
+		RealODMatrixTempro temproMatrix = new RealODMatrixTempro(zoning);
+		
+		for (MultiKey mk: ladODMatrix.getKeySet()) {
+			String originLAD = (String) mk.getKey(0);
+			String destinationLAD = (String) mk.getKey(1);
+			
+			int ladFlow = ladODMatrix.getFlow(originLAD, destinationLAD);
+					
+			//get tempro zones contained within originLAD and destinationLAD
+			List<String> temproOrigins = zoning.getLADToListOfContainedZones().get(originLAD);
+			List<String> temproDestinations = zoning.getLADToListOfContainedZones().get(destinationLAD);
+			
+			//sum all elements of the base tempro submatrix
+			double temproSum = baseTempro.sumMatrixSubset(temproOrigins, temproDestinations);
+			
+			//disaggregate LAD flow using the weights of the underlying tempro submatrix
+			for (String origin: temproOrigins)
+				for (String destination: temproDestinations) {
+					double temproFlow = 0.0;
+					if (temproSum > 0.0) temproFlow = baseTempro.getFlow(origin, destination) * ladFlow / temproSum;
 					temproMatrix.setFlow(origin, destination, temproFlow);
 				}
 		}
