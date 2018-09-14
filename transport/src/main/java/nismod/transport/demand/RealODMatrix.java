@@ -116,6 +116,18 @@ public class RealODMatrix implements AssignableODMatrix {
 	}
 	
 	/**
+	 * Gets sum of all the flows.
+	 * @return Sum of flows.
+	 */
+	public double getSumOfFlows() {
+		
+		double sumOfFlows = 0;
+		for (Object flow: matrix.values()) sumOfFlows += (double) flow;
+		
+		return sumOfFlows;
+	}
+	
+	/**
 	 * Gets sum of all the (rounded) flows in the matrix.
 	 * @return Sum of all the (rounded) flows in the matrix (i.e. number of trips).
 	 */
@@ -500,11 +512,16 @@ public class RealODMatrix implements AssignableODMatrix {
 	 */
 	public void deleteInterzonalFlows(String zone) {
 		
-		for (String origin: this.getSortedOrigins())
-			for (String destination: this.getSortedDestinations())
+		LOGGER.debug("Deleting inter-zonal flows from/to zone {}...", zone);
+		
+		List<String> origins = this.getUnsortedOrigins();
+		List<String> destinations = this.getUnsortedDestinations();
+				
+		for (String origin: origins)
+			for (String destination: destinations)
 				if (origin.equals(zone) && !destination.equals(zone) || !origin.equals(zone) && destination.equals(zone)) { //this will leave intra-zonal flow
-				this.setFlow(origin, destination, 0);
-			}
+				this.setFlow(origin, destination, 0.0);
+		}
 	}
 	
 	@Override

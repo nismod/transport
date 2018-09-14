@@ -3,21 +3,16 @@
  */
 package nismod.transport.demand;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.commons.collections4.keyvalue.MultiKey;
-import org.geotools.graph.path.Path;
 import org.junit.Test;
 
 import nismod.transport.decision.CongestionCharging;
@@ -26,10 +21,10 @@ import nismod.transport.decision.RoadDevelopment;
 import nismod.transport.decision.RoadExpansion;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
-import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
+import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.utility.ConfigReader;
 import nismod.transport.utility.InputFileReader;
 

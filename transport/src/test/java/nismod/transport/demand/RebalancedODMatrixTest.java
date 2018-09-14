@@ -3,8 +3,6 @@
  */
 package nismod.transport.demand;
 
-import static org.junit.Assert.*;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -12,25 +10,18 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import org.apache.sanselan.ImageWriteException;
-import org.geotools.graph.structure.DirectedEdge;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.junit.Test;
 
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
-import nismod.transport.network.road.Route;
-import nismod.transport.network.road.RouteSet;
 import nismod.transport.network.road.RouteSetGenerator;
-import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.utility.ConfigReader;
 import nismod.transport.utility.InputFileReader;
 import nismod.transport.visualisation.LineVisualiser;
-import nismod.transport.visualisation.NetworkVisualiser;
-import nismod.transport.zone.Zoning;
 
 /**
  * Tests for the RebalancedODMatrix class

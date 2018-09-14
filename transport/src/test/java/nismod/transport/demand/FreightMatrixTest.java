@@ -3,12 +3,11 @@
  */
 package nismod.transport.demand;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.junit.Test;
 
 /**

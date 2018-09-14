@@ -568,8 +568,7 @@ public class ODMatrix implements AssignableODMatrix {
 		
 		List<String> origins = this.getUnsortedOrigins();
 		List<String> destinations = this.getUnsortedDestinations();
-		
-		
+			
 		for (String origin: origins)
 			for (String destination: destinations)
 				if (origin.equals(zone) && !destination.equals(zone) || !origin.equals(zone) && destination.equals(zone)) { //this will leave intra-zonal flow
@@ -593,6 +592,8 @@ public class ODMatrix implements AssignableODMatrix {
 
 		return odm;
 	}
+	
+	
 	
 	/**
 	 * Saves the matrix into a csv file.

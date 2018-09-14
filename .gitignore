@@ -424,7 +424,7 @@ hs_err_pid*
 *.qix
 
 ### Input files ###
-transport/src/main/resources/data/
+transport/src/main/full/
 
 ### Output files ###
 transport/output/

@@ -149,16 +149,16 @@ public class RealODMatrixTempro implements AssignableODMatrix {
 		
 		HashMap<String, Integer> tripStarts = new HashMap<String, Integer>();
 		
-		for (int i=0; i<matrix.length; i++) {
-			String origin = zoning.getZoneIDToCodeMap().get(i);
-			for (int j=0; j<matrix[0].length; j++) {
-				String destination = zoning.getZoneIDToCodeMap().get(j);
+		List<String> origins = this.getUnsortedOrigins();
+		List<String> destinations = this.getUnsortedDestinations();
+				
+		for (String origin: origins)
+			for (String destination: destinations) {
 				Integer number = tripStarts.get(origin);
 				if (number == null) number = 0;
 				number += (int) Math.round(this.getFlow(origin, destination));
 				tripStarts.put(origin, number);
 			}
-		}
 		
 		return tripStarts;
 	}
@@ -170,17 +170,17 @@ public class RealODMatrixTempro implements AssignableODMatrix {
 	public HashMap<String, Integer> calculateTripEnds() {
 		
 		HashMap<String, Integer> tripEnds = new HashMap<String, Integer>();
-		
-		for (int j=0; j<matrix[0].length; j++) {
-			String destination = zoning.getZoneIDToCodeMap().get(j);
-			for (int i=0; j<matrix.length; i++) {
-				String origin = zoning.getZoneIDToCodeMap().get(i);
+
+		List<String> origins = this.getUnsortedOrigins();
+		List<String> destinations = this.getUnsortedDestinations();
+				
+		for (String origin: origins)
+			for (String destination: destinations) {
 				Integer number = tripEnds.get(destination);
 				if (number == null) number = 0;
 				number += (int) Math.round(this.getFlow(origin, destination));
 				tripEnds.put(destination, number);
 			}
-		}
 		
 		return tripEnds;
 	}
@@ -409,11 +409,12 @@ public class RealODMatrixTempro implements AssignableODMatrix {
 	public static RealODMatrixTempro createUnitMatrix(Zoning zoning) {
 		
 		RealODMatrixTempro odm = new RealODMatrixTempro(zoning);
+		Set<String> zones = zoning.getZoneCodeToIDMap().keySet();
 
-		for (int i=0; i<odm.matrix.length; i++)
-			for (int j=0; j<odm.matrix[0].length; j++)
-				odm.matrix[i][j] = 1.0;
-		
+		for (String origin: zones)
+			for (String destination: zones)
+				odm.setFlow(origin, destination, 1.0);
+			
 		return odm;
 	}
 	
@@ -550,8 +551,7 @@ public class RealODMatrixTempro implements AssignableODMatrix {
 		
 		List<String> origins = this.getUnsortedOrigins();
 		List<String> destinations = this.getUnsortedDestinations();
-		
-		
+				
 		for (String origin: origins)
 			for (String destination: destinations)
 				if (origin.equals(zone) && !destination.equals(zone) || !origin.equals(zone) && destination.equals(zone)) { //this will leave intra-zonal flow
