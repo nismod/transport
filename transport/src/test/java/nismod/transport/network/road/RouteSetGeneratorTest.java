@@ -1,41 +1,28 @@
 package nismod.transport.network.road;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.closeTo;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintStream;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.commons.collections4.keyvalue.MultiKey;
-import org.apache.commons.io.FileUtils;
-import org.geotools.graph.path.Path;
 import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedGraph;
 import org.geotools.graph.structure.DirectedNode;
-import org.geotools.graph.structure.Edge;
-import org.geotools.graph.structure.Node;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.opengis.feature.simple.SimpleFeature;
 
 import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.ODMatrix;
 import nismod.transport.demand.RealODMatrixTempro;
-import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.utility.ConfigReader;
 import nismod.transport.utility.InputFileReader;
 import nismod.transport.zone.Zoning;

@@ -35,6 +35,7 @@ import nismod.transport.demand.RebalancedTemproODMatrix;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
+import nismod.transport.optimisation.SPSA4;
 import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.showcase.LandingGUI;
 import nismod.transport.utility.ConfigReader;
@@ -109,6 +110,16 @@ public class App {
 				.valueSeparator(' ')
 				.build();
 		options.addOption(estimateMatrix);
+		
+		Option optimiseMatrix = Option.builder("o")
+				.longOpt("optimiseMatrix")
+				.argName("ITERATIONS")
+				.hasArg()
+				.numberOfArgs(1)
+				.desc("Optimise Tempro-level origin-destination matrix.")
+				.valueSeparator(' ')
+				.build();
+		options.addOption(optimiseMatrix);
 		
 		Option mergeRoutes = Option.builder("m")
 				.longOpt("mergeRoutes")
@@ -347,6 +358,84 @@ public class App {
 				graph.setSize(600, 400);
 				graph.setVisible(true);
 				graph.saveToPNG("temproRebalancing.png");
+			}
+			
+			else if (line.hasOption("o")) {
+				
+				String[] values = line.getOptionValues("optimiseMatrix");
+				final String iterations = values[0];
+				
+				roadNetwork.sortGravityNodes();
+						
+				//create route set generator
+				RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, props);
+				final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
+				final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
+				Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
+
+				//generate single node routes
+				rsg.generateSingleNodeRoutes();
+				LOGGER.debug(rsg.getStatistics());
+				
+				//read tempro routes
+				final String temproRoutesFile = props.getProperty("temproRoutesFile");
+				rsg.readRoutesBinaryWithoutValidityCheck(temproRoutesFile);
+				LOGGER.debug(rsg.getStatistics());
+				
+				final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
+				final String unitCO2EmissionsFile = props.getProperty("unitCO2EmissionsFile");
+				final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
+				final String AVFractionsFile = props.getProperty("autonomousVehiclesFile");
+				final String vehicleTypeToPCUFile = props.getProperty("vehicleTypeToPCUFile");
+				final String timeOfDayDistributionFile = props.getProperty("timeOfDayDistributionFile");
+				final String timeOfDayDistributionFreightFile = props.getProperty("timeOfDayDistributionFreightFile");
+				final String baseFuelConsumptionRatesFile = props.getProperty("baseFuelConsumptionRatesFile");
+				final String relativeFuelEfficiencyFile = props.getProperty("relativeFuelEfficiencyFile");
+				final String defaultLinkTravelTimeFile = props.getProperty("defaultLinkTravelTimeFile");
+				final int BASE_YEAR = Integer.parseInt(props.getProperty("baseYear"));
+			
+				Map<TimeOfDay, Map<Integer, Double>> defaultLinkTravelTime = null;
+				if (defaultLinkTravelTimeFile != null) 
+					defaultLinkTravelTime = InputFileReader.readLinkTravelTimeFile(BASE_YEAR, defaultLinkTravelTimeFile);
+				
+				//create a road network assignment
+				RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, 
+																	InputFileReader.readEnergyUnitCostsFile(energyUnitCostsFile).get(BASE_YEAR),
+																	InputFileReader.readUnitCO2EmissionFile(unitCO2EmissionsFile).get(BASE_YEAR),
+																	InputFileReader.readEngineTypeFractionsFile(engineTypeFractionsFile).get(BASE_YEAR),
+																	InputFileReader.readAVFractionsFile(AVFractionsFile).get(BASE_YEAR),
+																	InputFileReader.readVehicleTypeToPCUFile(vehicleTypeToPCUFile),
+																	InputFileReader.readEnergyConsumptionParamsFile(baseFuelConsumptionRatesFile),
+																	InputFileReader.readRelativeFuelEfficiencyFile(relativeFuelEfficiencyFile).get(BASE_YEAR),
+																	InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFile).get(BASE_YEAR),
+																	InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFreightFile).get(BASE_YEAR),
+																	defaultLinkTravelTime,
+																	null,
+																	null,
+																	null,
+																	props);
+				
+				final String temproODMatrixFile = props.getProperty("temproODMatrixFile");
+				RealODMatrixTempro temproODMatrix = new RealODMatrixTempro(temproODMatrixFile, zoning);
+				
+				//double a = 10000;
+				double a = 1000;
+				double A = 0.0; 
+				double c = 50;
+				double alpha = 0.602;
+				double gamma = 0.101;
+				
+				SPSA4 optimiser = new SPSA4(props);
+				optimiser.initialise(rna, zoning, rsg, temproODMatrix, a, A, c, alpha, gamma);
+				optimiser.runSPSA(Integer.parseInt(iterations));
+				
+				DefaultCategoryDataset lineDataset = new DefaultCategoryDataset();
+				List<Double> lossEvals = optimiser.getLossFunctionEvaluations();
+				for (int i = 0; i < lossEvals.size(); i++) lineDataset.addValue(lossEvals.get(i), "RMSN", Integer.toString(i));
+				LineVisualiser graph = new LineVisualiser(lineDataset, "Loss function evaluations");
+				graph.setSize(600, 400);
+				graph.setVisible(true);
+				graph.saveToPNG("temproOptimising.png");
 			}
 
 			else if (line.hasOption("r")) { //run the main demand prediction model

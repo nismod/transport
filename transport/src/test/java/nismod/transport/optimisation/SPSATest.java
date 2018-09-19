@@ -11,6 +11,7 @@ import org.jfree.data.category.DefaultCategoryDataset;
 
 import nismod.transport.demand.ODMatrix;
 import nismod.transport.demand.RealODMatrix;
+import nismod.transport.demand.RealODMatrixTempro;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.network.road.RouteSetGenerator;
@@ -31,8 +32,8 @@ public class SPSATest {
 	public static void main( String[] args ) throws IOException	{
 			
 		//final String configFile = "./src/main/config/config.properties";
-		//final String configFile = "./src/test/config/testConfig.properties";
-		final String configFile = "./src/test/config/minitestConfig.properties";
+		final String configFile = "./src/test/config/testConfig.properties";
+		//final String configFile = "./src/test/config/minitestConfig.properties";
 		Properties props = ConfigReader.getProperties(configFile);
 		
 		final String areaCodeFileName = props.getProperty("areaCodeFileName");
@@ -259,12 +260,12 @@ public class SPSATest {
 		final String temproODMatrixFile = props.getProperty("temproODMatrixFile");
 		
 		//initial OD matrix
-		RealODMatrix temproODMatrix = new RealODMatrix(temproODMatrixFile);
+		RealODMatrixTempro temproODMatrix = new RealODMatrixTempro(temproODMatrixFile, zoning);
 		//RealODMatrix odmatrix = optimiser.getThetaEstimate();
 		//odmatrix.setFlow("E06000045", "E06000045", 70269);
 		//odmatrix.setFlow("E06000045", "E06000045", 70000);
 		//odmatrix.setFlow("E06000045", "E06000045", 72930);
-		temproODMatrix.scaleMatrixValue(0.5);
+		//temproODMatrix.scaleMatrixValue(0.5);
 		temproODMatrix.printMatrixFormatted("Initial passenger matrix:", 2);
 		
 		//double a = 10000;
@@ -274,7 +275,7 @@ public class SPSATest {
 		double alpha = 0.602;
 		double gamma = 0.101;
 		
-		SPSA4 optimiser = new SPSA4();
+		SPSA4 optimiser = new SPSA4(props);
 
 		//rsg.readRoutes("./src/test/resources/testdata/testRoutes.txt");
 		//rsg.readRoutes("./src/test/resources/testdata/allRoutes.txt");
@@ -283,7 +284,11 @@ public class SPSATest {
 		rsgparams.setProperty("GENERATION_LIMIT", "10");
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, rsgparams);
 		//rsg.generateRouteSetForODMatrix(new ODMatrix(temproODMatrix));
-		
+		//generate single node routes
+		rsg.generateSingleNodeRoutes();
+		//read tempro routes
+		final String temproRoutesFile = props.getProperty("temproRoutesFile");
+		rsg.readRoutesBinaryWithoutValidityCheck(temproRoutesFile);
 		rsg.printStatistics();
 		
 		//set route choice parameters
@@ -295,7 +300,7 @@ public class SPSATest {
 		params.setProperty("AVERAGE_INTERSECTION_DELAY", "0.8");
 	
 		optimiser.initialise(rna, zoning, rsg, temproODMatrix, a, A, c, alpha, gamma);
-		optimiser.runSPSA(100);
+		optimiser.runSPSA(10);
 
 		optimiser.getThetaEstimate().printMatrixFormatted("Final OD matrix:", 2);
 		
