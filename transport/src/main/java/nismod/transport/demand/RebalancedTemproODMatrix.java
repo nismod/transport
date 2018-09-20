@@ -1,5 +1,6 @@
 package nismod.transport.demand;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -88,12 +89,23 @@ public class RebalancedTemproODMatrix extends RealODMatrixTempro {
 	 * @param number Number of iterations.
 	 */
 	public void iterate(int number) {
+		
+		final String outputFolder = params.getProperty("outputFolder");
+		//create output directory
+	     File file = new File(outputFolder);
+	        if (!file.exists()) {
+	            if (file.mkdirs()) {
+	                LOGGER.debug("Output directory is created.");
+	            } else {
+	            	LOGGER.error("Failed to create output directory.");
+	            }
+	        }
 
 		for (int i=0; i<number; i++) {
 			this.assignAndCalculateRMSN();
 			this.scaleToTrafficCounts();
-			this.saveMatrixFormatted("temproODMafterIteration" + i + ".csv");
-			this.rna.saveLinkTravelTimes(2015, "linkTravelTimesAfterIteration" + i + ".csv");
+			this.saveMatrixFormatted(file + "/temproODMafterIteration" + i + ".csv");
+			this.rna.saveLinkTravelTimes(2015, file + "/linkTravelTimesAfterIteration" + i + ".csv");
 		}
 		
 		//assign ones more to get the latest RMSN

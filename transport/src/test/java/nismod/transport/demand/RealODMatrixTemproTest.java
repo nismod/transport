@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.sanselan.ImageWriteException;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -32,6 +33,55 @@ import nismod.transport.zone.Zoning;
  *
  */
 public class RealODMatrixTemproTest {
+	
+	public static void main( String[] args ) throws FileNotFoundException, IOException, ImageWriteException {
+		
+		final String configFile = "./src/main/full/config/config.properties";
+		//final String configFile = "./src/test/config/testConfig.properties";
+		//final String configFile = "./src/test/config/miniTestConfig.properties";
+		Properties props = ConfigReader.getProperties(configFile);
+		
+		final String areaCodeFileName = props.getProperty("areaCodeFileName");
+		final String areaCodeNearestNodeFile = props.getProperty("areaCodeNearestNodeFile");
+		final String workplaceZoneFileName = props.getProperty("workplaceZoneFileName");
+		final String workplaceZoneNearestNodeFile = props.getProperty("workplaceZoneNearestNodeFile");
+		final String freightZoneToLADfile = props.getProperty("freightZoneToLADfile");
+		final String freightZoneNearestNodeFile = props.getProperty("freightZoneNearestNodeFile");
+
+		final URL zonesUrl = new URL(props.getProperty("zonesUrl"));
+		final URL networkUrl = new URL(props.getProperty("networkUrl"));
+		final URL networkUrlFixedEdgeIDs = new URL(props.getProperty("networkUrlFixedEdgeIDs"));
+		final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
+		final URL AADFurl = new URL(props.getProperty("AADFurl"));
+
+		final String temproODMatrixFile = props.getProperty("temproODMatrixFile");
+		
+		final String outputFolder = props.getProperty("outputFolder");
+		
+		//create output directory
+	     File file = new File(outputFolder);
+	        if (!file.exists()) {
+	            if (file.mkdirs()) {
+	                System.out.println("Output directory is created.");
+	            } else {
+	                System.err.println("Failed to create output directory.");
+	            }
+	        }
+
+		//create a road network
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
+		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
+
+		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
+		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
+		
+		RealODMatrixTempro temproODM = new RealODMatrixTempro(temproODMatrixFile, zoning);
+		//temproODM.deleteInterzonalFlows("E02006781");
+
+		RealODMatrix ladODM = RealODMatrixTempro.createLadMatrixFromTEMProMatrix(temproODM, zoning);
+		ladODM.printMatrixFormatted("LAD matrix:", 2);
+		ladODM.saveMatrixFormatted("ladFromTemproODM.csv");
+	}
 	
 	@BeforeClass
 	public static void initialise() {

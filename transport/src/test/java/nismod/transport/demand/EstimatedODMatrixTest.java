@@ -49,15 +49,8 @@ public class EstimatedODMatrixTest {
 		final URL networkUrlFixedEdgeIDs = new URL(props.getProperty("networkUrlFixedEdgeIDs"));
 		final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
 		final URL AADFurl = new URL(props.getProperty("AADFurl"));
-
-		final String baseYearODMatrixFile = props.getProperty("baseYearODMatrixFile");
-		final String freightMatrixFile = props.getProperty("baseYearFreightMatrixFile");
-		
-		final String passengerRoutesFile = props.getProperty("passengerRoutesFile");
-		final String freightRoutesFile = props.getProperty("freightRoutesFile");
 		
 		final String outputFolder = props.getProperty("outputFolder");
-		final String assignmentResultsFile = props.getProperty("assignmentResultsFile");
 		
 		//create output directory
 	     File file = new File(outputFolder);
@@ -199,14 +192,14 @@ public class EstimatedODMatrixTest {
 //		odmpa.deleteInterzonalFlows("3");
 //		odmpa.printMatrixFormatted("After deletion of interzonal flows for zone 3:");
 		
-		for (int i=0; i<1; i++) {
+		for (int i=0; i<2; i++) {
 
 			odmpa.scaleToProductions();
-			odmpa.printMatrixFormatted(2);
+			odmpa.printMatrixFormatted("After scaling to productions", 2);
 
 			odmpa.scaleToAttractions();
-			odmpa.printMatrixFormatted(2);
-
+			odmpa.printMatrixFormatted("After scaling to attractions", 2);
+			
 			System.out.println("TLD = " + Arrays.toString(odmpa.getTripLengthDistribution()));
 			System.out.println("OTLD = " + Arrays.toString(odmpa.getObservedTripLengthDistribution()));
 			odmpa.updateTripLengthDistribution();

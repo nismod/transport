@@ -3,6 +3,8 @@
  */
 package nismod.transport.demand;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -54,5 +56,42 @@ public class SkimMatrixTest {
 		
 		skimMatrix.printMatrixFormatted();
 		skimMatrix.saveMatrixFormatted("./temp/skimMatrix.csv");
+		
+		SkimMatrix skimMatrix2 = new SkimMatrix("./temp/skimMatrix.csv");
+		double diff = skimMatrix2.getAbsoluteDifference(skimMatrix);
+		
+		final double DELTA = 0.000001;
+		assertEquals("Matrices are the same", 0.0, diff, DELTA);
+		
+		double averageCost = skimMatrix2.getAverageCost();
+		double sumOfCosts = skimMatrix2.getSumOfCosts();
+		skimMatrix2.printMatrixFormatted();
+		skimMatrix2.printMatrixFormatted("Skim matrix");
+		
+		ODMatrix odMatrix = new ODMatrix();
+		odMatrix.setFlow("E06000045", "E06000045", 10);
+		odMatrix.setFlow("E06000045", "E07000086", 10);
+		odMatrix.setFlow("E06000045", "E07000091", 10); 
+		odMatrix.setFlow("E06000045", "E06000046", 10);
+		odMatrix.setFlow("E07000086", "E06000045", 10);
+		odMatrix.setFlow("E07000086", "E07000086", 10); 
+		odMatrix.setFlow("E07000086", "E07000091", 10);
+		odMatrix.setFlow("E07000086", "E06000046", 10);
+		odMatrix.setFlow("E07000091", "E06000045", 10);
+		odMatrix.setFlow("E07000091", "E07000086", 10);
+		odMatrix.setFlow("E07000091", "E07000091", 10);
+		odMatrix.setFlow("E07000091", "E06000046", 10);
+		odMatrix.setFlow("E06000046", "E06000045", 10);
+		odMatrix.setFlow("E06000046", "E07000086", 10);
+		odMatrix.setFlow("E06000046", "E07000091", 10);
+		odMatrix.setFlow("E06000046", "E06000046", 10);
+		
+		double demandCosts = skimMatrix2.getSumOfCosts(odMatrix);
+		assertEquals("Sum of weighted matrix costs is the same", sumOfCosts * 10, demandCosts, DELTA);
+		
+		double demandWeigthedCost = skimMatrix2.getAverageCost(odMatrix);
+		assertEquals("Sum of weighted matrix costs is the same", averageCost, demandWeigthedCost, DELTA);
+		
+		
 	}
 }

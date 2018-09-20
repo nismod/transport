@@ -81,7 +81,7 @@ public class EstimatedODMatrix extends RealODMatrix {
 		if (sumProductions != sumAttractions) System.err.println("The sum of productions does not equal the sum of attractions!");
 
 		//determine binning based on the distanceSkimMatrix (this will not change for a given distance skim matrix).
-	//	this.determineBinIndexMatrix(distanceSkimMatrix);
+		this.determineBinIndexMatrix(distanceSkimMatrix);
 		//this.binIndexMatrix.printMatrixFormatted();
 
 		createUnitMatrix();
@@ -99,51 +99,8 @@ public class EstimatedODMatrix extends RealODMatrix {
 	 */
 	public EstimatedODMatrix(String fileName, SkimMatrix distanceSkimMatrix, final double[] binLimitsKm, final double[] observedTripLengthDistribution) throws FileNotFoundException, IOException {
 
-		super();
+		this(readProductions(fileName), readAttractions(fileName), distanceSkimMatrix, binLimitsKm, observedTripLengthDistribution);
 
-		this.binLimitsKm = binLimitsKm;
-		this.observedTripLengthDistribution = observedTripLengthDistribution;
-		this.productions = new HashMap<String, Integer>();
-		this.attractions = new HashMap<String, Integer>();
-		this.zones = new ArrayList<String>();
-		this.binIndexMatrix = new ODMatrix();
-		this.tripLengthDistribution = new double[observedTripLengthDistribution.length];
-
-		CSVParser parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
-		System.out.println(parser.getHeaderMap().toString());
-		Set<String> keySet = parser.getHeaderMap().keySet();
-		System.out.println("keySet = " + keySet);
-		int production, attraction;
-		for (CSVRecord record : parser) { 
-			System.out.println(record);
-			System.out.println("Zone  = " + record.get(0));
-			production = Integer.parseInt(record.get("Production"));
-			attraction = Integer.parseInt(record.get("Attraction"));
-			productions.put(record.get(0), production);
-			attractions.put(record.get(0), attraction);
-			zones.add(record.get(0));
-
-		}
-		parser.close(); 
-
-		System.out.println("Zones = " + zones);
-		System.out.println("Productions = " + productions);
-		System.out.println("Attractions = " + attractions);
-
-		//check validity
-		int sumProductions = 0, sumAttractions = 0;
-		for (String zone: zones) {
-			sumProductions += this.productions.get(zone);
-			sumAttractions += this.attractions.get(zone);
-		}
-		if (sumProductions != sumAttractions) System.err.println("The sum of productions does not equal the sum of attractions!");
-
-		//determine binning based on the distanceSkimMatrix (this will not change for a given distance skim matrix).
-		this.determineBinIndexMatrix(distanceSkimMatrix);
-		//this.binIndexMatrix.printMatrixFormatted();
-
-		createUnitMatrix();
-		iterate();
 	}
 	
 	/**
@@ -449,5 +406,37 @@ public class EstimatedODMatrix extends RealODMatrix {
 				this.setFlow(zone, zone2, 0.0);
 				this.setFlow(zone2,  zone, 0.0);
 			}
+	}
+	
+	private static HashMap<String, Integer> readProductions(String fileName) throws FileNotFoundException, IOException {
+		
+		HashMap<String, Integer> productions = new HashMap<String, Integer>();
+
+		CSVParser parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
+		Set<String> keySet = parser.getHeaderMap().keySet();
+		int production;
+		for (CSVRecord record : parser) { 
+			production = Integer.parseInt(record.get("Production"));
+			productions.put(record.get(0), production);
+		}
+		parser.close();
+		
+		return productions;
+	}
+	
+	private static HashMap<String, Integer> readAttractions(String fileName) throws FileNotFoundException, IOException {
+		
+		HashMap<String, Integer> attractions = new HashMap<String, Integer>();
+
+		CSVParser parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
+		Set<String> keySet = parser.getHeaderMap().keySet();
+		int attraction;
+		for (CSVRecord record : parser) { 
+			attraction = Integer.parseInt(record.get("Attraction"));
+			attractions.put(record.get(0), attraction);
+		}
+		parser.close();
+		
+		return attractions;
 	}
 }

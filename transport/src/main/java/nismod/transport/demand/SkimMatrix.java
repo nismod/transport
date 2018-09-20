@@ -59,10 +59,11 @@ public class SkimMatrix {
 			for (String destination: keySet) {
 				//System.out.println("Destination zone = " + destination);
 				try {
-				cost = Double.parseDouble(record.get(destination));
-				this.setCost(record.get(0), destination, cost);
+					cost = Double.parseDouble(record.get(destination));
+					this.setCost(record.get(0), destination, cost);
 				} catch(NumberFormatException e) {
 					LOGGER.error(e);
+					this.setCost(record.get(0), destination, Double.NaN);
 				}
 			}
 		}
@@ -269,8 +270,14 @@ public class SkimMatrix {
 	public double getAverageCost() {
 		
 		double averageCost = 0.0;
-		for (Object cost: matrix.values()) averageCost += (double) cost;
-		averageCost /= matrix.size();
+		int number = 0;
+		for (Object value: matrix.values()) {
+			Double cost = (double) value;
+			if (cost.isNaN()) continue; //ignore NaN values
+			averageCost += cost;
+			number++;
+		}
+		averageCost /= number;
 		
 		return averageCost;
 	}
@@ -282,7 +289,11 @@ public class SkimMatrix {
 	public double getSumOfCosts() {
 		
 		double sumOfCosts = 0.0;
-		for (Object cost: matrix.values()) sumOfCosts += (double) cost;
+		for (Object value: matrix.values()) {
+			Double cost = (double) value;
+			if (cost.isNaN()) continue; //ignore NaN values
+			sumOfCosts += cost;
+		}
 		
 		return sumOfCosts;
 	}
@@ -299,6 +310,8 @@ public class SkimMatrix {
 		for (MultiKey mk: flows.getKeySet()) {
 			String origin = (String) mk.getKey(0);
 			String destination = (String) mk.getKey(1);
+			Double cost = (double) matrix.get(origin, destination);
+			if (cost.isNaN()) continue; //ignore NaN values
 			averageCost += flows.getFlow(origin, destination) * (double) matrix.get(origin, destination);
 			totalFlows += flows.getFlow(origin, destination);
 		}
@@ -308,7 +321,7 @@ public class SkimMatrix {
 	}
 	
 	/**
-	 * Gets sum of costs weighted by demand.
+	 * Gets sum of costs multiplied by demand flows.
 	 * @param flows The demand as an origin-destination matrix.
 	 * @return Sum of costs.
 	 */
@@ -318,7 +331,10 @@ public class SkimMatrix {
 		for (MultiKey mk: flows.getKeySet()) {
 			String origin = (String) mk.getKey(0);
 			String destination = (String) mk.getKey(1);
-			sumOfCosts += flows.getFlow(origin, destination) * (double) matrix.get(origin, destination);
+			Double cost = this.getCost(origin, destination);
+			int flow = flows.getFlow(origin, destination);
+			if (cost.isNaN()) continue; //ignore NaN values
+			sumOfCosts += cost * flow;
 		}
 		return sumOfCosts;
 	}
@@ -334,7 +350,10 @@ public class SkimMatrix {
 		for (MultiKey mk: other.getKeySet()) {
 			String origin = (String) mk.getKey(0);
 			String destination = (String) mk.getKey(1);
-			difference += Math.abs(this.getCost(origin, destination) - other.getCost(origin, destination));
+			Double thisCost = this.getCost(origin, destination);
+			Double otherCost = other.getCost(origin, destination);
+			if (thisCost.isNaN() || otherCost.isNaN()) continue;
+			difference += Math.abs(thisCost - otherCost);
 		}
 	
 		return difference;

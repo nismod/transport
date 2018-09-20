@@ -1,5 +1,6 @@
 package nismod.transport.demand;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -61,11 +62,22 @@ public class RebalancedODMatrix extends RealODMatrix {
 	 * @param number Number of iterations.
 	 */
 	public void iterate(int number) {
+		
+		final String outputFolder = params.getProperty("outputFolder");
+		//create output directory
+	     File file = new File(outputFolder);
+	        if (!file.exists()) {
+	            if (file.mkdirs()) {
+	                LOGGER.debug("Output directory is created.");
+	            } else {
+	            	LOGGER.error("Failed to create output directory.");
+	            }
+	        }
 
 		for (int i=0; i<number; i++) {
 			this.assignAndCalculateRMSN();
 			this.scaleToTrafficCounts();
-			this.saveMatrixFormatted("ODMafterIteration" + i + ".csv");
+			this.saveMatrixFormatted(file + "/ODMafterIteration" + i + ".csv");
 		}
 		
 		//assign ones more to get the latest RMSN
