@@ -1147,7 +1147,7 @@ public class RoadNetworkAssignmentTest {
 		ArrayList<Trip> tripList = rna.getTripList();
 		Frequency freq = new Frequency();
 		for (Trip trip: tripList) {
-			System.out.println(trip.toString());
+			//System.out.println(trip.toString());
 			freq.addValue(trip.getEngine());
 		}
 		
@@ -1219,14 +1219,14 @@ public class RoadNetworkAssignmentTest {
 		final String temproODMatrixFile = props.getProperty("temproODMatrixFile");
 		ODMatrix temproODM = new ODMatrix(temproODMatrixFile);
 		
-		temproODM.printMatrixFormatted("Tempro OD Matrix");
+		//temproODM.printMatrixFormatted("Tempro OD Matrix");
 		rna.assignPassengerFlowsTempro(temproODM, zoning, rsg);
-		rna.calculateDistanceSkimMatrixTempro().printMatrixFormatted();
+		rna.calculateDistanceSkimMatrixTempro();
 		
 		ODMatrix temproODM2 = ODMatrix.createUnitMatrix(temproODM.getSortedOrigins());
 		rna.resetTripStorages();
 		rna.assignPassengerFlowsTempro(temproODM2, zoning, rsg);
-		rna.calculateDistanceSkimMatrixTempro().printMatrixFormatted();
+		rna.calculateDistanceSkimMatrixTempro();
 		
 		rna.calculateLinkVolumePerVehicleType(rna.getTripList());
 		System.out.println(rna.calculateZonalVehicleKilometresPerVehicleTypeFromTemproTripList(false));
@@ -1235,13 +1235,13 @@ public class RoadNetworkAssignmentTest {
 		rna.resetTripStorages();
 		rna.resetLinkVolumes();
 		rna.assignPassengerFlowsRouteChoiceTempro(temproODM2, zoning, rsg, params);
-		rna.calculateDistanceSkimMatrixTempro().printMatrixFormatted();
+		rna.calculateDistanceSkimMatrixTempro();
 		
 		rsg.generateSingleNodeRoutes();
 		rna.resetTripStorages();
 		rna.resetLinkVolumes();
 		rna.assignPassengerFlowsRouteChoiceTemproDistanceBased(temproODM2, zoning, rsg, params);
-		rna.calculateDistanceSkimMatrixTempro().printMatrixFormatted();
+		rna.calculateDistanceSkimMatrixTempro();
 		
 		//TEST COUNTERS OF TRIP STARTS/ENDS
 		System.out.println("\n\n*** Testing LAD trip starts/ends for assignment with tempro route choice ***");
@@ -1461,6 +1461,9 @@ public class RoadNetworkAssignmentTest {
 		final String freightRoutesFile = props.getProperty("freightRoutesFile");
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, props);
 		rsg.readRoutesBinaryWithoutValidityCheck(freightRoutesFile);
+		
+		rsg.generateSingleNodeRoutes();
+		rsg.generateRouteSetForFreightMatrix(fm, 5);
 				
 		rna.assignFreightFlowsRouteChoice(fm, rsg, props);
 		
