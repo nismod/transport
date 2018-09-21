@@ -543,7 +543,7 @@ public class RouteSetGeneratorTest {
 		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforFreightCounts());
 		
 		//rna.saveAssignmentResults(2015, "testAssignmentResultsWithFreight.csv");
-	
+
 	}
 	
 	//@Test

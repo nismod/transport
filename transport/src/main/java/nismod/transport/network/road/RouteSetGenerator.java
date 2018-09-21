@@ -1328,6 +1328,7 @@ public class RouteSetGenerator{
 			data = new DataInputStream(buff);
 			
 			Route route = new Route(roadNetwork);
+			
 			while (true) { 
 				int edgeID = data.readInt();
 				if (edgeID != 0) { //keep adding edge to the route

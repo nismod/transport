@@ -568,7 +568,7 @@ public class Route {
 	@Override
 	public String toString() {
 
-		if (edges.isEmpty() && this.singleNode == null) return null;
+		if (edges.isEmpty() && this.singleNode == null) return "";
 
 		StringBuilder sb = new StringBuilder();
 
@@ -606,7 +606,7 @@ public class Route {
 	 */
 	public String getFormattedString() {
 		
-		if (edges.isEmpty() && this.singleNode == null) return null;
+		if (edges.isEmpty() && this.singleNode == null) return "";
 		
 		StringBuilder sb = new StringBuilder();
 		
@@ -631,7 +631,7 @@ public class Route {
 	 */
 	public String getFormattedStringEdgeIDsOnly() {
 		
-		if (edges.isEmpty() && this.singleNode == null) return null;
+		if (edges.isEmpty() && this.singleNode == null) return "";
 		
 		StringBuilder sb = new StringBuilder();
 		

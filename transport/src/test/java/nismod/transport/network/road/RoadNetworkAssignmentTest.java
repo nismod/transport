@@ -1303,7 +1303,8 @@ public class RoadNetworkAssignmentTest {
 
 		//create a road network
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
-
+		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
+		
 		final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
 		final String unitCO2EmissionsFile = props.getProperty("unitCO2EmissionsFile");
 		final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
@@ -1460,10 +1461,16 @@ public class RoadNetworkAssignmentTest {
 		//read freight routes
 		final String freightRoutesFile = props.getProperty("freightRoutesFile");
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, props);
+		
+		System.out.println(freightRoutesFile);
+		rsg.printStatistics();
+		
 		rsg.readRoutesBinaryWithoutValidityCheck(freightRoutesFile);
+		rsg.printStatistics();
 		
 		rsg.generateSingleNodeRoutes();
 		rsg.generateRouteSetForFreightMatrix(fm, 5);
+		rsg.printStatistics();
 				
 		rna.assignFreightFlowsRouteChoice(fm, rsg, props);
 		

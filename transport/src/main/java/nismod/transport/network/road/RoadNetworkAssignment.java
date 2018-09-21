@@ -2751,13 +2751,13 @@ public class RoadNetworkAssignment {
 			} else {
 				this.assignPassengerFlowsRouting(passengerODM, rsg);
 			}
-		} if (assignmentType.equals("tempro")) {
+		} else if (assignmentType.equals("tempro")) {
 			if (flagUseRouteChoiceModel) {
 				this.assignPassengerFlowsRouteChoiceTempro(passengerODM, zoning, rsg, params);
 			} else {
 				this.assignPassengerFlowsTempro(passengerODM, zoning, rsg);
 			}
-		} if (assignmentType.equals("combined")) {
+		} else if (assignmentType.equals("combined")) {
 			this.assignPassengerFlowsRouteChoiceTemproDistanceBased(passengerODM, zoning, rsg, params);
 			if (flagUseRouteChoiceModel) {
 				this.assignPassengerFlowsRouteChoiceTempro(passengerODM, zoning, rsg, params);
@@ -3726,6 +3726,8 @@ public class RoadNetworkAssignment {
 	 * @param outputFile Output file name (with path).
 	 */
 	public void saveHourlyCarVolumes(int year, String outputFile) {
+		
+		LOGGER.debug("Saving hourly car volumes.");
 
 		String NEW_LINE_SEPARATOR = "\n";
 		ArrayList<String> header = new ArrayList<String>();
@@ -3889,15 +3891,17 @@ public class RoadNetworkAssignment {
 	 */
 	public void saveZonalCarEnergyConsumptions(int year, final double originZoneEnergyWeight, String outputFile) {
 
+		LOGGER.debug("Saving zonal car energy consumptions.");
+		
 		//calculate energy consumptions
 		HashMap<EnergyType, HashMap<String, Double>> energyConsumptions = this.calculateZonalCarEnergyConsumptions(originZoneEnergyWeight);
 		Set<String> zones = energyConsumptions.get(EnergyType.ELECTRICITY).keySet();
-
+		
 		String NEW_LINE_SEPARATOR = "\n";
 		ArrayList<String> header = new ArrayList<String>();
 		header.add("year");
 		header.add("zone");
-		for (EngineType et: EngineType.values()) header.add(et.name());
+		for (EnergyType et: EnergyType.values()) header.add(et.name());
 
 		FileWriter fileWriter = null;
 		CSVPrinter csvFilePrinter = null;
@@ -3912,7 +3916,7 @@ public class RoadNetworkAssignment {
 				record.add(Integer.toString(year));
 				record.add(zone);
 				for (int i=2; i<header.size(); i++)	{
-					EngineType et = EngineType.valueOf(header.get(i));
+					EnergyType et = EnergyType.valueOf(header.get(i));
 					double consumption = energyConsumptions.get(et).get(zone);
 					record.add(String.format("%.2f", consumption));
 				}
@@ -3936,6 +3940,8 @@ public class RoadNetworkAssignment {
 	 * @param outputFile Output file name (with path).
 	 */
 	public void saveOriginDestinationCarElectricityConsumption(String outputFile) {
+		
+		LOGGER.debug("Saving OD matrix for car electricity consumption.");
 		
 		//calculate OD energy consumptions
 		HashMap<EnergyType, SkimMatrix> energyConsumptions = this.calculateODCarEnergyConsumptions();
@@ -4043,6 +4049,8 @@ public class RoadNetworkAssignment {
 	 */
 	public void savePeakLinkPointCapacities (int year, String outputFile) {
 
+		LOGGER.debug("Saving peak link point capacities.");
+		
 		//calculate capacities
 		HashMap<Integer, Double> capacities = this.calculatePeakLinkPointCapacities();
 
