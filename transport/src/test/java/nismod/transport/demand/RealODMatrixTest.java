@@ -187,14 +187,8 @@ public class RealODMatrixTest {
 		RealODMatrix tempro2 = RealODMatrix.createTEMProFromLadMatrix(ladMatrix, tempro, zoning);
 		tempro2.printMatrixFormatted("New tempro from LAD:", 2);
 		
-		//ODMatrix fullODM = new ODMatrix("./src/main/resources/data/csvfiles/balancedODMatrix.csv");
-		//fullODM.printMatrixFormatted("Full ODM:");
-		//ODMatrix subset = fullODM.getMatrixSubset(zones, zones);
-		//subset.printMatrixFormatted("Fast-track subset:");
-		//subset.saveMatrixFormatted("fastTrackODM.csv");
-		
 		RealODMatrix temproODM = new RealODMatrix("./src/test/resources/testdata/csvfiles/temproODM.csv");
-		temproODM.printMatrixFormatted("tempro", 2);
+		//temproODM.printMatrixFormatted("tempro", 2);
 		ladMatrix = RealODMatrix.createLadMatrixFromTEMProMatrix(temproODM, zoning);
 		ladMatrix.printMatrixFormatted("from tempro to LAD:", 2);
 

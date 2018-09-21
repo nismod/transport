@@ -261,12 +261,7 @@ public class SPSATest {
 		
 		//initial OD matrix
 		RealODMatrixTempro temproODMatrix = new RealODMatrixTempro(temproODMatrixFile, zoning);
-		//RealODMatrix odmatrix = optimiser.getThetaEstimate();
-		//odmatrix.setFlow("E06000045", "E06000045", 70269);
-		//odmatrix.setFlow("E06000045", "E06000045", 70000);
-		//odmatrix.setFlow("E06000045", "E06000045", 72930);
-		//temproODMatrix.scaleMatrixValue(0.5);
-		temproODMatrix.printMatrixFormatted("Initial passenger matrix:", 2);
+		//temproODMatrix.printMatrixFormatted("Initial passenger matrix:", 2);
 		
 		//double a = 10000;
 		double a = 1000;

@@ -109,13 +109,6 @@ public class ODMatrixTest {
 		
 		ODMatrix passengerODMatrix2 = new ODMatrix("./src/test/resources/testdata/csvfiles/passengerODM.csv");
 		passengerODMatrix2.printMatrixFormatted();
-//		System.out.println(passengerODMatrix2.getKeySet());
-//		for (MultiKey mk: passengerODMatrix2.getKeySet()) {
-//			System.out.println(mk);
-//			System.out.println("origin = " + mk.getKey(0));
-//			System.out.println("destination = " + mk.getKey(1));
-//			System.out.println("flow = " + passengerODMatrix2.getFlow((String)mk.getKey(0), (String)mk.getKey(1)));
-//		}
 		
 		condition = passengerODMatrix2.getFlow("E06000045", "E06000045") == 5000 &&
 					passengerODMatrix2.getFlow("E06000045", "E07000086") == 5500 &&
@@ -218,19 +211,10 @@ public class ODMatrixTest {
 		ODMatrix tempro2 = ODMatrix.createTEMProFromLadMatrix(ladMatrix, tempro, zoning);
 		tempro2.printMatrixFormatted("New tempro from LAD:");
 		
-		//ODMatrix fullODM = new ODMatrix("./src/main/resources/data/csvfiles/balancedODMatrix.csv");
-		//fullODM.printMatrixFormatted("Full ODM:");
-		//ODMatrix subset = fullODM.getMatrixSubset(zones, zones);
-		//subset.printMatrixFormatted("Fast-track subset:");
-		//subset.saveMatrixFormatted("fastTrackODM.csv");
-		
 		ODMatrix temproODM = new ODMatrix("./src/test/resources/testdata/csvfiles/temproODM.csv");
-		temproODM.printMatrixFormatted("tempro");
+		//temproODM.printMatrixFormatted("tempro");
 		ladMatrix = ODMatrix.createLadMatrixFromTEMProMatrix(temproODM, zoning);
 		ladMatrix.printMatrixFormatted("from tempro to LAD:");
-		//ladMatrix.saveMatrixFormatted("tempro2LAD.csv");
-		//ladMatrix.scaleMatrixValue(0.1);
-		//ladMatrix.saveMatrixFormatted("tempro2LADscaled.csv");
 		
 		assertEquals("Sum of flows of two matrices should be equal", temproODM.getSumOfFlows(), ladMatrix.getSumOfFlows());
 		

@@ -278,12 +278,12 @@ public class RoadDisruptionTest {
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, params);
 		//rsg.generateRouteSetWithRandomLinkEliminationRestricted(87, 46);
 		rsg.generateRouteSetForODMatrix(odm, 5);
-		rsg.printChoiceSets();
+		//rsg.printChoiceSets();
 		rsg.printStatistics();
 
 		//install road disruption
 		rd3.install(rsg);
-		rsg.printChoiceSets();
+		//rsg.printChoiceSets();
 		rsg.printStatistics();
 		System.out.println("Disrupted edges: " + rd3.getListOfDisruptedEdgesIDs());
 		System.out.println("Removed routes: ");
@@ -340,7 +340,7 @@ public class RoadDisruptionTest {
 		assertNull("There should be no traffic volume for the removed link", rna.getLinkVolumeInPCU().get(561));
 				
 		rd3.uninstall(rsg);
-		rsg.printChoiceSets();
+		//rsg.printChoiceSets();
 		rsg.printStatistics();
 	}
 }

@@ -141,7 +141,8 @@ public class CongestionChargingTest {
 		
 		//create a road network
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
-	
+		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
+		
 		Properties props2 = new Properties();
 		props2.setProperty("type", "congestionCharging");
 		props2.setProperty("startYear", "2016");
@@ -195,17 +196,18 @@ public class CongestionChargingTest {
 		assertTrue("Intervention should be installed", cg2.getState());
 		assertTrue("Intervention should be installed", cg3.getState());
 		
-		System.out.println("Congestion charges in 2015: ");
-		System.out.println(dm.getCongestionCharges(2015));
+		//System.out.println("Congestion charges in 2015: ");
+		//System.out.println(dm.getCongestionCharges(2015));
 		
-		System.out.println("Congestion charges in 2016: ");
-		System.out.println(dm.getCongestionCharges(2016));
+		//System.out.println("Congestion charges in 2016: ");
+		//System.out.println(dm.getCongestionCharges(2016));
 		
-		System.out.println("Congestion charges in 2025: ");
-		System.out.println(dm.getCongestionCharges(2025));
+		//System.out.println("Congestion charges in 2025: ");
+		//System.out.println(dm.getCongestionCharges(2025));
 		
 		cg3.uninstall(dm);
-		System.out.println("Congestion charges in 2016: ");
-		System.out.println(dm.getCongestionCharges(2016));
+		//System.out.println("Congestion charges in 2016: ");
+		//System.out.println(dm.getCongestionCharges(2016));
+		assertTrue("Intervention should be uninstalled", !cg3.getState());
 	}
 }
