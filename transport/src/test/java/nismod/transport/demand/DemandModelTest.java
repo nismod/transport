@@ -415,8 +415,11 @@ public class DemandModelTest {
 		HashMap<String, Integer> pop2015 = population.get(2015);
 		HashMap<String, Integer> pop2016 = population.get(2016);
 		
-		for (String originZone: odm2016.getSortedOrigins())
-			for (String destinationZone: odm2016.getSortedDestinations()) {
+		List<String> origins = odm2016.getSortedOrigins();
+		List<String> destinations = odm2016.getSortedDestinations();
+		
+		for (String originZone: origins)
+			for (String destinationZone: destinations) {
 				int flow2015 = odm2015.getFlow(originZone, destinationZone);
 				int flow2016 = odm2016.getFlow(originZone, destinationZone);
 				
@@ -431,8 +434,8 @@ public class DemandModelTest {
 				
 				//if the population has increased and costs have decreased, the flow should increase
 				if (po2016 > po2015 && pd2016 > pd2015 && time2016 < time2015 && cost2016 < cost2015) {
-					System.out.printf("Origin = %s destination = %s %n", originZone, destinationZone);
-					assertTrue("Flow should increase", flow2016 >= flow2015);
+					//System.out.printf("Origin = %s destination = %s %n", originZone, destinationZone);
+					//assertTrue("Flow should increase", flow2016 >= flow2015); //not possible to test as the demand model uses intermediate time and cost matrices, not the final 2016 one!
 				}
 			}
 		
