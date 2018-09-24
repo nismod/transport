@@ -1823,7 +1823,6 @@ public class RoadNetwork {
 	
 	/**
 	 * Maps the edges of the graph to the zone codes.
-	 * Some edges may remain unmapped to a zone, e.g. edges for which both nodes and the count point fall outside any polygon.
 	 * @param zonesFeatureCollection Feature collection with the zones.
 	 */
 	private void mapEdgesToZones(SimpleFeatureCollection zonesFeatureCollection) {
@@ -1881,6 +1880,37 @@ public class RoadNetwork {
 		} finally {
 			//feature iterator is a live connection that must be closed
 			iter.close();
+		}
+		
+		//Some edges may still remain unmapped to a zone, e.g. edges for which count point falls outside any polygon (such as river).
+		//Iterate again over edges to find unmapped ones and map them using heuristic rules.
+		for (Object o: this.network.getEdges()) {
+			Edge edge = (Edge) o;
+			//if edge is unmapped
+			if (!this.edgeToZone.containsKey(edge.getID())) {
+				SimpleFeature sf = (SimpleFeature) edge.getObject();
+				String roadNumber = (String) sf.getAttribute("RoadNumber");
+				if (roadNumber.charAt(0) == 'A' || roadNumber.charAt(0) == 'M') { //if a road and not a ferry
+					String zone1 = this.nodeToZone.get(edge.getNodeA().getID());
+					if (zone1 != null) { //assign to the zone of nodeA
+						this.edgeToZone.put(edge.getID(), zone1);
+						LOGGER.debug("Assigning edge {} to zone {} of node {}.", edge.getID(), zone1, edge.getNodeA());
+					} else { //assign to the zone of the related edge
+						DirectedNode nodeA = (DirectedNode)edge.getNodeA();
+						Integer otherEdgeID = this.edgeIDtoOtherDirectionEdgeID.get(edge.getID());
+						List<Edge> inEdges = nodeA.getInEdges();
+						Integer relatedEdgeID = null;
+						for (Edge e: inEdges)
+							if (e.getID() != otherEdgeID) {
+								relatedEdgeID = e.getID();
+								break;
+							}
+						String zone = this.edgeToZone.get(relatedEdgeID);
+						this.edgeToZone.put(edge.getID(), zone);
+						LOGGER.debug("Assigning edge {} to zone {} of related edge {}", edge.getID(), zone, relatedEdgeID);
+					}
+				}
+			}
 		}
 	}
 	
