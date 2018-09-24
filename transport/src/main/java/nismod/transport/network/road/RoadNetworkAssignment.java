@@ -3624,8 +3624,8 @@ public class RoadNetworkAssignment {
 				SimpleFeature feature = (SimpleFeature)edge.getObject();
 				String roadNumber = (String) feature.getAttribute("RoadNumber");
 				record.add(roadNumber);
-				record.add(Double.toString(this.roadNetwork.getFreeFlowTravelTime().get(edge.getID())));
-				record.add(Double.toString(this.linkTravelTimePerTimeOfDay.get(TimeOfDay.EIGHTAM).get(edge.getID())));
+				record.add(String.format("%.4f", this.roadNetwork.getFreeFlowTravelTime().get(edge.getID())));
+				record.add(String.format("%.4f", this.linkTravelTimePerTimeOfDay.get(TimeOfDay.EIGHTAM).get(edge.getID())));
 				Integer linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edge.getID());
 				if (linkVolume == null) record.add(Integer.toString(0));
 				else 					record.add(Integer.toString(linkVolume));
@@ -3653,26 +3653,26 @@ public class RoadNetworkAssignment {
 				Double linkVolumePCU = this.linkVolumesInPCU.get(edge.getID());
 				if (linkVolumePCU == null) record.add(Double.toString(0.0));
 				else					   record.add(Double.toString(linkVolumePCU));
-				record.add(Double.toString(capacities.get(edge.getID())));
-				record.add(Double.toString(densities.get(edge.getID())));
+				record.add(String.format("%.2f", capacities.get(edge.getID())));
+				record.add(String.format("%.2f", densities.get(edge.getID())));
 				//get max capacity from road type
 				if (roadNumber.charAt(0) == 'M') { //motorway
 					record.add(Integer.toString(maximumCapacityMRoad));
 					double utilisation = capacities.get(edge.getID()) / maximumCapacityMRoad;
-					record.add(Double.toString(utilisation));
+					record.add(String.format("%.4f", utilisation));
 					double averageUtilisation = averageCapacities.get(edge.getID()) / maximumCapacityMRoad;
-					record.add(Double.toString(averageUtilisation));
+					record.add(String.format("%.4f", averageUtilisation));
 					double maximumUtilisation = maximumCapacities.get(edge.getID()) / maximumCapacityMRoad;
-					record.add(Double.toString(maximumUtilisation));
+					record.add(String.format("%.4f", maximumUtilisation));
 				}	
 				else if (roadNumber.charAt(0) == 'A') { //A road
 					record.add(Integer.toString(maximumCapacityARoad));
 					double utilisation = capacities.get(edge.getID()) / maximumCapacityARoad;
-					record.add(Double.toString(utilisation));
+					record.add(String.format("%.4f", utilisation));
 					double averageUtilisation = averageCapacities.get(edge.getID()) / maximumCapacityARoad;
-					record.add(Double.toString(averageUtilisation));
+					record.add(String.format("%.4f", averageUtilisation));
 					double maximumUtilisation = maximumCapacities.get(edge.getID()) / maximumCapacityARoad;
-					record.add(Double.toString(maximumUtilisation));
+					record.add(String.format("%.4f", maximumUtilisation));
 				}
 				else { //ferry
 					record.add("N/A");
@@ -4122,7 +4122,7 @@ public class RoadNetworkAssignment {
 				record.add(Integer.toString(edge.getID()));
 				record.add(Double.toString(this.roadNetwork.getFreeFlowTravelTime().get(edge.getID())));
 				for (TimeOfDay hour: TimeOfDay.values())
-					record.add(Double.toString(this.linkTravelTimePerTimeOfDay.get(hour).get(edge.getID())));
+					record.add(String.format("%.4f", this.linkTravelTimePerTimeOfDay.get(hour).get(edge.getID())));
 				csvFilePrinter.printRecord(record);
 			}
 		} catch (Exception e) {

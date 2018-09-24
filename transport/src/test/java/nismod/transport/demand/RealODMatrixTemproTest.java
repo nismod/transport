@@ -78,9 +78,13 @@ public class RealODMatrixTemproTest {
 		RealODMatrixTempro temproODM = new RealODMatrixTempro(temproODMatrixFile, zoning);
 		//temproODM.deleteInterzonalFlows("E02006781");
 
-		RealODMatrix ladODM = RealODMatrixTempro.createLadMatrixFromTEMProMatrix(temproODM, zoning);
-		ladODM.printMatrixFormatted("LAD matrix:", 2);
-		ladODM.saveMatrixFormatted("ladFromTemproODM.csv");
+		//RealODMatrix ladODM = RealODMatrixTempro.createLadMatrixFromTEMProMatrix(temproODM, zoning);
+		//ladODM.printMatrixFormatted("LAD matrix:", 2);
+		//ladODM.saveMatrixFormatted("ladFromTemproODM.csv");
+		
+		temproODM.saveMatrixFormatted2("temproMatrixListBased.csv");
+		temproODM.saveMatrixFormatted3("temproMatrixListBased2.csv");
+		
 	}
 	
 	@BeforeClass
@@ -212,9 +216,16 @@ public class RealODMatrixTemproTest {
 		
 		unit1.deleteInterzonalFlows("E02004800");
 		//unit1.printMatrixFormatted(2);
-		unit1.saveMatrixFormatted("./temp/unitTempro.csv");
 		assertEquals("Total flows after interzonal deletion should be as expected", numberOfZones*numberOfZones - 2*(numberOfZones-1), unit1.getSumOfFlows(), DELTA);
-			
+
+		unit1.saveMatrixFormatted("./temp/unitTempro.csv");
+		unit1.saveMatrixFormatted2("./temp/unitTempro2.csv");
+		unit1.saveMatrixFormatted3("./temp/unitTempro3.csv");
+		
+		RealODMatrixTempro unit1a = new RealODMatrixTempro("./temp/unitTempro.csv", zoning);
+		RealODMatrixTempro unit1b = new RealODMatrixTempro("./temp/unitTempro2.csv", zoning);
+		assertEquals("Total flows should be the same for two formats", 	unit1a.getTotalIntFlow(), unit1b.getTotalIntFlow());
+	
 		RealODMatrixTempro unit2 = RealODMatrixTempro.createUnitMatrix(origins, zoning);
 		assertEquals("Total flows for unit matrix should be as expected", 1.0, unit2.getSumOfFlows(), DELTA);
 

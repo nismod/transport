@@ -63,12 +63,7 @@ public class RoadNetworkAssignmentTest {
 		final URL AADFurl = new URL(props.getProperty("AADFurl"));
 
 		final String baseYearODMatrixFile = props.getProperty("baseYearODMatrixFile");
-		final String freightMatrixFile = props.getProperty("baseYearFreightMatrixFile");
-		
 		final String passengerRoutesFile = props.getProperty("passengerRoutesFile");
-		final String freightRoutesFile = props.getProperty("freightRoutesFile");
-		final String temproRoutesFile = props.getProperty("temproRoutesFile");
-			
 		final String outputFolder = props.getProperty("outputFolder");
 		
 		//create output directory
@@ -545,7 +540,7 @@ public class RoadNetworkAssignmentTest {
 		Map<TimeOfDay, Map<Integer, Double>> linkTravelTimes = rna.getLinkTravelTimes();
 		
 		//compare them
-		final double PRECISION = 1e-6;
+		final double PRECISION = 1e-4;
 		for (TimeOfDay hour: linkTravelTimes.keySet()) {
 			Map<Integer, Double> linkTimes = linkTravelTimes.get(hour);
 			Map<Integer, Double> loadedLinkTimes = loadedLinkTravelTimes.get(hour);

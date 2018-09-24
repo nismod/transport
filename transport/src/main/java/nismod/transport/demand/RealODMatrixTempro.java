@@ -46,7 +46,7 @@ public class RealODMatrixTempro implements AssignableODMatrix {
 	}
 	
 	/**
-	 * Constructor that reads OD matrix from an input csv file.
+	 * Constructor that reads OD matrix from an input csv file. Can use both matrix and list format.
 	 * @param fileName Path to the input file.
 	 * @throws FileNotFoundException if any.
 	 * @throws IOException if any.
@@ -62,16 +62,26 @@ public class RealODMatrixTempro implements AssignableODMatrix {
 		CSVParser parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
 		//System.out.println(parser.getHeaderMap().toString());
 		Set<String> keySet = parser.getHeaderMap().keySet();
-		keySet.remove("origin");
-		//System.out.println("keySet = " + keySet);
-		double flow;
-		for (CSVRecord record : parser) { 
-			//System.out.println(record);
-			//System.out.println("Origin zone = " + record.get(0));
-			for (String destination: keySet) {
-				//System.out.println("Destination zone = " + destination);
-				flow = Double.parseDouble(record.get(destination));
-				this.setFlow(record.get(0), destination, flow);			
+
+		if (keySet.contains("origin") &&  keySet.contains("destination") && keySet.contains("flow")) { //use list format
+			for (CSVRecord record : parser) { 
+					String origin = record.get(0);
+					String destination = record.get(1);
+					double flow = Double.parseDouble(record.get(2));
+					this.setFlow(origin, destination, flow);
+			}
+		} else { //use matrix format
+			keySet.remove("origin");
+			//System.out.println("keySet = " + keySet);
+			double flow;
+			for (CSVRecord record : parser) { 
+				//System.out.println(record);
+				//System.out.println("Origin zone = " + record.get(0));
+				for (String destination: keySet) {
+					//System.out.println("Destination zone = " + destination);
+					flow = Double.parseDouble(record.get(destination));
+					this.setFlow(record.get(0), destination, flow);			
+				}
 			}
 		}
 		parser.close();
@@ -122,6 +132,28 @@ public class RealODMatrixTempro implements AssignableODMatrix {
 		
 		int i = this.zoning.getZoneCodeToIDMap().get(originZone) - 1;
 		int j = this.zoning.getZoneCodeToIDMap().get(destinationZone) - 1;
+
+		matrix[i][j] = flow;
+	}
+	
+	/**
+	 * Sets the flow for a given origin-destination pair.
+	 * @param originCode Origin zone integer code.
+	 * @param destinationCode Destination zone integer code.
+	 * @param flow Origin-destination flow.
+	 */
+	public void setFlow(int originCode, int destinationCode, double flow) {
+	
+		/*
+		if (flow > 0.0)		matrix.put(originZone, destinationZone, flow);
+		//do not store zero flows into the matrix (skip zero flow or remove if already exists)
+		else // flow == 0 
+			if (this.getFlow(originZone, destinationZone) > 0.0)
+				matrix.removeMultiKey(originZone, destinationZone);
+		*/
+		
+		int i = originCode - 1;
+		int j = destinationCode - 1;
 
 		matrix[i][j] = flow;
 	}
@@ -588,7 +620,7 @@ public class RealODMatrixTempro implements AssignableODMatrix {
 	}
 	
 	/**
-	 * Saves the matrix into a csv file.
+	 * Saves the matrix into a csv file. Uses a rectangular/matrix format.
 	 * @param outputFile Path to the output file.
 	 */
 	public void saveMatrixFormatted(String outputFile) {
@@ -617,6 +649,106 @@ public class RealODMatrixTempro implements AssignableODMatrix {
 				for (String destination: secondKeyList) record.add(String.format("%d", (int) Math.round(this.getFlow(origin, destination))));
 				csvFilePrinter.printRecord(record);
 			}
+		} catch (Exception e) {
+			LOGGER.error(e);
+		} finally {
+			try {
+				fileWriter.flush();
+				fileWriter.close();
+				csvFilePrinter.close();
+			} catch (IOException e) {
+				LOGGER.error(e);
+			}
+		}
+		
+		LOGGER.debug("OD matrix saved to a csv file.");
+	}
+	
+	/**
+	 * Saves the matrix into a csv file. Uses a list format (origin, destination, flow).
+	 * @param outputFile Path to the output file.
+	 */
+	public void saveMatrixFormatted2(String outputFile) {
+		
+		LOGGER.info("Saving OD matrix to a csv file...");
+		
+		List<String> firstKeyList = this.getSortedOrigins();
+		List<String> secondKeyList = this.getSortedDestinations();
+	
+		String NEW_LINE_SEPARATOR = "\n";
+		ArrayList<String> header = new ArrayList<String>();
+		header.add("origin");
+		header.add("destination");
+		header.add("flow");
+		FileWriter fileWriter = null;
+		CSVPrinter csvFilePrinter = null;
+		CSVFormat csvFileFormat = CSVFormat.DEFAULT.withRecordSeparator(NEW_LINE_SEPARATOR);
+		try {
+			fileWriter = new FileWriter(outputFile);
+			csvFilePrinter = new CSVPrinter(fileWriter, csvFileFormat);
+			csvFilePrinter.printRecord(header);
+			ArrayList<String> record = new ArrayList<String>();
+			for (String origin: firstKeyList)
+				for (String destination: secondKeyList) {
+					double flow = this.getFlow(origin, destination);
+					if (flow > 0) {
+						record.clear();
+						record.add(origin);
+						record.add(destination);
+						record.add(String.format("%d", (int) Math.round(flow)));
+						csvFilePrinter.printRecord(record);
+					}
+				}
+		} catch (Exception e) {
+			LOGGER.error(e);
+		} finally {
+			try {
+				fileWriter.flush();
+				fileWriter.close();
+				csvFilePrinter.close();
+			} catch (IOException e) {
+				LOGGER.error(e);
+			}
+		}
+		
+		LOGGER.debug("OD matrix saved to a csv file.");
+	}
+	
+	/**
+	 * Saves the matrix into a csv file. Uses a list format (origin, destination, flow) and number codes for zones.
+	 * @param outputFile Path to the output file.
+	 */
+	public void saveMatrixFormatted3(String outputFile) {
+		
+		LOGGER.info("Saving OD matrix to a csv file...");
+		
+		List<String> firstKeyList = this.getSortedOrigins();
+		List<String> secondKeyList = this.getSortedDestinations();
+	
+		String NEW_LINE_SEPARATOR = "\n";
+		ArrayList<String> header = new ArrayList<String>();
+		header.add("origin");
+		header.add("destination");
+		header.add("flow");
+		FileWriter fileWriter = null;
+		CSVPrinter csvFilePrinter = null;
+		CSVFormat csvFileFormat = CSVFormat.DEFAULT.withRecordSeparator(NEW_LINE_SEPARATOR);
+		try {
+			fileWriter = new FileWriter(outputFile);
+			csvFilePrinter = new CSVPrinter(fileWriter, csvFileFormat);
+			csvFilePrinter.printRecord(header);
+			ArrayList<String> record = new ArrayList<String>();
+			for (String origin: firstKeyList)
+				for (String destination: secondKeyList) {
+					double flow = this.getFlow(origin, destination);
+					if (flow > 0) {
+						record.clear();
+						record.add(String.valueOf(this.zoning.getZoneCodeToIDMap().get(origin)));
+						record.add(String.valueOf(this.zoning.getZoneCodeToIDMap().get(destination)));
+						record.add(String.format("%d", (int) Math.round(flow)));
+						csvFilePrinter.printRecord(record);
+					}
+				}
 		} catch (Exception e) {
 			LOGGER.error(e);
 		} finally {
