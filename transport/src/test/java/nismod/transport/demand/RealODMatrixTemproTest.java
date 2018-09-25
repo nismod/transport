@@ -103,7 +103,7 @@ public class RealODMatrixTemproTest {
 	@Test
 	public void minitest() throws FileNotFoundException, IOException {
 		
-		final String configFile = "./src/test/config/minitestConfig.properties";
+		final String configFile = "./src/test/config/miniTestConfig.properties";
 		Properties props = ConfigReader.getProperties(configFile);
 		
 		final String areaCodeFileName = props.getProperty("areaCodeFileName");
@@ -126,9 +126,6 @@ public class RealODMatrixTemproTest {
 		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
 		
 		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
-		
-		//E06000045 (E02003552, E02003553)
-		//E07000091  (E02004801, E02004800)
 		
 		RealODMatrixTempro tempro = new RealODMatrixTempro(zoning);
 		tempro.setFlow("E02003565", "E02003568", 1.0);
