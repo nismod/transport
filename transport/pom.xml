@@ -245,9 +245,7 @@
 		    	<configuration>
 		        	<argLine>${surefireArgLine}</argLine>
 		        	<skipTests>${skip.unit.tests}</skipTests>
-				    <forkCount>3</forkCount>
-    				<reuseForks>true</reuseForks>
-    				<argLine>-Xmx4g -XX:MaxPermSize=256m</argLine>
+	   				<argLine>-Xmx4g -XX:MaxPermSize=256m</argLine>
   		    	</configuration>
 			</plugin>
 		</plugins>
