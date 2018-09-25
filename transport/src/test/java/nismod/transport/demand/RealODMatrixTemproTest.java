@@ -101,6 +101,146 @@ public class RealODMatrixTemproTest {
 	}
 	
 	@Test
+	public void minitest() throws FileNotFoundException, IOException {
+		
+		final String configFile = "./src/test/config/minitestConfig.properties";
+		Properties props = ConfigReader.getProperties(configFile);
+		
+		final String areaCodeFileName = props.getProperty("areaCodeFileName");
+		final String areaCodeNearestNodeFile = props.getProperty("areaCodeNearestNodeFile");
+		final String workplaceZoneFileName = props.getProperty("workplaceZoneFileName");
+		final String workplaceZoneNearestNodeFile = props.getProperty("workplaceZoneNearestNodeFile");
+		final String freightZoneToLADfile = props.getProperty("freightZoneToLADfile");
+		final String freightZoneNearestNodeFile = props.getProperty("freightZoneNearestNodeFile");
+
+		final URL zonesUrl = new URL(props.getProperty("zonesUrl"));
+		final URL networkUrl = new URL(props.getProperty("networkUrl"));
+		final URL networkUrlFixedEdgeIDs = new URL(props.getProperty("networkUrlFixedEdgeIDs"));
+		final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
+		final URL AADFurl = new URL(props.getProperty("AADFurl"));
+
+		//create a road network
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
+		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
+		
+		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
+		
+		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
+		
+		//E06000045 (E02003552, E02003553)
+		//E07000091  (E02004801, E02004800)
+		
+		RealODMatrixTempro tempro = new RealODMatrixTempro(zoning);
+		tempro.setFlow("E02003565", "E02003568", 1.0);
+		tempro.setFlow("E02003565", "E02003569", 2.0);
+		tempro.setFlow("E02003566", "E02003568", 3.0);
+		tempro.setFlow("E02003566", "E02003569", 4.0);
+		//tempro.printMatrixFormatted("Tempro matrix:", 2);
+		
+		RealODMatrix real = new RealODMatrix();
+		real.setFlow("E06000045", "E06000045", 10.0);
+		real.printMatrixFormatted("LAD matrix", 2);
+		
+		RealODMatrix ladMatrix = RealODMatrixTempro.createLadMatrixFromTEMProMatrix(tempro, zoning);
+		ladMatrix.printMatrixFormatted("Lad matrix:", 2);
+		
+		RealODMatrixTempro tempro2 = RealODMatrixTempro.createTEMProFromLadMatrix(ladMatrix, tempro, zoning);
+		//tempro2.printMatrixFormatted("Tempro matrix 2",  2);
+		
+		final double DELTA = 0.00001;
+		assertEquals("Absolute difference between equal matrices should be zero", 0.0, tempro.getAbsoluteDifference(tempro2), DELTA);
+
+		HashMap<String, Integer> tripEnds = tempro.calculateTripEnds();
+		HashMap<String, Integer> tripStarts = tempro.calculateTripStarts();
+		int sumTripEnds = 0, sumTripStarts = 0;
+		for (int num: tripEnds.values()) sumTripEnds += num;
+		for (int num: tripStarts.values()) sumTripStarts += num;
+		assertEquals("Sum of trips ends and trip starts is equal", sumTripEnds, sumTripStarts);
+				
+		RealODMatrixTempro tempro3 = tempro.clone();
+		assertEquals("Absolute difference between equal matrices should be zero", 0.0, tempro.getAbsoluteDifference(tempro3), DELTA);
+		
+		tempro.setFlow("E02003565", "E02003568", 1.1);
+		tempro.setFlow("E02003565", "E02003569", 2.4);
+		tempro.setFlow("E02003566", "E02003568", 3.5);
+		tempro.setFlow("E02003566", "E02003569", 4.9);
+		
+		tempro.ceilMatrixValues(); //2, 3, 4, 5
+		assertEquals("Cell value is correct", 2, tempro.getFlow("E02003565", "E02003568"), DELTA);
+		assertEquals("Cell value is correct", 3, tempro.getFlow("E02003565", "E02003569"), DELTA);
+		assertEquals("Cell value is correct", 4, tempro.getFlow("E02003566", "E02003568"), DELTA);
+		assertEquals("Cell value is correct", 5, tempro.getFlow("E02003566", "E02003569"), DELTA);
+		
+		tempro.setFlow("E02003565", "E02003568", 1.1);
+		tempro.setFlow("E02003565", "E02003569", 2.4);
+		tempro.setFlow("E02003566", "E02003568", 3.5);
+		tempro.setFlow("E02003566", "E02003569", 4.9);
+		
+		tempro.floorMatrixValues(); //1, 2, 3, 4
+		assertEquals("Cell value is correct", 1, tempro.getFlow("E02003565", "E02003568"), DELTA);
+		assertEquals("Cell value is correct", 2, tempro.getFlow("E02003565", "E02003569"), DELTA);
+		assertEquals("Cell value is correct", 3, tempro.getFlow("E02003566", "E02003568"), DELTA);
+		assertEquals("Cell value is correct", 4, tempro.getFlow("E02003566", "E02003569"), DELTA);
+		
+		tempro.setFlow("E02003565", "E02003568", 1.1);
+		tempro.setFlow("E02003565", "E02003569", 2.4);
+		tempro.setFlow("E02003566", "E02003568", 3.5);
+		tempro.setFlow("E02003566", "E02003569", 4.9);
+		
+		tempro.roundMatrixValues(); //1, 2, 4, 5
+		assertEquals("Cell value is correct", 1, tempro.getFlow("E02003565", "E02003568"), DELTA);
+		assertEquals("Cell value is correct", 2, tempro.getFlow("E02003565", "E02003569"), DELTA);
+		assertEquals("Cell value is correct", 4, tempro.getFlow("E02003566", "E02003568"), DELTA);
+		assertEquals("Cell value is correct", 5, tempro.getFlow("E02003566", "E02003569"), DELTA);
+		
+		assertEquals("After rounding should be the same", tempro.getFlow("E02003565", "E02003568"), tempro.getIntFlow("E02003565", "E02003568"), DELTA);
+		assertEquals("After rounding total flows should be the same", tempro.getTotalIntFlow(), tempro.getSumOfFlows(), DELTA);
+
+		double before = tempro.getTotalIntFlow();
+		tempro.scaleMatrixValue(2.0);
+		assertEquals("After scaling total flows should be as expected", before * 2.0, tempro.getTotalIntFlow(), DELTA);
+		
+		tempro.scaleMatrixValue(tempro);
+
+		ArrayList<String> origins, destinations;
+		origins = new ArrayList<String>();
+		origins.add("E02003565");
+		destinations = new ArrayList<String>();
+		destinations.add("E02003568");
+		destinations.add("E02003569");
+		
+		tempro.sumMatrixSubset(origins, destinations);
+		
+		int numberOfZones = zoning.getZoneIDToCodeMap().keySet().size();
+		System.out.println("Number of zones = " + zoning.getZoneIDToCodeMap().keySet().size());
+		
+		//unit matrix
+		tempro = RealODMatrixTempro.createUnitMatrix(zoning);
+		assertEquals("Total flows for unit matrix should be as expected", numberOfZones*numberOfZones, tempro.getSumOfFlows(), DELTA);
+		
+		tempro.deleteInterzonalFlows("E02003565");
+		//unit1.printMatrixFormatted(2);
+		assertEquals("Total flows after interzonal deletion should be as expected", numberOfZones*numberOfZones - 2*(numberOfZones-1), tempro.getSumOfFlows(), DELTA);
+
+		tempro.saveMatrixFormatted("./temp/unitTempro.csv");
+		tempro.saveMatrixFormatted2("./temp/unitTempro2.csv");
+		tempro.saveMatrixFormatted3("./temp/unitTempro3.csv");
+		
+		tempro = new RealODMatrixTempro("./temp/unitTempro.csv", zoning);
+		int flow1 = tempro.getTotalIntFlow();
+		
+		tempro = new RealODMatrixTempro("./temp/unitTempro2.csv", zoning);
+		int flow2 = tempro.getTotalIntFlow();
+		assertEquals("Total flows should be the same for two formats", 	flow1, flow2);
+	
+		tempro = RealODMatrixTempro.createUnitMatrix(origins, zoning);
+		assertEquals("Total flows for unit matrix should be as expected", 1.0, tempro.getSumOfFlows(), DELTA);
+
+		tempro = RealODMatrixTempro.createUnitMatrix(origins, destinations, zoning);
+		assertEquals("Total flows for unit matrix should be as expected", 2.0, tempro.getSumOfFlows(), DELTA);
+	}
+	
+	//@Test
 	public void test() throws FileNotFoundException, IOException {
 		
 		final String configFile = "./src/test/config/testConfig.properties";
@@ -211,25 +351,28 @@ public class RealODMatrixTemproTest {
 		
 		int numberOfZones = zoning.getZoneIDToCodeMap().keySet().size();
 		System.out.println("Number of zones = " + zoning.getZoneIDToCodeMap().keySet().size());
-		RealODMatrixTempro unit1 = RealODMatrixTempro.createUnitMatrix(zoning);
-		assertEquals("Total flows for unit matrix should be as expected", numberOfZones*numberOfZones, unit1.getSumOfFlows(), DELTA);
+		RealODMatrixTempro unit = RealODMatrixTempro.createUnitMatrix(zoning);
+		assertEquals("Total flows for unit matrix should be as expected", numberOfZones*numberOfZones, unit.getSumOfFlows(), DELTA);
 		
-		unit1.deleteInterzonalFlows("E02004800");
+		unit.deleteInterzonalFlows("E02004800");
 		//unit1.printMatrixFormatted(2);
-		assertEquals("Total flows after interzonal deletion should be as expected", numberOfZones*numberOfZones - 2*(numberOfZones-1), unit1.getSumOfFlows(), DELTA);
+		assertEquals("Total flows after interzonal deletion should be as expected", numberOfZones*numberOfZones - 2*(numberOfZones-1), unit.getSumOfFlows(), DELTA);
 
-		unit1.saveMatrixFormatted("./temp/unitTempro.csv");
-		unit1.saveMatrixFormatted2("./temp/unitTempro2.csv");
-		unit1.saveMatrixFormatted3("./temp/unitTempro3.csv");
+		unit.saveMatrixFormatted("./temp/unitTempro.csv");
+		unit.saveMatrixFormatted2("./temp/unitTempro2.csv");
+		unit.saveMatrixFormatted3("./temp/unitTempro3.csv");
 		
-		RealODMatrixTempro unit1a = new RealODMatrixTempro("./temp/unitTempro.csv", zoning);
-		RealODMatrixTempro unit1b = new RealODMatrixTempro("./temp/unitTempro2.csv", zoning);
-		assertEquals("Total flows should be the same for two formats", 	unit1a.getTotalIntFlow(), unit1b.getTotalIntFlow());
+		unit = new RealODMatrixTempro("./temp/unitTempro.csv", zoning);
+		int flow1 = unit.getTotalIntFlow();
+		
+		unit = new RealODMatrixTempro("./temp/unitTempro2.csv", zoning);
+		int flow2 = unit.getTotalIntFlow();
+		assertEquals("Total flows should be the same for two formats", 	flow1, flow2);
 	
-		RealODMatrixTempro unit2 = RealODMatrixTempro.createUnitMatrix(origins, zoning);
-		assertEquals("Total flows for unit matrix should be as expected", 1.0, unit2.getSumOfFlows(), DELTA);
+		unit = RealODMatrixTempro.createUnitMatrix(origins, zoning);
+		assertEquals("Total flows for unit matrix should be as expected", 1.0, unit.getSumOfFlows(), DELTA);
 
-		RealODMatrixTempro unit3 = RealODMatrixTempro.createUnitMatrix(origins, destinations, zoning);
-		assertEquals("Total flows for unit matrix should be as expected", 2.0, unit3.getSumOfFlows(), DELTA);
+		unit = RealODMatrixTempro.createUnitMatrix(origins, destinations, zoning);
+		assertEquals("Total flows for unit matrix should be as expected", 2.0, unit.getSumOfFlows(), DELTA);
 	}
 }
