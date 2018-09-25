@@ -4,6 +4,7 @@ jdk:
 before_script:
  - "echo $JAVA_OPTS"
  - "export JAVA_OPTS=-Xmx4g"
+ - "export _JAVA_OPTIONS=-Xmx4g"
 script: 
   - cd transport
   - mvn test
