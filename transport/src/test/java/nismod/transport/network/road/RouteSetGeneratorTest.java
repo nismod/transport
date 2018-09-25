@@ -212,7 +212,9 @@ public class RouteSetGeneratorTest {
 		//routes.printChoiceSets();
 		routes.printStatistics();
 		
-		//generate all route sets
+		routes.clearRoutes();
+		routes.generateRouteSetForODMatrix(passengerODM, 1, 3);
+		routes.printStatistics();
 		routes.clearRoutes();
 		
 		//has to be sorted!
@@ -338,6 +340,24 @@ public class RouteSetGeneratorTest {
 		rsg2.clearRoutes();
 		rsg2.generateRouteSetForODMatrixTemproDistanceBased(tempro, zoning, 1, 1);
 		rsg2.printStatistics();
+		
+		final String passengerRoutesFile = props.getProperty("passengerRoutesFile");
+		rsg.clearRoutes();
+		rsg.readRoutesBinaryWithoutValidityCheck(passengerRoutesFile);
+		rsg.printStatistics();
+		
+		rsg.saveRoutesBinaryGZIPped("./temp/passengerRoutes.dat.gz", false);
+		
+		rsg2.clearRoutes();
+		rsg2.readRoutesBinaryGZIPpedWithoutValidityCheck("./temp/passengerRoutes.dat.gz");
+		rsg2.printStatistics();
+		
+		ns1 = rsg.getNumberOfRouteSets();
+		nr1 = rsg.getNumberOfRoutes();
+		ns2 = rsg2.getNumberOfRouteSets();
+		nr2 = rsg2.getNumberOfRoutes();
+		assertEquals("Number of route sets is the same", ns1, ns2);
+		assertEquals("Number of route is the same", nr1, nr2);
 	}
 
 	@Test
@@ -521,12 +541,9 @@ public class RouteSetGeneratorTest {
 		rsg.printStatistics();
 		int totalRouteSetsFromSlices = rsg.getNumberOfRouteSets();
 		int totalRoutesFromSlices = rsg.getNumberOfRoutes();
-		
-				
+					
 		System.out.printf("%d route sets, %d routes \n", totalRouteSets, totalRoutes);
 		System.out.printf("%d route sets from slices, %d routes from slices \n", totalRouteSetsFromSlices, totalRoutesFromSlices);
-		
-		//rsg.printChoiceSets();
 		
 		assertEquals("The number of route sets generated across freight matrix slices is equal to the total number of route sets", totalRouteSets, totalRouteSetsFromSlices);
 		
@@ -544,6 +561,14 @@ public class RouteSetGeneratorTest {
 		
 		//rna.saveAssignmentResults(2015, "testAssignmentResultsWithFreight.csv");
 
+		rsg.clearRoutes();
+		rsg.generateRouteSetForFreightMatrix(fm, 1, 3);
+		rsg.printStatistics();
+		rsg.clearRoutes();
+		rsg.generateRouteSetBetweenFreightZones(854, 855);
+		rsg.printStatistics();
+		rsg.generateRouteSetBetweenFreightZones(854, 855, 1);
+		rsg.printStatistics();
 	}
 	
 	//@Test

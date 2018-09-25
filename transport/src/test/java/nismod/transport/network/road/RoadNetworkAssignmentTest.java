@@ -996,10 +996,12 @@ public class RoadNetworkAssignmentTest {
 		System.out.printf("Percentage of edges with invalid flows (GEH >= 10.0) is: %.0f%% %n", (double) invalidFlows / GEH.size() * 100);
 		
 		rna.printGEHstatistic();
+		rna.printHourlyGEHstatistic();
 		
 		//various differences between volumes and counts
 		rna.calculateDifferenceCarCounts();
 		rna.calculateAbsDifferenceCarCounts();
+		rna.calculateDirectionAveragedAbsoluteDifferenceCarCounts();
 		rna.calculateMADforExpandedSimulatedVolumes(1.0);
 		rna.calculateGEHStatisticPerTimeOfDay(TimeOfDay.EIGHTAM);
 		

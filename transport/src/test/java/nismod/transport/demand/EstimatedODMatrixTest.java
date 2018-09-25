@@ -206,14 +206,15 @@ public class EstimatedODMatrixTest {
 			System.out.println("TLD after update = " + Arrays.toString(odmpa.getTripLengthDistribution()));
 
 			odmpa.scaleToObservedTripLenghtDistribution();
-			
 			odmpa.roundMatrixValues();
 			
 			odmpa.updateTripLengthDistribution();
 			System.out.println("TLD after scaling to OTLD = " + Arrays.toString(odmpa.getTripLengthDistribution()));
 			odmpa.printMatrixFormatted(2);
 		}
-/*
+		
+		odmpa.iterate();
+
 		SkimMatrix distanceSkimMatrix2 = new SkimMatrix();
 
 		distanceSkimMatrix2.setCost("E06000045", "E06000045", 0.5);
@@ -234,19 +235,22 @@ public class EstimatedODMatrixTest {
 		distanceSkimMatrix2.setCost("E06000046", "E06000046", 3.4);
 
 		System.out.println("Distance skim matrix:");
-		distanceSkimMatrix.printMatrixFormatted();
+		distanceSkimMatrix2.printMatrixFormatted();
 
 		double[] BIN_LIMITS_KM2 = {0.0, 0.621371, 1.242742, 3.106855, 6.21371, 15.534275, 31.06855, 62.1371, 93.20565, 155.34275, 217.47985};
 		double[] OTLD2 = {0.05526, 0.16579, 0.34737, 0.21053, 0.15789, 0.03947, 0.01579, 0.00432, 0.00280, 0.00063, 0.00014};
 
-		EstimatedODMAtrix odmpa2 = new EstimatedODMAtrix("./src/test/resources/testdata/passengerProductionsAttractions.csv", distanceSkimMatrix2, BIN_LIMITS_KM2, OTLD2);
+		EstimatedODMatrix odmpa2 = new EstimatedODMatrix("./src/test/resources/testdata/passengerProductionsAttractions.csv", distanceSkimMatrix2, BIN_LIMITS_KM2, OTLD2);
 
+		System.out.println("Productions: " + odmpa2.getProductions());
+		System.out.println("Attractions: " + odmpa2.getAttractions());
+		
 		odmpa2.createUnitMatrix();
 		odmpa2.scaleToProductions();
 		odmpa2.scaleToAttractions();
 		odmpa2.scaleToObservedTripLenghtDistribution();
 		odmpa2.roundMatrixValues();
-		odmpa2.printMatrixFormatted();
+		odmpa2.printMatrixFormatted(2);
 
 		System.out.println("Bin index matrix:");
 		odmpa2.getBinIndexMatrix().printMatrixFormatted();
@@ -266,11 +270,9 @@ public class EstimatedODMatrixTest {
 			System.out.println(	Arrays.stream(odmpa2.getObservedTripLengthDistribution()).sum() );
 		}
 		
-		odmpa2.printMatrixFormatted("Final OD matrix:");
+		odmpa2.printMatrixFormatted("Final OD matrix:", 2);
 		
 		odmpa2.deleteInterzonalFlows("E07000086");
-		odmpa2.printMatrixFormatted("After deletion of interzonal flows from/to E07000086:");
-	
-		*/
+		odmpa2.printMatrixFormatted("After deletion of interzonal flows from/to E07000086:", 2);
 	}
 }

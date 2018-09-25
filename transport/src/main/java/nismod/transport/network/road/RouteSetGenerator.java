@@ -17,6 +17,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.logging.log4j.LogManager;
@@ -1152,6 +1153,49 @@ public class RouteSetGenerator{
 						}
 						dataStream.writeShort(0);
 					}
+		} catch (Exception e) {
+			LOGGER.error(e);
+		} finally {
+			try {
+				dataStream.flush();
+				dataStream.close();
+				bufferedStream.flush();
+				bufferedStream.close();
+				outputStream.flush();
+				outputStream.close();
+			} catch (IOException e) {
+				LOGGER.error(e);
+			}
+			LOGGER.debug("Routes successfully saved into a binary file.");
+		}
+	}
+	
+	/**
+	 * Saves all route sets into a binary file.
+	 * @param fileName File name.
+	 * @param append Whether to append to an existing file.
+	 */
+	public void saveRoutesBinaryGZIPped(String fileName, boolean append) {
+		
+		LOGGER.info("Saving the routes into a zipped binary file.");
+		
+        FileOutputStream outputStream = null;
+        GZIPOutputStream gzipStream = null;
+        BufferedOutputStream bufferedStream = null;
+        DataOutputStream dataStream = null;
+		try {
+			outputStream = new FileOutputStream(fileName, append);
+			gzipStream = new GZIPOutputStream(outputStream);
+			bufferedStream = new BufferedOutputStream(gzipStream);
+			dataStream = new DataOutputStream(bufferedStream);
+			//iterate over all route sets
+			for (int origin: routes.keys())
+				for (int destination: routes.get(origin).keys())
+					for (Route route: this.getRouteSet(origin, destination).getChoiceSet())	 {
+						for (int edgeID: route.getEdges().toArray())
+							dataStream.writeInt(edgeID);
+					dataStream.writeInt(0);
+				}
 		} catch (Exception e) {
 			LOGGER.error(e);
 		} finally {

@@ -19,6 +19,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
+import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.graph.path.AStarShortestPathFinder;
 import org.geotools.graph.path.DijkstraShortestPathFinder;
 import org.geotools.graph.path.Path;
@@ -30,6 +31,7 @@ import org.geotools.graph.structure.Node;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.simple.SimpleFeatureType;
 
 import nismod.transport.utility.ConfigReader;
 import nismod.transport.visualisation.NetworkVisualiser;
@@ -483,7 +485,23 @@ public class RoadNetworkTest {
 		path = roadNetwork.getFastestPathDijkstra((DirectedNode)to, (DirectedNode)from, roadNetwork.getFreeFlowTravelTime());
 		assertEquals("The list of nodes in the shortest path is correct", Arrays.toString(expectedNodeList), path.toString());
 		assertEquals("The list of edges in the shortest path is correct", Arrays.toString(expectedEdgeList), path.getEdges().toString());
-			
+		
+		//find the shortest path using Time Dijkstra
+		System.out.println("Source node: " + from.getID() + " | Destination node: " + to.getID());
+		DijkstraShortestPathFinder pathTimeFinder = new DijkstraShortestPathFinder(rn, from, roadNetwork.getDijkstraTimeWeighter(roadNetwork.getFreeFlowTravelTime()));
+		pathTimeFinder.calculate();
+		Path path2 = pathTimeFinder.getPath(to);
+		path2.reverse();
+		System.out.println("The path as a list of nodes nodes: " + path2);
+		listOfEdges = path2.getEdges();
+		System.out.println("The path as a list of edges: " + listOfEdges);
+		System.out.println("Path size in the number of nodes: " + path2.size());
+		System.out.println("Path size in the number of edges: " + listOfEdges.size());
+		System.out.printf("Total path time in min: %.3f\n", pathTimeFinder.getCost(to));
+		
+		path = roadNetwork.getFastestPathDijkstra((DirectedNode)from, (DirectedNode)to, roadNetwork.getFreeFlowTravelTime());
+		assertTrue("Two paths are the same", path.equals(path2));
+								
 		System.out.println("\n*** AStar ***");
 
 		//find the shortest path using AStar algorithm
@@ -585,7 +603,6 @@ public class RoadNetworkTest {
 
 		//find the shortest path using AStar algorithm
 		try {
-
 			System.out.printf("Finding the shortest path from %d to %d using astar: \n", from.getID(), to.getID());
 
 			AStarShortestPathFinder aStarPathFinder = new AStarShortestPathFinder(rn, from, to, roadNetwork.getAstarFunctions(to));
@@ -1112,6 +1129,11 @@ public class RoadNetworkTest {
 		
 		//export to shapefile
 		roadNetwork.exportToShapefile("./temp/testNetwork.shp");
+		SimpleFeatureType sf = roadNetwork.createCustomFeatureType("DayVolume");
+		System.out.println(sf.getType("DayVolume"));
+		System.out.println(sf.indexOf("DayVolume"));
+		SimpleFeatureCollection sfc = roadNetwork.createNetworkFeatureCollection(roadNetwork.getFreeFlowTravelTime(), "FreeFlow", "./temp/features.shp");
+		System.out.println(sfc.getSchema());
 	}
 
 	//@Test

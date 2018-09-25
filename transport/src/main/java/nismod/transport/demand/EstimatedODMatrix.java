@@ -104,24 +104,6 @@ public class EstimatedODMatrix extends RealODMatrix {
 	}
 	
 	/**
-	 * Constructor for estimated OD matrix that uses network assignment and traffic counts for matrix rebalancing.
-	 * @param zones List of zones.
-	 * @param rna Road network assignment.
-	 */
-	public EstimatedODMatrix(List<String> zones, RoadNetworkAssignment rna) {
-
-		super();
-		
-		this.binLimitsKm = null;
-		this.observedTripLengthDistribution = null;
-		this.rna = rna;
-		this.zones = new ArrayList<String>();
-		
-		for (String zone: zones) this.zones.add(zone);
-		this.createUnitMatrix();
-	}
-
-	/**
 	 * Iterates scaling to productions, scaling to attractions, rounding and scaling to observed trip length distribution.
 	 */
 	public void iterate() {
@@ -200,78 +182,6 @@ public class EstimatedODMatrix extends RealODMatrix {
 			}
 	}
 
-	/**
-	 * Scales OD matrix to traffic counts.
-	 */
-	public void scaleToTrafficCounts() {
-			
-		this.rna.resetLinkVolumes();
-		this.rna.resetTripStorages();
-		ODMatrix odm = new ODMatrix(this);
-		
-		this.rna.assignPassengerFlowsRouting(odm, null);
-		double RMSN = this.rna.calculateRMSNforSimulatedVolumes();
-		System.out.printf("RMSN before scaling = %.2f%% %n", RMSN);
-		
-		RealODMatrix sf = this.getScalingFactors();
-		sf.printMatrixFormatted("Scaling factors:", 4);
-		
-		this.scaleMatrixValue(sf);
-		this.printMatrixFormatted("OD matrix after scaling:", 2);
-	}
-	
-	/**
-	 * Calculates scaling factors for OD pairs.
-	 * @return Scaling factors.
-	 */
-	public RealODMatrix getScalingFactors() {
-		
-		List<Trip> tripList = this.rna.getTripList();
-		
-		Map<Integer, Integer> volumes = this.rna.getLinkVolumePerVehicleType().get(VehicleType.CAR);
-		Map<Integer, Integer> counts = this.rna.getAADFCarTrafficCounts();
-		Map<Integer, Double> linkFactors = new HashMap<Integer, Double>();
-		
-		for (Integer edgeID: volumes.keySet()) linkFactors.put(edgeID, 1.0 * counts.get(edgeID) / volumes.get(edgeID));
-		
-		RealODMatrix factors = new RealODMatrix();
-		ODMatrix counter = new ODMatrix();
-		RealODMatrix scalingFactors = new RealODMatrix();
-		
-		for (Trip t: tripList) 
-			if (t.getVehicle().equals(VehicleType.CAR))	{
-			
-				String originLAD = t.getOriginLAD(this.rna.getRoadNetwork().getNodeToZone());
-				String destinationLAD = t.getDestinationLAD(this.rna.getRoadNetwork().getNodeToZone());
-				Route route = t.getRoute();
-				int multiplier = t.getMultiplier();
-				
-				//get current factor and count
-				double factor = factors.getFlow(originLAD, destinationLAD); 
-				int count = counter.getFlow(originLAD, destinationLAD);
-				
-				for (int edgeID: route.getEdges().toArray()) {
-					factor += linkFactors.get(edgeID) * multiplier;
-					count += multiplier;
-				}
-				
-				//update factor sum and count
-				factors.setFlow(originLAD, destinationLAD, factor);
-				counter.setFlow(originLAD, destinationLAD, count);
-			}
-		
-		//calculate scaling factors by dividing factor sum and counter
-		for (Object mk: factors.getKeySet()) {
-			String originLAD = (String) ((MultiKey)mk).getKey(0);
-			String destinationLAD = (String) ((MultiKey)mk).getKey(1);
-	
-			double scalingFactor = 1.0 * factors.getFlow(originLAD, destinationLAD) / counter.getFlow(originLAD, destinationLAD);
-			scalingFactors.setFlow(originLAD, destinationLAD, scalingFactor);
-		}
-		
-		return scalingFactors;
-	}
-	
 	/**
 	 * Determines which OD pairs fall within which bin index (depending on the distance skim matrix).
 	 * @param distanceSkimMatrix Distance skim matrix
