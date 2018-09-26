@@ -836,6 +836,22 @@ public class RoadNetwork {
 		//TODO or alternatively, make sure the edge object contains a point geometry and then call this method:
 		//this.mapEdgesToZones(zonesFeatureCollection);
 		
+		//check if one of the nodes of the edge are not mapped to any zone as this indicates potential problems
+		//(e.g. when a node is on the bridge, so it is not contained within any zonal polygon).
+		String zone1 = this.nodeToZone.get(directedEdge.getNodeA().getID());
+		String zone2 = this.nodeToZone.get(directedEdge.getNodeB().getID());
+		//if one node falls outside any zonal polygon, then assign edge to the zone of the other node
+		if (zone1 == null && zone2 != null)
+			this.edgeToZone.put(directedEdge.getID(), zone2);
+		else if (zone2 == null && zone1 != null)
+			this.edgeToZone.put(directedEdge.getID(), zone1);
+		else if (zone1 != null && zone2 != null && zone1.equals(zone2))
+			this.edgeToZone.put(directedEdge.getID(), zone1);
+		else if (zone1 != null && zone2 != null && !zone1.equals(zone2)) //use the zone of nodeA
+			this.edgeToZone.put(directedEdge.getID(), zone1);
+		else
+			LOGGER.warn("It was not possible to map new edge {} to any zone!", directedEdge.getID());
+			
 		return directedEdge;
 	}
 	
@@ -868,6 +884,23 @@ public class RoadNetwork {
 				
 		//update node blacklists
 		this.createNodeBlacklists();
+		
+		//map edge to a zone
+		String zone1 = this.nodeToZone.get(edge.getNodeA().getID());
+		String zone2 = this.nodeToZone.get(edge.getNodeB().getID());
+		//if one node falls outside any zonal polygon, then assign edge to the zone of the other node
+		if (zone1 == null && zone2 != null)
+			this.edgeToZone.put(edge.getID(), zone2);
+		else if (zone2 == null && zone1 != null)
+			this.edgeToZone.put(edge.getID(), zone1);
+		//if nodes fall to the same zone
+		else if (zone1 != null && zone2 != null && zone1.equals(zone2))
+			this.edgeToZone.put(edge.getID(), zone1);
+		//if nodes are in different zones, use the zone of nodeA
+		else if (zone1 != null && zone2 != null && !zone1.equals(zone2)) 
+			this.edgeToZone.put(edge.getID(), zone1);
+		else
+			LOGGER.warn("It was not possible to map new edge {} to any zone!", edge.getID());
 	}
 	
 	/**
@@ -889,6 +922,9 @@ public class RoadNetwork {
 		
 		//update node blacklists
 		this.createNodeBlacklists();
+		
+		//remove from edge to zone mapping
+		this.edgeToZone.remove(edge.getID());
 	}
 	
 	/**

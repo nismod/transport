@@ -91,11 +91,19 @@ public class RoadDevelopmentTest {
 		
 		System.out.println(newEdge.getObject());
 		
+		System.out.println("New edge 1 is mapped to zone: " + roadNetwork.getEdgeToZone().get(newEdge.getID()));
+		System.out.println("New edge 2 is mapped to zone: " + roadNetwork.getEdgeToZone().get(newEdge2.getID()));
+		assertEquals("New edge 1 is mapped to a correct zone", roadNetwork.getNodeToZone().get(63), roadNetwork.getEdgeToZone().get(newEdge.getID()));
+		assertEquals("New edge 2 is mapped to a correct zone", roadNetwork.getNodeToZone().get(23), roadNetwork.getEdgeToZone().get(newEdge2.getID()));
+			
 		//check length
 	
 		rd.uninstall(roadNetwork);
 		System.out.println("Number of road links/edges after uninstallment: " + roadNetwork.getNetwork().getEdges().size());
 		assertEquals("The number of road links should be correct", 301, roadNetwork.getNetwork().getEdges().size());
+		
+		assertNull("New edge 1 after removal is not mapped to any zone", roadNetwork.getEdgeToZone().get(newEdge.getID()));
+		assertNull("New edge 2 after removal is not mapped to any zone", roadNetwork.getEdgeToZone().get(newEdge2.getID()));
 
 		currentYear = 2014;
 		//check if correct interventions have been installed
