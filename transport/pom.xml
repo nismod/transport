@@ -245,7 +245,7 @@
 		    	<configuration>
 		        	<argLine>${surefireArgLine}</argLine>
 		        	<skipTests>${skip.unit.tests}</skipTests>
-	   				<argLine>-Xmx4g -XX:MaxPermSize=256m</argLine>
+	   				<argLine>${argLine} -Xmx4g -XX:MaxPermSize=256m</argLine>
   		    	</configuration>
 			</plugin>
 		</plugins>
