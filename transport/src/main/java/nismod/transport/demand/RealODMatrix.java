@@ -50,21 +50,31 @@ public class RealODMatrix implements AssignableODMatrix {
 	public RealODMatrix(String fileName) throws FileNotFoundException, IOException {
 		
 		LOGGER.info("Reading OD matrix from file: {}", fileName);
-		
+	
 		matrix = new MultiKeyMap();
 		CSVParser parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
 		//System.out.println(parser.getHeaderMap().toString());
 		Set<String> keySet = parser.getHeaderMap().keySet();
-		keySet.remove("origin");
-		//System.out.println("keySet = " + keySet);
-		double flow;
-		for (CSVRecord record : parser) { 
-			//System.out.println(record);
-			//System.out.println("Origin zone = " + record.get(0));
-			for (String destination: keySet) {
-				//System.out.println("Destination zone = " + destination);
-				flow = Double.parseDouble(record.get(destination));
-				this.setFlow(record.get(0), destination, flow);			
+
+		if (keySet.contains("origin") &&  keySet.contains("destination") && keySet.contains("flow")) { //use list format
+			for (CSVRecord record : parser) { 
+					String origin = record.get(0);
+					String destination = record.get(1);
+					double flow = Double.parseDouble(record.get(2));
+					this.setFlow(origin, destination, flow);
+			}
+		} else { //use matrix format
+			keySet.remove("origin");
+			//System.out.println("keySet = " + keySet);
+			double flow;
+			for (CSVRecord record : parser) { 
+				//System.out.println(record);
+				//System.out.println("Origin zone = " + record.get(0));
+				for (String destination: keySet) {
+					//System.out.println("Destination zone = " + destination);
+					flow = Double.parseDouble(record.get(destination));
+					this.setFlow(record.get(0), destination, flow);			
+				}
 			}
 		}
 		parser.close();
@@ -584,6 +594,56 @@ public class RealODMatrix implements AssignableODMatrix {
 				for (String destination: secondKeyList) record.add(String.format("%d", (int) Math.round(this.getFlow(origin, destination))));
 				csvFilePrinter.printRecord(record);
 			}
+		} catch (Exception e) {
+			LOGGER.error(e);
+		} finally {
+			try {
+				fileWriter.flush();
+				fileWriter.close();
+				csvFilePrinter.close();
+			} catch (IOException e) {
+				LOGGER.error(e);
+			}
+		}
+		
+		LOGGER.debug("OD matrix saved to a csv file.");
+	}
+	
+	/**
+	 * Saves the matrix into a csv file. Uses a list format (origin, destination, flow).
+	 * @param outputFile Path to the output file.
+	 */
+	public void saveMatrixFormatted2(String outputFile) {
+		
+		LOGGER.info("Saving OD matrix to a csv file using list format...");
+		
+		List<String> firstKeyList = this.getSortedOrigins();
+		List<String> secondKeyList = this.getSortedDestinations();
+	
+		String NEW_LINE_SEPARATOR = "\n";
+		ArrayList<String> header = new ArrayList<String>();
+		header.add("origin");
+		header.add("destination");
+		header.add("flow");
+		FileWriter fileWriter = null;
+		CSVPrinter csvFilePrinter = null;
+		CSVFormat csvFileFormat = CSVFormat.DEFAULT.withRecordSeparator(NEW_LINE_SEPARATOR);
+		try {
+			fileWriter = new FileWriter(outputFile);
+			csvFilePrinter = new CSVPrinter(fileWriter, csvFileFormat);
+			csvFilePrinter.printRecord(header);
+			ArrayList<String> record = new ArrayList<String>();
+			for (String origin: firstKeyList)
+				for (String destination: secondKeyList) {
+					double flow = this.getFlow(origin, destination);
+					if (flow > 0) {
+						record.clear();
+						record.add(origin);
+						record.add(destination);
+						record.add(String.format("%d", (int) Math.round(flow)));
+						csvFilePrinter.printRecord(record);
+					}
+				}
 		} catch (Exception e) {
 			LOGGER.error(e);
 		} finally {

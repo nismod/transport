@@ -104,7 +104,7 @@ public class RebalancedTemproODMatrix extends RealODMatrixTempro {
 		for (int i=0; i<number; i++) {
 			this.assignAndCalculateRMSN();
 			this.scaleToTrafficCounts();
-			this.saveMatrixFormatted(file + "/temproODMafterIteration" + i + ".csv");
+			this.saveMatrixFormatted2(file + "/temproODMafterIteration" + i + ".csv");
 			this.rna.saveLinkTravelTimes(2015, file + "/linkTravelTimesAfterIteration" + i + ".csv");
 		}
 		

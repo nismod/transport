@@ -242,5 +242,6 @@ public class ODMatrixTest {
 		tempro.deleteInterzonalFlows("E02004800");
 		tempro.printMatrixFormatted();
 		tempro.saveMatrixFormatted("./temp/tempro.csv");
+		tempro.saveMatrixFormatted2("./temp/tempro2.csv");
 	}
 }

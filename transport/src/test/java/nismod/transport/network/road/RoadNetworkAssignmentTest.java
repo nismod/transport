@@ -64,6 +64,7 @@ public class RoadNetworkAssignmentTest {
 
 		final String baseYearODMatrixFile = props.getProperty("baseYearODMatrixFile");
 		final String passengerRoutesFile = props.getProperty("passengerRoutesFile");
+		final String temproRoutesFile = props.getProperty("temproRoutesFile");
 		final String outputFolder = props.getProperty("outputFolder");
 		
 		//create output directory
@@ -119,15 +120,14 @@ public class RoadNetworkAssignmentTest {
 		
 		
 		
-		//assign passenger flows
-		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
-		
-		/*
+		//read passenger car flows
+		//ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
+			
 		//RealODMatrixTempro odm = RealODMatrixTempro.createUnitMatrix(zoning);
 		//odm.deleteInterzonalFlows("E02006781"); //Isle of Scilly in Tempro
 		final String temproODMatrixFile = props.getProperty("temproODMatrixFile");
 		RealODMatrixTempro odm = new RealODMatrixTempro(temproODMatrixFile, zoning);
-		*/
+		
 		
 		//odm.scaleMatrixValue(8.0);
 		//odm.printMatrixFormatted("Tempro unit OD matrix:", 2);
@@ -142,8 +142,8 @@ public class RoadNetworkAssignmentTest {
 		
 		//read routes
 		timeNow = System.currentTimeMillis();
-//		rsg.readRoutesBinaryWithoutValidityCheck(temproRoutesFile);
-		rsg.readRoutesBinaryWithoutValidityCheck(passengerRoutesFile);
+		rsg.readRoutesBinaryWithoutValidityCheck(temproRoutesFile);
+//		rsg.readRoutesBinaryWithoutValidityCheck(passengerRoutesFile);
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Routes read in %d milliseconds.\n", timeNow);
 		rsg.printStatistics();
@@ -172,8 +172,8 @@ public class RoadNetworkAssignmentTest {
 		//	routeStorage.get(hour).printStatistics();
 		//}
 		
-		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
-		//rna.assignPassengerFlowsRouteChoiceTemproDistanceBased(odm, zoning, rsg, params);
+		//rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
+		rna.assignPassengerFlowsRouteChoiceTemproDistanceBased(odm, zoning, rsg, params);
 		
 		
 		

@@ -22,11 +22,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jfree.data.category.DefaultCategoryDataset;
 
-import nismod.transport.decision.CongestionCharging;
 import nismod.transport.decision.Intervention;
 import nismod.transport.decision.Intervention.InterventionType;
-import nismod.transport.decision.RoadDevelopment;
-import nismod.transport.decision.RoadExpansion;
 import nismod.transport.demand.DemandModel;
 import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.ODMatrix;
@@ -35,8 +32,8 @@ import nismod.transport.demand.RebalancedTemproODMatrix;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
-import nismod.transport.optimisation.SPSA4;
 import nismod.transport.network.road.RouteSetGenerator;
+import nismod.transport.optimisation.SPSA5;
 import nismod.transport.showcase.LandingGUI;
 import nismod.transport.utility.ConfigReader;
 import nismod.transport.utility.InputFileReader;
@@ -106,17 +103,17 @@ public class App {
 				.argName("ITERATIONS")
 				.hasArg()
 				.numberOfArgs(1)
-				.desc("Estimate Tempro-level origin-destination matrix.")
+				.desc("Estimate Tempro-level origin-destination matrix with traffic counts.")
 				.valueSeparator(' ')
 				.build();
 		options.addOption(estimateMatrix);
 		
 		Option optimiseMatrix = Option.builder("o")
 				.longOpt("optimiseMatrix")
-				.argName("ITERATIONS")
+				.argName("ITERATIONS> <PARAM_a> <PARAM_c")
 				.hasArg()
-				.numberOfArgs(1)
-				.desc("Optimise Tempro-level origin-destination matrix.")
+				.numberOfArgs(3)
+				.desc("Optimise Tempro-level origin-destination matrix using SPSA.")
 				.valueSeparator(' ')
 				.build();
 		options.addOption(optimiseMatrix);
@@ -364,6 +361,8 @@ public class App {
 				
 				String[] values = line.getOptionValues("optimiseMatrix");
 				final String iterations = values[0];
+				final String param_a = values[1];
+				final String param_c = values[2];
 				
 				roadNetwork.sortGravityNodes();
 						
@@ -418,14 +417,15 @@ public class App {
 				final String temproODMatrixFile = props.getProperty("temproODMatrixFile");
 				RealODMatrixTempro temproODMatrix = new RealODMatrixTempro(temproODMatrixFile, zoning);
 				
-				//double a = 10000;
-				double a = 1000;
+				//double a = 100;
+				double a = Double.parseDouble(param_a);
 				double A = 0.0; 
-				double c = 50;
+				//double c = 50;
+				double c = Double.parseDouble(param_c);
 				double alpha = 0.602;
 				double gamma = 0.101;
 				
-				SPSA4 optimiser = new SPSA4(props);
+				SPSA5 optimiser = new SPSA5(props);
 				optimiser.initialise(rna, zoning, rsg, temproODMatrix, a, A, c, alpha, gamma);
 				optimiser.runSPSA(Integer.parseInt(iterations));
 				

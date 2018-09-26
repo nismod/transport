@@ -217,5 +217,6 @@ public class RealODMatrixTest {
 		tempro.deleteInterzonalFlows("E02004800");
 		tempro.printMatrixFormatted(2);
 		tempro.saveMatrixFormatted("./temp/realtempro.csv");
+		tempro.saveMatrixFormatted2("./temp/realtempro2.csv");
 	}
 }
