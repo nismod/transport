@@ -495,14 +495,7 @@ public class App {
 				}
 			
 				RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, props);
-				
 				final Boolean flagUseRouteChoiceModel = Boolean.parseBoolean(props.getProperty("USE_ROUTE_CHOICE_MODEL"));
-				if (flagUseRouteChoiceModel) { //if route choice version used, load pre-generated routes
-					rsg.readRoutesBinary(passengerRoutesFile);
-					rsg.readRoutesBinary(freightRoutesFile);
-				}
-				
-				rsg.generateSingleNodeRoutes();
 				
 				final String assignmentType = props.getProperty("ASSIGNMENT_TYPE").toLowerCase();
 				//create zoning system if necessary
@@ -511,7 +504,28 @@ public class App {
 					final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
 					final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
 					zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
+					
+					if (flagUseRouteChoiceModel) { 
+						//read tempro routes
+						final String temproRoutesFile = props.getProperty("temproRoutesFile");
+						rsg.readRoutesBinaryWithoutValidityCheck(temproRoutesFile);
+						LOGGER.debug(rsg.getStatistics());
+						rsg.readRoutesBinaryWithoutValidityCheck(freightRoutesFile);
+						LOGGER.debug(rsg.getStatistics());
+					}
+				} else if (assignmentType.equals("lad")) {
+					if (flagUseRouteChoiceModel) { //if route choice version used, load pre-generated routes
+						rsg.readRoutesBinaryWithoutValidityCheck(passengerRoutesFile);
+						LOGGER.debug(rsg.getStatistics());
+						rsg.readRoutesBinaryWithoutValidityCheck(freightRoutesFile);
+						LOGGER.debug(rsg.getStatistics());
+					}
+				} else {
+					LOGGER.error("Type of assignment '{}' is not among allowed assignment types.", assignmentType);
+					return;
 				}
+		
+				rsg.generateSingleNodeRoutes();
 
 				//the main demand model
 				DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, unitCO2EmissionsFile, engineTypeFractionsFile, AVFractionsFile, interventions, rsg, zoning, props);
