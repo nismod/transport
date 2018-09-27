@@ -37,12 +37,13 @@ public class DemandModel {
 	
 	private final static Logger LOGGER = LogManager.getLogger(DemandModel.class);
 	
-	public final static int BASE_YEAR = 2015;
-	public final static int BASE_YEAR_FREIGHT = 2006;
-	public final static double FREIGHT_SCALING_FACTOR = 18366.0/21848.0;
-	public final static double LINK_TRAVEL_TIME_AVERAGING_WEIGHT = 1.0;
-	public final static int ASSIGNMENT_ITERATIONS = 1;
-	public final static int PREDICTION_ITERATIONS = 1;
+	public final int baseYear;
+	public final int baseYearFreight;
+	public final double freightScalingFactor;
+	public final double linkTravelTimeAveragingWeight;
+	public final int assignmentIterations;
+	public final int predictionIterations;
+	
 	public static enum ElasticityTypes {
 		POPULATION, GVA, TIME, COST
 	}
@@ -121,31 +122,34 @@ public class DemandModel {
 		this.interventions = interventions;
 		this.zoning = zoning;
 
+		//read the parameters
+		this.baseYear = Integer.parseInt(props.getProperty("baseYear"));
+		this.baseYearFreight = Integer.parseInt(props.getProperty("baseYearFreight"));
+		this.freightScalingFactor = Double.parseDouble(props.getProperty("FREIGHT_SCALING_FACTOR"));
+		this.linkTravelTimeAveragingWeight = Double.parseDouble(props.getProperty("LINK_TRAVEL_TIME_AVERAGING_WEIGHT")); 
+		this.assignmentIterations = Integer.parseInt(props.getProperty("ASSIGNMENT_ITERATIONS"));
+		this.predictionIterations = Integer.parseInt(props.getProperty("PREDICTION_ITERATIONS"));
+				
 		//read base-year passenger matrix
 		ODMatrix passengerODMatrix = new ODMatrix(baseYearODMatrixFile);
 		//passengerODMatrix.printMatrixFormatted();
-		this.yearToPassengerODMatrix.put(DemandModel.BASE_YEAR, passengerODMatrix);
+		this.yearToPassengerODMatrix.put(this.baseYear, passengerODMatrix);
 		
 		//read base-year freight matrix
 		FreightMatrix freightMatrix = new FreightMatrix(baseYearFreightMatrixFile);
 		//freightMatrix.printMatrixFormatted();
 		//System.out.println("Freight matrix scaled to 2015:");
-		FreightMatrix freightMatrixScaled = freightMatrix.getScaledMatrix(FREIGHT_SCALING_FACTOR);
+		FreightMatrix freightMatrixScaled = freightMatrix.getScaledMatrix(this.freightScalingFactor);
 		//freightMatrixScaled.printMatrixFormatted();
-		this.yearToFreightODMatrix.put(DemandModel.BASE_YEAR, freightMatrixScaled);
+		this.yearToFreightODMatrix.put(this.baseYear, freightMatrixScaled);
 				
 		//read all year population predictions
 		this.yearToZoneToPopulation = InputFileReader.readPopulationFile(populationFile);
-
 		//read all year GVA predictions
 		this.yearToZoneToGVA = InputFileReader.readGVAFile(GVAFile);
-		
 		this.yearToEnergyUnitCosts = InputFileReader.readEnergyUnitCostsFile(energyUnitCostsFile);
-		
 		this.yearToUnitCO2Emissions = InputFileReader.readUnitCO2EmissionFile(unitCO2EmissionsFile);
-		
 		this.yearToEngineTypeFractions = InputFileReader.readEngineTypeFractionsFile(engineTypeFractionsFile);
-		
 		this.yearToAVFractions = InputFileReader.readAVFractionsFile(autonomousVehiclesFractionsFile);
 		
 		this.elasticities = InputFileReader.readElasticitiesFile(elasticitiesFile);
@@ -171,7 +175,6 @@ public class DemandModel {
 			this.temproMatrixTemplate = new RealODMatrixTempro(temproODMatrixFile, this.zoning);
 		}
 	}
-	
 	
 	/**
 	 * Predicts (passenger and freight) highway demand (origin-destination vehicle flows)
@@ -221,8 +224,8 @@ public class DemandModel {
 
 		LOGGER.info("Predicting {} highway demand from {} demand.", predictedYear, fromYear);
 		
-		if (predictedYear <= fromYear) {
-			LOGGER.error("predictedYear should be greater than fromYear!");
+		if (predictedYear < fromYear) {
+			LOGGER.error("predictedYear should not be smaller than fromYear!");
 			return;
 		//check if the demand from year fromYear exists
 		} else if (!this.yearToPassengerODMatrix.containsKey(fromYear)) { 
@@ -244,6 +247,12 @@ public class DemandModel {
 			RoadNetworkAssignment rna = yearToRoadNetworkAssignment.get(fromYear);
 			if (rna == null) {
 				LOGGER.debug("{} year has not been assigned to the network, so assigning it now.", fromYear);
+
+				//read default link travel time
+				final String defaultLinkTravelTimeFile = props.getProperty("defaultLinkTravelTimeFile");
+				Map<TimeOfDay, Map<Integer, Double>> defaultLinkTravelTime = null;
+				if (defaultLinkTravelTimeFile != null) 
+					defaultLinkTravelTime = InputFileReader.readLinkTravelTimeFile(this.baseYear, defaultLinkTravelTimeFile);
 				
 				//create a network assignment and assign the demand
 				rna = new RoadNetworkAssignment(this.roadNetwork, 
@@ -256,7 +265,7 @@ public class DemandModel {
 												this.yearToRelativeFuelEfficiencies.get(fromYear),
 												this.yearToTimeOfDayDistribution.get(fromYear),
 												this.yearToTimeOfDayDistributionFreight.get(fromYear),
-												null, 
+												defaultLinkTravelTime, 
 												null,
 												null, 
 												this.yearToCongestionCharges.get(fromYear),
@@ -270,7 +279,7 @@ public class DemandModel {
 				} else
 					passengerODM = this.yearToPassengerODMatrix.get(fromYear);
 						
-				rna.assignFlowsAndUpdateLinkTravelTimesIterated(passengerODM, this.yearToFreightODMatrix.get(fromYear), this.rsg, this.zoning, this.props, LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);
+				rna.assignFlowsAndUpdateLinkTravelTimesIterated(passengerODM, this.yearToFreightODMatrix.get(fromYear), this.rsg, this.zoning, this.props, this.linkTravelTimeAveragingWeight, this.assignmentIterations);
 				yearToRoadNetworkAssignment.put(fromYear, rna);
 		
 				//calculate skim matrices
@@ -282,7 +291,16 @@ public class DemandModel {
 				yearToCostSkimMatrix.put(fromYear, csm);
 				yearToTimeSkimMatrixFreight.put(fromYear, tsmf);
 				yearToCostSkimMatrixFreight.put(fromYear, csmf);
+				
+				//if assigning base year, print traffic count comparison data
+				if (fromYear == this.baseYear) {
+					rna.printRMSNstatistic();
+					rna.printGEHstatistic();
+				}
+					
 			}
+			
+			if (predictedYear == fromYear) return; //skip the rest if predicting the same year
 			
 			//check if the right interventions have been installed
 			if (interventions != null) 
@@ -398,7 +416,7 @@ public class DemandModel {
 			SkimMatrix tsm = null, csm = null;
 			SkimMatrixFreight tsmf = null, csmf = null;
 			RoadNetworkAssignment predictedRna = null;
-			for (int i=0; i<PREDICTION_ITERATIONS; i++) {
+			for (int i=0; i<this.predictionIterations; i++) {
 
 				if (predictedRna == null)
 					//assign predicted year - using link travel times from fromYear
@@ -442,7 +460,7 @@ public class DemandModel {
 					predictedPassengerODMatrixToAssign = RealODMatrixTempro.createTEMProFromLadMatrix(predictedPassengerODMatrix, this.temproMatrixTemplate, zoning);
 				} else
 					predictedPassengerODMatrixToAssign = predictedPassengerODMatrix;
-				predictedRna.assignFlowsAndUpdateLinkTravelTimesIterated(predictedPassengerODMatrixToAssign, predictedFreightODMatrix, this.rsg, this.zoning, this.props, LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);
+				predictedRna.assignFlowsAndUpdateLinkTravelTimesIterated(predictedPassengerODMatrixToAssign, predictedFreightODMatrix, this.rsg, this.zoning, this.props, this.linkTravelTimeAveragingWeight, this.assignmentIterations);
 				
 				//update skim matrices for predicted year after the assignment
 				tsm = predictedRna.calculateTimeSkimMatrix();
@@ -549,7 +567,7 @@ public class DemandModel {
 					predictedPassengerODMatrixToAssign = RealODMatrixTempro.createTEMProFromLadMatrix(predictedPassengerODMatrix, this.temproMatrixTemplate, zoning);
 				} else
 					predictedPassengerODMatrixToAssign = predictedPassengerODMatrix;
-				predictedRna.assignFlowsAndUpdateLinkTravelTimesIterated(predictedPassengerODMatrixToAssign, predictedFreightODMatrix, this.rsg, this.zoning, this.props, LINK_TRAVEL_TIME_AVERAGING_WEIGHT, ASSIGNMENT_ITERATIONS);				
+				predictedRna.assignFlowsAndUpdateLinkTravelTimesIterated(predictedPassengerODMatrixToAssign, predictedFreightODMatrix, this.rsg, this.zoning, this.props, this.linkTravelTimeAveragingWeight, this.assignmentIterations);				
 				
 				//store skim matrices into hashmaps
 				yearToTimeSkimMatrix.put(predictedYear, tsm);

@@ -502,6 +502,8 @@ public class App {
 					rsg.readRoutesBinary(freightRoutesFile);
 				}
 				
+				rsg.generateSingleNodeRoutes();
+				
 				final String assignmentType = props.getProperty("ASSIGNMENT_TYPE").toLowerCase();
 				//create zoning system if necessary
 				Zoning zoning = null;

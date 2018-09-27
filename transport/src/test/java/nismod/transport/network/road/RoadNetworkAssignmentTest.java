@@ -118,8 +118,6 @@ public class RoadNetworkAssignmentTest {
 		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
 		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
 		
-		
-		
 		//read passenger car flows
 		//ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
 			

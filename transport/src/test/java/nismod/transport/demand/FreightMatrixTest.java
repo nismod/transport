@@ -78,7 +78,8 @@ public class FreightMatrixTest {
 		freightMatrix2.printMatrixFormatted();
 		
 		System.out.println("Scaled freight matrix: ");
-		freightMatrix2.getScaledMatrix(DemandModel.FREIGHT_SCALING_FACTOR).printMatrixFormatted();
+		double freightScalingFactor = 0.84;
+		freightMatrix2.getScaledMatrix(freightScalingFactor).printMatrixFormatted();
 		
 		condition = freightMatrix2.getFlow(854, 1312, 3) == 3 &&
 					freightMatrix2.getFlow(855, 1312, 2) == 117 &&

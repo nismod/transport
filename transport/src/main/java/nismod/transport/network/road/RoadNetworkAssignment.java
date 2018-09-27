@@ -50,23 +50,23 @@ public class RoadNetworkAssignment {
 	//	//public static final double SPEED_LIMIT_M_ROAD = 112.65; //70mph = 31.29mps = 112.65kph
 	//	//public static final double SPEED_LIMIT_A_ROAD = 96.56; //60mph = 26.82mps = 96.56kph
 
-	public int maximumCapacityMRoad; //PCU per lane per hour
-	public int maximumCapacityARoad; //PCU per lane per hour
-	public double averageAccessEgressSpeedCar; //kph  
-	public double averageAccessEgressSpeedFreight; //kph 
-	public double peakHourPercentage;
-	public double alpha;
-	public double betaMRoad;
-	public double betaARoad;
-	public boolean flagIntrazonalAssignmentReplacement; //true means that origin and destination nodes can be the same
-	public boolean flagAStarIfEmptyRouteSet; //if there is no pre-generated route set for a node pair, try finding a route with aStar
-	public int interzonalTopNodes; //how many top nodes (based on gravitated population size) to considers as trip origin/destination
-	public double averageIntersectionDelay; //[min]
-	public double nodesProbabilityWeighting; //manipulates probabilities of nodes for the node choice
-	public double nodesProbabilityWeightingFreight; //manipulates probabilities of nodes for the node choice
-	public double assignmentFraction; //the fraction of vehicle flows to actually assign, with later results expansion to 100%
-	public boolean flagUseRouteChoiceModel; //use route-choice model (true) or routing with A-Star (false)
-	public int topTemproNodes = 1;
+	public final int maximumCapacityMRoad; //PCU per lane per hour
+	public final int maximumCapacityARoad; //PCU per lane per hour
+	public final double averageAccessEgressSpeedCar; //kph  
+	public final double averageAccessEgressSpeedFreight; //kph 
+	public final double peakHourPercentage;
+	public final double alpha;
+	public final double betaMRoad;
+	public final double betaARoad;
+	public final boolean flagIntrazonalAssignmentReplacement; //true means that origin and destination nodes can be the same
+	public final boolean flagAStarIfEmptyRouteSet; //if there is no pre-generated route set for a node pair, try finding a route with aStar
+	public final int interzonalTopNodes; //how many top nodes (based on gravitated population size) to considers as trip origin/destination
+	public final double averageIntersectionDelay; //[min]
+	public final double nodesProbabilityWeighting; //manipulates probabilities of nodes for the node choice
+	public final double nodesProbabilityWeightingFreight; //manipulates probabilities of nodes for the node choice
+	public final double assignmentFraction; //the fraction of vehicle flows to actually assign, with later results expansion to 100%
+	public final boolean flagUseRouteChoiceModel; //use route-choice model (true) or routing with A-Star (false)
+	public final int topTemproNodes = 1;
 
 	private static RandomSingleton rng = RandomSingleton.getInstance();
 
@@ -4768,14 +4768,14 @@ public class RoadNetworkAssignment {
 		this.engineTypeFractions.put(vht, engineTypeFractions);
 	}
 
-	/**
-	 * Setter method for fractional assignment.
-	 * @param assignmentFraction Assignment fraction (&lt;= 1.0).
-	 */
-	public void setAssignmentFraction (double assignmentFraction) {
-
-		this.assignmentFraction = assignmentFraction;
-	}
+//	/**
+//	 * Setter method for fractional assignment.
+//	 * @param assignmentFraction Assignment fraction (&lt;= 1.0).
+//	 */
+//	public void setAssignmentFraction (double assignmentFraction) {
+//
+//		this.assignmentFraction = assignmentFraction;
+//	}
 
 	/**
 	 * Resets link volumes to zero.
