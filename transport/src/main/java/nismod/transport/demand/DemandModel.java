@@ -77,7 +77,7 @@ public class DemandModel {
 	private List<Intervention> interventions;
 	private RoadNetwork roadNetwork;
 	private Zoning zoning;
-	private RealODMatrixTempro temproMatrixTemplate;
+	private ODMatrix temproMatrixTemplate;
 
 	/**
 	 * The constructor for the demand prediction model.
@@ -172,7 +172,7 @@ public class DemandModel {
 		if (assignmentType.equals("tempro") || assignmentType.equals("combined")) {
 			
 			final String temproODMatrixFile = props.getProperty("temproODMatrixFile");
-			this.temproMatrixTemplate = new RealODMatrixTempro(temproODMatrixFile, this.zoning);
+			this.temproMatrixTemplate = new ODMatrix(temproODMatrixFile);
 		}
 	}
 	
@@ -275,7 +275,7 @@ public class DemandModel {
 				//if tempro or combined assignment used, disaggregate LAD-based matrix to tempro level using the template
 				final String assignmentType = props.getProperty("ASSIGNMENT_TYPE").toLowerCase();
 				if (assignmentType.equals("tempro") || assignmentType.equals("combined")) {
-					passengerODM = RealODMatrixTempro.createTEMProFromLadMatrix(this.yearToPassengerODMatrix.get(fromYear), this.temproMatrixTemplate, zoning);
+					passengerODM = ODMatrix.createTEMProFromLadMatrix(this.yearToPassengerODMatrix.get(fromYear), this.temproMatrixTemplate, zoning);
 				} else
 					passengerODM = this.yearToPassengerODMatrix.get(fromYear);
 						
@@ -457,7 +457,7 @@ public class DemandModel {
 				//if tempro or combined assignment used, disaggregate LAD-based matrix to tempro level using the template
 				final String assignmentType = props.getProperty("ASSIGNMENT_TYPE").toLowerCase();
 				if (assignmentType.equals("tempro") || assignmentType.equals("combined")) {
-					predictedPassengerODMatrixToAssign = RealODMatrixTempro.createTEMProFromLadMatrix(predictedPassengerODMatrix, this.temproMatrixTemplate, zoning);
+					predictedPassengerODMatrixToAssign = ODMatrix.createTEMProFromLadMatrix(predictedPassengerODMatrix, this.temproMatrixTemplate, zoning);
 				} else
 					predictedPassengerODMatrixToAssign = predictedPassengerODMatrix;
 				predictedRna.assignFlowsAndUpdateLinkTravelTimesIterated(predictedPassengerODMatrixToAssign, predictedFreightODMatrix, this.rsg, this.zoning, this.props, this.linkTravelTimeAveragingWeight, this.assignmentIterations);
@@ -564,7 +564,7 @@ public class DemandModel {
 				
 				//if tempro or combined assignment used, disaggregate LAD-based matrix to tempro level using the template
 				if (assignmentType.equals("tempro") || assignmentType.equals("combined")) {
-					predictedPassengerODMatrixToAssign = RealODMatrixTempro.createTEMProFromLadMatrix(predictedPassengerODMatrix, this.temproMatrixTemplate, zoning);
+					predictedPassengerODMatrixToAssign = ODMatrix.createTEMProFromLadMatrix(predictedPassengerODMatrix, this.temproMatrixTemplate, zoning);
 				} else
 					predictedPassengerODMatrixToAssign = predictedPassengerODMatrix;
 				predictedRna.assignFlowsAndUpdateLinkTravelTimesIterated(predictedPassengerODMatrixToAssign, predictedFreightODMatrix, this.rsg, this.zoning, this.props, this.linkTravelTimeAveragingWeight, this.assignmentIterations);				
