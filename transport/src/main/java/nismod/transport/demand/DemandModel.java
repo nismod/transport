@@ -206,6 +206,9 @@ public class DemandModel {
 		
 		//save base year
 		this.saveAllResults(baseYear);
+		
+		if (toYear == baseYear) return;
+		
 		if (flagPredictIntermediateYears) { //save all intermediate years
 			for (int year = baseYear; year <= toYear - 1; year++) {
 				this.saveAllResults(year + 1);
