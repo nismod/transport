@@ -94,13 +94,13 @@ public class EstimatedODMatrixTest {
 															null,
 															props);
 		
-		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
+		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, props);
 		
 		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
 		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
 		
 		ODMatrix temproODM = ODMatrix.createUnitMatrix(zoning.getZoneCodeToIDMap().keySet());
-		rna.assignPassengerFlowsTempro(temproODM, zoning, rsg);
+		rna.assignPassengerFlowsTempro(temproODM, zoning, rsg, props);
 		rna.calculateDistanceSkimMatrixTempro().printMatrixFormatted();
 				
 		//SkimMatrix distanceSkimMatrix = new SkimMatrix("./distanceSkimMatrix.csv");
@@ -136,7 +136,7 @@ public class EstimatedODMatrixTest {
 		
 		rna.resetTripStorages();
 		rna.resetLinkVolumes();
-		rna.assignPassengerFlowsTempro(estimatedODM, zoning, rsg);
+		rna.assignPassengerFlowsTempro(estimatedODM, zoning, rsg, props);
 		double RMSN = rna.calculateRMSNforSimulatedVolumes();
 		System.out.printf("RMSN = %.2f%% %n", RMSN);
 	}

@@ -440,7 +440,7 @@ public class CongestionChargingDashboard extends JFrame {
 
 					RandomSingleton.getInstance().setSeed(1234);
 
-					rnaAfterCongestionCharging.assignPassengerFlowsRouting(predictedODM, rsg);
+					rnaAfterCongestionCharging.assignPassengerFlowsRouting(predictedODM, rsg, props);
 					rnaAfterCongestionCharging.updateLinkVolumeInPCU();
 					rnaAfterCongestionCharging.updateLinkVolumeInPCUPerTimeOfDay();
 					//SkimMatrix sm = rnaAfterCongestionCharging.calculateTimeSkimMatrix();
@@ -1123,7 +1123,7 @@ public class CongestionChargingDashboard extends JFrame {
 
 		odm = new ODMatrix(baseYearODMatrixFile);
 		odm.scaleMatrixValue(MATRIX_SCALING_FACTOR);
-		rsg = new RouteSetGenerator(roadNetwork);
+		rsg = new RouteSetGenerator(roadNetwork, props);
 
 		rsg.readRoutesBinaryWithoutValidityCheck(passengerRoutesFile);
 		//rsg.generateRouteSetForODMatrix(odm, 5);

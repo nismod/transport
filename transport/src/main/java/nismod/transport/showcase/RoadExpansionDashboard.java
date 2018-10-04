@@ -443,7 +443,7 @@ public class RoadExpansionDashboard extends JFrame {
 						props);
 
 				rsg.clearRoutes();
-				rnaAfterExpansion.assignPassengerFlowsRouting(odm, rsg);
+				rnaAfterExpansion.assignPassengerFlowsRouting(odm, rsg, props);
 	//			rnaAfterExpansion.assignPassengerFlowsRouteChoice(odm, rsg, props);
 				rnaAfterExpansion.updateLinkVolumeInPCU();
 				rnaAfterExpansion.updateLinkVolumeInPCUPerTimeOfDay();
@@ -495,7 +495,7 @@ public class RoadExpansionDashboard extends JFrame {
 				rnaAfterExpansion.resetTripStorages();
 
 				rsg.clearRoutes();
-				rnaAfterExpansion.assignPassengerFlowsRouting(predictedODM, rsg);
+				rnaAfterExpansion.assignPassengerFlowsRouting(predictedODM, rsg, props);
 //				rnaAfterExpansion.assignPassengerFlowsRouteChoice(predictedODM, rsg, props);
 				rnaAfterExpansion.updateLinkVolumeInPCU();
 				rnaAfterExpansion.updateLinkVolumeInPCUPerTimeOfDay();
@@ -1241,13 +1241,13 @@ public class RoadExpansionDashboard extends JFrame {
 		odm = new ODMatrix(baseYearODMatrixFile); 
 		//odm = new ODMatrix("./src/test/resources/testdata/csvfiles/tempro2LAD.csv");
 		odm.scaleMatrixValue(MATRIX_SCALING_FACTOR);
-		rsg = new RouteSetGenerator(roadNetwork);
+		rsg = new RouteSetGenerator(roadNetwork, props);
 		
 		//rsg.readRoutesBinaryWithoutValidityCheck(passengerRoutesFile);
 		//rsg.generateRouteSetForODMatrix(odm, 5);
 
 //		rnaBefore.assignPassengerFlowsRouteChoice(odm, rsg, props);
-		rnaBefore.assignPassengerFlowsRouting(odm, rsg);
+		rnaBefore.assignPassengerFlowsRouting(odm, rsg, props);
 //		rnaBefore.updateLinkTravelTimes(0.9);
 //		rnaBefore.resetLinkVolumes();
 //		rnaBefore.resetTripStorages();

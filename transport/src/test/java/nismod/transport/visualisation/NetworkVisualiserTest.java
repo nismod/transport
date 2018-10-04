@@ -69,7 +69,7 @@ public class NetworkVisualiserTest {
 															null,
 															props);
 		ODMatrix odm = new ODMatrix("./src/test/resources/testdata/csvfiles/passengerODM.csv");
-		rna.assignPassengerFlowsRouting(odm, null);
+		rna.assignPassengerFlowsRouting(odm, null, props);
 
 		final URL congestionChargeZoneUrl = new URL("file://src/test/resources/testdata/shapefiles/congestionChargingZone.shp");
 		String shapefilePath = "./temp/networkWithDailyVolume.shp";

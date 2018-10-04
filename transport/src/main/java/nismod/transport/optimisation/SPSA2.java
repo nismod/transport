@@ -3,6 +3,7 @@ package nismod.transport.optimisation;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Properties;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -44,6 +45,7 @@ public class SPSA2 {
 	
 	private List<Double> lossFunctionValues;
 	private RoadNetworkAssignment rna;
+	private Properties props;
 	private ODMatrix odm;
 
 	public SPSA2() {
@@ -52,6 +54,7 @@ public class SPSA2 {
 	/**
 	 * Initialise the SPSA algorithm with starting values.
 	 * @param rna Road network assignment
+	 * @param props Parameters from the config file.
 	 * @param odm Origin-destination matrix.
 	 * @param initialThetaStart Initial start node probabilities.
 	 * @param initialThetaEnd Initial end node probabilities.
@@ -61,9 +64,10 @@ public class SPSA2 {
 	 * @param alpha SPSA parameter.
 	 * @param gamma SPSA parameter.
 	 */
-	public void initialise(RoadNetworkAssignment rna, ODMatrix odm, HashMap<Integer, Double> initialThetaStart, HashMap<Integer, Double> initialThetaEnd, double a, double A, double c, double alpha, double gamma) {
+	public void initialise(RoadNetworkAssignment rna, Properties props, ODMatrix odm, HashMap<Integer, Double> initialThetaStart, HashMap<Integer, Double> initialThetaEnd, double a, double A, double c, double alpha, double gamma) {
 			
 		this.rna = rna;
+		this.props = props;
 		this.odm = odm;
 		this.thetaEstimateStart = new HashMap<Integer, Double>(initialThetaStart);
 		this.thetaEstimateEnd = new HashMap<Integer, Double>(initialThetaEnd);
@@ -248,7 +252,7 @@ public class SPSA2 {
 		rna.setEndNodeProbabilities(thetaEnd);
 		
 		//assign passenger flows
-		rna.assignPassengerFlowsRouting(this.odm, null); //routing version
+		rna.assignPassengerFlowsRouting(this.odm, null, props); //routing version
 		rna.updateLinkVolumePerVehicleType(); //used in RMSN calculation
 		
 		//calculate RMSN

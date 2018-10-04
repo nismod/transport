@@ -179,6 +179,8 @@ public class RouteSetGeneratorTest {
 		Properties params = new Properties();
 		params.setProperty("ROUTE_LIMIT", "5");
 		params.setProperty("GENERATION_LIMIT", "10");
+		params.setProperty("INITIAL_OUTER_CAPACITY", "163");
+		params.setProperty("INITIAL_INNER_CAPACITY", "163");
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, params);
 		rsg.generateRouteSetWithRandomLinkEliminationRestricted(83, 31);
 		rsg.printChoiceSets();
@@ -391,6 +393,8 @@ public class RouteSetGeneratorTest {
 		Properties params = new Properties();
 		params.setProperty("ROUTE_LIMIT", "5");
 		params.setProperty("GENERATION_LIMIT", "10");
+		params.setProperty("INITIAL_OUTER_CAPACITY", "23");
+		params.setProperty("INITIAL_INNER_CAPACITY", "23");
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, params);
 		//rsg.generateRouteSet(odm);
 		//rsg.generateRouteSet(31, 82);
@@ -504,6 +508,8 @@ public class RouteSetGeneratorTest {
 		Properties params = new Properties();
 		params.setProperty("ROUTE_LIMIT", "5");
 		params.setProperty("GENERATION_LIMIT", "10");
+		params.setProperty("INITIAL_OUTER_CAPACITY", "163");
+		params.setProperty("INITIAL_INNER_CAPACITY", "163");
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, params);
 		rsg.generateRouteSetWithRandomLinkEliminationRestricted(48, 67);
 		//rsg.printChoiceSets();
@@ -659,7 +665,7 @@ public class RouteSetGeneratorTest {
 		System.out.printf("Passenger flows assigned with route choice in %d seconds.\n", timeNow / 1000);
 		
 		timeNow = System.currentTimeMillis();
-		rna.assignPassengerFlowsRouting(odm, null);
+		rna.assignPassengerFlowsRouting(odm, null, props);
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Passenger flows assigned in %d seconds.\n", timeNow / 1000);
 	}

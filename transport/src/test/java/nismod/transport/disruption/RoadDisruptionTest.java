@@ -175,19 +175,7 @@ public class RoadDisruptionTest {
 		final URL AADFurl = new URL(props.getProperty("AADFurl"));
 
 		final String baseYearODMatrixFile = props.getProperty("baseYearODMatrixFile");
-		final String baseYearFreightMatrixFile = props.getProperty("baseYearFreightMatrixFile");
-		final String populationFile = props.getProperty("populationFile");
-		final String GVAFile = props.getProperty("GVAFile");
-		final String elasticitiesFile = props.getProperty("elasticitiesFile");
-		final String elasticitiesFreightFile = props.getProperty("elasticitiesFreightFile");
-
-		final String roadExpansionFileName = props.getProperty("roadExpansionFile");
-		final String roadDevelopmentFileName = props.getProperty("roadDevelopmentFile");
-		final String congestionChargeFile = props.getProperty("congestionChargingFile");
-		
 		final String roadDisruptionFile = props.getProperty("roadDisruptionFile");
-	
-		final String energyConsumptionsFile = props.getProperty("energyConsumptionsFile"); //output
 		
 		//create a road network
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
@@ -275,6 +263,8 @@ public class RoadDisruptionTest {
 		Properties params = new Properties();
 		params.setProperty("ROUTE_LIMIT", "5");
 		params.setProperty("GENERATION_LIMIT", "10");
+		params.setProperty("INITIAL_OUTER_CAPACITY", "163");
+		params.setProperty("INITIAL_INNER_CAPACITY", "163");
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, params);
 		//rsg.generateRouteSetWithRandomLinkEliminationRestricted(87, 46);
 		rsg.generateRouteSetForODMatrix(odm, 5);

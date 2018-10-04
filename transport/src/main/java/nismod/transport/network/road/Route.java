@@ -37,7 +37,7 @@ public class Route {
 //	public static final double AVERAGE_INTERSECTION_DELAY = 0.8; //[min] 
 	
 	//initial route size for arraylist
-	public static final int INITIAL_ROUTE_CAPACITY = 10;
+//	public static final int INITIAL_ROUTE_CAPACITY = 10;
 
 //	private static int counter = 0;
 //	private int id;
@@ -54,7 +54,7 @@ public class Route {
 	public Route(RoadNetwork roadNetwork) {
 	
 		this.roadNetwork = roadNetwork;
-		this.edges = new TIntArrayList(INITIAL_ROUTE_CAPACITY);
+		this.edges = new TIntArrayList(RouteSetGenerator.INITIAL_ROUTE_CAPACITY);
 //		this.id = ++Route.counter;
 	}
 	
@@ -92,7 +92,7 @@ public class Route {
 		
 		this.roadNetwork = roadNetwork;
 		
-		this.edges = new TIntArrayList(INITIAL_ROUTE_CAPACITY);
+		this.edges = new TIntArrayList(RouteSetGenerator.INITIAL_ROUTE_CAPACITY);
 		for (DirectedEdge edge: builtEdges) this.edges.add(edge.getID()); 
 			
 //		this.id = ++Route.counter;

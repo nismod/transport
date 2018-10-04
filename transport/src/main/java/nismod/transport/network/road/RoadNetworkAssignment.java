@@ -333,9 +333,10 @@ public class RoadNetworkAssignment {
 	 * however only one route will be used for the same OD pair (the route that was calculated first).
 	 * @param passengerODM Passenger origin-destination matrix with flows to be assigned.
 	 * @param rsg To store routes during the assignment (reduces the number of routing calls).
+	 * @param props Routing parameters.
 	 */
 	@SuppressWarnings("unused")
-	public void assignPassengerFlowsRouting(AssignableODMatrix passengerODM, RouteSetGenerator rsg) {
+	public void assignPassengerFlowsRouting(AssignableODMatrix passengerODM, RouteSetGenerator rsg, Properties props) {
 
 		LOGGER.info("Assigning the passenger flows from the passenger matrix...");
 
@@ -343,7 +344,7 @@ public class RoadNetworkAssignment {
 		this.roadNetwork.sortGravityNodes();
 
 		//to store routes generated during the assignment
-		if (rsg == null) rsg = new RouteSetGenerator(this.roadNetwork);
+		if (rsg == null) rsg = new RouteSetGenerator(this.roadNetwork, props);
 
 		//counters to calculate percentage of assignment success
 		long counterAssignedTrips = 0;
@@ -523,7 +524,7 @@ public class RoadNetworkAssignment {
 	 * @param routeStorage Stores routes for each hour of the day separately.
 	 */
 	@SuppressWarnings("unused")
-	public void assignPassengerFlowsHourlyRouting(AssignableODMatrix passengerODM, Map<TimeOfDay, RouteSetGenerator> routeStorage) {
+	public void assignPassengerFlowsHourlyRouting(AssignableODMatrix passengerODM, Map<TimeOfDay, RouteSetGenerator> routeStorage, Properties props) {
 
 		LOGGER.info("Assigning the passenger flows from the passenger matrix...");
 
@@ -534,7 +535,7 @@ public class RoadNetworkAssignment {
 		if (routeStorage == null) {
 			routeStorage = new HashMap<TimeOfDay, RouteSetGenerator>();
 			for (TimeOfDay hour: TimeOfDay.values()) {
-				routeStorage.put(hour, new RouteSetGenerator(this.roadNetwork));
+				routeStorage.put(hour, new RouteSetGenerator(this.roadNetwork, props));
 			}
 		}
 
@@ -999,13 +1000,13 @@ public class RoadNetworkAssignment {
 	 * @param rsg Route set (here new routes will be stored).
 	 */
 	@SuppressWarnings("unused")
-	public void assignPassengerFlowsTempro(AssignableODMatrix passengerODM, Zoning zoning, RouteSetGenerator rsg) {
+	public void assignPassengerFlowsTempro(AssignableODMatrix passengerODM, Zoning zoning, RouteSetGenerator rsg, Properties props) {
 
 		LOGGER.info("Assigning the passenger flows from the tempro passenger matrix...");
 
 		//to store routes generated during the assignment
 		//RouteSetGenerator rsg = new RouteSetGenerator(this.roadNetwork);
-		if (rsg == null) rsg = new RouteSetGenerator(this.roadNetwork);
+		if (rsg == null) rsg = new RouteSetGenerator(this.roadNetwork, props);
 
 		//counters to calculate percentage of assignment success
 		long counterAssignedTrips = 0;
@@ -1286,7 +1287,7 @@ public class RoadNetworkAssignment {
 
 		//to store routes generated during the assignment
 		//RouteSetGenerator rsg = new RouteSetGenerator(this.roadNetwork);
-		if (rsg == null) rsg = new RouteSetGenerator(this.roadNetwork);
+		if (rsg == null) rsg = new RouteSetGenerator(this.roadNetwork, routeChoiceParameters);
 
 		//counters to calculate percentage of assignment success
 		long counterAssignedTrips = 0;
@@ -1541,7 +1542,7 @@ public class RoadNetworkAssignment {
 
 		//to store routes generated during the assignment
 		//RouteSetGenerator rsg = new RouteSetGenerator(this.roadNetwork);
-		if (rsg == null) rsg = new RouteSetGenerator(this.roadNetwork);
+		if (rsg == null) rsg = new RouteSetGenerator(this.roadNetwork, routeChoiceParameters);
 
 		//counters to calculate percentage of assignment success
 		long counterAssignedTrips = 0;
@@ -1758,7 +1759,7 @@ public class RoadNetworkAssignment {
 	 * @param rsg Route storage (reduces the number of routing calls).
 	 */
 	@SuppressWarnings("unused")
-	public void assignFreightFlowsRouting(FreightMatrix freightMatrix, RouteSetGenerator rsg) {
+	public void assignFreightFlowsRouting(FreightMatrix freightMatrix, RouteSetGenerator rsg, Properties props) {
 
 
 		LOGGER.info("Assigning the vehicle flows from the freight matrix...");
@@ -1768,7 +1769,7 @@ public class RoadNetworkAssignment {
 		long counterTotalFlow = 0;
 
 		//to store routes generated during the assignment
-		if (rsg == null) rsg = new RouteSetGenerator(this.roadNetwork);
+		if (rsg == null) rsg = new RouteSetGenerator(this.roadNetwork, props);
 
 		//sort nodes based on the gravitating workplace population
 		this.roadNetwork.sortGravityNodesFreight();
@@ -1999,7 +2000,7 @@ public class RoadNetworkAssignment {
 	 * @param routeStorage Route storage (stores fastest routes separately for each hour of the day).
 	 */
 	@SuppressWarnings("unused")
-	public void assignFreightFlowsHourlyRouting(FreightMatrix freightMatrix, Map<TimeOfDay, RouteSetGenerator> routeStorage) {
+	public void assignFreightFlowsHourlyRouting(FreightMatrix freightMatrix, Map<TimeOfDay, RouteSetGenerator> routeStorage, Properties props) {
 
 
 		LOGGER.info("Assigning the vehicle flows from the freight matrix...");
@@ -2012,7 +2013,7 @@ public class RoadNetworkAssignment {
 		if (routeStorage == null) {
 			routeStorage = new HashMap<TimeOfDay, RouteSetGenerator>();
 			for (TimeOfDay hour: TimeOfDay.values()) {
-				routeStorage.put(hour, new RouteSetGenerator(this.roadNetwork));
+				routeStorage.put(hour, new RouteSetGenerator(this.roadNetwork, props));
 			}
 		}
 
@@ -2716,12 +2717,13 @@ public class RoadNetworkAssignment {
 	 * @param passengerODM Passenger origin-destination matrix.
 	 * @param freightODM Freight origin-destination matrix.
 	 * @param rsg Route set generator to store fastest routes generated during the assignment (but could be pregenerated too).
+	 * @param props Parameters from the config file.
 	 * @param weight Weighting parameter.
 	 */
-	public void assignFlowsAndUpdateLinkTravelTimes(AssignableODMatrix passengerODM, FreightMatrix freightODM, RouteSetGenerator rsg, double weight) {
+	public void assignFlowsAndUpdateLinkTravelTimes(AssignableODMatrix passengerODM, FreightMatrix freightODM, RouteSetGenerator rsg, Properties props, double weight) {
 
-		this.assignPassengerFlowsRouting(passengerODM, rsg);
-		this.assignFreightFlowsRouting(freightODM, rsg);
+		this.assignPassengerFlowsRouting(passengerODM, rsg, props);
+		this.assignFreightFlowsRouting(freightODM, rsg, props);
 		this.updateLinkVolumeInPCU();
 		this.updateLinkVolumeInPCUPerTimeOfDay();
 		this.updateLinkVolumePerVehicleType();
@@ -2749,20 +2751,19 @@ public class RoadNetworkAssignment {
 			if (flagUseRouteChoiceModel) {
 				this.assignPassengerFlowsRouteChoice(passengerODM, rsg, params);
 			} else {
-				this.assignPassengerFlowsRouting(passengerODM, rsg);
+				this.assignPassengerFlowsRouting(passengerODM, rsg, params);
 			}
 		} else if (assignmentType.equals("tempro")) {
 			if (flagUseRouteChoiceModel) {
 				this.assignPassengerFlowsRouteChoiceTempro(passengerODM, zoning, rsg, params);
 			} else {
-				this.assignPassengerFlowsTempro(passengerODM, zoning, rsg);
+				this.assignPassengerFlowsTempro(passengerODM, zoning, rsg, params);
 			}
 		} else if (assignmentType.equals("combined")) {
-			this.assignPassengerFlowsRouteChoiceTemproDistanceBased(passengerODM, zoning, rsg, params);
 			if (flagUseRouteChoiceModel) {
-				this.assignPassengerFlowsRouteChoiceTempro(passengerODM, zoning, rsg, params);
+				this.assignPassengerFlowsRouteChoiceTemproDistanceBased(passengerODM, zoning, rsg, params);
 			} else {
-				this.assignPassengerFlowsTempro(passengerODM, zoning, rsg);
+				this.assignPassengerFlowsTempro(passengerODM, zoning, rsg, params);
 			}
 		} else {
 			LOGGER.error("Unkown assignment type in the config file. Allowed values: 'lad', 'tempro', 'combined'");
@@ -2773,7 +2774,7 @@ public class RoadNetworkAssignment {
 		if (flagUseRouteChoiceModel) {
 			this.assignFreightFlowsRouteChoice(freightODM, rsg, params);
 		} else {
-			this.assignFreightFlowsRouting(freightODM, rsg);
+			this.assignFreightFlowsRouting(freightODM, rsg, params);
 		}
 		
 		this.updateLinkVolumeInPCU();
@@ -2790,12 +2791,12 @@ public class RoadNetworkAssignment {
 	 * @param weight Weighting parameter.
 	 * @param iterations Number of iterations.
 	 */
-	public void assignFlowsAndUpdateLinkTravelTimesIterated(AssignableODMatrix passengerODM, FreightMatrix freightODM, RouteSetGenerator rsg, double weight, int iterations) {
+	public void assignFlowsAndUpdateLinkTravelTimesIterated(AssignableODMatrix passengerODM, FreightMatrix freightODM, RouteSetGenerator rsg, Properties props, double weight, int iterations) {
 
 		for (int i=0; i<iterations; i++) {
 			this.resetLinkVolumes(); //link volumes must be reset or they would compound across all iterations
 			this.resetTripStorages(); //clear route storages
-			this.assignFlowsAndUpdateLinkTravelTimes(passengerODM, freightODM, rsg, weight);
+			this.assignFlowsAndUpdateLinkTravelTimes(passengerODM, freightODM, rsg, props, weight);
 		}
 	}
 

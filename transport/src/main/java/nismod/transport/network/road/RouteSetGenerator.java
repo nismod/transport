@@ -46,28 +46,36 @@ public class RouteSetGenerator{
 	
 	//public static final int ROUTE_LIMIT = 5;
 	//public static final int GENERATION_LIMIT = 10;
-
+	
+	//initial route size
+	public static final int INITIAL_ROUTE_CAPACITY = 10;
+	//initial route set size
+	public static final int INITIAL_ROUTE_SET_CAPACITY = 5;
+	
+	//initial sizes for nested hashmap
+	public static int initialOuterCapacity;
+	public static int initialInnerCapacity;
+	
+	//storage for route sets between node pairs
 	private TIntObjectHashMap<TIntObjectHashMap<RouteSet>> routes;
 	
 	private RoadNetwork roadNetwork;
-	private Properties params;
+	private Properties props;
 	
-	public RouteSetGenerator(RoadNetwork roadNetwork) {
+	/**
+	 * Constructor for the route set generator.
+	 * @param roadNetwork Road network.
+	 * @param props Parameters from the config file.
+	 */
+	public RouteSetGenerator(RoadNetwork roadNetwork, Properties props) {
 		
 		this.roadNetwork = roadNetwork;
-		this.routes = new TIntObjectHashMap<TIntObjectHashMap<RouteSet>>();
-	}
-	
-	public RouteSetGenerator(RoadNetwork roadNetwork, Properties params) {
+		this.props = props;
 		
-		this.roadNetwork = roadNetwork;
-		this.params = params;
-		this.routes = new TIntObjectHashMap<TIntObjectHashMap<RouteSet>>();
-	}
-	
-	public void setParams(Properties params) {
+		RouteSetGenerator.initialOuterCapacity = Integer.parseInt(props.getProperty("INITIAL_OUTER_CAPACITY"));
+		RouteSetGenerator.initialInnerCapacity = Integer.parseInt(props.getProperty("INITIAL_INNER_CAPACITY"));
 		
-		this.params = params;
+		this.routes = new TIntObjectHashMap<TIntObjectHashMap<RouteSet>>(RouteSetGenerator.initialOuterCapacity);
 	}
 	
 	/**
@@ -92,7 +100,7 @@ public class RouteSetGenerator{
 		
 		TIntObjectHashMap<RouteSet> map = routes.get(origin);
 		if (map == null) {
-			map = new TIntObjectHashMap<RouteSet>();
+			map = new TIntObjectHashMap<RouteSet>(RouteSetGenerator.initialInnerCapacity);
 			routes.put(origin, map);
 		}
 		
@@ -122,7 +130,7 @@ public class RouteSetGenerator{
 		
 		TIntObjectHashMap<RouteSet> map = routes.get(origin);
 		if (map == null) {
-			map = new TIntObjectHashMap<RouteSet>();
+			map = new TIntObjectHashMap<RouteSet>(RouteSetGenerator.initialInnerCapacity);
 			routes.put(origin, map);
 		}
 		
@@ -256,13 +264,13 @@ public class RouteSetGenerator{
 	 */
 	public void generateRouteSetWithRandomLinkEliminationRestricted(int origin, int destination) {
 
-		if (params == null) {
+		if (props == null) {
 			LOGGER.error("Route set generator does not have required parameters!");
 			return;
 		} else {
 		
-			final Integer routeLimit = Integer.parseInt(params.getProperty("ROUTE_LIMIT"));
-			final Integer generationLimit = Integer.parseInt(params.getProperty("GENERATION_LIMIT"));
+			final Integer routeLimit = Integer.parseInt(props.getProperty("ROUTE_LIMIT"));
+			final Integer generationLimit = Integer.parseInt(props.getProperty("GENERATION_LIMIT"));
 			this.generateRouteSetWithRandomLinkEliminationRestricted(origin, destination, routeLimit, generationLimit);
 		}
 	}
@@ -451,12 +459,12 @@ public class RouteSetGenerator{
 	 */
 	public void generateRouteSetZoneToZoneTemproDistanceBased(String originZone, String destinationZone, Zoning zoning) {
 		
-		if (params == null) {
+		if (props == null) {
 			LOGGER.error("Route set generator does not have required parameters!");
 			return;
 		}
 		
-		final int generationLimit = Integer.parseInt(params.getProperty("GENERATION_LIMIT"));
+		final int generationLimit = Integer.parseInt(props.getProperty("GENERATION_LIMIT"));
 		
 //		List<Integer> originNodes = this.roadNetwork.getZoneToNodes().get(originLAD);
 //		List<Integer> destinationNodes = this.roadNetwork.getZoneToNodes().get(destinationLAD);

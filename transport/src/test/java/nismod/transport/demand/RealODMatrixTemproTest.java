@@ -78,15 +78,65 @@ public class RealODMatrixTemproTest {
 		RealODMatrixTempro temproODM = new RealODMatrixTempro(temproODMatrixFile, zoning);
 		//temproODM.deleteInterzonalFlows("E02006781");
 
-		//RealODMatrix ladODM = RealODMatrixTempro.createLadMatrixFromTEMProMatrix(temproODM, zoning);
-		//ladODM.printMatrixFormatted("LAD matrix:", 2);
-		//ladODM.saveMatrixFormatted("ladFromTemproODM.csv");
+//		//RealODMatrix ladODM = RealODMatrixTempro.createLadMatrixFromTEMProMatrix(temproODM, zoning);
+//		//ladODM.printMatrixFormatted("LAD matrix:", 2);
+//		//ladODM.saveMatrixFormatted("ladFromTemproODM.csv");
+//		
+//		temproODM.saveMatrixFormatted2("temproMatrixListBased199.csv");
+//		//temproODM.saveMatrixFormatted3("temproMatrixListBased198b.csv");
+//		
+//		System.in.read(); System.in.read();
+//		
+//		long timeNow;
+//		
+//		timeNow = System.currentTimeMillis();
+//		RealODMatrixTempro tempro1 = new RealODMatrixTempro(temproODMatrixFile, zoning);
+//		timeNow = System.currentTimeMillis() - timeNow;
+//		System.out.printf("Tempro matrix read in %d milliseconds.\n", timeNow);
+//		System.out.println("Total flow: " + tempro1.getTotalIntFlow());
+//		
+//		System.in.read(); System.in.read();
+//
+//		timeNow = System.currentTimeMillis();
+//		RealODMatrixTempro tempro2 = new RealODMatrixTempro("temproMatrixListBased199.csv", zoning);
+//		timeNow = System.currentTimeMillis() - timeNow;
+//		System.out.printf("Tempro matrix read in %d milliseconds.\n", timeNow);
+//		System.out.println("Total flow: " + tempro2.getTotalIntFlow());
+//				
+//		System.in.read(); System.in.read();
+//		
+//		timeNow = System.currentTimeMillis();
+//		ODMatrix tempro3 = new ODMatrix(temproODMatrixFile);
+//		timeNow = System.currentTimeMillis() - timeNow;
+//		System.out.printf("Tempro matrix read in %d milliseconds.\n", timeNow);
+//		System.out.println("Total flow: " + tempro3.getTotalIntFlow());
+//		
+//		System.in.read(); System.in.read();
+//		
+//		timeNow = System.currentTimeMillis();
+//		ODMatrix tempro4 = new ODMatrix("temproMatrixListBased199.csv");
+//		timeNow = System.currentTimeMillis() - timeNow;
+//		System.out.printf("Tempro matrix read in %d milliseconds.\n", timeNow);
+//		System.out.println("Total flow: " + tempro4.getTotalIntFlow());
 		
-		temproODM.saveMatrixFormatted2("temproMatrixListBased.csv");
-		temproODM.saveMatrixFormatted3("temproMatrixListBased2.csv");
+			
+		System.in.read(); System.in.read();
+		
+		
+		final String ladMatrixFile = props.getProperty("baseYearODMatrixFile");
+		ODMatrix ladMatrix = new ODMatrix(ladMatrixFile);
+		ladMatrix.scaleMatrixValue(2);
+	
+		ODMatrix baseTempro = new ODMatrix(temproODMatrixFile);
+		RealODMatrixTempro todm = RealODMatrixTempro.createTEMProFromLadMatrix(ladMatrix, temproODM, zoning);
+		ODMatrix odm = ODMatrix.createTEMProFromLadMatrix(ladMatrix, baseTempro, zoning);
+		
+		System.out.println(todm.getTotalIntFlow());
+		System.out.println(odm.getTotalIntFlow());
+		
 		
 	}
-	
+		
 	@BeforeClass
 	public static void initialise() {
 	

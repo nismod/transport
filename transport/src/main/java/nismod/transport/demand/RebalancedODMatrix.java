@@ -111,7 +111,7 @@ public class RebalancedODMatrix extends RealODMatrix {
 		if (flagUseRouteChoiceModel) {
 			rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
 		} else {
-			rna.assignPassengerFlowsRouting(odm, rsg);
+			rna.assignPassengerFlowsRouting(odm, rsg, params);
 		}
 		rna.updateLinkVolumeInPCU();
 		rna.updateLinkVolumeInPCUPerTimeOfDay();

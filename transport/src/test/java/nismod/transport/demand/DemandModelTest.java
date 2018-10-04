@@ -221,7 +221,7 @@ public class DemandModelTest {
 		}
 			
 		//read routes
-		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
+		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, props);
 		rsg.readRoutesBinaryWithoutValidityCheck(passengerRoutesFile);
 		rsg.printStatistics();
 		rsg.readRoutesBinaryWithoutValidityCheck(freightRoutesFile);
@@ -402,7 +402,7 @@ public class DemandModelTest {
 		final String freightRoutesFile = props.getProperty("freightRoutesFile");
 		
 		//read routes
-		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
+		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, props);
 		rsg.readRoutesBinaryWithoutValidityCheck(passengerRoutesFile);
 		rsg.printStatistics();
 		rsg.readRoutesBinaryWithoutValidityCheck(freightRoutesFile);

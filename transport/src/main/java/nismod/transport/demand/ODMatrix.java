@@ -515,6 +515,8 @@ public class ODMatrix implements AssignableODMatrix {
 	 */
 	public static ODMatrix createTEMProFromLadMatrix(ODMatrix ladODMatrix, ODMatrix baseTempro, Zoning zoning) {
 		
+		LOGGER.info("Dissaggregating LAD OD matrix to TEMPro OD matrix.");
+		
 		ODMatrix temproMatrix = new ODMatrix();
 		
 		for (MultiKey mk: ladODMatrix.getKeySet()) {
@@ -539,6 +541,7 @@ public class ODMatrix implements AssignableODMatrix {
 				}
 		}
 		
+		LOGGER.debug("Finished disaggregating LAD OD matrix to TEMPro OD matrix.");
 		return temproMatrix;
 	}
 	

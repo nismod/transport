@@ -132,7 +132,7 @@ public class RoadNetworkAssignmentTest {
 		
 		//read routes
 		long timeNow = System.currentTimeMillis();
-		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
+		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, props);
 //		rsg.readRoutesBinaryWithoutValidityCheck(passengerRoutesFile);
 //		timeNow = System.currentTimeMillis() - timeNow;
 //		System.out.printf("Routes read in %d milliseconds.\n", timeNow);
@@ -460,7 +460,7 @@ public class RoadNetworkAssignmentTest {
 		
 		//assign passenger flows
 		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
-		rna.assignPassengerFlowsRouting(odm, null);
+		rna.assignPassengerFlowsRouting(odm, null, props);
 		
 		//TEST OUTPUT AREA PROBABILITIES
 		System.out.println("\n\n*** Testing output area probabilities ***");
@@ -560,7 +560,7 @@ public class RoadNetworkAssignmentTest {
 		//hourly assignment with routing
 		rna.resetLinkVolumes();
 		rna.resetTripStorages();
-		rna.assignPassengerFlowsHourlyRouting(odm, null);
+		rna.assignPassengerFlowsHourlyRouting(odm, null, props);
 	
 		rna.calculateDistanceSkimMatrixTempro().printMatrixFormatted();
 		rna.calculateLADTripEnds();
@@ -579,6 +579,8 @@ public class RoadNetworkAssignmentTest {
 		Properties params = new Properties();
 		params.setProperty("ROUTE_LIMIT", "5");
 		params.setProperty("GENERATION_LIMIT", "10");
+		params.setProperty("INITIAL_OUTER_CAPACITY", "23");
+		params.setProperty("INITIAL_INNER_CAPACITY", "23");
 			
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, params);
 		rsg.generateRouteSetForODMatrix(odm);
@@ -718,7 +720,7 @@ public class RoadNetworkAssignmentTest {
 		
 		temproODM.printMatrixFormatted("Tempro OD Matrix");
 
-		rna.assignPassengerFlowsTempro(temproODM, zoning, rsg);
+		rna.assignPassengerFlowsTempro(temproODM, zoning, rsg, props);
 		System.out.println("Trip list size: " + rna.getTripList().size());
 		rna.updateLinkVolumePerVehicleType();
 		System.out.println(rna.getLinkVolumePerVehicleType());
@@ -735,7 +737,7 @@ public class RoadNetworkAssignmentTest {
 		ODMatrix temproODM2 = ODMatrix.createUnitMatrix(temproODM.getSortedOrigins());
 		rna.resetTripStorages();
 		rna.resetLinkVolumes();
-		rna.assignPassengerFlowsTempro(temproODM2, zoning, rsg);
+		rna.assignPassengerFlowsTempro(temproODM2, zoning, rsg, props);
 		rna.calculateDistanceSkimMatrixTempro().printMatrixFormatted();
 		
 		rna.resetLinkVolumes();
@@ -803,7 +805,7 @@ public class RoadNetworkAssignmentTest {
 
 		//assign passenger flows
 		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
-		rna.assignPassengerFlowsRouting(odm, null);
+		rna.assignPassengerFlowsRouting(odm, null, props);
 		
 		//TEST OUTPUT AREA PROBABILITIES
 		System.out.println("\n\n*** Testing output area probabilities ***");
@@ -1014,7 +1016,7 @@ public class RoadNetworkAssignmentTest {
 		//hourly assignment
 		rna.resetLinkVolumes();
 		rna.resetTripStorages();
-		rna.assignPassengerFlowsHourlyRouting(odm, null);
+		rna.assignPassengerFlowsHourlyRouting(odm, null, props);
 	
 		//TEST COUNTERS OF TRIP STARTS/ENDS
 		System.out.println("\n\n*** Testing trip starts/ends for hourly assignment with routing ***");
@@ -1051,7 +1053,7 @@ public class RoadNetworkAssignmentTest {
 		params.setProperty("INTERSECTIONS", "-0.1");
 		params.setProperty("AVERAGE_INTERSECTION_DELAY", "0.8");
 		
-		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
+		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, props);
 		//rsg.readRoutes("./src/test/resources/testdata/testRoutes.txt");
 		rsg.readRoutes("./src/test/resources/testdata/allRoutes.txt");
 		//rsg.calculateAllUtilities(rna.getLinkTravelTimes(), params);
@@ -1215,12 +1217,12 @@ public class RoadNetworkAssignmentTest {
 		ODMatrix temproODM = new ODMatrix(temproODMatrixFile);
 		
 		//temproODM.printMatrixFormatted("Tempro OD Matrix");
-		rna.assignPassengerFlowsTempro(temproODM, zoning, rsg);
+		rna.assignPassengerFlowsTempro(temproODM, zoning, rsg, props);
 		rna.calculateDistanceSkimMatrixTempro();
 		
 		ODMatrix temproODM2 = ODMatrix.createUnitMatrix(temproODM.getSortedOrigins());
 		rna.resetTripStorages();
-		rna.assignPassengerFlowsTempro(temproODM2, zoning, rsg);
+		rna.assignPassengerFlowsTempro(temproODM2, zoning, rsg, props);
 		rna.calculateDistanceSkimMatrixTempro();
 		
 		rna.calculateLinkVolumePerVehicleType(rna.getTripList());
@@ -1335,7 +1337,7 @@ public class RoadNetworkAssignmentTest {
 		//assign freight flows
 		FreightMatrix fm = new FreightMatrix(baseYearFreightMatrixFile);
 		fm.printMatrixFormatted();
-		rna.assignFreightFlowsRouting(fm, null);
+		rna.assignFreightFlowsRouting(fm, null, props);
 		rna.saveAssignmentResults(2015, "./temp/testAssignmentResultsWithFreight.csv");
 		
 		//TEST OUTPUT AREA PROBABILITIES
@@ -1447,7 +1449,7 @@ public class RoadNetworkAssignmentTest {
 		//hourly assignment with routing
 		rna.resetLinkVolumes();
 		rna.resetTripStorages();
-		rna.assignFreightFlowsHourlyRouting(fm, null);
+		rna.assignFreightFlowsHourlyRouting(fm, null, props);
 		
 		//hourly assignment with routing
 		rna.resetLinkVolumes();
@@ -1520,7 +1522,7 @@ public class RoadNetworkAssignmentTest {
 		odm.printMatrixFormatted();
 		
 		long timeNow = System.currentTimeMillis();
-		rna.assignPassengerFlowsRouting(odm, null);
+		rna.assignPassengerFlowsRouting(odm, null, props);
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Passenger flows assigned in %d seconds.\n", timeNow / 1000);
 		

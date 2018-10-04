@@ -101,7 +101,7 @@ public class RebalancedODMatrixTest {
 															props);
 
 		//create route set generator
-		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
+		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, props);
 		rsg.readRoutesBinaryWithoutValidityCheck(passengerRoutesFile);
 		rsg.printStatistics();
 		rsg.generateRouteSetZoneToZone("E06000053", "E06000053");
@@ -293,7 +293,7 @@ public class RebalancedODMatrixTest {
 															props);
 
 		//create route set generator
-		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork);
+		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, props);
 		rsg.readRoutesBinaryWithoutValidityCheck(passengerRoutesFile);
 		
 		roadNetwork.sortGravityNodes();

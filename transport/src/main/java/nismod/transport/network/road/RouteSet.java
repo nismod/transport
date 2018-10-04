@@ -44,7 +44,7 @@ public class RouteSet {
 		//this.destinationNode = destinationNode;
 		this.roadNetwork = roadNetwork;
 		
-		choiceSet = new ArrayList<Route>();
+		choiceSet = new ArrayList<Route>(RouteSetGenerator.INITIAL_ROUTE_SET_CAPACITY);
 	}
 	
 	/**

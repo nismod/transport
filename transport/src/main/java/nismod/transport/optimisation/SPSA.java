@@ -2,6 +2,7 @@ package nismod.transport.optimisation;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
@@ -41,6 +42,7 @@ public class SPSA {
 	private List<Double> lossFunctionValues;
 	
 	private RoadNetworkAssignment rna;
+	private Properties props;
 
 	public SPSA() {
 	}
@@ -48,6 +50,7 @@ public class SPSA {
 	/**
 	 * Initialise the SPSA algorithm with starting values.
 	 * @param rna Road network assignment.
+	 * @param props Parameters from the config file.
 	 * @param initialTheta Initial OD matrix.
 	 * @param a SPSA parameter.
 	 * @param A SPSA parameter.
@@ -55,9 +58,10 @@ public class SPSA {
 	 * @param alpha SPSA parameter.
 	 * @param gamma SPSA parameter.
 	 */
-	public void initialise(RoadNetworkAssignment rna, RealODMatrix initialTheta, double a, double A, double c, double alpha, double gamma) {
+	public void initialise(RoadNetworkAssignment rna, Properties props, RealODMatrix initialTheta, double a, double A, double c, double alpha, double gamma) {
 			
 		this.rna = rna;
+		this.props = props;
 		this.thetaEstimate = initialTheta.clone();
 		this.deltas = new RealODMatrix();
 		this.gradientApproximation = new RealODMatrix();
@@ -204,7 +208,7 @@ public class SPSA {
 		rna.resetTripStorages();
 		
 		//assign passenger flows
-		rna.assignPassengerFlowsRouting(odm, null); //routing version
+		rna.assignPassengerFlowsRouting(odm, null, props); //routing version
 		rna.updateLinkVolumePerVehicleType(); //used in RMSN calculation
 		
 		//calculate RMSN
