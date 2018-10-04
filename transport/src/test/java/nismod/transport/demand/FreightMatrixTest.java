@@ -3,6 +3,7 @@
  */
 package nismod.transport.demand;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.FileNotFoundException;
@@ -89,5 +90,12 @@ public class FreightMatrixTest {
 					freightMatrix2.getFlow(867, 867, 1) == 95;
 					
 		assertTrue("All matrix elements are correct", condition);
+		
+		assertEquals("Total flow is correct", 7772, freightMatrix2.getTotalIntFlow());
+		
+		System.out.println(freightMatrix2.getSortedOrigins());
+		System.out.println(freightMatrix2.getUnsortedOrigins());
+		System.out.println(freightMatrix2.getSortedDestinations());
+		System.out.println(freightMatrix2.getUnsortedDestinations());
 	}
 }

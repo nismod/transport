@@ -706,8 +706,8 @@ public class RouteSetGenerator{
 	 */
 	public void generateRouteSetForFreightMatrix(FreightMatrix freightMatrix, int topNodes) {
 		
-		List<Integer> origins = freightMatrix.getOrigins();
-		List<Integer> destinations = freightMatrix.getDestinations();
+		List<Integer> origins = freightMatrix.getUnsortedOrigins();
+		List<Integer> destinations = freightMatrix.getUnsortedDestinations();
 		List<Integer> vehicles = freightMatrix.getVehicleTypes();
 		
 		for (Integer originFreightZone: origins)
@@ -749,8 +749,8 @@ public class RouteSetGenerator{
 	 */
 	public void generateRouteSetForFreightMatrix(FreightMatrix freightMatrix, int sliceIndex, int sliceNumber) {
 		
-		List<Integer> origins = freightMatrix.getOrigins();
-		List<Integer> destinations = freightMatrix.getDestinations();
+		List<Integer> origins = freightMatrix.getSortedOrigins();
+		List<Integer> destinations = freightMatrix.getUnsortedDestinations();
 		List<Integer> vehicles = freightMatrix.getVehicleTypes();
 		
 		int originsPerSlice = (int) Math.floor(1.0 * origins.size() / sliceNumber); //the last slice may have a different number of origins
@@ -790,8 +790,8 @@ public class RouteSetGenerator{
 	 */
 	public void generateRouteSetForFreightMatrix(FreightMatrix freightMatrix, int sliceIndex, int sliceNumber, int topNodes) {
 		
-		List<Integer> origins = freightMatrix.getOrigins();
-		List<Integer> destinations = freightMatrix.getDestinations();
+		List<Integer> origins = freightMatrix.getSortedOrigins();
+		List<Integer> destinations = freightMatrix.getUnsortedDestinations();
 		List<Integer> vehicles = freightMatrix.getVehicleTypes();
 		
 		int originsPerSlice = (int) Math.floor(1.0 * origins.size() / sliceNumber); //the last slice may have a different number of origins

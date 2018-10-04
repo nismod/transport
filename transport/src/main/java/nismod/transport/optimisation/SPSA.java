@@ -205,7 +205,7 @@ public class SPSA {
 		
 		//reset as we are re-using the same road network assignment
 		rna.resetLinkVolumes();
-		rna.resetTripStorages();
+		rna.resetTripList();
 		
 		//assign passenger flows
 		rna.assignPassengerFlowsRouting(odm, null, props); //routing version

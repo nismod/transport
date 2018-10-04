@@ -436,7 +436,7 @@ public class CongestionChargingDashboard extends JFrame {
 
 
 					rnaAfterCongestionCharging.resetLinkVolumes();
-					rnaAfterCongestionCharging.resetTripStorages();
+					rnaAfterCongestionCharging.resetTripList();
 
 					RandomSingleton.getInstance().setSeed(1234);
 

@@ -279,7 +279,7 @@ public class ODMatrix implements AssignableODMatrix {
 	}
 	
 	/**
-	 * Gets the sorted list of origins.
+	 * Gets the unsorted list of origins.
 	 * @return List of origins.
 	 */
 	public List<String> getUnsortedOrigins() {
@@ -300,7 +300,7 @@ public class ODMatrix implements AssignableODMatrix {
 	}
 	
 	/**
-	 * Gets the sorted list of destinations.
+	 * Gets the unsorted list of destinations.
 	 * @return List of destinations.
 	 */
 	public List<String> getUnsortedDestinations() {

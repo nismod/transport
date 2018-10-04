@@ -143,7 +143,7 @@ public class RoadDisruptionTest {
 		rsg.printStatistics();
 		
 		rna.resetLinkVolumes();
-		rna.resetTripStorages();
+		rna.resetTripList();
 		//rsg.calculateAllUtilities(roadNetwork.getFreeFlowTravelTime(), consumption, unitCost, null, params);
 		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
 		

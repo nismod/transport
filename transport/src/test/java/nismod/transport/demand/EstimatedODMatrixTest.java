@@ -134,7 +134,7 @@ public class EstimatedODMatrixTest {
 		//odmpa.saveMatrixFormatted(outputFolder + "balancedTemproODMatrix.csv");
 		ODMatrix estimatedODM = new ODMatrix(odmpa);
 		
-		rna.resetTripStorages();
+		rna.resetTripList();
 		rna.resetLinkVolumes();
 		rna.assignPassengerFlowsTempro(estimatedODM, zoning, rsg, props);
 		double RMSN = rna.calculateRMSNforSimulatedVolumes();

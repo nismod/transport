@@ -492,7 +492,7 @@ public class RoadDevelopmentDashboard extends JFrame {
 				}
 
 				rnaAfterDevelopment.resetLinkVolumes();
-				rnaAfterDevelopment.resetTripStorages();
+				rnaAfterDevelopment.resetTripList();
 
 				rsg.clearRoutes();
 				rnaAfterDevelopment.assignPassengerFlowsRouting(predictedODM, rsg, props);
@@ -1254,7 +1254,7 @@ public class RoadDevelopmentDashboard extends JFrame {
 		rnaBefore.updateLinkTravelTimes(0.9);
 
 		rnaBefore.resetLinkVolumes();
-		rnaBefore.resetTripStorages();
+		rnaBefore.resetTripList();
 		rnaBefore.assignPassengerFlowsRouting(odm, rsg, props);
 		rnaBefore.updateLinkTravelTimes(0.9);
 

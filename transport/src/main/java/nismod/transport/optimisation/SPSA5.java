@@ -235,7 +235,7 @@ public class SPSA5 {
 		
 		//reset as we are re-using the same road network assignment
 		rna.resetLinkVolumes();
-		rna.resetTripStorages();
+		rna.resetTripList();
 		
 		//assign passenger flows
 		rna.assignPassengerFlowsRouteChoiceTemproDistanceBased(theta, zoning, rsg, props); //routing version with tempro zones

@@ -186,6 +186,7 @@ public class RoadNetworkAssignment {
 			HashMap<Integer, Double> map = new HashMap<Integer, Double>();
 			linkTravelTimePerTimeOfDay.put(hour, map);
 		}
+		
 		this.tripList = new ArrayList<Trip>();
 
 		if (defaultLinkTravelTime == null) { //use free flow
@@ -2795,7 +2796,7 @@ public class RoadNetworkAssignment {
 
 		for (int i=0; i<iterations; i++) {
 			this.resetLinkVolumes(); //link volumes must be reset or they would compound across all iterations
-			this.resetTripStorages(); //clear route storages
+			this.resetTripList(); //clear route storages
 			this.assignFlowsAndUpdateLinkTravelTimes(passengerODM, freightODM, rsg, props, weight);
 		}
 	}
@@ -2814,7 +2815,7 @@ public class RoadNetworkAssignment {
 
 		for (int i=0; i<iterations; i++) {
 			this.resetLinkVolumes(); //link volumes must be reset or they would compound across all iterations
-			this.resetTripStorages(); //clear route storages
+			this.resetTripList(); //clear route storages
 			this.assignFlowsAndUpdateLinkTravelTimes(passengerODM, freightODM, rsg, zoning, params, weight);
 		}
 	}
@@ -4803,10 +4804,19 @@ public class RoadNetworkAssignment {
 	/**
 	 * Reset trip list for passengers and freight.
 	 */
-	public void resetTripStorages () {
+	public void resetTripList () {
 
 		this.tripList.clear();
 		//this.tripList = new ArrayList<Trip>();
+	}
+	
+	/**
+	 * Initialise trip list for passengers and freight (e.g. expected total sum or passenger and freight flows).
+	 * @param initialCapacity Initial capacity of the trip list.
+	 */
+	public void initialiseTripList (int initialCapacity) {
+
+		this.tripList = new ArrayList<Trip>(initialCapacity);
 	}
 
 	/**

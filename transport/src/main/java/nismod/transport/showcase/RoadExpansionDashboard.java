@@ -492,7 +492,7 @@ public class RoadExpansionDashboard extends JFrame {
 				}
 
 				rnaAfterExpansion.resetLinkVolumes();
-				rnaAfterExpansion.resetTripStorages();
+				rnaAfterExpansion.resetTripList();
 
 				rsg.clearRoutes();
 				rnaAfterExpansion.assignPassengerFlowsRouting(predictedODM, rsg, props);

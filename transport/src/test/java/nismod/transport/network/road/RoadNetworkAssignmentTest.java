@@ -559,7 +559,7 @@ public class RoadNetworkAssignmentTest {
 		
 		//hourly assignment with routing
 		rna.resetLinkVolumes();
-		rna.resetTripStorages();
+		rna.resetTripList();
 		rna.assignPassengerFlowsHourlyRouting(odm, null, props);
 	
 		rna.calculateDistanceSkimMatrixTempro().printMatrixFormatted();
@@ -573,7 +573,7 @@ public class RoadNetworkAssignmentTest {
 		//rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null);
 		
 		rna.resetLinkVolumes();
-		rna.resetTripStorages();
+		rna.resetTripList();
 
 		//set route generation parameters
 		Properties params = new Properties();
@@ -707,7 +707,7 @@ public class RoadNetworkAssignmentTest {
 		//TEST ASSIGNMENT WITH TEMPRO ZONES
 		System.out.println("\n\n*** Testing assignment with route choice ***");
 		rna.resetLinkVolumes();
-		rna.resetTripStorages();
+		rna.resetTripList();
 		
 		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
 		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
@@ -735,13 +735,13 @@ public class RoadNetworkAssignmentTest {
 		rna.calculateDistanceSkimMatrixTempro().printMatrixFormatted();
 		
 		ODMatrix temproODM2 = ODMatrix.createUnitMatrix(temproODM.getSortedOrigins());
-		rna.resetTripStorages();
+		rna.resetTripList();
 		rna.resetLinkVolumes();
 		rna.assignPassengerFlowsTempro(temproODM2, zoning, rsg, props);
 		rna.calculateDistanceSkimMatrixTempro().printMatrixFormatted();
 		
 		rna.resetLinkVolumes();
-		rna.resetTripStorages();
+		rna.resetTripList();
 		rna.assignPassengerFlowsRouteChoiceTempro(temproODM2, zoning, rsg, params);
 		rna.calculateDistanceSkimMatrixTempro().printMatrixFormatted();
 	}
@@ -1015,7 +1015,7 @@ public class RoadNetworkAssignmentTest {
 		
 		//hourly assignment
 		rna.resetLinkVolumes();
-		rna.resetTripStorages();
+		rna.resetTripList();
 		rna.assignPassengerFlowsHourlyRouting(odm, null, props);
 	
 		//TEST COUNTERS OF TRIP STARTS/ENDS
@@ -1043,7 +1043,7 @@ public class RoadNetworkAssignmentTest {
 		//TEST ASSIGNMENT WITH ROUTE CHOICE
 		System.out.println("\n\n*** Testing assignment with route choice ***");
 		rna.resetLinkVolumes();
-		rna.resetTripStorages();
+		rna.resetTripList();
 		
 		//set route choice parameters
 		Properties params = new Properties();
@@ -1065,7 +1065,7 @@ public class RoadNetworkAssignmentTest {
 		//TEST ASSIGNMENT WITH ROUTE CHOICE
 		System.out.println("\n\n*** Testing assignment with route choice ***");
 		rna.resetLinkVolumes();
-		rna.resetTripStorages();
+		rna.resetTripList();
 		
 		//set route choice parameters
 		params.setProperty("TIME", "-1.0");
@@ -1205,7 +1205,7 @@ public class RoadNetworkAssignmentTest {
 		//TEST ASSIGNMENT WITH TEMPRO ZONES
 		System.out.println("\n\n*** Testing assignment with tempro zones ***");
 		rna.resetLinkVolumes();
-		rna.resetTripStorages();
+		rna.resetTripList();
 		
 		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
 		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
@@ -1221,7 +1221,7 @@ public class RoadNetworkAssignmentTest {
 		rna.calculateDistanceSkimMatrixTempro();
 		
 		ODMatrix temproODM2 = ODMatrix.createUnitMatrix(temproODM.getSortedOrigins());
-		rna.resetTripStorages();
+		rna.resetTripList();
 		rna.assignPassengerFlowsTempro(temproODM2, zoning, rsg, props);
 		rna.calculateDistanceSkimMatrixTempro();
 		
@@ -1229,13 +1229,13 @@ public class RoadNetworkAssignmentTest {
 		System.out.println(rna.calculateZonalVehicleKilometresPerVehicleTypeFromTemproTripList(false));
 		System.out.println(rna.calculateZonalVehicleKilometresPerVehicleTypeFromTemproTripList(true));
 		
-		rna.resetTripStorages();
+		rna.resetTripList();
 		rna.resetLinkVolumes();
 		rna.assignPassengerFlowsRouteChoiceTempro(temproODM2, zoning, rsg, params);
 		rna.calculateDistanceSkimMatrixTempro();
 		
 		rsg.generateSingleNodeRoutes();
-		rna.resetTripStorages();
+		rna.resetTripList();
 		rna.resetLinkVolumes();
 		rna.assignPassengerFlowsRouteChoiceTemproDistanceBased(temproODM2, zoning, rsg, params);
 		rna.calculateDistanceSkimMatrixTempro();
@@ -1448,12 +1448,12 @@ public class RoadNetworkAssignmentTest {
 		
 		//hourly assignment with routing
 		rna.resetLinkVolumes();
-		rna.resetTripStorages();
+		rna.resetTripList();
 		rna.assignFreightFlowsHourlyRouting(fm, null, props);
 		
 		//hourly assignment with routing
 		rna.resetLinkVolumes();
-		rna.resetTripStorages();
+		rna.resetTripList();
 		
 		//read freight routes
 		final String freightRoutesFile = props.getProperty("freightRoutesFile");

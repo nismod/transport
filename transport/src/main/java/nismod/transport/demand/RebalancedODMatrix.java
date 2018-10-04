@@ -102,7 +102,7 @@ public class RebalancedODMatrix extends RealODMatrix {
 	public void assignAndCalculateRMSN() {
 		
 		this.rna.resetLinkVolumes();
-		this.rna.resetTripStorages();
+		this.rna.resetTripList();
 		ODMatrix odm = new ODMatrix(this);
 		//	odm.printMatrixFormatted();
 		

@@ -520,10 +520,10 @@ public class RouteSetGeneratorTest {
 		//rsg.printChoiceSets();
 		rsg.printStatistics();
 
-		System.out.println("Origins: " + fm.getOrigins().size());
-		System.out.println(fm.getOrigins());
-		System.out.println("Destinations: " + fm.getDestinations().size());
-		System.out.println(fm.getDestinations());
+		System.out.println("Origins: " + fm.getSortedOrigins().size());
+		System.out.println(fm.getSortedOrigins());
+		System.out.println("Destinations: " + fm.getSortedDestinations().size());
+		System.out.println(fm.getSortedDestinations());
 		System.out.println("Vehicles: " + fm.getVehicleTypes().size());
 		System.out.println(fm.getVehicleTypes());
 			

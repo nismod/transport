@@ -140,7 +140,9 @@ public class FreightMatrix {
 	 * Gets the sorted list of origins.
 	 * @return List of origins.
 	 */
-	public List<Integer> getOrigins() {
+	public List<Integer> getSortedOrigins() {
+		
+		LOGGER.debug("Getting the sorted origins.");
 		
 		Set<Integer> firstKey = new HashSet<Integer>();
 		
@@ -153,6 +155,7 @@ public class FreightMatrix {
 		List<Integer> firstKeyList = new ArrayList(firstKey);
 		Collections.sort(firstKeyList);
 	
+		LOGGER.trace("Origins sorted and returned.");
 		return firstKeyList;
 	}
 	
@@ -160,7 +163,9 @@ public class FreightMatrix {
 	 * Gets the sorted list of destinations.
 	 * @return List of destinations.
 	 */
-	public List<Integer> getDestinations() {
+	public List<Integer> getSortedDestinations() {
+		
+		LOGGER.debug("Getting the sorted destinations.");
 		
 		Set<Integer> secondKey = new HashSet<Integer>();
 		
@@ -172,6 +177,49 @@ public class FreightMatrix {
 		//put them into a list and sort them
 		List<Integer> secondKeyList = new ArrayList(secondKey);
 		Collections.sort(secondKeyList);
+		
+		LOGGER.trace("Origins sorted and returned.");
+		return secondKeyList;
+	}
+	
+	/**
+	 * Gets the unsorted list of origins.
+	 * @return List of origins.
+	 */
+	public List<Integer> getUnsortedOrigins() {
+		
+		LOGGER.debug("Getting the unsorted origins.");
+		
+		Set<Integer> firstKey = new HashSet<Integer>();
+		
+		//extract row keysets
+		for (Object mk: matrix.keySet()) {
+			int origin = (int) ((MultiKey)mk).getKey(0);
+			firstKey.add(origin);
+		}
+		//put them into a list
+		List<Integer> firstKeyList = new ArrayList(firstKey);
+
+		return firstKeyList;
+	}
+	
+	/**
+	 * Gets the unsorted list of destinations.
+	 * @return List of destinations.
+	 */
+	public List<Integer> getUnsortedDestinations() {
+		
+		LOGGER.debug("Getting the unsorted destinations.");
+		
+		Set<Integer> secondKey = new HashSet<Integer>();
+		
+		//extract column keysets
+		for (Object mk: matrix.keySet()) {
+			int destination = (int) ((MultiKey)mk).getKey(1);
+			secondKey.add(destination);
+		}
+		//put them into a list
+		List<Integer> secondKeyList = new ArrayList(secondKey);
 		
 		return secondKeyList;
 	}
@@ -203,6 +251,23 @@ public class FreightMatrix {
 	public Set<MultiKey> getKeySet() {
 		
 		return matrix.keySet();
+	}
+	
+	/**
+	 * Gets sum of all the flows in the matrix.
+	 * @return Sum of all the flows in the matrix (i.e. number of trips).
+	 */
+	public int getTotalIntFlow() {
+		
+		int totalFlow = 0;
+		for (MultiKey mk: this.getKeySet()) {
+			int origin = (int) mk.getKey(0);
+			int destination = (int) mk.getKey(1);
+			int vehicleType = (int) mk.getKey(2);
+			totalFlow += this.getFlow(origin, destination, vehicleType);
+		}
+	
+		return totalFlow;
 	}
 	
 	/**
@@ -249,8 +314,8 @@ public class FreightMatrix {
 		
 		LOGGER.debug("Saving freight OD matrix.");
 		
-		List<Integer> firstKeyList = this.getDestinations();
-		List<Integer> secondKeyList = this.getOrigins();
+		List<Integer> firstKeyList = this.getSortedDestinations();
+		List<Integer> secondKeyList = this.getSortedOrigins();
 	
 		String NEW_LINE_SEPARATOR = "\n";
 		ArrayList<String> header = new ArrayList<String>();

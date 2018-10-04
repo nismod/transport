@@ -129,7 +129,7 @@ public class RebalancedTemproODMatrix extends RealODMatrixTempro {
 	public void assignAndCalculateRMSN() {
 		
 		this.rna.resetLinkVolumes();
-		this.rna.resetTripStorages();
+		this.rna.resetTripList();
 		//ODMatrix odm = new ODMatrix(this);
 		//	odm.printMatrixFormatted();
 		

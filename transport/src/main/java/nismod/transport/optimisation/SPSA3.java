@@ -397,7 +397,7 @@ public class SPSA3 {
 		
 		//reset as we are re-using the same road network assignment
 		rna.resetLinkVolumes();
-		rna.resetTripStorages();
+		rna.resetTripList();
 		
 		rna.setStartNodeProbabilities(thetaStart);
 		rna.setEndNodeProbabilities(thetaEnd);

@@ -278,8 +278,13 @@ public class DemandModel {
 					passengerODM = ODMatrix.createTEMProFromLadMatrix(this.yearToPassengerODMatrix.get(fromYear), this.temproMatrixTemplate, zoning);
 				} else
 					passengerODM = this.yearToPassengerODMatrix.get(fromYear);
-						
-				rna.assignFlowsAndUpdateLinkTravelTimesIterated(passengerODM, this.yearToFreightODMatrix.get(fromYear), this.rsg, this.zoning, this.props, this.linkTravelTimeAveragingWeight, this.assignmentIterations);
+				
+				FreightMatrix freightODM = this.yearToFreightODMatrix.get(fromYear);
+				
+				int expectedTripListSize = passengerODM.getTotalIntFlow() + freightODM.getTotalIntFlow();
+				rna.initialiseTripList(expectedTripListSize);
+				
+				rna.assignFlowsAndUpdateLinkTravelTimesIterated(passengerODM, freightODM, this.rsg, this.zoning, this.props, this.linkTravelTimeAveragingWeight, this.assignmentIterations);
 				yearToRoadNetworkAssignment.put(fromYear, rna);
 		
 				//calculate skim matrices
@@ -460,6 +465,10 @@ public class DemandModel {
 					predictedPassengerODMatrixToAssign = ODMatrix.createTEMProFromLadMatrix(predictedPassengerODMatrix, this.temproMatrixTemplate, zoning);
 				} else
 					predictedPassengerODMatrixToAssign = predictedPassengerODMatrix;
+				
+				int expectedTripListSize = predictedPassengerODMatrixToAssign.getTotalIntFlow() + predictedFreightODMatrix.getTotalIntFlow();
+				predictedRna.initialiseTripList(expectedTripListSize);
+							
 				predictedRna.assignFlowsAndUpdateLinkTravelTimesIterated(predictedPassengerODMatrixToAssign, predictedFreightODMatrix, this.rsg, this.zoning, this.props, this.linkTravelTimeAveragingWeight, this.assignmentIterations);
 				
 				//update skim matrices for predicted year after the assignment
@@ -567,6 +576,10 @@ public class DemandModel {
 					predictedPassengerODMatrixToAssign = ODMatrix.createTEMProFromLadMatrix(predictedPassengerODMatrix, this.temproMatrixTemplate, zoning);
 				} else
 					predictedPassengerODMatrixToAssign = predictedPassengerODMatrix;
+				
+				expectedTripListSize = predictedPassengerODMatrixToAssign.getTotalIntFlow() + predictedFreightODMatrix.getTotalIntFlow();
+				predictedRna.initialiseTripList(expectedTripListSize);
+				
 				predictedRna.assignFlowsAndUpdateLinkTravelTimesIterated(predictedPassengerODMatrixToAssign, predictedFreightODMatrix, this.rsg, this.zoning, this.props, this.linkTravelTimeAveragingWeight, this.assignmentIterations);				
 				
 				//store skim matrices into hashmaps
