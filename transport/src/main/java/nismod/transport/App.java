@@ -57,7 +57,7 @@ public class App {
 		Options options = new Options();
 		options.addOption("h", "help", false, "Show help.")
 		.addOption("d", "demo", false, "Run the Showcase Demo.")
-		.addOption("r", "run", false, "Run the main demand model.");
+		.addOption("b", "baseYear", false, "Run the model for base year.");
 
 		Option configFile = Option.builder("c")
 				.longOpt("configFile")
@@ -67,6 +67,16 @@ public class App {
 				.required()
 				.build();
 		options.addOption(configFile);
+		
+		Option runDemandModel = Option.builder("r")
+				.longOpt("runDemandModel")
+				.argName("PREDICTED_YEAR> <FROM_YEAR")
+				.hasArg()
+				.numberOfArgs(2)
+				.desc("Run demand model for a future year.")
+				.valueSeparator(' ')
+				.build();
+		options.addOption(runDemandModel);
 
 		Option passengerRoutes = Option.builder("p")
 				.longOpt("passengerRoutes")
@@ -442,10 +452,11 @@ public class App {
 				System.exit(0);
 			}
 
-			else if (line.hasOption("r")) { //run the main demand prediction model
+			else if (line.hasOption("b") || line.hasOption("r")) { //run the main demand model
 
-				final String fromYear = props.getProperty("fromYear");
-				final String predictedYear = props.getProperty("predictedYear");
+				final String baseYear = props.getProperty("baseYear");
+				//final String fromYear = props.getProperty("fromYear");
+				//final String predictedYear = props.getProperty("predictedYear");
 
 				final String baseYearODMatrixFile = props.getProperty("baseYearODMatrixFile");
 				final String baseYearFreightMatrixFile = props.getProperty("baseYearFreightMatrixFile");
@@ -533,8 +544,22 @@ public class App {
 
 				//the main demand model
 				DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, unitCO2EmissionsFile, engineTypeFractionsFile, AVFractionsFile, interventions, rsg, zoning, props);
-				dm.predictHighwayDemands(Integer.parseInt(predictedYear), Integer.parseInt(fromYear));
-				dm.saveAllResults(Integer.parseInt(predictedYear), Integer.parseInt(fromYear));
+				
+				if (line.hasOption("b")) {
+					dm.assignBaseYear();
+					dm.saveAllResults(Integer.parseInt(baseYear));
+				}
+				
+				if (line.hasOption("r")) {
+					
+					String[] values = line.getOptionValues("runDemandModel");
+
+					final String predictedYear = values[0];
+					final String fromYear = values[1];
+					
+					dm.predictHighwayDemandUsingResultsOfFromYear(Integer.parseInt(predictedYear), Integer.parseInt(fromYear));
+					dm.saveAllResults(Integer.parseInt(predictedYear));
+				}
 				
 				System.exit(0);
 			}
