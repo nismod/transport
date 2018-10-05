@@ -358,7 +358,7 @@ public class DemandModel {
 			
 			LOGGER.debug("First stage prediction passenger matrix (from population and GVA):");
 			//if (LOGGER.getLevel().isLessSpecificThan(Level.DEBUG)) predictedPassengerODMatrix.printMatrixFormatted();
-			if (LogManager.getRootLogger().getLevel().isLessSpecificThan(Level.DEBUG)) predictedPassengerODMatrix.printMatrixFormatted();
+			//if (LogManager.getRootLogger().getLevel().isLessSpecificThan(Level.DEBUG)) predictedPassengerODMatrix.printMatrixFormatted();
 					
 			//for each OD pair first predict the change in freight vehicle flows from the changes in population and GVA
 			for (MultiKey mk: this.yearToFreightODMatrix.get(fromYear).getKeySet()) {
@@ -417,7 +417,7 @@ public class DemandModel {
 
 			LOGGER.debug("First stage prediction freight matrix (from population and GVA):");
 			//if (LOGGER.getLevel().isLessSpecificThan(Level.DEBUG)) predictedFreightODMatrix.printMatrixFormatted();
-			if (LogManager.getRootLogger().getLevel().isLessSpecificThan(Level.DEBUG)) predictedFreightODMatrix.printMatrixFormatted();
+			//if (LogManager.getRootLogger().getLevel().isLessSpecificThan(Level.DEBUG)) predictedFreightODMatrix.printMatrixFormatted();
 			
 			//SECOND STAGE PREDICTION (FROM CHANGES IN COST AND TIME)
 			
@@ -516,7 +516,7 @@ public class DemandModel {
 
 				LOGGER.debug("Second stage prediction passenger matrix (from changes in skim matrices):");
 				//if (LOGGER.getLevel().isLessSpecificThan(Level.DEBUG)) predictedPassengerODMatrix.printMatrixFormatted();
-				if (LogManager.getRootLogger().getLevel().isLessSpecificThan(Level.DEBUG)) predictedPassengerODMatrix.printMatrixFormatted();
+				//if (LogManager.getRootLogger().getLevel().isLessSpecificThan(Level.DEBUG)) predictedPassengerODMatrix.printMatrixFormatted();
 								
 				//for each OD pair predict the change in freight vehicle flow from the change in skim matrices
 				for (MultiKey mk: this.yearToFreightODMatrix.get(fromYear).getKeySet()) {
@@ -552,7 +552,7 @@ public class DemandModel {
 
 				LOGGER.debug("Second stage prediction freight matrix (from changes in skim matrices):");
 				//if (LOGGER.getLevel().isLessSpecificThan(Level.DEBUG)) predictedFreightODMatrix.printMatrixFormatted();
-				if (LogManager.getRootLogger().getLevel().isLessSpecificThan(Level.DEBUG)) predictedFreightODMatrix.printMatrixFormatted();
+				//if (LogManager.getRootLogger().getLevel().isLessSpecificThan(Level.DEBUG)) predictedFreightODMatrix.printMatrixFormatted();
 				
 				//assign predicted year again using latest link travel times
 				predictedRna = new RoadNetworkAssignment(this.roadNetwork, 
@@ -618,8 +618,457 @@ public class DemandModel {
 			yearToTimeSkimMatrixFreight.put(predictedYear, tsmf);
 			yearToCostSkimMatrixFreight.put(predictedYear, csmf);
 		}
-	}                                                                                                                                               
+	}
+	
+	
+	/**
+	 * Assigned base year demand.
+	 */
+	public void assignBaseYear() {
+		
+		//check if the right interventions have been installed
+		if (interventions != null)
+			for (Intervention i: interventions) {
+				if (i.getStartYear() <= baseYear && i.getEndYear() >= baseYear && !i.getState())				i.install(this);
+				if (i.getEndYear() < baseYear && i.getState() || i.getStartYear() > baseYear && i.getState())	i.uninstall(this);
+			}
+					
+		LOGGER.debug("Assigning the base year {}.", baseYear);
 
+		//read default link travel time
+		final String defaultLinkTravelTimeFile = props.getProperty("defaultLinkTravelTimeFile");
+		Map<TimeOfDay, Map<Integer, Double>> defaultLinkTravelTime = null;
+		if (defaultLinkTravelTimeFile != null) 
+			defaultLinkTravelTime = InputFileReader.readLinkTravelTimeFile(this.baseYear, defaultLinkTravelTimeFile);
+		
+		//create a network assignment and assign the demand
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(this.roadNetwork, 
+											this.yearToEnergyUnitCosts.get(baseYear),
+											this.yearToUnitCO2Emissions.get(baseYear),
+											this.yearToEngineTypeFractions.get(baseYear), 
+											this.yearToAVFractions.get(baseYear),
+											this.vehicleTypeToPCU,
+											this.baseFuelConsumptionRates,
+											this.yearToRelativeFuelEfficiencies.get(baseYear),
+											this.yearToTimeOfDayDistribution.get(baseYear),
+											this.yearToTimeOfDayDistributionFreight.get(baseYear),
+											defaultLinkTravelTime, 
+											null,
+											null, 
+											this.yearToCongestionCharges.get(baseYear),
+											this.props);
+			
+			AssignableODMatrix passengerODM;
+			//if tempro or combined assignment used, disaggregate LAD-based matrix to tempro level using the template
+			final String assignmentType = props.getProperty("ASSIGNMENT_TYPE").toLowerCase();
+			if (assignmentType.equals("tempro") || assignmentType.equals("combined")) {
+				passengerODM = ODMatrix.createTEMProFromLadMatrix(this.yearToPassengerODMatrix.get(baseYear), this.temproMatrixTemplate, zoning);
+			} else
+				passengerODM = this.yearToPassengerODMatrix.get(baseYear);
+			
+			FreightMatrix freightODM = this.yearToFreightODMatrix.get(baseYear);
+			
+			int expectedTripListSize = passengerODM.getTotalIntFlow() + freightODM.getTotalIntFlow();
+			rna.initialiseTripList(expectedTripListSize);
+			
+			rna.assignFlowsAndUpdateLinkTravelTimesIterated(passengerODM, freightODM, this.rsg, this.zoning, this.props, this.linkTravelTimeAveragingWeight, this.assignmentIterations);
+			yearToRoadNetworkAssignment.put(baseYear, rna);
+	
+			//calculate skim matrices
+			SkimMatrix tsm = rna.calculateTimeSkimMatrix();
+			SkimMatrix csm = rna.calculateCostSkimMatrix();
+			SkimMatrixFreight tsmf = rna.calculateTimeSkimMatrixFreight();
+			SkimMatrixFreight csmf = rna.calculateCostSkimMatrixFreight();
+			
+			yearToTimeSkimMatrix.put(baseYear, tsm);
+			yearToCostSkimMatrix.put(baseYear, csm);
+			yearToTimeSkimMatrixFreight.put(baseYear, tsmf);
+			yearToCostSkimMatrixFreight.put(baseYear, csmf);
+			
+			//if assigning base year, print traffic count comparison data
+			rna.printRMSNstatistic();
+			rna.printGEHstatistic();
+		}
+		
+	/**
+	 * Predicts (passenger and freight) highway demand (origin-destination vehicle flows).
+	 * Uses already existing results of the fromYear.
+	 * @param predictedYear The year for which the demand is predicted.
+	 * @param fromYear The year from which demand the prediction is made.
+	 */
+	public void predictHighwayDemandUsingResultsOfFromYear(int predictedYear, int fromYear) {
+
+		LOGGER.info("Predicting {} highway demand from existing {} demand.", predictedYear, fromYear);
+
+		if (predictedYear < fromYear) {
+			LOGGER.error("predictedYear should not be smaller than fromYear!");
+			return;
+		}
+
+		//use output folder for input folder
+		String inputFolder = this.props.getProperty("outputFolder") + File.separator + fromYear;
+
+		String predictedODMatrixFile = this.props.getProperty("predictedODMatrixFile");
+		String predictedFreightMatrixFile = this.props.getProperty("predictedFreightMatrixFile");
+		String linkTravelTimesFile = this.props.getProperty("linkTravelTimesFile");
+		String timeSkimMatrixFile = this.props.getProperty("timeSkimMatrixFile");
+		String costSkimMatrixFile = this.props.getProperty("costSkimMatrixFile");
+		String timeSkimMatrixFreightFile = this.props.getProperty("timeSkimMatrixFreightFile");
+		String costSkimMatrixFreightFile = this.props.getProperty("costSkimMatrixFreightFile");
+
+		if (fromYear == baseYear) { //use different file names for base year
+			predictedODMatrixFile = "baseYearODMatrix.csv";
+			predictedFreightMatrixFile = "baseYearFreightMatrix.csv";
+		}
+
+		//load OD matrices, time and cost skim matrices, and link trave times for fromYear
+		LOGGER.info("Loading ouput data (OD matrices, time/cost skim matrices and link travel times) from year {}", fromYear);
+
+		Map<TimeOfDay, Map<Integer, Double>> linkTravelTime = null;
+
+		try {
+			String inputFile = inputFolder + File.separator + predictedODMatrixFile;
+			ODMatrix passengerODM = new ODMatrix(inputFile);
+			this.yearToPassengerODMatrix.put(fromYear, passengerODM);
+
+			inputFile = inputFolder + File.separator + predictedFreightMatrixFile;
+			FreightMatrix freightODM = new FreightMatrix(inputFile);
+			this.yearToFreightODMatrix.put(fromYear, freightODM);
+
+			inputFile = inputFolder + File.separator +  timeSkimMatrixFile;
+			SkimMatrix timeSkimMatrix = new SkimMatrix(inputFile);
+			this.yearToTimeSkimMatrix.put(fromYear, timeSkimMatrix);
+
+			inputFile = inputFolder + File.separator +  costSkimMatrixFile;
+			SkimMatrix costSkimMatrix = new SkimMatrix(inputFile);
+			this.yearToCostSkimMatrix.put(fromYear, costSkimMatrix);
+
+			inputFile = inputFolder + File.separator +  timeSkimMatrixFreightFile;
+			SkimMatrixFreight timeSkimMatrixFreight = new SkimMatrixFreight(inputFile);
+			this.yearToTimeSkimMatrixFreight.put(fromYear, timeSkimMatrixFreight);
+
+			inputFile = inputFolder + File.separator +  costSkimMatrixFreightFile;
+			SkimMatrixFreight costSkimMatrixFreight = new SkimMatrixFreight(inputFile);
+			this.yearToCostSkimMatrixFreight.put(fromYear, costSkimMatrixFreight);
+
+			inputFile = inputFolder + File.separator + linkTravelTimesFile;
+			//linkTravelTime = InputFileReader.readLinkTravelTimeFile(this.baseYear, linkTravelTimesFile);
+			linkTravelTime = InputFileReader.readLinkTravelTimeFile(fromYear, inputFile);
+
+		} catch (Exception e) {
+			LOGGER.error("Error while reading output files from year {}.", fromYear);
+			return;
+		}
+
+		//check if the right interventions have been installed
+		if (interventions != null) 
+			for (Intervention i: interventions) {
+				if (i.getStartYear() <= predictedYear && i.getEndYear() >= predictedYear && !i.getState())				i.install(this);
+				if (i.getEndYear() < predictedYear && i.getState() || i.getStartYear() > predictedYear && i.getState()) i.uninstall(this);
+			}
+
+		//copy skim matrices from fromYear into predictedYear
+		yearToTimeSkimMatrix.put(predictedYear, yearToTimeSkimMatrix.get(fromYear));
+		yearToCostSkimMatrix.put(predictedYear, yearToCostSkimMatrix.get(fromYear));
+		yearToTimeSkimMatrixFreight.put(predictedYear, yearToTimeSkimMatrixFreight.get(fromYear));
+		yearToCostSkimMatrixFreight.put(predictedYear, yearToCostSkimMatrixFreight.get(fromYear));
+
+		//predicted demand	
+		ODMatrix predictedPassengerODMatrix = new ODMatrix();
+		FreightMatrix predictedFreightODMatrix = new FreightMatrix();
+
+		//FIRST STAGE PREDICTION (FROM POPULATION AND GVA)
+
+		//for each OD pair first predict the change in passenger vehicle flows from the changes in population and GVA
+		for (MultiKey mk: this.yearToPassengerODMatrix.get(fromYear).getKeySet()) {
+			String originZone = (String) mk.getKey(0);
+			String destinationZone = (String) mk.getKey(1);
+
+			double oldFlow = this.yearToPassengerODMatrix.get(fromYear).getFlow(originZone, destinationZone);
+
+			double oldPopulationOriginZone = this.yearToZoneToPopulation.get(fromYear).get(originZone);
+			double oldPopulationDestinationZone = this.yearToZoneToPopulation.get(fromYear).get(destinationZone);
+			double newPopulationOriginZone = this.yearToZoneToPopulation.get(predictedYear).get(originZone);
+			double newPopulationDestinationZone = this.yearToZoneToPopulation.get(predictedYear).get(destinationZone);
+			double oldGVAOriginZone = this.yearToZoneToGVA.get(fromYear).get(originZone);
+			double oldGVADestinationZone = this.yearToZoneToGVA.get(fromYear).get(destinationZone);
+			double newGVAOriginZone = this.yearToZoneToGVA.get(predictedYear).get(originZone);
+			double newGVADestinationZone = this.yearToZoneToGVA.get(predictedYear).get(destinationZone);
+
+			double predictedFlow = oldFlow * Math.pow((newPopulationOriginZone + newPopulationDestinationZone) / (oldPopulationOriginZone + oldPopulationDestinationZone), elasticities.get(ElasticityTypes.POPULATION)) *
+					Math.pow((newGVAOriginZone + newGVADestinationZone) / (oldGVAOriginZone + oldGVADestinationZone), elasticities.get(ElasticityTypes.GVA));
+			//System.out.printf("%d = %d * (%.0f / %.0f) ^ %.2f * (%.1f / %.1f) ^ %.2f * (%.0f / %.0f) ^ %.2f * (%.1f / %.1f) ^ %.2f\n", (int) Math.round(predictedFlow), (int) Math.round(oldFlow),
+			//newPopulationOriginZone, oldPopulationOriginZone, elasticities.get(ElasticityTypes.POPULATION),
+			//newGVAOriginZone, oldGVAOriginZone, elasticities.get(ElasticityTypes.GVA),
+			//newPopulationDestinationZone, oldPopulationDestinationZone, elasticities.get(ElasticityTypes.POPULATION),
+			//newGVADestinationZone, oldGVADestinationZone, elasticities.get(ElasticityTypes.GVA));
+
+			predictedPassengerODMatrix.setFlow(originZone, destinationZone, (int) Math.round(predictedFlow));
+		} 
+
+		LOGGER.debug("First stage prediction passenger matrix (from population and GVA):");
+		//if (LOGGER.getLevel().isLessSpecificThan(Level.DEBUG)) predictedPassengerODMatrix.printMatrixFormatted();
+		//if (LogManager.getRootLogger().getLevel().isLessSpecificThan(Level.DEBUG)) predictedPassengerODMatrix.printMatrixFormatted();
+
+		//for each OD pair first predict the change in freight vehicle flows from the changes in population and GVA
+		for (MultiKey mk: this.yearToFreightODMatrix.get(fromYear).getKeySet()) {
+			int origin = (int) mk.getKey(0);
+			int destination = (int) mk.getKey(1);
+			int vehicleType = (int) mk.getKey(2);
+
+			double oldFlow = this.yearToFreightODMatrix.get(fromYear).getFlow(origin, destination, vehicleType);
+			double predictedFlow = oldFlow;
+
+			//if origin is a LAD (<= 1032, according to the DfT BYFM model)
+			if (origin <= 1032 && destination > 1032) {
+
+				String originZone = roadNetwork.getFreightZoneToLAD().get(origin); 
+				double oldPopulationOriginZone = this.yearToZoneToPopulation.get(fromYear).get(originZone);
+				double newPopulationOriginZone = this.yearToZoneToPopulation.get(predictedYear).get(originZone);
+				double oldGVAOriginZone = this.yearToZoneToGVA.get(fromYear).get(originZone);
+				double newGVAOriginZone = this.yearToZoneToGVA.get(predictedYear).get(originZone);
+
+				predictedFlow = predictedFlow * Math.pow(newPopulationOriginZone / oldPopulationOriginZone, elasticitiesFreight.get(ElasticityTypes.POPULATION)) *
+						Math.pow(newGVAOriginZone / oldGVAOriginZone, elasticitiesFreight.get(ElasticityTypes.GVA));
+			}
+			//if destination is a LAD (<= 1032, according to the DfT BYFM model)
+			else if (destination <= 1032 && origin > 1032) {
+
+				String destinationZone = roadNetwork.getFreightZoneToLAD().get(destination); 
+				double oldPopulationDestinationZone = this.yearToZoneToPopulation.get(fromYear).get(destinationZone);
+				double newPopulationDestinationZone = this.yearToZoneToPopulation.get(predictedYear).get(destinationZone);
+				double oldGVADestinationZone = this.yearToZoneToGVA.get(fromYear).get(destinationZone);
+				double newGVADestinationZone = this.yearToZoneToGVA.get(predictedYear).get(destinationZone);
+
+				predictedFlow = predictedFlow *	Math.pow(newPopulationDestinationZone / oldPopulationDestinationZone, elasticitiesFreight.get(ElasticityTypes.POPULATION)) *
+						Math.pow(newGVADestinationZone / oldGVADestinationZone, elasticitiesFreight.get(ElasticityTypes.GVA));
+			}
+			//if both origin and destination zone are LADs
+			else if (origin <= 1032 && destination <= 1032) {
+
+				String originZone = roadNetwork.getFreightZoneToLAD().get(origin); 
+				double oldPopulationOriginZone = this.yearToZoneToPopulation.get(fromYear).get(originZone);
+				double newPopulationOriginZone = this.yearToZoneToPopulation.get(predictedYear).get(originZone);
+				double oldGVAOriginZone = this.yearToZoneToGVA.get(fromYear).get(originZone);
+				double newGVAOriginZone = this.yearToZoneToGVA.get(predictedYear).get(originZone);
+				String destinationZone = roadNetwork.getFreightZoneToLAD().get(destination); 
+				double oldPopulationDestinationZone = this.yearToZoneToPopulation.get(fromYear).get(destinationZone);
+				double newPopulationDestinationZone = this.yearToZoneToPopulation.get(predictedYear).get(destinationZone);
+				double oldGVADestinationZone = this.yearToZoneToGVA.get(fromYear).get(destinationZone);
+				double newGVADestinationZone = this.yearToZoneToGVA.get(predictedYear).get(destinationZone);
+
+				predictedFlow = predictedFlow *	Math.pow((newPopulationOriginZone + newPopulationDestinationZone) / (oldPopulationOriginZone + oldPopulationDestinationZone), elasticitiesFreight.get(ElasticityTypes.POPULATION)) *
+						Math.pow((newGVAOriginZone + newGVADestinationZone) / (oldGVAOriginZone + oldGVADestinationZone), elasticitiesFreight.get(ElasticityTypes.GVA));
+
+			}
+
+			predictedFreightODMatrix.setFlow(origin, destination, vehicleType, (int) Math.round(predictedFlow));
+		}
+
+		LOGGER.debug("First stage prediction freight matrix (from population and GVA):");
+		//if (LOGGER.getLevel().isLessSpecificThan(Level.DEBUG)) predictedFreightODMatrix.printMatrixFormatted();
+		//if (LogManager.getRootLogger().getLevel().isLessSpecificThan(Level.DEBUG)) predictedFreightODMatrix.printMatrixFormatted();
+
+		//SECOND STAGE PREDICTION (FROM CHANGES IN COST AND TIME)
+
+		SkimMatrix tsm = null, csm = null;
+		SkimMatrixFreight tsmf = null, csmf = null;
+		RoadNetworkAssignment predictedRna = null;
+		for (int i=0; i<this.predictionIterations; i++) {
+
+			if (predictedRna == null)
+				//assign predicted year - using link travel times from fromYear
+				predictedRna = new RoadNetworkAssignment(this.roadNetwork, 
+						this.yearToEnergyUnitCosts.get(predictedYear),
+						this.yearToUnitCO2Emissions.get(predictedYear),
+						this.yearToEngineTypeFractions.get(predictedYear), 
+						this.yearToAVFractions.get(predictedYear),
+						this.vehicleTypeToPCU,
+						this.baseFuelConsumptionRates,
+						this.yearToRelativeFuelEfficiencies.get(predictedYear),
+						this.yearToTimeOfDayDistribution.get(predictedYear),
+						this.yearToTimeOfDayDistributionFreight.get(predictedYear),
+						linkTravelTime, 
+						null, 
+						null,
+						this.yearToCongestionCharges.get(predictedYear),
+						this.props);
+			else
+				//using latest link travel times
+				predictedRna = new RoadNetworkAssignment(this.roadNetwork, 
+						this.yearToEnergyUnitCosts.get(predictedYear),
+						this.yearToUnitCO2Emissions.get(predictedYear),
+						this.yearToEngineTypeFractions.get(predictedYear), 
+						this.yearToAVFractions.get(predictedYear),
+						this.vehicleTypeToPCU,
+						this.baseFuelConsumptionRates,
+						this.yearToRelativeFuelEfficiencies.get(predictedYear),
+						this.yearToTimeOfDayDistribution.get(predictedYear),
+						this.yearToTimeOfDayDistributionFreight.get(predictedYear),
+						predictedRna.getLinkTravelTimes(), 
+						predictedRna.getAreaCodeProbabilities(), 
+						predictedRna.getWorkplaceZoneProbabilities(),
+						this.yearToCongestionCharges.get(predictedYear),
+						this.props);
+
+			AssignableODMatrix predictedPassengerODMatrixToAssign;
+			//if tempro or combined assignment used, disaggregate LAD-based matrix to tempro level using the template
+			final String assignmentType = props.getProperty("ASSIGNMENT_TYPE").toLowerCase();
+			if (assignmentType.equals("tempro") || assignmentType.equals("combined")) {
+				predictedPassengerODMatrixToAssign = ODMatrix.createTEMProFromLadMatrix(predictedPassengerODMatrix, this.temproMatrixTemplate, zoning);
+			} else
+				predictedPassengerODMatrixToAssign = predictedPassengerODMatrix;
+
+			int expectedTripListSize = predictedPassengerODMatrixToAssign.getTotalIntFlow() + predictedFreightODMatrix.getTotalIntFlow();
+			predictedRna.initialiseTripList(expectedTripListSize);
+
+			predictedRna.assignFlowsAndUpdateLinkTravelTimesIterated(predictedPassengerODMatrixToAssign, predictedFreightODMatrix, this.rsg, this.zoning, this.props, this.linkTravelTimeAveragingWeight, this.assignmentIterations);
+
+			//update skim matrices for predicted year after the assignment
+			tsm = predictedRna.calculateTimeSkimMatrix();
+			csm = predictedRna.calculateCostSkimMatrix();
+			tsmf = predictedRna.calculateTimeSkimMatrixFreight();
+			csmf = predictedRna.calculateCostSkimMatrixFreight();
+
+			//for each OD pair predict the change in passenger vehicle flow from the change in skim matrices
+			for (MultiKey mk: this.yearToPassengerODMatrix.get(fromYear).getKeySet()) {
+				String originZone = (String) mk.getKey(0);
+				String destinationZone = (String) mk.getKey(1);
+
+				double oldFlow = predictedPassengerODMatrix.getFlow(originZone, destinationZone);
+
+				if (this.yearToTimeSkimMatrix.get(predictedYear) == null) LOGGER.error("No time skim matrix in the demand model.");
+				if (this.yearToCostSkimMatrix.get(predictedYear) == null) LOGGER.error("No cost skim matrix in the demand model.");
+
+				Double oldODTravelTime = this.yearToTimeSkimMatrix.get(predictedYear).getCost(originZone, destinationZone);
+				Double newODTravelTime = tsm.getCost(originZone, destinationZone);
+				Double oldODTravelCost = this.yearToCostSkimMatrix.get(predictedYear).getCost(originZone, destinationZone);
+				Double newODTravelCost = csm.getCost(originZone, destinationZone);
+
+				if (oldODTravelTime == null) LOGGER.warn("Unknown old travel time between zone {} and zone {}.", originZone, destinationZone);
+				if (newODTravelTime == null) LOGGER.warn("Unknown new travel time between zone {} and zone {}.", originZone, destinationZone);
+				if (oldODTravelCost == null) LOGGER.warn("Unknown old travel cost between zone {} and zone {}.", originZone, destinationZone);
+				if (newODTravelCost == null) LOGGER.warn("Unknown new travel cost between zone {} and zone {}.", originZone, destinationZone);
+				if (oldODTravelTime == null || newODTravelTime == null)	{ //if either is undefined assume the ratio is 1, i.e. not affecting the prediction
+					oldODTravelTime = 1.0;
+					newODTravelTime = 1.0;
+				}
+				if (oldODTravelCost == null || newODTravelCost == null) { 
+					oldODTravelCost = 1.0;
+					newODTravelCost = 1.0;
+				}
+
+				double predictedflow = oldFlow * Math.pow(newODTravelTime / oldODTravelTime, elasticities.get(ElasticityTypes.TIME)) *
+						Math.pow(newODTravelCost / oldODTravelCost, elasticities.get(ElasticityTypes.COST));
+
+				predictedPassengerODMatrix.setFlow(originZone, destinationZone, (int) Math.round(predictedflow));
+			}
+
+			LOGGER.debug("Second stage prediction passenger matrix (from changes in skim matrices):");
+			//if (LOGGER.getLevel().isLessSpecificThan(Level.DEBUG)) predictedPassengerODMatrix.printMatrixFormatted();
+			//if (LogManager.getRootLogger().getLevel().isLessSpecificThan(Level.DEBUG)) predictedPassengerODMatrix.printMatrixFormatted();
+
+			//for each OD pair predict the change in freight vehicle flow from the change in skim matrices
+			for (MultiKey mk: this.yearToFreightODMatrix.get(fromYear).getKeySet()) {
+				int origin = (int) mk.getKey(0);
+				int destination = (int) mk.getKey(1);
+				int vehicleType = (int) mk.getKey(2);
+
+				double oldFlow = predictedFreightODMatrix.getFlow(origin, destination, vehicleType);
+
+				Double oldODTravelTime = this.yearToTimeSkimMatrixFreight.get(predictedYear).getCost(origin, destination, vehicleType);
+				Double newODTravelTime = tsmf.getCost(origin, destination, vehicleType);
+				Double oldODTravelCost = this.yearToCostSkimMatrixFreight.get(predictedYear).getCost(origin, destination, vehicleType);
+				Double newODTravelCost = csmf.getCost(origin, destination, vehicleType);
+
+				if (oldODTravelTime == null) LOGGER.warn("Unknown old travel time between freight zone {} and freight zone {} for vehicle {}.", origin, destination, vehicleType);
+				if (newODTravelTime == null) LOGGER.warn("Unknown new travel time between freight zone {} and freight zone {} for vehicle {}.", origin, destination, vehicleType);
+				if (oldODTravelCost == null) LOGGER.warn("Unknown old travel cost between freight zone {} and freight zone {} for vehicle {}.", origin, destination, vehicleType);
+				if (newODTravelCost == null) LOGGER.warn("Unknown new travel cost between freight zone {} and freight zone {} for vehicle {}.", origin, destination, vehicleType);
+				if (oldODTravelTime == null || newODTravelTime == null)	{ //if either is undefined assume the ratio is 1, i.e. not affecting the prediction
+					oldODTravelTime = 1.0;
+					newODTravelTime = 1.0;
+				}
+				if (oldODTravelCost == null || newODTravelCost == null) { 
+					oldODTravelCost = 1.0;
+					newODTravelCost = 1.0;
+				}
+
+				double predictedflow = oldFlow * Math.pow(newODTravelTime / oldODTravelTime, elasticitiesFreight.get(ElasticityTypes.TIME)) *
+						Math.pow(newODTravelCost / oldODTravelCost, elasticitiesFreight.get(ElasticityTypes.COST));
+
+				predictedFreightODMatrix.setFlow(origin, destination, vehicleType, (int) Math.round(predictedflow));
+			}
+
+			LOGGER.debug("Second stage prediction freight matrix (from changes in skim matrices):");
+			//if (LOGGER.getLevel().isLessSpecificThan(Level.DEBUG)) predictedFreightODMatrix.printMatrixFormatted();
+			//if (LogManager.getRootLogger().getLevel().isLessSpecificThan(Level.DEBUG)) predictedFreightODMatrix.printMatrixFormatted();
+
+			//assign predicted year again using latest link travel times
+			predictedRna = new RoadNetworkAssignment(this.roadNetwork, 
+					this.yearToEnergyUnitCosts.get(predictedYear),
+					this.yearToUnitCO2Emissions.get(predictedYear),
+					this.yearToEngineTypeFractions.get(predictedYear), 
+					this.yearToAVFractions.get(predictedYear),
+					this.vehicleTypeToPCU,
+					this.baseFuelConsumptionRates,
+					this.yearToRelativeFuelEfficiencies.get(predictedYear),
+					this.yearToTimeOfDayDistribution.get(predictedYear),
+					this.yearToTimeOfDayDistributionFreight.get(predictedYear),
+					predictedRna.getLinkTravelTimes(), 
+					predictedRna.getAreaCodeProbabilities(), 
+					predictedRna.getWorkplaceZoneProbabilities(),
+					this.yearToCongestionCharges.get(predictedYear),
+					this.props);
+			//predictedRna.resetLinkVolumes();
+			//predictedRna.assignPassengerFlows(predictedPassengerODMatrix);
+			//predictedRna.updateLinkTravelTimes(ALPHA_LINK_TRAVEL_TIME_AVERAGING);
+
+			//if tempro or combined assignment used, disaggregate LAD-based matrix to tempro level using the template
+			if (assignmentType.equals("tempro") || assignmentType.equals("combined")) {
+				predictedPassengerODMatrixToAssign = ODMatrix.createTEMProFromLadMatrix(predictedPassengerODMatrix, this.temproMatrixTemplate, zoning);
+			} else
+				predictedPassengerODMatrixToAssign = predictedPassengerODMatrix;
+
+			expectedTripListSize = predictedPassengerODMatrixToAssign.getTotalIntFlow() + predictedFreightODMatrix.getTotalIntFlow();
+			predictedRna.initialiseTripList(expectedTripListSize);
+
+			predictedRna.assignFlowsAndUpdateLinkTravelTimesIterated(predictedPassengerODMatrixToAssign, predictedFreightODMatrix, this.rsg, this.zoning, this.props, this.linkTravelTimeAveragingWeight, this.assignmentIterations);				
+
+			//store skim matrices into hashmaps
+			yearToTimeSkimMatrix.put(predictedYear, tsm);
+			yearToCostSkimMatrix.put(predictedYear, csm);
+			yearToTimeSkimMatrixFreight.put(predictedYear, tsmf);
+			yearToCostSkimMatrixFreight.put(predictedYear, csmf);
+
+			//update skim matrices for predicted year after the assignment
+			tsm = predictedRna.calculateTimeSkimMatrix();
+			csm = predictedRna.calculateCostSkimMatrix();
+			tsmf = predictedRna.calculateTimeSkimMatrixFreight();
+			csmf = predictedRna.calculateCostSkimMatrixFreight();
+
+			/*
+				System.out.println("Difference in consecutive time skim matrices: " + tsm.getAbsoluteDifference(yearToTimeSkimMatrix.get(predictedYear)));
+				System.out.println("Difference in consecutive cost skim matrix: " + csm.getAbsoluteDifference(yearToCostSkimMatrix.get(predictedYear)));
+				System.out.println("Difference in consecutive time skim matrices for freight: " + tsmf.getAbsoluteDifference(yearToTimeSkimMatrixFreight.get(predictedYear)));
+				System.out.println("Difference in consecutive cost skim matrix for freight: " + csmf.getAbsoluteDifference(yearToCostSkimMatrixFreight.get(predictedYear)));
+			 */
+
+			//store road network assignment
+			yearToRoadNetworkAssignment.put(predictedYear, predictedRna);
+
+			//store predicted OD matrix in the map
+			this.yearToPassengerODMatrix.put(predictedYear, predictedPassengerODMatrix);
+			this.yearToFreightODMatrix.put(predictedYear, predictedFreightODMatrix);
+		}//for loop
+
+		//store latest skim matrices
+		yearToTimeSkimMatrix.put(predictedYear, tsm);
+		yearToCostSkimMatrix.put(predictedYear, csm);
+		yearToTimeSkimMatrixFreight.put(predictedYear, tsmf);
+		yearToCostSkimMatrixFreight.put(predictedYear, csmf);
+	}
+                                                                                                                
 	/**
 	 * Getter method for the passenger demand in a given year.
 	 * @param year Year for which the demand is requested.

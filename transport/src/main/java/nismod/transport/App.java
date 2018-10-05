@@ -355,6 +355,8 @@ public class App {
 				graph.setSize(600, 400);
 				graph.setVisible(true);
 				graph.saveToPNG("temproRebalancing.png");
+				
+				System.exit(0);
 			}
 			
 			else if (line.hasOption("o")) {
@@ -436,6 +438,8 @@ public class App {
 				graph.setSize(600, 400);
 				graph.setVisible(true);
 				graph.saveToPNG("temproOptimising.png");
+				
+				System.exit(0);
 			}
 
 			else if (line.hasOption("r")) { //run the main demand prediction model
@@ -531,6 +535,8 @@ public class App {
 				DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, unitCO2EmissionsFile, engineTypeFractionsFile, AVFractionsFile, interventions, rsg, zoning, props);
 				dm.predictHighwayDemands(Integer.parseInt(predictedYear), Integer.parseInt(fromYear));
 				dm.saveAllResults(Integer.parseInt(predictedYear), Integer.parseInt(fromYear));
+				
+				System.exit(0);
 			}
 
 		} catch (ParseException e) {

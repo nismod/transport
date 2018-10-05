@@ -418,6 +418,10 @@ public class DemandModelTest {
 		
 		dm.predictHighwayDemands(2016, 2015);
 		dm.saveAllResults(2016, 2015);
+		dm.assignBaseYear();
+		dm.saveAllResults(2015);
+		dm.predictHighwayDemandUsingResultsOfFromYear(2025, 2015);
+		dm.saveAllResults(2025);
 
 		/*
 		RoadNetworkAssignment rna2015 = dm.getRoadNetworkAssignment(2015);
