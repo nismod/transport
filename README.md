@@ -73,15 +73,10 @@ script as necessary.
 
 ## How to generate docs
 
-1. Install [javasphinx](http://bronto.github.io/javasphinx/)
+This project uses [sphinx](http://www.sphinx-doc.org) with [javasphinx](http://bronto.github.io/javasphinx/)
+to generate documentation.
 
-    `$ pip install javasphinx`
-
-2. Generate java API docs
-
-    `javasphinx-apidoc -o docs/ --title='transport' transport/src/main/java/`
-
-3. Build documentation
+Use the following command to build documentation locally
 
     `sphinx-build -b html docs/ docs/build/`
 
