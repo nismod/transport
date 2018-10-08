@@ -15,7 +15,25 @@
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
+import os
+from os.path import basename
+from javasphinx import apidoc
 
+def run_apidoc(_):
+    if basename(os.getcwd()) == 'docs':
+        os.chdir('..')
+    
+    argv = [
+        "-o", "docs/",
+        "--title='transport'",
+        "transport/src/main/java/",
+        "-f"
+    ]
+    argv.insert(0, apidoc.__file__)
+    apidoc.main(argv)
+
+def setup(app):
+    app.connect('builder-inited', run_apidoc)
 
 # -- Project information -----------------------------------------------------
 
