@@ -1262,6 +1262,10 @@ public class RoadNetworkAssignmentTest {
 		for (String LAD: tripEnds.keySet()) {
 			assertEquals("Trip ends should match flows to each LAD", tripEnds.get(LAD), tripEndsFromODM.get(LAD));		
 		}
+			
+		//test zonal temporal trip starts
+		System.out.println(rna.calculateZonalTemporalTripStartsForElectricVehicles());
+		System.out.println(rna.calculateZonalTemporalCarElectricityConsumptions(1.0));
 		
 		//SAVING METHODS
 		rna.saveAssignmentResults(2015, "./temp/testAssignmentResults.csv");
@@ -1274,6 +1278,8 @@ public class RoadNetworkAssignmentTest {
 		rna.saveZonalCarEnergyConsumptions(2015, 0.5, "./temp/testZonalCarEnergyConsumptions.csv");
 		rna.saveZonalVehicleKilometres(2015, "./temp/testZonalVehicleKilometres.csv");
 		rna.saveZonalVehicleKilometresWithAccessEgress(2015, "./temp/testZonalVehicleKilometresWithAccessEgress.csv");
+		rna.saveZonalTemporalTripStartsForEVs(2015, "./temp/testZonalTemporalEVTripStarts.csv");
+		rna.saveZonalTemporalCarElectricity(2015, 1.0, "./temp/testZonalTemporalCarElectricityConsumption.csv");
 	}
 	
 	@Test

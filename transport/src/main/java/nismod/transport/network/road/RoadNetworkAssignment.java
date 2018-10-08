@@ -3233,6 +3233,82 @@ public class RoadNetworkAssignment {
 	}
 	
 	/**
+	 * Calculates zonal (per LAD) and temporal (per hour) electricity consumption for car vehicles (in kWh).
+	 * @param originZoneEnergyWeight Percentage of energy consumption assigned to origin zone (the rest assigned to destination zone).
+	 * @return Electricity consumption per zone and time of day.
+	 */
+	public HashMap<String, HashMap<TimeOfDay, Double>> calculateZonalTemporalCarElectricityConsumptions(final double originZoneEnergyWeight) {
+
+		//initialise hashmap
+		HashMap<String, HashMap<TimeOfDay, Double>> zonalConsumptions = new HashMap<String, HashMap<TimeOfDay, Double>>();
+
+		for (Trip trip: this.tripList) {
+
+			if (trip.getVehicle() != VehicleType.CAR && trip.getVehicle() != VehicleType.CAR_AV) continue; //skip freight vehicles
+
+			HashMap<EnergyType, Double> tripConsumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyConsumptions, this.relativeFuelEfficiencies);
+			Double tripConsumptionElectricity = tripConsumption.get(EnergyType.ELECTRICITY);
+			if (tripConsumptionElectricity == null) continue; //skip if zero electricity consumption for this trip
+			
+			String originLAD = trip.getOriginLAD(this.roadNetwork.getNodeToZone());
+			String destinationLAD = trip.getDestinationLAD(this.roadNetwork.getNodeToZone());
+			TimeOfDay hour = trip.getTimeOfDay();
+			int multiplier = trip.getMultiplier();
+			
+			HashMap<TimeOfDay, Double> currentTemporalOrigin = zonalConsumptions.get(originLAD);
+			if (currentTemporalOrigin == null) currentTemporalOrigin = new HashMap<TimeOfDay, Double>();
+			zonalConsumptions.put(originLAD, currentTemporalOrigin);
+
+			HashMap<TimeOfDay, Double> currentTemporalDestination = zonalConsumptions.get(destinationLAD);
+			if (currentTemporalDestination == null) currentTemporalDestination = new HashMap<TimeOfDay, Double>();
+			zonalConsumptions.put(destinationLAD, currentTemporalDestination);
+			
+			Double currentConsumptionOrigin = currentTemporalOrigin.get(hour);
+			if (currentConsumptionOrigin == null) currentConsumptionOrigin = 0.0;
+
+			Double currentConsumptionDestination = currentTemporalDestination.get(hour);
+			if (currentConsumptionDestination == null) currentConsumptionDestination = 0.0;
+		
+			currentConsumptionOrigin += originZoneEnergyWeight * tripConsumptionElectricity * multiplier;
+			currentConsumptionDestination += (1.0 - originZoneEnergyWeight) * tripConsumptionElectricity * multiplier;
+			
+			currentTemporalOrigin.put(hour, currentConsumptionOrigin);
+			currentTemporalDestination.put(hour, currentConsumptionDestination);
+		}
+
+		return zonalConsumptions;
+	}
+	
+	/**
+	 * Calculates the number of electric (BV, PHEV) passenger (car/AV) trips starting in each LAD in each hour.
+	 * @return Number of trips.
+	 */
+	public HashMap<String, HashMap<TimeOfDay, Integer>> calculateZonalTemporalTripStartsForElectricVehicles() {
+
+		//initialise hashmap
+		HashMap<String, HashMap<TimeOfDay, Integer>> zonalTripStarts = new HashMap<String, HashMap<TimeOfDay, Integer>>();
+
+		for (Trip trip: this.tripList)
+			if ((trip.getVehicle() == VehicleType.CAR || trip.getVehicle() == VehicleType.CAR_AV) &&
+				(trip.getEngine() == EngineType.BEV || trip.getEngine() == EngineType.PHEV_PETROL || trip.getEngine() == EngineType.PHEV_DIESEL)) {
+				String originLAD = trip.getOriginLAD(this.roadNetwork.getNodeToZone());
+				TimeOfDay hour = trip.getTimeOfDay();
+				int multiplier = trip.getMultiplier();	
+				
+				HashMap<TimeOfDay, Integer> temporalTripStarts = zonalTripStarts.get(originLAD);
+				if (temporalTripStarts == null) temporalTripStarts = new HashMap<TimeOfDay, Integer>();
+				zonalTripStarts.put(originLAD, temporalTripStarts);
+				
+				Integer tripStarts = temporalTripStarts.get(hour);
+				if (tripStarts == null) tripStarts = 0;
+				tripStarts += multiplier;
+				temporalTripStarts.put(hour, tripStarts);
+			}
+
+		return zonalTripStarts;
+	}
+	
+	/**
 	 * Calculates origin-destination energy consumption for car vehicles for each energy type (in litres/kg for fuels and in kWh for electricity).
 	 * @return Zonal consumption for each energy type.
 	 */
@@ -3938,6 +4014,59 @@ public class RoadNetworkAssignment {
 	}
 	
 	/**
+	 * Saves zonal (LAD) and temporal (hourly) car electricity consumptions to an output file.
+	 * @param year Assignment year.
+	 * @param originZoneEnergyWeight Percentage of energy consumption assigned to origin zone (the rest assigned to destination zone).
+	 * @param outputFile Output file name (with path).
+	 */
+	public void saveZonalTemporalCarElectricity(int year, final double originZoneEnergyWeight, String outputFile) {
+
+		LOGGER.debug("Saving zonal and temporal car electricity consumptions.");
+		
+		//calculate energy consumptions
+		HashMap<String, HashMap<TimeOfDay, Double>> electricityConsumptions = this.calculateZonalTemporalCarElectricityConsumptions(originZoneEnergyWeight);
+		Set<String> zones = electricityConsumptions.keySet();
+		
+		String NEW_LINE_SEPARATOR = "\n";
+		ArrayList<String> header = new ArrayList<String>();
+		header.add("year");
+		header.add("zone");
+		for (TimeOfDay hour: TimeOfDay.values()) header.add(hour.name());
+
+		FileWriter fileWriter = null;
+		CSVPrinter csvFilePrinter = null;
+		CSVFormat csvFileFormat = CSVFormat.DEFAULT.withRecordSeparator(NEW_LINE_SEPARATOR);
+		try {
+			fileWriter = new FileWriter(outputFile);
+			csvFilePrinter = new CSVPrinter(fileWriter, csvFileFormat);
+			csvFilePrinter.printRecord(header);
+
+			for (String zone: zones) {
+				ArrayList<String> record = new ArrayList<String>();
+				record.add(Integer.toString(year));
+				record.add(zone);
+				for (int i=2; i<header.size(); i++)	{
+					TimeOfDay hour = TimeOfDay.valueOf(header.get(i));
+					Double consumption = electricityConsumptions.get(zone).get(hour);
+					if (consumption == null) consumption = 0.0;
+					record.add(String.format("%.2f", consumption));
+				}
+				csvFilePrinter.printRecord(record);
+			}
+		} catch (Exception e) {
+			LOGGER.error(e);
+		} finally {
+			try {
+				fileWriter.flush();
+				fileWriter.close();
+				csvFilePrinter.close();
+			} catch (IOException e) {
+				LOGGER.error(e);
+			}
+		}
+	}
+	
+	/**
 	 * Saves origin-destination matrix of car electricity consumption.
 	 * @param outputFile Output file name (with path).
 	 */
@@ -3950,6 +4079,58 @@ public class RoadNetworkAssignment {
 		
 		energyConsumptions.get(EnergyType.ELECTRICITY).saveMatrixFormatted(outputFile);
 		
+	}
+	
+	/**
+	 * Saves zonal (LAD) and temporal (hourly) number of EV trips to an output file.
+	 * @param year Assignment year.
+	 * @param outputFile Output file name (with path).
+	 */
+	public void saveZonalTemporalTripStartsForEVs(int year, String outputFile) {
+
+		LOGGER.debug("Saving number of EV trips starting in each zone in each hour.");
+		
+		//calculate energy consumptions
+		HashMap<String, HashMap<TimeOfDay, Integer>> zonalTemporalTripStartForEVs = this.calculateZonalTemporalTripStartsForElectricVehicles();
+		Set<String> zones = zonalTemporalTripStartForEVs.keySet();
+		
+		String NEW_LINE_SEPARATOR = "\n";
+		ArrayList<String> header = new ArrayList<String>();
+		header.add("year");
+		header.add("zone");
+		for (TimeOfDay hour: TimeOfDay.values()) header.add(hour.name());
+
+		FileWriter fileWriter = null;
+		CSVPrinter csvFilePrinter = null;
+		CSVFormat csvFileFormat = CSVFormat.DEFAULT.withRecordSeparator(NEW_LINE_SEPARATOR);
+		try {
+			fileWriter = new FileWriter(outputFile);
+			csvFilePrinter = new CSVPrinter(fileWriter, csvFileFormat);
+			csvFilePrinter.printRecord(header);
+
+			for (String zone: zones) {
+				ArrayList<String> record = new ArrayList<String>();
+				record.add(Integer.toString(year));
+				record.add(zone);
+				for (int i=2; i<header.size(); i++)	{
+					TimeOfDay hour = TimeOfDay.valueOf(header.get(i));
+					Integer trips = zonalTemporalTripStartForEVs.get(zone).get(hour);
+					if (trips == null) trips = 0;
+					record.add(String.format("%d", trips));
+				}
+				csvFilePrinter.printRecord(record);
+			}
+		} catch (Exception e) {
+			LOGGER.error(e);
+		} finally {
+			try {
+				fileWriter.flush();
+				fileWriter.close();
+				csvFilePrinter.close();
+			} catch (IOException e) {
+				LOGGER.error(e);
+			}
+		}
 	}
 
 	/**

@@ -1389,7 +1389,7 @@ public class RouteSetGenerator{
 					//trim to size
 					route.trimToSize();
 					//add route to the route set if all edge additions have been successful
-					this.addRouteWithoutValidityCheck(route);
+					this.addRouteWithoutValidityCheck(route);					
 					//create new route if there are more bytes
 					//if (data.available() > 0) route = new Route();
 					route = new Route(roadNetwork);

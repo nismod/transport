@@ -523,7 +523,8 @@ public class App {
 					if (flagUseRouteChoiceModel) { 
 						//read tempro routes
 						final String temproRoutesFile = props.getProperty("temproRoutesFile");
-						rsg.readRoutesBinaryWithoutValidityCheck(temproRoutesFile);
+	//					rsg.readRoutesBinaryWithoutValidityCheck(temproRoutesFile);
+						rsg.readRoutesBinaryGZIPpedWithoutValidityCheck(temproRoutesFile);
 						LOGGER.debug(rsg.getStatistics());
 						rsg.readRoutesBinaryWithoutValidityCheck(freightRoutesFile);
 						LOGGER.debug(rsg.getStatistics());

@@ -1277,6 +1277,8 @@ public class DemandModel {
 		String vehicleKilometresFile = this.props.getProperty("vehicleKilometresFile");
 		String energyConsumptionsFile = this.props.getProperty("energyConsumptionsFile");
 		String totalCO2EmissionsFile = this.props.getProperty("totalCO2EmissionsFile");
+		String zonalTemporalEVTripStartsFile = this.props.getProperty("zonalTemporalEVTripStartsFile");
+		String zonalTemporalEVTripElectricityFile = this.props.getProperty("zonalTemporalEVTripElectricityFile");
 		String tripsFile = this.props.getProperty("tripsFile");
 	
 		if (year == Integer.parseInt(baseYear)) { //rename output files for base year
@@ -1316,6 +1318,12 @@ public class DemandModel {
 		
 		outputFile = file.getPath() + File.separator + linkTravelTimesFile;
 		this.yearToRoadNetworkAssignment.get(year).saveLinkTravelTimes(year, outputFile);
+		
+		outputFile = file.getPath() + File.separator + zonalTemporalEVTripStartsFile;
+		this.yearToRoadNetworkAssignment.get(year).saveZonalTemporalTripStartsForEVs(year, outputFile);
+		
+		outputFile = file.getPath() + File.separator + zonalTemporalEVTripElectricityFile;
+		this.yearToRoadNetworkAssignment.get(year).saveZonalTemporalCarElectricity(year, 1.0, outputFile);
 	}
 	
 	/**
