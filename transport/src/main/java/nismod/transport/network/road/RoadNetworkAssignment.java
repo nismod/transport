@@ -3242,43 +3242,43 @@ public class RoadNetworkAssignment {
 		//initialise hashmap
 		HashMap<String, HashMap<TimeOfDay, Double>> zonalConsumptions = new HashMap<String, HashMap<TimeOfDay, Double>>();
 
-		for (Trip trip: this.tripList) {
+		for (Trip trip: this.tripList)
+			if ((trip.getVehicle() == VehicleType.CAR || trip.getVehicle() == VehicleType.CAR_AV) &&
+				(trip.getEngine() == EngineType.BEV || trip.getEngine() == EngineType.PHEV_PETROL || trip.getEngine() == EngineType.PHEV_DIESEL)) {
 
-			if (trip.getVehicle() != VehicleType.CAR && trip.getVehicle() != VehicleType.CAR_AV) continue; //skip freight vehicles
+				HashMap<EnergyType, Double> tripConsumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyConsumptions, this.relativeFuelEfficiencies);
+				Double tripConsumptionElectricity = tripConsumption.get(EnergyType.ELECTRICITY);
+				if (tripConsumptionElectricity == null) continue; //skip if zero electricity consumption for this trip
 
-			HashMap<EnergyType, Double> tripConsumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyConsumptions, this.relativeFuelEfficiencies);
-			Double tripConsumptionElectricity = tripConsumption.get(EnergyType.ELECTRICITY);
-			if (tripConsumptionElectricity == null) continue; //skip if zero electricity consumption for this trip
-			
-			String originLAD = trip.getOriginLAD(this.roadNetwork.getNodeToZone());
-			String destinationLAD = trip.getDestinationLAD(this.roadNetwork.getNodeToZone());
-			TimeOfDay hour = trip.getTimeOfDay();
-			int multiplier = trip.getMultiplier();
-			
-			HashMap<TimeOfDay, Double> currentTemporalOrigin = zonalConsumptions.get(originLAD);
-			if (currentTemporalOrigin == null) currentTemporalOrigin = new HashMap<TimeOfDay, Double>();
-			zonalConsumptions.put(originLAD, currentTemporalOrigin);
+				String originLAD = trip.getOriginLAD(this.roadNetwork.getNodeToZone());
+				String destinationLAD = trip.getDestinationLAD(this.roadNetwork.getNodeToZone());
+				TimeOfDay hour = trip.getTimeOfDay();
+				int multiplier = trip.getMultiplier();
 
-			HashMap<TimeOfDay, Double> currentTemporalDestination = zonalConsumptions.get(destinationLAD);
-			if (currentTemporalDestination == null) currentTemporalDestination = new HashMap<TimeOfDay, Double>();
-			zonalConsumptions.put(destinationLAD, currentTemporalDestination);
-			
-			Double currentConsumptionOrigin = currentTemporalOrigin.get(hour);
-			if (currentConsumptionOrigin == null) currentConsumptionOrigin = 0.0;
+				HashMap<TimeOfDay, Double> currentTemporalOrigin = zonalConsumptions.get(originLAD);
+				if (currentTemporalOrigin == null) currentTemporalOrigin = new HashMap<TimeOfDay, Double>();
+				zonalConsumptions.put(originLAD, currentTemporalOrigin);
 
-			Double currentConsumptionDestination = currentTemporalDestination.get(hour);
-			if (currentConsumptionDestination == null) currentConsumptionDestination = 0.0;
-		
-			currentConsumptionOrigin += originZoneEnergyWeight * tripConsumptionElectricity * multiplier;
-			currentConsumptionDestination += (1.0 - originZoneEnergyWeight) * tripConsumptionElectricity * multiplier;
-			
-			currentTemporalOrigin.put(hour, currentConsumptionOrigin);
-			currentTemporalDestination.put(hour, currentConsumptionDestination);
-		}
+				HashMap<TimeOfDay, Double> currentTemporalDestination = zonalConsumptions.get(destinationLAD);
+				if (currentTemporalDestination == null) currentTemporalDestination = new HashMap<TimeOfDay, Double>();
+				zonalConsumptions.put(destinationLAD, currentTemporalDestination);
+
+				Double currentConsumptionOrigin = currentTemporalOrigin.get(hour);
+				if (currentConsumptionOrigin == null) currentConsumptionOrigin = 0.0;
+
+				Double currentConsumptionDestination = currentTemporalDestination.get(hour);
+				if (currentConsumptionDestination == null) currentConsumptionDestination = 0.0;
+
+				currentConsumptionOrigin += originZoneEnergyWeight * tripConsumptionElectricity * multiplier;
+				currentConsumptionDestination += (1.0 - originZoneEnergyWeight) * tripConsumptionElectricity * multiplier;
+
+				currentTemporalOrigin.put(hour, currentConsumptionOrigin);
+				currentTemporalDestination.put(hour, currentConsumptionDestination);
+			}
 
 		return zonalConsumptions;
 	}
-	
+
 	/**
 	 * Calculates the number of electric (BV, PHEV) passenger (car/AV) trips starting in each LAD in each hour.
 	 * @return Number of trips.
