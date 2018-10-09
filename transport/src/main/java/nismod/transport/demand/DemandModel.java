@@ -695,6 +695,9 @@ public class DemandModel {
 			LOGGER.debug("Empirical: {}", Arrays.toString(EstimatedODMatrix.OTLD));
 			LOGGER.debug("Without access/egress: {}", Arrays.toString(rna.getObservedTripLengthDistribution(EstimatedODMatrix.BIN_LIMITS_KM, false)));
 			LOGGER.debug("With access/egress: {}", Arrays.toString(rna.getObservedTripLengthDistribution(EstimatedODMatrix.BIN_LIMITS_KM, true)));
+			LOGGER.debug("Trip length frequencies:");
+			LOGGER.debug("Without access/egress: {}", Arrays.toString(rna.getObservedTripLengthFrequencies(EstimatedODMatrix.BIN_LIMITS_KM, false)));
+			LOGGER.debug("With access/egress: {}", Arrays.toString(rna.getObservedTripLengthFrequencies(EstimatedODMatrix.BIN_LIMITS_KM, true)));
 	}
 		
 	/**

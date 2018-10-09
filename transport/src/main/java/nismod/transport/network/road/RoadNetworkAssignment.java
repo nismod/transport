@@ -3101,16 +3101,16 @@ public class RoadNetworkAssignment {
 
 		return distanceSkimMatrixFreight;
 	}
-
+	
 	/**
-	 * Calculates observed trip length distribution.
+	 * Calculates observed trip length frequences.
 	 * @param binLimitsInKm Bin limits in kilometres.
 	 * @param includeAccessEgress If true include access and eggress to trip distance calculation.
 	 * @return Observed trip length distribution.
 	 */
-	public double[] getObservedTripLengthDistribution(double[] binLimitsInKm, boolean flagIncludeAccessEgress) {
+	public double[] getObservedTripLengthFrequencies(double[] binLimitsInKm, boolean flagIncludeAccessEgress) {
 		
-		double[] distribution = new double[binLimitsInKm.length];
+		double[] frequences = new double[binLimitsInKm.length];
 		
 		for (Trip trip: this.tripList) {
 			
@@ -3128,14 +3128,27 @@ public class RoadNetworkAssignment {
 			//find in which bin it falls
 			for (int i=1; i<binLimitsInKm.length; i++) {
 				if (tripDistance < binLimitsInKm[i]) {
-					distribution[i-1] += trip.multiplier;
+					frequences[i-1] += trip.multiplier;
 					break;
 				}
 				if (tripDistance >= binLimitsInKm[binLimitsInKm.length-1])
-					distribution[binLimitsInKm.length-1] += trip.multiplier;
+					frequences[binLimitsInKm.length-1] += trip.multiplier;
 			}
 					
 		}
+	
+		return frequences;
+	}
+
+	/**
+	 * Calculates observed trip length distribution.
+	 * @param binLimitsInKm Bin limits in kilometres.
+	 * @param includeAccessEgress If true include access and eggress to trip distance calculation.
+	 * @return Observed trip length distribution.
+	 */
+	public double[] getObservedTripLengthDistribution(double[] binLimitsInKm, boolean flagIncludeAccessEgress) {
+		
+		double[] distribution = this.getObservedTripLengthFrequencies(binLimitsInKm, flagIncludeAccessEgress);
 		
 		//normalise distribution
 		double sum = 0.0;

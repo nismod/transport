@@ -1270,11 +1270,18 @@ public class RoadNetworkAssignmentTest {
 		System.out.println(rna.calculateZonalTemporalCarElectricityConsumptions(1.0));
 		
 		//observed trip length distribution
-		System.out.println("Trip lenght distributions:");
+		System.out.println("Trip length distributions:");
+		System.out.println(Arrays.toString(rna.getObservedTripLengthFrequencies(EstimatedODMatrix.BIN_LIMITS_KM, false)));
+		System.out.println(Arrays.toString(rna.getObservedTripLengthFrequencies(EstimatedODMatrix.BIN_LIMITS_KM, true)));
 		System.out.println(Arrays.toString(EstimatedODMatrix.OTLD));
 		System.out.println(Arrays.toString(rna.getObservedTripLengthDistribution(EstimatedODMatrix.BIN_LIMITS_KM, false)));
 		System.out.println(Arrays.toString(rna.getObservedTripLengthDistribution(EstimatedODMatrix.BIN_LIMITS_KM, true)));
-				
+		
+		double sum = 0.0;
+		double[] frequencies = rna.getObservedTripLengthFrequencies(EstimatedODMatrix.BIN_LIMITS_KM, false);
+		for (double f: frequencies) sum += f;
+		assertEquals("Total number of trips equals sum of frequences", temproODM2.getTotalIntFlow(), sum, EPSILON);
+						
 		//SAVING METHODS
 		rna.saveAssignmentResults(2015, "./temp/testAssignmentResults.csv");
 		rna.saveHourlyCarVolumes(2015, "./temp/testHourlyCarVolumes.csv");
