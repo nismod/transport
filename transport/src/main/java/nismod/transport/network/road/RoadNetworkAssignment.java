@@ -3102,7 +3102,44 @@ public class RoadNetworkAssignment {
 		return distanceSkimMatrixFreight;
 	}
 
+	/**
+	 * Calculates observed trip length distribution.
+	 * @param binLimitsInKm Bin limits in kilometres.
+	 * @param includeAccessEgress If true include access and eggress to trip distance calculation.
+	 * @return Observed trip length distribution.
+	 */
+	public double[] getObservedTripLengthDistribution(double[] binLimitsInKm, boolean flagIncludeAccessEgress) {
+		
+		double[] distribution = new double[binLimitsInKm.length];
+		
+		for (Trip trip: this.tripList) {
+			
+			if (!(trip.getVehicle() == VehicleType.CAR || trip.getVehicle() == VehicleType.CAR_AV)) continue; //skip freight
+			
+			Double tripDistance;
+			if (!flagIncludeAccessEgress) tripDistance = trip.getRoute().getLength(); //without access/egress
+			else {
+				if (trip instanceof TripTempro)
+						tripDistance = ((TripTempro)trip).getLength(); //with access/egress
+				else 
+						tripDistance = trip.getLength(roadNetwork.getNodeToAverageAccessEgressDistance()); //with access/egress
+			}
 
+			for (int i=1; i<binLimitsInKm.length; i++)
+				if (tripDistance < binLimitsInKm[i]) {
+					distribution[i] += trip.multiplier;
+					break;
+				}
+		}
+		
+		//normalise distribution
+		double sum = 0.0;
+		for (int i=0; i<binLimitsInKm.length; i++) sum += distribution[i];
+		for (int i=0; i<binLimitsInKm.length; i++) distribution[i] /= sum;
+		
+		return distribution;
+	}
+	
 	/**
 	 * Updates cost skim matrix (zone-to-zone financial costs) for freight.
 	 * @param costSkimMatrixFreight Inter-zonal skim matrix (cost) for freight.

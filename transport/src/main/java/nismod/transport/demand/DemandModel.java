@@ -6,6 +6,7 @@ package nismod.transport.demand;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -685,10 +686,16 @@ public class DemandModel {
 			yearToTimeSkimMatrixFreight.put(baseYear, tsmf);
 			yearToCostSkimMatrixFreight.put(baseYear, csmf);
 			
-			//if assigning base year, print traffic count comparison data
+			//print traffic count comparison data
 			rna.printRMSNstatistic();
 			rna.printGEHstatistic();
-		}
+			
+			//observed trip length distribution
+			LOGGER.debug("Trip length distributions:");
+			LOGGER.debug("Empirical: {}", Arrays.toString(EstimatedODMatrix.OTLD));
+			LOGGER.debug("Without access/egress: {}", Arrays.toString(rna.getObservedTripLengthDistribution(EstimatedODMatrix.BIN_LIMITS_KM, false)));
+			LOGGER.debug("With access/egress: {}", Arrays.toString(rna.getObservedTripLengthDistribution(EstimatedODMatrix.BIN_LIMITS_KM, true)));
+	}
 		
 	/**
 	 * Predicts (passenger and freight) highway demand (origin-destination vehicle flows).
