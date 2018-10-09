@@ -3125,11 +3125,16 @@ public class RoadNetworkAssignment {
 						tripDistance = trip.getLength(roadNetwork.getNodeToAverageAccessEgressDistance()); //with access/egress
 			}
 
-			for (int i=1; i<binLimitsInKm.length; i++)
+			//find in which bin it falls
+			for (int i=1; i<binLimitsInKm.length; i++) {
 				if (tripDistance < binLimitsInKm[i]) {
-					distribution[i] += trip.multiplier;
+					distribution[i-1] += trip.multiplier;
 					break;
 				}
+				if (tripDistance >= binLimitsInKm[binLimitsInKm.length-1])
+					distribution[binLimitsInKm.length-1] += trip.multiplier;
+			}
+					
 		}
 		
 		//normalise distribution
