@@ -3693,6 +3693,7 @@ public class RoadNetworkAssignment {
 		HashMap<Integer, Double> averageCapacities = this.calculateAveragePeakLinkPointCapacities();
 		HashMap<Integer, Double> maximumCapacities = this.calculateMaximumPeakLinkPointCapacities();
 		HashMap<Integer, Double> densities = this.calculatePeakLinkDensities();
+		HashMap<Integer, Double> GEHStats = this.calculateGEHStatisticForCarCounts();
 
 		String NEW_LINE_SEPARATOR = "\n";
 		ArrayList<String> header = new ArrayList<String>();
@@ -3722,6 +3723,7 @@ public class RoadNetworkAssignment {
 		header.add("countVan");
 		header.add("countRigid");
 		header.add("countArtic");
+		header.add("GEH");
 		FileWriter fileWriter = null;
 		CSVPrinter csvFilePrinter = null;
 		CSVFormat csvFileFormat = CSVFormat.DEFAULT.withRecordSeparator(NEW_LINE_SEPARATOR);
@@ -3811,8 +3813,11 @@ public class RoadNetworkAssignment {
 					record.add(Long.toString(rigidCount));
 					long articCount = (long) feature.getAttribute("FdHGVA3") + (long) feature.getAttribute("FdHGVA5") + (long) feature.getAttribute("FdHGVA6");
 					record.add(Long.toString(articCount));
+					double geh = GEHStats.get(edge.getID());
+					record.add(String.format("%.4f", geh));
 				}
 				else { //ferry or a newly developed road with no count point
+					record.add("N/A");
 					record.add("N/A");
 					record.add("N/A");
 					record.add("N/A");
