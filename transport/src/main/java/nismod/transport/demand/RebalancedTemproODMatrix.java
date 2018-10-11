@@ -44,6 +44,7 @@ public class RebalancedTemproODMatrix extends RealODMatrixTempro {
 	 * @param rna Road network assignment.
 	 * @param rsg Route set generator.
 	 * @param zoning Zoning system.
+	 * @param params Properties.
 	 */
 	public RebalancedTemproODMatrix(List<String> origins, List<String> destinations, RoadNetworkAssignment rna, RouteSetGenerator rsg, Zoning zoning, Properties params) {
 

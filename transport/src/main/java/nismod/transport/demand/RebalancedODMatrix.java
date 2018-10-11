@@ -39,6 +39,7 @@ public class RebalancedODMatrix extends RealODMatrix {
 	 * @param destinations List of destination zones.
 	 * @param rna Road network assignment.
 	 * @param rsg Route set generator.
+	 * @param params Properties.
 	 */
 	public RebalancedODMatrix(List<String> origins, List<String> destinations, RoadNetworkAssignment rna, RouteSetGenerator rsg, Properties params) {
 

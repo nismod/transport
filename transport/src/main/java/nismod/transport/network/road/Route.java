@@ -61,6 +61,7 @@ public class Route {
 	/**
 	 * Construtor from a given path.
 	 * @param path A path from which to construct a route.
+	 * @param roadNetwork Road network.
 	 */
 	public Route(RoadPath path, RoadNetwork roadNetwork) {
 		
@@ -157,7 +158,7 @@ public class Route {
 	
 	/**
 	 * Adds a directed edge to the end of the current route.
-	 * @param edge Directed edge to be added.
+	 * @param edgeID Directed edge to be added.
 	 */
 	public void addEdgeWithoutValidityCheck(int edgeID) {
 

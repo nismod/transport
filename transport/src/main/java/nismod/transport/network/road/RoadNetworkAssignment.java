@@ -523,6 +523,7 @@ public class RoadNetworkAssignment {
 	 * which means different fastest routes may be used in different hours of the day.
 	 * @param passengerODM Passenger origin-destination matrix with flows to be assigned.
 	 * @param routeStorage Stores routes for each hour of the day separately.
+	 * @param props Properties.
 	 */
 	@SuppressWarnings("unused")
 	public void assignPassengerFlowsHourlyRouting(AssignableODMatrix passengerODM, Map<TimeOfDay, RouteSetGenerator> routeStorage, Properties props) {
@@ -999,6 +1000,7 @@ public class RoadNetworkAssignment {
 	 * @param passengerODM Passenger origin-destination matrix with flows to be assigned.
 	 * @param zoning Contains Tempro zone information.
 	 * @param rsg Route set (here new routes will be stored).
+	 * @param props Properties.
 	 */
 	@SuppressWarnings("unused")
 	public void assignPassengerFlowsTempro(AssignableODMatrix passengerODM, Zoning zoning, RouteSetGenerator rsg, Properties props) {
@@ -1758,6 +1760,7 @@ public class RoadNetworkAssignment {
 	 * </ul>   
 	 * @param freightMatrix Freight origin-destination matrix.
 	 * @param rsg Route storage (reduces the number of routing calls).
+	 * @param props Properties.
 	 */
 	@SuppressWarnings("unused")
 	public void assignFreightFlowsRouting(FreightMatrix freightMatrix, RouteSetGenerator rsg, Properties props) {
@@ -1999,6 +2002,7 @@ public class RoadNetworkAssignment {
 	 * </ul>   
 	 * @param freightMatrix Freight origin-destination matrix.
 	 * @param routeStorage Route storage (stores fastest routes separately for each hour of the day).
+	 * @param props Properties.
 	 */
 	@SuppressWarnings("unused")
 	public void assignFreightFlowsHourlyRouting(FreightMatrix freightMatrix, Map<TimeOfDay, RouteSetGenerator> routeStorage, Properties props) {
@@ -2789,6 +2793,7 @@ public class RoadNetworkAssignment {
 	 * @param passengerODM Passenger origin-destination matrix.
 	 * @param freightODM Freight origin-destination matrix.
 	 * @param rsg Route set generator object with routes to be used for the assignment (if route choice used) or an object in which to store routes (if routing used).
+	 * @param props Properties.
 	 * @param weight Weighting parameter.
 	 * @param iterations Number of iterations.
 	 */
@@ -3105,7 +3110,7 @@ public class RoadNetworkAssignment {
 	/**
 	 * Calculates observed trip length frequences.
 	 * @param binLimitsInKm Bin limits in kilometres.
-	 * @param includeAccessEgress If true include access and eggress to trip distance calculation.
+	 * @param flagIncludeAccessEgress If true include access and eggress to trip distance calculation.
 	 * @return Observed trip length distribution.
 	 */
 	public double[] getObservedTripLengthFrequencies(double[] binLimitsInKm, boolean flagIncludeAccessEgress) {
@@ -3143,7 +3148,7 @@ public class RoadNetworkAssignment {
 	/**
 	 * Calculates observed trip length distribution.
 	 * @param binLimitsInKm Bin limits in kilometres.
-	 * @param includeAccessEgress If true include access and eggress to trip distance calculation.
+	 * @param flagIncludeAccessEgress If true include access and eggress to trip distance calculation.
 	 * @return Observed trip length distribution.
 	 */
 	public double[] getObservedTripLengthDistribution(double[] binLimitsInKm, boolean flagIncludeAccessEgress) {

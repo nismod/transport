@@ -36,8 +36,7 @@ public class RouteSet {
 	
 	/**
 	 * Constructor.
-	 * @param originNode Origin node.
-	 * @param destinationNode Destination node.
+	 * @param roadNetwork Road network.
 	 */
 	public RouteSet(RoadNetwork roadNetwork) {
 		//this.originNode = originNode;
@@ -149,8 +148,6 @@ public class RouteSet {
 	
 	/**
 	 * Calculates choice probabilities using logit formula.
-	 * @param linkTravelTime Link travel times.
-	 * @param params Route choice parameters.
 	 */
 	public void calculateProbabilities() {
 		

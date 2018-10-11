@@ -38,6 +38,11 @@ public class RealODMatrixTempro implements AssignableODMatrix {
 	
 	private Zoning zoning;
 	
+	/**
+	 * Constructor for an empty OD matrix.
+	 * Uses the maximum zone code which will create a rather large matrix.
+	 * @param zoning Zoning system.
+	 */
 	public RealODMatrixTempro(Zoning zoning) {
 		
 		this.zoning = zoning;
@@ -48,6 +53,7 @@ public class RealODMatrixTempro implements AssignableODMatrix {
 	/**
 	 * Constructor that reads OD matrix from an input csv file. Can use both matrix and list format.
 	 * @param fileName Path to the input file.
+	 * @param zoning Zoning system.
 	 * @throws FileNotFoundException if any.
 	 * @throws IOException if any.
 	 */
