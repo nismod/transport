@@ -1102,7 +1102,7 @@ public class RoadNetworkAssignment {
 
 				if (originZone.equals(destinationZone)) { 	//if inter-zonal, pick random node within the zone (based on gravitating population is better)
 
-					List<Integer> listOfContainedNodes = zoning.getZoneToListOfContaintedNodes().get(originZone);
+					List<Integer> listOfContainedNodes = zoning.getZoneToListOfContainedNodes().get(originZone);
 
 					//if there are no zones in that node, simply pick the closest node
 					if (listOfContainedNodes == null) { 
@@ -1560,12 +1560,18 @@ public class RoadNetworkAssignment {
 				
 			if (passengerODM.getIntFlow(originZone, destinationZone) == 0) continue;
 			
+			/*
+			//calculate distance
 			Point originCentroid = zoning.getZoneToCentroid().get(originZone);
 			Point destinationCentroid = zoning.getZoneToCentroid().get(destinationZone);
-				
 			final double centroidDistance = originCentroid.distance(destinationCentroid);
+			*/
 			
-
+			//get distance between Tempro zone centroids
+			int originZoneID = zoning.getZoneCodeToIDMap().get(originZone);
+			int destinationZoneID = zoning.getZoneCodeToIDMap().get(destinationZone);
+			final double centroidDistance = zoning.getZoneToZoneDistanceMatrix()[originZoneID-1][destinationZoneID-1];
+			
 			/*
 			List<Integer> listOfOriginNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(originZone)); //the list is already sorted
 			List<Integer> listOfDestinationNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(destinationZone)); //the list is already sorted
@@ -1734,8 +1740,6 @@ public class RoadNetworkAssignment {
 				counterAssignedTrips += multiplier;
 
 				//store trip in trip list
-				Integer originZoneID = zoning.getZoneCodeToIDMap().get(originZone);
-				Integer destinationZoneID = zoning.getZoneCodeToIDMap().get(destinationZone);
 				Trip trip = new TripTempro(vht, engine, chosenRoute, hour, originZoneID, destinationZoneID, zoning, multiplier);
 				this.tripList.add(trip);
 

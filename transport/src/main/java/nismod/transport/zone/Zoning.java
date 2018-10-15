@@ -48,6 +48,7 @@ public class Zoning {
 	private HashMap<String, List<Pair<Integer, Double>>> zoneToSortedListOfNodeAndDistancePairs;
 	
 	private double[][] zoneToNodeDistanceMatrix;
+	private double[][] zoneToZoneDistanceMatrix; //distance between zone centroids
 	
 	private HashMap<Integer, String> nodeToZoneInWhichLocated; //maps node to Tempro zone in which it is located //TODO There are unmapped nodes (outside polygons)!
 	private HashMap<String, List<Integer>> zoneToListOfContainedNodes; //maps Tempro zone to a list of nodes within that zone (if they exist)
@@ -98,8 +99,8 @@ public class Zoning {
 		mapZonesToNodesAndDistances(zonesFeatureCollection);
 		
 		//calculating zone to all nodes distance matrix
-		LOGGER.debug("Mapping Tempro zones to all the nodes, distance matrix...");
-		mapZonesToNodesAndDistanceMatrix(zonesFeatureCollection);
+		LOGGER.debug("Calculating distances between Tempro zones, as well as between Tempro zones and nodes...");
+		zoneToNodeAndZoneToZoneDistanceMatrices(zonesFeatureCollection);
 				
 		//map zones to nearest nodes from LAD top nodes
 		LOGGER.debug("Mapping Tempro zones to the nearest node among the LAD top nodes...");
@@ -263,16 +264,17 @@ public class Zoning {
 	}
 	
 	/**
-	 * Maps zones to all the nodes of the network and distances, sorted by distance.
+	 * Calculates distance between each zone and each node.
 	 * @param zonesFeatureCollection Feature collection with the zones.
 	 */
-	private void mapZonesToNodesAndDistanceMatrix(SimpleFeatureCollection zonesFeatureCollection) {
-		
+	private void zoneToNodeAndZoneToZoneDistanceMatrices(SimpleFeatureCollection zonesFeatureCollection) {
+
 		int maxZones = Collections.max(this.getZoneIDToCodeMap().keySet()); //find maximum index
 		int maxNodes = Collections.max(this.rn.getNodeIDtoNode().keySet()); //find maximum node id
 		this.zoneToNodeDistanceMatrix = new double[maxZones][maxNodes];
-		
-		//iterate through the zones and through the nodes
+		this.zoneToZoneDistanceMatrix = new double[maxZones][maxZones];		
+
+		//iterate through zones
 		SimpleFeatureIterator iter = zonesFeatureCollection.features();
 		try {
 			while (iter.hasNext()) {
@@ -280,21 +282,59 @@ public class Zoning {
 				MultiPolygon polygon = (MultiPolygon) sf.getDefaultGeometry();
 				String zoneID = (String) sf.getAttribute("Zone_Code");
 				Point centroid = polygon.getCentroid();
-		
+
+				//iterate through nodes
 				Iterator nodeIter = (Iterator) this.rn.getNetwork().getNodes().iterator();
 				while (nodeIter.hasNext()) {
-
 					Node node = (Node) nodeIter.next();
-					
+
 					//if node is blacklisted as either start or end node, do not consider that node
 					if (rn.isBlacklistedAsStartNode(node.getID()) || rn.isBlacklistedAsEndNode(node.getID())) continue;
-					
+
 					SimpleFeature sfn = (SimpleFeature) node.getObject();
 					Point point = (Point) sfn.getDefaultGeometry();
 					double distanceToNode = centroid.distance(point);
-					
+
 					this.zoneToNodeDistanceMatrix[this.temproCodeToID.get(zoneID) - 1][node.getID() - 1] = distanceToNode;
 				}
+
+				//iterate through zones
+				/*
+				SimpleFeatureIterator iter2 = zonesFeatureCollection.features();
+				try {
+					while (iter2.hasNext()) {
+						SimpleFeature sf2 = iter2.next();
+						MultiPolygon polygon2 = (MultiPolygon) sf2.getDefaultGeometry();
+						String zoneID2 = (String) sf2.getAttribute("Zone_Code");
+
+						//if zones are the same, or distance is already calculated, skip
+						if (zoneID != zoneID2 && this.zoneToZoneDistanceMatrix[this.temproCodeToID.get(zoneID) - 1][this.temproCodeToID.get(zoneID2) - 1] > 0) continue;
+
+						//calculate centroid and distance
+						Point centroid2 = polygon2.getCentroid(); //calculate centroid
+						double zoneToZoneDistance = centroid2.distance(centroid); //calculate distance
+						this.zoneToZoneDistanceMatrix[this.temproCodeToID.get(zoneID) - 1][this.temproCodeToID.get(zoneID2) - 1] = zoneToZoneDistance;
+						this.zoneToZoneDistanceMatrix[this.temproCodeToID.get(zoneID2) - 1][this.temproCodeToID.get(zoneID) - 1] = zoneToZoneDistance;
+					}
+				} finally {
+					//feature iterator is a live connection that must be closed
+					iter2.close();
+				}
+				*/
+				
+				//assume centroids have already been calculated
+				for (String zoneID2: this.zoneToCentroid.keySet()) {
+					
+					//if zones are the same, or distance is already calculated, skip
+					if (zoneID != zoneID2 && this.zoneToZoneDistanceMatrix[this.temproCodeToID.get(zoneID) - 1][this.temproCodeToID.get(zoneID2) - 1] > 0) continue;
+					
+					//calculate distance
+					Point centroid2 = this.zoneToCentroid.get(zoneID2); //fetch centroid
+					double zoneToZoneDistance = centroid2.distance(centroid); //calculate distance
+					this.zoneToZoneDistanceMatrix[this.temproCodeToID.get(zoneID) - 1][this.temproCodeToID.get(zoneID2) - 1] = zoneToZoneDistance;
+					this.zoneToZoneDistanceMatrix[this.temproCodeToID.get(zoneID2) - 1][this.temproCodeToID.get(zoneID) - 1] = zoneToZoneDistance;
+				}
+				
 			}
 		} finally {
 			//feature iterator is a live connection that must be closed
@@ -506,18 +546,27 @@ public class Zoning {
 	 * Getter for tempro zone to list of contained nodes mapping.
 	 * @return Zone to list of contained nodes.
 	 */
-	public HashMap<String, List<Integer>> getZoneToListOfContaintedNodes() {
+	public HashMap<String, List<Integer>> getZoneToListOfContainedNodes() {
 		
 		return this.zoneToListOfContainedNodes;
 	}
 	
 	/**
-	 * Getter for tempro zone to all nodes distance matrix.
+	 * Getter for tempro zone to all nodes distance matrix [in metres].
 	 * @return Zone to node distance matrix.
 	 */
 	public double[][] getZoneToNodeDistanceMatrix() {
 		
 		return this.zoneToNodeDistanceMatrix;
+	}
+	
+	/**
+	 * Getter for tempro zone (centroid) to tempro zone (centroid) distance matrix [in metres].
+	 * @return Zone to node distance matrix.
+	 */
+	public double[][] getZoneToZoneDistanceMatrix() {
+		
+		return this.zoneToZoneDistanceMatrix;
 	}
 	
 //	/**

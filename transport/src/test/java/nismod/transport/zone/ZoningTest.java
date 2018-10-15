@@ -10,7 +10,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.geotools.graph.structure.Node;
@@ -98,7 +100,7 @@ public class ZoningTest {
 		System.out.println("Tempro zone ID to tempro zone code map: " + zoning.getZoneIDToCodeMap());
 		
 		System.out.println(zoning.getZoneToSortedListOfNodeAndDistancePairs());
-		System.out.println(zoning.getZoneToListOfContaintedNodes());
+		System.out.println(zoning.getZoneToListOfContainedNodes());
 		
 		double[][] matrix = zoning.getZoneToNodeDistanceMatrix();
 		System.out.println("matrix length: " + matrix.length);
@@ -172,9 +174,9 @@ public class ZoningTest {
 		int size2 = zoning.getNodeToZoneMap().size();
 		assertEquals("All nodes from roadNetwork are mapped to Tempro zones", size1, size2);
 		
-		assertNull("Zone E02003593 contains no nodes", zoning.getZoneToListOfContaintedNodes().get("E02003593"));
+		assertNull("Zone E02003593 contains no nodes", zoning.getZoneToListOfContainedNodes().get("E02003593"));
 		
-		List<Integer> listOfNodes = zoning.getZoneToListOfContaintedNodes().get("E02003554");
+		List<Integer> listOfNodes = zoning.getZoneToListOfContainedNodes().get("E02003554");
 		Collections.sort(listOfNodes);
 		int[] expectedNodeList = new int[] {9, 40, 55};
 		assertEquals("The list of nodes in the tempro zone is correct", Arrays.toString(expectedNodeList), listOfNodes.toString());
@@ -241,6 +243,17 @@ public class ZoningTest {
 
 		assertEquals("The closest node among the top nodes is correct", 6, zoning.getZoneToNearestNodeIDFromLADTopNodesMap().get(originZone).intValue());
 		
+		//test zone to zone distances
+		Set<Integer> zonesSet = zoning.getZoneIDToCodeMap().keySet();
+		double [][] zoneDistances = zoning.getZoneToZoneDistanceMatrix();
+		
+		final double EPSILON = 1e-5;
+		for (Integer zoneID1: zonesSet) {
+			for (Integer zoneID2: zonesSet) {
+				if (zoneID1 == zoneID2) assertEquals("Distance between the same zones should be zero", 0.0, zoneDistances[zoneID1-1][zoneID2-1], EPSILON);
+				else assertEquals("Distance is a symetric measure", zoneDistances[zoneID2-1][zoneID1-1], zoneDistances[zoneID1-1][zoneID2-1], EPSILON);
+			}
+		}
 	}
 	
 	@Test
