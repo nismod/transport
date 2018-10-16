@@ -1013,13 +1013,38 @@ public class RoadNetworkTest {
 				assertNull("The number of lanes for ferries is not defined", roadNetwork.getNumberOfLanes().get(edge.getID()));
 			}
 		}
+		
+		//TEST WHETHER EDGES ARE URBAN OR RURAL
+		System.out.println("\n\n*** Testing if the edges are urban or rural ***");
+		System.out.println(roadNetwork.getIsEdgeUrban());
+		
+		Edge edge = roadNetwork.getEdgeIDtoEdge().get(541);
+		SimpleFeature sfcat = (SimpleFeature) edge.getObject();
+		String cat = (String) sfcat.getAttribute("RCat"); //road category (PM, PR, Pu, PU, TM, TR, Tu, TU), use Pu, PU, Tu, TU as urban, otherwise rural
 
+		System.out.println("Cat = " + cat);
+		System.out.println("Second char = " + cat.toUpperCase().charAt(1));
+		if (cat.toUpperCase().charAt(1) == 'U')
+			System.out.println("Edge is urban!");
+		if (cat.toUpperCase().charAt(1) == 'R')
+			System.out.println("Edge is rural!");
+		
+		System.out.println("should be false: " + roadNetwork.getIsEdgeUrban().get(541));
+		
+		assertTrue("Edge is not urban", !roadNetwork.getIsEdgeUrban().get(541));
+		assertTrue("Edge is not urban", !roadNetwork.getIsEdgeUrban().get(540));
+		
+		assertTrue("Edge is urban", roadNetwork.getIsEdgeUrban().get(616));
+		assertTrue("Edge is urban", roadNetwork.getIsEdgeUrban().get(615));
+		
+		assertNull("Edge is neither urban nor rural", roadNetwork.getIsEdgeUrban().get(555));
+		assertNull("Edge is neither urban nor rural", roadNetwork.getIsEdgeUrban().get(556));
+		
 		//TEST EDGE TO OTHER DIRECTION EDGE MAPPING
 		System.out.println("\n\n*** Testing edge to other direction edge mapping ***");
 
 		System.out.println(roadNetwork.getEdgeIDtoEdge());
 		System.out.println(roadNetwork.getEdgeIDtoOtherDirectionEdgeID());
-
 
 		//TEST PATH CREATION FROM A LIST OF NODES
 		System.out.println("\n\n*** Testing path creation from a list of nodes using RoadPath***");

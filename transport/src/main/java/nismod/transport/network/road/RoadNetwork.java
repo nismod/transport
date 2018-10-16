@@ -107,6 +107,7 @@ public class RoadNetwork {
 	private HashMap<Integer, Node> nodeIDtoNode; //for direct access
 	private HashMap<Integer, Edge> edgeIDtoEdge; //for direct access
 	private HashMap<Integer, Integer> edgeIDtoOtherDirectionEdgeID;
+	private HashMap<Integer, Boolean> isEdgeUrban; //true = urban, false = rural, null = unknown/ferry
 	private List<Integer> startNodeBlacklist;
 	private List<Integer> endNodeBlacklist;
 	private HashMap<Integer, Double> freeFlowTravelTime;
@@ -269,6 +270,8 @@ public class RoadNetwork {
 			this.calculateFreeFlowTravelTime();
 			//updates number of lanes with new edge ids
 			this.addNumberOfLanes();
+			//update information on urban/rural
+			this.determineEdgesUrbanRural();
 		} finally {
 			//feature iterator is a live connection that must be closed
 			iter.close();
@@ -1232,6 +1235,15 @@ public class RoadNetwork {
 	}
 	
 	/**
+	 * Getter method for the map saying if the edge is urban (true), rural (false), or unkown (null).
+	 * @return Map between the edge ID and whether the edge is urban/rural/unkown.
+	 */
+	public HashMap<Integer, Boolean> getIsEdgeUrban() {
+
+		return this.isEdgeUrban;
+	}
+	
+	/**
 	 * Getter method for the node to zone mapping.
 	 * @return Node to zone mapping.
 	 */
@@ -1366,7 +1378,7 @@ public class RoadNetwork {
 	}
 	
 	/**
-	 * Getter method for the node to average access/egress distance mapping.
+	 * Getter method for the node to average access/egress distance mapping [in metres].
 	 * @return Node to average access/egress distance mapping.
 	 */
 	public HashMap<Integer, Double> getNodeToAverageAccessEgressDistance() {
@@ -1375,7 +1387,7 @@ public class RoadNetwork {
 	}
 	
 	/**
-	 * Getter method for the node to average access/egress distance mapping for freight.
+	 * Getter method for the node to average access/egress distance mapping for freight [in metres].
 	 * @return Node to average access/egress distance mapping for freight.
 	 */
 	public HashMap<Integer, Double> getNodeToAverageAccessEgressDistanceFreight() {
@@ -1632,10 +1644,14 @@ public class RoadNetwork {
 		//set number of lanes
 		addNumberOfLanes();
 		
-		LOGGER.debug("Undirected graph representation of the road network:");
-		LOGGER.debug(undirectedGraph);
-		LOGGER.debug("Directed graph representation of the road network:");
-		LOGGER.debug(network);
+		LOGGER.info("Determining whether edges are urban or rural...");
+		
+		determineEdgesUrbanRural();
+		
+		LOGGER.trace("Undirected graph representation of the road network:");
+		LOGGER.trace(undirectedGraph);
+		LOGGER.trace("Directed graph representation of the road network:");
+		LOGGER.trace(network);
 	}
 
 	/**
@@ -2062,6 +2078,36 @@ public class RoadNetwork {
 		}
 	}
 	
+	
+	/**
+	 * Determines if edges are urban, rural or unknown.
+	 */
+	private void determineEdgesUrbanRural() {
+		
+		this.isEdgeUrban = new HashMap<Integer, Boolean>();
+		
+		//iterate through all the edges in the graph
+		Iterator iter = this.network.getEdges().iterator();
+		while(iter.hasNext()) {
+			
+			Edge edge = (Edge) iter.next();
+			SimpleFeature sf = (SimpleFeature) edge.getObject();
+			String cat = (String) sf.getAttribute("RCat"); //road category (PM, PR, Pu, PU, TM, TR, Tu, TU), use Pu, PU, Tu, TU as urban, otherwise rural
+
+			//if no roadCategory information, assume it is ferry and set null
+			if (cat == null) {
+				LOGGER.trace("No road category information (e.g. ferry), so setting null.");
+				isEdgeUrban.put(edge.getID(), null);
+				continue;
+			}
+			//if second character is U, the edge is urban, otherwise rural
+			if (cat.toUpperCase().charAt(1) == 'U') 
+				isEdgeUrban.put(edge.getID(), true);
+			else									
+				isEdgeUrban.put(edge.getID(), false);
+		}
+	}
+		
 	/**
 	 * Loads code area population data.
 	 * @param areaCodeFileName File with area code population data.

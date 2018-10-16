@@ -66,6 +66,7 @@ public class RoadNetworkAssignment {
 	public final double nodesProbabilityWeightingFreight; //manipulates probabilities of nodes for the node choice
 	public final double assignmentFraction; //the fraction of vehicle flows to actually assign, with later results expansion to 100%
 	public final boolean flagUseRouteChoiceModel; //use route-choice model (true) or routing with A-Star (false)
+	public final boolean flagIncludeAccessEgress; //use access/egress in the calculation of outputs.
 	public final int topTemproNodes = 1;
 
 	private static RandomSingleton rng = RandomSingleton.getInstance();
@@ -252,6 +253,7 @@ public class RoadNetworkAssignment {
 		this.nodesProbabilityWeightingFreight = Double.parseDouble(params.getProperty("NODES_PROBABILITY_WEIGHTING_FREIGHT"));
 		this.assignmentFraction = Double.parseDouble(params.getProperty("ASSIGNMENT_FRACTION"));
 		this.flagUseRouteChoiceModel = Boolean.parseBoolean(params.getProperty("USE_ROUTE_CHOICE_MODEL")); //use route-choice model (true) or routing with A-Star (false)
+		this.flagIncludeAccessEgress = Boolean.parseBoolean(params.getProperty("FLAG_INCLUDE_ACCESS_EGRESS")); //include access/egress into the calculations of outputs
 
 		//calculate area code choice probability
 		if (areaCodeProbabilities != null)	this.areaCodeProbabilities = areaCodeProbabilities;
@@ -3240,7 +3242,7 @@ public class RoadNetworkAssignment {
 
 		for (Trip trip: this.tripList) {
 			if (trip.getVehicle() != VehicleType.CAR && trip.getVehicle() != VehicleType.CAR_AV) continue; //skip freight vehicles
-			HashMap<EnergyType, Double> consumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistance(), averageAccessEgressSpeedCar, this.energyConsumptions, this.relativeFuelEfficiencies);
+			HashMap<EnergyType, Double> consumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistance(), averageAccessEgressSpeedCar, this.energyConsumptions, this.relativeFuelEfficiencies, this.flagIncludeAccessEgress);
 			int multiplier = trip.getMultiplier();
 
 			for (EnergyType energy: EnergyType.values()) {
@@ -3271,7 +3273,7 @@ public class RoadNetworkAssignment {
 
 			if (trip.getVehicle() != VehicleType.CAR && trip.getVehicle() != VehicleType.CAR_AV) continue; //skip freight vehicles
 
-			HashMap<EnergyType, Double> tripConsumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyConsumptions, this.relativeFuelEfficiencies);
+			HashMap<EnergyType, Double> tripConsumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyConsumptions, this.relativeFuelEfficiencies, this.flagIncludeAccessEgress);
 
 			String originLAD = trip.getOriginLAD(this.roadNetwork.getNodeToZone());
 			String destinationLAD = trip.getDestinationLAD(this.roadNetwork.getNodeToZone());
@@ -3310,7 +3312,7 @@ public class RoadNetworkAssignment {
 			if ((trip.getVehicle() == VehicleType.CAR || trip.getVehicle() == VehicleType.CAR_AV) &&
 				(trip.getEngine() == EngineType.BEV || trip.getEngine() == EngineType.PHEV_PETROL || trip.getEngine() == EngineType.PHEV_DIESEL)) {
 
-				HashMap<EnergyType, Double> tripConsumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyConsumptions, this.relativeFuelEfficiencies);
+				HashMap<EnergyType, Double> tripConsumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyConsumptions, this.relativeFuelEfficiencies, this.flagIncludeAccessEgress);
 				Double tripConsumptionElectricity = tripConsumption.get(EnergyType.ELECTRICITY);
 				if (tripConsumptionElectricity == null) continue; //skip if zero electricity consumption for this trip
 
@@ -3388,7 +3390,7 @@ public class RoadNetworkAssignment {
 		for (Trip trip: this.tripList) {
 			if (trip.getVehicle() != VehicleType.CAR && trip.getVehicle() != VehicleType.CAR_AV) continue; //skip freight vehicles
 
-			HashMap<EnergyType, Double> tripConsumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyConsumptions, this.relativeFuelEfficiencies);
+			HashMap<EnergyType, Double> tripConsumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyConsumptions, this.relativeFuelEfficiencies, this.flagIncludeAccessEgress);
 
 			String originLAD = trip.getOriginLAD(this.roadNetwork.getNodeToZone());
 			String destinationLAD = trip.getDestinationLAD(this.roadNetwork.getNodeToZone());
@@ -3420,7 +3422,7 @@ public class RoadNetworkAssignment {
 			VehicleType vht = trip.getVehicle();
 			if ( ! (vht == VehicleType.ARTIC || vht == VehicleType.RIGID || vht == VehicleType.VAN ||
 					vht == VehicleType.ARTIC_AV || vht == VehicleType.RIGID_AV || vht == VehicleType.VAN_AV)) continue; //skip non-freight vehicles
-			HashMap<EnergyType, Double> consumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyConsumptions, this.relativeFuelEfficiencies);
+			HashMap<EnergyType, Double> consumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyConsumptions, this.relativeFuelEfficiencies, this.flagIncludeAccessEgress);
 			int multiplier = trip.getMultiplier();
 
 			for (EnergyType energy: EnergyType.values()) {
@@ -4949,9 +4951,12 @@ public class RoadNetworkAssignment {
 				if (destinationNode == null) LOGGER.error("Trip does not have destination node!");
 				//get destination tempro zone
 				String destinationTemproZone = temproTrip.getDestinationTemproZone();
-				
+						
 				double egress = 0;
 				List<Pair<Integer, Double>> egressList = temproTrip.getZoning().getZoneToSortedListOfNodeAndDistancePairs().get(destinationTemproZone);
+				
+				System.out.println("Egress list: " + egressList.toString());
+				
 				for (Pair<Integer, Double> pair: egressList) {
 					if (pair.getKey() == destinationNode.getID()) {
 						egress = pair.getValue() / 1000;

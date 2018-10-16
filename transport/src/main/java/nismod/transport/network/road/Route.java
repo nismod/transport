@@ -268,17 +268,18 @@ public class Route {
 				SimpleFeature sf = (SimpleFeature) edge.getObject();
 				double len = (double) sf.getAttribute("LenNet"); //in [km]
 				double time = linkTravelTime.get(edgeID); //in [min]
-				String cat = (String) sf.getAttribute("RCat"); //road category (PM, PR, Pu, PU, TM, TR, Tu, TU), use Pu, PU, Tu, TU as urban, otherwise rural
+				//String cat = (String) sf.getAttribute("RCat"); //road category (PM, PR, Pu, PU, TM, TR, Tu, TU), use Pu, PU, Tu, TU as urban, otherwise rural
+				Boolean isUrban = this.roadNetwork.getIsEdgeUrban().get(edgeID);
 				double speed = len / (time / 60);
 
 				//if no roadCategory information, assume it is ferry and skip
-				if (cat == null) {
+				if (isUrban == null) {
 					LOGGER.trace("No road category information. Assuming it is ferry and skipping for consumption calculation.");
 					continue;
 				}
 
-				//if edge is urban use electricity
-				if (cat.toUpperCase().charAt(1) == 'U')
+				//if edge is urban use electricity, if rural use fuel
+				if (isUrban)
 					electricityConsumption += len * (parametersElectricity.get("A") / speed + parametersElectricity.get("B") + parametersElectricity.get("C") * speed + parametersElectricity.get("D") * speed  * speed);
 				else 
 					fuelConsumption += len * (parametersFuel.get("A") / speed + parametersFuel.get("B") + parametersFuel.get("C") * speed + parametersFuel.get("D") * speed  * speed);
@@ -303,17 +304,18 @@ public class Route {
 				SimpleFeature sf = (SimpleFeature) edge.getObject();
 				double len = (double) sf.getAttribute("LenNet"); //in [km]
 				double time = linkTravelTime.get(edge.getID()); //in [min]
-				String cat = (String) sf.getAttribute("RCat"); //road category (PM, PR, Pu, PU, TM, TR, Tu, TU), use Pu, PU, Tu, TU as urban, otherwise rural
+				//String cat = (String) sf.getAttribute("RCat"); //road category (PM, PR, Pu, PU, TM, TR, Tu, TU), use Pu, PU, Tu, TU as urban, otherwise rural
+				Boolean isUrban = this.roadNetwork.getIsEdgeUrban().get(edgeID);
 				double speed = len / (time / 60);
 
 				//if no roadCategory information, assume it is ferry and skip
-				if (cat == null) {
+				if (isUrban == null) {
 					LOGGER.trace("No road category information. Assuming it is ferry and skipping for consumption calculation.");
 					continue;
 				}
 
-				//if edge is urban use electricity
-				if (cat.toUpperCase().charAt(1) == 'U')
+				//if edge is urban use electricity, if rural use fuel
+				if (isUrban)
 					electricityConsumption += len * (parametersElectricity.get("A") / speed + parametersElectricity.get("B") + parametersElectricity.get("C") * speed + parametersElectricity.get("D") * speed  * speed);
 				else 
 					fuelConsumption += len * (parametersFuel.get("A") / speed + parametersFuel.get("B") + parametersFuel.get("C") * speed + parametersFuel.get("D") * speed  * speed);
@@ -526,6 +528,16 @@ public class Route {
 		}
 	}
 	
+	/**
+	 * Getter method for the road network.
+	 * @return Road network.
+	 */
+	public RoadNetwork getRoadNetwork() {
+		
+		return this.roadNetwork;
+		
+	}
+	
 //	public int getID() {
 //		
 //		return id;
@@ -632,7 +644,7 @@ public class Route {
 	 */
 	public String getFormattedStringEdgeIDsOnly() {
 		
-		if (edges.isEmpty() && this.singleNode == null) return "";
+		if (edges.isEmpty()) return "";
 		
 		StringBuilder sb = new StringBuilder();
 		
