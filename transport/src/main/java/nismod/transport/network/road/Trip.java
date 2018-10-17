@@ -221,37 +221,40 @@ public class Trip {
 	 * @param avgIntersectionDelay Average intersection delay.
 	 * @param averageAccessEgressMap Mapping between nodeID and average access/egress for that node. 
 	 * @param averageAccessEgressSpeed Average access/egress speed.
+	 * @param flagIncludeAccessEgress Whether to include access/egress travel time.
 	 * @return Trip travel time including access/egress [in min].
 	 */
-	public double getTravelTime(Map<Integer, Double> linkTravelTime, double avgIntersectionDelay, HashMap<Integer, Double> averageAccessEgressMap, double averageAccessEgressSpeed) {
+	public double getTravelTime(Map<Integer, Double> linkTravelTime, double avgIntersectionDelay, HashMap<Integer, Double> averageAccessEgressMap, double averageAccessEgressSpeed, boolean flagIncludeAccessEgress) {
 		
-		//Double time = this.route.getTime();
-		//if (time == null) {
-			this.route.calculateTravelTime(linkTravelTime, avgIntersectionDelay); //route travel time needs to be recalculated every time (as it depends on time of day).
-			Double time = this.route.getTime();
-		//}
-		Double access = averageAccessEgressMap.get(this.getOriginNode().getID());
-		if (access == null) access = 0.0; //TODO use some default access/egress distances?
-		Double egress = averageAccessEgressMap.get(this.getDestinationNode().getID());
-		if (egress == null) egress = 0.0;
-		double averageAccessTime = access / 1000 / averageAccessEgressSpeed * 60;
-		double averageEgressTime = egress / 1000 / averageAccessEgressSpeed * 60;
-		
-		return time + averageAccessTime + averageEgressTime;
+		this.route.calculateTravelTime(linkTravelTime, avgIntersectionDelay); //route travel time needs to be recalculated every time (as it depends on time of day).
+		Double time = this.route.getTime();
+			
+			if (flagIncludeAccessEgress) {	
+				Double access = averageAccessEgressMap.get(this.getOriginNode().getID());
+				if (access == null) access = 0.0; //TODO use some default access/egress distances?
+				Double egress = averageAccessEgressMap.get(this.getDestinationNode().getID());
+				if (egress == null) egress = 0.0;
+				double averageAccessTime = access / 1000 / averageAccessEgressSpeed * 60;
+				double averageEgressTime = egress / 1000 / averageAccessEgressSpeed * 60;
+				time += averageAccessTime + averageEgressTime;
+			}
+
+			return time;
 	}
 	
 	/**
 	 * Calculate cost of the trip (fuel cost + congestion charge, if any).
-	 * @param linkTravelTime
-	 * @param averageAccessEgressMap
-	 * @param averageAccessEgressSpeed
-	 * @param energyUnitCosts
-	 * @param energyConsumptions
-	 * @param relativeFuelEfficiency
-	 * @param congestionCharges
+	 * @param linkTravelTime Link travel time.
+	 * @param averageAccessEgressMap Average access/egress distance to a node for LAD-based trips.
+	 * @param averageAccessEgressSpeed Average access/egress speed.
+	 * @param energyUnitCosts Energy unit costs.
+	 * @param energyConsumptionParameters Energy consumption parameters.
+	 * @param relativeFuelEfficiency Relative fuel efficiency.
+	 * @param congestionCharges Congestion charges.
+	 * @param boolean flagIncludeAccessEgress Whether to include access/egress.
 	 * @return Total trip cost.
 	 */
-	public double getCost(Map<Integer, Double> linkTravelTime, HashMap<Integer, Double> averageAccessEgressMap, double averageAccessEgressSpeed, HashMap<EnergyType, Double> energyUnitCosts, HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptions, HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency, HashMap<String, MultiKeyMap> congestionCharges) {
+	public double getCost(Map<Integer, Double> linkTravelTime, HashMap<Integer, Double> averageAccessEgressMap, double averageAccessEgressSpeed, HashMap<EnergyType, Double> energyUnitCosts, HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParameters, HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency, HashMap<String, MultiKeyMap> congestionCharges, boolean flagIncludeAccessEgress) {
 		
 		//double distance = this.getLength(averageAccessEgressMap);
 		//double cost = distance / 100 * energyConsumptionsPer100km.get(this.engine) * energyUnitCosts.get(this.engine);
@@ -262,22 +265,30 @@ public class Trip {
 			for (String policyName: congestionCharges.keySet())
 				linkCharges.put(policyName, (HashMap<Integer, Double>) congestionCharges.get(policyName).get(this.vehicle, this.hour));
 				
-		this.route.calculateCost(this.vehicle, this.engine, linkTravelTime, energyConsumptions, relativeFuelEfficiency, energyUnitCosts, linkCharges);
+		this.route.calculateCost(this.vehicle, this.engine, linkTravelTime, energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, linkCharges);
 		double tripCost = this.route.getCost();
 		
-		//TODO add access/egress cost
+		//add access/egress cost
+		if (flagIncludeAccessEgress) {
+			HashMap<EnergyType, Double> accessEgressConsumptions = this.getAccessEgressConsumption(linkTravelTime, averageAccessEgressMap, averageAccessEgressSpeed, energyConsumptionParameters, relativeFuelEfficiency);
+			for (EnergyType et: EnergyType.values()) {
+				Double accessEgressConsumption = accessEgressConsumptions.get(et);
+				if (accessEgressConsumption == null) accessEgressConsumption = 0.0;
+				tripCost += accessEgressConsumption * energyUnitCosts.get(et);
+			}
+		}
 				
 		return tripCost;
 	}
 	
 	/**
 	 * Calculate trip consumption including access and egress.
-	 * @param linkTravelTime
-	 * @param averageAccessEgressMap
-	 * @param averageAccessEgressSpeed
-	 * @param energyConsumptions
-	 * @param relativeFuelEfficiency
-	 * @param boolean flagIncludeAccessEgress
+	 * @param linkTravelTime Link travel time.
+	 * @param averageAccessEgressMap Average access/egress distance to a node for LAD-based trips.
+	 * @param averageAccessEgressSpeed Average acess/egress speed.
+	 * @param energyConsumptionParameters Energy consumption parameters.
+	 * @param relativeFuelEfficiency Relative fuel efficiency.
+	 * @param boolean flagIncludeAccessEgress Whether to include access/egress.
 	 * @return Trip consumptions.
 	 */
 	public HashMap<EnergyType, Double> getConsumption(Map<Integer, Double> linkTravelTime, HashMap<Integer, Double> averageAccessEgressMap, double averageAccessEgressSpeed, HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParameters, HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency, boolean flagIncludeAccessEgress) {
@@ -288,63 +299,83 @@ public class Trip {
 		//get consumptions on the route itself
 		HashMap<EnergyType, Double> tripConsumptions = this.route.calculateConsumption(this.vehicle, this.engine, linkTravelTime, energyConsumptionParameters, relativeFuelEfficiency);
 
+		//add access/egress consumption
 		if (flagIncludeAccessEgress) {
-
-			//parameters
-			HashMap<String, Double> parameters = null, parametersFuel = null, parametersElectricity = null;
-			//consumptions
-			double consumption = 0.0, fuelConsumption = 0.0, electricityConsumption = 0.0;
-			//relative efficiencies
-			double relativeEfficiency = 0.0, relativeEfficiencyFuel = 0.0, relativeEfficiencyElectricity = 0.0;
-
-			//fetch the right parameters and existing consumptions
-			//PHEVs are more complicated as they have a combination of fuel and electricity consumption
-			if (this.engine == EngineType.PHEV_PETROL) {
-				parametersFuel = energyConsumptionParameters.get(Pair.of(this.vehicle, EngineType.ICE_PETROL));
-				parametersElectricity = energyConsumptionParameters.get(Pair.of(this.vehicle, EngineType.BEV));
-				relativeEfficiencyFuel = relativeFuelEfficiency.get(Pair.of(this.vehicle, EngineType.ICE_PETROL));
-				relativeEfficiencyElectricity = relativeFuelEfficiency.get(Pair.of(this.vehicle, EngineType.BEV));
-
-			} else if (this.engine == EngineType.PHEV_DIESEL) {
-				parametersFuel = energyConsumptionParameters.get(Pair.of(this.vehicle, EngineType.ICE_DIESEL));
-				parametersElectricity = energyConsumptionParameters.get(Pair.of(this.vehicle, EngineType.BEV));
-				relativeEfficiencyFuel = relativeFuelEfficiency.get(Pair.of(this.vehicle, EngineType.ICE_DIESEL));
-				relativeEfficiencyElectricity = relativeFuelEfficiency.get(Pair.of(this.vehicle, EngineType.BEV));
-
-			} else { //all other engine types have only one type of energy consumption (either fuel or electricity)
-				parameters = energyConsumptionParameters.get(Pair.of(this.vehicle, this.engine));
-				relativeEfficiency = relativeFuelEfficiency.get(Pair.of(this.vehicle, this.engine));
+			HashMap<EnergyType, Double> accessEgressConsumptions = this.getAccessEgressConsumption(linkTravelTime, averageAccessEgressMap, averageAccessEgressSpeed, energyConsumptionParameters, relativeFuelEfficiency);
+			for (EnergyType et: EnergyType.values()) {
+				Double tripConsumption = tripConsumptions.get(et);
+				if (tripConsumption == null) tripConsumption = 0.0;
+				Double accessEgressConsumption = accessEgressConsumptions.get(et);
+				if (accessEgressConsumption == null) accessEgressConsumption = 0.0;
+				tripConsumptions.put(et, tripConsumption + accessEgressConsumption);
 			}
+		}
+		
+		return tripConsumptions;
+	}
+	
+	/**
+	 * Calculate trip consumption only on access and egress.
+	 * @param linkTravelTime
+	 * @param averageAccessEgressMap
+	 * @param averageAccessEgressSpeed
+	 * @param energyConsumptions
+	 * @param relativeFuelEfficiency
+	 * @return Trip consumptions.
+	 */
+	protected HashMap<EnergyType, Double> getAccessEgressConsumption(Map<Integer, Double> linkTravelTime, HashMap<Integer, Double> averageAccessEgressMap, double averageAccessEgressSpeed, HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParameters, HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency) {
+		
+		//double distance = this.getLength(averageAccessEgressMap);
+		//double consumption = distance / 100 * energyConsumptionsPer100km.get(this.engine);
 
-			//get access and egress
-			Double access = averageAccessEgressMap.get(this.getOriginNode().getID());
-			if (access == null) access = 0.0; //TODO use some default access/egress distances?
-			Double egress = averageAccessEgressMap.get(this.getDestinationNode().getID());
-			if (egress == null) egress = 0.0;
+		HashMap<EnergyType, Double> accessEgressConsumptions = new HashMap<EnergyType, Double>();
 
-			//for PHEVs it is more complicated (depends on urban/rural road type
-			//it is assumed electricity is used on urban road links and fuel on rural road links
-			if (this.engine == EngineType.PHEV_PETROL || this.engine == EngineType.PHEV_DIESEL) { 
+		//parameters
+		HashMap<String, Double> parameters = null, parametersFuel = null, parametersElectricity = null;
+		//consumptions
+		double consumption = 0.0, fuelConsumption = 0.0, electricityConsumption = 0.0;
+		//relative efficiencies
+		double relativeEfficiency = 0.0, relativeEfficiencyFuel = 0.0, relativeEfficiencyElectricity = 0.0;
 
-				//calculate consumption for access
-				Boolean isUrban = null;
-				if (!this.route.getEdges().isEmpty()) { //if there is an edge list
-					int firstEdgeID = this.route.getEdges().get(0);
-					DirectedEdge firstEdge = (DirectedEdge) this.route.getRoadNetwork().getEdgeIDtoEdge().get(firstEdgeID);
-					isUrban = this.route.getRoadNetwork().getIsEdgeUrban().get(firstEdgeID);
+		//fetch the right parameters and existing consumptions
+		//PHEVs are more complicated as they have a combination of fuel and electricity consumption
+		if (this.engine == EngineType.PHEV_PETROL) {
+			parametersFuel = energyConsumptionParameters.get(Pair.of(this.vehicle, EngineType.ICE_PETROL));
+			parametersElectricity = energyConsumptionParameters.get(Pair.of(this.vehicle, EngineType.BEV));
+			relativeEfficiencyFuel = relativeFuelEfficiency.get(Pair.of(this.vehicle, EngineType.ICE_PETROL));
+			relativeEfficiencyElectricity = relativeFuelEfficiency.get(Pair.of(this.vehicle, EngineType.BEV));
 
-					//if no roadCategory information (e.g. ferry) use urban/rural classification of related edge
-					if (isUrban == null) {
-						DirectedNode nodeA = (DirectedNode)firstEdge.getNodeA();
-						List<Edge> inEdges = nodeA.getInEdges();
-						for (Edge e: inEdges)
-							if (this.route.getRoadNetwork().getIsEdgeUrban().get(e.getID()) != null) {
-								isUrban = this.route.getRoadNetwork().getIsEdgeUrban().get(e.getID()); //use information of first related edge with urban/rural information
-								break;
-							}
-					}
-				} else { //edge list is empty, so route is a single node
-					DirectedNode nodeA = this.route.getOriginNode();
+		} else if (this.engine == EngineType.PHEV_DIESEL) {
+			parametersFuel = energyConsumptionParameters.get(Pair.of(this.vehicle, EngineType.ICE_DIESEL));
+			parametersElectricity = energyConsumptionParameters.get(Pair.of(this.vehicle, EngineType.BEV));
+			relativeEfficiencyFuel = relativeFuelEfficiency.get(Pair.of(this.vehicle, EngineType.ICE_DIESEL));
+			relativeEfficiencyElectricity = relativeFuelEfficiency.get(Pair.of(this.vehicle, EngineType.BEV));
+
+		} else { //all other engine types have only one type of energy consumption (either fuel or electricity)
+			parameters = energyConsumptionParameters.get(Pair.of(this.vehicle, this.engine));
+			relativeEfficiency = relativeFuelEfficiency.get(Pair.of(this.vehicle, this.engine));
+		}
+
+		//get access and egress
+		Double access = averageAccessEgressMap.get(this.getOriginNode().getID());
+		if (access == null) access = 0.0; //TODO use some default access/egress distances?
+		Double egress = averageAccessEgressMap.get(this.getDestinationNode().getID());
+		if (egress == null) egress = 0.0;
+
+		//for PHEVs it is more complicated (depends on urban/rural road type
+		//it is assumed electricity is used on urban road links and fuel on rural road links
+		if (this.engine == EngineType.PHEV_PETROL || this.engine == EngineType.PHEV_DIESEL) { 
+
+			//calculate consumption for access
+			Boolean isUrban = null;
+			if (!this.route.getEdges().isEmpty()) { //if there is an edge list
+				int firstEdgeID = this.route.getEdges().get(0);
+				DirectedEdge firstEdge = (DirectedEdge) this.route.getRoadNetwork().getEdgeIDtoEdge().get(firstEdgeID);
+				isUrban = this.route.getRoadNetwork().getIsEdgeUrban().get(firstEdgeID);
+
+				//if no roadCategory information (e.g. ferry) use urban/rural classification of related edge
+				if (isUrban == null) {
+					DirectedNode nodeA = (DirectedNode)firstEdge.getNodeA();
 					List<Edge> inEdges = nodeA.getInEdges();
 					for (Edge e: inEdges)
 						if (this.route.getRoadNetwork().getIsEdgeUrban().get(e.getID()) != null) {
@@ -352,33 +383,33 @@ public class Trip {
 							break;
 						}
 				}
-				if (isUrban == null)
-					LOGGER.error("It was not possible to determine whether access was urban or rural.");
-				//if the first edge is urban use electricity for access, otherwise (rural) use fuel for access
-				if (isUrban)
-					electricityConsumption += (access / 1000) * (parametersElectricity.get("A") / averageAccessEgressSpeed + parametersElectricity.get("B") + parametersElectricity.get("C") * averageAccessEgressSpeed + parametersElectricity.get("D") * averageAccessEgressSpeed  * averageAccessEgressSpeed);
-				else
-					fuelConsumption += (access / 1000) * (parametersFuel.get("A") / averageAccessEgressSpeed + parametersFuel.get("B") + parametersFuel.get("C") * averageAccessEgressSpeed + parametersFuel.get("D") * averageAccessEgressSpeed  * averageAccessEgressSpeed);
-
-				//calculate consumption for egress
-				isUrban = null;
-				if (!this.route.getEdges().isEmpty()) { //if there is an edge list
-					int lastEdgeID = this.route.getEdges().get(this.route.getEdges().size()-1);
-					DirectedEdge lastEdge = (DirectedEdge) this.route.getRoadNetwork().getEdgeIDtoEdge().get(lastEdgeID);
-					isUrban = this.route.getRoadNetwork().getIsEdgeUrban().get(lastEdgeID);
-
-					//if no roadCategory information (e.g. ferry) use urban/rural classification of related edge
-					if (isUrban == null) {
-						DirectedNode nodeB = (DirectedNode)lastEdge.getNodeB();
-						List<Edge> outEdges = nodeB.getOutEdges();
-						for (Edge e: outEdges)
-							if (this.route.getRoadNetwork().getIsEdgeUrban().get(e.getID()) != null) {
-								isUrban = this.route.getRoadNetwork().getIsEdgeUrban().get(e.getID()); //use information of first related edge with urban/rural information
-								break;
-							}
+			} else { //edge list is empty, so route is a single node
+				DirectedNode nodeA = this.route.getOriginNode();
+				List<Edge> inEdges = nodeA.getInEdges();
+				for (Edge e: inEdges)
+					if (this.route.getRoadNetwork().getIsEdgeUrban().get(e.getID()) != null) {
+						isUrban = this.route.getRoadNetwork().getIsEdgeUrban().get(e.getID()); //use information of first related edge with urban/rural information
+						break;
 					}
-				} else { //edge list is empty, so route is a single node
-					DirectedNode nodeB = this.route.getDestinationNode();
+			}
+			if (isUrban == null)
+				LOGGER.error("It was not possible to determine whether access was urban or rural.");
+			//if the first edge is urban use electricity for access, otherwise (rural) use fuel for access
+			if (isUrban)
+				electricityConsumption += (access / 1000) * (parametersElectricity.get("A") / averageAccessEgressSpeed + parametersElectricity.get("B") + parametersElectricity.get("C") * averageAccessEgressSpeed + parametersElectricity.get("D") * averageAccessEgressSpeed  * averageAccessEgressSpeed);
+			else
+				fuelConsumption += (access / 1000) * (parametersFuel.get("A") / averageAccessEgressSpeed + parametersFuel.get("B") + parametersFuel.get("C") * averageAccessEgressSpeed + parametersFuel.get("D") * averageAccessEgressSpeed  * averageAccessEgressSpeed);
+
+			//calculate consumption for egress
+			isUrban = null;
+			if (!this.route.getEdges().isEmpty()) { //if there is an edge list
+				int lastEdgeID = this.route.getEdges().get(this.route.getEdges().size()-1);
+				DirectedEdge lastEdge = (DirectedEdge) this.route.getRoadNetwork().getEdgeIDtoEdge().get(lastEdgeID);
+				isUrban = this.route.getRoadNetwork().getIsEdgeUrban().get(lastEdgeID);
+
+				//if no roadCategory information (e.g. ferry) use urban/rural classification of related edge
+				if (isUrban == null) {
+					DirectedNode nodeB = (DirectedNode)lastEdge.getNodeB();
 					List<Edge> outEdges = nodeB.getOutEdges();
 					for (Edge e: outEdges)
 						if (this.route.getRoadNetwork().getIsEdgeUrban().get(e.getID()) != null) {
@@ -386,76 +417,73 @@ public class Trip {
 							break;
 						}
 				}
-				if (isUrban == null)
-					LOGGER.error("It was not possible to determine whether egress was urban or rural.");
-				//if the last edge is urban use electricity for access, otherwise (rural) use fuel for access
-				if (isUrban)
-					electricityConsumption += (egress / 1000) * (parametersElectricity.get("A") / averageAccessEgressSpeed + parametersElectricity.get("B") + parametersElectricity.get("C") * averageAccessEgressSpeed + parametersElectricity.get("D") * averageAccessEgressSpeed  * averageAccessEgressSpeed);
-				else
-					fuelConsumption += (egress / 1000) * (parametersFuel.get("A") / averageAccessEgressSpeed + parametersFuel.get("B") + parametersFuel.get("C") * averageAccessEgressSpeed + parametersFuel.get("D") * averageAccessEgressSpeed  * averageAccessEgressSpeed);
-
-				//apply relative fuel efficiency
-				electricityConsumption *= relativeEfficiencyElectricity;
-				fuelConsumption *= relativeEfficiencyFuel;
-
-			} else { //other engine types
-				consumption += (access + egress) / 1000 * (parameters.get("A") / averageAccessEgressSpeed + parameters.get("B") + parameters.get("C") * averageAccessEgressSpeed + parameters.get("D") * averageAccessEgressSpeed  * averageAccessEgressSpeed);
-				//apply relative fuel efficiency
-				consumption *= relativeEfficiency;
+			} else { //edge list is empty, so route is a single node
+				DirectedNode nodeB = this.route.getDestinationNode();
+				List<Edge> outEdges = nodeB.getOutEdges();
+				for (Edge e: outEdges)
+					if (this.route.getRoadNetwork().getIsEdgeUrban().get(e.getID()) != null) {
+						isUrban = this.route.getRoadNetwork().getIsEdgeUrban().get(e.getID()); //use information of first related edge with urban/rural information
+						break;
+					}
 			}
+			if (isUrban == null)
+				LOGGER.error("It was not possible to determine whether egress was urban or rural.");
+			//if the last edge is urban use electricity for access, otherwise (rural) use fuel for access
+			if (isUrban)
+				electricityConsumption += (egress / 1000) * (parametersElectricity.get("A") / averageAccessEgressSpeed + parametersElectricity.get("B") + parametersElectricity.get("C") * averageAccessEgressSpeed + parametersElectricity.get("D") * averageAccessEgressSpeed  * averageAccessEgressSpeed);
+			else
+				fuelConsumption += (egress / 1000) * (parametersFuel.get("A") / averageAccessEgressSpeed + parametersFuel.get("B") + parametersFuel.get("C") * averageAccessEgressSpeed + parametersFuel.get("D") * averageAccessEgressSpeed  * averageAccessEgressSpeed);
 
-			if (this.engine == EngineType.PHEV_PETROL) {
-				double routeFuelConsumption = tripConsumptions.get(EnergyType.PETROL);
-				double routeElectricityConsumption = tripConsumptions.get(EnergyType.ELECTRICITY);
-				//store
-				tripConsumptions.put(EnergyType.ELECTRICITY, routeElectricityConsumption + electricityConsumption);
-				tripConsumptions.put(EnergyType.PETROL, routeFuelConsumption + fuelConsumption);
+			//apply relative fuel efficiency
+			electricityConsumption *= relativeEfficiencyElectricity;
+			fuelConsumption *= relativeEfficiencyFuel;
 
-			} else if (this.engine == EngineType.PHEV_DIESEL) {
-				double routeFuelConsumption = tripConsumptions.get(EnergyType.DIESEL);
-				double routeElectricityConsumption = tripConsumptions.get(EnergyType.ELECTRICITY);
-				//store
-				tripConsumptions.put(EnergyType.ELECTRICITY, routeElectricityConsumption + electricityConsumption);
-				tripConsumptions.put(EnergyType.DIESEL, routeFuelConsumption + fuelConsumption);
-
-			} else if (this.engine == EngineType.ICE_PETROL || this.engine == EngineType.HEV_PETROL) {
-				double routeConsumption = tripConsumptions.get(EnergyType.PETROL);
-				tripConsumptions.put(EnergyType.PETROL, routeConsumption + consumption);
-
-			} else if (this.engine == EngineType.ICE_DIESEL || this.engine == EngineType.HEV_DIESEL) {
-				double routeConsumption = tripConsumptions.get(EnergyType.DIESEL);
-				tripConsumptions.put(EnergyType.DIESEL, routeConsumption + consumption);
-
-			} else if (this.engine == EngineType.ICE_CNG) {
-				double routeConsumption = tripConsumptions.get(EnergyType.CNG);
-				tripConsumptions.put(EnergyType.CNG, routeConsumption + consumption);
-
-			} else if (this.engine == EngineType.ICE_H2) {
-				double routeConsumption = tripConsumptions.get(EnergyType.HYDROGEN);
-				tripConsumptions.put(EnergyType.HYDROGEN, routeConsumption + consumption);
-
-			}	else if (this.engine == EngineType.BEV) {
-				double routeConsumption = tripConsumptions.get(EnergyType.ELECTRICITY);
-				tripConsumptions.put(EnergyType.ELECTRICITY, routeConsumption + consumption);
-			}
-
+		} else { //other engine types
+			consumption += (access + egress) / 1000 * (parameters.get("A") / averageAccessEgressSpeed + parameters.get("B") + parameters.get("C") * averageAccessEgressSpeed + parameters.get("D") * averageAccessEgressSpeed  * averageAccessEgressSpeed);
+			//apply relative fuel efficiency
+			consumption *= relativeEfficiency;
 		}
-		return tripConsumptions;
+
+		if (this.engine == EngineType.PHEV_PETROL) {
+			accessEgressConsumptions.put(EnergyType.ELECTRICITY, electricityConsumption);
+			accessEgressConsumptions.put(EnergyType.PETROL, fuelConsumption);
+
+		} else if (this.engine == EngineType.PHEV_DIESEL) {
+			accessEgressConsumptions.put(EnergyType.ELECTRICITY, electricityConsumption);
+			accessEgressConsumptions.put(EnergyType.DIESEL, fuelConsumption);
+
+		} else if (this.engine == EngineType.ICE_PETROL || this.engine == EngineType.HEV_PETROL) {
+			accessEgressConsumptions.put(EnergyType.PETROL, consumption);
+
+		} else if (this.engine == EngineType.ICE_DIESEL || this.engine == EngineType.HEV_DIESEL) {
+			accessEgressConsumptions.put(EnergyType.DIESEL, consumption);
+
+		} else if (this.engine == EngineType.ICE_CNG) {
+			accessEgressConsumptions.put(EnergyType.CNG, consumption);
+
+		} else if (this.engine == EngineType.ICE_H2) {
+			accessEgressConsumptions.put(EnergyType.HYDROGEN, consumption);
+
+		}	else if (this.engine == EngineType.BEV) {
+			accessEgressConsumptions.put(EnergyType.ELECTRICITY, consumption);
+		}
+
+		return accessEgressConsumptions;
 	}
 	
 	/**
 	 * Calculates total CO2 emissions per energy type.
-	 * @param linkTravelTime
-	 * @param averageAccessEgressMap
-	 * @param averageAccessEgressSpeed
-	 * @param energyConsumptions
-	 * @param relativeFuelEfficiency
-	 * @param unitCO2Emissions
+	 * @param linkTravelTime Link travel time.
+	 * @param averageAccessEgressMap Average access/egress distance to a node for LAD-based trips.
+	 * @param averageAccessEgressSpeed Average accces/egress speed.
+	 * @param energyConsumptionParameters Energy consumption parameters.
+	 * @param relativeFuelEfficiency Relative fuel efficiency.
+	 * @param unitCO2Emissions Unit CO2 emissions.
 	 * @return CO2 emissions per energy type.
 	 */
-	public Double getCO2emission(Map<Integer, Double> linkTravelTime, HashMap<Integer, Double> averageAccessEgressMap, double averageAccessEgressSpeed, HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptions, HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency, HashMap<EnergyType, Double> unitCO2Emissions) {
+	public Double getCO2emission(Map<Integer, Double> linkTravelTime, HashMap<Integer, Double> averageAccessEgressMap, double averageAccessEgressSpeed, HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParameters, HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency, HashMap<EnergyType, Double> unitCO2Emissions) {
 		
-		HashMap<EnergyType, Double> consumption = this.route.calculateConsumption(this.vehicle, this.engine, linkTravelTime, energyConsumptions, relativeFuelEfficiency);
+		HashMap<EnergyType, Double> consumption = this.route.calculateConsumption(this.vehicle, this.engine, linkTravelTime, energyConsumptionParameters, relativeFuelEfficiency);
 		
 		double CO2 = 0.0;
 		for (EnergyType et: consumption.keySet()) {
@@ -467,9 +495,10 @@ public class Trip {
 	}
 	
 	/**
-	 * @param policyName
-	 * @param congestionCharges
-	 * @return
+	 * Check whether trip is going through a congestion charging zone for a particular policy.
+	 * @param policyName Policy name.
+	 * @param congestionCharges Congestion charges.
+	 * @return True if it is going through the congestion charging zone.
 	 */
 	public boolean isTripGoingThroughCongestionChargingZone(String policyName, HashMap<String, MultiKeyMap> congestionCharges) {
 		
