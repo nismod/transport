@@ -142,6 +142,8 @@ public class RoadNetworkAssignment {
 
 	private HashMap<String, MultiKeyMap> congestionCharges; //String is the policy name, MultiKeyMap is (VehicleType, TimeOfDay) -> list of link charges
 
+	private Properties params;
+	
 	/**
 	 * @param roadNetwork Road network.
 	 * @param energyUnitCosts Energy unit costs.
@@ -176,6 +178,7 @@ public class RoadNetworkAssignment {
 			Properties params) {
 
 		this.roadNetwork = roadNetwork;
+		this.params = params;
 		this.linkVolumesInPCU = new HashMap<Integer, Double>();
 		this.linkVolumesPerVehicleType = new HashMap<VehicleType, Map<Integer, Integer>>();
 		for (VehicleType vht: VehicleType.values()) {
@@ -4258,9 +4261,15 @@ public class RoadNetworkAssignment {
 	public void saveZonalVehicleKilometresWithAccessEgress(int year, String outputFile) {
 
 		LOGGER.debug("Saving zonal vehicle-kilometres with access and egress.");
+		
+		final String assignmentType = this.params.getProperty("ASSIGNMENT_TYPE").toLowerCase();
 
-		Map<String, Map<VehicleType, Double>> vehicleKilometres = this.calculateZonalVehicleKilometresPerVehicleTypeFromTripList(true);
-
+		Map<String, Map<VehicleType, Double>> vehicleKilometres;
+		if (assignmentType.equals("tempro") || assignmentType.equals("combined"))
+			vehicleKilometres = this.calculateZonalVehicleKilometresPerVehicleTypeFromTemproTripList(true);
+		else
+			vehicleKilometres = this.calculateZonalVehicleKilometresPerVehicleTypeFromTripList(true);
+		
 		String NEW_LINE_SEPARATOR = "\n";
 		ArrayList<String> header = new ArrayList<String>();
 		header.add("year");
@@ -4720,7 +4729,7 @@ public class RoadNetworkAssignment {
 				if (originNode == null) LOGGER.error("Trip does not have origin node!");
 				Double access = roadNetwork.getNodeToAverageAccessEgressDistance().get(originNode.getID());
 				if (access == null) {
-					LOGGER.warn("Node {} does not have access length! Assume zero access.", originNode.getID());
+					LOGGER.trace("Node {} does not have access length! Assume zero access.", originNode.getID());
 					access = 0.0;
 				}
 				else access /= 1000; //km
@@ -4745,7 +4754,7 @@ public class RoadNetworkAssignment {
 				if (destinationNode == null) LOGGER.error("Trip does not have destination node!");
 				Double egress = roadNetwork.getNodeToAverageAccessEgressDistance().get(destinationNode.getID());
 				if (egress == null) {
-					LOGGER.warn("Node {} does not have egress length! Assume zero egress.", destinationNode.getID());
+					LOGGER.trace("Node {} does not have egress length! Assume zero egress.", destinationNode.getID());
 					egress = 0.0;
 				}
 				else egress /= 1000; //km
@@ -4875,16 +4884,13 @@ public class RoadNetworkAssignment {
 		//zone to vehicle type to vehicle kilometres
 		Map<String, Map<VehicleType, Double>> vehicleKilometres = new HashMap<String, Map<VehicleType, Double>>();
 
-		for (Trip trip: tripList)
-			if (trip instanceof TripTempro) {
-
-			TripTempro temproTrip = (TripTempro) trip;
-									
-			int multiplier = temproTrip.getMultiplier();
-			VehicleType vht = temproTrip.getVehicle();
+		for (Trip trip: tripList) {
+			
+			int multiplier = trip.getMultiplier();
+			VehicleType vht = trip.getVehicle();
 			
 			//for each edge of the route add vehkm depending on the zone of the edge
-			for (int edgeID: temproTrip.getRoute().getEdges().toArray()) {
+			for (int edgeID: trip.getRoute().getEdges().toArray()) {
 
 				//get zone
 				String zone = roadNetwork.getEdgeToZone().get(edgeID);
@@ -4916,67 +4922,107 @@ public class RoadNetworkAssignment {
 			if (includeAccessEgress) {
 
 				//get origin 
-				Node originNode = temproTrip.getOriginNode();
+				Node originNode = trip.getOriginNode();
 				if (originNode == null) LOGGER.error("Trip does not have origin node!");
-				//get origin tempro zone
-				String originTemproZone = temproTrip.getOriginTemproZone();
-				
-				double access = 0;
-				List<Pair<Integer, Double>> accessList = temproTrip.getZoning().getZoneToSortedListOfNodeAndDistancePairs().get(originTemproZone);
-				for (Pair<Integer, Double> pair: accessList) {
+
+				Double access = 0.0;
+				String accessLAD = null;
+				if (trip instanceof TripTempro) {
+
+					accessLAD = ((TripTempro)trip).getOriginLAD();
+					String originTemproZone = ((TripTempro)trip).getOriginTemproZone();
+					/*
+					//this is a more general (slower) version where Tempro trip can start from any node (node just the nearest).
+					List<Pair<Integer, Double>> accessList = ((TripTempro)trip).getZoning().getZoneToSortedListOfNodeAndDistancePairs().get(originTemproZone);
+					for (Pair<Integer, Double> pair: accessList) {
 					if (pair.getKey() == originNode.getID()) {
 						access = pair.getValue() / 1000;
-						continue;
+						break;
 					}
+					}
+					*/
+					access = TripTempro.zoning.getZoneToNearestNodeDistanceMap().get(originTemproZone);
+					if (access == null) access = 0.0;
+					else access /= 1000;
+
+				} else { //LAD-based trip
+
+					accessLAD = trip.getOriginLAD(this.roadNetwork.getNodeToZone());
+					
+					if (vht == VehicleType.CAR || vht == VehicleType.CAR_AV)
+						access = this.roadNetwork.getNodeToAverageAccessEgressDistance().get(originNode.getID());
+					else //freight vehicle
+						access = this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight().get(originNode.getID());
+					if (access == null) access = 0.0;
+					else access /= 1000;
 				}
-				String accessZone = roadNetwork.getNodeToZone().get(originNode.getID());
 								
 				//fetch current map
-				Map<VehicleType, Double> map = vehicleKilometres.get(accessZone);
+				Map<VehicleType, Double> map = vehicleKilometres.get(accessLAD);
 				if (map == null) {
 					map = new HashMap<VehicleType, Double>();
-					vehicleKilometres.put(accessZone, map);
+					vehicleKilometres.put(accessLAD, map);
 				}
 
 				//fetch current value
-				Double vehkm = vehicleKilometres.get(accessZone).get(vht);
+				Double vehkm = vehicleKilometres.get(accessLAD).get(vht);
 				if (vehkm == null) vehkm = 0.0;
 				vehkm += access * multiplier;
 
 				//store new value
-				vehicleKilometres.get(accessZone).put(vht, vehkm);
+				vehicleKilometres.get(accessLAD).put(vht, vehkm);
 
-				//get destination 
-				Node destinationNode = temproTrip.getDestinationNode();
-				if (destinationNode == null) LOGGER.error("Trip does not have destination node!");
-				//get destination tempro zone
-				String destinationTemproZone = temproTrip.getDestinationTemproZone();
-						
-				double egress = 0;
-				List<Pair<Integer, Double>> egressList = temproTrip.getZoning().getZoneToSortedListOfNodeAndDistancePairs().get(destinationTemproZone);
 				
-				for (Pair<Integer, Double> pair: egressList) {
+				//get destination 
+				Node destinationNode = trip.getDestinationNode();
+				if (destinationNode == null) LOGGER.error("Trip does not have destination node!");
+
+				Double egress = 0.0;
+				String egressLAD = null;
+				if (trip instanceof TripTempro) {
+
+					egressLAD = ((TripTempro)trip).getDestinationLAD();
+					String destinationTemproZone = ((TripTempro)trip).getDestinationTemproZone();
+					/*
+					//this is a more general (slower) version where Tempro trip can end in any node (node just the nearest).
+					List<Pair<Integer, Double>> egressList = ((TripTempro)trip).getZoning().getZoneToSortedListOfNodeAndDistancePairs().get(destinationTemproZone);
+					for (Pair<Integer, Double> pair: egressList) {
 					if (pair.getKey() == destinationNode.getID()) {
 						egress = pair.getValue() / 1000;
-						continue;
+						break;
 					}
-				}
-				String egressZone = roadNetwork.getNodeToZone().get(destinationNode.getID());
+					}
+					*/
+					egress = TripTempro.zoning.getZoneToNearestNodeDistanceMap().get(destinationTemproZone);
+					if (egress == null) egress = 0.0;
+					else egress /= 1000;
+					
+				} else { //LAD-based trip
 
+					egressLAD = trip.getDestinationLAD(this.roadNetwork.getNodeToZone());
+					
+					if (vht == VehicleType.CAR || vht == VehicleType.CAR_AV)
+						egress = this.roadNetwork.getNodeToAverageAccessEgressDistance().get(destinationNode.getID());
+					else //freight vehicle
+						egress = this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight().get(destinationNode.getID());
+					if (egress == null) egress = 0.0;
+					else egress /= 1000;
+				}
+								
 				//fetch current map
-				map = vehicleKilometres.get(egressZone);
+				map = vehicleKilometres.get(egressLAD);
 				if (map == null) {
 					map = new HashMap<VehicleType, Double>();
-					vehicleKilometres.put(egressZone, map);
+					vehicleKilometres.put(egressLAD, map);
 				}
 
 				//fetch current value
-				vehkm = vehicleKilometres.get(egressZone).get(vht);
+				vehkm = vehicleKilometres.get(egressLAD).get(vht);
 				if (vehkm == null) vehkm = 0.0;
 				vehkm += egress * multiplier;
 
 				//store new value
-				vehicleKilometres.get(egressZone).put(vht, vehkm);
+				vehicleKilometres.get(egressLAD).put(vht, vehkm);
 			}
 		} //trip loop
 

@@ -692,12 +692,12 @@ public class DemandModel {
 			
 			//observed trip length distribution
 			LOGGER.debug("Trip length distributions:");
-			LOGGER.debug("Empirical: {}", Arrays.toString(EstimatedODMatrix.OTLD));
-			LOGGER.debug("Without access/egress: {}", Arrays.toString(rna.getObservedTripLengthDistribution(EstimatedODMatrix.BIN_LIMITS_KM, false)));
-			LOGGER.debug("With access/egress: {}", Arrays.toString(rna.getObservedTripLengthDistribution(EstimatedODMatrix.BIN_LIMITS_KM, true)));
+			LOGGER.debug("Empirical: \n{}", Arrays.toString(EstimatedODMatrix.OTLD));
+			LOGGER.debug("Without access/egress: \n{}", Arrays.toString(rna.getObservedTripLengthDistribution(EstimatedODMatrix.BIN_LIMITS_KM, false)));
+			LOGGER.debug("With access/egress: \n{}", Arrays.toString(rna.getObservedTripLengthDistribution(EstimatedODMatrix.BIN_LIMITS_KM, true)));
 			LOGGER.debug("Trip length frequencies:");
-			LOGGER.debug("Without access/egress: {}", Arrays.toString(rna.getObservedTripLengthFrequencies(EstimatedODMatrix.BIN_LIMITS_KM, false)));
-			LOGGER.debug("With access/egress: {}", Arrays.toString(rna.getObservedTripLengthFrequencies(EstimatedODMatrix.BIN_LIMITS_KM, true)));
+			LOGGER.debug("Without access/egress: \n{}", Arrays.toString(rna.getObservedTripLengthFrequencies(EstimatedODMatrix.BIN_LIMITS_KM, false)));
+			LOGGER.debug("With access/egress: \n{}", Arrays.toString(rna.getObservedTripLengthFrequencies(EstimatedODMatrix.BIN_LIMITS_KM, true)));
 	}
 		
 	/**
@@ -1316,6 +1316,8 @@ public class DemandModel {
 		
 		outputFile = file.getPath() + File.separator +  vehicleKilometresFile;
 		this.yearToRoadNetworkAssignment.get(year).saveZonalVehicleKilometres(year, outputFile);
+		outputFile = outputFile.substring(0, outputFile.length()-5) + "WithAccessEgress.csv";
+		this.yearToRoadNetworkAssignment.get(year).saveZonalVehicleKilometresWithAccessEgress(year, outputFile);
 		
 		outputFile = file.getPath() + File.separator +  energyConsumptionsFile;
 		this.yearToRoadNetworkAssignment.get(year).saveTotalEnergyConsumptions(year, outputFile);

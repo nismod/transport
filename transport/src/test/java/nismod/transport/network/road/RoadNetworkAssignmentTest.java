@@ -1281,7 +1281,7 @@ public class RoadNetworkAssignmentTest {
 		double[] frequencies = rna.getObservedTripLengthFrequencies(EstimatedODMatrix.BIN_LIMITS_KM, false);
 		for (double f: frequencies) sum += f;
 		assertEquals("Total number of trips equals sum of frequences", temproODM2.getTotalIntFlow(), sum, EPSILON);
-						
+		
 		//SAVING METHODS
 		rna.saveAssignmentResults(2015, "./temp/testAssignmentResults.csv");
 		rna.saveHourlyCarVolumes(2015, "./temp/testHourlyCarVolumes.csv");
