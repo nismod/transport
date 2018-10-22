@@ -717,7 +717,7 @@ public class RouteSetGenerator{
 				for (Integer vehicleType: vehicles) 
 					if (freightMatrix.getFlow(originFreightZone, destinationFreightZone, vehicleType) != 0) {
 						this.generateRouteSetBetweenFreightZones(originFreightZone, destinationFreightZone, topNodes);
-						continue; //no need to repeat if there is flow for a different vehicle type!
+						break; //no need to repeat if there is flow for a different vehicle type!
 					}
 	}
 	
@@ -765,7 +765,7 @@ public class RouteSetGenerator{
 					for (Integer vehicleType: vehicles) 
 						if (freightMatrix.getFlow(originFreightZone, destinationFreightZone, vehicleType) != 0) {
 							this.generateRouteSetBetweenFreightZones(originFreightZone, destinationFreightZone);
-							continue; //no need to repeat if there is a flow for a different vehicle type!
+							break; //no need to repeat if there is a flow for a different vehicle type!
 						}
 			}
 		} else { //for the last slice there may be more origins, so go all the way to the end of the list
@@ -775,7 +775,7 @@ public class RouteSetGenerator{
 					for (Integer vehicleType: vehicles)
 						if (freightMatrix.getFlow(originFreightZone, destinationFreightZone, vehicleType) != 0) {
 							this.generateRouteSetBetweenFreightZones(originFreightZone, destinationFreightZone);
-							continue; //no need to repeat if there is a flow for a different vehicle type!
+							break; //no need to repeat if there is a flow for a different vehicle type!
 						}
 			}
 		}
@@ -806,7 +806,7 @@ public class RouteSetGenerator{
 					for (Integer vehicleType: vehicles) 
 						if (freightMatrix.getFlow(originFreightZone, destinationFreightZone, vehicleType) != 0) {
 							this.generateRouteSetBetweenFreightZones(originFreightZone, destinationFreightZone, topNodes);
-							continue; //no need to repeat if there is a flow for a different vehicle type!
+							break; //no need to repeat if there is a flow for a different vehicle type!
 						}
 			}
 		} else { //for the last slice there may be more origins, so go all the way to the end of the list
@@ -816,7 +816,7 @@ public class RouteSetGenerator{
 					for (Integer vehicleType: vehicles)
 						if (freightMatrix.getFlow(originFreightZone, destinationFreightZone, vehicleType) != 0) {
 							this.generateRouteSetBetweenFreightZones(originFreightZone, destinationFreightZone, topNodes);
-							continue; //no need to repeat if there is a flow for a different vehicle type!
+							break; //no need to repeat if there is a flow for a different vehicle type!
 						}
 			}
 		}
