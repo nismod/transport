@@ -68,6 +68,7 @@ public class RoadNetworkAssignment {
 	public final boolean flagUseRouteChoiceModel; //use route-choice model (true) or routing with A-Star (false)
 	public final boolean flagIncludeAccessEgress; //use access/egress in the calculation of outputs.
 	public final int topTemproNodes = 1;
+	public final int baseYear;
 
 	private static RandomSingleton rng = RandomSingleton.getInstance();
 
@@ -240,6 +241,7 @@ public class RoadNetworkAssignment {
 		//System.out.println("Congestion charges: " + this.congestionCharges);
 
 		//read the parameters
+		this.baseYear = Integer.parseInt(params.getProperty("baseYear"));
 		this.maximumCapacityMRoad = Integer.parseInt(params.getProperty("MAXIMUM_CAPACITY_M_ROAD"));
 		this.maximumCapacityARoad = Integer.parseInt(params.getProperty("MAXIMUM_CAPACITY_A_ROAD"));
 		this.averageAccessEgressSpeedCar = Double.parseDouble(params.getProperty("AVERAGE_ACCESS_EGRESS_SPEED_CAR"));  
@@ -3725,13 +3727,18 @@ public class RoadNetworkAssignment {
 		HashMap<Integer, Double> averageCapacities = this.calculateAveragePeakLinkPointCapacities();
 		HashMap<Integer, Double> maximumCapacities = this.calculateMaximumPeakLinkPointCapacities();
 		HashMap<Integer, Double> densities = this.calculatePeakLinkDensities();
-		HashMap<Integer, Double> GEHStats = this.calculateGEHStatisticForCarCounts();
+		HashMap<Integer, Double> GEHStats = null;
+		if (year == this.baseYear) 
+			GEHStats = this.calculateGEHStatisticForCarCounts(); //GEH can be calculated for base year only
 
 		String NEW_LINE_SEPARATOR = "\n";
 		ArrayList<String> header = new ArrayList<String>();
 		header.add("year");
 		header.add("edgeID");
+		header.add("nodeA");
+		header.add("nodeB");
 		header.add("roadNumber");
+		header.add("length");
 		header.add("freeFlowTravelTime");
 		header.add("peakHourtravelTime");
 		header.add("linkVolumeCar");
@@ -3770,9 +3777,12 @@ public class RoadNetworkAssignment {
 				record.clear();
 				record.add(Integer.toString(year));
 				record.add(Integer.toString(edge.getID()));
+				record.add(Integer.toString(edge.getNodeA().getID()));
+				record.add(Integer.toString(edge.getNodeB().getID()));
 				SimpleFeature feature = (SimpleFeature)edge.getObject();
 				String roadNumber = (String) feature.getAttribute("RoadNumber");
 				record.add(roadNumber);
+				record.add(String.format("%.3f", this.roadNetwork.getEdgeLength(edge.getID())));
 				record.add(String.format("%.4f", this.roadNetwork.getFreeFlowTravelTime().get(edge.getID())));
 				record.add(String.format("%.4f", this.linkTravelTimePerTimeOfDay.get(TimeOfDay.EIGHTAM).get(edge.getID())));
 				Integer linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edge.getID());
@@ -3834,7 +3844,7 @@ public class RoadNetworkAssignment {
 				if (countPointObject instanceof Double) countPoint = (long) Math.round((double)countPointObject);
 				else countPoint = (long) countPointObject;
 				record.add(Long.toString(countPoint));
-				if (countPoint != 0) { //not a ferry nor a newly developed road with no count point
+				if (year == this.baseYear && countPoint != 0) { //only for base year and not a ferry nor a newly developed road with no count point
 					String direction = (String) feature.getAttribute("iDir");
 					record.add(direction);
 					long carCount = (long) feature.getAttribute("FdCar");
@@ -3848,7 +3858,7 @@ public class RoadNetworkAssignment {
 					double geh = GEHStats.get(edge.getID());
 					record.add(String.format("%.4f", geh));
 				}
-				else { //ferry or a newly developed road with no count point
+				else { //future years, ferry or a newly developed road with no count point
 					record.add("N/A");
 					record.add("N/A");
 					record.add("N/A");
