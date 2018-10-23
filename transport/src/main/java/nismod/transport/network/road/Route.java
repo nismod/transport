@@ -263,10 +263,7 @@ public class Route {
 			double fuelConsumption = 0.0;
 			double electricityConsumption = 0.0;
 			for (int edgeID: edges.toArray()) {
-
-				DirectedEdge edge = (DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(edgeID);
-				SimpleFeature sf = (SimpleFeature) edge.getObject();
-				double len = (double) sf.getAttribute("LenNet"); //in [km]
+				double len = roadNetwork.getEdgeLength(edgeID); //in [km]
 				double time = linkTravelTime.get(edgeID); //in [min]
 				//String cat = (String) sf.getAttribute("RCat"); //road category (PM, PR, Pu, PU, TM, TR, Tu, TU), use Pu, PU, Tu, TU as urban, otherwise rural
 				Boolean isUrban = this.roadNetwork.getIsEdgeUrban().get(edgeID);
@@ -300,11 +297,8 @@ public class Route {
 			double fuelConsumption = 0.0;
 			double electricityConsumption = 0.0;
 			for (int edgeID: edges.toArray()) {
-				DirectedEdge edge = (DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(edgeID);
-				SimpleFeature sf = (SimpleFeature) edge.getObject();
-				double len = (double) sf.getAttribute("LenNet"); //in [km]
-				double time = linkTravelTime.get(edge.getID()); //in [min]
-				//String cat = (String) sf.getAttribute("RCat"); //road category (PM, PR, Pu, PU, TM, TR, Tu, TU), use Pu, PU, Tu, TU as urban, otherwise rural
+				double len = roadNetwork.getEdgeLength(edgeID); //in [km]
+				double time = linkTravelTime.get(edgeID); //in [min]
 				Boolean isUrban = this.roadNetwork.getIsEdgeUrban().get(edgeID);
 				double speed = len / (time / 60);
 
@@ -334,16 +328,13 @@ public class Route {
 
 			double consumption = 0.0;
 			for (int edgeID: edges.toArray()) {
-				DirectedEdge edge = (DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(edgeID);
-				SimpleFeature sf = (SimpleFeature) edge.getObject();
-				double len = (double) sf.getAttribute("LenNet"); //in [km]
-				double time = linkTravelTime.get(edge.getID()); //in [min]
-				String cat = (String) sf.getAttribute("RCat"); //road category (PM, PR, Pu, PU, TM, TR, Tu, TU), use Pu, PU, Tu, TU as urban, otherwise rural
+				double len = roadNetwork.getEdgeLength(edgeID); //in [km]
+				double time = linkTravelTime.get(edgeID); //in [min]
 				double speed = len / (time / 60);
 
-				//if no roadCategory information, assume it is ferry and skip
-				if (cat == null) {
-					LOGGER.trace("No road category information. Assuming it is ferry and skipping for consumption calculation.");
+				//skip ferry
+				if (roadNetwork.getIsEdgeFerry().get(edgeID)) {
+					LOGGER.trace("Skipping ferry edge in consumption calculation.");
 					continue;
 				}
 

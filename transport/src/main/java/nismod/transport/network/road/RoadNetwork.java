@@ -108,6 +108,7 @@ public class RoadNetwork {
 	private HashMap<Integer, Edge> edgeIDtoEdge; //for direct access
 	private HashMap<Integer, Integer> edgeIDtoOtherDirectionEdgeID;
 	private HashMap<Integer, Boolean> isEdgeUrban; //true = urban, false = rural, null = unknown/ferry
+	private HashMap<Integer, Boolean> isEdgeFerry; //true = ferry, false = not ferry
 	private List<Integer> startNodeBlacklist;
 	private List<Integer> endNodeBlacklist;
 	private HashMap<Integer, Double> freeFlowTravelTime;
@@ -272,6 +273,8 @@ public class RoadNetwork {
 			this.addNumberOfLanes();
 			//update information on urban/rural
 			this.determineEdgesUrbanRural();
+			//update information on ferry or not
+			this.determineEdgesFerry();
 		} finally {
 			//feature iterator is a live connection that must be closed
 			iter.close();
@@ -1244,6 +1247,15 @@ public class RoadNetwork {
 	}
 	
 	/**
+	 * Getter method for the map saying if the edge is ferry (true) or not (false).
+	 * @return Map between the edge ID and whether the edge is ferry.
+	 */
+	public HashMap<Integer, Boolean> getIsEdgeFerry() {
+
+		return this.isEdgeFerry;
+	}
+	
+	/**
 	 * Getter method for the node to zone mapping.
 	 * @return Node to zone mapping.
 	 */
@@ -1647,6 +1659,10 @@ public class RoadNetwork {
 		LOGGER.info("Determining whether edges are urban or rural...");
 		
 		determineEdgesUrbanRural();
+		
+		LOGGER.info("Determining whether edges are ferry or not...");
+		
+		determineEdgesFerry();
 		
 		LOGGER.trace("Undirected graph representation of the road network:");
 		LOGGER.trace(undirectedGraph);
@@ -2077,8 +2093,7 @@ public class RoadNetwork {
 			numberOfLanes.put(edge.getID(), lanes);
 		}
 	}
-	
-	
+		
 	/**
 	 * Determines if edges are urban, rural or unknown.
 	 */
@@ -2105,6 +2120,27 @@ public class RoadNetwork {
 				isEdgeUrban.put(edge.getID(), true);
 			else									
 				isEdgeUrban.put(edge.getID(), false);
+		}
+	}
+	
+	/**
+	 * Determines if edges are ferry or not.
+	 */
+	private void determineEdgesFerry() {
+		
+		this.isEdgeFerry = new HashMap<Integer, Boolean>();
+		
+		//iterate through all the edges in the graph
+		Iterator iter = this.network.getEdges().iterator();
+		while(iter.hasNext()) {
+			
+			Edge edge = (Edge) iter.next();
+			SimpleFeature sf = (SimpleFeature) edge.getObject();
+			String roadNumber = (String) sf.getAttribute("RoadNumber");
+			if (roadNumber.toUpperCase().charAt(0) == 'F')//ferry
+				isEdgeFerry.put(edge.getID(), true);
+			else									
+				isEdgeFerry.put(edge.getID(), false);
 		}
 	}
 		

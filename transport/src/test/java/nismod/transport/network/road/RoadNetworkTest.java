@@ -1040,6 +1040,12 @@ public class RoadNetworkTest {
 		assertNull("Edge is neither urban nor rural", roadNetwork.getIsEdgeUrban().get(555));
 		assertNull("Edge is neither urban nor rural", roadNetwork.getIsEdgeUrban().get(556));
 		
+		//TEST WHETHER EDGE IS FERRY
+		assertTrue("Edge is ferry", roadNetwork.getIsEdgeFerry().get(555));
+		assertTrue("Edge is ferry", roadNetwork.getIsEdgeFerry().get(556));
+		assertTrue("Edge is not ferry", !roadNetwork.getIsEdgeFerry().get(541));
+		assertTrue("Edge is not ferry", !roadNetwork.getIsEdgeFerry().get(540));
+		
 		//TEST EDGE TO OTHER DIRECTION EDGE MAPPING
 		System.out.println("\n\n*** Testing edge to other direction edge mapping ***");
 
