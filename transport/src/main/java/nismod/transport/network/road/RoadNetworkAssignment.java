@@ -4246,8 +4246,11 @@ public class RoadNetworkAssignment {
 				record.clear();
 				record.add(Integer.toString(year));
 				record.add(zone);
-				for (Entry<VehicleType, Double> entry: vehicleKilometres.get(zone).entrySet())
-					record.add(String.format("%.2f", entry.getValue()));
+				for (VehicleType vht: VehicleType.values()) {
+					Double vhkm = vehicleKilometres.get(zone).get(vht);
+					if (vhkm == null) vhkm = 0.0;
+					record.add(String.format("%.2f", vhkm));
+				}
 				csvFilePrinter.printRecord(record);
 			}	
 		} catch (Exception e) {
@@ -4298,8 +4301,11 @@ public class RoadNetworkAssignment {
 				record.clear();
 				record.add(Integer.toString(year));
 				record.add(zone);
-				for (Entry<VehicleType, Double> entry: vehicleKilometres.get(zone).entrySet())
-					record.add(String.format("%.2f", entry.getValue()));
+				for (VehicleType vht: VehicleType.values()) {
+					Double vhkm = vehicleKilometres.get(zone).get(vht);
+					if (vhkm == null) vhkm = 0.0;
+					record.add(String.format("%.2f", vhkm));
+				}
 				csvFilePrinter.printRecord(record);
 			}	
 		} catch (Exception e) {
