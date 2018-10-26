@@ -205,7 +205,7 @@ public class RouteSet {
 		this.correctUtilitiesWithPathSize();
 		
 		//sort routes on utility (optional)
-		this.sortRoutesOnUtility();
+		//this.sortRoutesOnUtility();
 	}
 	
 	/**
