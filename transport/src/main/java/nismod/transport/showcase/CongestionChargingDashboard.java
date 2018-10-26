@@ -1127,6 +1127,7 @@ public class CongestionChargingDashboard extends JFrame {
 
 		rsg.readRoutesBinaryWithoutValidityCheck(passengerRoutesFile);
 		//rsg.generateRouteSetForODMatrix(odm, 5);
+		rsg.calculateAllPathsizes();
 
 		RandomSingleton.getInstance().setSeed(1234);
 

@@ -281,6 +281,7 @@ public class SPSATest {
 		//rsg.generateRouteSetForODMatrix(new ODMatrix(temproODMatrix));
 		//generate single node routes
 		rsg.generateSingleNodeRoutes();
+		rsg.calculateAllPathsizes();
 		//read tempro routes
 		final String temproRoutesFile = props.getProperty("temproRoutesFile");
 		rsg.readRoutesBinaryWithoutValidityCheck(temproRoutesFile);

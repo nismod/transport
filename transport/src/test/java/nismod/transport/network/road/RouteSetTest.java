@@ -1,18 +1,14 @@
 package nismod.transport.network.road;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.lessThan;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.junit.Assert.assertEquals;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Properties;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -137,7 +133,15 @@ public class RouteSetTest {
 	
 		rs.printChoiceSet();
 		rs.printStatistics();
-				
+		
+		rs.calculatePathsizes();
+		rs.printPathsizes();
+		
+		for (double pathsize: rs.getPathsizes()) {
+			assertThat(0.0, lessThan(pathsize)); //all pathsizes should be larger than 0 and less than or equal to 1.
+			assertThat(1.0, greaterThanOrEqualTo(pathsize)); 
+		}
+		
 		//rs.calculateUtilities(roadNetwork.getFreeFlowTravelTime(), params);
 		rs.calculateUtilities(VehicleType.CAR, EngineType.PHEV_PETROL, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null, params);
 		rs.printUtilities();
@@ -197,12 +201,14 @@ public class RouteSetTest {
 		rs.printChoiceSet();
 		rs.printStatistics();
 		//all routes need to have re-calculated utility and path size after the new route is added!
+		rs.calculatePathsizes();
 		rs.calculateUtilities(VehicleType.CAR, EngineType.PHEV_PETROL, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null, params);
 		rs.printUtilities();
 		rs.calculateProbabilities();
 		rs.printProbabilities();
 		rs.printChoiceSet();
 		rs.printUtilities();
+		rs.printPathsizes();
 		rs.printProbabilities();
 		Route chosenRoute = rs.choose(params);
 		System.out.println("Chosen route: " + chosenRoute.toString());
@@ -224,9 +230,11 @@ public class RouteSetTest {
 		rs.addRoute(r5);
 		rs.printChoiceSet();
 		rs.printStatistics();
+		rs.calculatePathsizes();
 		rs.calculateUtilities(VehicleType.CAR, EngineType.PHEV_PETROL, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null, params);
 		rs.printUtilities();
 		rs.calculateProbabilities();
+		rs.printPathsizes();
 		rs.printProbabilities();
 	}
 }

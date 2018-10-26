@@ -92,7 +92,7 @@ public class RoadDisruption extends Disruption {
 				if (this.listOfRemovedRoutes == null) this.listOfRemovedRoutes = new ArrayList<Route>();
 				//for route-choice based, remove from the route set
 				if (o instanceof RouteSetGenerator) 
-					((RouteSetGenerator)o).removeRoutesWithEdge(edgeID, this.listOfRemovedRoutes);
+					((RouteSetGenerator)o).removeRoutesWithEdge(edgeID, this.listOfRemovedRoutes); //pathsizes will be recalculated too
 			}
 		}
 		
@@ -142,8 +142,12 @@ public class RoadDisruption extends Disruption {
 		} else {
 			//restore disrupted routes in the route set
 			for (Route route: this.listOfRemovedRoutes) {
-				System.out.printf("Restoring route from %d to %d back to the network. %n", route.getOriginNode().getID(), route.getDestinationNode().getID());
+				int origin = route.getOriginNode().getID();
+				int destination = route.getDestinationNode().getID();
+				System.out.printf("Restoring route from %d to %d back to the network. %n", origin, destination);
 				((RouteSetGenerator)o).addRoute(route);
+				//recalculate pathsizes
+				((RouteSetGenerator)o).getRouteSet(origin, destination).calculatePathsizes();
 			}
 			this.listOfRemovedRoutes = null;
 		}

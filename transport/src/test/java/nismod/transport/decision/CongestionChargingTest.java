@@ -79,6 +79,7 @@ public class CongestionChargingTest {
 		rsg.readRoutesBinary(passengerRoutesFile);
 		rsg.readRoutesBinary(freightRoutesFile);
 		rsg.printStatistics();
+		rsg.calculateAllPathsizes();
 		
 		DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, baseYearFreightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, unitCO2EmissionsFile, engineTypeFractionsFile, AVFractionsFile, interventions, rsg, null, props);
 

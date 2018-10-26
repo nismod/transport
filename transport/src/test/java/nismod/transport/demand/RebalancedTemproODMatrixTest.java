@@ -536,6 +536,7 @@ public class RebalancedTemproODMatrixTest {
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, props);
 		rsg.generateSingleNodeRoutes();
 		rsg.readRoutesBinaryWithoutValidityCheck(passengerRoutesFile);
+		rsg.calculateAllPathsizes();
 		
 		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
 		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);

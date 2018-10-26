@@ -1,6 +1,7 @@
 package nismod.transport.network.road;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -32,6 +33,7 @@ public class RouteSet {
 	private List<Route> choiceSet;
 	//private ArrayList<Double> probabilities;
 	private double[] probabilities;
+	private double[] pathsizes;
 	private RoadNetwork roadNetwork;
 	
 	/**
@@ -43,7 +45,7 @@ public class RouteSet {
 		//this.destinationNode = destinationNode;
 		this.roadNetwork = roadNetwork;
 		
-		choiceSet = new ArrayList<Route>(RouteSetGenerator.INITIAL_ROUTE_SET_CAPACITY);
+		this.choiceSet = new ArrayList<Route>(RouteSetGenerator.INITIAL_ROUTE_SET_CAPACITY);
 	}
 	
 	/**
@@ -67,14 +69,14 @@ public class RouteSet {
 				return;
 			}
 			//check that route does not already exist
-			for (Route r: choiceSet)
+			for (Route r: this.choiceSet)
 				if (r.equals(route)) {
 					LOGGER.trace("Trying to add a duplicate route to the choice set. Ignoring request.");
 					return;
 				}
 		}
 		//add route to the choice set
-		choiceSet.add(route);
+		this.choiceSet.add(route);
 	}
 	
 	/**
@@ -93,14 +95,14 @@ public class RouteSet {
 				return;
 			}
 			//check that route does not already exist
-			for (Route r: choiceSet)
+			for (Route r: this.choiceSet)
 				if (r.equals(route)) {
 					LOGGER.trace("Trying to add a duplicate route to the choice set. Ignoring request.");
 					return;
 				}
 		}
 		//add route to the choice set
-		choiceSet.add(route);
+		this.choiceSet.add(route);
 	}
 	
 	/**
@@ -121,7 +123,7 @@ public class RouteSet {
 				}
 		}
 		//add route to the choice set
-		choiceSet.add(route);
+		this.choiceSet.add(route);
 	}
 	
 	/**
@@ -131,7 +133,7 @@ public class RouteSet {
 	public void addRouteWithoutAnyChecks(Route route) {
 		
 		//add route to the choice set
-		choiceSet.add(route);
+		this.choiceSet.add(route);
 	}
 		
 	/**
@@ -142,7 +144,7 @@ public class RouteSet {
 		if (this.choiceSet.isEmpty()) return;
 		
 		System.out.printf("Choice set for origin node %d and destination node %d: \n", getOriginNode().getID(), getDestinationNode().getID());
-		for (Route r: choiceSet) 
+		for (Route r: this.choiceSet) 
 			System.out.println(r.toString());
 	}
 	
@@ -151,17 +153,17 @@ public class RouteSet {
 	 */
 	public void calculateProbabilities() {
 		
-		probabilities = new double[choiceSet.size()];
+		this.probabilities = new double[this.choiceSet.size()];
 
 		//if just one route in the route set, set probability to 1.0
-		if (choiceSet.size() == 1) probabilities[0] = 1.0;
+		if (this.choiceSet.size() == 1) this.probabilities[0] = 1.0;
 
 		else { //otherwise calculate probabilities using logit formula
 
 			double sum = 0.0;
 
 			//all routes need to have a utility calculated
-			for (Route r: choiceSet) {
+			for (Route r: this.choiceSet) {
 				if (!r.getEdges().isEmpty() && Double.compare(r.getUtility(), 0.0d) == 0)
 					//System.err.printf("Route %d does not have a calculated utility! %n", r.getID());
 					LOGGER.warn("Route with edges does not have a calculated utility! Probabilities will be wrongly calculated.");
@@ -169,9 +171,9 @@ public class RouteSet {
 					sum += Math.exp(r.getUtility());
 			}
 
-			for (int index = 0; index < choiceSet.size(); index++) {
-				double probability = Math.exp(choiceSet.get(index).getUtility()) / sum;
-				probabilities[index] = probability;
+			for (int index = 0; index < this.choiceSet.size(); index++) {
+				double probability = Math.exp(this.choiceSet.get(index).getUtility()) / sum;
+				this.probabilities[index] = probability;
 			}
 			/*
 		System.out.println("Utility / Probability");
@@ -180,8 +182,6 @@ public class RouteSet {
 			 */
 
 		}
-
-		this.probabilities = probabilities;
 	}
 	
 	/**
@@ -198,7 +198,7 @@ public class RouteSet {
 	public void calculateUtilities(VehicleType vht, EngineType et, Map<Integer, Double> linkTravelTime, HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParameters, HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency, HashMap<EnergyType, Double> energyUnitCosts, HashMap<String, HashMap<Integer, Double>> linkCharges, Properties params) {
 		
 		//re-calculate utility for all the routes
-		for (Route r: choiceSet)
+		for (Route r: this.choiceSet)
 			r.calculateUtility(vht, et, linkTravelTime, energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, linkCharges, params);
 		
 		//correct for correlation with path-size
@@ -229,6 +229,16 @@ public class RouteSet {
 	}
 	
 	/**
+	 * Getter method for pathsizes.
+	 * @return Choice pathsizes.
+	 */
+	public double[] getPathsizes() {
+
+		return this.pathsizes;
+	}
+	
+	
+	/**
 	 * Getter method for choice utilities.
 	 * @return Choice utilities.
 	 */
@@ -244,32 +254,56 @@ public class RouteSet {
 	}
 	
 	/**
-	 * Correct each route's utility with path size (measure of correlation with other routes in the choice set)
+	 * Calculate path sizes (also calculates route lengths if they had not been calculated before).
+	 */
+	public void calculatePathsizes() {
+		
+		this.pathsizes = new double[this.choiceSet.size()];
+
+		//if just one route in the route set, set pathsize to 1.0
+		if (this.choiceSet.size() == 1) this.pathsizes[0] = 1.0;
+
+		else { //otherwise calculate pathsizes
+			for (int index = 0; index < this.choiceSet.size(); index++) {
+				Route i = this.choiceSet.get(index);
+				if (i.getEdges().isEmpty()) {
+					LOGGER.warn("There shouldn't be a single node route in a route set with multiple routes!");
+					continue; //do not calculate for single node routes without edges (pathSize will be zero)
+				}
+				double pathSize = 0.0;
+				for (int a: i.getEdges().toArray()) {
+					double edgeLength = roadNetwork.getEdgeLength(a);
+					if (Double.compare(i.getLength(), 0.0d) == 0) 
+						i.calculateLength(); //calculate only once (length is not going to change)
+					double firstTerm = edgeLength / i.getLength();
+					double secondTerm = 0.0;
+					for (Route j: this.choiceSet)
+						if (j.getEdges().contains(a)) {
+							if (Double.compare(j.getLength(), 0.0d) == 0) 
+								j.calculateLength(); //calculate only once (length is not going to change)
+							secondTerm += i.getLength() / j.getLength();
+						}
+					pathSize += firstTerm / secondTerm;
+				}
+				this.pathsizes[index] = pathSize;
+			}
+		}
+	}
+	
+	/**
+	 * Correct each route's utility with (pre-calculated) pathsize (a measure of correlation with other routes in the choice set).
 	 */
 	private void correctUtilitiesWithPathSize() {
 		
-		for (Route i: this.choiceSet) {
-			
-			if (i.getEdges().isEmpty()) continue; //do not calculate for single node routes without edges (pathSize will be zero)
-			
-			double pathSize = 0.0;
-			for (int a: i.getEdges().toArray()) {
-				
-				//SimpleFeature sf = (SimpleFeature) a.getObject();
-				//double edgeLength = (double) sf.getAttribute("LenNet"); //in [km]
-				double edgeLength = roadNetwork.getEdgeLength(a);
-				double firstTerm = edgeLength / i.getLength();
-
-				double secondTerm = 0.0;
-				for (Route j: this.choiceSet)
-					if (j.getEdges().contains(a))
-						secondTerm += i.getLength() / j.getLength();
-
-				pathSize += firstTerm / secondTerm;
-			}
+		if (this.choiceSet.size() == 1) return; //not needed for just one route
+		
+		for (int index = 0; index < this.choiceSet.size(); index++) {
 			//correct utility with pathsize
+			Route i = this.choiceSet.get(index);
 			double utility = i.getUtility();
-			utility += Math.log(pathSize);
+			double pathsize = this.pathsizes[index];
+			if (pathsize > 0)
+				utility += Math.log(pathsize);
 			i.setUtility(utility);
 		}
 	}
@@ -417,7 +451,16 @@ public class RouteSet {
 	public void printProbabilities() {
 
 		System.out.println("Probabilities: ");
-		System.out.println(this.probabilities);
+		System.out.println(Arrays.toString(this.probabilities));
+	}
+	
+	/**
+	 * Prints pathsizes for the route set.
+	 */
+	public void printPathsizes() {
+
+		System.out.println("Pathsizes: ");
+		System.out.println(Arrays.toString(this.pathsizes));
 	}
 	
 	/**

@@ -553,6 +553,9 @@ public class RouteSetGeneratorTest {
 		
 		assertEquals("The number of route sets generated across freight matrix slices is equal to the total number of route sets", totalRouteSets, totalRouteSetsFromSlices);
 		
+		rsg.generateSingleNodeRoutes();
+		rsg.calculateAllPathsizes();
+		
 		//set route choice parameters
 		params.setProperty("TIME", "-1.5");
 		params.setProperty("LENGTH", "-1.0");

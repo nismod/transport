@@ -118,7 +118,7 @@ public class Route {
 	
 	
 	/**
-	 * Trims edges list to size.
+	 * Trims edges list to size and calculate length (onetime operation).
 	 */
 	public void trimToSize() {
 		

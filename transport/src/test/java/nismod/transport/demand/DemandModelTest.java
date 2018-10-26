@@ -226,6 +226,7 @@ public class DemandModelTest {
 		rsg.printStatistics();
 		rsg.readRoutesBinaryWithoutValidityCheck(freightRoutesFile);
 		rsg.printStatistics();
+		rsg.calculateAllPathsizes();
 		rsg.generateSingleNodeRoutes();
 		
 		//the main demand model
@@ -409,6 +410,7 @@ public class DemandModelTest {
 		rsg.printStatistics();
 		
 		rsg.generateSingleNodeRoutes();
+		rsg.calculateAllPathsizes();
 		
 		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
 		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);

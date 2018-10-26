@@ -106,6 +106,7 @@ public class RebalancedODMatrixTest {
 		rsg.printStatistics();
 		rsg.generateRouteSetZoneToZone("E06000053", "E06000053");
 		rsg.printStatistics();
+		rsg.calculateAllPathsizes();
 		
 		roadNetwork.sortGravityNodes();
 
@@ -295,6 +296,7 @@ public class RebalancedODMatrixTest {
 		//create route set generator
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, props);
 		rsg.readRoutesBinaryWithoutValidityCheck(passengerRoutesFile);
+		rsg.calculateAllPathsizes();
 		
 		roadNetwork.sortGravityNodes();
 

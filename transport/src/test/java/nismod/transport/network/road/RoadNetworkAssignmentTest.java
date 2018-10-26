@@ -148,6 +148,7 @@ public class RoadNetworkAssignmentTest {
 		System.out.printf("Routes read in %d milliseconds.\n", timeNow);
 		rsg.printStatistics();
 		
+		rsg.calculateAllPathsizes();
 		rsg.generateSingleNodeRoutes();
 		
 		//set route choice parameters
@@ -590,6 +591,7 @@ public class RoadNetworkAssignmentTest {
 		//rsg.generateRouteSet(31, 82);
 		//rsg.generateRouteSetWithRandomLinkEliminationRestricted(31, 82);
 		//rsg.printChoiceSets();
+		rsg.calculateAllPathsizes();
 		System.out.println(rsg.getRouteSet(31, 82).getChoiceSet());
 
 //		RoadPath rp = roadNetwork.getFastestPath((DirectedNode)roadNetwork.getNodeIDtoNode().get(31), 
@@ -1059,6 +1061,7 @@ public class RoadNetworkAssignmentTest {
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, props);
 		//rsg.readRoutes("./src/test/resources/testdata/testRoutes.txt");
 		rsg.readRoutes("./src/test/resources/testdata/allRoutes.txt");
+		rsg.calculateAllPathsizes();
 		//rsg.calculateAllUtilities(rna.getLinkTravelTimes(), params);
 		
 		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
@@ -1490,6 +1493,7 @@ public class RoadNetworkAssignmentTest {
 		rsg.generateSingleNodeRoutes();
 		rsg.generateRouteSetForFreightMatrix(fm, 5);
 		rsg.printStatistics();
+		rsg.calculateAllPathsizes();
 				
 		rna.assignFreightFlowsRouteChoice(fm, rsg, props);
 		

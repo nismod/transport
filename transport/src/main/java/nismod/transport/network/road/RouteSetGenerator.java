@@ -161,6 +161,8 @@ public class RouteSetGenerator{
 					if (route.contains(edgeID)) iter.remove();
 				}
 				//rs.getChoiceSet().removeIf(route -> route.contains(edgeID)); //or alternatively, with Java 8
+				//recalculate path sizes!
+				rs.calculatePathsizes();
 			}
 	}
 	
@@ -183,6 +185,8 @@ public class RouteSetGenerator{
 						iter.remove();
 					}
 				}
+				//recalculate path sizes!
+				rs.calculatePathsizes();
 			}
 	}
 	
@@ -1058,6 +1062,21 @@ public class RouteSetGenerator{
 //			rs.sortRoutesOnUtility(); //will update probabilities as well
 //		}
 //	}
+		
+	/**
+	 * Calculates all pathsizes for all the route sets (expensive operation).
+	 */
+	public void calculateAllPathsizes() {
+		
+		LOGGER.info("Calculating path sizes for all the route sets...");
+		
+		//iterate over all route sets
+		for (int origin: routes.keys())
+			for (int destination: routes.get(origin).keys())
+				this.getRouteSet(origin, destination).calculatePathsizes();
+		
+		LOGGER.debug("Finished path size calculation.");
+	}
 	
 	/**
 	 * Saves all route sets into a text file.
