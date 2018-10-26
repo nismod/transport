@@ -689,6 +689,9 @@ public class DemandModel {
 			//print traffic count comparison data
 			rna.printRMSNstatistic();
 			rna.printGEHstatistic();
+			rna.printGEHstatistic(this.yearToTimeOfDayDistribution.get(baseYear).get(TimeOfDay.EIGHTAM));
+			rna.printRMSNstatisticFreight();
+			rna.printGEHstatisticFreight();
 			
 			//observed trip length distribution
 			LOGGER.debug("Trip length distributions:");

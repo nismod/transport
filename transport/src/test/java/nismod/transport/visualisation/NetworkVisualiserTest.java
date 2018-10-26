@@ -80,7 +80,7 @@ public class NetworkVisualiserTest {
 		rna.updateLinkVolumeInPCU();
 		rna.updateLinkVolumePerVehicleType();
 		Map<Integer, Double> dailyVolume = rna.getLinkVolumeInPCU();
-		Map<Integer, Double> gehStats = rna.calculateGEHStatisticForCarCounts();
+		Map<Integer, Double> gehStats = rna.calculateGEHStatisticForCarCounts(rna.getVolumeToFlowFactor());
 		
 		System.out.println(dailyVolume);
 		

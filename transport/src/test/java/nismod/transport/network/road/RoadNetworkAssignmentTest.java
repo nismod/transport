@@ -983,7 +983,7 @@ public class RoadNetworkAssignmentTest {
 				
 		//calculate GEH statistic
 		rna.updateLinkVolumePerVehicleType();
-		HashMap<Integer, Double> GEH = rna.calculateGEHStatisticForCarCounts();
+		HashMap<Integer, Double> GEH = rna.calculateGEHStatisticForCarCounts(1/24.0);
 				
 		int validFlows = 0;
 		int suspiciousFlows = 0;
@@ -997,9 +997,10 @@ public class RoadNetworkAssignmentTest {
 		System.out.printf("Percentage of edges with suspicious flows (5.0 <= GEH < 10.0) is: %.0f%% %n", (double) suspiciousFlows / GEH.size() * 100);
 		System.out.printf("Percentage of edges with invalid flows (GEH >= 10.0) is: %.0f%% %n", (double) invalidFlows / GEH.size() * 100);
 		
-		rna.printGEHstatistic();
+		rna.printGEHstatistic(1/24.0);
+		rna.printGEHstatistic(0.1);
 		rna.printHourlyGEHstatistic();
-		
+			
 		//various differences between volumes and counts
 		rna.calculateDifferenceCarCounts();
 		rna.calculateAbsDifferenceCarCounts();
@@ -1495,6 +1496,9 @@ public class RoadNetworkAssignmentTest {
 		rna.calculateDistanceSkimMatrixFreight().printMatrixFormatted();
 		rna.calculateFreightLADTripEnds();
 		rna.calculateFreightLADTripStarts();
+
+		rna.printRMSNstatisticFreight();
+		rna.printGEHstatisticFreight();
 	}
 	
 	//@Test

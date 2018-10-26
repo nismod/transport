@@ -47,8 +47,8 @@ public class RoadNetworkAssignment {
 
 	private final static Logger LOGGER = LogManager.getLogger(RoadNetworkAssignment.class);
 
-	//	//public static final double SPEED_LIMIT_M_ROAD = 112.65; //70mph = 31.29mps = 112.65kph
-	//	//public static final double SPEED_LIMIT_A_ROAD = 96.56; //60mph = 26.82mps = 96.56kph
+	//public static final double SPEED_LIMIT_M_ROAD = 112.65; //70mph = 31.29mps = 112.65kph
+	//public static final double SPEED_LIMIT_A_ROAD = 96.56; //60mph = 26.82mps = 96.56kph
 
 	public final int maximumCapacityMRoad; //PCU per lane per hour
 	public final int maximumCapacityARoad; //PCU per lane per hour
@@ -65,6 +65,7 @@ public class RoadNetworkAssignment {
 	public final double nodesProbabilityWeighting; //manipulates probabilities of nodes for the node choice
 	public final double nodesProbabilityWeightingFreight; //manipulates probabilities of nodes for the node choice
 	public final double assignmentFraction; //the fraction of vehicle flows to actually assign, with later results expansion to 100%
+	public final double volumeToFlowFactor; //converts daily vehicle volume to hourly vehicle flow for GEH statistic.
 	public final boolean flagUseRouteChoiceModel; //use route-choice model (true) or routing with A-Star (false)
 	public final boolean flagIncludeAccessEgress; //use access/egress in the calculation of outputs.
 	public final int topTemproNodes = 1;
@@ -257,6 +258,7 @@ public class RoadNetworkAssignment {
 		this.nodesProbabilityWeighting = Double.parseDouble(params.getProperty("NODES_PROBABILITY_WEIGHTING"));
 		this.nodesProbabilityWeightingFreight = Double.parseDouble(params.getProperty("NODES_PROBABILITY_WEIGHTING_FREIGHT"));
 		this.assignmentFraction = Double.parseDouble(params.getProperty("ASSIGNMENT_FRACTION"));
+		this.volumeToFlowFactor = Double.parseDouble(params.getProperty("VOLUME_TO_FLOW_FACTOR"));
 		this.flagUseRouteChoiceModel = Boolean.parseBoolean(params.getProperty("USE_ROUTE_CHOICE_MODEL")); //use route-choice model (true) or routing with A-Star (false)
 		this.flagIncludeAccessEgress = Boolean.parseBoolean(params.getProperty("FLAG_INCLUDE_ACCESS_EGRESS")); //include access/egress into the calculations of outputs
 
@@ -3712,6 +3714,15 @@ public class RoadNetworkAssignment {
 
 		return this.flagUseRouteChoiceModel;
 	}
+	
+	/**
+	 * Getter method for the volume to flow factor.
+	 * @return Volume to flow factor.
+	 */
+	public double getVolumeToFlowFactor() {
+
+		return this.volumeToFlowFactor;
+	}
 
 	/**
 	 * Saves assignment results to output file.
@@ -3728,8 +3739,11 @@ public class RoadNetworkAssignment {
 		HashMap<Integer, Double> maximumCapacities = this.calculateMaximumPeakLinkPointCapacities();
 		HashMap<Integer, Double> densities = this.calculatePeakLinkDensities();
 		HashMap<Integer, Double> GEHStats = null;
-		if (year == this.baseYear) 
-			GEHStats = this.calculateGEHStatisticForCarCounts(); //GEH can be calculated for base year only
+		HashMap<VehicleType, HashMap<Integer, Double>> GEHStatsFreight = null;
+		if (year == this.baseYear) {
+			GEHStats = this.calculateGEHStatisticForCarCounts(this.volumeToFlowFactor); //GEH can be calculated for base year only
+			GEHStatsFreight = this.calculateGEHStatisticForFreightCounts(this.volumeToFlowFactor);
+		}
 
 		String NEW_LINE_SEPARATOR = "\n";
 		ArrayList<String> header = new ArrayList<String>();
@@ -3762,7 +3776,10 @@ public class RoadNetworkAssignment {
 		header.add("countVan");
 		header.add("countRigid");
 		header.add("countArtic");
-		header.add("GEH");
+		header.add("GEHCar");
+		header.add("GEHVan");
+		header.add("GEHRigid");
+		header.add("GEHArtic");
 		FileWriter fileWriter = null;
 		CSVPrinter csvFilePrinter = null;
 		CSVFormat csvFileFormat = CSVFormat.DEFAULT.withRecordSeparator(NEW_LINE_SEPARATOR);
@@ -3855,10 +3872,19 @@ public class RoadNetworkAssignment {
 					record.add(Long.toString(rigidCount));
 					long articCount = (long) feature.getAttribute("FdHGVA3") + (long) feature.getAttribute("FdHGVA5") + (long) feature.getAttribute("FdHGVA6");
 					record.add(Long.toString(articCount));
-					double geh = GEHStats.get(edge.getID());
-					record.add(String.format("%.4f", geh));
+					double gehCar = GEHStats.get(edge.getID());
+					record.add(String.format("%.4f", gehCar));
+					double gehVan = GEHStatsFreight.get(VehicleType.VAN).get(edge.getID());
+					record.add(String.format("%.4f", gehVan));
+					double gehRigid = GEHStatsFreight.get(VehicleType.RIGID).get(edge.getID());
+					record.add(String.format("%.4f", gehRigid));
+					double gehArtic = GEHStatsFreight.get(VehicleType.ARTIC).get(edge.getID());
+					record.add(String.format("%.4f", gehArtic));
 				}
 				else { //future years, ferry or a newly developed road with no count point
+					record.add("N/A");
+					record.add("N/A");
+					record.add("N/A");
 					record.add("N/A");
 					record.add("N/A");
 					record.add("N/A");
@@ -5456,12 +5482,13 @@ public class RoadNetworkAssignment {
 
 	/**
 	 * Calculates GEH statistic for simulated and observed hourly car flows.
-	 * For combined counts, takes the average of the two differences.
-	 * Two obtain hourly flows, divide daily link volumes (and traffic counts) by 24.
+	 * For combined counts, combines the volumes on two road directions.
+	 * Two obtain hourly flows, multiplies daily link volumes (and traffic counts) with volumeToFlowFactor.
 	 * The formula is taken from WebTAG Unit M3.1.
+	 * @param volumeToFlowFactor Converts daily vehicle volume to hourly flow (e.g. 0.1 for peak flow; 1/24.0 for daily average)  
 	 * @return GEH statistic for simulated and observed hourly car flows.
 	 */
-	public HashMap<Integer, Double> calculateGEHStatisticForCarCounts () {
+	public HashMap<Integer, Double> calculateGEHStatisticForCarCounts (double volumeToFlowFactor) {
 
 		HashMap<Integer, Double> GEH = new HashMap<Integer, Double>();
 
@@ -5489,8 +5516,8 @@ public class RoadNetworkAssignment {
 				if (carVolumeFetch == null) carVolume = 0;
 				else 						carVolume = carVolumeFetch;
 
-				double carFlowSimulated = carVolume / 24.0;
-				double carFlowObserved = carCount / 24.0;
+				double carFlowSimulated = carVolume * volumeToFlowFactor;
+				double carFlowObserved = carCount * volumeToFlowFactor;
 				double geh = Math.abs(carFlowSimulated - carFlowObserved) / Math.sqrt((carFlowSimulated + carFlowObserved) / 2.0);
 
 				GEH.put(edge.getID(), geh);
@@ -5516,8 +5543,8 @@ public class RoadNetworkAssignment {
 
 				checkedCP.add(countPoint);
 
-				double carFlowSimulated = (carVolume + carVolume2) / 24.0;
-				double carFlowObserved = carCount / 24.0;
+				double carFlowSimulated = (carVolume + carVolume2) * volumeToFlowFactor;
+				double carFlowObserved = carCount * volumeToFlowFactor;
 				double geh = Math.abs(carFlowSimulated - carFlowObserved) / Math.sqrt((carFlowSimulated + carFlowObserved) / 2.0);
 
 				GEH.put(edge.getID(), geh);
@@ -5527,13 +5554,23 @@ public class RoadNetworkAssignment {
 
 		return GEH;
 	}
-
+	
+	
 	/**
 	 * Prints GEH statistics for comparison between simulated and observed hourly car flows.
 	 */
 	public void printGEHstatistic() {
+		
+		this.printGEHstatistic(this.volumeToFlowFactor);
+	}
 
-		HashMap<Integer, Double> GEH = this.calculateGEHStatisticForCarCounts();
+	/**
+	 * Prints GEH statistics for comparison between simulated and observed hourly car flows.
+	 * @param volumeToFlowFactor Converts daily vehicle volume to hourly flow (e.g. 0.1 for peak flow; 1/24.0 for daily average)  
+	 */
+	public void printGEHstatistic(double volumeToFlowFactor) {
+
+		HashMap<Integer, Double> GEH = this.calculateGEHStatisticForCarCounts(volumeToFlowFactor);
 
 		int validFlows = 0;
 		int suspiciousFlows = 0;
@@ -5546,6 +5583,62 @@ public class RoadNetworkAssignment {
 		LOGGER.info("Percentage of edges with valid flows (GEH < 5.0) is: {}%", Math.round((double) validFlows / GEH.size() * 100));
 		LOGGER.info("Percentage of edges with suspicious flows (5.0 <= GEH < 10.0) is: {}%", Math.round((double) suspiciousFlows / GEH.size() * 100));
 		LOGGER.info("Percentage of edges with invalid flows (GEH >= 10.0) is: {}%", Math.round((double) invalidFlows / GEH.size() * 100));		
+	}
+	
+	/**
+	 * Prints GEH statistics for comparison between simulated and observed hourly freight vehicle flows.
+	 */
+	public void printGEHstatisticFreight() {
+		
+		this.printGEHstatisticFreight(this.volumeToFlowFactor);
+	}
+	
+	/**
+	 * Prints GEH statistics for comparison between simulated and observed hourly freight vehicle flows.
+	 * @param volumeToFlowFactor Converts daily vehicle volume to hourly flow (e.g. 0.1 for peak flow; 1/24.0 for daily average)  
+	 */
+	public void printGEHstatisticFreight(double volumeToFlowFactor) {
+		
+		HashMap<VehicleType, HashMap<Integer, Double>> freightGEH = this.calculateGEHStatisticForFreightCounts(volumeToFlowFactor);
+		
+		HashMap<Integer, Double> GEH = freightGEH.get(VehicleType.VAN);
+		int validFlows = 0;
+		int suspiciousFlows = 0;
+		int invalidFlows = 0;
+		for (Integer edgeID: GEH.keySet()) {
+			if (GEH.get(edgeID) < 5.0) validFlows++;
+			else if (GEH.get(edgeID) < 10.0) suspiciousFlows++;
+			else invalidFlows++;
+		}
+		LOGGER.info("Percentage of edges with valid van flows (GEH < 5.0) is: {}%", Math.round((double) validFlows / GEH.size() * 100));
+		LOGGER.info("Percentage of edges with suspicious van flows (5.0 <= GEH < 10.0) is: {}%", Math.round((double) suspiciousFlows / GEH.size() * 100));
+		LOGGER.info("Percentage of edges with invalid van flows (GEH >= 10.0) is: {}%", Math.round((double) invalidFlows / GEH.size() * 100));
+		
+		GEH = freightGEH.get(VehicleType.RIGID);
+		validFlows = 0;
+		suspiciousFlows = 0;
+		invalidFlows = 0;
+		for (Integer edgeID: GEH.keySet()) {
+			if (GEH.get(edgeID) < 5.0) validFlows++;
+			else if (GEH.get(edgeID) < 10.0) suspiciousFlows++;
+			else invalidFlows++;
+		}
+		LOGGER.info("Percentage of edges with valid rigid flows (GEH < 5.0) is: {}%", Math.round((double) validFlows / GEH.size() * 100));
+		LOGGER.info("Percentage of edges with suspicious rigid flows (5.0 <= GEH < 10.0) is: {}%", Math.round((double) suspiciousFlows / GEH.size() * 100));
+		LOGGER.info("Percentage of edges with invalid rigid flows (GEH >= 10.0) is: {}%", Math.round((double) invalidFlows / GEH.size() * 100));	
+		
+		GEH = freightGEH.get(VehicleType.ARTIC);
+		validFlows = 0;
+		suspiciousFlows = 0;
+		invalidFlows = 0;
+		for (Integer edgeID: GEH.keySet()) {
+			if (GEH.get(edgeID) < 5.0) validFlows++;
+			else if (GEH.get(edgeID) < 10.0) suspiciousFlows++;
+			else invalidFlows++;
+		}
+		LOGGER.info("Percentage of edges with valid artic flows (GEH < 5.0) is: {}%", Math.round((double) validFlows / GEH.size() * 100));
+		LOGGER.info("Percentage of edges with suspicious artic flows (5.0 <= GEH < 10.0) is: {}%", Math.round((double) suspiciousFlows / GEH.size() * 100));
+		LOGGER.info("Percentage of edges with invalid artic flows (GEH >= 10.0) is: {}%", Math.round((double) invalidFlows / GEH.size() * 100));	
 	}
 	
 	/**
@@ -5622,8 +5715,7 @@ public class RoadNetworkAssignment {
 
 		return GEH;
 	}
-	
-	
+		
 	/**
 	 * Prints GEH statistics for comparison between simulated and observed hourly car flows.
 	 */
@@ -5661,14 +5753,22 @@ public class RoadNetworkAssignment {
 		LOGGER.info(hourlyGEHTriples.toString());
 	}
 	
-
 	/**
 	 * Prints RMSN statistic for comparison between simulated daily car volumes and observed daily traffic counts.
 	 */
 	public void printRMSNstatistic() {
 
 		double RMSN = this.calculateRMSNforSimulatedVolumes();
-		LOGGER.info("RMSN for traffic counts is: {}%", Math.round(RMSN));
+		LOGGER.info("RMSN for car traffic counts is: {}%", Math.round(RMSN));
+	}
+	
+	/**
+	 * Prints RMSN statistic for comparison between simulated daily freight volumes and observed daily freight traffic counts.
+	 */
+	public void printRMSNstatisticFreight() {
+
+		double RMSN = this.calculateRMSNforFreightCounts();
+		LOGGER.info("RMSN for freight traffic counts is: {}%", Math.round(RMSN));
 	}
 
 	/**
@@ -5877,6 +5977,142 @@ public class RoadNetworkAssignment {
 		return (RMSE / averageTrueCount ) * 100;
 	}
 
+	/**
+	 * Calculates GEH statistic for simulated and observed hourly freight vehicle flows.
+	 * For combined counts, combines the volumes on two road directions.
+	 * Two obtain hourly flows, multiplies daily link volumes (and traffic counts) with volumeToFlowFactor.
+	 * The formula is taken from WebTAG Unit M3.1.
+	 * @param volumeToFlowFactor Converts daily vehicle volume to hourly flow (e.g. 0.1 for peak flow; 1/24.0 for daily average)  
+	 * @return GEH statistic for simulated and observed hourly freight vehicle flows, per vehicle type.
+	 */
+	public HashMap<VehicleType, HashMap<Integer, Double>> calculateGEHStatisticForFreightCounts (double volumeToFlowFactor) {
+
+		HashMap<VehicleType, HashMap<Integer, Double>> GEH = new HashMap<VehicleType, HashMap<Integer, Double>>();
+		HashMap<Integer, Double> vanGEH = new HashMap<Integer, Double>();
+		HashMap<Integer, Double> rigidGEH = new HashMap<Integer, Double>();
+		HashMap<Integer, Double> articGEH = new HashMap<Integer, Double>();
+		GEH.put(VehicleType.VAN, vanGEH);
+		GEH.put(VehicleType.RIGID, rigidGEH);
+		GEH.put(VehicleType.ARTIC, articGEH);
+		
+		Iterator iter = this.roadNetwork.getNetwork().getEdges().iterator();
+		ArrayList<Long> checkedCP = new ArrayList<Long>(); 
+
+		while (iter.hasNext()) {
+			DirectedEdge edge = (DirectedEdge) iter.next();
+			SimpleFeature sf = (SimpleFeature) edge.getObject(); 
+			String roadNumber = (String) sf.getAttribute("RoadNumber");
+
+			if (roadNumber.charAt(0) != 'M' && roadNumber.charAt(0) != 'A') continue; //ferry
+
+			Long countPoint = (long) sf.getAttribute("CP");
+
+			String direction = (String) sf.getAttribute("iDir");
+			char dir = direction.charAt(0);
+
+			//ignore combined counts 'C' for now
+			if (dir == 'N' || dir == 'S' || dir == 'W' || dir == 'E') {
+
+				long vanCount = (long) sf.getAttribute("FdLGV");
+				long rigidCount = (long) sf.getAttribute("FdHGVR2") + (long) sf.getAttribute("FdHGVR3") + (long) sf.getAttribute("FdHGVR4");
+				long articCount = (long) sf.getAttribute("FdHGVA3") + (long) sf.getAttribute("FdHGVA5") + (long) sf.getAttribute("FdHGVA6");
+
+				long vanVolume;
+				Integer vanVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.VAN).get(edge.getID());
+				if (vanVolumeFetch == null) vanVolume = 0;
+				else 						vanVolume = vanVolumeFetch;
+				
+				long rigidVolume;
+				Integer rigidVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.RIGID).get(edge.getID());
+				if (rigidVolumeFetch == null) rigidVolume = 0;
+				else 						  rigidVolume = rigidVolumeFetch;
+				
+				long articVolume;
+				Integer articVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC).get(edge.getID());
+				if (articVolumeFetch == null) articVolume = 0;
+				else 						  articVolume = articVolumeFetch;
+				
+				double vanFlowSimulated = vanVolume * volumeToFlowFactor;
+				double vanFlowObserved = vanCount * volumeToFlowFactor;
+				double geh = Math.abs(vanFlowSimulated - vanFlowObserved) / Math.sqrt((vanFlowSimulated + vanFlowObserved) / 2.0);
+				vanGEH.put(edge.getID(), geh);
+				
+				double rigidFlowSimulated = rigidVolume * volumeToFlowFactor;
+				double rigidFlowObserved = rigidCount * volumeToFlowFactor;
+				geh = Math.abs(rigidFlowSimulated - rigidFlowObserved) / Math.sqrt((rigidFlowSimulated + rigidFlowObserved) / 2.0);
+				rigidGEH.put(edge.getID(), geh);
+				
+				double articFlowSimulated = articVolume * volumeToFlowFactor;
+				double articFlowObserved = articCount * volumeToFlowFactor;
+				geh = Math.abs(articFlowSimulated - articFlowObserved) / Math.sqrt((articFlowSimulated + articFlowObserved) / 2.0);
+				articGEH.put(edge.getID(), geh);
+			}
+
+			if (dir == 'C' && !checkedCP.contains(countPoint)) { //for combined counts check if this countPoint has been processed already
+
+				//get combined counts
+				long vanCount = (long) sf.getAttribute("FdLGV");
+				long rigidCount = (long) sf.getAttribute("FdHGVR2") + (long) sf.getAttribute("FdHGVR3") + (long) sf.getAttribute("FdHGVR4");
+				long articCount = (long) sf.getAttribute("FdHGVA3") + (long) sf.getAttribute("FdHGVA5") + (long) sf.getAttribute("FdHGVA6");
+
+				//get volumes for this direction
+				long vanVolume;
+				Integer vanVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.VAN).get(edge.getID());
+				if (vanVolumeFetch == null) vanVolume = 0;
+				else 						vanVolume = vanVolumeFetch;
+
+				long rigidVolume;
+				Integer rigidVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.RIGID).get(edge.getID());
+				if (rigidVolumeFetch == null) rigidVolume = 0;
+				else 						  rigidVolume = rigidVolumeFetch;
+				
+				long articVolume;
+				Integer articVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC).get(edge.getID());
+				if (articVolumeFetch == null) articVolume = 0;
+				else 						  articVolume = articVolumeFetch;
+				
+				//get volumes for other direction (if exists)
+				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(edge.getID());
+				long vanVolume2;
+				Integer vanVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.VAN).get(edge2);
+				if (vanVolumeFetch2 == null) vanVolume2 = 0;
+				else 						 vanVolume2 = vanVolumeFetch2;
+				
+				long rigidVolume2;
+				Integer rigidVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.RIGID).get(edge2);
+				if (rigidVolumeFetch2 == null) rigidVolume2 = 0;
+				else 						   rigidVolume2 = rigidVolumeFetch2;
+				
+				long articVolume2;
+				Integer articVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC).get(edge2);
+				if (articVolumeFetch2 == null) articVolume2 = 0;
+				else 						   articVolume2 = articVolumeFetch2;
+
+				checkedCP.add(countPoint);
+
+				double vanFlowSimulated = (vanVolume + vanVolume2) * volumeToFlowFactor;
+				double vanFlowObserved = vanCount * volumeToFlowFactor;
+				double geh = Math.abs(vanFlowSimulated - vanFlowObserved) / Math.sqrt((vanFlowSimulated + vanFlowObserved) / 2.0);
+				vanGEH.put(edge.getID(), geh);
+				if (edge2 != null) vanGEH.put(edge2, geh); //store in other direction too
+				
+				double rigidFlowSimulated = (rigidVolume + rigidVolume2) * volumeToFlowFactor;
+				double rigidFlowObserved = rigidCount * volumeToFlowFactor;
+				geh = Math.abs(rigidFlowSimulated - rigidFlowObserved) / Math.sqrt((rigidFlowSimulated + rigidFlowObserved) / 2.0);
+				rigidGEH.put(edge.getID(), geh);
+				if (edge2 != null) rigidGEH.put(edge2, geh); //store in other direction too
+				
+				double articFlowSimulated = (articVolume + articVolume2) * volumeToFlowFactor;
+				double articFlowObserved = articCount * volumeToFlowFactor;
+				geh = Math.abs(articFlowSimulated - articFlowObserved) / Math.sqrt((articFlowSimulated + articFlowObserved) / 2.0);
+				articGEH.put(edge.getID(), geh);
+				if (edge2 != null) articGEH.put(edge2, geh); //store in other direction too
+			}
+		}
+
+		return GEH;
+	}
+	
 	/**
 	 * Calculate prediction error (mean absolute deviation for expanded simulated volumes and observed traffic counts).
 	 * @param expansionFactor Expansion factor expands simulated volumes.

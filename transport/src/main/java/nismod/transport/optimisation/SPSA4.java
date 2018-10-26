@@ -228,7 +228,7 @@ public class SPSA4 {
 		rna.updateLinkTravelTimes(0.9);
 		
 		//calculate GEH
-		HashMap<Integer, Double> GEH = rna.calculateGEHStatisticForCarCounts();
+		HashMap<Integer, Double> GEH = rna.calculateGEHStatisticForCarCounts(rna.getVolumeToFlowFactor());
 		
 		int validFlows = 0;
 		int suspiciousFlows = 0;
