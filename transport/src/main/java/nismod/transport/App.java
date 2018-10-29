@@ -319,7 +319,7 @@ public class App {
 				final String temproRoutesFile = props.getProperty("temproRoutesFile");
 				rsg.readRoutesBinaryWithoutValidityCheck(temproRoutesFile);
 				LOGGER.debug(rsg.getStatistics());
-				rsg.calculateAllPathsizes();
+				//rsg.calculateAllPathsizes();
 				
 				final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
 				final String unitCO2EmissionsFile = props.getProperty("unitCO2EmissionsFile");
@@ -393,7 +393,7 @@ public class App {
 				final String temproRoutesFile = props.getProperty("temproRoutesFile");
 				rsg.readRoutesBinaryWithoutValidityCheck(temproRoutesFile);
 				LOGGER.debug(rsg.getStatistics());
-				rsg.calculateAllPathsizes();
+				//rsg.calculateAllPathsizes();
 				
 				final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
 				final String unitCO2EmissionsFile = props.getProperty("unitCO2EmissionsFile");
@@ -543,7 +543,7 @@ public class App {
 					return;
 				}
 
-				rsg.calculateAllPathsizes();
+				//rsg.calculateAllPathsizes();
 				rsg.generateSingleNodeRoutes();
 
 				//the main demand model

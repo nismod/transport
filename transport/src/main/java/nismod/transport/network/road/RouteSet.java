@@ -236,8 +236,7 @@ public class RouteSet {
 
 		return this.pathsizes;
 	}
-	
-	
+		
 	/**
 	 * Getter method for choice utilities.
 	 * @return Choice utilities.
@@ -301,6 +300,10 @@ public class RouteSet {
 			//correct utility with pathsize
 			Route i = this.choiceSet.get(index);
 			double utility = i.getUtility();
+			
+			//if pathsizes have not been pre-calculated, calculate here
+			if (this.pathsizes == null) this.calculatePathsizes();
+			
 			double pathsize = this.pathsizes[index];
 			if (pathsize > 0)
 				utility += Math.log(pathsize);
