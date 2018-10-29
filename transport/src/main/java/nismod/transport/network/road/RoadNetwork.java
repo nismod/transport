@@ -112,6 +112,7 @@ public class RoadNetwork {
 	private List<Integer> startNodeBlacklist;
 	private List<Integer> endNodeBlacklist;
 	private HashMap<Integer, Double> freeFlowTravelTime;
+	private HashMap<Integer, Double> edgeLengths;
 	
 	public double freeFlowSpeedMRoad; //kph
 	public double freeFlowSpeedARoad; //kph
@@ -271,6 +272,8 @@ public class RoadNetwork {
 			this.calculateFreeFlowTravelTime();
 			//updates number of lanes with new edge ids
 			this.addNumberOfLanes();
+			//store edge lengths to the instance map
+			this.storeEdgesLengths();
 			//update information on urban/rural
 			this.determineEdgesUrbanRural();
 			//update information on ferry or not
@@ -311,7 +314,8 @@ public class RoadNetwork {
 			if (length < distance) {
 				LOGGER.printf(Level.TRACE, "The length of the edge (%.2f) is smaller than the straight line distance (%.2f)!", length, distance);
 				LOGGER.trace("I am overriding actual distance for edge ({})-{}->({})", fromNode.getID(), edge.getID(), toNode.getID());
-				feature.setAttribute("LenNet", distance);
+				feature.setAttribute("LenNet", distance); //write into sf object
+				this.edgeLengths.put(edge.getID(), distance); //write into instance map
 				counter++;
 			}
 		}
@@ -806,8 +810,11 @@ public class RoadNetwork {
 		SimpleFeature sf2 = (SimpleFeature)toNode.getObject();
 		Point point2 = (Point)sf2.getDefaultGeometry();
 		double distance = point.distance(point2) / 1000.0; //straight line distance (from metres to kilometres)!
-		if (length < distance) 
+		if (length < distance) {
 			LOGGER.printf(Level.WARN, "The length of the newly created link (%.2f) is smaller than the straight line distance (%.2f)!", length, distance);
+		}
+		
+		this.edgeLengths.put(directedEdge.getID(), length);
 		
 		//create an object to add to edge
 		//dynamically creates a feature type to describe the shapefile contents
@@ -882,6 +889,11 @@ public class RoadNetwork {
 		this.edgeIDtoEdge.put(edgeID, edge);
 		this.createEdgeToOtherDirectionEdgeMap();
 		
+		//put edge length into map
+		SimpleFeature feature = (SimpleFeature)edge.getObject();
+		double length = (double) feature.getAttribute("LenNet");
+		this.edgeLengths.put(edgeID, length);
+		
 		//this.addNumberOfLanes(); //this would overwrite edges with unusual number of lanes!
 		//TODO
 		//calculate number of lanes -> this should be stored in edge object 
@@ -925,6 +937,7 @@ public class RoadNetwork {
 		//update
 		this.edgeIDtoEdge.remove(edge.getID());
 		//this.numberOfLanes.remove(edge.getID()); //TODO leave it for now, until edge object contains this information
+		this.edgeLengths.remove(edge.getID());
 		
 		//update node blacklists
 		this.createNodeBlacklists();
@@ -1507,10 +1520,7 @@ public class RoadNetwork {
 	 */
 	public double getEdgeLength(int edgeID) {
 		
-		DirectedEdge edge = (DirectedEdge) this.getEdgeIDtoEdge().get(edgeID);
-		SimpleFeature sf = (SimpleFeature) edge.getObject();
-		double length = (double) sf.getAttribute("LenNet");
-		return length;
+		return this.edgeLengths.get(edgeID);
 	}
 	
 	public ShapefileDataStore getZonesShapefile () {
@@ -1655,6 +1665,11 @@ public class RoadNetwork {
 		
 		//set number of lanes
 		addNumberOfLanes();
+		
+		LOGGER.info("Storing edge lenghts into the instance map...");
+		
+		//store edge lengths to the instance map
+		storeEdgesLengths();
 		
 		LOGGER.info("Determining whether edges are urban or rural...");
 		
@@ -2141,6 +2156,24 @@ public class RoadNetwork {
 				isEdgeFerry.put(edge.getID(), true);
 			else									
 				isEdgeFerry.put(edge.getID(), false);
+		}
+	}
+	
+	/**
+	 * Store edge lengths to the instance map.
+	 */
+	private void storeEdgesLengths() {
+		
+		this.edgeLengths = new HashMap<Integer, Double>();
+		
+		//iterate through all the edges in the graph
+		Iterator iter = this.network.getEdges().iterator();
+		while(iter.hasNext()) {
+			
+			Edge edge = (Edge) iter.next();
+			SimpleFeature sf = (SimpleFeature) edge.getObject();
+			double length = (double) sf.getAttribute("LenNet");
+			this.edgeLengths.put(edge.getID(), length);
 		}
 	}
 		
