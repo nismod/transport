@@ -1,14 +1,13 @@
 package nismod.transport.visualisation;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
 import org.apache.sanselan.ImageWriteException;
 import org.jfree.data.general.DefaultPieDataset;
 
-import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.utility.ConfigReader;
@@ -44,7 +43,7 @@ public class PieChartVisualiserTest {
 		Properties props = ConfigReader.getProperties(configFile);
 		final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
 		final int BASE_YEAR = Integer.parseInt(props.getProperty("baseYear"));
-		HashMap<EngineType, Double> engineMap = InputFileReader.readEngineTypeFractionsFile(engineTypeFractionsFile).get(BASE_YEAR).get(VehicleType.CAR);
+		Map<EngineType, Double> engineMap = InputFileReader.readEngineTypeFractionsFile(engineTypeFractionsFile).get(BASE_YEAR).get(VehicleType.CAR);
 		
 		pieDataset = new DefaultPieDataset();
 		for (Entry<EngineType, Double> entry: engineMap.entrySet())

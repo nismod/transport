@@ -31,9 +31,8 @@ public class TripTempro extends Trip {
 
 		
 	/**
-	 * Constructor for a trip. Origin and destination are used for freight trips (according to DfT's BYFM zonal coding).
-	 * Origin and destination for passenger car/AV trips are 0 as their correct origin and destination zone can be 
-	 * obtained using the first and the last node of the route.
+	 * Constructor for a passenger car trip using the Tempro zoning system.
+	 * Origin and destination are integer IDs of Tempro zones.
 	 * @param vehicle Vehicle type.
 	 * @param engine Engine type.
 	 * @param route Route.
@@ -50,9 +49,9 @@ public class TripTempro extends Trip {
 	}
 	
 	/**
-	 * Constructor for a trip. Origin and destination are used for freight trips (according to DfT's BYFM zonal coding).
-	 * Origin and destination for passenger car/AV trips are 0 as their correct origin and destination zone can be 
-	 * obtained using the first and the last node of the route.
+	 * Constructor for a passenger car trip using the Tempro zoning system.
+	 * Origin and destination are integer IDs of Tempro zones.
+	 * Multiplier is used to store multiple instances of the same trip (vs creating multiple objects), thus reducing the memory footprint.
 	 * @param vehicle Vehicle type.
 	 * @param engine Engine type.
 	 * @param route Route.
@@ -175,7 +174,7 @@ public class TripTempro extends Trip {
 	}
 	
 	@Override
-	public double getCost(Map<Integer, Double> linkTravelTime, HashMap<Integer, Double> distanceFromTemproZoneToNearestNode, double averageAccessEgressSpeed, HashMap<EnergyType, Double> energyUnitCosts, HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParameters, HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency, HashMap<String, MultiKeyMap> congestionCharges, boolean flagIncludeAccessEgress) {
+	public double getCost(Map<Integer, Double> linkTravelTime, HashMap<Integer, Double> distanceFromTemproZoneToNearestNode, double averageAccessEgressSpeed, Map<EnergyType, Double> energyUnitCosts, HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParameters, HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency, HashMap<String, MultiKeyMap> congestionCharges, boolean flagIncludeAccessEgress) {
 		
 		//double distance = this.getLength(averageAccessEgressMap);
 		//double cost = distance / 100 * energyConsumptionsPer100km.get(this.engine) * energyUnitCosts.get(this.engine);
@@ -377,9 +376,10 @@ public class TripTempro extends Trip {
 	}
 	
 	@Override
-	public Double getCO2emission(Map<Integer, Double> linkTravelTime, HashMap<Integer, Double> distanceFromTemproZoneToNearestNode, double averageAccessEgressSpeed, HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptions, HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency, HashMap<EnergyType, Double> unitCO2Emissions) {
+	public Double getCO2emission(Map<Integer, Double> linkTravelTime, HashMap<Integer, Double> distanceFromTemproZoneToNearestNode, double averageAccessEgressSpeed, HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParameters, HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency, HashMap<EnergyType, Double> unitCO2Emissions, boolean flagIncludeAccessEgress) {
 		
-		HashMap<EnergyType, Double> consumption = this.route.calculateConsumption(this.vehicle, this.engine, linkTravelTime, energyConsumptions, relativeFuelEfficiency);
+		//HashMap<EnergyType, Double> consumption = this.route.calculateConsumption(this.vehicle, this.engine, linkTravelTime, energyConsumptions, relativeFuelEfficiency);
+		HashMap<EnergyType, Double> consumption = this.getConsumption(linkTravelTime, distanceFromTemproZoneToNearestNode, averageAccessEgressSpeed, energyConsumptionParameters, relativeFuelEfficiency, flagIncludeAccessEgress);
 		
 		double CO2 = 0.0;
 		for (EnergyType et: consumption.keySet()) {

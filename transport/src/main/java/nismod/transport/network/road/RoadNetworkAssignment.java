@@ -105,18 +105,17 @@ public class RoadNetworkAssignment {
 		private TimeOfDay(int value) { this.value = value; }
 	}
 
-	private HashMap<VehicleType, Double> vehicleTypeToPCU;
-
-	private HashMap<EnergyType, Double> energyUnitCosts;
+	private Map<VehicleType, Double> vehicleTypeToPCU;
+	private Map<EnergyType, Double> energyUnitCosts;
 	private HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptions;
 	private HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiencies;
-	private HashMap<VehicleType, HashMap<EngineType, Double>> engineTypeFractions;
-	private HashMap<VehicleType, Double> AVFractions;
+	private Map<VehicleType, Map<EngineType, Double>> engineTypeFractions;
+	private Map<VehicleType, Double> AVFractions;
 
 	private Map<TimeOfDay, Double> timeOfDayDistribution;
 	private Map<TimeOfDay, Double> timeOfDayDistributionFreight;
 
-	private HashMap<EnergyType, Double> unitCO2Emissions;
+	private Map<EnergyType, Double> unitCO2Emissions;
 
 	private RoadNetwork roadNetwork;
 
@@ -164,11 +163,11 @@ public class RoadNetworkAssignment {
 	 * @param params Assignment parameters.
 	 */
 	public RoadNetworkAssignment(RoadNetwork roadNetwork, 
-			HashMap<EnergyType, Double> energyUnitCosts, 
-			HashMap<EnergyType, Double> unitCO2Emissions,
-			HashMap<VehicleType, HashMap<EngineType, Double>> engineTypeFractions,
-			HashMap<VehicleType, Double> fractionsAV,
-			HashMap<VehicleType, Double> vehicleTypeToPCU,
+			Map<EnergyType, Double> energyUnitCosts, 
+			Map<EnergyType, Double> unitCO2Emissions,
+			Map<VehicleType, Map<EngineType, Double>> engineTypeFractions,
+			Map<VehicleType, Double> fractionsAV,
+			Map<VehicleType, Double> vehicleTypeToPCU,
 			HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParams,
 			HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiencies,
 			Map<TimeOfDay, Double> timeOfDayDistribution,
@@ -4464,7 +4463,7 @@ public class RoadNetworkAssignment {
 	 * Getter method for energy unit costs.
 	 * @return Energy unit costs.
 	 */   
-	public HashMap<EnergyType, Double> getEnergyUnitCosts() {
+	public Map<EnergyType, Double> getEnergyUnitCosts() {
 
 		return this.energyUnitCosts;
 	}
@@ -4482,7 +4481,7 @@ public class RoadNetworkAssignment {
 	 * Getter method for engine type fractions.
 	 * @return Engine type fractions.
 	 */   
-	public HashMap<VehicleType, HashMap<EngineType, Double>> getEngineTypeFractions() {
+	public Map<VehicleType, Map<EngineType, Double>> getEngineTypeFractions() {
 
 		return this.engineTypeFractions;
 	}

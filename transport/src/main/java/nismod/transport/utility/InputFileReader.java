@@ -3,6 +3,7 @@ package nismod.transport.utility;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -128,9 +129,9 @@ public class InputFileReader {
 	 * @param fileName File name.
 	 * @return Map with elasticity parameters.
 	 */
-	public static HashMap<ElasticityTypes, Double> readElasticitiesFile (String fileName) {
+	public static Map<ElasticityTypes, Double> readElasticitiesFile (String fileName) {
 
-		HashMap<ElasticityTypes, Double> map = new HashMap<ElasticityTypes, Double>();
+		Map<ElasticityTypes, Double> map = new EnumMap<>(ElasticityTypes.class);
 		CSVParser parser = null;
 		try {
 			parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
@@ -166,9 +167,9 @@ public class InputFileReader {
 	 * @param fileName File name.
 	 * @return Map with PCU equivalents.
 	 */
-	public static HashMap<VehicleType, Double> readVehicleTypeToPCUFile (String fileName) {
+	public static Map<VehicleType, Double> readVehicleTypeToPCUFile (String fileName) {
 
-		HashMap<VehicleType, Double> map = new HashMap<VehicleType, Double>();
+		Map<VehicleType, Double> map = new EnumMap<>(VehicleType.class);
 		CSVParser parser = null;
 		try {
 			parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
@@ -250,9 +251,9 @@ public class InputFileReader {
 	 * @param fileName File name.
 	 * @return Map with energy unit costs.
 	 */
-	public static HashMap<Integer, HashMap<EnergyType, Double>> readEnergyUnitCostsFile (String fileName) {
+	public static HashMap<Integer, Map<EnergyType, Double>> readEnergyUnitCostsFile (String fileName) {
 
-		HashMap<Integer, HashMap<EnergyType, Double>> map = new HashMap<Integer, HashMap<EnergyType, Double>>();
+		HashMap<Integer, Map<EnergyType, Double>> map = new HashMap<Integer, Map<EnergyType, Double>>();
 		CSVParser parser = null;
 		try {
 			parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
@@ -264,7 +265,7 @@ public class InputFileReader {
 			for (CSVRecord record : parser) {
 				//System.out.println(record);
 				int year = Integer.parseInt(record.get(0));
-				HashMap<EnergyType, Double> energyTypeToPrice = new HashMap<EnergyType, Double>();
+				Map<EnergyType, Double> energyTypeToPrice = new EnumMap<>(EnergyType.class);
 				for (String et: keySet) {
 					//System.out.println("Destination zone = " + destination);
 					EnergyType energyType = EnergyType.valueOf(et);
@@ -296,9 +297,9 @@ public class InputFileReader {
 	 * @param fileName File name.
 	 * @return Map with unit CO2 emissions.
 	 */
-	public static HashMap<Integer, HashMap<EnergyType, Double>> readUnitCO2EmissionFile (String fileName) {
+	public static HashMap<Integer, Map<EnergyType, Double>> readUnitCO2EmissionFile (String fileName) {
 
-		HashMap<Integer, HashMap<EnergyType, Double>> map = new HashMap<Integer, HashMap<EnergyType, Double>>();
+		HashMap<Integer, Map<EnergyType, Double>> map = new HashMap<Integer, Map<EnergyType, Double>>();
 		CSVParser parser = null;
 		try {
 			parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
@@ -310,7 +311,7 @@ public class InputFileReader {
 			for (CSVRecord record : parser) {
 				//System.out.println(record);
 				int year = Integer.parseInt(record.get(0));
-				HashMap<EnergyType, Double> energyTypeToUnitCO2Emission = new HashMap<EnergyType, Double>();
+				Map<EnergyType, Double> energyTypeToUnitCO2Emission = new EnumMap<>(EnergyType.class);
 				for (String et: keySet) {
 					//System.out.println("Destination zone = " + destination);
 					EnergyType energyType = EnergyType.valueOf(et);
@@ -389,9 +390,9 @@ public class InputFileReader {
 	 * @param fileName File name.
 	 * @return Map with engine type fractions.
 	 */
-	public static HashMap<Integer, HashMap<VehicleType, HashMap<EngineType, Double>>> readEngineTypeFractionsFile (String fileName){
+	public static HashMap<Integer, Map<VehicleType, Map<EngineType, Double>>> readEngineTypeFractionsFile (String fileName){
 		
-		HashMap<Integer, HashMap<VehicleType, HashMap<EngineType, Double>>> yearToVehicleToEngineTypeFractions = new HashMap<Integer, HashMap<VehicleType, HashMap<EngineType, Double>>>();
+		HashMap<Integer, Map<VehicleType, Map<EngineType, Double>>> yearToVehicleToEngineTypeFractions = new HashMap<Integer, Map<VehicleType, Map<EngineType, Double>>>();
 
 		CSVParser parser = null;
 		try {
@@ -406,14 +407,14 @@ public class InputFileReader {
 				//System.out.println(record);
 				int year = Integer.parseInt(record.get(0));
 
-				HashMap<VehicleType, HashMap<EngineType, Double>> vehicleToEngineTypeFractions = yearToVehicleToEngineTypeFractions.get(year);
-				if (vehicleToEngineTypeFractions == null) { vehicleToEngineTypeFractions = new HashMap<VehicleType, HashMap<EngineType, Double>>();
+				Map<VehicleType, Map<EngineType, Double>> vehicleToEngineTypeFractions = yearToVehicleToEngineTypeFractions.get(year);
+				if (vehicleToEngineTypeFractions == null) { vehicleToEngineTypeFractions = new EnumMap<>(VehicleType.class);
 				yearToVehicleToEngineTypeFractions.put(year, vehicleToEngineTypeFractions);
 				}
 
 				VehicleType vht = VehicleType.valueOf(record.get(1));
-				HashMap<EngineType, Double> engineTypeFractions = vehicleToEngineTypeFractions.get(vht);
-				if (engineTypeFractions == null) { engineTypeFractions = new HashMap<EngineType, Double>();
+				Map<EngineType, Double> engineTypeFractions = vehicleToEngineTypeFractions.get(vht);
+				if (engineTypeFractions == null) { engineTypeFractions = new EnumMap<>(EngineType.class);
 				vehicleToEngineTypeFractions.put(vht, engineTypeFractions);
 				}
 
@@ -447,9 +448,9 @@ public class InputFileReader {
 	 * @param fileName File name.
 	 * @return Map with predictions of autonomous vehicles fractions.
 	 */
-	public static HashMap<Integer, HashMap<VehicleType, Double>> readAVFractionsFile(String fileName) {
+	public static HashMap<Integer, Map<VehicleType, Double>> readAVFractionsFile(String fileName) {
 
-		HashMap<Integer, HashMap<VehicleType, Double>>  map = new HashMap<Integer, HashMap<VehicleType, Double>> ();
+		HashMap<Integer, Map<VehicleType, Double>>  map = new HashMap<Integer, Map<VehicleType, Double>> ();
 		CSVParser parser = null;
 		try {
 			parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
@@ -460,7 +461,7 @@ public class InputFileReader {
 			for (CSVRecord record : parser) {
 				//System.out.println(record);
 				int year = Integer.parseInt(record.get(0));
-				HashMap<VehicleType, Double> fractionMap = new HashMap<VehicleType, Double>();
+				Map<VehicleType, Double> fractionMap = new EnumMap<>(VehicleType.class);
 				map.put(year, fractionMap);
 				for (String key: keySet) {
 					VehicleType vht = VehicleType.valueOf(key);

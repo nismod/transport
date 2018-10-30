@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,9 +50,9 @@ public class DemandModel {
 		POPULATION, GVA, TIME, COST
 	}
 
-	private HashMap<ElasticityTypes, Double> elasticities;
-	private HashMap<ElasticityTypes, Double> elasticitiesFreight;
-	private HashMap<VehicleType, Double> vehicleTypeToPCU;
+	private Map<ElasticityTypes, Double> elasticities;
+	private Map<ElasticityTypes, Double> elasticitiesFreight;
+	private Map<VehicleType, Double> vehicleTypeToPCU;
 	private HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> baseFuelConsumptionRates;
 	private HashMap<Integer, HashMap<Pair<VehicleType, EngineType>, Double>> yearToRelativeFuelEfficiencies;
 	private Map<Integer, Map<TimeOfDay, Double>> yearToTimeOfDayDistribution;
@@ -65,10 +66,10 @@ public class DemandModel {
 	private HashMap<Integer, HashMap<String, Integer>> yearToZoneToPopulation;
 	private HashMap<Integer, HashMap<String, Double>> yearToZoneToGVA;
 	private HashMap<Integer, RoadNetworkAssignment> yearToRoadNetworkAssignment;
-	private HashMap<Integer, HashMap<EnergyType, Double>> yearToEnergyUnitCosts;
-	private HashMap<Integer, HashMap<EnergyType, Double>> yearToUnitCO2Emissions;
-	private HashMap<Integer, HashMap<VehicleType, HashMap<EngineType, Double>>> yearToEngineTypeFractions;
-	private HashMap<Integer, HashMap<VehicleType, Double>> yearToAVFractions;
+	private HashMap<Integer, Map<EnergyType, Double>> yearToEnergyUnitCosts;
+	private HashMap<Integer, Map<EnergyType, Double>> yearToUnitCO2Emissions;
+	private HashMap<Integer, Map<VehicleType, Map<EngineType, Double>>> yearToEngineTypeFractions;
+	private HashMap<Integer, Map<VehicleType, Double>> yearToAVFractions;
 	//private HashMap<Integer, HashMap<Integer, Double>> yearToCongestionCharges;
 	private HashMap<Integer, HashMap<String, MultiKeyMap>> yearToCongestionCharges;
 	//private SkimMatrix baseYearTimeSkimMatrix,	baseYearCostSkimMatrix;
@@ -111,10 +112,10 @@ public class DemandModel {
 		this.yearToZoneToPopulation = new HashMap<Integer, HashMap<String, Integer>>();
 		this.yearToZoneToGVA = new HashMap<Integer, HashMap<String, Double>>();
 		this.yearToRoadNetworkAssignment = new HashMap<Integer, RoadNetworkAssignment>();
-		this.yearToEnergyUnitCosts = new HashMap<Integer, HashMap<EnergyType, Double>>();
-		this.yearToUnitCO2Emissions = new HashMap<Integer, HashMap<EnergyType, Double>>();
-		this.yearToEngineTypeFractions = new HashMap<Integer, HashMap<VehicleType, HashMap<EngineType, Double>>>();
-		this.yearToAVFractions = new HashMap<Integer, HashMap<VehicleType, Double>>();
+		this.yearToEnergyUnitCosts = new HashMap<Integer, Map<EnergyType, Double>>();
+		this.yearToUnitCO2Emissions = new HashMap<Integer, Map<EnergyType, Double>>();
+		this.yearToEngineTypeFractions = new HashMap<Integer, Map<VehicleType, Map<EngineType, Double>>>();
+		this.yearToAVFractions = new HashMap<Integer, Map<VehicleType, Double>>();
 		this.yearToCongestionCharges = new HashMap<Integer, HashMap<String, MultiKeyMap>>();
 		
 		this.rsg = rsg;
@@ -1167,7 +1168,7 @@ public class DemandModel {
 	 * @param year Year of the data.
 	 * @param engineTypeFractions Map with engine type fractions.
 	 */
-	public void setEngineTypeFractions(int year, HashMap<VehicleType, HashMap<EngineType, Double>> engineTypeFractions) {
+	public void setEngineTypeFractions(int year, Map<VehicleType, Map<EngineType, Double>> engineTypeFractions) {
 		
 		this.yearToEngineTypeFractions.put(year, engineTypeFractions);
 	}
@@ -1346,7 +1347,7 @@ public class DemandModel {
 	 * @param year Year of the data.
 	 * @return Map with engine type fractions.
 	 */
-	public HashMap<VehicleType, HashMap<EngineType, Double>> getEngineTypeFractions(int year) {
+	public Map<VehicleType, Map<EngineType, Double>> getEngineTypeFractions(int year) {
 		
 		return this.yearToEngineTypeFractions.get(year);
 	}

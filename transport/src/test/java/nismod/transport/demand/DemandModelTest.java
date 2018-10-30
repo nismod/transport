@@ -11,6 +11,8 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
@@ -235,7 +237,7 @@ public class DemandModelTest {
 		//copy base-year engine fractions
 		//for (int year = 2015; year < 2025; year++) {
 		for (int year = 2015; year < 2016; year++) {
-			HashMap<VehicleType, HashMap<EngineType, Double>> map = new HashMap<VehicleType, HashMap<EngineType, Double>>();
+			Map<VehicleType, Map<EngineType, Double>> map = new EnumMap<>(VehicleType.class);
 			map.putAll(dm.getEngineTypeFractions(2015));
 			dm.setEngineTypeFractions(year, map);
 		}

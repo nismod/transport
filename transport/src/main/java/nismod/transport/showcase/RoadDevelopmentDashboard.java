@@ -119,15 +119,15 @@ public class RoadDevelopmentDashboard extends JFrame {
 	private static RouteSetGenerator rsg;
 	private static Zoning zoning;
 	
-	private static HashMap<VehicleType, Double> vehicleTypeToPCU;
+	private static Map<VehicleType, Double> vehicleTypeToPCU;
 	private static HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> baseFuelConsumptionRates;
 	private static HashMap<Integer, HashMap<Pair<VehicleType, EngineType>, Double>> relativeFuelEfficiency;
 	private static Map<Integer, Map<TimeOfDay, Double>> timeOfDayDistribution;
 	private static Map<Integer, Map<TimeOfDay, Double>> timeOfDayDistributionFreight;
-	private static HashMap<Integer, HashMap<EnergyType, Double>> yearToEnergyUnitCosts;
-	private static HashMap<Integer, HashMap<EnergyType, Double>> yearToUnitCO2Emissions;
-	private static HashMap<Integer, HashMap<VehicleType, HashMap<EngineType, Double>>> yearToEngineTypeFractions;
-	private static HashMap<Integer, HashMap<VehicleType, Double>> yearToAVFractions;
+	private static HashMap<Integer, Map<EnergyType, Double>> yearToEnergyUnitCosts;
+	private static HashMap<Integer, Map<EnergyType, Double>> yearToUnitCO2Emissions;
+	private static HashMap<Integer, Map<VehicleType, Map<EngineType, Double>>> yearToEngineTypeFractions;
+	private static HashMap<Integer, Map<VehicleType, Double>> yearToAVFractions;
 	
 	public static final int MAP_WIDTH = 750;
 	public static final int MAP_HEIGHT = 700;
@@ -468,7 +468,7 @@ public class RoadDevelopmentDashboard extends JFrame {
 				ODMatrix predictedODM = new ODMatrix();
 
 				final String elasticitiesFile = props.getProperty("elasticitiesFile");
-				HashMap<ElasticityTypes, Double> elasticities = InputFileReader.readElasticitiesFile(elasticitiesFile);
+				Map<ElasticityTypes, Double> elasticities = InputFileReader.readElasticitiesFile(elasticitiesFile);
 
 				tsmBefore.printMatrixFormatted();
 				tsm.printMatrixFormatted();
