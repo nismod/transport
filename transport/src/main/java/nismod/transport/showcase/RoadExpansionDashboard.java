@@ -78,6 +78,7 @@ import nismod.transport.network.road.RoadNetworkAssignment.EnergyType;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
+import nismod.transport.network.road.Route.WebTAG;
 import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.network.road.Trip;
 import nismod.transport.utility.ConfigReader;
@@ -119,7 +120,7 @@ public class RoadExpansionDashboard extends JFrame {
 	private static Zoning zoning;
 	
 	private static Map<VehicleType, Double> vehicleTypeToPCU;
-	private static HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> baseFuelConsumptionRates;
+	private static HashMap<Pair<VehicleType, EngineType>, Map<WebTAG, Double>> baseFuelConsumptionRates;
 	private static HashMap<Integer, HashMap<Pair<VehicleType, EngineType>, Double>> relativeFuelEfficiency;
 	private static Map<Integer, Map<TimeOfDay, Double>> timeOfDayDistribution;
 	private static Map<Integer, Map<TimeOfDay, Double>> timeOfDayDistributionFreight;

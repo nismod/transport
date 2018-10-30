@@ -1,5 +1,6 @@
 package nismod.transport.network.road;
 
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +42,10 @@ public class Route {
 
 //	private static int counter = 0;
 //	private int id;
+	
+	public static enum WebTAG {
+		A, B, C, D
+	}
 	
 	private TIntArrayList edges; //optimised list of edge IDs
 	private double length;
@@ -203,7 +208,7 @@ public class Route {
 	 * @param energyUnitCosts Energy unit costs.
 	 * @param linkCharges Congestion charges.
 	 */
-	public void calculateCost(VehicleType vht, EngineType et, Map<Integer, Double> linkTravelTime, HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParameters, HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency, Map<EnergyType, Double> energyUnitCosts, HashMap<String, HashMap<Integer, Double>> linkCharges) {
+	public void calculateCost(VehicleType vht, EngineType et, Map<Integer, Double> linkTravelTime, HashMap<Pair<VehicleType, EngineType>, Map<WebTAG, Double>> energyConsumptionParameters, HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency, Map<EnergyType, Double> energyUnitCosts, HashMap<String, HashMap<Integer, Double>> linkCharges) {
 
 		//temporary map to check if a charging policy has already been applied
 		HashMap<String, Boolean> flags = new HashMap<String, Boolean>();
@@ -211,7 +216,7 @@ public class Route {
 			for (String policyName: linkCharges.keySet()) flags.put(policyName, false);
 		
 		double fuelCost = 0.0;
-		HashMap<EnergyType, Double> routeConsumptions = calculateConsumption(vht, et, linkTravelTime, energyConsumptionParameters, relativeFuelEfficiency);
+		Map<EnergyType, Double> routeConsumptions = this.calculateConsumption(vht, et, linkTravelTime, energyConsumptionParameters, relativeFuelEfficiency);
 		
 		for (EnergyType energy: EnergyType.values()) fuelCost +=  routeConsumptions.get(energy) * energyUnitCosts.get(energy);
 		
@@ -246,10 +251,10 @@ public class Route {
 	 * @param relativeFuelEfficiency Relative fuel efficiency compared to base year.
 	 * @return Consumption for each type.
 	 */
-	public HashMap<EnergyType, Double> calculateConsumption(VehicleType vht, EngineType et, Map<Integer, Double> linkTravelTime, HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParameters, HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency) {
+	public Map<EnergyType, Double> calculateConsumption(VehicleType vht, EngineType et, Map<Integer, Double> linkTravelTime, HashMap<Pair<VehicleType, EngineType>, Map<WebTAG, Double>> energyConsumptionParameters, HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency) {
 
-		HashMap<EnergyType, Double> routeConsumptions = new HashMap<EnergyType, Double>();
-		HashMap<String, Double> parameters, parametersFuel, parametersElectricity;
+		Map<EnergyType, Double> routeConsumptions = new EnumMap<>(EnergyType.class);
+		Map<WebTAG, Double> parameters, parametersFuel, parametersElectricity;
 
 		for (EnergyType energy: EnergyType.values()) routeConsumptions.put(energy, 0.0);
 
@@ -277,9 +282,9 @@ public class Route {
 
 				//if edge is urban use electricity, if rural use fuel
 				if (isUrban)
-					electricityConsumption += len * (parametersElectricity.get("A") / speed + parametersElectricity.get("B") + parametersElectricity.get("C") * speed + parametersElectricity.get("D") * speed  * speed);
+					electricityConsumption += len * (parametersElectricity.get(WebTAG.A) / speed + parametersElectricity.get(WebTAG.B) + parametersElectricity.get(WebTAG.C) * speed + parametersElectricity.get(WebTAG.D) * speed  * speed);
 				else 
-					fuelConsumption += len * (parametersFuel.get("A") / speed + parametersFuel.get("B") + parametersFuel.get("C") * speed + parametersFuel.get("D") * speed  * speed);
+					fuelConsumption += len * (parametersFuel.get(WebTAG.A) / speed + parametersFuel.get(WebTAG.B) + parametersFuel.get(WebTAG.C) * speed + parametersFuel.get(WebTAG.D) * speed  * speed);
 			}
 			//apply relative fuel efficiency
 			electricityConsumption *= relativeEfficiencyElectricity;
@@ -310,9 +315,9 @@ public class Route {
 
 				//if edge is urban use electricity, if rural use fuel
 				if (isUrban)
-					electricityConsumption += len * (parametersElectricity.get("A") / speed + parametersElectricity.get("B") + parametersElectricity.get("C") * speed + parametersElectricity.get("D") * speed  * speed);
+					electricityConsumption += len * (parametersElectricity.get(WebTAG.A) / speed + parametersElectricity.get(WebTAG.B) + parametersElectricity.get(WebTAG.C) * speed + parametersElectricity.get(WebTAG.D) * speed  * speed);
 				else 
-					fuelConsumption += len * (parametersFuel.get("A") / speed + parametersFuel.get("B") + parametersFuel.get("C") * speed + parametersFuel.get("D") * speed  * speed);
+					fuelConsumption += len * (parametersFuel.get(WebTAG.A) / speed + parametersFuel.get(WebTAG.B) + parametersFuel.get(WebTAG.C) * speed + parametersFuel.get(WebTAG.D) * speed  * speed);
 			}
 			//apply relative fuel efficiency
 			electricityConsumption *= relativeEfficiencyElectricity;
@@ -338,7 +343,7 @@ public class Route {
 					continue;
 				}
 
-				consumption += len * (parameters.get("A") / speed + parameters.get("B") + parameters.get("C") * speed + parameters.get("D") * speed  * speed);
+				consumption += len * (parameters.get(WebTAG.A) / speed + parameters.get(WebTAG.B) + parameters.get(WebTAG.C) * speed + parameters.get(WebTAG.D) * speed  * speed);
 			}
 			//apply relative fuel efficiency
 			consumption *= relativeEfficiency;
@@ -370,7 +375,7 @@ public class Route {
 	 * @param linkCharges Congestion charges.
 	 * @param params Route choice parameters.
 	 */
-	public void calculateUtility(VehicleType vht, EngineType et, Map<Integer, Double> linkTravelTime, HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParameters, HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency, Map<EnergyType, Double> energyUnitCosts, HashMap<String, HashMap<Integer, Double>> linkCharges, Properties params) {		
+	public void calculateUtility(VehicleType vht, EngineType et, Map<Integer, Double> linkTravelTime, HashMap<Pair<VehicleType, EngineType>, Map<WebTAG, Double>> energyConsumptionParameters, HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency, Map<EnergyType, Double> energyUnitCosts, HashMap<String, HashMap<Integer, Double>> linkCharges, Properties params) {		
 		
 		//if a single node route, utility is zero
 		if (this.edges.isEmpty() && this.singleNode != null) {

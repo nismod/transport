@@ -27,6 +27,7 @@ import nismod.transport.network.road.RoadNetworkAssignment.EnergyType;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
+import nismod.transport.network.road.Route.WebTAG;
 import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.utility.InputFileReader;
 import nismod.transport.zone.Zoning;
@@ -53,7 +54,7 @@ public class DemandModel {
 	private Map<ElasticityTypes, Double> elasticities;
 	private Map<ElasticityTypes, Double> elasticitiesFreight;
 	private Map<VehicleType, Double> vehicleTypeToPCU;
-	private HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> baseFuelConsumptionRates;
+	private HashMap<Pair<VehicleType, EngineType>, Map<WebTAG, Double>> baseFuelConsumptionRates;
 	private HashMap<Integer, HashMap<Pair<VehicleType, EngineType>, Double>> yearToRelativeFuelEfficiencies;
 	private Map<Integer, Map<TimeOfDay, Double>> yearToTimeOfDayDistribution;
 	private Map<Integer, Map<TimeOfDay, Double>> yearToTimeOfDayDistributionFreight;
@@ -1179,7 +1180,7 @@ public class DemandModel {
 	 * @param vht Vehicle type.
 	 * @param engineTypeFractions Map with engine type fractions.
 	 */
-	public void setEngineTypeFractions(int year, VehicleType vht, HashMap<EngineType, Double> engineTypeFractions) {
+	public void setEngineTypeFractions(int year, VehicleType vht, Map<EngineType, Double> engineTypeFractions) {
 		
 		this.yearToEngineTypeFractions.get(year).put(vht, engineTypeFractions);
 	}

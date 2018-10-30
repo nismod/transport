@@ -6,7 +6,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -17,6 +19,7 @@ import org.junit.Test;
 import nismod.transport.network.road.RoadNetworkAssignment.EnergyType;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
+import nismod.transport.network.road.Route.WebTAG;
 import nismod.transport.utility.ConfigReader;
 
 public class RouteTest {
@@ -82,13 +85,13 @@ public class RouteTest {
 		params.setProperty("INTERSECTIONS", "-1.0");
 		params.setProperty("AVERAGE_INTERSECTION_DELAY", "0.8");
 		
-		HashMap<String, Double> parameters = new HashMap<String, Double>();
-		parameters.put("A", 1.11932239320862);
-		parameters.put("B", 0.0440047704089497);
-		parameters.put("C", -0.0000813834474888197);
-		parameters.put("D", 2.44908328418021E-06);
+		Map<WebTAG, Double> parameters = new EnumMap<>(WebTAG.class);
+		parameters.put(WebTAG.A, 1.11932239320862);
+		parameters.put(WebTAG.B, 0.0440047704089497);
+		parameters.put(WebTAG.C, -0.0000813834474888197);
+		parameters.put(WebTAG.D, 2.44908328418021E-06);
 		
-		HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParameters = new HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>>();
+		HashMap<Pair<VehicleType, EngineType>, Map<WebTAG, Double>> energyConsumptionParameters = new HashMap<Pair<VehicleType, EngineType>, Map<WebTAG, Double>>();
 		energyConsumptionParameters.put(Pair.of(VehicleType.CAR, EngineType.ICE_PETROL), parameters);
 		energyConsumptionParameters.put(Pair.of(VehicleType.CAR, EngineType.BEV), parameters);
 		
@@ -96,7 +99,7 @@ public class RouteTest {
 		relativeFuelEfficiency.put(Pair.of(VehicleType.CAR, EngineType.ICE_PETROL), 0.9);
 		relativeFuelEfficiency.put(Pair.of(VehicleType.CAR, EngineType.BEV), 0.9);
 		
-		HashMap<EnergyType, Double> energyUnitCosts = new HashMap<EnergyType, Double>();
+		Map<EnergyType, Double> energyUnitCosts = new EnumMap<>(EnergyType.class);
 		energyUnitCosts.put(EnergyType.PETROL, 1.17);
 		energyUnitCosts.put(EnergyType.DIESEL, 1.17);
 		energyUnitCosts.put(EnergyType.CNG, 1.17);

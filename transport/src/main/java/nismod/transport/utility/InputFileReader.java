@@ -21,6 +21,7 @@ import nismod.transport.network.road.RoadNetworkAssignment.EnergyType;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
+import nismod.transport.network.road.Route.WebTAG;
 
 /**
  * InputFileReader reads input files and provides them as various data structures required by other classes.
@@ -218,7 +219,7 @@ public class InputFileReader {
 			for (CSVRecord record : parser) {
 				//System.out.println(record);
 				int year = Integer.parseInt(record.get(0));
-				Map<TimeOfDay, Double> timeDistribution = new LinkedHashMap<TimeOfDay, Double>();
+				Map<TimeOfDay, Double> timeDistribution = new EnumMap<>(TimeOfDay.class);
 				
 				for (String key: keySet) {
 					TimeOfDay hour = TimeOfDay.valueOf(key);
@@ -343,9 +344,9 @@ public class InputFileReader {
 	 * @param fileName File name.
 	 * @return Map with engine type fractions.
 	 */
-	public static HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> readEnergyConsumptionParamsFile (String fileName){
+	public static HashMap<Pair<VehicleType, EngineType>, Map<WebTAG, Double>> readEnergyConsumptionParamsFile (String fileName){
 		
-		HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> map = new HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>>();
+		HashMap<Pair<VehicleType, EngineType>, Map<WebTAG, Double>> map = new HashMap<Pair<VehicleType, EngineType>, Map<WebTAG, Double>>();
 
 		CSVParser parser = null;
 		try {
@@ -361,9 +362,11 @@ public class InputFileReader {
 				VehicleType vt = VehicleType.valueOf(record.get(0));
 				EngineType et = EngineType.valueOf(record.get(1));
 				
-				HashMap<String, Double> parameters = new HashMap<String, Double>();
-				for (String key: keySet)
-					parameters.put(key, Double.valueOf(record.get(key)));
+				Map<WebTAG, Double> parameters = new EnumMap<>(WebTAG.class);
+				for (String key: keySet) {
+					WebTAG pt = WebTAG.valueOf(key);
+					parameters.put(pt, Double.valueOf(record.get(key)));
+				}
 				map.put(Pair.of(vt, et), parameters);
 			}
  
@@ -566,7 +569,7 @@ public class InputFileReader {
 							
 				Map<TimeOfDay, Map<Integer, Double>> linkTravelTimePerTimeOfDay = yearToLinkTravelTimePerTimeOfDay.get(yearFromFile);
 				if (linkTravelTimePerTimeOfDay == null) {
-					linkTravelTimePerTimeOfDay = new LinkedHashMap<TimeOfDay, Map<Integer, Double>>();
+					linkTravelTimePerTimeOfDay = new EnumMap<>(TimeOfDay.class);
 					yearToLinkTravelTimePerTimeOfDay.put(yearFromFile, linkTravelTimePerTimeOfDay);					
 				}
 				for (String key: keySet) {

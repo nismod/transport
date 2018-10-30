@@ -6,6 +6,7 @@ package nismod.transport.network.road;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -35,6 +36,7 @@ import nismod.transport.demand.AssignableODMatrix;
 import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.SkimMatrix;
 import nismod.transport.demand.SkimMatrixFreight;
+import nismod.transport.network.road.Route.WebTAG;
 import nismod.transport.utility.InputFileReader;
 import nismod.transport.utility.RandomSingleton;
 import nismod.transport.zone.Zoning;
@@ -107,7 +109,7 @@ public class RoadNetworkAssignment {
 
 	private Map<VehicleType, Double> vehicleTypeToPCU;
 	private Map<EnergyType, Double> energyUnitCosts;
-	private HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptions;
+	private HashMap<Pair<VehicleType, EngineType>, Map<WebTAG, Double>> energyConsumptions;
 	private HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiencies;
 	private Map<VehicleType, Map<EngineType, Double>> engineTypeFractions;
 	private Map<VehicleType, Double> AVFractions;
@@ -168,7 +170,7 @@ public class RoadNetworkAssignment {
 			Map<VehicleType, Map<EngineType, Double>> engineTypeFractions,
 			Map<VehicleType, Double> fractionsAV,
 			Map<VehicleType, Double> vehicleTypeToPCU,
-			HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> energyConsumptionParams,
+			HashMap<Pair<VehicleType, EngineType>, Map<WebTAG, Double>> energyConsumptionParams,
 			HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiencies,
 			Map<TimeOfDay, Double> timeOfDayDistribution,
 			Map<TimeOfDay, Double> timeOfDayDistributionFreight, 
@@ -181,12 +183,12 @@ public class RoadNetworkAssignment {
 		this.roadNetwork = roadNetwork;
 		this.params = params;
 		this.linkVolumesInPCU = new HashMap<Integer, Double>();
-		this.linkVolumesPerVehicleType = new HashMap<VehicleType, Map<Integer, Integer>>();
+		this.linkVolumesPerVehicleType = new EnumMap<>(VehicleType.class);
 		for (VehicleType vht: VehicleType.values()) {
 			HashMap<Integer, Integer> map = new HashMap<Integer, Integer>();
 			linkVolumesPerVehicleType.put(vht, map);
 		}
-		this.linkTravelTimePerTimeOfDay = new LinkedHashMap<TimeOfDay, Map<Integer, Double>>();
+		this.linkTravelTimePerTimeOfDay = new EnumMap<>(TimeOfDay.class);
 		for (TimeOfDay hour: TimeOfDay.values()) {
 			HashMap<Integer, Double> map = new HashMap<Integer, Double>();
 			linkTravelTimePerTimeOfDay.put(hour, map);
@@ -543,7 +545,7 @@ public class RoadNetworkAssignment {
 
 		//to store routes generated during the assignment
 		if (routeStorage == null) {
-			routeStorage = new HashMap<TimeOfDay, RouteSetGenerator>();
+			routeStorage = new EnumMap<>(TimeOfDay.class);
 			for (TimeOfDay hour: TimeOfDay.values()) {
 				routeStorage.put(hour, new RouteSetGenerator(this.roadNetwork, props));
 			}
@@ -2028,7 +2030,7 @@ public class RoadNetworkAssignment {
 
 		//to store routes generated during the assignment
 		if (routeStorage == null) {
-			routeStorage = new HashMap<TimeOfDay, RouteSetGenerator>();
+			routeStorage = new EnumMap<>(TimeOfDay.class);
 			for (TimeOfDay hour: TimeOfDay.values()) {
 				routeStorage.put(hour, new RouteSetGenerator(this.roadNetwork, props));
 			}
@@ -3241,14 +3243,14 @@ public class RoadNetworkAssignment {
 	 * Calculates total energy consumption for each car/AV energy type (in litres for fuels and in kWh for electricity).
 	 * @return Total consumption for each energy type.
 	 */
-	public HashMap<EnergyType, Double> calculateCarEnergyConsumptions() {
+	public Map<EnergyType, Double> calculateCarEnergyConsumptions() {
 
-		HashMap<EnergyType, Double> consumptions = new HashMap<EnergyType, Double>();
+		Map<EnergyType, Double> consumptions = new EnumMap<>(EnergyType.class);
 		for (EnergyType energy: EnergyType.values()) consumptions.put(energy, 0.0);
 
 		for (Trip trip: this.tripList) {
 			if (trip.getVehicle() != VehicleType.CAR && trip.getVehicle() != VehicleType.CAR_AV) continue; //skip freight vehicles
-			HashMap<EnergyType, Double> consumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistance(), averageAccessEgressSpeedCar, this.energyConsumptions, this.relativeFuelEfficiencies, this.flagIncludeAccessEgress);
+			Map<EnergyType, Double> consumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistance(), averageAccessEgressSpeedCar, this.energyConsumptions, this.relativeFuelEfficiencies, this.flagIncludeAccessEgress);
 			int multiplier = trip.getMultiplier();
 
 			for (EnergyType energy: EnergyType.values()) {
@@ -3266,10 +3268,10 @@ public class RoadNetworkAssignment {
 	 * @param originZoneEnergyWeight Percentage of energy consumption assigned to origin zone (the rest assigned to destination zone).
 	 * @return Zonal consumption for each energy type.
 	 */
-	public HashMap<EnergyType, HashMap<String, Double>> calculateZonalCarEnergyConsumptions(final double originZoneEnergyWeight) {
+	public Map<EnergyType, HashMap<String, Double>> calculateZonalCarEnergyConsumptions(final double originZoneEnergyWeight) {
 
 		//initialise hashmaps
-		HashMap<EnergyType, HashMap<String, Double>> zonalConsumptions = new HashMap<EnergyType, HashMap<String, Double>>();
+		Map<EnergyType, HashMap<String, Double>> zonalConsumptions = new EnumMap<>(EnergyType.class);
 		for (EnergyType energy: EnergyType.values()) {
 			HashMap<String, Double> consumption = new HashMap<String, Double>();
 			zonalConsumptions.put(energy, consumption);
@@ -3279,7 +3281,7 @@ public class RoadNetworkAssignment {
 
 			if (trip.getVehicle() != VehicleType.CAR && trip.getVehicle() != VehicleType.CAR_AV) continue; //skip freight vehicles
 
-			HashMap<EnergyType, Double> tripConsumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyConsumptions, this.relativeFuelEfficiencies, this.flagIncludeAccessEgress);
+			Map<EnergyType, Double> tripConsumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyConsumptions, this.relativeFuelEfficiencies, this.flagIncludeAccessEgress);
 
 			String originLAD = trip.getOriginLAD(this.roadNetwork.getNodeToZone());
 			String destinationLAD = trip.getDestinationLAD(this.roadNetwork.getNodeToZone());
@@ -3309,16 +3311,16 @@ public class RoadNetworkAssignment {
 	 * @param originZoneEnergyWeight Percentage of energy consumption assigned to origin zone (the rest assigned to destination zone).
 	 * @return Electricity consumption per zone and time of day.
 	 */
-	public HashMap<String, HashMap<TimeOfDay, Double>> calculateZonalTemporalCarElectricityConsumptions(final double originZoneEnergyWeight) {
+	public HashMap<String, Map<TimeOfDay, Double>> calculateZonalTemporalCarElectricityConsumptions(final double originZoneEnergyWeight) {
 
 		//initialise hashmap
-		HashMap<String, HashMap<TimeOfDay, Double>> zonalConsumptions = new HashMap<String, HashMap<TimeOfDay, Double>>();
+		HashMap<String, Map<TimeOfDay, Double>> zonalConsumptions = new HashMap<String, Map<TimeOfDay, Double>>();
 
 		for (Trip trip: this.tripList)
 			if ((trip.getVehicle() == VehicleType.CAR || trip.getVehicle() == VehicleType.CAR_AV) &&
 				(trip.getEngine() == EngineType.BEV || trip.getEngine() == EngineType.PHEV_PETROL || trip.getEngine() == EngineType.PHEV_DIESEL)) {
 
-				HashMap<EnergyType, Double> tripConsumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyConsumptions, this.relativeFuelEfficiencies, this.flagIncludeAccessEgress);
+				Map<EnergyType, Double> tripConsumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyConsumptions, this.relativeFuelEfficiencies, this.flagIncludeAccessEgress);
 				Double tripConsumptionElectricity = tripConsumption.get(EnergyType.ELECTRICITY);
 				if (tripConsumptionElectricity == null) continue; //skip if zero electricity consumption for this trip
 
@@ -3327,12 +3329,12 @@ public class RoadNetworkAssignment {
 				TimeOfDay hour = trip.getTimeOfDay();
 				int multiplier = trip.getMultiplier();
 
-				HashMap<TimeOfDay, Double> currentTemporalOrigin = zonalConsumptions.get(originLAD);
-				if (currentTemporalOrigin == null) currentTemporalOrigin = new HashMap<TimeOfDay, Double>();
+				Map<TimeOfDay, Double> currentTemporalOrigin = zonalConsumptions.get(originLAD);
+				if (currentTemporalOrigin == null) currentTemporalOrigin = new EnumMap<>(TimeOfDay.class);
 				zonalConsumptions.put(originLAD, currentTemporalOrigin);
 
-				HashMap<TimeOfDay, Double> currentTemporalDestination = zonalConsumptions.get(destinationLAD);
-				if (currentTemporalDestination == null) currentTemporalDestination = new HashMap<TimeOfDay, Double>();
+				Map<TimeOfDay, Double> currentTemporalDestination = zonalConsumptions.get(destinationLAD);
+				if (currentTemporalDestination == null) currentTemporalDestination = new EnumMap<>(TimeOfDay.class);
 				zonalConsumptions.put(destinationLAD, currentTemporalDestination);
 
 				Double currentConsumptionOrigin = currentTemporalOrigin.get(hour);
@@ -3355,10 +3357,10 @@ public class RoadNetworkAssignment {
 	 * Calculates the number of electric (BV, PHEV) passenger (car/AV) trips starting in each LAD in each hour.
 	 * @return Number of trips.
 	 */
-	public HashMap<String, HashMap<TimeOfDay, Integer>> calculateZonalTemporalTripStartsForElectricVehicles() {
+	public HashMap<String, Map<TimeOfDay, Integer>> calculateZonalTemporalTripStartsForElectricVehicles() {
 
 		//initialise hashmap
-		HashMap<String, HashMap<TimeOfDay, Integer>> zonalTripStarts = new HashMap<String, HashMap<TimeOfDay, Integer>>();
+		HashMap<String, Map<TimeOfDay, Integer>> zonalTripStarts = new HashMap<String, Map<TimeOfDay, Integer>>();
 
 		for (Trip trip: this.tripList)
 			if ((trip.getVehicle() == VehicleType.CAR || trip.getVehicle() == VehicleType.CAR_AV) &&
@@ -3367,8 +3369,8 @@ public class RoadNetworkAssignment {
 				TimeOfDay hour = trip.getTimeOfDay();
 				int multiplier = trip.getMultiplier();	
 				
-				HashMap<TimeOfDay, Integer> temporalTripStarts = zonalTripStarts.get(originLAD);
-				if (temporalTripStarts == null) temporalTripStarts = new HashMap<TimeOfDay, Integer>();
+				Map<TimeOfDay, Integer> temporalTripStarts = zonalTripStarts.get(originLAD);
+				if (temporalTripStarts == null) temporalTripStarts = new EnumMap<>(TimeOfDay.class);
 				zonalTripStarts.put(originLAD, temporalTripStarts);
 				
 				Integer tripStarts = temporalTripStarts.get(hour);
@@ -3384,10 +3386,10 @@ public class RoadNetworkAssignment {
 	 * Calculates origin-destination energy consumption for car vehicles for each energy type (in litres/kg for fuels and in kWh for electricity).
 	 * @return Zonal consumption for each energy type.
 	 */
-	public HashMap<EnergyType, SkimMatrix> calculateODCarEnergyConsumptions() {
+	public Map<EnergyType, SkimMatrix> calculateODCarEnergyConsumptions() {
 
 		//initialise hashmaps
-		HashMap<EnergyType, SkimMatrix> zonalConsumptions = new HashMap<EnergyType, SkimMatrix>();
+		Map<EnergyType, SkimMatrix> zonalConsumptions = new EnumMap<>(EnergyType.class);
 		for (EnergyType energy: EnergyType.values()) {
 			SkimMatrix consumption = new SkimMatrix();
 			zonalConsumptions.put(energy, consumption);
@@ -3396,7 +3398,7 @@ public class RoadNetworkAssignment {
 		for (Trip trip: this.tripList) {
 			if (trip.getVehicle() != VehicleType.CAR && trip.getVehicle() != VehicleType.CAR_AV) continue; //skip freight vehicles
 
-			HashMap<EnergyType, Double> tripConsumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyConsumptions, this.relativeFuelEfficiencies, this.flagIncludeAccessEgress);
+			Map<EnergyType, Double> tripConsumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyConsumptions, this.relativeFuelEfficiencies, this.flagIncludeAccessEgress);
 
 			String originLAD = trip.getOriginLAD(this.roadNetwork.getNodeToZone());
 			String destinationLAD = trip.getDestinationLAD(this.roadNetwork.getNodeToZone());
@@ -3417,9 +3419,9 @@ public class RoadNetworkAssignment {
 	 * Calculates total energy consumption for each freight vehicle engine type (in litres for fuels and in kWh for electricity).
 	 * @return Total consumption for each energy type.
 	 */
-	public HashMap<EnergyType, Double> calculateFreightEnergyConsumptions() {
+	public Map<EnergyType, Double> calculateFreightEnergyConsumptions() {
 
-		HashMap<EnergyType, Double> consumptions = new HashMap<EnergyType, Double>();
+		Map<EnergyType, Double> consumptions = new EnumMap<>(EnergyType.class);
 		for (EnergyType energy: EnergyType.values()) {
 			consumptions.put(energy, 0.0);
 		}
@@ -3428,7 +3430,7 @@ public class RoadNetworkAssignment {
 			VehicleType vht = trip.getVehicle();
 			if ( ! (vht == VehicleType.ARTIC || vht == VehicleType.RIGID || vht == VehicleType.VAN ||
 					vht == VehicleType.ARTIC_AV || vht == VehicleType.RIGID_AV || vht == VehicleType.VAN_AV)) continue; //skip non-freight vehicles
-			HashMap<EnergyType, Double> consumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyConsumptions, this.relativeFuelEfficiencies, this.flagIncludeAccessEgress);
+			Map<EnergyType, Double> consumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyConsumptions, this.relativeFuelEfficiencies, this.flagIncludeAccessEgress);
 			int multiplier = trip.getMultiplier();
 
 			for (EnergyType energy: EnergyType.values()) {
@@ -3445,11 +3447,11 @@ public class RoadNetworkAssignment {
 	 * Calculates total energy consumption for each energy type of passenger cars and freight vehicles (in litres for fuels and in kWh for electricity).
 	 * @return Total consumption for each engine type.
 	 */
-	public HashMap<EnergyType, Double> calculateEnergyConsumptions() {
+	public Map<EnergyType, Double> calculateEnergyConsumptions() {
 
-		HashMap<EnergyType, Double> car = calculateCarEnergyConsumptions();
-		HashMap<EnergyType, Double> freight = calculateFreightEnergyConsumptions();
-		HashMap<EnergyType, Double> combined = new HashMap<EnergyType, Double>();
+		Map<EnergyType, Double> car = calculateCarEnergyConsumptions();
+		Map<EnergyType, Double> freight = calculateFreightEnergyConsumptions();
+		Map<EnergyType, Double> combined = new EnumMap<>(EnergyType.class);
 
 		for (EnergyType energy: EnergyType.values()) {
 			double consumption = car.get(energy) + freight.get(energy);
@@ -3466,14 +3468,14 @@ public class RoadNetworkAssignment {
 
 		HashMap<String, Double> totalCO2Emissions = new HashMap<String, Double>();
 
-		HashMap<EnergyType, Double> car = calculateCarEnergyConsumptions();
+		Map<EnergyType, Double> car = calculateCarEnergyConsumptions();
 		double carCO2 = 0.0;
 		for (EnergyType energy: EnergyType.values()) {
 			carCO2 += car.get(energy) + this.unitCO2Emissions.get(energy);
 		}
 		totalCO2Emissions.put("PASSENGER", carCO2);
 
-		HashMap<EnergyType, Double> freight = calculateFreightEnergyConsumptions();
+		Map<EnergyType, Double> freight = calculateFreightEnergyConsumptions();
 		double freightCO2 = 0.0;
 		for (EnergyType energy: EnergyType.values()) {
 			freightCO2 += freight.get(energy) + this.unitCO2Emissions.get(energy);
@@ -3671,7 +3673,7 @@ public class RoadNetworkAssignment {
 	 */
 	public Map<TimeOfDay, Map<Integer, Double>> getCopyOfLinkTravelTimes() {
 
-		Map<TimeOfDay, Map<Integer, Double>> linkTravelTimes = new LinkedHashMap<TimeOfDay, Map<Integer, Double>>();
+		Map<TimeOfDay, Map<Integer, Double>> linkTravelTimes = new EnumMap<>(TimeOfDay.class);
 		for (TimeOfDay hour: TimeOfDay.values()) {
 			Map<Integer, Double> hourlyMap = new HashMap<Integer, Double>();
 			for (Integer edge: this.linkTravelTimePerTimeOfDay.get(hour).keySet())
@@ -3738,7 +3740,7 @@ public class RoadNetworkAssignment {
 		HashMap<Integer, Double> maximumCapacities = this.calculateMaximumPeakLinkPointCapacities();
 		HashMap<Integer, Double> densities = this.calculatePeakLinkDensities();
 		HashMap<Integer, Double> GEHStats = null;
-		HashMap<VehicleType, HashMap<Integer, Double>> GEHStatsFreight = null;
+		Map<VehicleType, HashMap<Integer, Double>> GEHStatsFreight = null;
 		if (year == this.baseYear) {
 			GEHStats = this.calculateGEHStatisticForCarCounts(this.volumeToFlowFactor); //GEH can be calculated for base year only
 			GEHStatsFreight = this.calculateGEHStatisticForFreightCounts(this.volumeToFlowFactor);
@@ -3994,7 +3996,7 @@ public class RoadNetworkAssignment {
 		LOGGER.debug("Saving energy consumptions file.");
 
 		//calculate energy consumptions
-		HashMap<EnergyType, Double> energyConsumptions = this.calculateEnergyConsumptions();
+		Map<EnergyType, Double> energyConsumptions = this.calculateEnergyConsumptions();
 
 		String NEW_LINE_SEPARATOR = "\n";
 		ArrayList<String> header = new ArrayList<String>();
@@ -4081,7 +4083,7 @@ public class RoadNetworkAssignment {
 		LOGGER.debug("Saving zonal car energy consumptions.");
 		
 		//calculate energy consumptions
-		HashMap<EnergyType, HashMap<String, Double>> energyConsumptions = this.calculateZonalCarEnergyConsumptions(originZoneEnergyWeight);
+		Map<EnergyType, HashMap<String, Double>> energyConsumptions = this.calculateZonalCarEnergyConsumptions(originZoneEnergyWeight);
 		Set<String> zones = energyConsumptions.get(EnergyType.ELECTRICITY).keySet();
 		
 		String NEW_LINE_SEPARATOR = "\n";
@@ -4133,7 +4135,7 @@ public class RoadNetworkAssignment {
 		LOGGER.debug("Saving zonal and temporal car electricity consumptions.");
 		
 		//calculate energy consumptions
-		HashMap<String, HashMap<TimeOfDay, Double>> electricityConsumptions = this.calculateZonalTemporalCarElectricityConsumptions(originZoneEnergyWeight);
+		HashMap<String, Map<TimeOfDay, Double>> electricityConsumptions = this.calculateZonalTemporalCarElectricityConsumptions(originZoneEnergyWeight);
 		Set<String> zones = electricityConsumptions.keySet();
 		
 		String NEW_LINE_SEPARATOR = "\n";
@@ -4184,7 +4186,7 @@ public class RoadNetworkAssignment {
 		LOGGER.debug("Saving OD matrix for car electricity consumption.");
 		
 		//calculate OD energy consumptions
-		HashMap<EnergyType, SkimMatrix> energyConsumptions = this.calculateODCarEnergyConsumptions();
+		Map<EnergyType, SkimMatrix> energyConsumptions = this.calculateODCarEnergyConsumptions();
 		
 		energyConsumptions.get(EnergyType.ELECTRICITY).saveMatrixFormatted(outputFile);
 		
@@ -4200,7 +4202,7 @@ public class RoadNetworkAssignment {
 		LOGGER.debug("Saving number of EV trips starting in each zone in each hour.");
 		
 		//calculate energy consumptions
-		HashMap<String, HashMap<TimeOfDay, Integer>> zonalTemporalTripStartForEVs = this.calculateZonalTemporalTripStartsForElectricVehicles();
+		HashMap<String, Map<TimeOfDay, Integer>> zonalTemporalTripStartForEVs = this.calculateZonalTemporalTripStartsForElectricVehicles();
 		Set<String> zones = zonalTemporalTripStartForEVs.keySet();
 		
 		String NEW_LINE_SEPARATOR = "\n";
@@ -4472,7 +4474,7 @@ public class RoadNetworkAssignment {
 	 * Getter method for energy consumptions.
 	 * @return Energy consumptions.
 	 */   
-	public HashMap<Pair<VehicleType, EngineType>, HashMap<String, Double>> getEnergyConsumptions() {
+	public HashMap<Pair<VehicleType, EngineType>, Map<WebTAG, Double>> getEnergyConsumptions() {
 
 		return this.energyConsumptions;
 	}
@@ -4685,7 +4687,7 @@ public class RoadNetworkAssignment {
 					//fetch current map for the zone
 					Map<VehicleType, Double> map = vehicleKilometres.get(zone);
 					if (map == null) {
-						map = new HashMap<VehicleType, Double>();
+						map = new EnumMap<>(VehicleType.class);
 						vehicleKilometres.put(zone, map);
 					}
 
@@ -4735,7 +4737,7 @@ public class RoadNetworkAssignment {
 						//fetch current map for the zone
 						Map<VehicleType, Double> map = vehicleKilometres.get(zone1);
 						if (map == null) {
-							map = new HashMap<VehicleType, Double>();
+							map = new EnumMap<>(VehicleType.class);
 							vehicleKilometres.put(zone1, map);
 						}
 						//fetch current value
@@ -4749,7 +4751,7 @@ public class RoadNetworkAssignment {
 						//fetch current map for the zone
 						map = vehicleKilometres.get(zone2);
 						if (map == null) {
-							map = new HashMap<VehicleType, Double>();
+							map = new EnumMap<>(VehicleType.class);
 							vehicleKilometres.put(zone2, map);
 						}
 						//fetch current value
@@ -4779,7 +4781,7 @@ public class RoadNetworkAssignment {
 				//fetch current map
 				Map<VehicleType, Double> map = vehicleKilometres.get(accessZone);
 				if (map == null) {
-					map = new HashMap<VehicleType, Double>();
+					map = new EnumMap<>(VehicleType.class);
 					vehicleKilometres.put(accessZone, map);
 				}
 
@@ -4804,7 +4806,7 @@ public class RoadNetworkAssignment {
 				//fetch current map
 				map = vehicleKilometres.get(egressZone);
 				if (map == null) {
-					map = new HashMap<VehicleType, Double>();
+					map = new EnumMap<>(VehicleType.class);
 					vehicleKilometres.put(egressZone, map);
 				}
 
@@ -4843,7 +4845,7 @@ public class RoadNetworkAssignment {
 					//fetch current map
 					Map<VehicleType, Double> map = vehicleKilometres.get(zone);
 					if (map == null) {
-						map = new HashMap<VehicleType, Double>();
+						map = new EnumMap<>(VehicleType.class);
 						vehicleKilometres.put(zone, map);
 					}
 
@@ -4947,7 +4949,7 @@ public class RoadNetworkAssignment {
 				//fetch current map for the zone
 				Map<VehicleType, Double> map = vehicleKilometres.get(zone);
 				if (map == null) {
-					map = new HashMap<VehicleType, Double>();
+					map = new EnumMap<>(VehicleType.class);
 					vehicleKilometres.put(zone, map);
 				}
 
@@ -5001,7 +5003,7 @@ public class RoadNetworkAssignment {
 				//fetch current map
 				Map<VehicleType, Double> map = vehicleKilometres.get(accessLAD);
 				if (map == null) {
-					map = new HashMap<VehicleType, Double>();
+					map = new EnumMap<>(VehicleType.class);
 					vehicleKilometres.put(accessLAD, map);
 				}
 
@@ -5053,7 +5055,7 @@ public class RoadNetworkAssignment {
 				//fetch current map
 				map = vehicleKilometres.get(egressLAD);
 				if (map == null) {
-					map = new HashMap<VehicleType, Double>();
+					map = new EnumMap<>(VehicleType.class);
 					vehicleKilometres.put(egressLAD, map);
 				}
 
@@ -5095,7 +5097,7 @@ public class RoadNetworkAssignment {
 	 * @param engineType Engine type
 	 * @param parameters Energy consumptions parameters (A, B, C, D)
 	 */
-	public void setEnergyConsumptionParameters (VehicleType vehicleType, EngineType engineType, HashMap<String, Double> parameters) {
+	public void setEnergyConsumptionParameters (VehicleType vehicleType, EngineType engineType, Map<WebTAG, Double> parameters) {
 
 		this.energyConsumptions.put(Pair.of(vehicleType, engineType), parameters);
 	}
@@ -5105,7 +5107,7 @@ public class RoadNetworkAssignment {
 	 * @param vht Vehicle type
 	 * @param engineTypeFractions Map with engine type fractions.
 	 */
-	public void setEngineTypeFractions (VehicleType vht, HashMap<EngineType, Double> engineTypeFractions) {
+	public void setEngineTypeFractions (VehicleType vht, Map<EngineType, Double> engineTypeFractions) {
 
 		this.engineTypeFractions.put(vht, engineTypeFractions);
 	}
@@ -5134,7 +5136,7 @@ public class RoadNetworkAssignment {
 		}
 
 		//reset link volumes per time of day
-		this.linkVolumesInPCUPerTimeOfDay = new LinkedHashMap<TimeOfDay, Map<Integer, Double>>();
+		this.linkVolumesInPCUPerTimeOfDay = new EnumMap<>(TimeOfDay.class);
 		for (TimeOfDay hour: TimeOfDay.values()) {
 			Map<Integer, Double> hourlyMap = new HashMap<Integer, Double>();
 			this.linkVolumesInPCUPerTimeOfDay.put(hour, hourlyMap);
@@ -5170,7 +5172,7 @@ public class RoadNetworkAssignment {
 
 		//Long countOfPetrolTrips2 = tripList.parallelStream().filter(t -> t.getEngine() == EngineType.PETROL).count();
 
-		Map<TimeOfDay, Map<Integer, Double>> map = new LinkedHashMap<TimeOfDay, Map<Integer, Double>>();
+		Map<TimeOfDay, Map<Integer, Double>> map = new EnumMap<>(TimeOfDay.class);
 		for (TimeOfDay hour: TimeOfDay.values()) {
 			Map<Integer, Double> hourlyMap = new HashMap<Integer, Double>();
 			map.put(hour, hourlyMap);
@@ -5253,7 +5255,7 @@ public class RoadNetworkAssignment {
 	 */
 	public Map<VehicleType, Map<Integer, Integer>> calculateLinkVolumePerVehicleType(List<Trip> tripList) {
 
-		Map<VehicleType, Map<Integer, Integer>> map = new HashMap<VehicleType, Map<Integer, Integer>>();
+		Map<VehicleType, Map<Integer, Integer>> map = new EnumMap<>(VehicleType.class);
 		for (VehicleType vht: VehicleType.values()) {
 			Map<Integer, Integer> vehicleMap = new HashMap<Integer, Integer>();
 			map.put(vht, vehicleMap);
@@ -5598,7 +5600,7 @@ public class RoadNetworkAssignment {
 	 */
 	public void printGEHstatisticFreight(double volumeToFlowFactor) {
 		
-		HashMap<VehicleType, HashMap<Integer, Double>> freightGEH = this.calculateGEHStatisticForFreightCounts(volumeToFlowFactor);
+		Map<VehicleType, HashMap<Integer, Double>> freightGEH = this.calculateGEHStatisticForFreightCounts(volumeToFlowFactor);
 		
 		HashMap<Integer, Double> GEH = freightGEH.get(VehicleType.VAN);
 		int validFlows = 0;
@@ -5720,7 +5722,7 @@ public class RoadNetworkAssignment {
 	 */
 	public void printHourlyGEHstatistic() {
 		
-		Map<TimeOfDay, Triple<Integer, Integer, Integer>> hourlyGEHTriples = new LinkedHashMap<TimeOfDay, Triple<Integer, Integer, Integer>>();
+		Map<TimeOfDay, Triple<Integer, Integer, Integer>> hourlyGEHTriples = new EnumMap<>(TimeOfDay.class);
 
 		for (TimeOfDay hour: TimeOfDay.values()) {
 			
@@ -5984,9 +5986,9 @@ public class RoadNetworkAssignment {
 	 * @param volumeToFlowFactor Converts daily vehicle volume to hourly flow (e.g. 0.1 for peak flow; 1/24.0 for daily average)  
 	 * @return GEH statistic for simulated and observed hourly freight vehicle flows, per vehicle type.
 	 */
-	public HashMap<VehicleType, HashMap<Integer, Double>> calculateGEHStatisticForFreightCounts (double volumeToFlowFactor) {
+	public Map<VehicleType, HashMap<Integer, Double>> calculateGEHStatisticForFreightCounts (double volumeToFlowFactor) {
 
-		HashMap<VehicleType, HashMap<Integer, Double>> GEH = new HashMap<VehicleType, HashMap<Integer, Double>>();
+		Map<VehicleType, HashMap<Integer, Double>> GEH = new EnumMap<>(VehicleType.class);
 		HashMap<Integer, Double> vanGEH = new HashMap<Integer, Double>();
 		HashMap<Integer, Double> rigidGEH = new HashMap<Integer, Double>();
 		HashMap<Integer, Double> articGEH = new HashMap<Integer, Double>();
