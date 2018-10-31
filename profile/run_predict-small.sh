@@ -6,7 +6,7 @@ cd $script_dir/../transport && java \
   -XX:+FlightRecorder \
   -XX:FlightRecorderOptions=defaultrecording=true,dumponexit=true,settings=../profile/settings-small.jfc \
   -XX:+UnlockDiagnosticVMOptions -XX:+DebugNonSafepoints \
-  -XX:MaxHeapSize=20g \
+  -XX:MaxHeapSize=1g \
   -cp ./target/transport-0.0.1-SNAPSHOT-jar-with-dependencies.jar \
   nismod.transport.App \
   -c ./src/test/config/testConfig.properties \
