@@ -394,42 +394,15 @@ public class RoadNetworkAssignment {
 			for (int i=0; i < (flow + remainder); i++) {
 
 				//choose time of day
-				double cumulativeProbability = 0.0;
-				double random = rng.nextDouble();
-				TimeOfDay hour = null;
-				for (Map.Entry<TimeOfDay, Double> entry : timeOfDayDistribution.entrySet()) {
-					TimeOfDay key = entry.getKey();
-					Double value = entry.getValue();	
-					cumulativeProbability += value;
-					if (Double.compare(cumulativeProbability, random) > 0) {
-						hour = key;
-						break;
-					}
-				}
+				TimeOfDay hour = this.chooseTimeOfDay(timeOfDayDistribution);
 				if (hour == null) LOGGER.warn("Time of day not chosen!");
 
 				//choose vehicle
-				random  = rng.nextDouble();
-				VehicleType vht = null;
-				if (Double.compare(1.0 - AVFractions.get(VehicleType.CAR_AV), random) > 0)
-					vht = VehicleType.CAR;
-				else 
-					vht = VehicleType.CAR_AV;
+				VehicleType vht = this.chooseCarVehicleType(AVFractions);
 				if (vht == null) LOGGER.warn("Vehicle type not chosen!");
 
 				//choose engine
-				cumulativeProbability = 0.0;
-				random = rng.nextDouble();
-				EngineType engine = null;
-				for (Map.Entry<EngineType, Double> entry : engineTypeFractions.get(vht).entrySet()) {
-					EngineType key = entry.getKey();
-					Double value = entry.getValue();	
-					cumulativeProbability += value;
-					if (Double.compare(cumulativeProbability, random) > 0) {
-						engine = key;
-						break;
-					}
-				}
+				EngineType engine = this.chooseEngineType(engineTypeFractions.get(vht));
 				if (engine == null) LOGGER.warn("Engine type not chosen!");
 
 				//choose origin/destination nodes based on the gravitating population
@@ -437,9 +410,9 @@ public class RoadNetworkAssignment {
 				//the choice without replacement means that destination node has to be different from origin node
 
 				//choose origin node
-				cumulativeProbability = 0.0;
+				double cumulativeProbability = 0.0;
 				Integer originNode = null;
-				random = rng.nextDouble();
+				double random = rng.nextDouble();
 				for (Integer node: listOfOriginNodes) {
 					cumulativeProbability += startNodeProbabilities.get(node);
 					if (Double.compare(cumulativeProbability, random) > 0) {
@@ -588,42 +561,15 @@ public class RoadNetworkAssignment {
 			for (int i=0; i < (flow + remainder); i++) {
 
 				//choose time of day
-				double cumulativeProbability = 0.0;
-				double random = rng.nextDouble();
-				TimeOfDay hour = null;
-				for (Map.Entry<TimeOfDay, Double> entry : timeOfDayDistribution.entrySet()) {
-					TimeOfDay key = entry.getKey();
-					Double value = entry.getValue();	
-					cumulativeProbability += value;
-					if (Double.compare(cumulativeProbability, random) > 0) {
-						hour = key;
-						break;
-					}
-				}
+				TimeOfDay hour = this.chooseTimeOfDay(timeOfDayDistribution);
 				if (hour == null) LOGGER.warn("Time of day not chosen!");
 
 				//choose vehicle
-				random  = rng.nextDouble();
-				VehicleType vht = null;
-				if (Double.compare(1.0 - AVFractions.get(VehicleType.CAR_AV), random) > 0)
-					vht = VehicleType.CAR;
-				else 
-					vht = VehicleType.CAR_AV;
+				VehicleType vht = this.chooseCarVehicleType(AVFractions);
 				if (vht == null) LOGGER.warn("Vehicle type not chosen!");
 
 				//choose engine
-				cumulativeProbability = 0.0;
-				random = rng.nextDouble();
-				EngineType engine = null;
-				for (Map.Entry<EngineType, Double> entry : engineTypeFractions.get(vht).entrySet()) {
-					EngineType key = entry.getKey();
-					Double value = entry.getValue();	
-					cumulativeProbability += value;
-					if (Double.compare(cumulativeProbability, random) > 0) {
-						engine = key;
-						break;
-					}
-				}
+				EngineType engine = this.chooseEngineType(engineTypeFractions.get(vht));
 				if (engine == null) LOGGER.warn("Engine type not chosen!");
 
 				//choose origin/destination nodes based on the gravitating population
@@ -631,9 +577,9 @@ public class RoadNetworkAssignment {
 				//the choice without replacement means that destination node has to be different from origin node
 
 				//choose origin node
-				cumulativeProbability = 0.0;
+				double cumulativeProbability = 0.0;
 				Integer originNode = null;
-				random = rng.nextDouble();
+				double random = rng.nextDouble();
 				for (Integer node: listOfOriginNodes) {
 					cumulativeProbability += startNodeProbabilities.get(node);
 					if (Double.compare(cumulativeProbability, random) > 0) {
@@ -782,42 +728,15 @@ public class RoadNetworkAssignment {
 			for (int i=0; i < (flow + remainder); i++) {
 
 				//choose time of day
-				double cumulativeProbability = 0.0;
-				double random = rng.nextDouble();
-				TimeOfDay hour = null;
-				for (Map.Entry<TimeOfDay, Double> entry : timeOfDayDistribution.entrySet()) {
-					TimeOfDay key = entry.getKey();
-					Double value = entry.getValue();	
-					cumulativeProbability += value;
-					if (Double.compare(cumulativeProbability, random) > 0) {
-						hour = key;
-						break;
-					}
-				}
+				TimeOfDay hour = this.chooseTimeOfDay(timeOfDayDistribution);
 				if (hour == null) LOGGER.warn("Time of day not chosen!");
 
 				//choose vehicle
-				random  = rng.nextDouble();
-				VehicleType vht = null;
-				if (Double.compare(1.0 - AVFractions.get(VehicleType.CAR_AV), random) > 0)
-					vht = VehicleType.CAR;
-				else 
-					vht = VehicleType.CAR_AV;
+				VehicleType vht = this.chooseCarVehicleType(AVFractions);
 				if (vht == null) LOGGER.warn("Vehicle type not chosen!");
 
 				//choose engine
-				cumulativeProbability = 0.0;
-				random = rng.nextDouble();
-				EngineType engine = null;
-				for (Map.Entry<EngineType, Double> entry : engineTypeFractions.get(vht).entrySet()) {
-					EngineType key = entry.getKey();
-					Double value = entry.getValue();	
-					cumulativeProbability += value;
-					if (Double.compare(cumulativeProbability, random) > 0) {
-						engine = key;
-						break;
-					}
-				}
+				EngineType engine = this.chooseEngineType(engineTypeFractions.get(vht));
 				if (engine == null) LOGGER.warn("Engine type not chosen!");
 
 				//choose origin/destination nodes based on the gravitating population
@@ -830,8 +749,8 @@ public class RoadNetworkAssignment {
 				if (originZone.equals(destinationZone)) { //if intra-zonal
 
 					//choose origin node
-					cumulativeProbability = 0.0;
-					random = rng.nextDouble();
+					double cumulativeProbability = 0.0;
+					double random = rng.nextDouble();
 					for (Integer node: listOfOriginNodes) {
 						cumulativeProbability += startNodeProbabilities.get(node);
 						if (Double.compare(cumulativeProbability, random) > 0) {
@@ -889,8 +808,8 @@ public class RoadNetworkAssignment {
 					double sum = 0.0;
 					for (int j=0; j<originNodesToConsider; j++) sum += startNodeProbabilities.get(listOfOriginNodes.get(j)); 
 					//choose origin node
-					cumulativeProbability = 0.0;
-					random = rng.nextDouble();
+					double cumulativeProbability = 0.0;
+					double random = rng.nextDouble();
 					for (Integer node: listOfOriginNodes) {
 						cumulativeProbability += startNodeProbabilities.get(node) / sum; //scale with sum
 						if (Double.compare(cumulativeProbability, random) > 0) {
@@ -1003,7 +922,6 @@ public class RoadNetworkAssignment {
 		LOGGER.debug("Succesfully assigned trips percentage: " + 100.0* counterAssignedTrips / counterTotalFlow);
 	}
 
-
 	/** 
 	 * Assigns passenger origin-destination matrix to the road network using the Tempro zoning system.
 	 * Calculates the fastest path based on the current values in the linkTravelTime instance field.
@@ -1053,7 +971,6 @@ public class RoadNetworkAssignment {
 
 			 */
 
-
 			//calculate number of trip assignments
 			int flow = (int) Math.floor(passengerODM.getIntFlow(originZone, destinationZone) * this.assignmentFraction); //assigned fractionally and later augmented
 			int remainder = passengerODM.getIntFlow(originZone, destinationZone) - (int) Math.round(flow / this.assignmentFraction); //remainder of trips will be assigned individually (each trip)
@@ -1062,45 +979,16 @@ public class RoadNetworkAssignment {
 			//for each trip
 			for (int i=0; i < (flow + remainder); i++) {
 
-				//choose time of day
-				double cumulativeProbability = 0.0;
-				double random = rng.nextDouble();
-				TimeOfDay hour = null;
-				for (Map.Entry<TimeOfDay, Double> entry : timeOfDayDistribution.entrySet()) {
-					TimeOfDay key = entry.getKey();
-					Double value = entry.getValue();	
-					cumulativeProbability += value;
-					if (Double.compare(cumulativeProbability, random) > 0) {
-						hour = key;
-						break;
-					}
-				}
+				TimeOfDay hour = this.chooseTimeOfDay(timeOfDayDistribution);
 				if (hour == null) LOGGER.warn("Time of day not chosen!");
 
 				//choose vehicle
-				random  = rng.nextDouble();
-				VehicleType vht = null;
-				if (Double.compare(1.0 - AVFractions.get(VehicleType.CAR_AV), random) > 0)
-					vht = VehicleType.CAR;
-				else 
-					vht = VehicleType.CAR_AV;
+				VehicleType vht = this.chooseCarVehicleType(AVFractions);
 				if (vht == null) LOGGER.warn("Vehicle type not chosen!");
 
 				//choose engine
-				cumulativeProbability = 0.0;
-				random = rng.nextDouble();
-				EngineType engine = null;
-				for (Map.Entry<EngineType, Double> entry : engineTypeFractions.get(vht).entrySet()) {
-					EngineType key = entry.getKey();
-					Double value = entry.getValue();	
-					cumulativeProbability += value;
-					if (Double.compare(cumulativeProbability, random) > 0) {
-						engine = key;
-						break;
-					}
-				}
+				EngineType engine = this.chooseEngineType(engineTypeFractions.get(vht));
 				if (engine == null) LOGGER.warn("Engine type not chosen!");
-
 
 				//choose origin/destination nodes based on the gravitating population
 				//the choice with replacement means that possibly: destination node = origin node
@@ -1183,9 +1071,9 @@ public class RoadNetworkAssignment {
 
 					double sumOfDistances = 0.0;
 					for (Pair<Integer, Double> pair: listOfTopOriginNodes) sumOfDistances += pair.getValue(); 
-					cumulativeProbability = 0.0;
+					double cumulativeProbability = 0.0;
 					//Integer originNode = null;
-					random = rng.nextDouble();
+					double random = rng.nextDouble();
 					for (Pair<Integer, Double> pair: listOfTopOriginNodes) {
 						cumulativeProbability += pair.getRight() / sumOfDistances;
 						if (Double.compare(cumulativeProbability, random) > 0) {
@@ -1344,42 +1232,15 @@ public class RoadNetworkAssignment {
 			for (int i=0; i < (flow + remainder); i++) {
 
 				//choose time of day
-				double cumulativeProbability = 0.0;
-				double random = rng.nextDouble();
-				TimeOfDay hour = null;
-				for (Map.Entry<TimeOfDay, Double> entry : timeOfDayDistribution.entrySet()) {
-					TimeOfDay key = entry.getKey();
-					Double value = entry.getValue();	
-					cumulativeProbability += value;
-					if (Double.compare(cumulativeProbability, random) > 0) {
-						hour = key;
-						break;
-					}
-				}
+				TimeOfDay hour = this.chooseTimeOfDay(timeOfDayDistribution);
 				if (hour == null) LOGGER.warn("Time of day not chosen!");
 
 				//choose vehicle
-				random  = rng.nextDouble();
-				VehicleType vht = null;
-				if (Double.compare(1.0 - AVFractions.get(VehicleType.CAR_AV), random) > 0)
-					vht = VehicleType.CAR;
-				else 
-					vht = VehicleType.CAR_AV;
+				VehicleType vht = this.chooseCarVehicleType(AVFractions);
 				if (vht == null) LOGGER.warn("Vehicle type not chosen!");
 
 				//choose engine
-				cumulativeProbability = 0.0;
-				random = rng.nextDouble();
-				EngineType engine = null;
-				for (Map.Entry<EngineType, Double> entry : engineTypeFractions.get(vht).entrySet()) {
-					EngineType key = entry.getKey();
-					Double value = entry.getValue();	
-					cumulativeProbability += value;
-					if (Double.compare(cumulativeProbability, random) > 0) {
-						engine = key;
-						break;
-					}
-				}
+				EngineType engine = this.chooseEngineType(engineTypeFractions.get(vht));
 				if (engine == null) LOGGER.warn("Engine type not chosen!");
 
 				//choose origin/destination nodes based on the gravitating population
@@ -1610,42 +1471,15 @@ public class RoadNetworkAssignment {
 			for (int i=0; i < (flow + remainder); i++) {
 
 				//choose time of day
-				double cumulativeProbability = 0.0;
-				double random = rng.nextDouble();
-				TimeOfDay hour = null;
-				for (Map.Entry<TimeOfDay, Double> entry : timeOfDayDistribution.entrySet()) {
-					TimeOfDay key = entry.getKey();
-					Double value = entry.getValue();	
-					cumulativeProbability += value;
-					if (Double.compare(cumulativeProbability, random) > 0) {
-						hour = key;
-						break;
-					}
-				}
+				TimeOfDay hour = this.chooseTimeOfDay(timeOfDayDistribution);
 				if (hour == null) LOGGER.warn("Time of day not chosen!");
 
 				//choose vehicle
-				random  = rng.nextDouble();
-				VehicleType vht = null;
-				if (Double.compare(1.0 - AVFractions.get(VehicleType.CAR_AV), random) > 0)
-					vht = VehicleType.CAR;
-				else 
-					vht = VehicleType.CAR_AV;
+				VehicleType vht = this.chooseCarVehicleType(AVFractions);
 				if (vht == null) LOGGER.warn("Vehicle type not chosen!");
 
 				//choose engine
-				cumulativeProbability = 0.0;
-				random = rng.nextDouble();
-				EngineType engine = null;
-				for (Map.Entry<EngineType, Double> entry : engineTypeFractions.get(vht).entrySet()) {
-					EngineType key = entry.getKey();
-					Double value = entry.getValue();	
-					cumulativeProbability += value;
-					if (Double.compare(cumulativeProbability, random) > 0) {
-						engine = key;
-						break;
-					}
-				}
+				EngineType engine = this.chooseEngineType(engineTypeFractions.get(vht));
 				if (engine == null) LOGGER.warn("Engine type not chosen!");
 
 				//choose origin and destination node
@@ -1811,46 +1645,17 @@ public class RoadNetworkAssignment {
 			for (int i=0; i < (flow + remainder); i++) {
 
 				//choose time of day
-				double cumulativeProbability = 0.0;
-				double random = rng.nextDouble();
-				TimeOfDay hour = null;
-				for (Map.Entry<TimeOfDay, Double> entry : timeOfDayDistributionFreight.entrySet()) {
-					TimeOfDay key = entry.getKey();
-					Double value = entry.getValue();	
-					cumulativeProbability += value;
-					if (Double.compare(cumulativeProbability, random) > 0) {
-						hour = key;
-						break;
-					}
-				}
+				TimeOfDay hour = this.chooseTimeOfDay(timeOfDayDistributionFreight);
 				if (hour == null) LOGGER.warn("Time of day not chosen!");
 
 				//get freight vehicle type from the freight matrix value
-				VehicleType vht = VehicleType.values()[vehicleType];
-				//find autonomous counterpart
-				VehicleType avht = null;
-				if (vht == VehicleType.VAN) 		avht = VehicleType.VAN_AV;
-				else if (vht == VehicleType.RIGID) 	avht = VehicleType.RIGID_AV;
-				else if (vht == VehicleType.ARTIC) 	avht = VehicleType.ARTIC_AV;
-
-				//choose vehicle
-				random  = rng.nextDouble();
-				if (Double.compare(AVFractions.get(avht), random) > 0) vht = avht;
+				VehicleType fvht = VehicleType.values()[vehicleType];
+				//choose actual vehicle type (autonomous or non-autonomous)
+				VehicleType vht = this.chooseFreightVehicleType(fvht, this.AVFractions);
 				if (vht == null) LOGGER.warn("Vehicle type not chosen!");
 
 				//choose engine
-				cumulativeProbability = 0.0;
-				random = rng.nextDouble();
-				EngineType engine = null;
-				for (Map.Entry<EngineType, Double> entry : engineTypeFractions.get(vht).entrySet()) {
-					EngineType key = entry.getKey();
-					Double value = entry.getValue();	
-					cumulativeProbability += value;
-					if (Double.compare(cumulativeProbability, random) > 0) {
-						engine = key;
-						break;
-					}
-				}
+				EngineType engine = this.chooseEngineType(engineTypeFractions.get(vht));
 				if (engine == null) LOGGER.warn("Engine type not chosen!");
 
 				Integer originNode = null, destinationNode = null;
@@ -1874,8 +1679,8 @@ public class RoadNetworkAssignment {
 							listOfOriginNodes.remove(node);
 
 					//choose origin node
-					cumulativeProbability = 0.0;
-					random = rng.nextDouble();
+					double cumulativeProbability = 0.0;
+					double random = rng.nextDouble();
 					for (int node: listOfOriginNodes) {
 						cumulativeProbability += startNodeProbabilitiesFreight.get(node);
 						if (Double.compare(cumulativeProbability, random) > 0) {
@@ -1907,8 +1712,8 @@ public class RoadNetworkAssignment {
 							listOfDestinationNodes.remove(node);
 
 					//choose origin node
-					cumulativeProbability = 0.0;
-					random = rng.nextDouble();
+					double cumulativeProbability = 0.0;
+					double random = rng.nextDouble();
 					//if intrazonal trip and replacement is not allowed, the probability of the originNode should be 0 so it cannot be chosen again
 					//also, in that case it is important to rescale other node probabilities (now that the originNode is removed) by dividing with (1.0 - p(originNode))!
 					if (!flagIntrazonalAssignmentReplacement && origin == destination && listOfDestinationNodes.contains(originNode)) { //no replacement and intra-zonal trip
@@ -2058,46 +1863,17 @@ public class RoadNetworkAssignment {
 			for (int i=0; i < (flow + remainder); i++) {
 
 				//choose time of day
-				double cumulativeProbability = 0.0;
-				double random = rng.nextDouble();
-				TimeOfDay hour = null;
-				for (Map.Entry<TimeOfDay, Double> entry : timeOfDayDistributionFreight.entrySet()) {
-					TimeOfDay key = entry.getKey();
-					Double value = entry.getValue();	
-					cumulativeProbability += value;
-					if (Double.compare(cumulativeProbability, random) > 0) {
-						hour = key;
-						break;
-					}
-				}
+				TimeOfDay hour = this.chooseTimeOfDay(timeOfDayDistributionFreight);
 				if (hour == null) LOGGER.warn("Time of day not chosen!");
 
 				//get freight vehicle type from the freight matrix value
-				VehicleType vht = VehicleType.values()[vehicleType];
-				//find autonomous counterpart
-				VehicleType avht = null;
-				if (vht == VehicleType.VAN) 		avht = VehicleType.VAN_AV;
-				else if (vht == VehicleType.RIGID) 	avht = VehicleType.RIGID_AV;
-				else if (vht == VehicleType.ARTIC) 	avht = VehicleType.ARTIC_AV;
-
-				//choose vehicle
-				random  = rng.nextDouble();
-				if (Double.compare(AVFractions.get(avht), random) > 0) vht = avht;
+				VehicleType fvht = VehicleType.values()[vehicleType];
+				//choose actual vehicle type (autonomous or non-autonomous)
+				VehicleType vht = this.chooseFreightVehicleType(fvht, this.AVFractions);
 				if (vht == null) LOGGER.warn("Vehicle type not chosen!");
 
 				//choose engine
-				cumulativeProbability = 0.0;
-				random = rng.nextDouble();
-				EngineType engine = null;
-				for (Map.Entry<EngineType, Double> entry : engineTypeFractions.get(vht).entrySet()) {
-					EngineType key = entry.getKey();
-					Double value = entry.getValue();	
-					cumulativeProbability += value;
-					if (Double.compare(cumulativeProbability, random) > 0) {
-						engine = key;
-						break;
-					}
-				}
+				EngineType engine = this.chooseEngineType(engineTypeFractions.get(vht));
 				if (engine == null) LOGGER.warn("Engine type not chosen!");
 
 				Integer originNode = null, destinationNode = null;
@@ -2121,8 +1897,8 @@ public class RoadNetworkAssignment {
 							listOfOriginNodes.remove(node);
 
 					//choose origin node
-					cumulativeProbability = 0.0;
-					random = rng.nextDouble();
+					double cumulativeProbability = 0.0;
+					double random = rng.nextDouble();
 					for (int node: listOfOriginNodes) {
 						cumulativeProbability += startNodeProbabilitiesFreight.get(node);
 						if (Double.compare(cumulativeProbability, random) > 0) {
@@ -2154,8 +1930,8 @@ public class RoadNetworkAssignment {
 							listOfDestinationNodes.remove(node);
 
 					//choose origin node
-					cumulativeProbability = 0.0;
-					random = rng.nextDouble();
+					double cumulativeProbability = 0.0;
+					double random = rng.nextDouble();
 					//if intrazonal trip and replacement is not allowed, the probability of the originNode should be 0 so it cannot be chosen again
 					//also, in that case it is important to rescale other node probabilities (now that the originNode is removed) by dividing with (1.0 - p(originNode))!
 					if (!flagIntrazonalAssignmentReplacement && origin == destination && listOfDestinationNodes.contains(originNode)) { //no replacement and intra-zonal trip
@@ -2294,46 +2070,17 @@ public class RoadNetworkAssignment {
 			for (int i=0; i < (flow + remainder); i++) {
 
 				//choose time of day
-				double cumulativeProbability = 0.0;
-				double random = rng.nextDouble();
-				TimeOfDay hour = null;
-				for (Map.Entry<TimeOfDay, Double> entry : timeOfDayDistributionFreight.entrySet()) {
-					TimeOfDay key = entry.getKey();
-					Double value = entry.getValue();	
-					cumulativeProbability += value;
-					if (Double.compare(cumulativeProbability, random) > 0) {
-						hour = key;
-						break;
-					}
-				}
+				TimeOfDay hour = this.chooseTimeOfDay(timeOfDayDistributionFreight);
 				if (hour == null) LOGGER.warn("Time of day not chosen!");
 
 				//get freight vehicle type from the freight matrix value
-				VehicleType vht = VehicleType.values()[vehicleType];
-				//find autonomous counterpart
-				VehicleType avht = null;
-				if (vht == VehicleType.VAN) 		avht = VehicleType.VAN_AV;
-				else if (vht == VehicleType.RIGID) 	avht = VehicleType.RIGID_AV;
-				else if (vht == VehicleType.ARTIC) 	avht = VehicleType.ARTIC_AV;
-
-				//choose vehicle
-				random  = rng.nextDouble();
-				if (Double.compare(AVFractions.get(avht), random) > 0) vht = avht;
+				VehicleType fvht = VehicleType.values()[vehicleType];
+				//choose actual vehicle type (autonomous or non-autonomous)
+				VehicleType vht = this.chooseFreightVehicleType(fvht, this.AVFractions);
 				if (vht == null) LOGGER.warn("Vehicle type not chosen!");
 
 				//choose engine
-				cumulativeProbability = 0.0;
-				random = rng.nextDouble();
-				EngineType engine = null;
-				for (Map.Entry<EngineType, Double> entry : engineTypeFractions.get(vht).entrySet()) {
-					EngineType key = entry.getKey();
-					Double value = entry.getValue();	
-					cumulativeProbability += value;
-					if (Double.compare(cumulativeProbability, random) > 0) {
-						engine = key;
-						break;
-					}
-				}
+				EngineType engine = this.chooseEngineType(engineTypeFractions.get(vht));
 				if (engine == null) LOGGER.warn("Engine type not chosen!");
 
 				Integer originNode = null, destinationNode = null;
@@ -2377,8 +2124,8 @@ public class RoadNetworkAssignment {
 					if (originLAD == destinationLAD) { //intra-zonal trip!
 
 						//choose any origin node
-						cumulativeProbability = 0.0;
-						random = rng.nextDouble();
+						double cumulativeProbability = 0.0;
+						double random = rng.nextDouble();
 						for (int node: listOfOriginNodes) {
 							cumulativeProbability += startNodeProbabilitiesFreight.get(node);
 							if (Double.compare(cumulativeProbability, random) > 0) {
@@ -2421,8 +2168,8 @@ public class RoadNetworkAssignment {
 						double sum = 0.0;
 						for (int j=0; j<originNodesToConsider; j++) sum += startNodeProbabilitiesFreight.get(listOfOriginNodes.get(j)); 
 						//choose origin node
-						cumulativeProbability = 0.0;
-						random = rng.nextDouble();
+						double cumulativeProbability = 0.0;
+						double random = rng.nextDouble();
 						for (Integer node: listOfOriginNodes) {
 							cumulativeProbability += startNodeProbabilitiesFreight.get(node) / sum; //scale with sum
 							if (Double.compare(cumulativeProbability, random) > 0) {
@@ -2463,8 +2210,8 @@ public class RoadNetworkAssignment {
 					if (roadNetwork.getZoneToNodes().get(destinationLAD).contains(originNode)) { 
 
 						//choose destination node
-						cumulativeProbability = 0.0;
-						random = rng.nextDouble();
+						double cumulativeProbability = 0.0;
+						double random = rng.nextDouble();
 						if (!flagIntrazonalAssignmentReplacement && listOfDestinationNodes.contains(originNode)) { //no replacement and intra-zonal trip
 							for (int node: listOfDestinationNodes) {
 								if (node == originNode.intValue()) continue; //skip if the node is the same as origin
@@ -2504,8 +2251,8 @@ public class RoadNetworkAssignment {
 					if (roadNetwork.getZoneToNodes().get(originLAD).contains(destinationNode)) { 
 
 						//choose destination node
-						cumulativeProbability = 0.0;
-						random = rng.nextDouble();
+						double cumulativeProbability = 0.0;
+						double random = rng.nextDouble();
 						if (!flagIntrazonalAssignmentReplacement && listOfOriginNodes.contains(destinationNode)) { //no replacement and intra-zonal trip
 							for (int node: listOfOriginNodes) {
 								if (node == destinationNode.intValue()) continue; //skip if the node is the same as destination
@@ -6203,5 +5950,95 @@ public class RoadNetworkAssignment {
 
 
 		return MAD;
+	}
+	
+	/**
+	 * Choose time of day.
+	 * @param timOfDayDistribution Time of day distribution.
+	 * @return Chosen time of day (hour).
+	 */
+	private TimeOfDay chooseTimeOfDay(Map<TimeOfDay, Double> timOfDayDistribution) {
+		
+		//choose time of day
+		double cumulativeProbability = 0.0;
+		double random = rng.nextDouble();
+		TimeOfDay hour = null;
+		for (Map.Entry<TimeOfDay, Double> entry : timOfDayDistribution.entrySet()) {
+			TimeOfDay key = entry.getKey();
+			Double value = entry.getValue();	
+			cumulativeProbability += value;
+			if (Double.compare(cumulativeProbability, random) > 0) {
+				hour = key;
+				break;
+			}
+		}
+		
+		return hour;
+	}
+	
+	/**
+	 * Choose car vehicle type (autonomous or non-autonomous).
+	 * @param AVFractions Fraction of autonomous cars.
+	 * @return Chosen car vehicle type.
+	 */
+	private VehicleType chooseCarVehicleType(Map<VehicleType, Double> AVFractions) {
+		
+		//choose vehicle type (autonomous or non-autonomous)
+		double random  = rng.nextDouble();
+		VehicleType vht = null;
+		if (Double.compare(1.0 - AVFractions.get(VehicleType.CAR_AV), random) > 0)
+			vht = VehicleType.CAR;
+		else 
+			vht = VehicleType.CAR_AV;
+		
+		return vht;
+	}
+	
+	/**
+	 * Choose freight vehicle type (autonomous or non-autonomous).
+	 * @param fvht Freight vehicle type (non-autonomous).
+	 * @param AVFractions Fraction of autonomous freight vehicle types.
+	 * @return Chosen freight vehicle type (autonomous or non-autonomous).
+	 */
+	private VehicleType chooseFreightVehicleType(VehicleType fvht, Map<VehicleType, Double> AVFractions) {
+		
+		//find autonomous counterpart
+		VehicleType avht = null;
+		if (fvht == VehicleType.VAN) 			avht = VehicleType.VAN_AV;
+		else if (fvht == VehicleType.RIGID) 	avht = VehicleType.RIGID_AV;
+		else if (fvht == VehicleType.ARTIC) 	avht = VehicleType.ARTIC_AV;
+
+		//choose vehicle type (autonomous or non-autonomous)
+		double random  = rng.nextDouble();
+		VehicleType vht = null;
+		if (Double.compare(AVFractions.get(avht), random) > 0) 
+			vht = avht; //autonomous version
+		else
+			vht = fvht; //non-autonomous version
+		
+		return vht;
+	}
+		
+	/**
+	 * Choose engine type.
+	 * @param engineTypeDistribution Engine type distribution (for a given vehicle type).
+	 * @return Chosen engine type.
+	 */
+	private EngineType chooseEngineType(Map<EngineType, Double> engineTypeDistribution) {
+
+		//choose engine type
+		double cumulativeProbability = 0.0;
+		double random = rng.nextDouble();
+		EngineType engine = null;
+		for (Map.Entry<EngineType, Double> entry : engineTypeDistribution.entrySet()) {
+			EngineType key = entry.getKey();
+			Double value = entry.getValue();	
+			cumulativeProbability += value;
+			if (Double.compare(cumulativeProbability, random) > 0) {
+				engine = key;
+				break;
+			}
+		}
+		return engine;
 	}
 }
