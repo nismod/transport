@@ -147,7 +147,6 @@ public class App {
 			//interrogate options
 			if (line.hasOption("h")) {
 				printHelp(options);
-				System.exit(0);
 			}
 
 			RoadNetwork roadNetwork = null;
@@ -216,7 +215,6 @@ public class App {
 					routes.generateRouteSetForODMatrix(passengerODM, Integer.parseInt(sliceIndex), Integer.parseInt(sliceNumber));
 					routes.saveRoutesBinary(file.getPath() + "routes" + sliceIndex + "of" + sliceNumber + ".dat", false);
 				}
-				System.exit(0);
 			}
 			
 			else if (line.hasOption("t")) {
@@ -246,7 +244,6 @@ public class App {
 				routes.generateRouteSetForODMatrixTemproDistanceBased(temproODM, zoning, Integer.parseInt(sliceIndex), Integer.parseInt(sliceNumber));
 				LOGGER.debug(routes.getStatistics());
 				routes.saveRoutesBinary(file.getPath() + "TemproRoutes" + sliceIndex + "of" + sliceNumber + ".dat", false);
-				System.exit(0);
 			}
 
 			else if (line.hasOption("f")) {
@@ -273,7 +270,6 @@ public class App {
 					routes.generateRouteSetForFreightMatrix(freightMatrix, Integer.parseInt(sliceIndex), Integer.parseInt(sliceNumber));
 					routes.saveRoutesBinary(file.getPath() + "freightRoutes" + sliceIndex + "of" + sliceNumber + ".dat", false);
 				}
-				System.exit(0);
 			}
 			
 			if (line.hasOption("m")) {
@@ -292,8 +288,6 @@ public class App {
 				routes.readRoutesBinary(routesInputFile2);
 				routes.saveRoutesBinary(routeOutputFile, false);
 				//routes.saveRoutesBinary(file.getPath() + "mergedRoutes.dat", false);
-	
-				System.exit(0);
 			}
 
 			else if (line.hasOption("d")) LandingGUI.main(null);
@@ -366,8 +360,6 @@ public class App {
 				graph.setSize(600, 400);
 				graph.setVisible(true);
 				graph.saveToPNG("temproRebalancing.png");
-				
-				System.exit(0);
 			}
 			
 			else if (line.hasOption("o")) {
@@ -450,8 +442,6 @@ public class App {
 				graph.setSize(600, 400);
 				graph.setVisible(true);
 				graph.saveToPNG("temproOptimising.png");
-				
-				System.exit(0);
 			}
 
 			else if (line.hasOption("b") || line.hasOption("r")) { //run the main demand model
@@ -564,13 +554,14 @@ public class App {
 					dm.predictHighwayDemandUsingResultsOfFromYear(Integer.parseInt(predictedYear), Integer.parseInt(fromYear));
 					dm.saveAllResults(Integer.parseInt(predictedYear));
 				}
-				
-				System.exit(0);
 			}
+			
+			LOGGER.info("Program ended successfully.");
+			System.exit(0);
 
 		} catch (ParseException e) {
 			LOGGER.error(e);
-			printHelp(options); 
+			printHelp(options);
 		} catch (MalformedURLException e) {
 			LOGGER.error(e);
 		} catch (IOException e) {
@@ -578,7 +569,8 @@ public class App {
 		} catch (Exception e) {
 			LOGGER.error(ExceptionUtils.getStackTrace(e));
 		} finally {
-			LOGGER.info("Done.");
+			LOGGER.info("Program ended unsuccessfully.");
+			System.exit(1);
 		}
 	}
 
