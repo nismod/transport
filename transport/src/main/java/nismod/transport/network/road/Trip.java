@@ -257,7 +257,7 @@ public class Trip {
 	 * @param boolean flagIncludeAccessEgress Whether to include access/egress.
 	 * @return Total trip cost.
 	 */
-	public double getCost(Map<Integer, Double> linkTravelTime, HashMap<Integer, Double> averageAccessEgressMap, double averageAccessEgressSpeed, Map<EnergyType, Double> energyUnitCosts, HashMap<Pair<VehicleType, EngineType>, Map<WebTAG, Double>> energyConsumptionParameters, HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency, HashMap<String, MultiKeyMap> congestionCharges, boolean flagIncludeAccessEgress) {
+	public double getCost(Map<Integer, Double> linkTravelTime, HashMap<Integer, Double> averageAccessEgressMap, double averageAccessEgressSpeed, Map<EnergyType, Double> energyUnitCosts, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency, HashMap<String, MultiKeyMap> congestionCharges, boolean flagIncludeAccessEgress) {
 		
 		//double distance = this.getLength(averageAccessEgressMap);
 		//double cost = distance / 100 * energyConsumptionsPer100km.get(this.engine) * energyUnitCosts.get(this.engine);
@@ -294,7 +294,7 @@ public class Trip {
 	 * @param boolean flagIncludeAccessEgress Whether to include access/egress.
 	 * @return Trip consumptions.
 	 */
-	public Map<EnergyType, Double> getConsumption(Map<Integer, Double> linkTravelTime, HashMap<Integer, Double> averageAccessEgressMap, double averageAccessEgressSpeed, HashMap<Pair<VehicleType, EngineType>, Map<WebTAG, Double>> energyConsumptionParameters, HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency, boolean flagIncludeAccessEgress) {
+	public Map<EnergyType, Double> getConsumption(Map<Integer, Double> linkTravelTime, HashMap<Integer, Double> averageAccessEgressMap, double averageAccessEgressSpeed, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency, boolean flagIncludeAccessEgress) {
 		
 		//double distance = this.getLength(averageAccessEgressMap);
 		//double consumption = distance / 100 * energyConsumptionsPer100km.get(this.engine);
@@ -326,7 +326,7 @@ public class Trip {
 	 * @param relativeFuelEfficiency
 	 * @return Trip consumptions.
 	 */
-	protected Map<EnergyType, Double> getAccessEgressConsumption(Map<Integer, Double> linkTravelTime, HashMap<Integer, Double> averageAccessEgressMap, double averageAccessEgressSpeed, HashMap<Pair<VehicleType, EngineType>, Map<WebTAG, Double>> energyConsumptionParameters, HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency) {
+	protected Map<EnergyType, Double> getAccessEgressConsumption(Map<Integer, Double> linkTravelTime, HashMap<Integer, Double> averageAccessEgressMap, double averageAccessEgressSpeed, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency) {
 		
 		//double distance = this.getLength(averageAccessEgressMap);
 		//double consumption = distance / 100 * energyConsumptionsPer100km.get(this.engine);
@@ -343,20 +343,20 @@ public class Trip {
 		//fetch the right parameters and existing consumptions
 		//PHEVs are more complicated as they have a combination of fuel and electricity consumption
 		if (this.engine == EngineType.PHEV_PETROL) {
-			parametersFuel = energyConsumptionParameters.get(Pair.of(this.vehicle, EngineType.ICE_PETROL));
-			parametersElectricity = energyConsumptionParameters.get(Pair.of(this.vehicle, EngineType.BEV));
-			relativeEfficiencyFuel = relativeFuelEfficiency.get(Pair.of(this.vehicle, EngineType.ICE_PETROL));
-			relativeEfficiencyElectricity = relativeFuelEfficiency.get(Pair.of(this.vehicle, EngineType.BEV));
+			parametersFuel = energyConsumptionParameters.get(this.vehicle).get(EngineType.ICE_PETROL);
+			parametersElectricity = energyConsumptionParameters.get(this.vehicle).get(EngineType.BEV);
+			relativeEfficiencyFuel = relativeFuelEfficiency.get(this.vehicle).get(EngineType.ICE_PETROL);
+			relativeEfficiencyElectricity = relativeFuelEfficiency.get(this.vehicle).get(EngineType.BEV);
 
 		} else if (this.engine == EngineType.PHEV_DIESEL) {
-			parametersFuel = energyConsumptionParameters.get(Pair.of(this.vehicle, EngineType.ICE_DIESEL));
-			parametersElectricity = energyConsumptionParameters.get(Pair.of(this.vehicle, EngineType.BEV));
-			relativeEfficiencyFuel = relativeFuelEfficiency.get(Pair.of(this.vehicle, EngineType.ICE_DIESEL));
-			relativeEfficiencyElectricity = relativeFuelEfficiency.get(Pair.of(this.vehicle, EngineType.BEV));
+			parametersFuel = energyConsumptionParameters.get(this.vehicle).get(EngineType.ICE_DIESEL);
+			parametersElectricity = energyConsumptionParameters.get(this.vehicle).get(EngineType.BEV);
+			relativeEfficiencyFuel = relativeFuelEfficiency.get(this.vehicle).get(EngineType.ICE_DIESEL);
+			relativeEfficiencyElectricity = relativeFuelEfficiency.get(this.vehicle).get(EngineType.BEV);
 
 		} else { //all other engine types have only one type of energy consumption (either fuel or electricity)
-			parameters = energyConsumptionParameters.get(Pair.of(this.vehicle, this.engine));
-			relativeEfficiency = relativeFuelEfficiency.get(Pair.of(this.vehicle, this.engine));
+			parameters = energyConsumptionParameters.get(this.vehicle).get(this.engine);
+			relativeEfficiency = relativeFuelEfficiency.get(this.vehicle).get(this.engine);
 		}
 
 		//get access and egress
@@ -485,7 +485,7 @@ public class Trip {
 	 * @param boolean flagIncludeAccessEgress Whether to include access/egress.
 	 * @return CO2 emissions per energy type.
 	 */
-	public Double getCO2emission(Map<Integer, Double> linkTravelTime, HashMap<Integer, Double> averageAccessEgressMap, double averageAccessEgressSpeed, HashMap<Pair<VehicleType, EngineType>, Map<WebTAG, Double>> energyConsumptionParameters, HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency, Map<EnergyType, Double> unitCO2Emissions, boolean flagIncludeAccessEgress) {
+	public Double getCO2emission(Map<Integer, Double> linkTravelTime, HashMap<Integer, Double> averageAccessEgressMap, double averageAccessEgressSpeed, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency, Map<EnergyType, Double> unitCO2Emissions, boolean flagIncludeAccessEgress) {
 		
 		//Map<EnergyType, Double> consumption = this.route.calculateConsumption(this.vehicle, this.engine, linkTravelTime, energyConsumptionParameters, relativeFuelEfficiency);
 		Map<EnergyType, Double> consumption = this.getConsumption(linkTravelTime, averageAccessEgressMap, averageAccessEgressSpeed, energyConsumptionParameters, relativeFuelEfficiency, flagIncludeAccessEgress);

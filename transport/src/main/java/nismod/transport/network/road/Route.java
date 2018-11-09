@@ -208,7 +208,7 @@ public class Route {
 	 * @param energyUnitCosts Energy unit costs.
 	 * @param linkCharges Congestion charges.
 	 */
-	public void calculateCost(VehicleType vht, EngineType et, Map<Integer, Double> linkTravelTime, HashMap<Pair<VehicleType, EngineType>, Map<WebTAG, Double>> energyConsumptionParameters, HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency, Map<EnergyType, Double> energyUnitCosts, HashMap<String, HashMap<Integer, Double>> linkCharges) {
+	public void calculateCost(VehicleType vht, EngineType et, Map<Integer, Double> linkTravelTime, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency, Map<EnergyType, Double> energyUnitCosts, HashMap<String, HashMap<Integer, Double>> linkCharges) {
 
 		//temporary map to check if a charging policy has already been applied
 		HashMap<String, Boolean> flags = new HashMap<String, Boolean>();
@@ -251,7 +251,7 @@ public class Route {
 	 * @param relativeFuelEfficiency Relative fuel efficiency compared to base year.
 	 * @return Consumption for each type.
 	 */
-	public Map<EnergyType, Double> calculateConsumption(VehicleType vht, EngineType et, Map<Integer, Double> linkTravelTime, HashMap<Pair<VehicleType, EngineType>, Map<WebTAG, Double>> energyConsumptionParameters, HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency) {
+	public Map<EnergyType, Double> calculateConsumption(VehicleType vht, EngineType et, Map<Integer, Double> linkTravelTime, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency) {
 
 		Map<EnergyType, Double> routeConsumptions = new EnumMap<>(EnergyType.class);
 		Map<WebTAG, Double> parameters, parametersFuel, parametersElectricity;
@@ -260,10 +260,10 @@ public class Route {
 
 		if (et == EngineType.PHEV_PETROL) {
 
-			parametersFuel = energyConsumptionParameters.get(Pair.of(vht, EngineType.ICE_PETROL));
-			parametersElectricity = energyConsumptionParameters.get(Pair.of(vht, EngineType.BEV));
-			double relativeEfficiencyFuel = relativeFuelEfficiency.get(Pair.of(vht, EngineType.ICE_PETROL));
-			double relativeEfficiencyElectricity = relativeFuelEfficiency.get(Pair.of(vht, EngineType.BEV));
+			parametersFuel = energyConsumptionParameters.get(vht).get(EngineType.ICE_PETROL);
+			parametersElectricity = energyConsumptionParameters.get(vht).get(EngineType.BEV);
+			double relativeEfficiencyFuel = relativeFuelEfficiency.get(vht).get(EngineType.ICE_PETROL);
+			double relativeEfficiencyElectricity = relativeFuelEfficiency.get(vht).get(EngineType.BEV);
 
 			double fuelConsumption = 0.0;
 			double electricityConsumption = 0.0;
@@ -271,7 +271,7 @@ public class Route {
 				double len = roadNetwork.getEdgeLength(edgeID); //in [km]
 				double time = linkTravelTime.get(edgeID); //in [min]
 				//String cat = (String) sf.getAttribute("RCat"); //road category (PM, PR, Pu, PU, TM, TR, Tu, TU), use Pu, PU, Tu, TU as urban, otherwise rural
-				Boolean isUrban = this.roadNetwork.getIsEdgeUrban().get(edgeID);
+				Boolean isUrban = roadNetwork.getIsEdgeUrban().get(edgeID);
 				double speed = len / (time / 60);
 
 				//if no roadCategory information, assume it is ferry and skip
@@ -294,17 +294,17 @@ public class Route {
 			routeConsumptions.put(EnergyType.PETROL, fuelConsumption);
 
 		} else if (et == EngineType.PHEV_DIESEL) {
-			parametersFuel = energyConsumptionParameters.get(Pair.of(vht, EngineType.ICE_DIESEL));
-			parametersElectricity = energyConsumptionParameters.get(Pair.of(vht, EngineType.BEV));
-			double relativeEfficiencyFuel = relativeFuelEfficiency.get(Pair.of(vht, EngineType.ICE_DIESEL));
-			double relativeEfficiencyElectricity = relativeFuelEfficiency.get(Pair.of(vht, EngineType.BEV));
+			parametersFuel = energyConsumptionParameters.get(vht).get(EngineType.ICE_DIESEL);
+			parametersElectricity = energyConsumptionParameters.get(vht).get(EngineType.BEV);
+			double relativeEfficiencyFuel = relativeFuelEfficiency.get(vht).get(EngineType.ICE_DIESEL);
+			double relativeEfficiencyElectricity = relativeFuelEfficiency.get(vht).get(EngineType.BEV);
 
 			double fuelConsumption = 0.0;
 			double electricityConsumption = 0.0;
 			for (int edgeID: edges.toArray()) {
 				double len = roadNetwork.getEdgeLength(edgeID); //in [km]
 				double time = linkTravelTime.get(edgeID); //in [min]
-				Boolean isUrban = this.roadNetwork.getIsEdgeUrban().get(edgeID);
+				Boolean isUrban = roadNetwork.getIsEdgeUrban().get(edgeID);
 				double speed = len / (time / 60);
 
 				//if no roadCategory information, assume it is ferry and skip
@@ -328,8 +328,8 @@ public class Route {
 
 		} else {
 
-			parameters = energyConsumptionParameters.get(Pair.of(vht, et));
-			double relativeEfficiency = relativeFuelEfficiency.get(Pair.of(vht, et));
+			parameters = energyConsumptionParameters.get(vht).get(et);
+			double relativeEfficiency = relativeFuelEfficiency.get(vht).get(et);
 
 			double consumption = 0.0;
 			for (int edgeID: edges.toArray()) {
@@ -375,7 +375,7 @@ public class Route {
 	 * @param linkCharges Congestion charges.
 	 * @param params Route choice parameters.
 	 */
-	public void calculateUtility(VehicleType vht, EngineType et, Map<Integer, Double> linkTravelTime, HashMap<Pair<VehicleType, EngineType>, Map<WebTAG, Double>> energyConsumptionParameters, HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency, Map<EnergyType, Double> energyUnitCosts, HashMap<String, HashMap<Integer, Double>> linkCharges, Properties params) {		
+	public void calculateUtility(VehicleType vht, EngineType et, Map<Integer, Double> linkTravelTime, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency, Map<EnergyType, Double> energyUnitCosts, HashMap<String, HashMap<Integer, Double>> linkCharges, Properties params) {		
 		
 		//if a single node route, utility is zero
 		if (this.edges.isEmpty() && this.singleNode != null) {

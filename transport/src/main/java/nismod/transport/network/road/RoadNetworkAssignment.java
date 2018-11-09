@@ -36,6 +36,8 @@ import nismod.transport.demand.AssignableODMatrix;
 import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.SkimMatrix;
 import nismod.transport.demand.SkimMatrixFreight;
+import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
+import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.network.road.Route.WebTAG;
 import nismod.transport.utility.InputFileReader;
 import nismod.transport.utility.RandomSingleton;
@@ -109,8 +111,10 @@ public class RoadNetworkAssignment {
 
 	private Map<VehicleType, Double> vehicleTypeToPCU;
 	private Map<EnergyType, Double> energyUnitCosts;
-	private HashMap<Pair<VehicleType, EngineType>, Map<WebTAG, Double>> energyConsumptions;
-	private HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiencies;
+
+	private Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptions;
+	private Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiencies;
+	
 	private Map<VehicleType, Map<EngineType, Double>> engineTypeFractions;
 	private Map<VehicleType, Double> AVFractions;
 
@@ -170,8 +174,8 @@ public class RoadNetworkAssignment {
 			Map<VehicleType, Map<EngineType, Double>> engineTypeFractions,
 			Map<VehicleType, Double> fractionsAV,
 			Map<VehicleType, Double> vehicleTypeToPCU,
-			HashMap<Pair<VehicleType, EngineType>, Map<WebTAG, Double>> energyConsumptionParams,
-			HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiencies,
+			Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParams,
+			Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiencies,
 			Map<TimeOfDay, Double> timeOfDayDistribution,
 			Map<TimeOfDay, Double> timeOfDayDistributionFreight, 
 			Map<TimeOfDay, Map<Integer, Double>> defaultLinkTravelTime, 
@@ -4218,10 +4222,10 @@ public class RoadNetworkAssignment {
 	}
 
 	/**
-	 * Getter method for energy consumptions.
-	 * @return Energy consumptions.
+	 * Getter method for energy consumption WebTAG parameters.
+	 * @return Energy consumption parameters.
 	 */   
-	public HashMap<Pair<VehicleType, EngineType>, Map<WebTAG, Double>> getEnergyConsumptions() {
+	public Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> getEnergyConsumptions() {
 
 		return this.energyConsumptions;
 	}
@@ -4846,7 +4850,7 @@ public class RoadNetworkAssignment {
 	 */
 	public void setEnergyConsumptionParameters (VehicleType vehicleType, EngineType engineType, Map<WebTAG, Double> parameters) {
 
-		this.energyConsumptions.put(Pair.of(vehicleType, engineType), parameters);
+		this.energyConsumptions.get(vehicleType).put(engineType, parameters);
 	}
 
 	/**

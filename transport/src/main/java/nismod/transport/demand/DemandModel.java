@@ -54,8 +54,8 @@ public class DemandModel {
 	private Map<ElasticityTypes, Double> elasticities;
 	private Map<ElasticityTypes, Double> elasticitiesFreight;
 	private Map<VehicleType, Double> vehicleTypeToPCU;
-	private HashMap<Pair<VehicleType, EngineType>, Map<WebTAG, Double>> baseFuelConsumptionRates;
-	private HashMap<Integer, HashMap<Pair<VehicleType, EngineType>, Double>> yearToRelativeFuelEfficiencies;
+	private Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> baseFuelConsumptionRates;
+	private HashMap<Integer, Map<VehicleType, Map<EngineType, Double>>> yearToRelativeFuelEfficiencies;
 	private Map<Integer, Map<TimeOfDay, Double>> yearToTimeOfDayDistribution;
 	private Map<Integer, Map<TimeOfDay, Double>> yearToTimeOfDayDistributionFreight;
 	private HashMap<Integer, ODMatrix> yearToPassengerODMatrix; //passenger demand

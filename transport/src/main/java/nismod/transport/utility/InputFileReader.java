@@ -344,9 +344,9 @@ public class InputFileReader {
 	 * @param fileName File name.
 	 * @return Map with engine type fractions.
 	 */
-	public static HashMap<Pair<VehicleType, EngineType>, Map<WebTAG, Double>> readEnergyConsumptionParamsFile (String fileName){
+	public static Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> readEnergyConsumptionParamsFile (String fileName){
 		
-		HashMap<Pair<VehicleType, EngineType>, Map<WebTAG, Double>> map = new HashMap<Pair<VehicleType, EngineType>, Map<WebTAG, Double>>();
+		Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> map = new EnumMap<VehicleType, Map<EngineType, Map<WebTAG, Double>>>(VehicleType.class);
 
 		CSVParser parser = null;
 		try {
@@ -367,7 +367,13 @@ public class InputFileReader {
 					WebTAG pt = WebTAG.valueOf(key);
 					parameters.put(pt, Double.valueOf(record.get(key)));
 				}
-				map.put(Pair.of(vt, et), parameters);
+				
+				Map<EngineType, Map<WebTAG, Double>> innerMap = map.get(vt);
+				if (innerMap == null) {
+					innerMap = new EnumMap<EngineType, Map<WebTAG, Double>>(EngineType.class);
+					map.put(vt, innerMap);
+				}
+				map.get(vt).put(et, parameters);
 			}
  
 		} catch (FileNotFoundException e) {
@@ -495,9 +501,9 @@ public class InputFileReader {
 	 * @param fileName File name.
 	 * @return Map with relative fuel efficiency.
 	 */
-	public static HashMap<Integer, HashMap<Pair<VehicleType, EngineType>, Double>> readRelativeFuelEfficiencyFile (String fileName){
+	public static HashMap<Integer, Map<VehicleType, Map<EngineType, Double>>> readRelativeFuelEfficiencyFile (String fileName){
 		
-		HashMap<Integer, HashMap<Pair<VehicleType, EngineType>, Double>> yearToRelativeFuelEfficiency = new HashMap<Integer, HashMap<Pair<VehicleType, EngineType>, Double>>();
+		HashMap<Integer, Map<VehicleType, Map<EngineType, Double>>> yearToRelativeFuelEfficiency = new HashMap<Integer, Map<VehicleType, Map<EngineType, Double>>>();
 
 		CSVParser parser = null;
 		try {
@@ -516,12 +522,17 @@ public class InputFileReader {
 				for(String key: keySet) {
 					Integer year = Integer.parseInt(key);
 					efficiency = Double.parseDouble(record.get(key));
-					HashMap<Pair<VehicleType, EngineType>, Double> vehicleEngineEfficiency = yearToRelativeFuelEfficiency.get(year);
+					Map<VehicleType, Map<EngineType, Double>> vehicleEngineEfficiency = yearToRelativeFuelEfficiency.get(year);
 					if (vehicleEngineEfficiency == null) {
-						vehicleEngineEfficiency = new HashMap<Pair<VehicleType, EngineType>, Double>();
+						vehicleEngineEfficiency = new EnumMap<VehicleType, Map<EngineType, Double>>(VehicleType.class);
 						yearToRelativeFuelEfficiency.put(year, vehicleEngineEfficiency);
 					}
-					vehicleEngineEfficiency.put(Pair.of(vht,  engine), efficiency);
+					Map<EngineType, Double> innerMap = vehicleEngineEfficiency.get(vht);
+					if (innerMap == null) {
+						innerMap = new EnumMap<EngineType, Double>(EngineType.class);
+						vehicleEngineEfficiency.put(vht, innerMap);
+					}
+					vehicleEngineEfficiency.get(vht).put(engine, efficiency);
 				}
 			} 
 		} catch (FileNotFoundException e) {

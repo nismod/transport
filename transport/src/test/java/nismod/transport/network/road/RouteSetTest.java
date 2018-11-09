@@ -113,13 +113,17 @@ public class RouteSetTest {
 		parameters.put(WebTAG.C, -0.0000813834474888197);
 		parameters.put(WebTAG.D, 2.44908328418021E-06);
 		
-		HashMap<Pair<VehicleType, EngineType>, Map<WebTAG, Double>> energyConsumptionParameters = new HashMap<Pair<VehicleType, EngineType>, Map<WebTAG, Double>>();
-		energyConsumptionParameters.put(Pair.of(VehicleType.CAR, EngineType.ICE_PETROL), parameters);
-		energyConsumptionParameters.put(Pair.of(VehicleType.CAR, EngineType.BEV), parameters);
+		Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters = new EnumMap<VehicleType, Map<EngineType, Map<WebTAG, Double>>>(VehicleType.class);
+		Map<EngineType, Map<WebTAG, Double>> innerMap = new EnumMap<EngineType, Map<WebTAG, Double>>(EngineType.class);
+		energyConsumptionParameters.put(VehicleType.CAR, innerMap);
+		energyConsumptionParameters.get(VehicleType.CAR).put(EngineType.ICE_PETROL, parameters);
+		energyConsumptionParameters.get(VehicleType.CAR).put(EngineType.BEV, parameters);
 		
-		HashMap<Pair<VehicleType, EngineType>, Double> relativeFuelEfficiency = new HashMap<Pair<VehicleType, EngineType>, Double>();
-		relativeFuelEfficiency.put(Pair.of(VehicleType.CAR, EngineType.ICE_PETROL), 0.9);
-		relativeFuelEfficiency.put(Pair.of(VehicleType.CAR, EngineType.BEV), 0.9);
+		Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency = new EnumMap<VehicleType, Map<EngineType, Double>>(VehicleType.class);
+		Map<EngineType, Double> engineMap = new EnumMap<EngineType, Double>(EngineType.class);
+		relativeFuelEfficiency.put(VehicleType.CAR, engineMap);
+		relativeFuelEfficiency.get(VehicleType.CAR).put(EngineType.ICE_PETROL, 0.9);
+		relativeFuelEfficiency.get(VehicleType.CAR).put(EngineType.BEV, 0.9);
 		
 		Map<EnergyType, Double> energyUnitCosts = new EnumMap<>(EnergyType.class);
 		energyUnitCosts.put(EnergyType.PETROL, 1.17);

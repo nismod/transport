@@ -121,8 +121,8 @@ public class RoadDevelopmentDashboard extends JFrame {
 	private static Zoning zoning;
 	
 	private static Map<VehicleType, Double> vehicleTypeToPCU;
-	private static HashMap<Pair<VehicleType, EngineType>, Map<WebTAG, Double>> baseFuelConsumptionRates;
-	private static HashMap<Integer, HashMap<Pair<VehicleType, EngineType>, Double>> relativeFuelEfficiency;
+	private static Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> baseFuelConsumptionRates;
+	private static HashMap<Integer, Map<VehicleType, Map<EngineType, Double>>> relativeFuelEfficiency;
 	private static Map<Integer, Map<TimeOfDay, Double>> timeOfDayDistribution;
 	private static Map<Integer, Map<TimeOfDay, Double>> timeOfDayDistributionFreight;
 	private static HashMap<Integer, Map<EnergyType, Double>> yearToEnergyUnitCosts;
