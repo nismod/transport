@@ -105,14 +105,18 @@ public class RoadNetwork {
 	private HashMap<Integer, Double> nodeToAverageAccessEgressDistance; //[m]
 	private HashMap<Integer, Double> nodeToAverageAccessEgressDistanceFreight; //[m]
 	private HashMap<Integer, Node> nodeIDtoNode; //for direct access
+	
 	private HashMap<Integer, Edge> edgeIDtoEdge; //for direct access
+	//private Edge[] edgeIDtoEdge;
+	
 	private HashMap<Integer, Integer> edgeIDtoOtherDirectionEdgeID;
 	private HashMap<Integer, Boolean> isEdgeUrban; //true = urban, false = rural, null = unknown/ferry
 	private HashMap<Integer, Boolean> isEdgeFerry; //true = ferry, false = not ferry
 	private List<Integer> startNodeBlacklist;
 	private List<Integer> endNodeBlacklist;
 	private HashMap<Integer, Double> freeFlowTravelTime;
-	private HashMap<Integer, Double> edgeLengths;
+	//private HashMap<Integer, Double> edgeLengths;
+	private double[] edgeLengths;
 	
 	public double freeFlowSpeedMRoad; //kph
 	public double freeFlowSpeedARoad; //kph
@@ -315,7 +319,8 @@ public class RoadNetwork {
 				LOGGER.printf(Level.TRACE, "The length of the edge (%.2f) is smaller than the straight line distance (%.2f)!", length, distance);
 				LOGGER.trace("I am overriding actual distance for edge ({})-{}->({})", fromNode.getID(), edge.getID(), toNode.getID());
 				feature.setAttribute("LenNet", distance); //write into sf object
-				this.edgeLengths.put(edge.getID(), distance); //write into instance map
+				//this.edgeLengths.put(edge.getID(), distance); //write into instance map
+				this.edgeLengths[edge.getID()] = distance; //write into instance map
 				counter++;
 			}
 		}
@@ -814,7 +819,8 @@ public class RoadNetwork {
 			LOGGER.printf(Level.WARN, "The length of the newly created link (%.2f) is smaller than the straight line distance (%.2f)!", length, distance);
 		}
 		
-		this.edgeLengths.put(directedEdge.getID(), length);
+		//this.edgeLengths.put(directedEdge.getID(), length);
+		this.edgeLengths[directedEdge.getID()] = length;
 		
 		//create an object to add to edge
 		//dynamically creates a feature type to describe the shapefile contents
@@ -892,7 +898,8 @@ public class RoadNetwork {
 		//put edge length into map
 		SimpleFeature feature = (SimpleFeature)edge.getObject();
 		double length = (double) feature.getAttribute("LenNet");
-		this.edgeLengths.put(edgeID, length);
+		//this.edgeLengths.put(edgeID, length);
+		this.edgeLengths[edgeID] = length;
 		
 		//this.addNumberOfLanes(); //this would overwrite edges with unusual number of lanes!
 		//TODO
@@ -937,7 +944,9 @@ public class RoadNetwork {
 		//update
 		this.edgeIDtoEdge.remove(edge.getID());
 		//this.numberOfLanes.remove(edge.getID()); //TODO leave it for now, until edge object contains this information
-		this.edgeLengths.remove(edge.getID());
+		
+		//this.edgeLengths.remove(edge.getID());
+		this.edgeLengths[edge.getID()] = 0.0; //put zero length
 		
 		//update node blacklists
 		this.createNodeBlacklists();
@@ -1520,7 +1529,8 @@ public class RoadNetwork {
 	 */
 	public double getEdgeLength(int edgeID) {
 		
-		return this.edgeLengths.get(edgeID);
+		//return this.edgeLengths.get(edgeID);
+		return this.edgeLengths[edgeID];
 	}
 	
 	public ShapefileDataStore getZonesShapefile () {
@@ -2164,7 +2174,10 @@ public class RoadNetwork {
 	 */
 	private void storeEdgesLengths() {
 		
-		this.edgeLengths = new HashMap<Integer, Double>();
+		final int MAX_EDGE_ID = 20000;
+		
+		//this.edgeLengths = new HashMap<Integer, Double>();
+		this.edgeLengths = new double[MAX_EDGE_ID];
 		
 		//iterate through all the edges in the graph
 		Iterator iter = this.network.getEdges().iterator();
@@ -2173,7 +2186,8 @@ public class RoadNetwork {
 			Edge edge = (Edge) iter.next();
 			SimpleFeature sf = (SimpleFeature) edge.getObject();
 			double length = (double) sf.getAttribute("LenNet");
-			this.edgeLengths.put(edge.getID(), length);
+			//this.edgeLengths.put(edge.getID(), length);
+			this.edgeLengths[edge.getID()] = length;
 		}
 	}
 		
