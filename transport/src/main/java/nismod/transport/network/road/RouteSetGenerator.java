@@ -12,6 +12,8 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -29,7 +31,6 @@ import org.geotools.graph.structure.Node;
 
 import org.locationtech.jts.geom.Point;
 
-import gnu.trove.map.hash.TIntObjectHashMap;
 import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.ODMatrix;
 import nismod.transport.demand.RealODMatrixTempro;
@@ -44,20 +45,13 @@ public class RouteSetGenerator{
 	
 	private final static Logger LOGGER = LogManager.getLogger(RouteSetGenerator.class);
 	
-	//public static final int ROUTE_LIMIT = 5;
-	//public static final int GENERATION_LIMIT = 10;
-	
 	//initial route size
-	public static final int INITIAL_ROUTE_CAPACITY = 10;
+	public static final int INITIAL_ROUTE_CAPACITY = 13;
 	//initial route set size
-	public static final int INITIAL_ROUTE_SET_CAPACITY = 5;
-	
-	//initial sizes for nested hashmap
-	public static int initialOuterCapacity;
-	public static int initialInnerCapacity;
+	public static final int INITIAL_ROUTE_SET_CAPACITY = 7;
 	
 	//storage for route sets between node pairs
-	private TIntObjectHashMap<TIntObjectHashMap<RouteSet>> routes;
+	private RouteSet[][] routes;
 	
 	private RoadNetwork roadNetwork;
 	private Properties props;
@@ -72,10 +66,8 @@ public class RouteSetGenerator{
 		this.roadNetwork = roadNetwork;
 		this.props = props;
 		
-		RouteSetGenerator.initialOuterCapacity = Integer.parseInt(props.getProperty("INITIAL_OUTER_CAPACITY"));
-		RouteSetGenerator.initialInnerCapacity = Integer.parseInt(props.getProperty("INITIAL_INNER_CAPACITY"));
-		
-		this.routes = new TIntObjectHashMap<TIntObjectHashMap<RouteSet>>(RouteSetGenerator.initialOuterCapacity);
+		int maxNodes = Collections.max(this.roadNetwork.getNodeIDtoNode().keySet()); //find maximum node id
+		routes = new RouteSet[maxNodes + 1][maxNodes + 1]; //access will be directly with node ID (without -1).
 	}
 	
 	/**
@@ -98,18 +90,11 @@ public class RouteSetGenerator{
 		int origin = route.getOriginNode().getID();
 		int destination = route.getDestinationNode().getID();
 		
-		TIntObjectHashMap<RouteSet> map = routes.get(origin);
-		if (map == null) {
-			map = new TIntObjectHashMap<RouteSet>(RouteSetGenerator.initialInnerCapacity);
-			routes.put(origin, map);
-		}
-		
-		RouteSet set = map.get(destination);
+		RouteSet set = this.routes[origin][destination];
 		if (set == null) {
 			set = new RouteSet(roadNetwork);
-			map.put(destination, set);
+			this.routes[origin][destination] = set;
 		}
-		
 		set.addRoute(route);
 	}
 	
@@ -128,18 +113,11 @@ public class RouteSetGenerator{
 		int origin = route.getOriginNode().getID();
 		int destination = route.getDestinationNode().getID();
 		
-		TIntObjectHashMap<RouteSet> map = routes.get(origin);
-		if (map == null) {
-			map = new TIntObjectHashMap<RouteSet>(RouteSetGenerator.initialInnerCapacity);
-			routes.put(origin, map);
-		}
-		
-		RouteSet set = map.get(destination);
+		RouteSet set = this.routes[origin][destination];
 		if (set == null) {
 			set = new RouteSet(roadNetwork);
-			map.put(destination, set);
+			this.routes[origin][destination] = set;
 		}
-
 		set.addRouteWithoutValidityCheck(route);
 		//set.addRouteWithoutValidityAndEndNodesCheck(route);
 		//set.addRouteWithoutAnyChecks(route);
@@ -151,15 +129,16 @@ public class RouteSetGenerator{
 	 */
 	public void removeRoutesWithEdge(int edgeID) {
 		
-		for (int origin: routes.keys())
-			for (int destination: routes.get(origin).keys()) {
-				RouteSet rs = routes.get(origin).get(destination);
-				//iterate over all routes using iterator (to allow concurrent modification)
-				Iterator<Route> iter = rs.getChoiceSet().iterator();
-				while (iter.hasNext()) {
-					Route route = iter.next();
-					if (route.contains(edgeID)) iter.remove();
-				}
+		for (int i = 1; i < this.routes.length; i++)
+			for (int j = 1; j < this.routes[i].length; j++)
+				if (this.routes[i][j] != null) {
+					RouteSet rs = this.routes[i][j];
+					//iterate over all routes using iterator (to allow concurrent modification)
+					Iterator<Route> iter = rs.getChoiceSet().iterator();
+					while (iter.hasNext()) {
+						Route route = iter.next();
+						if (route.contains(edgeID)) iter.remove();
+					}
 				//rs.getChoiceSet().removeIf(route -> route.contains(edgeID)); //or alternatively, with Java 8
 				//recalculate path sizes!
 				rs.calculatePathsizes();
@@ -173,18 +152,19 @@ public class RouteSetGenerator{
 	 */
 	public void removeRoutesWithEdge(int edgeID, List<Route> removedRoutes) {
 		
-		for (int origin: routes.keys())
-			for (int destination: routes.get(origin).keys()) {
-				RouteSet rs = routes.get(origin).get(destination);
-				//iterate over all routes using iterator (to allow concurrent modification)
-				Iterator<Route> iter = rs.getChoiceSet().iterator();
-				while (iter.hasNext()) {
-					Route route = iter.next();
-					if (route.contains(edgeID)) {
-						removedRoutes.add(route);
-						iter.remove();
+		for (int i = 1; i < this.routes.length; i++)
+			for (int j = 1; j < this.routes[i].length; j++)
+				if (this.routes[i][j] != null) {
+					RouteSet rs = this.routes[i][j];
+					//iterate over all routes using iterator (to allow concurrent modification)
+					Iterator<Route> iter = rs.getChoiceSet().iterator();
+					while (iter.hasNext()) {
+						Route route = iter.next();
+						if (route.contains(edgeID)) {
+							removedRoutes.add(route);
+							iter.remove();
+						}
 					}
-				}
 				//recalculate path sizes!
 				rs.calculatePathsizes();
 			}
@@ -414,7 +394,10 @@ public class RouteSetGenerator{
 						LOGGER.warn("Route generated with link elimination does not contain correct origin and destination nodes! Skipping this route.");
 				}
 				RouteSet rs = this.getRouteSet(origin, destination);
-				if (rs.getSize() >= routeLimit) break; //stop if sufficient number of routes has been generated 
+				
+				//if (rs == null) ; //System.err.println("Empty routeset!");
+				//if (rs!= null && rs.getSize() >= routeLimit) break; //stop if sufficient number of routes has been generated 
+				if (rs.getSize() >= routeLimit) break; //stop if sufficient number of routes has been generated
 			}
 		}
 	}
@@ -961,11 +944,7 @@ public class RouteSetGenerator{
 	 */
 	public RouteSet getRouteSet(int origin, int destination) {
 		
-		RouteSet set = null;
-		TIntObjectHashMap<RouteSet> map = this.routes.get(origin);
-		if (map != null) set = map.get(destination);
-		
-		return set;
+		return this.routes[origin][destination];
 	}
 	
 	/**
@@ -973,7 +952,8 @@ public class RouteSetGenerator{
 	 */
 	public void clearRoutes() {
 		
-		this.routes.clear();
+		for(int i = 0; i < routes.length; i++)
+			Arrays.fill(routes[i], null);
 	}
 	
 	/**
@@ -981,9 +961,12 @@ public class RouteSetGenerator{
 	 */
 	public void printChoiceSets() {
 		
-		for (int origin: routes.keys())
-			for (int destination: routes.get(origin).keys())
-				routes.get(origin).get(destination).printChoiceSet();
+		for (int i = 1; i < this.routes.length; i++)
+			for (int j = 1; j < this.routes[i].length; j++) {
+				if (this.routes[i][j] != null) {
+					this.routes[i][j].printChoiceSet();
+				}
+			}
 	}
 	
 	/**
@@ -1013,8 +996,10 @@ public class RouteSetGenerator{
 	public int getNumberOfRouteSets() { 
 		
 		int totalRouteSets = 0;
-		for (int origin: routes.keys())
-				totalRouteSets += routes.get(origin).size();
+		for (int i = 1; i < this.routes.length; i++)
+			for (int j = 1; j < this.routes[i].length; j++)
+				if (this.routes[i][j] != null)
+					totalRouteSets++;
 
 		return totalRouteSets;
 	}
@@ -1026,12 +1011,11 @@ public class RouteSetGenerator{
 	public int getNumberOfRoutes() { 
 	
 		int totalRoutes = 0;
-		for (int origin: routes.keys())
-			for (int destination: routes.get(origin).keys()) {
-				RouteSet rs = routes.get(origin).get(destination);
-				totalRoutes += rs.getSize();
-			}
-
+		for (int i = 1; i < this.routes.length; i++)
+			for (int j = 1; j < this.routes[i].length; j++)
+				if (this.routes[i][j] != null)
+					totalRoutes += this.routes[i][j].getSize();
+			
 		return totalRoutes;
 	}
 	
@@ -1071,9 +1055,10 @@ public class RouteSetGenerator{
 		LOGGER.info("Calculating path sizes for all the route sets...");
 		
 		//iterate over all route sets
-		for (int origin: routes.keys())
-			for (int destination: routes.get(origin).keys())
-				this.getRouteSet(origin, destination).calculatePathsizes();
+		for (int i = 1; i < this.routes.length; i++)
+			for (int j = 1; j < this.routes[i].length; j++)
+				if (this.routes[i][j] != null)
+					this.routes[i][j].calculatePathsizes();
 		
 		LOGGER.debug("Finished path size calculation.");
 	}
@@ -1091,10 +1076,11 @@ public class RouteSetGenerator{
 			fileWriter = new FileWriter(fileName, append);
 			bufferedWriter = new BufferedWriter(fileWriter);
 			//iterate over all route sets
-			for (int origin: routes.keys())
-				for (int destination: routes.get(origin).keys())
-					for (Route route: this.getRouteSet(origin, destination).getChoiceSet())
-						bufferedWriter.write(route.getFormattedString() + System.getProperty("line.separator"));
+			for (int i = 1; i < this.routes.length; i++)
+				for (int j = 1; j < this.routes[i].length; j++)
+					if (this.routes[i][j] != null)
+						for (Route route: this.routes[i][j].getChoiceSet())
+							bufferedWriter.write(route.getFormattedString() + System.getProperty("line.separator"));
 		} catch (Exception e) {
 			LOGGER.error(e);
 		} finally {
@@ -1127,13 +1113,14 @@ public class RouteSetGenerator{
 			bufferedStream = new BufferedOutputStream(outputStream);
 			dataStream = new DataOutputStream(bufferedStream);
 			//iterate over all route sets
-			for (int origin: routes.keys())
-				for (int destination: routes.get(origin).keys())
-					for (Route route: this.getRouteSet(origin, destination).getChoiceSet())	 {
-						for (int edgeID: route.getEdges().toArray())
-							dataStream.writeInt(edgeID);
-					dataStream.writeInt(0);
-				}
+			for (int i = 1; i < this.routes.length; i++)
+				for (int j = 1; j < this.routes[i].length; j++)
+					if (this.routes[i][j] != null)
+						for (Route route: this.routes[i][j].getChoiceSet())	 {
+							for (int edgeID: route.getEdges().toArray())
+								dataStream.writeInt(edgeID);
+							dataStream.writeInt(0);
+						}
 		} catch (Exception e) {
 			LOGGER.error(e);
 		} finally {
@@ -1170,16 +1157,17 @@ public class RouteSetGenerator{
 			dataStream = new DataOutputStream(bufferedStream);
 			//iterate over all route sets
 			//iterate over all route sets
-			for (int origin: routes.keys())
-				for (int destination: routes.get(origin).keys())
-					for (Route route: this.getRouteSet(origin, destination).getChoiceSet())	{
-						for (int edgeID: route.getEdges().toArray()) {
-							if (edgeID > 65535) {
-								LOGGER.error("Edge ID larger than 65535 cannot be stored as short. Use saveRoutesBinary method instead.");
-								return;
-							}
+			for (int i = 1; i < this.routes.length; i++)
+				for (int j = 1; j < this.routes[i].length; j++)
+					if (this.routes[i][j] != null)
+						for (Route route: this.routes[i][j].getChoiceSet())	 {
+							for (int edgeID: route.getEdges().toArray()) {
+								if (edgeID > 65535) {
+									LOGGER.error("Edge ID larger than 65535 cannot be stored as short. Use saveRoutesBinary method instead.");
+									return;
+								}
 							dataStream.writeShort(edgeID);
-						}
+							}
 						dataStream.writeShort(0);
 					}
 		} catch (Exception e) {
@@ -1218,13 +1206,14 @@ public class RouteSetGenerator{
 			bufferedStream = new BufferedOutputStream(gzipStream);
 			dataStream = new DataOutputStream(bufferedStream);
 			//iterate over all route sets
-			for (int origin: routes.keys())
-				for (int destination: routes.get(origin).keys())
-					for (Route route: this.getRouteSet(origin, destination).getChoiceSet())	 {
-						for (int edgeID: route.getEdges().toArray())
-							dataStream.writeInt(edgeID);
-					dataStream.writeInt(0);
-				}
+			for (int i = 1; i < this.routes.length; i++)
+				for (int j = 1; j < this.routes[i].length; j++)
+					if (this.routes[i][j] != null)
+						for (Route route: this.routes[i][j].getChoiceSet())	 {
+							for (int edgeID: route.getEdges().toArray())
+								dataStream.writeInt(edgeID);
+							dataStream.writeInt(0);
+						}
 		} catch (Exception e) {
 			LOGGER.error(e);
 		} finally {
