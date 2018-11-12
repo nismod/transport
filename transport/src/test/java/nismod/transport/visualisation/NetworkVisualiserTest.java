@@ -79,16 +79,21 @@ public class NetworkVisualiserTest {
 
 		rna.updateLinkVolumeInPCU();
 		rna.updateLinkVolumePerVehicleType();
-		Map<Integer, Double> dailyVolume = rna.getLinkVolumeInPCU();
-		Map<Integer, Double> gehStats = rna.calculateGEHStatisticForCarCounts(rna.getVolumeToFlowFactor());
+		Map<Integer, Double> dailyVolumeMap = rna.getLinkVolumeInPCU();
+//		double[] dailyVolume = new double[rna.getLinkFreeFlowTravelTimes().length];
+//		for (int key: dailyVolumeMap.keySet())
+//			dailyVolume[key] = dailyVolumeMap.get(key);
+		System.out.println(dailyVolumeMap);
 		
-		System.out.println(dailyVolume);
-		
-		
+		Map<Integer, Double> gehStatsMap = rna.calculateGEHStatisticForCarCounts(rna.getVolumeToFlowFactor());
+//		double[] gehStats = new double[rna.getLinkFreeFlowTravelTimes().length];
+//		for (int key: gehStatsMap.keySet())
+//			gehStats[key] = gehStatsMap.get(key);
+				
 //		NetworkVisualiserDemo.visualise(roadNetwork, "Network from shapefiles");
 //		NetworkVisualiserDemo.visualise(roadNetwork, "Network with capacity utilisation", rna.calculateDirectionAveragedPeakLinkCapacityUtilisation(), "CapUtil", shapefilePath);
-		NetworkVisualiser.visualise(roadNetwork, "Network with traffic volume", dailyVolume, "DayVolume", shapefilePath);
-		NetworkVisualiser.visualise(roadNetwork, "Network with GEH statistics", gehStats, "GEHStats", shapefilePath4);
+		NetworkVisualiser.visualise(roadNetwork, "Network with traffic volume", dailyVolumeMap, "DayVolume", shapefilePath);
+		NetworkVisualiser.visualise(roadNetwork, "Network with GEH statistics", gehStatsMap, "GEHStats", shapefilePath4);
 //		NetworkVisualiser.visualise(roadNetwork, "Network with count comparison", rna.calculateDirectionAveragedAbsoluteDifferenceCarCounts(), "AbsDiffCounts", shapefilePath3);
 //		NetworkVisualiser.visualise(roadNetwork, "Network with count comparison", rna.calculateDirectionAveragedAbsoluteDifferenceCarCounts(), "AbsDiffCounts", shapefilePath4, congestionChargeZoneUrl);
 	}

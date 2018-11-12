@@ -110,12 +110,12 @@ public class RoadNetwork {
 	//private Edge[] edgeIDtoEdge;
 	
 	private HashMap<Integer, Integer> edgeIDtoOtherDirectionEdgeID;
-	private HashMap<Integer, Boolean> isEdgeUrban; //true = urban, false = rural, null = unknown/ferry
-	private HashMap<Integer, Boolean> isEdgeFerry; //true = ferry, false = not ferry
+	private Boolean[] isEdgeUrban; //true = urban, false = rural, null = unknown/ferry
+	private boolean[] isEdgeFerry; //true = ferry, false = not ferry
+	
 	private List<Integer> startNodeBlacklist;
 	private List<Integer> endNodeBlacklist;
-	private HashMap<Integer, Double> freeFlowTravelTime;
-	//private HashMap<Integer, Double> edgeLengths;
+	private double[] freeFlowTravelTime;
 	private double[] edgeLengths;
 	
 	public double freeFlowSpeedMRoad; //kph
@@ -123,6 +123,7 @@ public class RoadNetwork {
 	public double averageSpeedFerry; //kph
 	public int numberOfLanesMRoad; //for one direction
 	public int numberOfLanesARoad; //for one direction
+	public int maximumEdgeID; //for the entire network
 		
 	/**
 	 * @param zonesUrl Url for the shapefile with zone polygons.
@@ -151,6 +152,7 @@ public class RoadNetwork {
 		this.averageSpeedFerry = Double.parseDouble(params.getProperty("AVERAGE_SPEED_FERRY"));
 		this.numberOfLanesMRoad = Integer.parseInt(params.getProperty("NUMBER_OF_LANES_M_ROAD"));
 		this.numberOfLanesARoad = Integer.parseInt(params.getProperty("NUMBER_OF_LANES_A_ROAD"));
+		this.maximumEdgeID = Integer.parseInt(params.getProperty("MAXIMUM_EDGE_ID"));
 		
 		//build the graph
 		this.build();
@@ -212,7 +214,7 @@ public class RoadNetwork {
 	
 	private void calculateFreeFlowTravelTime() {
 		//calculate free-flow travel time
-		this.freeFlowTravelTime = new HashMap<Integer, Double>();
+		this.freeFlowTravelTime = new double[this.maximumEdgeID];
 		for (Object edge: this.network.getEdges()) {
 			SimpleFeature feature = (SimpleFeature) ((Edge)edge).getObject(); 
 			double length = (double) feature.getAttribute("LenNet");
@@ -228,7 +230,7 @@ public class RoadNetwork {
 					LOGGER.warn("Unknown road type for link {}", ((Edge)edge).getID());
 					time = Double.NaN;
 				}
-				this.freeFlowTravelTime.put(((Edge)edge).getID(), time);
+				this.freeFlowTravelTime[((Edge)edge).getID()] = time;
 		}
 	}
 
@@ -978,7 +980,7 @@ public class RoadNetwork {
 	 * @param linkTravelTime Link travel times to use for edge weighting.
 	 * @return Dijkstra edge weighter with time.
 	 */
-	public DijkstraIterator.EdgeWeighter getDijkstraTimeWeighter(HashMap<Integer, Double> linkTravelTime) {
+	public DijkstraIterator.EdgeWeighter getDijkstraTimeWeighter(double[] linkTravelTime) {
 
 		//weight the edges of the graph using the free-flow travel time		
 		DijkstraIterator.EdgeWeighter dijkstraTimeWeighter = new EdgeWeighter() {
@@ -991,7 +993,7 @@ public class RoadNetwork {
 					//return Double.POSITIVE_INFINITY;
 				}
 				double cost;
-				if (linkTravelTime == null || linkTravelTime.get(edge.getID()) == null) { //use default link travel time
+				if (linkTravelTime == null || linkTravelTime[edge.getID()] == 0.0) { //use default link travel time
 					SimpleFeature feature = (SimpleFeature)edge.getObject();
 					String roadNumber = (String) feature.getAttribute("RoadNumber");
 					if (roadNumber.charAt(0) == 'M') //motorway
@@ -1005,7 +1007,7 @@ public class RoadNetwork {
 						cost = Double.NaN;
 					}
 				} else //use provided travel time
-					cost = linkTravelTime.get(edge.getID()); 
+					cost = linkTravelTime[edge.getID()]; 
 				return cost;
 			}
 		};
@@ -1057,7 +1059,7 @@ public class RoadNetwork {
 	 * @param linkTravelTime Link travel times to use for edge weighting.
 	 * @return AStar functions.
 	 */
-	public AStarIterator.AStarFunctions getAstarFunctionsTime(Node destinationNode, Map<Integer, Double> linkTravelTime) {
+	public AStarIterator.AStarFunctions getAstarFunctionsTime(Node destinationNode, double[] linkTravelTime) {
 
 			AStarIterator.AStarFunctions aStarFunctions = new  AStarIterator.AStarFunctions(destinationNode){
 			
@@ -1074,7 +1076,7 @@ public class RoadNetwork {
 					return Double.POSITIVE_INFINITY;
 				}
 				double cost;
-				if (linkTravelTime.get(edge.getID()) == null) { //use default link travel time
+				if (linkTravelTime[edge.getID()] == 0.0) { //use default link travel time
 					/*
 					SimpleFeature feature = (SimpleFeature)edge.getObject();
 					String roadNumber = (String) feature.getAttribute("RoadNumber");
@@ -1089,9 +1091,9 @@ public class RoadNetwork {
 						cost = Double.NaN;
 					}
 					*/
-					cost = RoadNetwork.this.freeFlowTravelTime.get(edge.getID());
+					cost = RoadNetwork.this.freeFlowTravelTime[edge.getID()];
 				} else //use provided travel time
-					cost = linkTravelTime.get(edge.getID()); 
+					cost = linkTravelTime[edge.getID()]; 
 				
 				//System.out.println("Cost = " + cost);
 				return cost;
@@ -1121,9 +1123,9 @@ public class RoadNetwork {
 	 * @param linkTravelTime The map with link travel times.
 	 * @return Fastest path.
 	 */
-	public RoadPath getFastestPath(DirectedNode from, DirectedNode to, Map<Integer, Double> linkTravelTime) {
+	public RoadPath getFastestPath(DirectedNode from, DirectedNode to, double[] linkTravelTime) {
 
-		if (linkTravelTime == null) linkTravelTime = new HashMap<Integer, Double>();
+		if (linkTravelTime == null) linkTravelTime = new double[this.maximumEdgeID];
 		//if (linkTravelTime == null) linkTravelTime = this.freeFlowTravelTime;
 		RoadPath path;
 
@@ -1179,9 +1181,9 @@ public class RoadNetwork {
 	 * @param linkTravelTime The map with link travel times.
 	 * @return Fastest path.
 	 */
-	public RoadPath getFastestPathDijkstra(DirectedNode from, DirectedNode to, HashMap<Integer, Double> linkTravelTime) {
+	public RoadPath getFastestPathDijkstra(DirectedNode from, DirectedNode to, double[] linkTravelTime) {
 
-		if (linkTravelTime == null) linkTravelTime = new HashMap<Integer, Double>();
+		if (linkTravelTime == null) linkTravelTime = new double[this.maximumEdgeID];
 		//if (linkTravelTime == null) linkTravelTime = this.freeFlowTravelTime;
 		RoadPath path;
 		//find the shortest path using Dijkstra algorithm
@@ -1260,19 +1262,21 @@ public class RoadNetwork {
 	}
 	
 	/**
-	 * Getter method for the map saying if the edge is urban (true), rural (false), or unkown (null).
-	 * @return Map between the edge ID and whether the edge is urban/rural/unkown.
+	 * Getter method for the array saying if the edge is urban (true), rural (false), or unkown (null).
+	 * Array index is edge ID (without -1 shift).
+	 * @return Array saying if the edge is urban/rural/unkown.
 	 */
-	public HashMap<Integer, Boolean> getIsEdgeUrban() {
+	public Boolean[] getIsEdgeUrban() {
 
 		return this.isEdgeUrban;
 	}
 	
 	/**
-	 * Getter method for the map saying if the edge is ferry (true) or not (false).
+	 * Getter method for the array saying if the edge is ferry (true) or not (false).
+	 * Array index is edge ID (without -1 shift).
 	 * @return Map between the edge ID and whether the edge is ferry.
 	 */
-	public HashMap<Integer, Boolean> getIsEdgeFerry() {
+	public boolean[]  getIsEdgeFerry() {
 
 		return this.isEdgeFerry;
 	}
@@ -1517,7 +1521,7 @@ public class RoadNetwork {
 	 * Getter method for free flow travel time.
 	 * @return Free flow travel time.
 	 */
-	public HashMap<Integer, Double> getFreeFlowTravelTime() {
+	public double[] getFreeFlowTravelTime() {
 		
 		return this.freeFlowTravelTime;
 	}
@@ -2124,7 +2128,7 @@ public class RoadNetwork {
 	 */
 	private void determineEdgesUrbanRural() {
 		
-		this.isEdgeUrban = new HashMap<Integer, Boolean>();
+		this.isEdgeUrban = new Boolean[this.maximumEdgeID];
 		
 		//iterate through all the edges in the graph
 		Iterator iter = this.network.getEdges().iterator();
@@ -2137,14 +2141,14 @@ public class RoadNetwork {
 			//if no roadCategory information, assume it is ferry and set null
 			if (cat == null) {
 				LOGGER.trace("No road category information (e.g. ferry), so setting null.");
-				isEdgeUrban.put(edge.getID(), null);
+				isEdgeUrban[edge.getID()] = null;
 				continue;
 			}
 			//if second character is U, the edge is urban, otherwise rural
 			if (cat.toUpperCase().charAt(1) == 'U') 
-				isEdgeUrban.put(edge.getID(), true);
+				isEdgeUrban[edge.getID()] = Boolean.TRUE;
 			else									
-				isEdgeUrban.put(edge.getID(), false);
+				isEdgeUrban[edge.getID()] = Boolean.FALSE;
 		}
 	}
 	
@@ -2153,7 +2157,7 @@ public class RoadNetwork {
 	 */
 	private void determineEdgesFerry() {
 		
-		this.isEdgeFerry = new HashMap<Integer, Boolean>();
+		this.isEdgeFerry = new boolean[this.maximumEdgeID];
 		
 		//iterate through all the edges in the graph
 		Iterator iter = this.network.getEdges().iterator();
@@ -2163,9 +2167,9 @@ public class RoadNetwork {
 			SimpleFeature sf = (SimpleFeature) edge.getObject();
 			String roadNumber = (String) sf.getAttribute("RoadNumber");
 			if (roadNumber.toUpperCase().charAt(0) == 'F')//ferry
-				isEdgeFerry.put(edge.getID(), true);
+				isEdgeFerry[edge.getID()] = true;
 			else									
-				isEdgeFerry.put(edge.getID(), false);
+				isEdgeFerry[edge.getID()] = false;
 		}
 	}
 	
@@ -2174,10 +2178,8 @@ public class RoadNetwork {
 	 */
 	private void storeEdgesLengths() {
 		
-		final int MAX_EDGE_ID = 20000;
-		
 		//this.edgeLengths = new HashMap<Integer, Double>();
-		this.edgeLengths = new double[MAX_EDGE_ID];
+		this.edgeLengths = new double[this.maximumEdgeID];
 		
 		//iterate through all the edges in the graph
 		Iterator iter = this.network.getEdges().iterator();

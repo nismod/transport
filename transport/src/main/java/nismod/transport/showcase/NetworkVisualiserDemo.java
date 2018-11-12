@@ -92,9 +92,13 @@ public class NetworkVisualiserDemo {
 
 		rna.updateLinkVolumeInPCU();
 		rna.updateLinkVolumePerVehicleType();
-		Map<Integer, Double> dailyVolume = rna.getLinkVolumeInPCU();
+		Map<Integer, Double> dailyVolumeMap = rna.getLinkVolumeInPCU();
+//		double[] dailyVolume = new double[rna.getLinkFreeFlowTravelTimes().length];
+//		for (int key: dailyVolumeMap.keySet())
+//			dailyVolume[key] = dailyVolumeMap.get(key);
+		
 		//NetworkVisualiser.visualise(roadNetwork, "Network from shapefiles");
-		NetworkVisualiserDemo.visualise(roadNetwork, "Network with traffic volume", dailyVolume, "DayVolume", shapefilePath);
+		NetworkVisualiserDemo.visualise(roadNetwork, "Network with traffic volume", dailyVolumeMap, "DayVolume", shapefilePath);
 		//NetworkVisualiser.visualise(roadNetwork, "Network with count comparison", rna.calculateDirectionAveragedAbsoluteDifferenceCarCounts(), "AbsDiffCounts", shapefilePath2);
 		//NetworkVisualiser.visualise(roadNetwork, "Network with count comparison", rna.calculateDirectionAveragedAbsoluteDifferenceCarCounts(), "AbsDiffCounts", shapefilePath3, congestionChargeZoneUrl);
 

@@ -402,7 +402,8 @@ public class RouteSetGeneratorTest {
 		rsg.printChoiceSets();
 		rsg.printStatistics();
 		
-		HashMap<Integer, Double> linkTravelTimes = new HashMap<Integer, Double>();
+		int maximumEdgeID = Integer.parseInt(props.getProperty("MAXIMUM_EDGE_ID"));
+		double[] linkTravelTimes = new double[maximumEdgeID];
 		DirectedNode node1 = (DirectedNode)roadNetwork.getNodeIDtoNode().get(48);
 		DirectedNode node2 = (DirectedNode)roadNetwork.getNodeIDtoNode().get(82);
 		DirectedEdge edge = (DirectedEdge) node1.getOutEdge(node2);

@@ -128,8 +128,7 @@ public class RoadNetworkAssignment {
 	private Map<Integer, Double> linkVolumesInPCU;
 	private Map<VehicleType, Map<Integer, Integer>> linkVolumesPerVehicleType;
 	private Map<TimeOfDay, Map<Integer, Double>> linkVolumesInPCUPerTimeOfDay;
-	//private HashMap<Integer, Double> linkTravelTime;
-	private Map<TimeOfDay, Map<Integer, Double>> linkTravelTimePerTimeOfDay;
+	private Map<TimeOfDay, double[]> linkTravelTimePerTimeOfDay;
 
 	//storage of performed trips
 	private ArrayList<Trip> tripList;
@@ -194,8 +193,8 @@ public class RoadNetworkAssignment {
 		}
 		this.linkTravelTimePerTimeOfDay = new EnumMap<>(TimeOfDay.class);
 		for (TimeOfDay hour: TimeOfDay.values()) {
-			HashMap<Integer, Double> map = new HashMap<Integer, Double>();
-			linkTravelTimePerTimeOfDay.put(hour, map);
+			double[] hourlyTimes = new double[this.roadNetwork.getFreeFlowTravelTime().length];
+			linkTravelTimePerTimeOfDay.put(hour, hourlyTimes);
 		}
 		
 		this.tripList = new ArrayList<Trip>();
@@ -203,16 +202,16 @@ public class RoadNetworkAssignment {
 		if (defaultLinkTravelTime == null) { //use free flow
 			LOGGER.debug("No link travel time provided, using free-flow link travel time.");
 			for (TimeOfDay hour: TimeOfDay.values()) {
-				Map<Integer, Double> hourlyMap = this.linkTravelTimePerTimeOfDay.get(hour);
-				for (Integer edgeID: this.roadNetwork.getFreeFlowTravelTime().keySet())
-					hourlyMap.put(edgeID, this.roadNetwork.getFreeFlowTravelTime().get(edgeID));
+				double[] hourlyTimes = this.linkTravelTimePerTimeOfDay.get(hour);
+				for (int i=1; i < hourlyTimes.length; i++)
+					hourlyTimes[i] = this.roadNetwork.getFreeFlowTravelTime()[i];
 			}
 		}
 		else //otherwise copy
 			for (TimeOfDay hour: TimeOfDay.values()) {
-				Map<Integer, Double> hourlyMap = this.linkTravelTimePerTimeOfDay.get(hour);
+				double[] hourlyTimes = this.linkTravelTimePerTimeOfDay.get(hour);
 				for (Integer edgeID: defaultLinkTravelTime.get(hour).keySet())
-					hourlyMap.put(edgeID, defaultLinkTravelTime.get(hour).get(edgeID));
+					hourlyTimes[edgeID] = defaultLinkTravelTime.get(hour).get(edgeID);
 			}
 
 		if (vehicleTypeToPCU != null) 	this.vehicleTypeToPCU = vehicleTypeToPCU;
@@ -474,7 +473,7 @@ public class RoadNetworkAssignment {
 						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(destinationNode);
 
 						//RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTime);
-						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, (HashMap<Integer, Double>)this.linkTravelTimePerTimeOfDay.get(hour));
+						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
 						if (fastestPath == null) {
 							LOGGER.warn("Not even aStar could find a route between node {} and node {}!", originNode, destinationNode);
 							continue;
@@ -642,7 +641,7 @@ public class RoadNetworkAssignment {
 						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(destinationNode);
 
 						//RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTime);
-						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, (HashMap<Integer, Double>)this.linkTravelTimePerTimeOfDay.get(hour));
+						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
 						if (fastestPath == null) {
 							LOGGER.warn("Not even aStar could find a route between node {} and node {}!", originNode, destinationNode);
 							continue;
@@ -1145,7 +1144,7 @@ public class RoadNetworkAssignment {
 						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(destinationNode);
 
 						//RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTime);
-						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, (HashMap<Integer, Double>)this.linkTravelTimePerTimeOfDay.get(hour));
+						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
 						if (fastestPath == null) {
 							LOGGER.warn("Not even aStar could find a route between node {} and node {}!", originNode, destinationNode);
 							continue;
@@ -2461,20 +2460,20 @@ public class RoadNetworkAssignment {
 					congestedTravelTime = roadLength / speed * 60;
 
 				} else //ferry
-					congestedTravelTime = this.roadNetwork.getFreeFlowTravelTime().get(edge.getID()); //ferry travel time is fixed
+					congestedTravelTime = this.roadNetwork.getFreeFlowTravelTime()[edge.getID()]; //ferry travel time is fixed
 
-				Map<Integer, Double> hourlyTimes = this.linkTravelTimePerTimeOfDay.get(hour);
+				double[] hourlyTimes = this.linkTravelTimePerTimeOfDay.get(hour);
 				if (hourlyTimes == null) LOGGER.error("No hourly travel times for hour {}", hour);
 				
-				Double oldLinkTravelTime = hourlyTimes.get(edge.getID());
-				if (oldLinkTravelTime == null) {
+				double oldLinkTravelTime = hourlyTimes[edge.getID()];
+				if (oldLinkTravelTime == 0.0) {
 					//fetch from the road network, which was likely modified by a road development intervention
-					oldLinkTravelTime = this.roadNetwork.getFreeFlowTravelTime().get(edge.getID());
-					if (oldLinkTravelTime == null) LOGGER.error("No link travel time for edge {}", edge.getID());
+					oldLinkTravelTime = this.roadNetwork.getFreeFlowTravelTime()[edge.getID()];
+					if (oldLinkTravelTime == 0.0) LOGGER.error("No link travel time for edge {}", edge.getID());
 				}
 				
 				double averagedCongestedTravelTime = weight * congestedTravelTime + (1 - weight) * oldLinkTravelTime; //averaging
-				hourlyTimes.put(edge.getID(), averagedCongestedTravelTime);
+				hourlyTimes[edge.getID()] = averagedCongestedTravelTime;
 				
 			}//for time of day
 		}//while edges
@@ -3422,14 +3421,30 @@ public class RoadNetworkAssignment {
 	/**
 	 * @return The copy of all link travel times.
 	 */
-	public Map<TimeOfDay, Map<Integer, Double>> getCopyOfLinkTravelTimes() {
+	public Map<TimeOfDay, double[]> getCopyOfLinkTravelTimes() {
 
-		Map<TimeOfDay, Map<Integer, Double>> linkTravelTimes = new EnumMap<>(TimeOfDay.class);
+		Map<TimeOfDay, double[]> linkTravelTimes = new EnumMap<>(TimeOfDay.class);
 		for (TimeOfDay hour: TimeOfDay.values()) {
-			Map<Integer, Double> hourlyMap = new HashMap<Integer, Double>();
-			for (Integer edge: this.linkTravelTimePerTimeOfDay.get(hour).keySet())
-				hourlyMap.put(edge, this.linkTravelTimePerTimeOfDay.get(hour).get(edge));
-			linkTravelTimes.put(hour, hourlyMap);
+			double[] hourlyTimes = new double[this.linkTravelTimePerTimeOfDay.get(hour).length];
+			for (int i = 1; i < hourlyTimes.length; i++)
+				hourlyTimes[i] = this.linkTravelTimePerTimeOfDay.get(hour)[i];
+			linkTravelTimes.put(hour, hourlyTimes);
+		}
+
+		return linkTravelTimes;
+	}
+	
+	/**
+	 * @return The copy of all link travel times as map.
+	 */
+	public Map<TimeOfDay, Map<Integer, Double>> getCopyOfLinkTravelTimesAsMap() {
+
+		Map<TimeOfDay, Map<Integer, Double>> linkTravelTimes = new EnumMap<TimeOfDay, Map<Integer, Double>>(TimeOfDay.class);
+		for (TimeOfDay hour: TimeOfDay.values()) {
+			Map<Integer, Double> hourlyTimes = new HashMap<Integer, Double>();
+			for (int i = 1; i < this.linkTravelTimePerTimeOfDay.get(hour).length; i++)
+				hourlyTimes.put(i, this.linkTravelTimePerTimeOfDay.get(hour)[i]);
+			linkTravelTimes.put(hour, hourlyTimes);
 		}
 
 		return linkTravelTimes;
@@ -3552,8 +3567,8 @@ public class RoadNetworkAssignment {
 				String roadNumber = (String) feature.getAttribute("RoadNumber");
 				record.add(roadNumber);
 				record.add(String.format("%.3f", this.roadNetwork.getEdgeLength(edge.getID())));
-				record.add(String.format("%.4f", this.roadNetwork.getFreeFlowTravelTime().get(edge.getID())));
-				record.add(String.format("%.4f", this.linkTravelTimePerTimeOfDay.get(TimeOfDay.EIGHTAM).get(edge.getID())));
+				record.add(String.format("%.4f", this.roadNetwork.getFreeFlowTravelTime()[edge.getID()]));
+				record.add(String.format("%.4f", this.linkTravelTimePerTimeOfDay.get(TimeOfDay.EIGHTAM)[edge.getID()]));
 				Integer linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edge.getID());
 				if (linkVolume == null) record.add(Integer.toString(0));
 				else 					record.add(Integer.toString(linkVolume));
@@ -4177,9 +4192,9 @@ public class RoadNetworkAssignment {
 				record.clear();
 				record.add(Integer.toString(year));
 				record.add(Integer.toString(edge.getID()));
-				record.add(Double.toString(this.roadNetwork.getFreeFlowTravelTime().get(edge.getID())));
+				record.add(Double.toString(this.roadNetwork.getFreeFlowTravelTime()[edge.getID()]));
 				for (TimeOfDay hour: TimeOfDay.values())
-					record.add(String.format("%.4f", this.linkTravelTimePerTimeOfDay.get(hour).get(edge.getID())));
+					record.add(String.format("%.4f", this.linkTravelTimePerTimeOfDay.get(hour)[edge.getID()]));
 				csvFilePrinter.printRecord(record);
 			}
 		} catch (Exception e) {
@@ -4206,9 +4221,9 @@ public class RoadNetworkAssignment {
 		
 		//store/overwrite into the defaultLinkTravelTime
 		for (TimeOfDay hour: TimeOfDay.values()) {
-			Map<Integer, Double> hourlyMap = this.linkTravelTimePerTimeOfDay.get(hour);
+			double[] hourlyTimes = this.linkTravelTimePerTimeOfDay.get(hour);
 			for (Integer edgeID: linkTravelTime.get(hour).keySet())
-				hourlyMap.put(edgeID, linkTravelTime.get(hour).get(edgeID));
+				hourlyTimes[edgeID] = linkTravelTime.get(hour).get(edgeID);
 		}
 	}
 
@@ -4243,7 +4258,7 @@ public class RoadNetworkAssignment {
 	 * Getter method for the link free-flow travel times.
 	 * @return Link volumes
 	 */
-	public HashMap<Integer, Double> getLinkFreeFlowTravelTimes() {
+	public double[] getLinkFreeFlowTravelTimes() {
 
 		return this.roadNetwork.getFreeFlowTravelTime();
 	}
@@ -4252,7 +4267,7 @@ public class RoadNetworkAssignment {
 	 * Getter method for the link travel times per time of day.
 	 * @return Link travel times per time of day.
 	 */
-	public Map<TimeOfDay, Map<Integer, Double>> getLinkTravelTimes() {
+	public Map<TimeOfDay, double[]> getLinkTravelTimes() {
 
 		return this.linkTravelTimePerTimeOfDay;
 	}

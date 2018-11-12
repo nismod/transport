@@ -1029,22 +1029,22 @@ public class RoadNetworkTest {
 		if (cat.toUpperCase().charAt(1) == 'R')
 			System.out.println("Edge is rural!");
 		
-		System.out.println("should be false: " + roadNetwork.getIsEdgeUrban().get(541));
+		System.out.println("should be false: " + roadNetwork.getIsEdgeUrban()[541]);
 		
-		assertTrue("Edge is not urban", !roadNetwork.getIsEdgeUrban().get(541));
-		assertTrue("Edge is not urban", !roadNetwork.getIsEdgeUrban().get(540));
+		assertTrue("Edge is not urban", !roadNetwork.getIsEdgeUrban()[541]);
+		assertTrue("Edge is not urban", !roadNetwork.getIsEdgeUrban()[540]);
 		
-		assertTrue("Edge is urban", roadNetwork.getIsEdgeUrban().get(616));
-		assertTrue("Edge is urban", roadNetwork.getIsEdgeUrban().get(615));
+		assertTrue("Edge is urban", roadNetwork.getIsEdgeUrban()[616]);
+		assertTrue("Edge is urban", roadNetwork.getIsEdgeUrban()[615]);
 		
-		assertNull("Edge is neither urban nor rural", roadNetwork.getIsEdgeUrban().get(555));
-		assertNull("Edge is neither urban nor rural", roadNetwork.getIsEdgeUrban().get(556));
+		assertNull("Edge is neither urban nor rural", roadNetwork.getIsEdgeUrban()[555]);
+		assertNull("Edge is neither urban nor rural", roadNetwork.getIsEdgeUrban()[556]);
 		
 		//TEST WHETHER EDGE IS FERRY
-		assertTrue("Edge is ferry", roadNetwork.getIsEdgeFerry().get(555));
-		assertTrue("Edge is ferry", roadNetwork.getIsEdgeFerry().get(556));
-		assertTrue("Edge is not ferry", !roadNetwork.getIsEdgeFerry().get(541));
-		assertTrue("Edge is not ferry", !roadNetwork.getIsEdgeFerry().get(540));
+		assertTrue("Edge is ferry", roadNetwork.getIsEdgeFerry()[555]);
+		assertTrue("Edge is ferry", roadNetwork.getIsEdgeFerry()[556]);
+		assertTrue("Edge is not ferry", !roadNetwork.getIsEdgeFerry()[541]);
+		assertTrue("Edge is not ferry", !roadNetwork.getIsEdgeFerry()[540]);
 		
 		//TEST EDGE TO OTHER DIRECTION EDGE MAPPING
 		System.out.println("\n\n*** Testing edge to other direction edge mapping ***");
@@ -1163,7 +1163,13 @@ public class RoadNetworkTest {
 		SimpleFeatureType sf = roadNetwork.createCustomFeatureType("DayVolume");
 		System.out.println(sf.getType("DayVolume"));
 		System.out.println(sf.indexOf("DayVolume"));
-		SimpleFeatureCollection sfc = roadNetwork.createNetworkFeatureCollection(roadNetwork.getFreeFlowTravelTime(), "FreeFlow", "./temp/features.shp");
+		
+		double[] freeFlowTime = roadNetwork.getFreeFlowTravelTime();
+		HashMap<Integer, Double> travelTimeMap = new HashMap<Integer, Double>();
+		for (int i=1; i < freeFlowTime.length; i++)
+			travelTimeMap.put(i, freeFlowTime[i]);
+				
+		SimpleFeatureCollection sfc = roadNetwork.createNetworkFeatureCollection(travelTimeMap, "FreeFlow", "./temp/features.shp");
 		System.out.println(sfc.getSchema());
 	}
 

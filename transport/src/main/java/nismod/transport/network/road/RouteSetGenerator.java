@@ -221,9 +221,9 @@ public class RouteSetGenerator{
 		
 		//link elimination method
 		for (Object o: fastestPath.getEdges()) {
-			HashMap<Integer, Double> linkTravelTimes = new HashMap<Integer, Double>();
+			double[] linkTravelTimes = new double[this.roadNetwork.getFreeFlowTravelTime().length];
 			DirectedEdge edge = (DirectedEdge) o;
-			linkTravelTimes.put(edge.getID(), Double.MAX_VALUE); //blocks by setting a maximum travel time
+			linkTravelTimes[edge.getID()] = Double.MAX_VALUE; //blocks by setting a maximum travel time
 			RoadPath path = this.roadNetwork.getFastestPath(originNode, destinationNode, linkTravelTimes);
 			if (path != null) {
 				//System.out.println(path.toString());
@@ -324,7 +324,7 @@ public class RouteSetGenerator{
 
 			for (Object o: fastestPath.getEdges()) {
 
-				HashMap<Integer, Double> linkTravelTimes = new HashMap<Integer, Double>();
+				double[] linkTravelTimes = new double[this.roadNetwork.getFreeFlowTravelTime().length];
 				DirectedEdge edge = (DirectedEdge) o;
 				//System.out.printf("Blocking edge (%d)-%d->(%d) \n", edge.getInNode().getID(), edge.getID(), edge.getOutNode().getID());
 
@@ -362,7 +362,7 @@ public class RouteSetGenerator{
 
 				int randomIndex = rng.nextInt(pathSizeInLinks);
 				Object o = fastestPath.getEdges().get(randomIndex); //pick random edge
-				HashMap<Integer, Double> linkTravelTimes = new HashMap<Integer, Double>();
+				double[] linkTravelTimes = new double[this.roadNetwork.getFreeFlowTravelTime().length];
 				DirectedEdge edge = (DirectedEdge) o;
 				//System.out.printf("Blocking edge (%d)-%d->(%d) \n", edge.getInNode().getID(), edge.getID(), edge.getOutNode().getID());
 

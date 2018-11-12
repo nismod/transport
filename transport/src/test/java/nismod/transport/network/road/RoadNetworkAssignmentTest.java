@@ -516,17 +516,26 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("\n\n*** Testing link travel times ***");
 
 		//before assignment link travel times should be equal to free flow travel times
-		System.out.println(rna.getLinkFreeFlowTravelTimes());
-		System.out.println(rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM)); //get times for the peak hour
-		assertTrue(rna.getLinkFreeFlowTravelTimes().equals(rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM)));
+		//System.out.println(Arrays.toString(rna.getLinkFreeFlowTravelTimes()));
+		//System.out.println(Arrays.toString(rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM))); //get times for the peak hour
+		//assertTrue(rna.getLinkFreeFlowTravelTimes().equals(rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM)));
+		
+		for (int i=1; i < rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM).length; i++) {
+			double actual = rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM)[i];
+			double freeFlow = rna.getLinkFreeFlowTravelTimes()[i];
+			//assertTrue(actual >= freeFlow);
+			//assertThat(actual, greaterThanOrEqualTo(freeFlow));
+			final double PRECISION = 1e-6;
+			assertEquals(actual, freeFlow, PRECISION);
+		}
 
 		//after assignment the link travel times should be greater or equal than the free flow travel times.
 		rna.updateLinkTravelTimes();
-		System.out.println(rna.getLinkFreeFlowTravelTimes());
-		System.out.println(rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM));
-		for (int key: rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM).keySet()) {
-			double actual = rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM).get(key);
-			double freeFlow = rna.getLinkFreeFlowTravelTimes().get(key);
+		//System.out.println(rna.getLinkFreeFlowTravelTimes());
+		//System.out.println(rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM));
+		for (int i=1; i < rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM).length; i++) {
+			double actual = rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM)[i];
+			double freeFlow = rna.getLinkFreeFlowTravelTimes()[i];
 			//assertTrue(actual >= freeFlow);
 			//assertThat(actual, greaterThanOrEqualTo(freeFlow));
 			final double PRECISION = 1e-6;
@@ -538,24 +547,24 @@ public class RoadNetworkAssignmentTest {
 		rna.saveLinkTravelTimes(2015, "./temp/miniTestLinkTravelTimes.csv");
 		Map<TimeOfDay, Map<Integer, Double>> loadedLinkTravelTimes = InputFileReader.readLinkTravelTimeFile(2015, "./temp/miniTestLinkTravelTimes.csv");
 		//System.out.println(loadedLinkTravelTimes);
-		Map<TimeOfDay, Map<Integer, Double>> linkTravelTimes = rna.getLinkTravelTimes();
+		Map<TimeOfDay, double[]> linkTravelTimes = rna.getLinkTravelTimes();
 		
 		//compare them
 		final double PRECISION = 1e-4;
 		for (TimeOfDay hour: linkTravelTimes.keySet()) {
-			Map<Integer, Double> linkTimes = linkTravelTimes.get(hour);
+			double[] linkTimes = linkTravelTimes.get(hour);
 			Map<Integer, Double> loadedLinkTimes = loadedLinkTravelTimes.get(hour);
-			for (int edgeID: linkTimes.keySet()) 
-				assertEquals("Link travel time is correct", linkTimes.get(edgeID), loadedLinkTimes.get(edgeID), PRECISION);			
+			for (int edgeID: loadedLinkTimes.keySet()) 
+				assertEquals("Link travel time is correct", linkTimes[edgeID], loadedLinkTimes.get(edgeID), PRECISION);			
 		}
 		
 		rna.loadLinkTravelTimes(2015, "./temp/miniTestLinkTravelTimes.csv");
 		linkTravelTimes = rna.getLinkTravelTimes();
 		for (TimeOfDay hour: loadedLinkTravelTimes.keySet()) {
-			Map<Integer, Double> linkTimes = linkTravelTimes.get(hour);
+			double[] linkTimes = linkTravelTimes.get(hour);
 			Map<Integer, Double> loadedLinkTimes = loadedLinkTravelTimes.get(hour);
 			for (int edgeID: loadedLinkTimes.keySet()) 
-				assertEquals("Link travel time is correct", linkTimes.get(edgeID), loadedLinkTimes.get(edgeID), PRECISION);			
+				assertEquals("Link travel time is correct", linkTimes[edgeID], loadedLinkTimes.get(edgeID), PRECISION);			
 		}
 					
 		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforSimulatedVolumes());
@@ -686,11 +695,11 @@ public class RoadNetworkAssignmentTest {
 		rna.updateLinkTravelTimes();
 	
 		System.out.println("Link travel times per time of day: ");
-		Map<TimeOfDay, Map<Integer, Double>> times = rna.getLinkTravelTimes();
+		Map<TimeOfDay, double[]> times = rna.getLinkTravelTimes();
 		System.out.println(times);
 		for (TimeOfDay hour: TimeOfDay.values()) {
 			System.out.println(hour);
-			System.out.println(times.get(hour));
+			//System.out.println(Arrays.toString(times.get(hour)));
 		}
 	
 		//compare volumes in PCU calculated during the assignment with those calculated from the trip list
@@ -923,34 +932,42 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("\n\n*** Testing link travel times ***");
 
 		//before assignment link travel times should be equal to free flow travel times
-		System.out.println(rna.getLinkFreeFlowTravelTimes());
-		System.out.println(rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM)); //get times for the peak hour
-		assertTrue(rna.getLinkFreeFlowTravelTimes().equals(rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM)));
+		//System.out.println(rna.getLinkFreeFlowTravelTimes());
+		//System.out.println(rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM)); //get times for the peak hour
+		//assertTrue(rna.getLinkFreeFlowTravelTimes().equals(rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM)));
+		for (int i=1; i < rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM).length; i++) {
+			double actual = rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM)[i];
+			double freeFlow = rna.getLinkFreeFlowTravelTimes()[i];
+			//assertTrue(actual >= freeFlow);
+			//assertThat(actual, greaterThanOrEqualTo(freeFlow));
+			final double PRECISION = 1e-6;
+			assertEquals(actual, freeFlow, PRECISION);
+		}
 
 		//check weighted averaging for travel times
 		rna.updateLinkTravelTimes(0.9);
-		Map<TimeOfDay, Map<Integer, Double>> averagedTravelTimes = rna.getCopyOfLinkTravelTimes();
+		Map<TimeOfDay, double[]> averagedTravelTimes = rna.getCopyOfLinkTravelTimes();
 		rna.updateLinkTravelTimes();
 		for (TimeOfDay hour: TimeOfDay.values())
-			for (int key: averagedTravelTimes.get(hour).keySet()) {
-				double freeFlow = rna.getLinkFreeFlowTravelTimes().get(key);
-				double updated = rna.getLinkTravelTimes().get(hour).get(key);
-				double averaged = averagedTravelTimes.get(hour).get(key);
+			for (int i=1; i < averagedTravelTimes.get(hour).length; i++) {
+				double freeFlow = rna.getLinkFreeFlowTravelTimes()[i];
+				double updated = rna.getLinkTravelTimes().get(hour)[i];
+				double averaged = averagedTravelTimes.get(hour)[i];
 				assertEquals("Averaged travel time should be correct", 0.9*updated + 0.1*freeFlow, averaged, EPSILON);
 		}
 		
 		//after assignment and update the link travel times should be greater or equal than the free flow travel times.
 		System.out.println(rna.getLinkFreeFlowTravelTimes());
 		System.out.println(rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM));
-		for (int key: rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM).keySet()) {
-			if (rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM).get(key) < rna.getLinkFreeFlowTravelTimes().get(key)) {
-				System.err.println("For link id = " + key);
-				System.err.println("Link volume in PCU: " + rna.getLinkVolumeInPCU().get(key));
-				System.err.println("Link travel time " + rna.getLinkTravelTimes().get(key));
-				System.err.println("Free-flow Link travel time " + rna.getLinkFreeFlowTravelTimes().get(key));
+		for (int i=1; i < rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM).length; i++) {
+			if (rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM)[i] < rna.getLinkFreeFlowTravelTimes()[i]) {
+				System.err.println("For link id = " + i);
+				System.err.println("Link volume in PCU: " + rna.getLinkVolumeInPCU().get(i));
+				System.err.println("Link travel time " + rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM)[i]);
+				System.err.println("Free-flow Link travel time " + rna.getLinkFreeFlowTravelTimes()[i]);
 			}
-			double actual = rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM).get(key);
-			double freeFlow = rna.getLinkFreeFlowTravelTimes().get(key);
+			double actual = rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM)[i];
+			double freeFlow = rna.getLinkFreeFlowTravelTimes()[i];
 			//assertTrue(actual >= freeFlow);
 			//assertThat(actual, greaterThanOrEqualTo(freeFlow));
 			final double PRECISION = 1e-6;
@@ -1397,27 +1414,35 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("\n\n*** Testing link travel times ***");
 
 		//before assignment link travel times should be equal to free flow travel times
-		System.out.println(rna.getLinkFreeFlowTravelTimes());
-		System.out.println(rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM));
-		assertTrue(rna.getLinkFreeFlowTravelTimes().equals(rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM)));
+		//System.out.println(rna.getLinkFreeFlowTravelTimes());
+		//System.out.println(rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM));
+		//assertTrue(rna.getLinkFreeFlowTravelTimes().equals(rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM)));
+		for (int i=1; i < rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM).length; i++) {
+			double actual = rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM)[i];
+			double freeFlow = rna.getLinkFreeFlowTravelTimes()[i];
+			//assertTrue(actual >= freeFlow);
+			//assertThat(actual, greaterThanOrEqualTo(freeFlow));
+			final double PRECISION = 1e-6;
+			assertEquals(actual, freeFlow, PRECISION);
+		}
 
 		//check weighted averaging for travel times
 		rna.updateLinkTravelTimes(0.9);
-		Map<Integer, Double> averagedTravelTimes = rna.getCopyOfLinkTravelTimes().get(TimeOfDay.EIGHTAM);
+		double[] averagedTravelTimes = rna.getCopyOfLinkTravelTimes().get(TimeOfDay.EIGHTAM);
 		rna.updateLinkTravelTimes();
-		for (int key: averagedTravelTimes.keySet()) {
-			double freeFlow = rna.getLinkFreeFlowTravelTimes().get(key);
-			double updated = rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM).get(key);
-			double averaged = averagedTravelTimes.get(key);
+		for (int i=1; i < averagedTravelTimes.length; i++) {
+			double freeFlow = rna.getLinkFreeFlowTravelTimes()[i];
+			double updated = rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM)[i];
+			double averaged = averagedTravelTimes[i];
 			assertEquals("Averaged travel time should be correct", 0.9*updated + 0.1*freeFlow, averaged, EPSILON);
 		}
 		
 		//after assignment and update the link travel times should be greater or equal than the free flow travel times.
 		System.out.println(rna.getLinkFreeFlowTravelTimes());
 		System.out.println(rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM));
-		for (int key: rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM).keySet()) {			
-			double actual = rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM).get(key);
-			double freeFlow = rna.getLinkFreeFlowTravelTimes().get(key);
+		for (int i = 1; i < rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM).length; i++) {			
+			double actual = rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM)[i];
+			double freeFlow = rna.getLinkFreeFlowTravelTimes()[i];
 			//assertTrue(actual >= freeFlow);
 			//assertThat(actual, greaterThanOrEqualTo(freeFlow));
 			final double PRECISION = 1e-6;
@@ -1621,28 +1646,28 @@ public class RoadNetworkAssignmentTest {
 
 		//check weighted averaging for travel times
 		rna.updateLinkTravelTimes(0.9);
-		Map<TimeOfDay, Map<Integer, Double>> averagedTravelTimes = rna.getCopyOfLinkTravelTimes();
+		Map<TimeOfDay, double[]> averagedTravelTimes = rna.getCopyOfLinkTravelTimes();
 		rna.updateLinkTravelTimes();
 		for (TimeOfDay hour: TimeOfDay.values())
-			for (int key: averagedTravelTimes.get(hour).keySet()) {
-				double freeFlow = rna.getLinkFreeFlowTravelTimes().get(key);
-				double updated = rna.getLinkTravelTimes().get(hour).get(key);
-				double averaged = averagedTravelTimes.get(hour).get(key);
+			for (int i=1; i < averagedTravelTimes.get(hour).length; i++) {
+				double freeFlow = rna.getLinkFreeFlowTravelTimes()[i];
+				double updated = rna.getLinkTravelTimes().get(hour)[i];
+				double averaged = averagedTravelTimes.get(hour)[i];
 				assertEquals("Averaged travel time should be correct", 0.9*updated + 0.1*freeFlow, averaged, EPSILON);
 		}
 		
 		//after assignment and update the link travel times should be greater or equal than the free flow travel times.
 		System.out.println(rna.getLinkFreeFlowTravelTimes());
 		System.out.println(rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM));
-		for (int key: rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM).keySet()) {
-			if (rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM).get(key) < rna.getLinkFreeFlowTravelTimes().get(key)) {
-				System.err.println("For link id = " + key);
-				System.err.println("Link volume in PCU: " + rna.getLinkVolumeInPCU().get(key));
-				System.err.println("Link travel time " + rna.getLinkTravelTimes().get(key));
-				System.err.println("Free-flow Link travel time " + rna.getLinkFreeFlowTravelTimes().get(key));
+		for (int i = 1; i < rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM).length; i++) {
+			if (rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM)[i] < rna.getLinkFreeFlowTravelTimes()[i]) {
+				System.err.println("For link id = " + i);
+				System.err.println("Link volume in PCU: " + rna.getLinkVolumeInPCU().get(i));
+				System.err.println("Link travel time " + rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM)[i]);
+				System.err.println("Free-flow Link travel time " + rna.getLinkFreeFlowTravelTimes()[i]);
 			}
-			double actual = rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM).get(key);
-			double freeFlow = rna.getLinkFreeFlowTravelTimes().get(key);
+			double actual = rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM)[i];
+			double freeFlow = rna.getLinkFreeFlowTravelTimes()[i];
 			//assertTrue(actual >= freeFlow);
 			//assertThat(actual, greaterThanOrEqualTo(freeFlow));
 			final double PRECISION = 1e-6;
