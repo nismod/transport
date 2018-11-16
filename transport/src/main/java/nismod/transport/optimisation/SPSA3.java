@@ -4,6 +4,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -13,6 +14,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.geotools.graph.structure.Node;
 
 import nismod.transport.demand.ODMatrix;
 import nismod.transport.demand.RealODMatrix;
@@ -233,7 +235,10 @@ public class SPSA3 {
 	 */
 	public void saveNodeProbabilities(String outputFile) {
 
-		Set<Integer> nodes = this.rna.getRoadNetwork().getNodeIDtoNode().keySet();
+		Set<Integer> nodes = new HashSet<Integer>();
+		for (Node node:	this.rna.getRoadNetwork().getNodeIDtoNode())
+			if (node != null) 
+				nodes.add(node.getID());
 
 		String NEW_LINE_SEPARATOR = System.lineSeparator();
 		ArrayList<String> header = new ArrayList<String>();

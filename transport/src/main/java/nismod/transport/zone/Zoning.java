@@ -291,7 +291,9 @@ public class Zoning {
 	private void zoneToNodeAndZoneToZoneDistanceMatrices(SimpleFeatureCollection zonesFeatureCollection) {
 
 		int maxZones = Collections.max(this.getZoneIDToCodeMap().keySet()); //find maximum index
-		int maxNodes = Collections.max(this.rn.getNodeIDtoNode().keySet()); //find maximum node id
+		//int maxNodes = Collections.max(this.rn.getNodeIDtoNode().keySet()); //find maximum node id
+		int maxNodes = this.rn.getMaximumNodeID();
+		
 		this.zoneToNodeDistanceMatrix = new double[maxZones][maxNodes];
 		this.zoneToZoneDistanceMatrix = new double[maxZones][maxZones];		
 

@@ -139,7 +139,7 @@ public class Route {
 		if (this.edges.isEmpty()) this.edges.add(edge.getID());
 		else {
 			int lastEdgeID = this.edges.get(this.edges.size()-1);
-			DirectedEdge lastEdge = (DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(lastEdgeID);
+			DirectedEdge lastEdge = (DirectedEdge) roadNetwork.getEdgeIDtoEdge()[lastEdgeID];
 			if (!lastEdge.getOutNode().equals(edge.getInNode())) {
 //				System.err.printf("Trying to add an edge %d that is not connected to the last edge %d in the route (id = %d)\n", edge.getID(), lastEdge.getID(), this.getID());
 //				System.err.printf("(%d)-%d->(%d), (%d)-%d->(%d)", lastEdge.getInNode().getID(), lastEdge.getID(), lastEdge.getOutNode().getID(), edge.getInNode().getID(), edge.getID(), edge.getOutNode().getID());
@@ -503,7 +503,7 @@ public class Route {
 			return (DirectedNode) this.singleNode;
 		else {
 			int firstEdgeID = this.edges.get(0);
-			DirectedEdge firstEdge = (DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(firstEdgeID);
+			DirectedEdge firstEdge = (DirectedEdge) roadNetwork.getEdgeIDtoEdge()[firstEdgeID];
 			return firstEdge.getInNode();
 		}
 	}
@@ -517,7 +517,7 @@ public class Route {
 			return (DirectedNode) this.singleNode;
 		else {
 			int lastEdgeID = this.edges.get(edges.size() - 1);
-			DirectedEdge lastEdge = (DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(lastEdgeID);
+			DirectedEdge lastEdge = (DirectedEdge) roadNetwork.getEdgeIDtoEdge()[lastEdgeID];
 			return lastEdge.getOutNode();	
 		}
 	}
@@ -549,8 +549,8 @@ public class Route {
 			int edgeID1 = this.edges.get(i-1);
 			int edgeID2 = this.edges.get(i);
 			
-			DirectedEdge edge1 = (DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(edgeID1);
-			DirectedEdge edge2 = (DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(edgeID2);
+			DirectedEdge edge1 = (DirectedEdge) roadNetwork.getEdgeIDtoEdge()[edgeID1];
+			DirectedEdge edge2 = (DirectedEdge) roadNetwork.getEdgeIDtoEdge()[edgeID2];
 			
 			if (!edge1.getOutNode().equals(edge2.getInNode())) return false; //if edges are not connected
 		}
@@ -587,7 +587,7 @@ public class Route {
 			sb.append(")");
 		} else {
 			for (int edgeID: edges.toArray()) {
-				DirectedEdge edge = (DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(edgeID);
+				DirectedEdge edge = (DirectedEdge) roadNetwork.getEdgeIDtoEdge()[edgeID];
 				sb.append("(");
 				sb.append(edge.getInNode().getID());
 				sb.append(")-");
@@ -599,7 +599,7 @@ public class Route {
 			}
 			sb.append("(");
 			int lastEdgeID = edges.get(edges.size()-1);
-			DirectedEdge lastEdge = (DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(lastEdgeID);
+			DirectedEdge lastEdge = (DirectedEdge) roadNetwork.getEdgeIDtoEdge()[lastEdgeID];
 			sb.append(lastEdge.getOutNode());
 			sb.append(")");
 		}

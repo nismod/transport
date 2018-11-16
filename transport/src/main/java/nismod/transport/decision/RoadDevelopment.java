@@ -68,8 +68,8 @@ public class RoadDevelopment extends Intervention {
 		double length = Double.parseDouble(this.props.getProperty("length"));
 		char roadCategory = this.props.getProperty("roadClass").charAt(0);
 				
-		Node fromNode = rn.getNodeIDtoNode().get(fromNodeId);
-		Node toNode = rn.getNodeIDtoNode().get(toNodeId);
+		Node fromNode = rn.getNodeIDtoNode()[fromNodeId];
+		Node toNode = rn.getNodeIDtoNode()[toNodeId];
 		if (fromNode == null || toNode == null) {
 			LOGGER.error("Could not find a node where road development should be installed!");
 			return;
@@ -92,8 +92,8 @@ public class RoadDevelopment extends Intervention {
 				return;
 			}
 			//update map that maps edgeId to the edgeID of other direction
-			rn.getEdgeIDtoOtherDirectionEdgeID().put(newEdge.getID(), newEdge2.getID());
-			rn.getEdgeIDtoOtherDirectionEdgeID().put(newEdge2.getID(), newEdge.getID());
+			rn.getEdgeIDtoOtherDirectionEdgeID()[newEdge.getID()] = newEdge2.getID();
+			rn.getEdgeIDtoOtherDirectionEdgeID()[newEdge2.getID()] = newEdge.getID();
 			
 			//store edge ID
 			this.newEdgeId2 = newEdge2.getID();
@@ -126,11 +126,11 @@ public class RoadDevelopment extends Intervention {
 			LOGGER.warn("RoadDevelopment does not have ID of the edge that needs to be removed.");
 			return;
 		} else 
-			rn.removeRoadLink(rn.getEdgeIDtoEdge().get(this.newEdgeId));
+			rn.removeRoadLink(rn.getEdgeIDtoEdge()[this.newEdgeId]);
 		
 		//if other edge exists, remove it too
 		if (this.newEdgeId2 != null) 
-			rn.removeRoadLink(rn.getEdgeIDtoEdge().get(this.newEdgeId2));
+			rn.removeRoadLink(rn.getEdgeIDtoEdge()[this.newEdgeId2]);
 		
 		this.installed = false;
 	}

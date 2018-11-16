@@ -276,7 +276,7 @@ public class TripTempro extends Trip {
 			Boolean isUrban = null;
 			if (!this.route.getEdges().isEmpty()) { //if there is an edge list
 				int firstEdgeID = this.route.getEdges().get(0);
-				DirectedEdge firstEdge = (DirectedEdge) this.route.getRoadNetwork().getEdgeIDtoEdge().get(firstEdgeID);
+				DirectedEdge firstEdge = (DirectedEdge) this.route.getRoadNetwork().getEdgeIDtoEdge()[firstEdgeID];
 				isUrban = this.route.getRoadNetwork().getIsEdgeUrban()[firstEdgeID];
 
 				//if no roadCategory information (e.g. ferry) use urban/rural classification of related edge
@@ -310,7 +310,7 @@ public class TripTempro extends Trip {
 			isUrban = null;
 			if (!this.route.getEdges().isEmpty()) { //if there is an edge list
 				int lastEdgeID = this.route.getEdges().get(this.route.getEdges().size()-1);
-				DirectedEdge lastEdge = (DirectedEdge) this.route.getRoadNetwork().getEdgeIDtoEdge().get(lastEdgeID);
+				DirectedEdge lastEdge = (DirectedEdge) this.route.getRoadNetwork().getEdgeIDtoEdge()[lastEdgeID];
 				isUrban = this.route.getRoadNetwork().getIsEdgeUrban()[lastEdgeID];
 
 				//if no roadCategory information (e.g. ferry) use urban/rural classification of related edge

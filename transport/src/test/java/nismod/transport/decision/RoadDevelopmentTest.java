@@ -77,15 +77,15 @@ public class RoadDevelopmentTest {
 		
 		System.out.println("Number of road links/edges after development: " + roadNetwork.getNetwork().getEdges().size());
 		assertEquals("The number of road links in the graph should be correct", 303, roadNetwork.getNetwork().getEdges().size());
-		assertEquals("The number of edges in the map should be correct", 303, roadNetwork.getEdgeIDtoEdge().size());
-		assertEquals("The number of road lanes should be correct", (int) Integer.parseInt(rd.getProperty("lanesPerDirection")), (int) roadNetwork.getNumberOfLanes().get(rd.getDevelopedEdgeID()));
+		assertEquals("The number of edges in the map should be correct", 303, roadNetwork.getNetwork().getEdges().size());
+		assertEquals("The number of road lanes should be correct", (int) Integer.parseInt(rd.getProperty("lanesPerDirection")), (int) roadNetwork.getNumberOfLanes()[rd.getDevelopedEdgeID()]);
 
-		DirectedEdge newEdge = (DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(rd.getDevelopedEdgeID());
+		DirectedEdge newEdge = (DirectedEdge) roadNetwork.getEdgeIDtoEdge()[rd.getDevelopedEdgeID()];
 		assertEquals("From node ID is correct", newEdge.getNodeA().getID(), Integer.parseInt(props2.getProperty("fromNode")));
 		assertEquals("To node ID is correct", newEdge.getNodeB().getID(), Integer.parseInt(props2.getProperty("toNode")));
 		
-		DirectedEdge newEdge2 = (DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(rd.getDevelopedEdgeID2());
-		assertEquals("Edge ID from other direction is correct", newEdge2.getID(), (int) roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(newEdge.getID()));
+		DirectedEdge newEdge2 = (DirectedEdge) roadNetwork.getEdgeIDtoEdge()[rd.getDevelopedEdgeID2()];
+		assertEquals("Edge ID from other direction is correct", newEdge2.getID(), (int)roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[newEdge.getID()]);
 		assertEquals("From node ID is correct", newEdge2.getNodeA().getID(), Integer.parseInt(rd.getProperty("toNode")));
 		assertEquals("To node ID is correct", newEdge2.getNodeB().getID(), Integer.parseInt(rd.getProperty("fromNode")));
 		

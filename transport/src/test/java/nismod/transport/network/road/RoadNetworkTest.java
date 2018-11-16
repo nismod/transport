@@ -97,8 +97,8 @@ public class RoadNetworkTest {
 		NetworkVisualiser.visualise(roadNetwork2, "Midi Test Area");
 
 		//create new road link
-		Node fromNode = roadNetwork2.getNodeIDtoNode().get(86);
-		Node toNode = roadNetwork2.getNodeIDtoNode().get(48);
+		Node fromNode = roadNetwork2.getNodeIDtoNode()[86];
+		Node toNode = roadNetwork2.getNodeIDtoNode()[48];
 		DirectedEdge newEdge = (DirectedEdge) roadNetwork2.createNewRoadLink(fromNode, toNode, 2, 'A', 0.6);
 		DirectedEdge newEdge2 = (DirectedEdge) roadNetwork2.createNewRoadLink(toNode, fromNode, 2, 'A', 0.6);
 
@@ -592,14 +592,14 @@ public class RoadNetworkTest {
 		//TEST ADDING NEW ROAD LINKS
 		System.out.println("\n\n*** Testing addition of new links ***");
 
-		Node fromNode = roadNetwork.getNodeIDtoNode().get(86);
-		Node toNode = roadNetwork.getNodeIDtoNode().get(48);
+		Node fromNode = roadNetwork.getNodeIDtoNode()[86];
+		Node toNode = roadNetwork.getNodeIDtoNode()[48];
 
 		DirectedEdge newEdge = (DirectedEdge) roadNetwork.createNewRoadLink(fromNode, toNode, 2, 'A', 0.6);
 
 		//find path from node 86 to node 19
-		from = roadNetwork.getNodeIDtoNode().get(86);
-		to = roadNetwork.getNodeIDtoNode().get(19);
+		from = roadNetwork.getNodeIDtoNode()[86];
+		to = roadNetwork.getNodeIDtoNode()[19];
 
 		//find the shortest path using AStar algorithm
 		try {
@@ -1006,11 +1006,11 @@ public class RoadNetworkTest {
 			SimpleFeature sf = (SimpleFeature) edge.getObject(); 
 			String roadNumber = (String) sf.getAttribute("RoadNumber");
 			if (roadNumber.charAt(0) == 'M') {//motorway
-				assertEquals("The number of lanes is correct for the road type", roadNetwork.getNumberOfLanesMRoad(), (int)roadNetwork.getNumberOfLanes().get(edge.getID()));
+				assertEquals("The number of lanes is correct for the road type", roadNetwork.getNumberOfLanesMRoad(), roadNetwork.getNumberOfLanes()[edge.getID()]);
 			} else if (roadNumber.charAt(0) == 'A') {//A road
-				assertEquals("The number of lanes is correct for the road type", roadNetwork.getNumberOfLanesARoad(), (int)roadNetwork.getNumberOfLanes().get(edge.getID()));
+				assertEquals("The number of lanes is correct for the road type", roadNetwork.getNumberOfLanesARoad(), roadNetwork.getNumberOfLanes()[edge.getID()]);
 			} else {//ferry
-				assertNull("The number of lanes for ferries is not defined", roadNetwork.getNumberOfLanes().get(edge.getID()));
+				assertEquals("The number of lanes for ferries is 0", 0, roadNetwork.getNumberOfLanes()[edge.getID()]);
 			}
 		}
 		
@@ -1018,7 +1018,7 @@ public class RoadNetworkTest {
 		System.out.println("\n\n*** Testing if the edges are urban or rural ***");
 		System.out.println(roadNetwork.getIsEdgeUrban());
 		
-		Edge edge = roadNetwork.getEdgeIDtoEdge().get(541);
+		Edge edge = roadNetwork.getEdgeIDtoEdge()[541];
 		SimpleFeature sfcat = (SimpleFeature) edge.getObject();
 		String cat = (String) sfcat.getAttribute("RCat"); //road category (PM, PR, Pu, PU, TM, TR, Tu, TU), use Pu, PU, Tu, TU as urban, otherwise rural
 
@@ -1056,9 +1056,9 @@ public class RoadNetworkTest {
 		System.out.println("\n\n*** Testing path creation from a list of nodes using RoadPath***");
 
 		Path cPath = new RoadPath();
-		DirectedNode node1 = (DirectedNode) roadNetwork.getNodeIDtoNode().get(6);
-		DirectedNode node2 = (DirectedNode) roadNetwork.getNodeIDtoNode().get(89);
-		DirectedNode node3 = (DirectedNode) roadNetwork.getNodeIDtoNode().get(39);
+		DirectedNode node1 = (DirectedNode) roadNetwork.getNodeIDtoNode()[6];
+		DirectedNode node2 = (DirectedNode) roadNetwork.getNodeIDtoNode()[89];
+		DirectedNode node3 = (DirectedNode) roadNetwork.getNodeIDtoNode()[39];
 		cPath.add(node1);
 		cPath.add(node2);
 		cPath.add(node3);
@@ -1068,8 +1068,8 @@ public class RoadNetworkTest {
 
 		ArrayList<Node> pathList = new ArrayList<Node>();
 		//48 -> 95
-		pathList.add((DirectedNode) roadNetwork.getNodeIDtoNode().get(48));
-		pathList.add((DirectedNode) roadNetwork.getNodeIDtoNode().get(95));
+		pathList.add((DirectedNode) roadNetwork.getNodeIDtoNode()[48]);
+		pathList.add((DirectedNode) roadNetwork.getNodeIDtoNode()[95]);
 		cPath = new RoadPath(pathList);
 		System.out.println(cPath);
 		System.out.println("Is path valid? " + cPath.isValid()); //this path should not be valid (GeoTools Path.isValid method ignores edge direction!)
@@ -1089,9 +1089,9 @@ public class RoadNetworkTest {
 
 		//48 -> 82 ->95
 		pathList.clear();
-		pathList.add((DirectedNode) roadNetwork.getNodeIDtoNode().get(48));
-		pathList.add((DirectedNode) roadNetwork.getNodeIDtoNode().get(82));
-		pathList.add((DirectedNode) roadNetwork.getNodeIDtoNode().get(95));
+		pathList.add((DirectedNode) roadNetwork.getNodeIDtoNode()[48]);
+		pathList.add((DirectedNode) roadNetwork.getNodeIDtoNode()[82]);
+		pathList.add((DirectedNode) roadNetwork.getNodeIDtoNode()[95]);
 		cPath = new RoadPath(pathList);
 		System.out.println(cPath);
 		System.out.println("Is path valid? " + cPath.isValid());

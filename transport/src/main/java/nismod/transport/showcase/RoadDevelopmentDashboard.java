@@ -242,7 +242,11 @@ public class RoadDevelopmentDashboard extends JFrame {
 		contentPane.add(lblRoadExpansionPolicy);
 
 		JComboBox comboBox = new JComboBox();
-		comboBox.setModel(new DefaultComboBoxModel(roadNetwork.getNodeIDtoNode().keySet().toArray()));
+		Set<Integer> nodes = new HashSet<Integer>();
+		for (Node node:	roadNetwork.getNodeIDtoNode())
+			if (node != null) 
+				nodes.add(node.getID());
+		comboBox.setModel(new DefaultComboBoxModel(nodes.toArray()));
 		//comboBox.setModel(new DefaultComboBoxModel(new String[] {"5", "6", "27", "23", "25"}));
 		comboBox.setBounds(LEFT_MARGIN, 728, 149, 22);
 		comboBox.setBorder(COMBOBOX_BORDER);
@@ -252,10 +256,10 @@ public class RoadDevelopmentDashboard extends JFrame {
 		contentPane.add(comboBox);
 
 		int fromNode = (int)comboBox.getSelectedItem();
-		DirectedNode nodeA = (DirectedNode) roadNetwork.getNodeIDtoNode().get(fromNode);
+		DirectedNode nodeA = (DirectedNode) roadNetwork.getNodeIDtoNode()[fromNode];
 		Set<Integer> listOfNodes = new HashSet<Integer>();
-		for (Integer nodeID: roadNetwork.getNodeIDtoNode().keySet()) //first copy all of the nodes
-			listOfNodes.add(nodeID);
+		for (Node node: roadNetwork.getNodeIDtoNode()) //first copy all of the nodes
+			if (node != null) listOfNodes.add(node.getID());
 		//remove fromNode
 		listOfNodes.remove(fromNode);
 		//remove all related/neighbouring nodes (regardless of direction).
@@ -268,7 +272,11 @@ public class RoadDevelopmentDashboard extends JFrame {
 		Integer[] arrayOfNodes = listOfNodes.toArray(new Integer[0]);
 		Arrays.sort(arrayOfNodes);
 		JComboBox comboBox_1 = new JComboBox();
-		comboBox_1.setModel(new DefaultComboBoxModel(roadNetwork.getNodeIDtoNode().keySet().toArray()));
+		Set<Integer> nodes_1 = new HashSet<Integer>();
+		for (Node node:	roadNetwork.getNodeIDtoNode())
+			if (node != null) 
+				nodes.add(node.getID());
+		comboBox_1.setModel(new DefaultComboBoxModel(nodes_1.toArray()));
 		comboBox_1.setBounds(SECOND_MARGIN, 728, 149, 22);
 		comboBox_1.setFont(new Font("Lato", Font.BOLD, 14));
 		comboBox_1.setBorder(COMBOBOX_BORDER);
@@ -278,10 +286,10 @@ public class RoadDevelopmentDashboard extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 
 				int fromNode = (int)comboBox.getSelectedItem();
-				DirectedNode nodeA = (DirectedNode) roadNetwork.getNodeIDtoNode().get(fromNode);
+				DirectedNode nodeA = (DirectedNode) roadNetwork.getNodeIDtoNode()[fromNode];
 				Set<Integer> listOfNodes = new HashSet<Integer>();
-				for (Integer nodeID: roadNetwork.getNodeIDtoNode().keySet()) //first copy all of the nodes
-					listOfNodes.add(nodeID);
+				for (Node node: roadNetwork.getNodeIDtoNode()) //first copy all of the node IDs
+					if (node != null) listOfNodes.add(node.getID());
 				//remove fromNode
 				listOfNodes.remove(fromNode);
 				//remove all related/neighbouring nodes (regardless of direction).
@@ -303,8 +311,8 @@ public class RoadDevelopmentDashboard extends JFrame {
 				int fromNode = (int) comboBox.getSelectedItem();
 				int toNode = (int) comboBox_1.getSelectedItem();
 	
-				DirectedNode nodeA = (DirectedNode) roadNetwork.getNodeIDtoNode().get(fromNode);
-				DirectedNode nodeB = (DirectedNode) roadNetwork.getNodeIDtoNode().get(toNode);
+				DirectedNode nodeA = (DirectedNode) roadNetwork.getNodeIDtoNode()[fromNode];
+				DirectedNode nodeB = (DirectedNode) roadNetwork.getNodeIDtoNode()[toNode];
 
 				//calculate straight line distance between nodes
 				SimpleFeature sf1 = (SimpleFeature)nodeA.getObject();
@@ -395,8 +403,8 @@ public class RoadDevelopmentDashboard extends JFrame {
 				if (rdbtnNewRadioButton.isSelected()) roadClass = "A";
 				else roadClass = "M";
 
-				DirectedNode nodeA = (DirectedNode) roadNetwork.getNodeIDtoNode().get(fromNode);
-				DirectedNode nodeB = (DirectedNode) roadNetwork.getNodeIDtoNode().get(toNode);
+				DirectedNode nodeA = (DirectedNode) roadNetwork.getNodeIDtoNode()[fromNode];
+				DirectedNode nodeB = (DirectedNode) roadNetwork.getNodeIDtoNode()[toNode];
 
 				//calculate straight line distance between nodes
 				SimpleFeature sf1 = (SimpleFeature)nodeA.getObject();

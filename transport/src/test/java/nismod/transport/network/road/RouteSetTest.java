@@ -56,12 +56,12 @@ public class RouteSetTest {
 		Route r3 = new Route(roadNetwork);
 		Route r4 = new Route(roadNetwork);
 		
-		DirectedNode n1 = (DirectedNode) roadNetwork.getNodeIDtoNode().get(7);
-		DirectedNode n2 = (DirectedNode) roadNetwork.getNodeIDtoNode().get(8);
-		DirectedNode n3 = (DirectedNode) roadNetwork.getNodeIDtoNode().get(27);
-		DirectedNode n4 = (DirectedNode) roadNetwork.getNodeIDtoNode().get(9);
-		DirectedNode n5 = (DirectedNode) roadNetwork.getNodeIDtoNode().get(55);
-		DirectedNode n6 = (DirectedNode) roadNetwork.getNodeIDtoNode().get(40);
+		DirectedNode n1 = (DirectedNode) roadNetwork.getNodeIDtoNode()[7];
+		DirectedNode n2 = (DirectedNode) roadNetwork.getNodeIDtoNode()[8];
+		DirectedNode n3 = (DirectedNode) roadNetwork.getNodeIDtoNode()[27];
+		DirectedNode n4 = (DirectedNode) roadNetwork.getNodeIDtoNode()[9];
+		DirectedNode n5 = (DirectedNode) roadNetwork.getNodeIDtoNode()[55];
+		DirectedNode n6 = (DirectedNode) roadNetwork.getNodeIDtoNode()[40];
 			
 		DirectedEdge e1 = (DirectedEdge) n1.getOutEdge(n2);
 		DirectedEdge e2 = (DirectedEdge) n2.getOutEdge(n4);
@@ -95,8 +95,8 @@ public class RouteSetTest {
 		r4.addEdge(e5);
 		//r4.calculateUtility(roadNetwork.getFreeFlowTravelTime(), null);
 		
-		DirectedNode originNode = (DirectedNode)roadNetwork.getNodeIDtoNode().get(7);
-		DirectedNode destinationNode = (DirectedNode)roadNetwork.getNodeIDtoNode().get(40);
+		DirectedNode originNode = (DirectedNode)roadNetwork.getNodeIDtoNode()[7];
+		DirectedNode destinationNode = (DirectedNode)roadNetwork.getNodeIDtoNode()[40];
 		
 		RouteSet rs = new RouteSet(roadNetwork);
 		

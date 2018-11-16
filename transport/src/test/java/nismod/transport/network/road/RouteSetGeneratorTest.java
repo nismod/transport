@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
@@ -60,7 +61,7 @@ public class RouteSetGeneratorTest {
 		roadNetwork.makeEdgesAdmissible();
 			
 		System.out.println("Edge Ids:");
-		System.out.println(roadNetwork.getEdgeIDtoEdge().keySet());
+		System.out.println(Arrays.toString(roadNetwork.getEdgeIDtoEdge()));
 				
 		//load base year matrices
 		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
@@ -313,7 +314,7 @@ public class RouteSetGeneratorTest {
 		rsg2.generateSingleNodeRoutes();
 		rsg2.printStatistics();
 		//rsg2.printChoiceSets();
-		assertEquals("The number of single node routes should equal the number of nodes in the graph", roadNetwork.getNodeIDtoNode().size(), rsg2.getNumberOfRoutes());
+		assertEquals("The number of single node routes should equal the number of nodes in the graph", roadNetwork.getNetwork().getNodes().size(), rsg2.getNumberOfRoutes());
 		
 		
 		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
@@ -404,16 +405,16 @@ public class RouteSetGeneratorTest {
 		
 		int maximumEdgeID = Integer.parseInt(props.getProperty("MAXIMUM_EDGE_ID"));
 		double[] linkTravelTimes = new double[maximumEdgeID];
-		DirectedNode node1 = (DirectedNode)roadNetwork.getNodeIDtoNode().get(48);
-		DirectedNode node2 = (DirectedNode)roadNetwork.getNodeIDtoNode().get(82);
+		DirectedNode node1 = (DirectedNode)roadNetwork.getNodeIDtoNode()[48];
+		DirectedNode node2 = (DirectedNode)roadNetwork.getNodeIDtoNode()[82];
 		DirectedEdge edge = (DirectedEdge) node1.getOutEdge(node2);
 		System.out.println(edge.getID());
 		
 		//linkTravelTimes.put(edge.getID(), Double.POSITIVE_INFINITY); //setting maximum travel time does not block or aStar!
 		roadNetwork.removeRoadLink(edge);
 
-		RoadPath rp = roadNetwork.getFastestPath((DirectedNode)roadNetwork.getNodeIDtoNode().get(31), 
-				(DirectedNode)roadNetwork.getNodeIDtoNode().get(82),
+		RoadPath rp = roadNetwork.getFastestPath((DirectedNode)roadNetwork.getNodeIDtoNode()[31], 
+				(DirectedNode)roadNetwork.getNodeIDtoNode()[82],
 				linkTravelTimes);
 
 		if (rp != null) {
@@ -619,8 +620,8 @@ public class RouteSetGeneratorTest {
 		//create a road network
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 		
-		DirectedNode  node1 = (DirectedNode) roadNetwork.getNodeIDtoNode().get(7293);
-		DirectedNode  node2 = (DirectedNode) roadNetwork.getNodeIDtoNode().get(12175);
+		DirectedNode  node1 = (DirectedNode) roadNetwork.getNodeIDtoNode()[7293];
+		DirectedNode  node2 = (DirectedNode) roadNetwork.getNodeIDtoNode()[12175];
 		
 		System.out.println("Before replacement:");
 		System.out.printf("Node %d out edges: %s \n", node1.getID(), node1.getOutEdges());

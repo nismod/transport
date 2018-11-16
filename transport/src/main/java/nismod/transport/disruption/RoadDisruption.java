@@ -77,7 +77,7 @@ public class RoadDisruption extends Disruption {
 		for (String edgeString: edgeIDs) {
 			
 			int edgeID = Integer.parseInt(edgeString);
-			Edge edge = rn.getEdgeIDtoEdge().get(edgeID); 
+			Edge edge = rn.getEdgeIDtoEdge()[edgeID]; 
 			if (edge == null) {
 				System.err.println("Cannot find network edge that was specified in the road disruption file.");
 				continue;

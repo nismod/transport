@@ -456,8 +456,8 @@ public class RoadNetworkAssignment {
 
 				DirectedGraph rn = roadNetwork.getNetwork();
 				//set source and destination node
-				Node from = roadNetwork.getNodeIDtoNode().get(originNode);
-				Node to = roadNetwork.getNodeIDtoNode().get(destinationNode);
+				Node from = roadNetwork.getNodeIDtoNode()[originNode];
+				Node to = roadNetwork.getNodeIDtoNode()[destinationNode];
 				//					System.out.println("from " + from + " to " + to);
 				Route foundRoute = null;
 				try {
@@ -470,8 +470,8 @@ public class RoadNetworkAssignment {
 					if (foundRoute == null) {
 						//System.out.println("The path does not exist in the path storage");
 
-						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(originNode);
-						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(destinationNode);
+						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[originNode];
+						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[destinationNode];
 
 						//RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTime);
 						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
@@ -623,8 +623,8 @@ public class RoadNetworkAssignment {
 
 				DirectedGraph rn = roadNetwork.getNetwork();
 				//set source and destination node
-				Node from = roadNetwork.getNodeIDtoNode().get(originNode);
-				Node to = roadNetwork.getNodeIDtoNode().get(destinationNode);
+				Node from = roadNetwork.getNodeIDtoNode()[originNode];
+				Node to = roadNetwork.getNodeIDtoNode()[destinationNode];
 				//					System.out.println("from " + from + " to " + to);
 				Route foundRoute = null;
 				try {
@@ -638,8 +638,8 @@ public class RoadNetworkAssignment {
 					if (foundRoute == null) {
 						//System.out.println("The path does not exist in the path storage");
 
-						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(originNode);
-						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(destinationNode);
+						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[originNode];
+						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[destinationNode];
 
 						//RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTime);
 						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
@@ -863,8 +863,8 @@ public class RoadNetworkAssignment {
 					else { //try finding a path with aStar
 						//						LOGGER.debug("Trying the astar!");
 
-						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(originNode);
-						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(destinationNode);
+						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[originNode];
+						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[destinationNode];
 
 						//RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTime);
 						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
@@ -1142,8 +1142,8 @@ public class RoadNetworkAssignment {
 
 				DirectedGraph rn = roadNetwork.getNetwork();
 				//set source and destination node
-				Node from = roadNetwork.getNodeIDtoNode().get(originNode);
-				Node to = roadNetwork.getNodeIDtoNode().get(destinationNode);
+				Node from = roadNetwork.getNodeIDtoNode()[originNode];
+				Node to = roadNetwork.getNodeIDtoNode()[destinationNode];
 				//					System.out.println("from " + from + " to " + to);
 				Route foundRoute = null;
 				try {
@@ -1156,8 +1156,8 @@ public class RoadNetworkAssignment {
 					if (foundRoute == null) {
 						//System.out.println("The path does not exist in the path storage");
 
-						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(originNode);
-						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(destinationNode);
+						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[originNode];
+						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[destinationNode];
 
 						//RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTime);
 						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
@@ -1343,8 +1343,8 @@ public class RoadNetworkAssignment {
 
 				DirectedGraph rn = roadNetwork.getNetwork();
 				//set source and destination node
-				Node from = roadNetwork.getNodeIDtoNode().get(originNode);
-				Node to = roadNetwork.getNodeIDtoNode().get(destinationNode);
+				Node from = roadNetwork.getNodeIDtoNode()[originNode];
+				Node to = roadNetwork.getNodeIDtoNode()[destinationNode];
 				//					System.out.println("from " + from + " to " + to);
 
 				Route chosenRoute = null;
@@ -1356,8 +1356,8 @@ public class RoadNetworkAssignment {
 					else { //try finding a path with aStar
 						LOGGER.debug("Trying the astar!");
 
-						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(originNode);
-						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(destinationNode);
+						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[originNode];
+						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[destinationNode];
 
 						//RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTime);
 						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
@@ -1571,8 +1571,8 @@ public class RoadNetworkAssignment {
 							else { //try finding a path with aStar
 								LOGGER.debug("Trying the astar!");
 
-								DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(originNode);
-								DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(destinationNode);
+								DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[originNode];
+								DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[destinationNode];
 
 								//RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTime);
 								RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
@@ -1811,8 +1811,8 @@ public class RoadNetworkAssignment {
 
 				DirectedGraph rn = roadNetwork.getNetwork();
 				//set source and destination node
-				Node from = roadNetwork.getNodeIDtoNode().get(originNode);
-				Node to = roadNetwork.getNodeIDtoNode().get(destinationNode);
+				Node from = roadNetwork.getNodeIDtoNode()[originNode];
+				Node to = roadNetwork.getNodeIDtoNode()[destinationNode];
 				//					System.out.println("from " + from + " to " + to);
 				Route foundRoute = null;
 				try {
@@ -1824,8 +1824,8 @@ public class RoadNetworkAssignment {
 					if (foundRoute == null) {
 						//System.out.println("The path does not exist in the path storage");
 
-						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(originNode);
-						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(destinationNode);
+						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[originNode];
+						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[destinationNode];
 
 						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
 						if (fastestPath == null) {
@@ -1840,8 +1840,8 @@ public class RoadNetworkAssignment {
 					//if path does not already exist, get the shortest path from the origin node to the destination node using AStar algorithm
 					if (foundRoute == null) {
 
-						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(originNode);
-						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(destinationNode);
+						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[originNode];
+						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[destinationNode];
 
 						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
 						if (fastestPath == null) {
@@ -2029,8 +2029,8 @@ public class RoadNetworkAssignment {
 
 				DirectedGraph rn = roadNetwork.getNetwork();
 				//set source and destination node
-				Node from = roadNetwork.getNodeIDtoNode().get(originNode);
-				Node to = roadNetwork.getNodeIDtoNode().get(destinationNode);
+				Node from = roadNetwork.getNodeIDtoNode()[originNode];
+				Node to = roadNetwork.getNodeIDtoNode()[destinationNode];
 				//					System.out.println("from " + from + " to " + to);
 				Route foundRoute = null;
 				try {
@@ -2043,8 +2043,8 @@ public class RoadNetworkAssignment {
 					if (foundRoute == null) {
 						//System.out.println("The path does not exist in the path storage");
 
-						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(originNode);
-						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(destinationNode);
+						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[originNode];
+						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[destinationNode];
 
 						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
 						if (fastestPath == null) {
@@ -2059,8 +2059,8 @@ public class RoadNetworkAssignment {
 					//if path does not already exist, get the shortest path from the origin node to the destination node using AStar algorithm
 					if (foundRoute == null) {
 
-						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(originNode);
-						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(destinationNode);
+						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[originNode];
+						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[destinationNode];
 
 						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
 						if (fastestPath == null) {
@@ -2380,8 +2380,8 @@ public class RoadNetworkAssignment {
 						if (originNode == destinationNode) 	LOGGER.trace("Generating a single node trip because origin and destination node are the same.");
 						else 								LOGGER.debug("Trying the astar to find a missing route from origin to destination node.");
 
-						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(originNode);
-						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(destinationNode);
+						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[originNode];
+						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[destinationNode];
 
 						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
 						if (fastestPath == null) {
@@ -2477,7 +2477,7 @@ public class RoadNetworkAssignment {
 
 		//iterate through all the edges in the graph
 		Iterator iter = roadNetwork.getNetwork().getEdges().iterator();
-		HashMap<Integer, Integer> numberOfLanes = roadNetwork.getNumberOfLanes();
+		int[] numberOfLanes = roadNetwork.getNumberOfLanes();
 		while(iter.hasNext()) {
 
 			Edge edge = (Edge) iter.next();
@@ -2505,7 +2505,7 @@ public class RoadNetworkAssignment {
 				//Speed-flow curves from FORGE (Department for Transport, 2005)
 				if (roadNumber.charAt(0) == 'M') {//motorway
 
-					double flow = linkVolumeInPCU / numberOfLanes.get(edge.getID());
+					double flow = linkVolumeInPCU / numberOfLanes[edge.getID()];
 					double speed = 0.0;
 					if (flow < 1398) speed = ((69.96 - 71.95) / 1398 * flow + 71.95) * 1.609344; //[kph]
 					else if (flow < 2330) speed = ((34.55 - 69.96) / (2330 - 1398) * (flow - 1398) + 69.96) * 1.609344; //[kph]
@@ -2522,7 +2522,7 @@ public class RoadNetworkAssignment {
 
 				} else if (roadNumber.charAt(0) == 'A') {//A-road
 
-					double flow = linkVolumeInPCU / numberOfLanes.get(edge.getID());
+					double flow = linkVolumeInPCU / numberOfLanes[edge.getID()];
 					double speed = 0.0;
 					if (flow < 1251) speed = ((50.14 - 56.05) / 1251 * flow + 56.05) * 1.609344; //[kph]
 					else if (flow < 1740) speed = ((27.22 - 50.14) / (1740 - 1251) * (flow - 1251) + 50.14) * 1.609344; //[kph]
@@ -3335,7 +3335,7 @@ public class RoadNetworkAssignment {
 	public HashMap<Integer, Double> calculatePeakLinkPointCapacities() {
 
 		Map<Integer, Double> peakLinkVolumes = this.calculateLinkVolumeInPCUPerTimeOfDay(this.tripList).get(TimeOfDay.EIGHTAM);
-		HashMap<Integer, Integer> numberOfLanes = roadNetwork.getNumberOfLanes();
+		int[] numberOfLanes = roadNetwork.getNumberOfLanes();
 		HashMap<Integer, Double> peakLinkCapacitieses = new HashMap<Integer, Double>();
 
 		//iterate through all the edges in the graph
@@ -3349,9 +3349,9 @@ public class RoadNetworkAssignment {
 			double capacity = 0.0;
 			String roadNumber = (String) sf.getAttribute("RoadNumber");
 			if (roadNumber.charAt(0) == 'M') //motorway
-				capacity = linkVol / numberOfLanes.get(edge.getID());
+				capacity = linkVol / numberOfLanes[edge.getID()];
 			else if (roadNumber.charAt(0) == 'A') //A-road
-				capacity = linkVol / numberOfLanes.get(edge.getID());
+				capacity = linkVol / numberOfLanes[edge.getID()];
 			else //ferry
 				capacity = linkVol;
 
@@ -3372,7 +3372,7 @@ public class RoadNetworkAssignment {
 
 		for (Integer edgeID: capacities.keySet()) {
 			double capacity1 = capacities.get(edgeID);
-			Integer otherEdgeID = roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(edgeID);
+			Integer otherEdgeID = roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edgeID];
 			if (otherEdgeID == null) averagedCapacities.put(edgeID, capacity1); //if just one direction, copy value
 			else { //otherwise, store average for both directions
 				Double capacity2 = capacities.get(otherEdgeID);
@@ -3395,7 +3395,7 @@ public class RoadNetworkAssignment {
 
 		for (Integer edgeID: capacities.keySet()) {
 			double capacity1 = capacities.get(edgeID);
-			Integer otherEdgeID = roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(edgeID);
+			Integer otherEdgeID = roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edgeID];
 			if (otherEdgeID == null) maximumCapacities.put(edgeID, capacity1); //if just one direction, copy value
 			else { //otherwise, store maximum of both directions
 				double capacity2 = capacities.get(otherEdgeID);
@@ -3418,7 +3418,7 @@ public class RoadNetworkAssignment {
 	public HashMap<Integer, Double> calculatePeakLinkDensities() {
 
 		Map<Integer, Double> peakLinkVolumes = this.calculateLinkVolumeInPCUPerTimeOfDay(this.tripList).get(TimeOfDay.EIGHTAM);
-		HashMap<Integer, Integer> numberOfLanes = roadNetwork.getNumberOfLanes();
+		int[] numberOfLanes = roadNetwork.getNumberOfLanes();
 		HashMap<Integer, Double> peakLinkDensities = new HashMap<Integer, Double>();
 
 		//iterate through all the edges in the graph
@@ -3433,9 +3433,9 @@ public class RoadNetworkAssignment {
 			String roadNumber = (String) sf.getAttribute("RoadNumber");
 			double length = (double) sf.getAttribute("LenNet");
 			if (roadNumber.charAt(0) == 'M') //motorway
-				density = linkVol / numberOfLanes.get(edge.getID()) / length;
+				density = linkVol / numberOfLanes[edge.getID()] / length;
 			else if (roadNumber.charAt(0) == 'A') //A-road
-				density = linkVol / numberOfLanes.get(edge.getID()) / length;
+				density = linkVol / numberOfLanes[edge.getID()] / length;
 			else //ferry
 				density = linkVol / length;
 
@@ -3486,7 +3486,7 @@ public class RoadNetworkAssignment {
 
 		for (Integer edgeID: utilisation.keySet()) {
 			double utilisation1 = utilisation.get(edgeID);
-			Integer otherEdgeID = roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(edgeID);
+			Integer otherEdgeID = roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edgeID];
 			if (otherEdgeID == null) averagedUtilisation.put(edgeID, utilisation1); //if just one direction, copy value
 			else { //otherwise, store average for both directions
 				Double utilisation2 = utilisation.get(otherEdgeID);
@@ -4560,7 +4560,7 @@ public class RoadNetworkAssignment {
 					vehicleKilometres.get(zone).put(vht, vehkm);
 				} else { //zone == null
 					//check if ferry
-					DirectedEdge edge = (DirectedEdge)this.roadNetwork.getEdgeIDtoEdge().get(edgeID);
+					DirectedEdge edge = (DirectedEdge)this.roadNetwork.getEdgeIDtoEdge()[edgeID];
 					SimpleFeature sf = (SimpleFeature)edge.getObject();
 					String roadNumber = (String) sf.getAttribute("RoadNumber");
 					if (roadNumber.charAt(0) != 'F') {
@@ -4719,7 +4719,7 @@ public class RoadNetworkAssignment {
 					vehicleKilometres.get(zone).put(vht, vehkm);
 				} else { //zone == null
 					//check if ferry
-					DirectedEdge edge = (DirectedEdge)this.roadNetwork.getEdgeIDtoEdge().get(edgeID);
+					DirectedEdge edge = (DirectedEdge)this.roadNetwork.getEdgeIDtoEdge()[edgeID];
 					SimpleFeature sf = (SimpleFeature)edge.getObject();
 					String roadNumber = (String) sf.getAttribute("RoadNumber");
 					if (roadNumber.charAt(0) != 'F') {
@@ -4822,7 +4822,7 @@ public class RoadNetworkAssignment {
 				//get zone
 				String zone = roadNetwork.getEdgeToZone().get(edgeID);
 				//check if ferry
-				DirectedEdge edge = (DirectedEdge)this.roadNetwork.getEdgeIDtoEdge().get(edgeID);
+				DirectedEdge edge = (DirectedEdge)this.roadNetwork.getEdgeIDtoEdge()[edgeID];
 				SimpleFeature sf = (SimpleFeature)edge.getObject();
 				String roadNumber = (String) sf.getAttribute("RoadNumber");
 				if (zone == null) {
@@ -5240,7 +5240,7 @@ public class RoadNetworkAssignment {
 				else 						carVolume = carVolumeFetch;
 
 				//get volumes for other direction (if exists)
-				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(edge.getID());
+				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edge.getID()];
 				long carVolume2;
 				Integer carVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edge2);
 				if (carVolumeFetch2 == null) carVolume2 = 0;
@@ -5277,7 +5277,7 @@ public class RoadNetworkAssignment {
 			if (!checkedLinks.contains(edge1)) {
 
 				//check if there is other direction edge, store average value for both
-				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(edge1);
+				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edge1];
 				if (edge2 != null) {
 
 					Integer diff1 = absoluteDifferences.get(edge1);
@@ -5354,7 +5354,7 @@ public class RoadNetworkAssignment {
 				else 						carVolume = carVolumeFetch;
 
 				//get volumes for other direction (if exists)
-				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(edge.getID());
+				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edge.getID()];
 				long carVolume2;
 				Integer carVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edge2);
 				if (carVolumeFetch2 == null) carVolume2 = 0;
@@ -5426,7 +5426,7 @@ public class RoadNetworkAssignment {
 				else 						carVolume = carVolumeFetch;
 
 				//get volumes for other direction (if exists)
-				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(edge.getID());
+				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edge.getID()];
 				long carVolume2;
 				Integer carVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edge2);
 				if (carVolumeFetch2 == null) carVolume2 = 0;
@@ -5587,7 +5587,7 @@ public class RoadNetworkAssignment {
 				else 						carVolume = carVolumeFetch;
 
 				//get volumes for other direction (if exists)
-				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(edge.getID());
+				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edge.getID()];
 				double carVolume2;
 				Double carVolumeFetch2 = this.linkVolumesInPCUPerTimeOfDay.get(hour).get(edge2);
 				if (carVolumeFetch2 == null) carVolume2 = 0.0;
@@ -5728,7 +5728,7 @@ public class RoadNetworkAssignment {
 				carVolume = Math.round(carVolume * expansionFactor);
 
 				//get volumes for other direction (if exists)
-				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(edge.getID());
+				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edge.getID()];
 				long carVolume2;
 				Integer carVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edge2);
 				if (carVolumeFetch2 == null) carVolume2 = 0;
@@ -5837,7 +5837,7 @@ public class RoadNetworkAssignment {
 				else 						  articVolume = articVolumeFetch;
 
 				//get volumes for other direction (if exists)
-				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(edge.getID());
+				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edge.getID()];
 
 				long vanVolume2;
 				Integer vanVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.VAN).get(edge2);
@@ -5963,7 +5963,7 @@ public class RoadNetworkAssignment {
 				else 						  articVolume = articVolumeFetch;
 				
 				//get volumes for other direction (if exists)
-				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(edge.getID());
+				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edge.getID()];
 				long vanVolume2;
 				Integer vanVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.VAN).get(edge2);
 				if (vanVolumeFetch2 == null) vanVolume2 = 0;
@@ -6061,7 +6061,7 @@ public class RoadNetworkAssignment {
 				carVolume = Math.round(carVolume * expansionFactor);
 
 				//get volumes for other direction (if exists)
-				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(edge.getID());
+				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edge.getID()];
 				long carVolume2;
 				Integer carVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edge2);
 				if (carVolumeFetch2 == null) carVolume2 = 0;

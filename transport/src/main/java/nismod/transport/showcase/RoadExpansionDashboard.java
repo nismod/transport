@@ -57,6 +57,7 @@ import org.geotools.brewer.color.BrewerPalette;
 import org.geotools.brewer.color.ColorBrewer;
 import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedNode;
+import org.geotools.graph.structure.Node;
 import org.geotools.swing.JMapFrame;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -260,7 +261,10 @@ public class RoadExpansionDashboard extends JFrame {
 		contentPane.add(rdbtnNewRadioButton_1);
 
 		JComboBox comboBox = new JComboBox();
-		comboBox.setModel(new DefaultComboBoxModel(roadNetwork.getNodeIDtoNode().keySet().toArray()));
+		Set<Integer> nodes = new HashSet<Integer>();
+		for (Node node: roadNetwork.getNodeIDtoNode())
+			if (node != null) nodes.add(node.getID());
+		comboBox.setModel(new DefaultComboBoxModel(nodes.toArray()));
 		//comboBox.setModel(new DefaultComboBoxModel(new String[] {"5", "6", "27", "23", "25"}));
 		comboBox.setBounds(LEFT_MARGIN, 765, 149, 22);
 		comboBox.setFont(new Font("Lato", Font.BOLD, 14));
@@ -270,14 +274,15 @@ public class RoadExpansionDashboard extends JFrame {
 		contentPane.add(comboBox);
 
 		int fromNode = (int)comboBox.getSelectedItem();
-		DirectedNode nodeA = (DirectedNode) roadNetwork.getNodeIDtoNode().get(fromNode);
+		DirectedNode nodeA = (DirectedNode) roadNetwork.getNodeIDtoNode()[fromNode];
 
 		Set<Integer> listOfNodes = new HashSet<Integer>();
 		List edges = nodeA.getOutEdges();
 		for (Object o: edges) {
 			DirectedEdge e = (DirectedEdge) o;
 			DirectedNode other = e.getOutNode();
-			if (roadNetwork.getNumberOfLanes().get(e.getID()) != null)	listOfNodes.add(other.getID()); //if there is no lane number information (e.g. ferry) skip edge
+			//if (roadNetwork.getNumberOfLanes().get(e.getID()) != null)	listOfNodes.add(other.getID()); //if there is no lane number information (e.g. ferry) skip edge
+			if (roadNetwork.getNumberOfLanes()[e.getID()] == 0)	listOfNodes.add(other.getID()); //if there is no lane number information (e.g. ferry) skip edge
 		}
 		Integer[] arrayOfNodes = listOfNodes.toArray(new Integer[0]);
 		Arrays.sort(arrayOfNodes);
@@ -294,14 +299,15 @@ public class RoadExpansionDashboard extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 
 				int fromNode = (int)comboBox.getSelectedItem();
-				DirectedNode nodeA = (DirectedNode) roadNetwork.getNodeIDtoNode().get(fromNode);
+				DirectedNode nodeA = (DirectedNode) roadNetwork.getNodeIDtoNode()[fromNode];
 
 				Set<Integer> listOfNodes = new HashSet<Integer>();
 				List edges = nodeA.getOutEdges();
 				for (Object o: edges) {
 					DirectedEdge e2 = (DirectedEdge) o;
 					DirectedNode other = e2.getOutNode();//e2.getOtherNode(nodeA);
-					if (roadNetwork.getNumberOfLanes().get(e2.getID()) != null)	listOfNodes.add(other.getID()); //if there is no lane number information (e.g. ferry) skip edge
+					if (roadNetwork.getNumberOfLanes()[e2.getID()] == 0)	
+						listOfNodes.add(other.getID()); //if there is no lane number information (e.g. ferry) skip edge
 				}
 				Integer[] arrayOfNodes = listOfNodes.toArray(new Integer[0]);
 				Arrays.sort(arrayOfNodes);
@@ -314,13 +320,13 @@ public class RoadExpansionDashboard extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 
 				int fromNode = (int)comboBox.getSelectedItem();
-				DirectedNode nodeA = (DirectedNode) roadNetwork.getNodeIDtoNode().get(fromNode);
+				DirectedNode nodeA = (DirectedNode) roadNetwork.getNodeIDtoNode()[fromNode];
 
 				int toNode = (int)comboBox_1.getSelectedItem();
-				DirectedNode nodeB = (DirectedNode) roadNetwork.getNodeIDtoNode().get(toNode);
+				DirectedNode nodeB = (DirectedNode) roadNetwork.getNodeIDtoNode()[toNode];
 
 				DirectedEdge edge = (DirectedEdge) nodeA.getOutEdge(nodeB);
-				if (roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(edge.getID()) == null) { //if there is no other direction edge, disable 2-way button
+				if (roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edge.getID()] == null) { //if there is no other direction edge, disable 2-way button
 					rdbtnNewRadioButton_1.setEnabled(false);
 					rdbtnNewRadioButton_1.setSelected(false);
 					rdbtnNewRadioButton.setSelected(true);
@@ -382,8 +388,8 @@ public class RoadExpansionDashboard extends JFrame {
 				System.out.println("fromNode = " + fromNode);
 				System.out.println("toNode = " + toNode);
 
-				DirectedNode nodeA = (DirectedNode) roadNetwork.getNodeIDtoNode().get(fromNode);
-				DirectedNode nodeB = (DirectedNode) roadNetwork.getNodeIDtoNode().get(toNode);
+				DirectedNode nodeA = (DirectedNode) roadNetwork.getNodeIDtoNode()[fromNode];
+				DirectedNode nodeB = (DirectedNode) roadNetwork.getNodeIDtoNode()[toNode];
 				DirectedEdge edge = (DirectedEdge) nodeA.getOutEdge(nodeB);
 				SimpleFeature sf = (SimpleFeature)edge.getObject();
 				Long countPoint = (long) sf.getAttribute("CP");
@@ -405,7 +411,8 @@ public class RoadExpansionDashboard extends JFrame {
 				if (rdbtnNewRadioButton_1.isSelected()) { //if both directions
 					
 					//edge = (DirectedEdge) nodeB.getOutEdge(nodeA);
-					roadNetwork.getEdgeIDtoOtherDirectionEdgeID().get(edge.getID());
+					Integer otherEdgeID = roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edge.getID()];
+					edge = (DirectedEdge)roadNetwork.getEdgeIDtoEdge()[otherEdgeID];
 					
 					sf = (SimpleFeature)edge.getObject();
 					countPoint = (long) sf.getAttribute("CP");

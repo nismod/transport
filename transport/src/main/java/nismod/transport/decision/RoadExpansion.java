@@ -67,8 +67,8 @@ public class RoadExpansion extends Intervention {
 		
 		//System.out.println("Edge to expand: " + expandedEdgeID);
 		
-		int numberOfLanes = rn.getNumberOfLanes().get(expandedEdgeID);
-		rn.getNumberOfLanes().put(expandedEdgeID, numberOfLanes + number);
+		int numberOfLanes = rn.getNumberOfLanes()[expandedEdgeID];
+		rn.getNumberOfLanes()[expandedEdgeID] = numberOfLanes + number;
 		
 		this.installed = true;
 	}
@@ -97,8 +97,8 @@ public class RoadExpansion extends Intervention {
 		
 		//System.out.println("Uninstalling road expansion for edge: " + expandedEdgeID);
 		
-		int numberOfLanes = rn.getNumberOfLanes().get(expandedEdgeID);
-		rn.getNumberOfLanes().put(expandedEdgeID, numberOfLanes - number);
+		int numberOfLanes = rn.getNumberOfLanes()[expandedEdgeID];
+		rn.getNumberOfLanes()[expandedEdgeID] = numberOfLanes - number;
 		
 		this.installed = false;
 	}

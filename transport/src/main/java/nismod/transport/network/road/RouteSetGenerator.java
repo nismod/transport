@@ -66,8 +66,8 @@ public class RouteSetGenerator{
 		this.roadNetwork = roadNetwork;
 		this.props = props;
 		
-		int maxNodes = Collections.max(this.roadNetwork.getNodeIDtoNode().keySet()); //find maximum node id
-		routes = new RouteSet[maxNodes + 1][maxNodes + 1]; //access will be directly with node ID (without -1).
+		int maxNodes = this.roadNetwork.getNodeIDtoNode().length;
+		routes = new RouteSet[maxNodes][maxNodes]; //access will be directly with node ID (without -1).
 	}
 	
 	/**
@@ -193,8 +193,8 @@ public class RouteSetGenerator{
 	 */
 	public void generateRouteSetWithLinkElimination(int origin, int destination) {
 		
-		DirectedNode originNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(origin);
-		DirectedNode destinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(destination);
+		DirectedNode originNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[origin];
+		DirectedNode destinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[destination];
 		//RouteSet rs = new RouteSet(originNode, destinationNode);
 		
 		//find the fastest path from origin to destination
@@ -280,14 +280,14 @@ public class RouteSetGenerator{
 		//if they are the same, create a single node path
 		if (origin == destination) {
 			RoadPath rp = new RoadPath();
-			rp.add(roadNetwork.getNodeIDtoNode().get(origin));
+			rp.add(roadNetwork.getNodeIDtoNode()[origin]);
 			Route route = new Route(rp, roadNetwork);
 			this.addRoute(route);
 			return;
 		}
 		
-		DirectedNode originNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(origin);
-		DirectedNode destinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(destination);
+		DirectedNode originNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[origin];
+		DirectedNode destinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[destination];
 		//RouteSet rs = new RouteSet(originNode, destinationNode);
 
 		//find the fastest path from origin to destination (astar or dijkstra)
@@ -927,12 +927,13 @@ public class RouteSetGenerator{
 		
 		LOGGER.info("Generating single node routes for the whole network...");
 		
-		for (Node n: roadNetwork.getNodeIDtoNode().values()) {
-			RoadPath rp = new RoadPath();
-			rp.add(n);
-			Route r = new Route(rp, roadNetwork);
-			//this.addRoute(r);
-			this.addRouteWithoutValidityCheck(r);
+		for (Node n: roadNetwork.getNodeIDtoNode()) 
+			if (n != null) {
+				RoadPath rp = new RoadPath();
+				rp.add(n);
+				Route r = new Route(rp, roadNetwork);
+				//this.addRoute(r);
+				this.addRouteWithoutValidityCheck(r);
 		}
 	}
 	
@@ -1256,7 +1257,7 @@ public class RouteSetGenerator{
 		    		Route route = new Route(roadNetwork);
 		    		boolean success = false;
 		    		for (String edge: edges) {
-		    			success = route.addEdge((DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(Integer.parseInt(edge)));
+		    			success = route.addEdge((DirectedEdge) roadNetwork.getEdgeIDtoEdge()[Integer.parseInt(edge)]);
 		    			if (!success) break;
 		    		}
 		    		//System.out.println(route.getFormattedString());
@@ -1300,7 +1301,7 @@ public class RouteSetGenerator{
 		    		//System.out.println(Arrays.toString(edges));
 		    		Route route = new Route(roadNetwork);
 		    		for (String edge: edges)
-		    			route.addEdgeWithoutValidityCheck((DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(Integer.parseInt(edge)));
+		    			route.addEdgeWithoutValidityCheck((DirectedEdge) roadNetwork.getEdgeIDtoEdge()[Integer.parseInt(edge)]);
 		    		//System.out.println(route.getFormattedString());
 					//trim to size
 					route.trimToSize();
@@ -1343,7 +1344,7 @@ public class RouteSetGenerator{
 				int edgeID = data.readInt();
 				if (edgeID != 0) { //keep adding edge to the route
 					//success = success && route.addEdge((DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(edgeID));
-					route.addEdgeWithoutValidityCheck((DirectedEdge) roadNetwork.getEdgeIDtoEdge().get(edgeID));
+					route.addEdgeWithoutValidityCheck((DirectedEdge) roadNetwork.getEdgeIDtoEdge()[edgeID]);
 				} else {
 					//trim to size
 					route.trimToSize();

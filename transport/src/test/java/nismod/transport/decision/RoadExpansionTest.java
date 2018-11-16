@@ -67,14 +67,14 @@ public class RoadExpansionTest {
 		
 		int currentYear = 2015;
 		int edgeID = re.getExpandedEdgeID(roadNetwork);
-		System.out.println("Number of lanes before expansion: " + roadNetwork.getNumberOfLanes().get(edgeID));
-		assertEquals("The number of lanes should be correct", 3, (int)roadNetwork.getNumberOfLanes().get(edgeID));
+		System.out.println("Number of lanes before expansion: " + roadNetwork.getNumberOfLanes()[edgeID]);
+		assertEquals("The number of lanes should be correct", 3, (int)roadNetwork.getNumberOfLanes()[edgeID]);
 		re.install(roadNetwork);
-		System.out.println("Number of lanes after expansion: " + roadNetwork.getNumberOfLanes().get(edgeID));
-		assertEquals("The number of lanes should be correct", 5, (int)roadNetwork.getNumberOfLanes().get(edgeID));
+		System.out.println("Number of lanes after expansion: " + roadNetwork.getNumberOfLanes()[edgeID]);
+		assertEquals("The number of lanes should be correct", 5, (int)roadNetwork.getNumberOfLanes()[edgeID]);
 		re.uninstall(roadNetwork);
-		System.out.println("Number of lanes after uninstallment: " + roadNetwork.getNumberOfLanes().get(edgeID));
-		assertEquals("The number of lanes should be correct", 3, (int)roadNetwork.getNumberOfLanes().get(edgeID));
+		System.out.println("Number of lanes after uninstallment: " + roadNetwork.getNumberOfLanes()[edgeID]);
+		assertEquals("The number of lanes should be correct", 3, (int)roadNetwork.getNumberOfLanes()[edgeID]);
 
 		currentYear = 2014;
 		//check if correct interventions have been installed

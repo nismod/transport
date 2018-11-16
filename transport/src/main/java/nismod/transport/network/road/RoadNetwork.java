@@ -85,7 +85,6 @@ public class RoadNetwork {
 	private ShapefileDataStore newNetworkShapefile;
 	private DijkstraIterator.EdgeWeighter dijkstraWeighter;
 	private DijkstraIterator.EdgeWeighter dijkstraTimeWeighter;
-	private HashMap<Integer, Integer> numberOfLanes;
 	private HashMap<Integer, String> nodeToZone;
 	private HashMap<Integer, String> edgeToZone;
 	private HashMap<String, List<Integer>> zoneToNodes;
@@ -104,12 +103,11 @@ public class RoadNetwork {
 	private HashMap<Integer, Integer> nodeToGravitatingWorkplacePopulation;
 	private HashMap<Integer, Double> nodeToAverageAccessEgressDistance; //[m]
 	private HashMap<Integer, Double> nodeToAverageAccessEgressDistanceFreight; //[m]
-	private HashMap<Integer, Node> nodeIDtoNode; //for direct access
+
+	private Node[] nodeIDtoNode; //for direct access
+	private Edge[] edgeIDtoEdge; //for direct access
+	private Integer[] edgeIDtoOtherDirectionEdgeID; //for direct access
 	
-	private HashMap<Integer, Edge> edgeIDtoEdge; //for direct access
-	//private Edge[] edgeIDtoEdge;
-	
-	private HashMap<Integer, Integer> edgeIDtoOtherDirectionEdgeID;
 	private Boolean[] isEdgeUrban; //true = urban, false = rural, null = unknown/ferry
 	private boolean[] isEdgeFerry; //true = ferry, false = not ferry
 	
@@ -117,13 +115,15 @@ public class RoadNetwork {
 	private List<Integer> endNodeBlacklist;
 	private double[] freeFlowTravelTime;
 	private double[] edgeLengths;
+	private int[] numberOfLanes;
 	
 	public double freeFlowSpeedMRoad; //kph
 	public double freeFlowSpeedARoad; //kph
 	public double averageSpeedFerry; //kph
 	public int numberOfLanesMRoad; //for one direction
 	public int numberOfLanesARoad; //for one direction
-	public int maximumEdgeID; //for the entire network
+	public int maximumEdgeID; //for the entire network (include roads developed in the future).
+	public int maximumNodeID; //for the entire network
 		
 	/**
 	 * @param zonesUrl Url for the shapefile with zone polygons.
@@ -153,6 +153,7 @@ public class RoadNetwork {
 		this.numberOfLanesMRoad = Integer.parseInt(params.getProperty("NUMBER_OF_LANES_M_ROAD"));
 		this.numberOfLanesARoad = Integer.parseInt(params.getProperty("NUMBER_OF_LANES_A_ROAD"));
 		this.maximumEdgeID = Integer.parseInt(params.getProperty("MAXIMUM_EDGE_ID"));
+		this.maximumNodeID = Integer.parseInt(params.getProperty("MAXIMUM_NODE_ID"));
 		
 		//build the graph
 		this.build();
@@ -255,8 +256,8 @@ public class RoadNetwork {
 				int Bnode = (int) feature.getAttribute("Bnode");
 				int CP = (int) feature.getAttribute("CP");
 				
-				DirectedNode nodeA = (DirectedNode) this.nodeIDtoNode.get(Anode);
-				DirectedNode nodeB = (DirectedNode) this.nodeIDtoNode.get(Bnode);
+				DirectedNode nodeA = (DirectedNode) this.nodeIDtoNode[Anode];
+				DirectedNode nodeB = (DirectedNode) this.nodeIDtoNode[Bnode];
 				
 				List edges = nodeA.getOutEdges(nodeB);
 				for (Object o: edges) {
@@ -557,7 +558,7 @@ public class RoadNetwork {
 					objList.add(null);
 					objList.add(null);
 				}
-				Integer lanes = this.numberOfLanes.get(edge.getID());
+				Integer lanes = this.numberOfLanes[edge.getID()];
 				if (lanes == null) lanes = 0;
 				objList.add(lanes);
 				Double volume = linkData.get(edge.getID());
@@ -808,8 +809,8 @@ public class RoadNetwork {
 		this.network = (DirectedGraph) graphBuilder.getGraph();
 		
 		//add edge to list
-		this.edgeIDtoEdge.put(directedEdge.getID(), directedEdge);
-		this.numberOfLanes.put(directedEdge.getID(), numberOfLanes);
+		this.edgeIDtoEdge[directedEdge.getID()] = directedEdge;
+		this.numberOfLanes[directedEdge.getID()] = numberOfLanes;
 		
 		//calculate straight line distance between nodes
 		SimpleFeature sf1 = (SimpleFeature)fromNode.getObject();
@@ -894,7 +895,7 @@ public class RoadNetwork {
 		this.network = (DirectedGraph) graphBuilder.getGraph();
 		
 		//update
-		this.edgeIDtoEdge.put(edgeID, edge);
+		this.edgeIDtoEdge[edgeID] = edge;
 		this.createEdgeToOtherDirectionEdgeMap();
 		
 		//put edge length into map
@@ -944,7 +945,7 @@ public class RoadNetwork {
 		this.network = (DirectedGraph) graphBuilder.getGraph();
 		
 		//update
-		this.edgeIDtoEdge.remove(edge.getID());
+		this.edgeIDtoEdge[edge.getID()] = null;
 		//this.numberOfLanes.remove(edge.getID()); //TODO leave it for now, until edge object contains this information
 		
 		//this.edgeLengths.remove(edge.getID());
@@ -1254,9 +1255,9 @@ public class RoadNetwork {
 	
 	/**
 	 * Getter method for the number of lanes for each link.
-	 * @return Link to number of lanes mapping.
+	 * @return Link id to number of lanes mapping.
 	 */
-	public HashMap<Integer, Integer> getNumberOfLanes() {
+	public int[] getNumberOfLanes() {
 
 		return this.numberOfLanes;
 	}
@@ -1463,7 +1464,7 @@ public class RoadNetwork {
 	 * Getter method for nodeID to node mapping.
 	 * @return Node ID to node mapping.
 	 */
-	public HashMap<Integer, Node> getNodeIDtoNode() {
+	public Node[] getNodeIDtoNode() {
 		
 		return this.nodeIDtoNode;
 	}
@@ -1472,16 +1473,34 @@ public class RoadNetwork {
 	 * Getter method for edgeID to edge mapping.
 	 * @return Edge ID to edge mapping.
 	 */
-	public HashMap<Integer, Edge> getEdgeIDtoEdge() {
+	public Edge[] getEdgeIDtoEdge() {
 		
 		return this.edgeIDtoEdge;
+	}
+	
+	/**
+	 * Getter method for maximum edge ID.
+	 * @return Maximum edge ID.
+	 */
+	public int getMaximumEdgeID() {
+		
+		return this.maximumEdgeID;
+	}
+	
+	/**
+	 * Getter method for maximum node ID.
+	 * @return Maximum node ID.
+	 */
+	public int getMaximumNodeID() {
+		
+		return this.maximumNodeID;
 	}
 	
 	/**
 	 * Getter method for edgeID to other direction edgeID mapping.
 	 * @return Edge ID to other direction edge ID mapping.
 	 */
-	public HashMap<Integer, Integer> getEdgeIDtoOtherDirectionEdgeID() {
+	public Integer[] getEdgeIDtoOtherDirectionEdgeID() {
 		
 		return this.edgeIDtoOtherDirectionEdgeID;
 	}
@@ -1994,7 +2013,7 @@ public class RoadNetwork {
 						LOGGER.debug("Assigning edge {} to zone {} of node {}.", edge.getID(), zone1, edge.getNodeA());
 					} else { //assign to the zone of the related edge
 						DirectedNode nodeA = (DirectedNode)edge.getNodeA();
-						Integer otherEdgeID = this.edgeIDtoOtherDirectionEdgeID.get(edge.getID());
+						Integer otherEdgeID = this.edgeIDtoOtherDirectionEdgeID[edge.getID()];
 						List<Edge> inEdges = nodeA.getInEdges();
 						Integer relatedEdgeID = null;
 						for (Edge e: inEdges)
@@ -2013,31 +2032,31 @@ public class RoadNetwork {
 	
 	private void createDirectAccessNodeMap() {
 		
-		this.nodeIDtoNode = new HashMap<Integer, Node>();
+		this.nodeIDtoNode = new Node[this.maximumNodeID];
 		
 		Iterator nodeIter = (Iterator) network.getNodes().iterator();
 		while (nodeIter.hasNext()) {
 		
 				Node node = (Node) nodeIter.next();
-				this.nodeIDtoNode.put(node.getID(), node);
+				this.nodeIDtoNode[node.getID()] = node;
 		}		
 	}
 	
 	private void createDirectAccessEdgeMap() {
 		
-		this.edgeIDtoEdge = new HashMap<Integer, Edge>();
+		this.edgeIDtoEdge = new Edge[this.maximumEdgeID];
 		
 		Iterator edgeIter = (Iterator) network.getEdges().iterator();
 		while (edgeIter.hasNext()) {
 		
 				Edge edge = (Edge) edgeIter.next();
-				this.edgeIDtoEdge.put(edge.getID(), edge);
+				this.edgeIDtoEdge[edge.getID()] = edge;
 		}		
 	}
 	
 	private void createEdgeToOtherDirectionEdgeMap() {
 		
-		this.edgeIDtoOtherDirectionEdgeID = new HashMap<Integer, Integer>();
+		this.edgeIDtoOtherDirectionEdgeID = new Integer[this.maximumEdgeID];
 		
 		Iterator edgeIter = (Iterator) network.getEdges().iterator();
 		while (edgeIter.hasNext()) {
@@ -2069,7 +2088,7 @@ public class RoadNetwork {
 									countPoint2 = (long) sf2.getAttribute("CP");
 				
 					if (countPoint == countPoint2) //if there is a count point match
-						this.edgeIDtoOtherDirectionEdgeID.put(edge.getID(), edge2.getID());
+						this.edgeIDtoOtherDirectionEdgeID[edge.getID()] = edge2.getID();
 						if (length1 != length2) //if lenghts are different something may be wrong (possible with more edges with 0 CP)
 							LOGGER.warn("Edge to other direction edge have different lengths!");
 				}
@@ -2099,7 +2118,7 @@ public class RoadNetwork {
 	 */
 	private void addNumberOfLanes() {
 		
-		this.numberOfLanes = new HashMap<Integer, Integer>();
+		this.numberOfLanes = new int[this.maximumEdgeID];
 		
 		//iterate through all the edges in the graph
 		Iterator iter = this.network.getEdges().iterator();
@@ -2114,12 +2133,13 @@ public class RoadNetwork {
 			else if (roadNumber.charAt(0) == 'A') //A-road
 				lanes = numberOfLanesARoad;
 			else if (roadNumber.charAt(0) == 'F')//ferry
-				lanes = null;
+				lanes = 0;
 			else {
 				LOGGER.warn("Link with unknown road type: {}", edge.getID());
-				lanes = null;
+				lanes = 0;
 			}
-			numberOfLanes.put(edge.getID(), lanes);
+			
+			this.numberOfLanes[edge.getID()] = lanes;
 		}
 	}
 		

@@ -23,6 +23,7 @@ import java.util.Properties;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.math3.stat.Frequency;
+import org.geotools.graph.structure.Edge;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -658,11 +659,12 @@ public class RoadNetworkAssignmentTest {
 		System.out.println(rna.getLinkVolumeInPCU());
 		
 		double vehicleKilometres = 0.0;
-		for (int edgeID: roadNetwork.getEdgeIDtoEdge().keySet()) {
-			
-			double volume  = rna.getLinkVolumeInPCU().get(edgeID);
-			double length = roadNetwork.getEdgeLength(edgeID);
-			vehicleKilometres += volume * length; 
+		for (Edge edge: roadNetwork.getEdgeIDtoEdge())
+			if (edge != null) {
+				int edgeID = edge.getID();
+				double volume  = rna.getLinkVolumeInPCU().get(edgeID);
+				double length = roadNetwork.getEdgeLength(edgeID);
+				vehicleKilometres += volume * length; 
 		}
 		System.out.println("Total vehicle-kilometres: " + vehicleKilometres);
 		assertEquals("Vehicle kilometres are correct", vehicleKilometres, rna.calculateZonalVehicleKilometresPerVehicleType().get("E06000045").get(VehicleType.CAR), EPSILON);
@@ -839,7 +841,7 @@ public class RoadNetworkAssignmentTest {
 		//TEST OUTPUT AREA PROBABILITIES
 		System.out.println("\n\n*** Testing output area probabilities ***");
 		
-		final double EPSILON = 1e-11; //may fail for higher accuracy
+		final double EPSILON = 1e-8; //may fail for higher accuracy
 		
 		//test the probability of one output area from each LAD
 		assertEquals("The probability of the output area E00116864 is correct", (double)299/176462, rna.getAreaCodeProbabilities().get("E00116864"), EPSILON);
@@ -1158,20 +1160,22 @@ public class RoadNetworkAssignmentTest {
 		for (String zone: roadNetwork.getZoneToNodes().keySet()) {
 
 			double zonalVehicleKilometres = 0.0;
-			for (int edgeID: roadNetwork.getEdgeIDtoEdge().keySet()) {
+			for (Edge edge: roadNetwork.getEdgeIDtoEdge())
+				if (edge != null) {
+					
+					int edgeID = edge.getID();
+					String fetchedZone = roadNetwork.getEdgeToZone().get(edgeID);
+					if (fetchedZone != null && fetchedZone.equals(zone)) {
 
-				String fetchedZone = roadNetwork.getEdgeToZone().get(edgeID);
-				if (fetchedZone != null && fetchedZone.equals(zone)) {
-
-					Double volume  = rna.getLinkVolumeInPCU().get(edgeID);
-					if (volume == null) {
-						System.out.println("No volume for edge " + edgeID);
-						volume = 0.0;
+						Double volume  = rna.getLinkVolumeInPCU().get(edgeID);
+						if (volume == null) {
+							System.out.println("No volume for edge " + edgeID);
+							volume = 0.0;
+						}
+						double length = roadNetwork.getEdgeLength(edgeID);
+						zonalVehicleKilometres += volume * length;
 					}
-					double length = roadNetwork.getEdgeLength(edgeID);
-					zonalVehicleKilometres += volume * length;
 				}
-			}
 			System.out.printf("Total vehicle-kilometres for zone %s: %f %n", zone, zonalVehicleKilometres);
 			assertEquals("Zonal vehicle kilometres are correct", zonalVehicleKilometres, rna.calculateZonalVehicleKilometresPerVehicleType().get(zone).get(VehicleType.CAR), EPSILON);
 		}

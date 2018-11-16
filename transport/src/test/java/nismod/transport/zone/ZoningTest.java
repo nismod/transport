@@ -170,7 +170,7 @@ public class ZoningTest {
 		System.out.println(zoning.getLADToName());
 		System.out.println(zoning.getNodeToZoneMap());
 		
-		int size1 = roadNetwork.getNodeIDtoNode().size();
+		int size1 = roadNetwork.getNetwork().getNodes().size();
 		int size2 = zoning.getNodeToZoneMap().size();
 		assertEquals("All nodes from roadNetwork are mapped to Tempro zones", size1, size2);
 		
@@ -184,7 +184,7 @@ public class ZoningTest {
 		Point centroid = zoning.getZoneToCentroid().get("E02003559");
 		int nearestNodeID = zoning.getZoneToNearestNodeIDMap().get("E02003559");
 		assertEquals("Nearest node ID is correct", 40, nearestNodeID);
-		Node nearestNode = roadNetwork.getNodeIDtoNode().get(nearestNodeID);
+		Node nearestNode = roadNetwork.getNodeIDtoNode()[nearestNodeID];
 		SimpleFeature sfn = (SimpleFeature) nearestNode.getObject();
 		Point point = (Point) sfn.getDefaultGeometry();
 		double DELTA = 0.000001;
