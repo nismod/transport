@@ -35,7 +35,12 @@ public class RouteSet {
 	//private ArrayList<Double> probabilities;
 	private double[] probabilities;
 	private double[] pathsizes;
-	private RoadNetwork roadNetwork;
+	
+	private static RoadNetwork roadNetwork;
+	
+	public static enum RouteChoiceParams {
+		LENGTH, TIME, COST, INTERSEC, DELAY
+	}
 	
 	/**
 	 * Constructor.
@@ -44,7 +49,7 @@ public class RouteSet {
 	public RouteSet(RoadNetwork roadNetwork) {
 		//this.originNode = originNode;
 		//this.destinationNode = destinationNode;
-		this.roadNetwork = roadNetwork;
+		RouteSet.roadNetwork = roadNetwork;
 		
 		this.choiceSet = new ArrayList<Route>(RouteSetGenerator.INITIAL_ROUTE_SET_CAPACITY);
 	}
@@ -196,7 +201,7 @@ public class RouteSet {
 	 * @param linkCharges Congestion charges.
 	 * @param params Route choice parameters.
 	 */
-	public void calculateUtilities(VehicleType vht, EngineType et, double[] linkTravelTime, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency, Map<EnergyType, Double> energyUnitCosts, HashMap<String, HashMap<Integer, Double>> linkCharges, Properties params) {
+	public void calculateUtilities(VehicleType vht, EngineType et, double[] linkTravelTime, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency, Map<EnergyType, Double> energyUnitCosts, HashMap<String, HashMap<Integer, Double>> linkCharges, Map<RouteChoiceParams, Double> params) {
 		
 		//re-calculate utility for all the routes
 		for (Route r: this.choiceSet)
@@ -361,10 +366,9 @@ public class RouteSet {
 	
 	/**
 	 * Chooses a route based on the probabilities.
-	 * @param params Parameters of the route choice model.
 	 * @return Chosen route.
 	 */
-	public Route choose(Properties params) {
+	public Route choose() {
 		
 		//probabilities must be calculated at least once
 		if (probabilities == null) {

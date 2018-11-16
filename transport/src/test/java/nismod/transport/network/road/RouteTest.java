@@ -20,6 +20,7 @@ import nismod.transport.network.road.RoadNetworkAssignment.EnergyType;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.network.road.Route.WebTAG;
+import nismod.transport.network.road.RouteSet.RouteChoiceParams;
 import nismod.transport.utility.ConfigReader;
 
 public class RouteTest {
@@ -78,12 +79,12 @@ public class RouteTest {
 //		System.out.println("Route " + r1.getID() + ": " + r1.getFormattedString());
 				
 		//set route choice parameters
-		Properties params = new Properties();
-		params.setProperty("TIME", "-1.5");
-		params.setProperty("LENGTH", "-1.5");
-		params.setProperty("COST", "-3.6");
-		params.setProperty("INTERSECTIONS", "-1.0");
-		params.setProperty("AVERAGE_INTERSECTION_DELAY", "0.8");
+		Map<RouteChoiceParams, Double> params = new EnumMap<>(RouteChoiceParams.class);
+		params.put(RouteChoiceParams.TIME, -1.5);
+		params.put(RouteChoiceParams.LENGTH, -1.0);
+		params.put(RouteChoiceParams.COST, -3.6);
+		params.put(RouteChoiceParams.INTERSEC, -0.1);
+		params.put(RouteChoiceParams.DELAY, 0.8);
 		
 		Map<WebTAG, Double> parameters = new EnumMap<>(WebTAG.class);
 		parameters.put(WebTAG.A, 1.11932239320862);
@@ -128,10 +129,11 @@ public class RouteTest {
 		System.out.println("Intersections: " + intersections);
 		System.out.println("Utility: " + utility);
 		
-		double paramTime = Double.parseDouble(params.getProperty("TIME"));
-		double paramLength = Double.parseDouble(params.getProperty("LENGTH"));
-		double paramCost = Double.parseDouble(params.getProperty("COST"));
-		double paramIntersections = Double.parseDouble(params.getProperty("INTERSECTIONS"));
+		double paramTime = params.get(RouteChoiceParams.TIME);
+		double paramLength = params.get(RouteChoiceParams.LENGTH);
+		double paramCost = params.get(RouteChoiceParams.COST);
+		double paramIntersections = params.get(RouteChoiceParams.INTERSEC);
+		
 		double calculatedUtility = paramTime * time + paramLength * length + paramCost * cost + paramIntersections * intersections;
 		
 		final double EPSILON = 1e-11; //may fail for higher accuracy
@@ -149,13 +151,13 @@ public class RouteTest {
 //		System.out.println("Route " + r2.getID() + ": " + r2.getFormattedString());
 				
 		//set route choice parameters
-		params = new Properties();
-		params.setProperty("TIME", "-1.5");
-		params.setProperty("LENGTH", "-1.5");
-		params.setProperty("COST", "-3.6");
-		params.setProperty("INTERSECTIONS", "-0.1");
-		params.setProperty("AVERAGE_INTERSECTION_DELAY", "0.8");
-		
+		params = new EnumMap<>(RouteChoiceParams.class);
+		params.put(RouteChoiceParams.TIME, -1.5);
+		params.put(RouteChoiceParams.LENGTH, -1.5);
+		params.put(RouteChoiceParams.COST, -3.6);
+		params.put(RouteChoiceParams.INTERSEC, -0.1);
+		params.put(RouteChoiceParams.DELAY, 0.8);
+			
 		r2.calculateUtility(VehicleType.CAR, EngineType.ICE_PETROL, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null, params);
 		
 		time = r2.getTime();
@@ -169,10 +171,11 @@ public class RouteTest {
 		System.out.println("Intersections: " + intersections);
 		System.out.println("Utility: " + utility);
 		
-		paramTime = Double.parseDouble(params.getProperty("TIME"));
-		paramLength = Double.parseDouble(params.getProperty("LENGTH"));
-		paramCost = Double.parseDouble(params.getProperty("COST"));
-		paramIntersections = Double.parseDouble(params.getProperty("INTERSECTIONS"));
+		paramTime = params.get(RouteChoiceParams.TIME);
+		paramLength = params.get(RouteChoiceParams.LENGTH);
+		paramCost = params.get(RouteChoiceParams.COST);
+		paramIntersections = params.get(RouteChoiceParams.INTERSEC);
+		
 		calculatedUtility = paramTime * time + paramLength * length + paramCost * cost + paramIntersections * intersections;
 		
 		assertEquals("Utility should be correctly calculated", utility, calculatedUtility, EPSILON);
@@ -189,12 +192,12 @@ public class RouteTest {
 //		System.out.println("Route " + r3.getID() + ": " + r3.getFormattedString());
 				
 		//set route choice parameters
-		params = new Properties();
-		params.setProperty("TIME", "-2.5");
-		params.setProperty("LENGTH", "-1.5");
-		params.setProperty("COST", "-3.6");
-		params.setProperty("INTERSECTIONS", "-0.1");
-		params.setProperty("AVERAGE_INTERSECTION_DELAY", "0.8");
+		params = new EnumMap<>(RouteChoiceParams.class);
+		params.put(RouteChoiceParams.TIME, -2.5);
+		params.put(RouteChoiceParams.LENGTH, -1.5);
+		params.put(RouteChoiceParams.COST, -3.6);
+		params.put(RouteChoiceParams.INTERSEC, -0.1);
+		params.put(RouteChoiceParams.DELAY, 0.8);
 		
 		r3.calculateUtility(VehicleType.CAR, EngineType.ICE_PETROL, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null, params);
 		
@@ -209,10 +212,11 @@ public class RouteTest {
 		System.out.println("Intersections: " + intersections);
 		System.out.println("Utility: " + utility);
 		
-		paramTime = Double.parseDouble(params.getProperty("TIME"));
-		paramLength = Double.parseDouble(params.getProperty("LENGTH"));
-		paramCost = Double.parseDouble(params.getProperty("COST"));
-		paramIntersections = Double.parseDouble(params.getProperty("INTERSECTIONS"));
+		paramTime = params.get(RouteChoiceParams.TIME);
+		paramLength = params.get(RouteChoiceParams.LENGTH);
+		paramCost = params.get(RouteChoiceParams.COST);
+		paramIntersections = params.get(RouteChoiceParams.INTERSEC);
+		
 		calculatedUtility = paramTime * time + paramLength * length + paramCost * cost + paramIntersections * intersections;
 		
 		assertEquals("Utility should be correctly calculated", utility, calculatedUtility, EPSILON);
@@ -229,12 +233,12 @@ public class RouteTest {
 //		System.out.println("Route " + r4.getID() + ": " + r4.getFormattedString());
 				
 		//set route choice parameters
-		params = new Properties();
-		params.setProperty("TIME", "-1.5");
-		params.setProperty("LENGTH", "-1.0");
-		params.setProperty("COST", "-3.6");
-		params.setProperty("INTERSECTIONS", "-0.1");
-		params.setProperty("AVERAGE_INTERSECTION_DELAY", "0.8");
+		params = new EnumMap<>(RouteChoiceParams.class);
+		params.put(RouteChoiceParams.TIME, -1.5);
+		params.put(RouteChoiceParams.LENGTH, -1.0);
+		params.put(RouteChoiceParams.COST, -3.6);
+		params.put(RouteChoiceParams.INTERSEC, -0.1);
+		params.put(RouteChoiceParams.DELAY, 0.8);
 		
 		r4.calculateUtility(VehicleType.CAR, EngineType.ICE_PETROL, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null, params);
 		
@@ -250,10 +254,11 @@ public class RouteTest {
 		System.out.println("Intersections: " + intersections);
 		System.out.println("Utility: " + utility);
 		
-		paramTime = Double.parseDouble(params.getProperty("TIME"));
-		paramLength = Double.parseDouble(params.getProperty("LENGTH"));
-		paramCost = Double.parseDouble(params.getProperty("COST"));
-		paramIntersections = Double.parseDouble(params.getProperty("INTERSECTIONS"));
+		paramTime = params.get(RouteChoiceParams.TIME);
+		paramLength = params.get(RouteChoiceParams.LENGTH);
+		paramCost = params.get(RouteChoiceParams.COST);
+		paramIntersections = params.get(RouteChoiceParams.INTERSEC);
+		
 		calculatedUtility = paramTime * time + paramLength * length + paramCost * cost + paramIntersections * intersections;
 		
 		assertEquals("Utility should be correctly calculated", utility, calculatedUtility, EPSILON);

@@ -19,6 +19,7 @@ import gnu.trove.list.array.TIntArrayList;
 import nismod.transport.network.road.RoadNetworkAssignment.EnergyType;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
+import nismod.transport.network.road.RouteSet.RouteChoiceParams;
 
 /**
  * Route is a sequence of directed edges with a choice utility.
@@ -58,7 +59,7 @@ public class Route {
 	
 	public Route(RoadNetwork roadNetwork) {
 	
-		this.roadNetwork = roadNetwork;
+		Route.roadNetwork = roadNetwork;
 		this.edges = new TIntArrayList(RouteSetGenerator.INITIAL_ROUTE_CAPACITY);
 //		this.id = ++Route.counter;
 	}
@@ -80,7 +81,7 @@ public class Route {
 			return;
 		}
 		
-		this.roadNetwork = roadNetwork;
+		Route.roadNetwork = roadNetwork;
 		List<DirectedEdge> builtEdges = (List<DirectedEdge>) path.getEdges(); //builds edges
 		
 		if (builtEdges == null) {
@@ -95,8 +96,6 @@ public class Route {
 				return;
 			}
 		}
-		
-		this.roadNetwork = roadNetwork;
 		
 		this.edges = new TIntArrayList(RouteSetGenerator.INITIAL_ROUTE_CAPACITY);
 		for (DirectedEdge edge: builtEdges) this.edges.add(edge.getID()); 
@@ -375,7 +374,7 @@ public class Route {
 	 * @param linkCharges Congestion charges.
 	 * @param params Route choice parameters.
 	 */
-	public void calculateUtility(VehicleType vht, EngineType et, double[] linkTravelTime, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency, Map<EnergyType, Double> energyUnitCosts, HashMap<String, HashMap<Integer, Double>> linkCharges, Properties params) {		
+	public void calculateUtility(VehicleType vht, EngineType et, double[] linkTravelTime, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency, Map<EnergyType, Double> energyUnitCosts, HashMap<String, HashMap<Integer, Double>> linkCharges, Map<RouteChoiceParams, Double> params) {		
 		
 		//if a single node route, utility is zero
 		if (this.edges.isEmpty() && this.singleNode != null) {
@@ -387,10 +386,9 @@ public class Route {
 		if (Double.compare(this.length, 0.0d) == 0) 
 			this.calculateLength(); //calculate only once (length is not going to change)
 				
-		double avgIntersectionDelay = Double.parseDouble(params.getProperty("AVERAGE_INTERSECTION_DELAY"));
+		double avgIntersectionDelay = params.get(RouteChoiceParams.DELAY);
 	
 		this.calculateTravelTime(linkTravelTime, avgIntersectionDelay); //always (re)calculate
-		
 		this.calculateCost(vht, et, linkTravelTime, energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, linkCharges); //always (re)calculate
 		
 		double length = this.getLength();
@@ -398,10 +396,10 @@ public class Route {
 		double cost = this.getCost();
 		int intersec = this.getNumberOfIntersections();
 		
-		double paramTime = Double.parseDouble(params.getProperty("TIME"));
-		double paramLength = Double.parseDouble(params.getProperty("LENGTH"));
-		double paramCost = Double.parseDouble(params.getProperty("COST"));
-		double paramIntersections = Double.parseDouble(params.getProperty("INTERSECTIONS"));
+		double paramTime = params.get(RouteChoiceParams.TIME);
+		double paramLength = params.get(RouteChoiceParams.LENGTH);
+		double paramCost = params.get(RouteChoiceParams.COST);
+		double paramIntersections = params.get(RouteChoiceParams.INTERSEC);
 		
 		double utility = paramTime * time + paramLength * length + paramCost * cost + paramIntersections * intersec;  
 		this.utility = utility;

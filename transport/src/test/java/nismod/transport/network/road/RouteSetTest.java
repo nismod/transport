@@ -22,6 +22,7 @@ import nismod.transport.network.road.RoadNetworkAssignment.EnergyType;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.network.road.Route.WebTAG;
+import nismod.transport.network.road.RouteSet.RouteChoiceParams;
 import nismod.transport.utility.ConfigReader;
 
 public class RouteSetTest {
@@ -100,12 +101,12 @@ public class RouteSetTest {
 		RouteSet rs = new RouteSet(roadNetwork);
 		
 		//set route choice parameters
-		Properties params = new Properties();
-		params.setProperty("TIME", "-1.5");
-		params.setProperty("LENGTH", "-1.0");
-		params.setProperty("COST", "-3.6");
-		params.setProperty("INTERSECTIONS", "-0.1");
-		params.setProperty("AVERAGE_INTERSECTION_DELAY", "0.8");
+		Map<RouteChoiceParams, Double> params = new EnumMap<>(RouteChoiceParams.class);
+		params.put(RouteChoiceParams.TIME, -1.5);
+		params.put(RouteChoiceParams.LENGTH, -1.0);
+		params.put(RouteChoiceParams.COST, -3.6);
+		params.put(RouteChoiceParams.INTERSEC, -0.1);
+		params.put(RouteChoiceParams.DELAY, 0.8);
 		
 		Map<WebTAG, Double> parameters = new EnumMap<>(WebTAG.class);
 		parameters.put(WebTAG.A, 1.11932239320862);
@@ -186,7 +187,7 @@ public class RouteSetTest {
 		
 		int[] choiceFrequency = new int[4];
 		for (int i=0; i<1000; i++) {
-			Route chosenRoute = rs.choose(null);
+			Route chosenRoute = rs.choose();
 			int choiceIndex = rs.getIndexOfRoute(chosenRoute);
 			choiceFrequency[choiceIndex]++;
 		}
@@ -217,7 +218,7 @@ public class RouteSetTest {
 		rs.printUtilities();
 		rs.printPathsizes();
 		rs.printProbabilities();
-		Route chosenRoute = rs.choose(params);
+		Route chosenRoute = rs.choose();
 		System.out.println("Chosen route: " + chosenRoute.toString());
 		
 		//create a one-node route

@@ -39,6 +39,7 @@ import nismod.transport.demand.SkimMatrixFreight;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.network.road.Route.WebTAG;
+import nismod.transport.network.road.RouteSet.RouteChoiceParams;
 import nismod.transport.utility.InputFileReader;
 import nismod.transport.utility.RandomSingleton;
 import nismod.transport.zone.Zoning;
@@ -686,7 +687,22 @@ public class RoadNetworkAssignment {
 		if (passengerODM == null) { LOGGER.warn("Passenger OD matrix is null! Skipping assignment."); return; }
 		if (rsg == null) { LOGGER.warn("Route set generator is null! Skipping assignment."); return; }
 		if (routeChoiceParameters == null) { LOGGER.warn("Route choice parameters are null! Skipping assignment."); return; }
-
+		
+		//read route choice parameters from the properties file
+		double paramTime = Double.parseDouble(routeChoiceParameters.getProperty("TIME"));
+		double paramLength = Double.parseDouble(routeChoiceParameters.getProperty("LENGTH"));
+		double paramCost = Double.parseDouble(routeChoiceParameters.getProperty("COST"));
+		double paramIntersections = Double.parseDouble(routeChoiceParameters.getProperty("INTERSECTIONS"));
+		double avgIntersectionDelay = Double.parseDouble(routeChoiceParameters.getProperty("AVERAGE_INTERSECTION_DELAY"));
+		
+		//set route choice parameters
+		Map<RouteChoiceParams, Double> params = new EnumMap<>(RouteChoiceParams.class);
+		params.put(RouteChoiceParams.TIME, paramTime);
+		params.put(RouteChoiceParams.LENGTH, paramLength);
+		params.put(RouteChoiceParams.COST, paramCost);
+		params.put(RouteChoiceParams.INTERSEC, paramIntersections);
+		params.put(RouteChoiceParams.DELAY, avgIntersectionDelay);
+		
 		final int totalExpectedFlow = passengerODM.getTotalIntFlow();
 		this.tripList = new ArrayList<Trip>(totalExpectedFlow); //use expected flow as array list initial capacity
 
@@ -890,12 +906,12 @@ public class RoadNetworkAssignment {
 								linkCharges.put(policyName, (HashMap<Integer, Double>) this.congestionCharges.get(policyName).get(vht, hour));
 							}
 
-						fetchedRouteSet.calculateUtilities(vht, engine, this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions, this.relativeFuelEfficiencies, this.energyUnitCosts, linkCharges, routeChoiceParameters);
+						fetchedRouteSet.calculateUtilities(vht, engine, this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions, this.relativeFuelEfficiencies, this.energyUnitCosts, linkCharges, params);
 						fetchedRouteSet.calculateProbabilities();
 						//}
 
 						//choose the route
-						chosenRoute = fetchedRouteSet.choose(routeChoiceParameters);
+						chosenRoute = fetchedRouteSet.choose();
 					}
 
 					if (chosenRoute == null) {
@@ -1192,6 +1208,21 @@ public class RoadNetworkAssignment {
 		//to store routes generated during the assignment
 		//RouteSetGenerator rsg = new RouteSetGenerator(this.roadNetwork);
 		if (rsg == null) rsg = new RouteSetGenerator(this.roadNetwork, routeChoiceParameters);
+		
+		//read route choice parameters from the properties file
+		double paramTime = Double.parseDouble(routeChoiceParameters.getProperty("TIME"));
+		double paramLength = Double.parseDouble(routeChoiceParameters.getProperty("LENGTH"));
+		double paramCost = Double.parseDouble(routeChoiceParameters.getProperty("COST"));
+		double paramIntersections = Double.parseDouble(routeChoiceParameters.getProperty("INTERSECTIONS"));
+		double avgIntersectionDelay = Double.parseDouble(routeChoiceParameters.getProperty("AVERAGE_INTERSECTION_DELAY"));
+		
+		//set route choice parameters
+		Map<RouteChoiceParams, Double> params = new EnumMap<>(RouteChoiceParams.class);
+		params.put(RouteChoiceParams.TIME, paramTime);
+		params.put(RouteChoiceParams.LENGTH, paramLength);
+		params.put(RouteChoiceParams.COST, paramCost);
+		params.put(RouteChoiceParams.INTERSEC, paramIntersections);
+		params.put(RouteChoiceParams.DELAY, avgIntersectionDelay);
 
 		//counters to calculate percentage of assignment success
 		long counterAssignedTrips = 0;
@@ -1364,12 +1395,12 @@ public class RoadNetworkAssignment {
 							for (String policyName: this.congestionCharges.keySet())
 								linkCharges.put(policyName, (HashMap<Integer, Double>) this.congestionCharges.get(policyName).get(vht, hour));
 
-						fetchedRouteSet.calculateUtilities(vht, engine, this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions, this.relativeFuelEfficiencies, this.energyUnitCosts, linkCharges, routeChoiceParameters);
+						fetchedRouteSet.calculateUtilities(vht, engine, this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions, this.relativeFuelEfficiencies, this.energyUnitCosts, linkCharges, params);
 						fetchedRouteSet.calculateProbabilities();
 						//}
 
 						//choose the route
-						chosenRoute = fetchedRouteSet.choose(routeChoiceParameters);
+						chosenRoute = fetchedRouteSet.choose();
 					}
 				}
 
@@ -1416,6 +1447,20 @@ public class RoadNetworkAssignment {
 		LOGGER.info("Assigning the passenger flows from the tempro passenger matrix using a combined tempro/LAD route set...");
 
 		final double distanceThreshold = Double.parseDouble(routeChoiceParameters.getProperty("DISTANCE_THRESHOLD"));
+		//read route choice parameters from the properties file
+		double paramTime = Double.parseDouble(routeChoiceParameters.getProperty("TIME"));
+		double paramLength = Double.parseDouble(routeChoiceParameters.getProperty("LENGTH"));
+		double paramCost = Double.parseDouble(routeChoiceParameters.getProperty("COST"));
+		double paramIntersections = Double.parseDouble(routeChoiceParameters.getProperty("INTERSECTIONS"));
+		double avgIntersectionDelay = Double.parseDouble(routeChoiceParameters.getProperty("AVERAGE_INTERSECTION_DELAY"));
+		
+		//set route choice parameters
+		Map<RouteChoiceParams, Double> params = new EnumMap<>(RouteChoiceParams.class);
+		params.put(RouteChoiceParams.TIME, paramTime);
+		params.put(RouteChoiceParams.LENGTH, paramLength);
+		params.put(RouteChoiceParams.COST, paramCost);
+		params.put(RouteChoiceParams.INTERSEC, paramIntersections);
+		params.put(RouteChoiceParams.DELAY, avgIntersectionDelay);
 
 		//to store routes generated during the assignment
 		//RouteSetGenerator rsg = new RouteSetGenerator(this.roadNetwork);
@@ -1565,12 +1610,12 @@ public class RoadNetworkAssignment {
 									for (String policyName: this.congestionCharges.keySet())
 										linkCharges.put(policyName, (HashMap<Integer, Double>) this.congestionCharges.get(policyName).get(vht, hour));
 
-								fetchedRouteSet.calculateUtilities(vht, engine, this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions, this.relativeFuelEfficiencies, this.energyUnitCosts, linkCharges, routeChoiceParameters);
+								fetchedRouteSet.calculateUtilities(vht, engine, this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions, this.relativeFuelEfficiencies, this.energyUnitCosts, linkCharges, params);
 								fetchedRouteSet.calculateProbabilities();
 								//}
 
 								//choose the route
-								chosenRoute = fetchedRouteSet.choose(routeChoiceParameters);
+								chosenRoute = fetchedRouteSet.choose();
 							}
 						}
 
@@ -2064,6 +2109,21 @@ public class RoadNetworkAssignment {
 	public void assignFreightFlowsRouteChoice(FreightMatrix freightMatrix, RouteSetGenerator rsg, Properties routeChoiceParameters) {
 
 		LOGGER.info("Assigning the vehicle flows from the freight matrix...");
+		
+		//read route choice parameters from the properties file
+		double paramTime = Double.parseDouble(routeChoiceParameters.getProperty("TIME"));
+		double paramLength = Double.parseDouble(routeChoiceParameters.getProperty("LENGTH"));
+		double paramCost = Double.parseDouble(routeChoiceParameters.getProperty("COST"));
+		double paramIntersections = Double.parseDouble(routeChoiceParameters.getProperty("INTERSECTIONS"));
+		double avgIntersectionDelay = Double.parseDouble(routeChoiceParameters.getProperty("AVERAGE_INTERSECTION_DELAY"));
+		
+		//set route choice parameters
+		Map<RouteChoiceParams, Double> params = new EnumMap<>(RouteChoiceParams.class);
+		params.put(RouteChoiceParams.TIME, paramTime);
+		params.put(RouteChoiceParams.LENGTH, paramLength);
+		params.put(RouteChoiceParams.COST, paramCost);
+		params.put(RouteChoiceParams.INTERSEC, paramIntersections);
+		params.put(RouteChoiceParams.DELAY, avgIntersectionDelay);		
 
 		//counters to calculate percentage of assignment success
 		long counterAssignedTrips = 0;
@@ -2358,11 +2418,11 @@ public class RoadNetworkAssignment {
 							for (String policyName: this.congestionCharges.keySet())
 								linkCharges.put(policyName, (HashMap<Integer, Double>) this.congestionCharges.get(policyName).get(vht, hour));
 
-						fetchedRouteSet.calculateUtilities(vht, engine, this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions, this.relativeFuelEfficiencies, this.energyUnitCosts, linkCharges, routeChoiceParameters);
+						fetchedRouteSet.calculateUtilities(vht, engine, this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions, this.relativeFuelEfficiencies, this.energyUnitCosts, linkCharges, params);
 						fetchedRouteSet.calculateProbabilities();
 				
 						//choose the route
-						chosenRoute = fetchedRouteSet.choose(routeChoiceParameters);
+						chosenRoute = fetchedRouteSet.choose();
 					}
 
 					if (chosenRoute == null) {
