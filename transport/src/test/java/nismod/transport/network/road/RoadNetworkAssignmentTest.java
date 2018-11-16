@@ -189,6 +189,22 @@ public class RoadNetworkAssignmentTest {
 		rna.printGEHstatistic();
 		rna.printHourlyGEHstatistic();
 		
+		int count = 0;
+		for (Trip trip:	rna.getTripList()) {
+				if (trip instanceof TripMinor) {
+					count++;
+					System.out.println(((TripMinor)trip).getLength());
+				}
+		}
+		
+		System.out.println(rna.getTripList().size());
+		System.out.println(count);
+		System.out.println(zoning.getZoneIDToCodeMap().keySet());
+		
+		System.out.println("Total flows: " + odm.getSumOfFlows());
+		System.out.println(odm.getUnsortedOrigins().size());
+		System.out.println(odm.getUnsortedDestinations().size());
+		
 //		rna.updateLinkVolumeInPCU();
 //		rna.updateLinkVolumeInPCUPerTimeOfDay();
 //		rna.updateLinkVolumePerVehicleType();
@@ -488,7 +504,7 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("\n\n*** Testing the setter for the electricity unit cost ***");
 
 		System.out.println("Energy unit costs:\t\t" + rna.getEnergyUnitCosts());
-		System.out.println("Energy consumptions:\t" + rna.getEnergyConsumptions());
+		System.out.println("Energy consumptions:\t" + rna.getEnergyConsumptionParameters());
 		System.out.println("Engine type fractions:\t\t" + rna.getEngineTypeFractions());
 		rna.setEnergyUnitCost(RoadNetworkAssignment.EnergyType.ELECTRICITY, 0.20);
 		assertEquals("asdf", 0.20, (double) rna.getEnergyUnitCosts().get(RoadNetworkAssignment.EnergyType.ELECTRICITY), EPSILON);
@@ -883,7 +899,7 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("\n\n*** Testing the setter for the electricity unit cost ***");
 		
 		System.out.println("Energy unit costs:\t\t" + rna.getEnergyUnitCosts());
-		System.out.println("Energy consumptions:\t" + rna.getEnergyConsumptions());
+		System.out.println("Energy consumptions:\t" + rna.getEnergyConsumptionParameters());
 		System.out.println("Engine type fractions:\t\t" + rna.getEngineTypeFractions());
 		
 		rna.setEnergyUnitCost(RoadNetworkAssignment.EnergyType.ELECTRICITY, 0.20);
@@ -1249,8 +1265,10 @@ public class RoadNetworkAssignmentTest {
 		rna.calculateDistanceSkimMatrixTempro();
 		
 		rna.calculateLinkVolumePerVehicleType(rna.getTripList());
-		System.out.println(rna.calculateZonalVehicleKilometresPerVehicleTypeFromTemproTripList(false));
-		System.out.println(rna.calculateZonalVehicleKilometresPerVehicleTypeFromTemproTripList(true));
+		System.out.println(rna.calculateZonalVehicleKilometresPerVehicleTypeFromTemproTripList(false, false));
+		System.out.println(rna.calculateZonalVehicleKilometresPerVehicleTypeFromTemproTripList(true, false));
+		System.out.println(rna.calculateZonalVehicleKilometresPerVehicleTypeFromTemproTripList(false, true));
+		System.out.println(rna.calculateZonalVehicleKilometresPerVehicleTypeFromTemproTripList(true, true));
 		
 		rna.resetTripList();
 		rna.resetLinkVolumes();
@@ -1292,14 +1310,14 @@ public class RoadNetworkAssignmentTest {
 		
 		//observed trip length distribution
 		System.out.println("Trip length distributions:");
-		System.out.println(Arrays.toString(rna.getObservedTripLengthFrequencies(EstimatedODMatrix.BIN_LIMITS_KM, false)));
-		System.out.println(Arrays.toString(rna.getObservedTripLengthFrequencies(EstimatedODMatrix.BIN_LIMITS_KM, true)));
+		System.out.println(Arrays.toString(rna.getObservedTripLengthFrequencies(EstimatedODMatrix.BIN_LIMITS_KM, false, true)));
+		System.out.println(Arrays.toString(rna.getObservedTripLengthFrequencies(EstimatedODMatrix.BIN_LIMITS_KM, true, true)));
 		System.out.println(Arrays.toString(EstimatedODMatrix.OTLD));
-		System.out.println(Arrays.toString(rna.getObservedTripLengthDistribution(EstimatedODMatrix.BIN_LIMITS_KM, false)));
-		System.out.println(Arrays.toString(rna.getObservedTripLengthDistribution(EstimatedODMatrix.BIN_LIMITS_KM, true)));
+		System.out.println(Arrays.toString(rna.getObservedTripLengthDistribution(EstimatedODMatrix.BIN_LIMITS_KM, false, true)));
+		System.out.println(Arrays.toString(rna.getObservedTripLengthDistribution(EstimatedODMatrix.BIN_LIMITS_KM, true, true)));
 		
 		double sum = 0.0;
-		double[] frequencies = rna.getObservedTripLengthFrequencies(EstimatedODMatrix.BIN_LIMITS_KM, false);
+		double[] frequencies = rna.getObservedTripLengthFrequencies(EstimatedODMatrix.BIN_LIMITS_KM, false, true);
 		for (double f: frequencies) sum += f;
 		assertEquals("Total number of trips equals sum of frequences", temproODM2.getTotalIntFlow(), sum, EPSILON);
 		
@@ -1607,7 +1625,7 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("\n\n*** Testing the setter for the electricity unit cost ***");
 		
 		System.out.println("Energy unit costs:\t\t" + rna.getEnergyUnitCosts());
-		System.out.println("Energy consumptions:\t" + rna.getEnergyConsumptions());
+		System.out.println("Energy consumptions:\t" + rna.getEnergyConsumptionParameters());
 		System.out.println("Engine type fractions:\t\t" + rna.getEngineTypeFractions());
 		
 		rna.setEnergyUnitCost(RoadNetworkAssignment.EnergyType.ELECTRICITY, 0.20);

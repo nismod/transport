@@ -1414,7 +1414,7 @@ public class RoadNetworkAssignment {
 	public void assignPassengerFlowsRouteChoiceTemproDistanceBased(AssignableODMatrix passengerODM, Zoning zoning, RouteSetGenerator rsg, Properties routeChoiceParameters) {
 
 		LOGGER.info("Assigning the passenger flows from the tempro passenger matrix using a combined tempro/LAD route set...");
-		
+
 		final double distanceThreshold = Double.parseDouble(routeChoiceParameters.getProperty("DISTANCE_THRESHOLD"));
 
 		//to store routes generated during the assignment
@@ -1427,26 +1427,26 @@ public class RoadNetworkAssignment {
 
 		List<String> origins = passengerODM.getUnsortedOrigins();
 		List<String> destinations = passengerODM.getUnsortedDestinations();
-		
+
 		//for each OD pair from the passengerODM
 		for (String originZone: origins)
 			for (String destinationZone: destinations) {
-				
-			if (passengerODM.getIntFlow(originZone, destinationZone) == 0) continue;
-			
-			/*
+
+				if (passengerODM.getIntFlow(originZone, destinationZone) == 0) continue;
+
+				/*
 			//calculate distance
 			Point originCentroid = zoning.getZoneToCentroid().get(originZone);
 			Point destinationCentroid = zoning.getZoneToCentroid().get(destinationZone);
 			final double centroidDistance = originCentroid.distance(destinationCentroid);
-			*/
-			
-			//get distance between Tempro zone centroids
-			int originZoneID = zoning.getZoneCodeToIDMap().get(originZone);
-			int destinationZoneID = zoning.getZoneCodeToIDMap().get(destinationZone);
-			final double centroidDistance = zoning.getZoneToZoneDistanceMatrix()[originZoneID-1][destinationZoneID-1];
-			
-			/*
+				 */
+
+				//get distance between Tempro zone centroids
+				int originZoneID = zoning.getZoneCodeToIDMap().get(originZone);
+				int destinationZoneID = zoning.getZoneCodeToIDMap().get(destinationZone);
+				final double centroidDistance = zoning.getZoneToZoneDistanceMatrix()[originZoneID-1][destinationZoneID-1];
+
+				/*
 			List<Integer> listOfOriginNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(originZone)); //the list is already sorted
 			List<Integer> listOfDestinationNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(destinationZone)); //the list is already sorted
 
@@ -1462,136 +1462,154 @@ public class RoadNetworkAssignment {
 				if (this.roadNetwork.isBlacklistedAsEndNode(destinationNode)) 
 					listOfDestinationNodes.remove(destinationNode);
 
-			 */
+				 */
 
 
-			//calculate number of trip assignments
-			int flow = (int) Math.floor(passengerODM.getIntFlow(originZone, destinationZone) * this.assignmentFraction); //assigned fractionally and later augmented
-			int remainder = passengerODM.getIntFlow(originZone, destinationZone) - (int) Math.round(flow / this.assignmentFraction); //remainder of trips will be assigned individually (each trip)
-			counterTotalFlow += passengerODM.getIntFlow(originZone, destinationZone);
+				//calculate number of trip assignments
+				int flow = (int) Math.floor(passengerODM.getIntFlow(originZone, destinationZone) * this.assignmentFraction); //assigned fractionally and later augmented
+				int remainder = passengerODM.getIntFlow(originZone, destinationZone) - (int) Math.round(flow / this.assignmentFraction); //remainder of trips will be assigned individually (each trip)
+				counterTotalFlow += passengerODM.getIntFlow(originZone, destinationZone);
 
-			//for each trip
-			for (int i=0; i < (flow + remainder); i++) {
+				//for each trip
+				for (int i=0; i < (flow + remainder); i++) {
 
-				//choose time of day
-				TimeOfDay hour = this.chooseTimeOfDay(timeOfDayDistribution);
-				if (hour == null) LOGGER.warn("Time of day not chosen!");
+					//choose time of day
+					TimeOfDay hour = this.chooseTimeOfDay(timeOfDayDistribution);
+					if (hour == null) LOGGER.warn("Time of day not chosen!");
 
-				//choose vehicle
-				VehicleType vht = this.chooseCarVehicleType(AVFractions);
-				if (vht == null) LOGGER.warn("Vehicle type not chosen!");
+					//choose vehicle
+					VehicleType vht = this.chooseCarVehicleType(AVFractions);
+					if (vht == null) LOGGER.warn("Vehicle type not chosen!");
 
-				//choose engine
-				EngineType engine = this.chooseEngineType(engineTypeFractions.get(vht));
-				if (engine == null) LOGGER.warn("Engine type not chosen!");
+					//choose engine
+					EngineType engine = this.chooseEngineType(engineTypeFractions.get(vht));
+					if (engine == null) LOGGER.warn("Engine type not chosen!");
 
-				//choose origin and destination node
-				Integer originNode = null, destinationNode = null;
-				
-				if (centroidDistance <= distanceThreshold) { //use nodes nearest to the tempro zone centroid
-					
-					originNode = zoning.getZoneToNearestNodeIDMap().get(originZone);
-					if (originNode == null) LOGGER.warn("Origin node was not chosen for zone {}", originZone);
+					//choose origin and destination node
+					Integer originNode = null, destinationNode = null;
 
-					//if (this.roadNetwork.isBlacklistedAsStartNode(originNode)) 
-					//	LOGGER.warn("Origin node is blacklisted! node: {}", originNode);
-					
-					destinationNode = zoning.getZoneToNearestNodeIDMap().get(destinationZone);
-					if (destinationNode == null) LOGGER.warn("Destination node was not chosen for zone {}", destinationZone);
-				
-					//if (this.roadNetwork.isBlacklistedAsEndNode(destinationNode)) 
-					//	LOGGER.warn("Destination node is blacklisted! node: {}", destinationNode);
-					
-				} else { //otherwise use one of the nodes from the LAD zone
-					
-					String originLAD = zoning.getZoneToLADMap().get(originZone);
-					String destinationLAD = zoning.getZoneToLADMap().get(destinationZone);
-					
-					//use precomputed nearest nodes from the zoning
-					originNode = zoning.getZoneToNearestNodeIDFromLADTopNodesMap().get(originZone);
-					destinationNode = zoning.getZoneToNearestNodeIDFromLADTopNodesMap().get(destinationZone);
-			
-					if (originNode == null) LOGGER.warn("Origin node was not chosen for zone {}", originZone);
-					if (destinationNode == null) LOGGER.warn("Destination node was not chosen for zone {}", destinationZone);
-				}
+					if (originZoneID != destinationZoneID) { //if not tempro intra-zonal (minor road) trip
 
-				Route chosenRoute = null;
-				RouteSet fetchedRouteSet = rsg.getRouteSet(originNode.intValue(), destinationNode.intValue());
-				if (fetchedRouteSet == null) {
-					LOGGER.warn("Can't fetch the route set between nodes {} and {}!", originNode, destinationNode);
+						if (centroidDistance <= distanceThreshold) { //use nodes nearest to the tempro zone centroid
 
-					if (!flagAStarIfEmptyRouteSet)	continue;
-					else { //try finding a path with aStar
-						LOGGER.debug("Trying the astar!");
+							originNode = zoning.getZoneToNearestNodeIDMap().get(originZone);
+							if (originNode == null) LOGGER.warn("Origin node was not chosen for zone {}", originZone);
 
-						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(originNode);
-						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(destinationNode);
+							//if (this.roadNetwork.isBlacklistedAsStartNode(originNode)) 
+							//	LOGGER.warn("Origin node is blacklisted! node: {}", originNode);
 
-						//RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTime);
-						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
-						if (fastestPath == null) {
-							LOGGER.warn("Not even aStar could find a route between node {} and node {}!", originNode, destinationNode);
+							destinationNode = zoning.getZoneToNearestNodeIDMap().get(destinationZone);
+							if (destinationNode == null) LOGGER.warn("Destination node was not chosen for zone {}", destinationZone);
+
+							//if (this.roadNetwork.isBlacklistedAsEndNode(destinationNode)) 
+							//	LOGGER.warn("Destination node is blacklisted! node: {}", destinationNode);
+
+						} else { //otherwise use one of the nodes from the LAD zone
+
+							String originLAD = zoning.getZoneToLADMap().get(originZone);
+							String destinationLAD = zoning.getZoneToLADMap().get(destinationZone);
+
+							//use precomputed nearest nodes from the zoning
+							originNode = zoning.getZoneToNearestNodeIDFromLADTopNodesMap().get(originZone);
+							destinationNode = zoning.getZoneToNearestNodeIDFromLADTopNodesMap().get(destinationZone);
+
+							if (originNode == null) LOGGER.warn("Origin node was not chosen for zone {}", originZone);
+							if (destinationNode == null) LOGGER.warn("Destination node was not chosen for zone {}", destinationZone);
+						}
+
+						Route chosenRoute = null;
+						RouteSet fetchedRouteSet = rsg.getRouteSet(originNode.intValue(), destinationNode.intValue());
+						if (fetchedRouteSet == null) {
+							LOGGER.warn("Can't fetch the route set between nodes {} and {}!", originNode, destinationNode);
+
+							if (!flagAStarIfEmptyRouteSet)	continue;
+							else { //try finding a path with aStar
+								LOGGER.debug("Trying the astar!");
+
+								DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(originNode);
+								DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode().get(destinationNode);
+
+								//RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTime);
+								RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
+								if (fastestPath == null) {
+									LOGGER.warn("Not even aStar could find a route between node {} and node {}!", originNode, destinationNode);
+									continue;
+								}
+								chosenRoute = new Route(fastestPath, roadNetwork);
+								if (chosenRoute.isEmpty()) {
+									LOGGER.warn("Empty route between nodes {} and {}!", originNode, destinationNode);
+									continue;
+								}
+								//store generated route into the rsg!
+								rsg.addRoute(chosenRoute);
+							}
+						} else { //there is a route set
+
+							//if only one route in the route set, do not calculate utilities and probabilities, but choose that route
+							if (fetchedRouteSet.getSize() == 1) {
+
+								LOGGER.trace("There is just one route in the route set, so choosing that route.");
+								//choose that route
+								chosenRoute = fetchedRouteSet.getChoiceSet().get(0);
+
+							} else { //choose a route using a discrete-choice model
+
+								LOGGER.trace("There are multiple route in the route set, so choosing with a route-choice model.");
+								//if (fetchedRouteSet.getProbabilities() == null) {
+								//probabilities need to be calculated for this route set before a choice can be made
+
+								//fetch congestion charge for the vehicle type
+								//HashMap<String, HashMap<Integer, Double>> linkCharges = null;
+								HashMap<String, HashMap<Integer, Double>> linkCharges = new HashMap<String, HashMap<Integer, Double>>();
+								if (this.congestionCharges != null) 
+									for (String policyName: this.congestionCharges.keySet())
+										linkCharges.put(policyName, (HashMap<Integer, Double>) this.congestionCharges.get(policyName).get(vht, hour));
+
+								fetchedRouteSet.calculateUtilities(vht, engine, this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions, this.relativeFuelEfficiencies, this.energyUnitCosts, linkCharges, routeChoiceParameters);
+								fetchedRouteSet.calculateProbabilities();
+								//}
+
+								//choose the route
+								chosenRoute = fetchedRouteSet.choose(routeChoiceParameters);
+							}
+						}
+
+						if (chosenRoute == null) {
+							LOGGER.warn("No chosen route between nodes {} and {}", originNode, destinationNode);
 							continue;
 						}
-						chosenRoute = new Route(fastestPath, roadNetwork);
+
 						if (chosenRoute.isEmpty()) {
-							LOGGER.warn("Empty route between nodes {} and {}!", originNode, destinationNode);
+							LOGGER.warn("The chosen route is empty, skipping this trip!");
 							continue;
 						}
-						//store generated route into the rsg!
-						rsg.addRoute(chosenRoute);
+
+
+						int multiplier = 1;
+						if (i < flow) multiplier = (int) Math.round(1 / this.assignmentFraction);
+						counterAssignedTrips += multiplier;
+
+						//store trip in trip list
+						Trip trip = new TripTempro(vht, engine, chosenRoute, hour, originZoneID, destinationZoneID, zoning, multiplier);
+						this.tripList.add(trip);
+
+					} else { //tempro inter-zonal (minor road) trip
+
+						int multiplier = 1;
+						if (i < flow) multiplier = (int) Math.round(1 / this.assignmentFraction);
+						counterAssignedTrips += multiplier;
+
+						//generate minor trip length
+						double minLength = zoning.getZoneToMinMaxDimension()[originZoneID][0];
+						double maxLength = zoning.getZoneToMinMaxDimension()[originZoneID][1];
+						double length = minLength + rng.nextDouble() * (maxLength - minLength);
+
+						//store trip in trip list
+						Trip trip = new TripMinor(vht, engine, hour, originZoneID, destinationZoneID, length, zoning, multiplier);
+						this.tripList.add(trip);
 					}
-				} else { //there is a route set
-
-					//if only one route in the route set, do not calculate utilities and probabilities, but choose that route
-					if (fetchedRouteSet.getSize() == 1) {
-
-						LOGGER.trace("There is just one route in the route set, so choosing that route.");
-						//choose that route
-						chosenRoute = fetchedRouteSet.getChoiceSet().get(0);
-
-					} else { //choose a route using a discrete-choice model
-
-						LOGGER.trace("There are multiple route in the route set, so choosing with a route-choice model.");
-						//if (fetchedRouteSet.getProbabilities() == null) {
-						//probabilities need to be calculated for this route set before a choice can be made
-
-						//fetch congestion charge for the vehicle type
-						//HashMap<String, HashMap<Integer, Double>> linkCharges = null;
-						HashMap<String, HashMap<Integer, Double>> linkCharges = new HashMap<String, HashMap<Integer, Double>>();
-						if (this.congestionCharges != null) 
-							for (String policyName: this.congestionCharges.keySet())
-								linkCharges.put(policyName, (HashMap<Integer, Double>) this.congestionCharges.get(policyName).get(vht, hour));
-
-						fetchedRouteSet.calculateUtilities(vht, engine, this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions, this.relativeFuelEfficiencies, this.energyUnitCosts, linkCharges, routeChoiceParameters);
-						fetchedRouteSet.calculateProbabilities();
-						//}
-
-						//choose the route
-						chosenRoute = fetchedRouteSet.choose(routeChoiceParameters);
-					}
-				}
-
-				if (chosenRoute == null) {
-						LOGGER.warn("No chosen route between nodes {} and {}", originNode, destinationNode);
-						continue;
-					}
-				
-				if (chosenRoute.isEmpty()) {
-					LOGGER.warn("The chosen route is empty, skipping this trip!");
-					continue;
-				}
-
-				int multiplier = 1;
-				if (i < flow) multiplier = (int) Math.round(1 / this.assignmentFraction);
-				counterAssignedTrips += multiplier;
-
-				//store trip in trip list
-				Trip trip = new TripTempro(vht, engine, chosenRoute, hour, originZoneID, destinationZoneID, zoning, multiplier);
-				this.tripList.add(trip);
-
-			}//for each trip
-		}//for each OD pair
+				}//for each trip
+			}//for each OD pair
 
 		LOGGER.debug("Total flow: {}", counterTotalFlow);
 		LOGGER.debug("Total assigned trips: {}", counterAssignedTrips);
@@ -2872,12 +2890,13 @@ public class RoadNetworkAssignment {
 	}
 	
 	/**
-	 * Calculates observed trip length frequences.
+	 * Calculates observed trip length frequencies.
 	 * @param binLimitsInKm Bin limits in kilometres.
-	 * @param flagIncludeAccessEgress If true include access and eggress to trip distance calculation.
+	 * @param flagIncludeAccessEgress If true include access and egress into trip distance calculation.
+	 * @param flagIncludeMinorTrips If true include minor road trips into trip distance calculation.
 	 * @return Observed trip length distribution.
 	 */
-	public double[] getObservedTripLengthFrequencies(double[] binLimitsInKm, boolean flagIncludeAccessEgress) {
+	public double[] getObservedTripLengthFrequencies(double[] binLimitsInKm, boolean flagIncludeAccessEgress, boolean flagIncludeMinorTrips) {
 		
 		double[] frequences = new double[binLimitsInKm.length];
 		
@@ -2886,14 +2905,25 @@ public class RoadNetworkAssignment {
 			if (!(trip.getVehicle() == VehicleType.CAR || trip.getVehicle() == VehicleType.CAR_AV)) continue; //skip freight
 			
 			Double tripDistance;
-			if (!flagIncludeAccessEgress) tripDistance = trip.getRoute().getLength(); //without access/egress
-			else {
-				if (trip instanceof TripTempro)
-						tripDistance = ((TripTempro)trip).getLength(); //with access/egress
+			
+			if (trip instanceof TripMinor) //minor trips
+				if (flagIncludeMinorTrips)
+					tripDistance = ((TripMinor)trip).getLength();
+				else
+					continue;
+			
+			else if (trip instanceof TripTempro) //tempro trips
+				if (flagIncludeAccessEgress)
+					tripDistance = ((TripTempro)trip).getLength(); //with access/egress
 				else 
-						tripDistance = trip.getLength(roadNetwork.getNodeToAverageAccessEgressDistance()); //with access/egress
-			}
-
+					tripDistance = trip.getRoute().getLength(); //without access/egress
+			
+			else //lad trips
+				if (flagIncludeAccessEgress)
+					tripDistance = trip.getLength(roadNetwork.getNodeToAverageAccessEgressDistance()); //with access/egress
+				else
+					tripDistance = trip.getRoute().getLength(); //without access/egress
+			
 			//find in which bin it falls
 			for (int i=1; i<binLimitsInKm.length; i++) {
 				if (tripDistance < binLimitsInKm[i]) {
@@ -2903,7 +2933,6 @@ public class RoadNetworkAssignment {
 				if (tripDistance >= binLimitsInKm[binLimitsInKm.length-1])
 					frequences[binLimitsInKm.length-1] += trip.multiplier;
 			}
-					
 		}
 	
 		return frequences;
@@ -2912,12 +2941,14 @@ public class RoadNetworkAssignment {
 	/**
 	 * Calculates observed trip length distribution.
 	 * @param binLimitsInKm Bin limits in kilometres.
-	 * @param flagIncludeAccessEgress If true include access and eggress to trip distance calculation.
+	 * @param flagIncludeAccessEgress If true include access and eggress into trip distance calculation.
+	 * 	 * @param flagIncludeMinorTrips If true include minor road trips into trip distance calculation.
+
 	 * @return Observed trip length distribution.
 	 */
-	public double[] getObservedTripLengthDistribution(double[] binLimitsInKm, boolean flagIncludeAccessEgress) {
+	public double[] getObservedTripLengthDistribution(double[] binLimitsInKm, boolean flagIncludeAccessEgress, boolean flagIncludeMinorTrips) {
 		
-		double[] distribution = this.getObservedTripLengthFrequencies(binLimitsInKm, flagIncludeAccessEgress);
+		double[] distribution = this.getObservedTripLengthFrequencies(binLimitsInKm, flagIncludeAccessEgress, flagIncludeMinorTrips);
 		
 		//normalise distribution
 		double sum = 0.0;
@@ -4060,7 +4091,7 @@ public class RoadNetworkAssignment {
 	}
 	
 	/**
-	 * Saves zonal vehicle-kilometres that include access/egress.
+	 * Saves zonal vehicle-kilometres that include access/egress and minor trips
 	 * @param year Assignment year.
 	 * @param outputFile Output file name (with path).
 	 */
@@ -4072,7 +4103,7 @@ public class RoadNetworkAssignment {
 
 		Map<String, Map<VehicleType, Double>> vehicleKilometres;
 		if (assignmentType.equals("tempro") || assignmentType.equals("combined"))
-			vehicleKilometres = this.calculateZonalVehicleKilometresPerVehicleTypeFromTemproTripList(true);
+			vehicleKilometres = this.calculateZonalVehicleKilometresPerVehicleTypeFromTemproTripList(true, true);
 		else
 			vehicleKilometres = this.calculateZonalVehicleKilometresPerVehicleTypeFromTripList(true);
 		
@@ -4240,7 +4271,7 @@ public class RoadNetworkAssignment {
 	 * Getter method for energy consumption WebTAG parameters.
 	 * @return Energy consumption parameters.
 	 */   
-	public Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> getEnergyConsumptions() {
+	public Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> getEnergyConsumptionParameters() {
 
 		return this.energyConsumptions;
 	}
@@ -4440,9 +4471,11 @@ public class RoadNetworkAssignment {
 		for (Trip trip: tripList) {
 			int multiplier = trip.getMultiplier();
 			VehicleType vht = trip.getVehicle();
-
+			Route route = trip.getRoute();
+			if (route == null) continue;
+			
 			//for each edge of the route add vehkm depending on the zone of the edge
-			for (int edgeID: trip.getRoute().getEdges().toArray()) {
+			for (int edgeID: route.getEdges().toArray()) {
 				
 				//link length
 				double length = roadNetwork.getEdgeLength(edgeID);
@@ -4591,7 +4624,7 @@ public class RoadNetworkAssignment {
 
 	/**
 	 * Calculates vehicle kilometres in each LAD and for each vehicle type.
-	 * Ignores access and egress.
+	 * Ignores access and egress to major roads. Ignores minor roads.
 	 * @return Vehicle kilometres.
 	 */
 	public Map<String, Map<VehicleType, Double>> calculateZonalVehicleKilometresPerVehicleType() {
@@ -4685,10 +4718,12 @@ public class RoadNetworkAssignment {
 	/**
 	 * Calculates vehicle kilometres in each LAD using Tempro-based trips.
 	 * Optionally includes access and egress (for Tempro-based model).
+	 * Optionally includes minor trips (Tempro intra-zonal).
 	 * @param includeAccessEgress True if access and egress should be included in the calculation.
+	 * @param includeMinorTrips True if minor trips should be included in the calculation.
 	 * @return Vehicle kilometres.
 	 */
-	public Map<String, Map<VehicleType, Double>> calculateZonalVehicleKilometresPerVehicleTypeFromTemproTripList(boolean includeAccessEgress) {
+	public Map<String, Map<VehicleType, Double>> calculateZonalVehicleKilometresPerVehicleTypeFromTemproTripList(boolean includeAccessEgress, boolean includeMinorTrips) {
 
 		//zone to vehicle type to vehicle kilometres
 		Map<String, Map<VehicleType, Double>> vehicleKilometres = new HashMap<String, Map<VehicleType, Double>>();
@@ -4697,9 +4732,32 @@ public class RoadNetworkAssignment {
 			
 			int multiplier = trip.getMultiplier();
 			VehicleType vht = trip.getVehicle();
+			Route route = trip.getRoute();
 			
+			if (trip instanceof TripMinor && includeMinorTrips) {
+				
+				String zone = ((TripMinor)trip).getOriginLAD();
+				
+				//fetch current map for the zone
+				Map<VehicleType, Double> map = vehicleKilometres.get(zone);
+				if (map == null) {
+					map = new EnumMap<>(VehicleType.class);
+					vehicleKilometres.put(zone, map);
+				}
+				
+				//fetch current value for the vehicle type
+				Double vehkm = vehicleKilometres.get(zone).get(vht);
+				if (vehkm == null) vehkm = 0.0;
+				vehkm += ((TripMinor)trip).getLength() * multiplier;
+
+				//store new value
+				vehicleKilometres.get(zone).put(vht, vehkm);
+			}
+		
+			if (route == null) continue;
+						
 			//for each edge of the route add vehkm depending on the zone of the edge
-			for (int edgeID: trip.getRoute().getEdges().toArray()) {
+			for (int edgeID: route.getEdges().toArray()) {
 
 				//get zone
 				String zone = roadNetwork.getEdgeToZone().get(edgeID);
@@ -4832,7 +4890,7 @@ public class RoadNetworkAssignment {
 
 				//store new value
 				vehicleKilometres.get(egressLAD).put(vht, vehkm);
-			}
+			} //access/egress
 		} //trip loop
 
 		return vehicleKilometres;
@@ -4945,9 +5003,11 @@ public class RoadNetworkAssignment {
 		}
 
 		for (Trip trip: tripList) {
+			Route route = trip.getRoute();
+			if (route == null) continue;
 			int multiplier = trip.getMultiplier();
 			Map<Integer, Double> hourlyMap = map.get(trip.getTimeOfDay());
-			for (int edgeID: trip.getRoute().getEdges().toArray()) {
+			for (int edgeID: route.getEdges().toArray()) {
 				Double currentCount = hourlyMap.get(edgeID);
 				if (currentCount == null) currentCount = 0.0;
 				currentCount += this.vehicleTypeToPCU.get(trip.getVehicle()) * multiplier; //add PCU of the vehicle
@@ -4985,8 +5045,10 @@ public class RoadNetworkAssignment {
 		Map<Integer, Double> map = new HashMap<Integer, Double>();
 
 		for (Trip trip: tripList) {
+			Route route = trip.getRoute();
+			if (route == null) continue;
 			int multiplier = trip.getMultiplier();
-			for (int edgeID: trip.getRoute().getEdges().toArray()) {
+			for (int edgeID: route.getEdges().toArray()) {
 				Double currentCount = map.get(edgeID);
 				if (currentCount == null) currentCount = 0.0;
 				currentCount += this.vehicleTypeToPCU.get(trip.getVehicle()) * multiplier; //add PCU of the vehicle
@@ -5028,6 +5090,8 @@ public class RoadNetworkAssignment {
 		}
 
 		for (Trip trip: tripList) {
+			Route route = trip.getRoute();
+			if (route == null) continue;
 			int multiplier = trip.getMultiplier();
 			Map<Integer, Integer> vehicleMap = map.get(trip.getVehicle());
 			for (int edgeID: trip.getRoute().getEdges().toArray()) {

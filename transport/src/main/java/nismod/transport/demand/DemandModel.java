@@ -698,11 +698,15 @@ public class DemandModel {
 			//observed trip length distribution
 			LOGGER.debug("Trip length distributions:");
 			LOGGER.debug("Empirical: \n{}", Arrays.toString(EstimatedODMatrix.OTLD));
-			LOGGER.debug("Without access/egress: \n{}", Arrays.toString(rna.getObservedTripLengthDistribution(EstimatedODMatrix.BIN_LIMITS_KM, false)));
-			LOGGER.debug("With access/egress: \n{}", Arrays.toString(rna.getObservedTripLengthDistribution(EstimatedODMatrix.BIN_LIMITS_KM, true)));
+			LOGGER.debug("Without access/egress: \n{}", Arrays.toString(rna.getObservedTripLengthDistribution(EstimatedODMatrix.BIN_LIMITS_KM, false, false)));
+			LOGGER.debug("With access/egress: \n{}", Arrays.toString(rna.getObservedTripLengthDistribution(EstimatedODMatrix.BIN_LIMITS_KM, true, false)));
+			LOGGER.debug("Without access/egress, with minor trips: \n{}", Arrays.toString(rna.getObservedTripLengthDistribution(EstimatedODMatrix.BIN_LIMITS_KM, false, true)));
+			LOGGER.debug("With access/egress, with minor trips: \n{}", Arrays.toString(rna.getObservedTripLengthDistribution(EstimatedODMatrix.BIN_LIMITS_KM, true, true)));
 			LOGGER.debug("Trip length frequencies:");
-			LOGGER.debug("Without access/egress: \n{}", Arrays.toString(rna.getObservedTripLengthFrequencies(EstimatedODMatrix.BIN_LIMITS_KM, false)));
-			LOGGER.debug("With access/egress: \n{}", Arrays.toString(rna.getObservedTripLengthFrequencies(EstimatedODMatrix.BIN_LIMITS_KM, true)));
+			LOGGER.debug("Without access/egress: \n{}", Arrays.toString(rna.getObservedTripLengthFrequencies(EstimatedODMatrix.BIN_LIMITS_KM, false, false)));
+			LOGGER.debug("With access/egress: \n{}", Arrays.toString(rna.getObservedTripLengthFrequencies(EstimatedODMatrix.BIN_LIMITS_KM, true, false)));
+			LOGGER.debug("Without access/egress, with minor trips: \n{}", Arrays.toString(rna.getObservedTripLengthFrequencies(EstimatedODMatrix.BIN_LIMITS_KM, false, true)));
+			LOGGER.debug("With access/egress, with minor trips: \n{}", Arrays.toString(rna.getObservedTripLengthFrequencies(EstimatedODMatrix.BIN_LIMITS_KM, true, true)));
 	}
 		
 	/**

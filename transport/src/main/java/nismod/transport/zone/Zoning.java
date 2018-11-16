@@ -17,10 +17,11 @@ import org.geotools.data.shapefile.ShapefileDataStore;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.graph.structure.Node;
-import org.opengis.feature.simple.SimpleFeature;
-
+import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.MultiPolygon;
 import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.Polygon;
+import org.opengis.feature.simple.SimpleFeature;
 
 import nismod.transport.network.road.RoadNetwork;
 
@@ -49,6 +50,8 @@ public class Zoning {
 	
 	private double[][] zoneToNodeDistanceMatrix;
 	private double[][] zoneToZoneDistanceMatrix; //distance between zone centroids
+	
+	private double[][] zoneToMinMaxDimension; //[zoneID][0] is the minimum dimension, [zoneID][1] is the maximum dimension
 	
 	private HashMap<Integer, String> nodeToZoneInWhichLocated; //maps node to Tempro zone in which it is located //TODO There are unmapped nodes (outside polygons)!
 	private HashMap<String, List<Integer>> zoneToListOfContainedNodes; //maps Tempro zone to a list of nodes within that zone (if they exist)
@@ -157,6 +160,9 @@ public class Zoning {
 		
 		this.zoneToLAD = new HashMap<String, String>();
 		this.LADToName = new HashMap<String, String>();
+		
+		int maxZones = Collections.max(this.getZoneIDToCodeMap().keySet()); //find maximum index
+		this.zoneToMinMaxDimension = new double[maxZones+1][2]; //zoneID used without -1 shift (0 is not used).
 
 		//iterate through the zones and through the nodes
 		SimpleFeatureIterator iter = zonesFeatureCollection.features();
@@ -172,9 +178,24 @@ public class Zoning {
 				String ladName = (String) sf.getAttribute("Local_Auth");
 				this.LADToName.put(ladID, ladName);
 				
+				//store centroid
 				Point centroid = polygon.getCentroid();
 				this.zoneToCentroid.put(zoneID, centroid);
 				
+				//get width and height of the polygon bounding box (envelope)
+				Polygon po = (Polygon) polygon.getEnvelope();
+				Envelope en = po.getEnvelopeInternal();
+				double width = en.getWidth() / 1000.0; //[km]
+				double height = en.getHeight() / 1000.0; //[km]
+				
+				if (width < height) {
+					this.zoneToMinMaxDimension[this.temproCodeToID.get(zoneID)][0] = width;
+					this.zoneToMinMaxDimension[this.temproCodeToID.get(zoneID)][1] = height;
+				} else {
+					this.zoneToMinMaxDimension[this.temproCodeToID.get(zoneID)][0] = height;
+					this.zoneToMinMaxDimension[this.temproCodeToID.get(zoneID)][1] = width;
+				}
+			
 				double minDistance = Double.MAX_VALUE;
 				Integer nearestNodeID = null;
 
@@ -569,15 +590,15 @@ public class Zoning {
 		return this.zoneToZoneDistanceMatrix;
 	}
 	
-//	/**
-//	 * Getter for tempro zone to node matrix of contained nodes.
-//	 * @return Node matrix of contained nodes (with joint probabilities).
-//	 */
-//	public HashMap<String, NodeMatrix> getZoneToNodeMatrix() {
-//		
-//		return this.zoneToNodeMatrix;
-//	}
-//	
+	/**
+	 * Getter for tempro zone ID to min [0] and max [1] dimension of the zone bounding box (envelope) [in km].
+	 * @return Zone min and max dimension (width or height).
+	 */
+	public double[][] getZoneToMinMaxDimension() {
+		
+		return this.zoneToMinMaxDimension;
+	}
+	
 	/**
 	 * Getter for LAD to list of contained tempro zones mapping.
 	 * @return LAD to list of contained zones.
