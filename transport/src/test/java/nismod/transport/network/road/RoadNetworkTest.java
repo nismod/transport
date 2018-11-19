@@ -357,10 +357,41 @@ public class RoadNetworkTest {
 
 		//TEST EDGE TO OTHER DIRECTION EDGE MAPPING
 		System.out.println("\n\n*** Testing edge to other direction edge mapping ***");
-
-		System.out.println(roadNetwork.getEdgeIDtoEdge());
-		System.out.println(roadNetwork.getEdgeIDtoOtherDirectionEdgeID());
-
+		
+		System.out.println(rn.getNodes());
+		System.out.println(rn.getEdges());
+		
+		int count = 0;
+		for (int edgeID=1; edgeID < roadNetwork.getMaximumEdgeID(); edgeID++)
+			if (roadNetwork.getEdgeIDtoEdge()[edgeID] != null) {
+				assertEquals("Array element points to the right edge", edgeID, roadNetwork.getEdgeIDtoEdge()[edgeID].getID());
+				count++;
+			}
+		assertEquals("Number of edges in direct array is correct", rn.getEdges().size(), count);
+		
+		count = 0;
+		for (int edgeID=1; edgeID < roadNetwork.getMaximumEdgeID(); edgeID++)
+			if (roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edgeID] != null) {
+				count++;
+			}
+		assertEquals("Number of opposite edges in direct array is correct", 19*2, count);
+		
+		assertEquals("Array element points to the right edge", 66, (int) roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[65]);
+		assertEquals("Array element points to the right edge", 65, (int) roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[66]);
+		assertNull("Unidirectional edge does not have opposite direction edge", roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[77]);
+		assertNull("Unidirectional edge does not have opposite direction edge", roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[64]);
+		assertNull("Unidirectional edge does not have opposite direction edge", roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[90]);
+	
+		//System.out.println(Arrays.toString(roadNetwork.getEdgeIDtoEdge()));
+		//System.out.println(Arrays.toString(roadNetwork.getEdgeIDtoOtherDirectionEdgeID()));
+		
+		int edgeID = 66;
+		System.out.println(roadNetwork.getFreeFlowTravelTime()[edgeID]);
+		System.out.println(roadNetwork.getEdgeLength(edgeID));
+		System.out.println(roadNetwork.getIsEdgeUrban()[edgeID]);
+		System.out.println(roadNetwork.getNumberOfLanes()[edgeID]);
+		System.out.println(roadNetwork.getEdgesType()[edgeID]);
+		
 		//TEST NODE GRAVITATING POPULATION
 		System.out.println("\n\n*** Testing node gravitating population ***");
 

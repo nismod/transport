@@ -195,7 +195,7 @@ public class RoadNetwork {
 		};
 		
 
-		this.calculateFreeFlowTravelTime();
+		this.calculateFreeFlowTravelTime(); //requries edge lenghts and edge types
 		
 		this.loadAreaCodePopulationData(areaCodeFileName);
 		this.loadAreaCodeNearestNodeAndDistance(areaCodeNearestNodeFile);
@@ -221,21 +221,21 @@ public class RoadNetwork {
 		//calculate free-flow travel time
 		this.freeFlowTravelTime = new double[this.maximumEdgeID];
 		for (Object edge: this.network.getEdges()) {
-			SimpleFeature feature = (SimpleFeature) ((Edge)edge).getObject(); 
-			double length = (double) feature.getAttribute("LenNet");
+			int edgeID = ((Edge)edge).getID();
+			double length = this.getEdgeLength(edgeID);
 			double time;
-			String roadNumber = (String) feature.getAttribute("RoadNumber");
-				if (roadNumber.charAt(0) == 'M') //motorway
-					time = length / freeFlowSpeedMRoad * 60;  //travel time in minutes
-				else if (roadNumber.charAt(0) == 'A') //A road
-					time = length / freeFlowSpeedARoad * 60;  //travel time in minutes
-				else if (roadNumber.charAt(0) == 'F')//ferry
-					time = length / averageSpeedFerry * 60;  //travel time in minutes
-				else {
-					LOGGER.warn("Unknown road type for link {}", ((Edge)edge).getID());
-					time = Double.NaN;
-				}
-				this.freeFlowTravelTime[((Edge)edge).getID()] = time;
+			EdgeType edgeType = this.edgesType[edgeID];
+			if (edgeType == EdgeType.MOTORWAY) //motorway
+				time = length / freeFlowSpeedMRoad * 60;  //travel time in minutes
+			else if (edgeType == EdgeType.AROAD) //A road
+				time = length / freeFlowSpeedARoad * 60;  //travel time in minutes
+			else if (edgeType == EdgeType.FERRY)//ferry
+				time = length / averageSpeedFerry * 60;  //travel time in minutes
+			else {
+				LOGGER.warn("Unknown road type for link {}", edgeID);
+				time = Double.NaN;
+			}
+			this.freeFlowTravelTime[edgeID] = time;
 		}
 	}
 
@@ -279,16 +279,16 @@ public class RoadNetwork {
 			//force recreation of direct access edge maps
 			this.createDirectAccessEdgeMap();
 			this.createEdgeToOtherDirectionEdgeMap();
-			//re-calculate free flow travel time
-			this.calculateFreeFlowTravelTime();
+			//update information on edge type
+			this.determineEdgesType();
 			//updates number of lanes with new edge ids
 			this.addNumberOfLanes();
 			//store edge lengths to the instance map
 			this.storeEdgesLengths();
+			//re-calculate free flow travel time (requires edge lengths and edge types!)
+			this.calculateFreeFlowTravelTime();
 			//update information on urban/rural
 			this.determineEdgesUrbanRural();
-			//update information on ferry or not
-			this.determineEdgesType();
 		} finally {
 			//feature iterator is a live connection that must be closed
 			iter.close();
@@ -829,6 +829,15 @@ public class RoadNetwork {
 		//this.edgeLengths.put(directedEdge.getID(), length);
 		this.edgeLengths[directedEdge.getID()] = length;
 		
+		if (roadCategory == 'A')
+			this.edgesType[directedEdge.getID()] = EdgeType.AROAD;
+		else if (roadCategory == 'M')
+			this.edgesType[directedEdge.getID()] = EdgeType.MOTORWAY;
+		else 
+			LOGGER.warn("Newly created road link does not have correct road category.");
+		
+		//TODO urban/rural
+		
 		//create an object to add to edge
 		//dynamically creates a feature type to describe the shapefile contents
 		SimpleFeatureType type = createNewRoadLinkFeatureType();
@@ -841,7 +850,7 @@ public class RoadNetwork {
 		objList.add(length);		
 		SimpleFeature feature = featureBuilder.build(type, objList, Integer.toString(directedEdge.getID()));
 		directedEdge.setObject(feature);
-				
+						
 		//update blacklists of nodes as some nodes might now become accessible
 //		for (int nodeId: startNodeBlacklist) {
 //			DirectedNode node = (DirectedNode) this.nodeIDtoNode.get(nodeId);
@@ -910,7 +919,10 @@ public class RoadNetwork {
 		
 		//this.addNumberOfLanes(); //this would overwrite edges with unusual number of lanes!
 		//TODO
-		//calculate number of lanes -> this should be stored in edge object 
+		//calculate number of lanes -> this should be stored in edge object
+		
+		//TODO
+		//put in the edgetype array!
 		
 		this.calculateFreeFlowTravelTime(); //could be just for new edge
 				
@@ -1082,20 +1094,6 @@ public class RoadNetwork {
 				}
 				double cost;
 				if (linkTravelTime[edge.getID()] == 0.0) { //use default link travel time
-					/*
-					SimpleFeature feature = (SimpleFeature)edge.getObject();
-					String roadNumber = (String) feature.getAttribute("RoadNumber");
-					if (roadNumber.charAt(0) == 'M') //motorway
-						cost = (double) feature.getAttribute("LenNet") / RoadNetworkAssignment.FREE_FLOW_SPEED_M_ROAD * 60;  //travel time in minutes
-					else if (roadNumber.charAt(0) == 'A') //A road
-						cost = (double) feature.getAttribute("LenNet") / RoadNetworkAssignment.FREE_FLOW_SPEED_A_ROAD * 60;  //travel time in minutes
-					else if (roadNumber.charAt(0) == 'F')//ferry
-						cost = (double) feature.getAttribute("LenNet") / RoadNetworkAssignment.AVERAGE_SPEED_FERRY * 60;  //travel time in minutes
-					else {
-						System.err.println("Unknown road type for link " + edge.getID());
-						cost = Double.NaN;
-					}
-					*/
 					cost = RoadNetwork.this.freeFlowTravelTime[edge.getID()];
 				} else //use provided travel time
 					cost = linkTravelTime[edge.getID()]; 
@@ -1230,17 +1228,18 @@ public class RoadNetwork {
 	 * Get car traffic counts data for each link (for combined counts return 1/2 of the count per direction).
 	 * @return AADF traffic counts per link.
 	 */
-	public Map<Integer, Integer> getAADFCarTrafficCounts () {
+	public Integer[] getAADFCarTrafficCounts () {
 
-		Map<Integer, Integer> countsMap = new HashMap<Integer, Integer>();
+		Integer[] counts = new Integer[this.maximumEdgeID];
 
 		Iterator iter = this.getNetwork().getEdges().iterator();
 		while (iter.hasNext()) {
 			DirectedEdge edge = (DirectedEdge) iter.next();
+			int edgeID = edge.getID();
+			EdgeType edgeType = this.edgesType[edgeID];
 			SimpleFeature sf = (SimpleFeature) edge.getObject(); 
-			String roadNumber = (String) sf.getAttribute("RoadNumber");
 
-			if (roadNumber.charAt(0) != 'M' && roadNumber.charAt(0) != 'A') continue; //ferry
+			if (edgeType == EdgeType.FERRY) continue; //ferry
 
 			//Long countPoint = (long) sf.getAttribute("CP");
 			String direction = (String) sf.getAttribute("iDir");
@@ -1249,12 +1248,12 @@ public class RoadNetwork {
 			long carCount = (long) sf.getAttribute("FdCar");
 
 			//directional counts
-			if (dir == 'N' || dir == 'S' || dir == 'W' || dir == 'E')	countsMap.put(edge.getID(), (int) carCount);
-			if (dir == 'C')												countsMap.put(edge.getID(), (int) Math.round(carCount/2.0));
+			if (dir == 'N' || dir == 'S' || dir == 'W' || dir == 'E')	counts[edgeID] = (int) carCount;
+			if (dir == 'C')												counts[edgeID] = (int) Math.round(carCount/2.0);
 
 		}
 
-		return countsMap;
+		return counts;
 	}
 	
 	/**
@@ -1698,6 +1697,10 @@ public class RoadNetwork {
 		LOGGER.debug("Start node blacklist: " + this.startNodeBlacklist);
 		LOGGER.debug("End node blacklist: " + this.endNodeBlacklist);
 		
+		LOGGER.info("Determining edges type...");
+		
+		determineEdgesType();
+		
 		LOGGER.info("Determining the number of lanes...");
 		
 		//set number of lanes
@@ -1711,10 +1714,6 @@ public class RoadNetwork {
 		LOGGER.info("Determining whether edges are urban or rural...");
 		
 		determineEdgesUrbanRural();
-		
-		LOGGER.info("Determining edges type...");
-		
-		determineEdgesType();
 		
 		LOGGER.trace("Undirected graph representation of the road network:");
 		LOGGER.trace(undirectedGraph);
@@ -2129,21 +2128,21 @@ public class RoadNetwork {
 		while(iter.hasNext()) {
 			
 			Edge edge = (Edge) iter.next();
-			SimpleFeature sf = (SimpleFeature) edge.getObject();
-			String roadNumber = (String) sf.getAttribute("RoadNumber");
+			int edgeID = edge.getID();
+			EdgeType edgeType = this.edgesType[edgeID];
 			Integer lanes = 0;
-			if (roadNumber.charAt(0) == 'M') //motorway
+			if (edgeType == EdgeType.MOTORWAY) //motorway
 				lanes = numberOfLanesMRoad;
-			else if (roadNumber.charAt(0) == 'A') //A-road
+			else if (edgeType == EdgeType.AROAD) //A-road
 				lanes = numberOfLanesARoad;
-			else if (roadNumber.charAt(0) == 'F')//ferry
+			else if (edgeType == EdgeType.FERRY)//ferry
 				lanes = 0;
 			else {
-				LOGGER.warn("Link with unknown road type: {}", edge.getID());
+				LOGGER.warn("Link with unknown road type: {}", edgeID);
 				lanes = 0;
 			}
 			
-			this.numberOfLanes[edge.getID()] = lanes;
+			this.numberOfLanes[edgeID] = lanes;
 		}
 	}
 		

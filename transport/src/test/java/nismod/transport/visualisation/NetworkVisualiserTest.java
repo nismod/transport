@@ -2,6 +2,7 @@ package nismod.transport.visualisation;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -79,13 +80,19 @@ public class NetworkVisualiserTest {
 
 		rna.updateLinkVolumeInPCU();
 		rna.updateLinkVolumePerVehicleType();
-		Map<Integer, Double> dailyVolumeMap = rna.getLinkVolumeInPCU();
+		double[] dailyVolume = rna.getLinkVolumeInPCU();
+		Map<Integer, Double> dailyVolumeMap = new HashMap<Integer, Double>();
+		for (int edgeID = 0; edgeID < dailyVolume.length; edgeID++)
+			dailyVolumeMap.put(edgeID, dailyVolume[edgeID]);
 //		double[] dailyVolume = new double[rna.getLinkFreeFlowTravelTimes().length];
 //		for (int key: dailyVolumeMap.keySet())
 //			dailyVolume[key] = dailyVolumeMap.get(key);
 		System.out.println(dailyVolumeMap);
 		
-		Map<Integer, Double> gehStatsMap = rna.calculateGEHStatisticForCarCounts(rna.getVolumeToFlowFactor());
+		Double[] gehStats = rna.calculateGEHStatisticForCarCounts(rna.getVolumeToFlowFactor());
+		Map<Integer, Double> gehStatsMap = new HashMap<Integer, Double>();
+		for (int edgeID = 0; edgeID < gehStats.length; edgeID++)
+			gehStatsMap.put(edgeID, gehStats[edgeID]);
 //		double[] gehStats = new double[rna.getLinkFreeFlowTravelTimes().length];
 //		for (int key: gehStatsMap.keySet())
 //			gehStats[key] = gehStatsMap.get(key);

@@ -204,20 +204,20 @@ public class RebalancedTemproODMatrix extends RealODMatrixTempro {
 		List<Trip> tripList = this.rna.getTripList();
 		LOGGER.trace("Trip list size: {}", tripList.size());
 		
-		Map<Integer, Integer> volumes = this.rna.getLinkVolumePerVehicleType().get(VehicleType.CAR);
-		Map<Integer, Integer> counts = this.rna.getAADFCarTrafficCounts();
-		Map<Integer, Double> linkFactors = new HashMap<Integer, Double>();
+		int[] volumes = this.rna.getLinkVolumePerVehicleType().get(VehicleType.CAR);
+		Integer[] counts = this.rna.getAADFCarTrafficCounts();
+		Double[] linkFactors = new Double[volumes.length];
 		
 		LOGGER.trace("volumes = {}", volumes);
 		LOGGER.trace("counts = {}", counts);
 				
 		//scaling link factors can only be calculated for links that have counts and flow > 0
-		for (Integer edgeID: volumes.keySet()) {
-			Integer count = counts.get(edgeID);
-			Integer volume = volumes.get(edgeID);
+		for (int edgeID = 1; edgeID < volumes.length; edgeID++) {
+			Integer count = counts[edgeID];
+			Integer volume = volumes[edgeID];
 			if (count == null) continue; //skip link with no count (e.g. ferry lines)
 			if (volume == 0.0) continue; //also skip as it would create infinite factor
-			linkFactors.put(edgeID, 1.0 * count / volume);
+			linkFactors[edgeID] = 1.0 * count / volume;
 		}
 		LOGGER.trace("link factors = {}", linkFactors);
 		
@@ -240,8 +240,8 @@ public class RebalancedTemproODMatrix extends RealODMatrixTempro {
 				double count = counter.getFlow(originZone, destinationZone);
 				
 				for (int edgeID: route.getEdges().toArray())
-					if (linkFactors.get(edgeID) != null){
-					factor += linkFactors.get(edgeID) * multiplier;
+					if (linkFactors[edgeID] != null){
+					factor += linkFactors[edgeID] * multiplier;
 					count += multiplier;
 					}
 				

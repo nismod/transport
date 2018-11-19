@@ -446,8 +446,11 @@ public class CongestionChargingDashboard extends JFrame {
 					rnaAfterCongestionCharging.updateLinkVolumeInPCUPerTimeOfDay();
 					//SkimMatrix sm = rnaAfterCongestionCharging.calculateTimeSkimMatrix();
 
-
-					HashMap<Integer, Double> capacityAfter = rnaAfterCongestionCharging.calculateDirectionAveragedPeakLinkCapacityUtilisation();
+					double[] capacityAfterArray = rnaAfterCongestionCharging.calculateDirectionAveragedPeakLinkCapacityUtilisation();
+					HashMap<Integer, Double> capacityAfter = new HashMap<Integer, Double>();
+					for (int edgeID = 1; edgeID < capacityAfterArray.length; edgeID++)
+						//if (capacityAfterArray[edgeID] != null) capacityAfter.put(edgeID, capacityAfterArray[edgeID]);
+						capacityAfter.put(edgeID, capacityAfterArray[edgeID]);
 
 					//String shapefilePathAfter = "./temp/networkWithCapacityUtilisationAfter.shp";
 					final URL congestionChargeZoneUrl = new URL("file://src/test/resources/testdata/shapefiles/congestionChargingZone.shp");
@@ -1155,7 +1158,12 @@ public class CongestionChargingDashboard extends JFrame {
 		String shapefilePathBefore = "./temp/networkWithCapacityUtilisationBefore.shp";
 		//String shapefilePathAfter = "./temp/networkWithCapacityUtilisationAfter.shp";
 
-		HashMap<Integer, Double> capacityBefore = rnaBefore.calculateDirectionAveragedPeakLinkCapacityUtilisation();
+		double[] capacityBeforeArray = rnaBefore.calculateDirectionAveragedPeakLinkCapacityUtilisation();
+		HashMap<Integer, Double> capacityBefore = new HashMap<Integer, Double>();
+		for (int edgeID = 1; edgeID < capacityBeforeArray.length; edgeID++)
+			//if (capacityAfterArray[edgeID] != null) capacityAfter.put(edgeID, capacityAfterArray[edgeID]);
+			capacityBefore.put(edgeID, capacityBeforeArray[edgeID]);
+		
 		JFrame leftFrame = NetworkVisualiserDemo.visualise(roadNetwork, "Capacity Utilisation Before Intervention", capacityBefore, "CapUtil", shapefilePathBefore);
 
 		//Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();

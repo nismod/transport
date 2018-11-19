@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
@@ -662,7 +663,7 @@ public class RoadNetworkAssignmentTest {
 		for (Edge edge: roadNetwork.getEdgeIDtoEdge())
 			if (edge != null) {
 				int edgeID = edge.getID();
-				double volume  = rna.getLinkVolumeInPCU().get(edgeID);
+				double volume  = rna.getLinkVolumeInPCU()[edgeID];
 				double length = roadNetwork.getEdgeLength(edgeID);
 				vehicleKilometres += volume * length; 
 		}
@@ -707,7 +708,7 @@ public class RoadNetworkAssignmentTest {
 		System.out.println(freq);
 		
 		System.out.println("Link volumes in PCU per time of day: ");
-		Map<TimeOfDay, Map<Integer, Double>> map = rna.calculateLinkVolumeInPCUPerTimeOfDay(tripList);
+		Map<TimeOfDay, double[]> map = rna.calculateLinkVolumeInPCUPerTimeOfDay(tripList);
 		System.out.println(map);
 		
 		rna.updateLinkTravelTimes();
@@ -721,16 +722,16 @@ public class RoadNetworkAssignmentTest {
 		}
 	
 		//compare volumes in PCU calculated during the assignment with those calculated from the trip list
-		Map<Integer, Double> linkVolumesInPCU = rna.getLinkVolumeInPCU();
-		for (Integer edgeID: linkVolumesInPCU.keySet()) {
+		double[] linkVolumesInPCU = rna.getLinkVolumeInPCU();
+		for (int edgeID = 1; edgeID < linkVolumesInPCU.length; edgeID++) {
 			double sum = 0.0;
 			for (TimeOfDay hour: map.keySet()) {
-				Map<Integer, Double> hourlyMap = map.get(hour);
-				Double volume = hourlyMap.get(edgeID);
+				double[] hourlyVolumes = map.get(hour);
+				Double volume = hourlyVolumes[edgeID];
 				if (volume == null) volume = 0.0;
 				sum += volume;
 			}
-		assertEquals("PCU flows for each edge are correct", linkVolumesInPCU.get(edgeID), sum, EPSILON);
+		assertEquals("PCU flows for each edge are correct", linkVolumesInPCU[edgeID], sum, EPSILON);
 		}
 		
 		//rna.saveHourlyCarVolumes(2015, "minitestHourlyVolumes.csv");
@@ -758,8 +759,9 @@ public class RoadNetworkAssignmentTest {
 		System.out.println(roadNetwork.getAADFCarTrafficCounts());
 		System.out.println(rna.calculateRMSNforSimulatedVolumes());
 		
-		int sumVolumes = rna.getLinkVolumePerVehicleType().get(VehicleType.CAR).values().stream().mapToInt(Number::intValue).sum();
-		int sumCounts = roadNetwork.getAADFCarTrafficCounts().values().stream().mapToInt(Number::intValue).sum();;
+		int sumVolumes = Arrays.stream(rna.getLinkVolumePerVehicleType().get(VehicleType.CAR)).sum();
+		int sumCounts = Arrays.stream(roadNetwork.getAADFCarTrafficCounts()).filter(Objects::nonNull).mapToInt(Number::intValue).sum();
+		
 		System.out.println("Sum of volumes : " + sumVolumes);
 		System.out.println("Sum of counts : " + sumCounts);
 		
@@ -980,7 +982,7 @@ public class RoadNetworkAssignmentTest {
 		for (int i=1; i < rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM).length; i++) {
 			if (rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM)[i] < rna.getLinkFreeFlowTravelTimes()[i]) {
 				System.err.println("For link id = " + i);
-				System.err.println("Link volume in PCU: " + rna.getLinkVolumeInPCU().get(i));
+				System.err.println("Link volume in PCU: " + rna.getLinkVolumeInPCU()[i]);
 				System.err.println("Link travel time " + rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM)[i]);
 				System.err.println("Free-flow Link travel time " + rna.getLinkFreeFlowTravelTimes()[i]);
 			}
@@ -1020,19 +1022,21 @@ public class RoadNetworkAssignmentTest {
 				
 		//calculate GEH statistic
 		rna.updateLinkVolumePerVehicleType();
-		HashMap<Integer, Double> GEH = rna.calculateGEHStatisticForCarCounts(1/24.0);
-				
+		Double[] GEH = rna.calculateGEHStatisticForCarCounts(1/24.0);
+			
+		int counter = 0;
 		int validFlows = 0;
 		int suspiciousFlows = 0;
 		int invalidFlows = 0;
-		for (Integer edgeID: GEH.keySet()) {
-			if (GEH.get(edgeID) < 5.0) validFlows++;
-			else if (GEH.get(edgeID) < 10.0) suspiciousFlows++;
+		for (int edgeID = 1; edgeID < GEH.length; edgeID++) {
+			if (GEH[edgeID] == null) continue;
+			if (GEH[edgeID] < 5.0) validFlows++;
+			else if (GEH[edgeID] < 10.0) suspiciousFlows++;
 			else invalidFlows++;
 		}
-		System.out.printf("Percentage of edges with valid flows (GEH < 5.0) is: %.0f%% %n", (double) validFlows / GEH.size() * 100);
-		System.out.printf("Percentage of edges with suspicious flows (5.0 <= GEH < 10.0) is: %.0f%% %n", (double) suspiciousFlows / GEH.size() * 100);
-		System.out.printf("Percentage of edges with invalid flows (GEH >= 10.0) is: %.0f%% %n", (double) invalidFlows / GEH.size() * 100);
+		System.out.printf("Percentage of edges with valid flows (GEH < 5.0) is: %.0f%% %n", (double) validFlows / counter * 100);
+		System.out.printf("Percentage of edges with suspicious flows (5.0 <= GEH < 10.0) is: %.0f%% %n", (double) suspiciousFlows / counter * 100);
+		System.out.printf("Percentage of edges with invalid flows (GEH >= 10.0) is: %.0f%% %n", (double) invalidFlows / counter * 100);
 		
 		rna.printGEHstatistic(1/24.0);
 		rna.printGEHstatistic(0.1);
@@ -1167,7 +1171,7 @@ public class RoadNetworkAssignmentTest {
 					String fetchedZone = roadNetwork.getEdgeToZone().get(edgeID);
 					if (fetchedZone != null && fetchedZone.equals(zone)) {
 
-						Double volume  = rna.getLinkVolumeInPCU().get(edgeID);
+						Double volume  = rna.getLinkVolumeInPCU()[edgeID];
 						if (volume == null) {
 							System.out.println("No volume for edge " + edgeID);
 							volume = 0.0;
@@ -1215,22 +1219,22 @@ public class RoadNetworkAssignmentTest {
 		
 		System.out.println("Link volumes in PCU per time of day: ");
 		rna.updateLinkVolumeInPCUPerTimeOfDay();
-		Map<TimeOfDay, Map<Integer, Double>> map = rna.getLinkVolumeInPCUPerTimeOfDay();
+		Map<TimeOfDay, double[]> map = rna.getLinkVolumeInPCUPerTimeOfDay();
 		
 		System.out.println(map);
 		
 		//compare volumes in PCU calculated during the assignment with those calculated from the trip list
-		Map<Integer, Double> linkVolumesInPCU = rna.getLinkVolumeInPCU();
+		double[] linkVolumesInPCU = rna.getLinkVolumeInPCU();
 				
-		for (Integer edgeID: linkVolumesInPCU.keySet()) {
+		for (int edgeID=1; edgeID < linkVolumesInPCU.length; edgeID++) {
 			double sum = 0.0;
 			for (TimeOfDay hour: map.keySet()) {
-				Map<Integer, Double> hourlyMap = map.get(hour);
-				Double volume = hourlyMap.get(edgeID);
+				double[] hourlyVolumes = map.get(hour);
+				Double volume = hourlyVolumes[edgeID];
 				if (volume == null) volume = 0.0;
 				sum += volume;
 			}
-		assertEquals("PCU flows for each edge are correct", linkVolumesInPCU.get(edgeID), sum, EPSILON);
+		assertEquals("PCU flows for each edge are correct", linkVolumesInPCU[edgeID], sum, EPSILON);
 		}
 		
 		//rna.saveHourlyCarVolumes(2015, "hourlyCarVolumes.csv");
@@ -1684,7 +1688,7 @@ public class RoadNetworkAssignmentTest {
 		for (int i = 1; i < rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM).length; i++) {
 			if (rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM)[i] < rna.getLinkFreeFlowTravelTimes()[i]) {
 				System.err.println("For link id = " + i);
-				System.err.println("Link volume in PCU: " + rna.getLinkVolumeInPCU().get(i));
+				System.err.println("Link volume in PCU: " + rna.getLinkVolumeInPCU()[i]);
 				System.err.println("Link travel time " + rna.getLinkTravelTimes().get(TimeOfDay.EIGHTAM)[i]);
 				System.err.println("Free-flow Link travel time " + rna.getLinkFreeFlowTravelTimes()[i]);
 			}

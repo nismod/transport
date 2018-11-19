@@ -127,9 +127,9 @@ public class RoadNetworkAssignment {
 
 	private RoadNetwork roadNetwork;
 
-	private Map<Integer, Double> linkVolumesInPCU;
-	private Map<VehicleType, Map<Integer, Integer>> linkVolumesPerVehicleType;
-	private Map<TimeOfDay, Map<Integer, Double>> linkVolumesInPCUPerTimeOfDay;
+	private double[] linkVolumesInPCU;
+	private Map<VehicleType, int[]> linkVolumesPerVehicleType;
+	private Map<TimeOfDay, double[]> linkVolumesInPCUPerTimeOfDay;
 	private Map<TimeOfDay, double[]> linkTravelTimePerTimeOfDay;
 
 	//storage of performed trips
@@ -187,13 +187,13 @@ public class RoadNetworkAssignment {
 
 		this.roadNetwork = roadNetwork;
 		this.params = params;
-		this.linkVolumesInPCU = new HashMap<Integer, Double>();
-		this.linkVolumesPerVehicleType = new EnumMap<>(VehicleType.class);
+		this.linkVolumesInPCU = new double[this.roadNetwork.getMaximumEdgeID()];
+		this.linkVolumesPerVehicleType = new EnumMap<VehicleType, int[]>(VehicleType.class);
 		for (VehicleType vht: VehicleType.values()) {
-			HashMap<Integer, Integer> map = new HashMap<Integer, Integer>();
-			linkVolumesPerVehicleType.put(vht, map);
+			int[] volumes = new int[this.roadNetwork.getMaximumEdgeID()];
+			linkVolumesPerVehicleType.put(vht, volumes);
 		}
-		this.linkTravelTimePerTimeOfDay = new EnumMap<>(TimeOfDay.class);
+		this.linkTravelTimePerTimeOfDay = new EnumMap<TimeOfDay, double[]>(TimeOfDay.class);
 		for (TimeOfDay hour: TimeOfDay.values()) {
 			double[] hourlyTimes = new double[this.roadNetwork.getFreeFlowTravelTime().length];
 			linkTravelTimePerTimeOfDay.put(hour, hourlyTimes);
@@ -2489,10 +2489,9 @@ public class RoadNetworkAssignment {
 			//iterate through all times of day
 			for (TimeOfDay hour: TimeOfDay.values()) {
 
-				Map<Integer, Double> hourlyVolumes = this.linkVolumesInPCUPerTimeOfDay.get(hour);
-				Double linkVolumeInPCU = hourlyVolumes.get(edgeID);
-				if (linkVolumeInPCU == null) linkVolumeInPCU = 0.0;
-
+				double[] hourlyVolumes = this.linkVolumesInPCUPerTimeOfDay.get(hour);
+				double linkVolumeInPCU = hourlyVolumes[edgeID];
+				
 				/*
 				//Bureau of Public Roads (1964) formulation
 				if (roadNumber.charAt(0) == 'M') //motorway
@@ -3333,11 +3332,11 @@ public class RoadNetworkAssignment {
 	 * Calculate peak-hour link point capacities (PCU/lane/hr).
 	 * @return Peak-hour link point capacities.
 	 */
-	public HashMap<Integer, Double> calculatePeakLinkPointCapacities() {
+	public double[] calculatePeakLinkPointCapacities() {
 
-		Map<Integer, Double> peakLinkVolumes = this.calculateLinkVolumeInPCUPerTimeOfDay(this.tripList).get(TimeOfDay.EIGHTAM);
+		double[] peakLinkVolumes = this.calculateLinkVolumeInPCUPerTimeOfDay(this.tripList).get(TimeOfDay.EIGHTAM);
 		int[] numberOfLanes = roadNetwork.getNumberOfLanes();
-		HashMap<Integer, Double> peakLinkCapacitieses = new HashMap<Integer, Double>();
+		double[] peakLinkCapacities = new double[this.roadNetwork.getMaximumEdgeID()];
 
 		//iterate through all the edges in the graph
 		Iterator iter = roadNetwork.getNetwork().getEdges().iterator();
@@ -3346,8 +3345,7 @@ public class RoadNetworkAssignment {
 			Edge edge = (Edge) iter.next();
 			int edgeID = edge.getID();
 			EdgeType edgeType = this.roadNetwork.getEdgesType()[edgeID];
-			double linkVol = 0.0;
-			if (peakLinkVolumes.get(edgeID) != null) linkVol = peakLinkVolumes.get(edgeID);
+			double linkVol = peakLinkVolumes[edgeID];
 			double capacity = 0.0;
 			if (edgeType == EdgeType.MOTORWAY) //motorway
 				capacity = linkVol / numberOfLanes[edgeID];
@@ -3356,9 +3354,9 @@ public class RoadNetworkAssignment {
 			else //ferry
 				capacity = linkVol;
 
-			peakLinkCapacitieses.put(edgeID, capacity);
+			peakLinkCapacities[edgeID] = capacity;
 		}
-		return peakLinkCapacitieses;
+		return peakLinkCapacities;
 	}
 
 
@@ -3366,19 +3364,19 @@ public class RoadNetworkAssignment {
 	 * Calculate peak-hour link point capacities (PCU/lane/hr) averaged by two directions.
 	 * @return Peak-hour link point capacities.
 	 */
-	private HashMap<Integer, Double> calculateAveragePeakLinkPointCapacities() {
+	private double[] calculateAveragePeakLinkPointCapacities() {
 
-		HashMap<Integer, Double> capacities = this.calculatePeakLinkPointCapacities();
-		HashMap<Integer, Double> averagedCapacities = new HashMap<Integer, Double>();
+		double[] capacities = this.calculatePeakLinkPointCapacities();
+		double[] averagedCapacities = new double[this.roadNetwork.getMaximumEdgeID()];
 
-		for (Integer edgeID: capacities.keySet()) {
-			double capacity1 = capacities.get(edgeID);
+		for (int edgeID = 1; edgeID < capacities.length; edgeID++) {
+			double capacity1 = capacities[edgeID];
 			Integer otherEdgeID = roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edgeID];
-			if (otherEdgeID == null) averagedCapacities.put(edgeID, capacity1); //if just one direction, copy value
+			if (otherEdgeID == null) averagedCapacities[edgeID] = capacity1; //if just one direction, copy value
 			else { //otherwise, store average for both directions
-				Double capacity2 = capacities.get(otherEdgeID);
-				averagedCapacities.put(edgeID, (capacity1 + capacity2) / 2.0);
-				averagedCapacities.put(otherEdgeID, (capacity1 + capacity2) / 2.0);
+				double capacity2 = capacities[otherEdgeID];
+				averagedCapacities[edgeID] = (capacity1 + capacity2) / 2.0;
+				averagedCapacities[otherEdgeID] = (capacity1 + capacity2) / 2.0;
 			}
 		}
 
@@ -3389,23 +3387,23 @@ public class RoadNetworkAssignment {
 	 * Calculate peak-hour link point capacities (PCU/lane/hr) maximum of the two directions.
 	 * @return Peak-hour link point capacities.
 	 */
-	private HashMap<Integer, Double> calculateMaximumPeakLinkPointCapacities() {
+	private double[] calculateMaximumPeakLinkPointCapacities() {
 
-		HashMap<Integer, Double> capacities = this.calculatePeakLinkPointCapacities();
-		HashMap<Integer, Double> maximumCapacities = new HashMap<Integer, Double>();
+		double[] capacities = this.calculatePeakLinkPointCapacities();
+		double[] maximumCapacities = new double[this.roadNetwork.getMaximumEdgeID()];
 
-		for (Integer edgeID: capacities.keySet()) {
-			double capacity1 = capacities.get(edgeID);
+		for (int edgeID = 1; edgeID < capacities.length; edgeID++) {
+			double capacity1 = capacities[edgeID];
 			Integer otherEdgeID = roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edgeID];
-			if (otherEdgeID == null) maximumCapacities.put(edgeID, capacity1); //if just one direction, copy value
+			if (otherEdgeID == null) maximumCapacities[edgeID] = capacity1; //if just one direction, copy value
 			else { //otherwise, store maximum of both directions
-				double capacity2 = capacities.get(otherEdgeID);
+				double capacity2 = capacities[otherEdgeID];
 				double maxCapacity = 0.0;
 				if (capacity1 > capacity2) maxCapacity = capacity1;
 				else 					   maxCapacity = capacity2;
 
-				maximumCapacities.put(edgeID, maxCapacity);
-				maximumCapacities.put(otherEdgeID, maxCapacity);
+				maximumCapacities[edgeID] = maxCapacity;
+				maximumCapacities[otherEdgeID] = maxCapacity;
 			}
 		}
 
@@ -3416,21 +3414,20 @@ public class RoadNetworkAssignment {
 	 * Calculate peak-hour link densities (PCU/lane/km/hr).
 	 * @return Peak-hour link densities.
 	 */
-	public HashMap<Integer, Double> calculatePeakLinkDensities() {
+	public double[] calculatePeakLinkDensities() {
 
-		Map<Integer, Double> peakLinkVolumes = this.calculateLinkVolumeInPCUPerTimeOfDay(this.tripList).get(TimeOfDay.EIGHTAM);
-		int[] numberOfLanes = roadNetwork.getNumberOfLanes();
-		HashMap<Integer, Double> peakLinkDensities = new HashMap<Integer, Double>();
+		double[] peakLinkVolumes = this.calculateLinkVolumeInPCUPerTimeOfDay(this.tripList).get(TimeOfDay.EIGHTAM);
+		int[] numberOfLanes = this.roadNetwork.getNumberOfLanes();
+		double[] peakLinkDensities = new double[this.roadNetwork.getMaximumEdgeID()];
 
 		//iterate through all the edges in the graph
-		Iterator iter = roadNetwork.getNetwork().getEdges().iterator();
+		Iterator iter = this.roadNetwork.getNetwork().getEdges().iterator();
 		while(iter.hasNext()) {
 
 			Edge edge = (Edge) iter.next();
 			int edgeID = edge.getID();
 			EdgeType edgeType = this.roadNetwork.getEdgesType()[edgeID];
-			double linkVol = 0.0;
-			if (peakLinkVolumes.get(edgeID) != null) linkVol = peakLinkVolumes.get(edgeID);
+			double linkVol = peakLinkVolumes[edgeID];
 			double density = 0.0;
 			double length = this.roadNetwork.getEdgeLength(edgeID);
 			if (edgeType == EdgeType.MOTORWAY) //motorway
@@ -3440,8 +3437,9 @@ public class RoadNetworkAssignment {
 			else //ferry
 				density = linkVol / length;
 
-			peakLinkDensities.put(edgeID, density);
+			peakLinkDensities[edgeID] = density;
 		}
+		
 		return peakLinkDensities;
 	}
 
@@ -3449,10 +3447,10 @@ public class RoadNetworkAssignment {
 	 * Calculate peak-hour link capacity utilisation (capacity / max. capacity).
 	 * @return Peak-hour link capacity utilisation [%].
 	 */
-	public HashMap<Integer, Double> calculatePeakLinkCapacityUtilisation() {
+	public double[] calculatePeakLinkCapacityUtilisation() {
 
-		HashMap<Integer, Double> peakLinkCapacitieses = this.calculatePeakLinkPointCapacities();
-		HashMap<Integer, Double> peakLinkCapacityUtilisataion = new HashMap<Integer, Double>();
+		double[] peakLinkCapacities = this.calculatePeakLinkPointCapacities();
+		double[] peakLinkCapacityUtilisation = new double[this.roadNetwork.getMaximumEdgeID()];
 
 		//iterate through all the edges in the graph
 		Iterator iter = roadNetwork.getNetwork().getEdges().iterator();
@@ -3461,8 +3459,7 @@ public class RoadNetworkAssignment {
 			Edge edge = (Edge) iter.next();
 			int edgeID = edge.getID();
 			EdgeType edgeType = this.roadNetwork.getEdgesType()[edgeID];
-			double capacity = 0.0;
-			if (peakLinkCapacitieses.get(edgeID) != null) capacity = peakLinkCapacitieses.get(edgeID);
+			double capacity = peakLinkCapacities[edgeID];
 			double utilisation = 0.0;
 			if (edgeType == EdgeType.MOTORWAY) //motorway
 				utilisation = capacity / this.maximumCapacityMRoad;
@@ -3471,45 +3468,34 @@ public class RoadNetworkAssignment {
 			else //ferry
 				utilisation = 0.0; //undefined for ferry
 
-			peakLinkCapacityUtilisataion.put(edgeID, utilisation * 100);
+			peakLinkCapacityUtilisation[edgeID] = utilisation * 100;
 		}
-		return peakLinkCapacityUtilisataion;
+		return peakLinkCapacityUtilisation;
 	}
 
 	/**
 	 * Calculate peak-hour link capacity utilisation (%) averaged by two directions.
 	 * @return Peak-hour link capacity utilisation.
 	 */
-	public HashMap<Integer, Double> calculateDirectionAveragedPeakLinkCapacityUtilisation() {
+	public double[] calculateDirectionAveragedPeakLinkCapacityUtilisation() {
 
-		HashMap<Integer, Double> utilisation = this.calculatePeakLinkCapacityUtilisation();
-		HashMap<Integer, Double> averagedUtilisation = new HashMap<Integer, Double>();
+		double[] utilisation = this.calculatePeakLinkCapacityUtilisation();
+		double[] averagedUtilisation = new double[this.roadNetwork.getMaximumEdgeID()];
 
-		for (Integer edgeID: utilisation.keySet()) {
-			double utilisation1 = utilisation.get(edgeID);
+		for (int edgeID = 1; edgeID < utilisation.length; edgeID++) {
+			double utilisation1 = utilisation[edgeID];
 			Integer otherEdgeID = roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edgeID];
-			if (otherEdgeID == null) averagedUtilisation.put(edgeID, utilisation1); //if just one direction, copy value
+			if (otherEdgeID == null) averagedUtilisation[edgeID] = utilisation1; //if just one direction, copy value
 			else { //otherwise, store average for both directions
-				Double utilisation2 = utilisation.get(otherEdgeID);
-				averagedUtilisation.put(edgeID, (utilisation1 + utilisation2) / 2.0);
-				averagedUtilisation.put(otherEdgeID, (utilisation1 + utilisation2) / 2.0);
+				double utilisation2 = utilisation[otherEdgeID];
+				averagedUtilisation[edgeID] = (utilisation1 + utilisation2) / 2.0;
+				averagedUtilisation[otherEdgeID] = (utilisation1 + utilisation2) / 2.0;
 			}
 		}
 
 		return averagedUtilisation;
 	}
 
-	//	/**
-	//	 * @return The sum of all link travel times in the network.
-	//	 */
-	//	public double getTotalLinkTravelTimes() {
-	//
-	//		double totalTravelTime = 0.0;
-	//		for (Integer key: this.linkTravelTime.keySet()) totalTravelTime += linkTravelTime.get(key);
-	//
-	//		return totalTravelTime;
-	//	}
-	//
 	/**
 	 * @return The copy of all link travel times.
 	 */
@@ -3541,20 +3527,6 @@ public class RoadNetworkAssignment {
 
 		return linkTravelTimes;
 	}
-
-	//	/**
-	//	 * Calculates the sum of absolute differences in link travel times.
-	//	 * @param other Link travel times to compare with.
-	//	 * @return Sum of absolute differences in link travel times.
-	//	 */
-	//	public double getAbsoluteDifferenceInLinkTravelTimes(HashMap<Integer, Double> other) {
-	//
-	//		double difference = 0.0;
-	//		for (Integer key: this.linkTravelTime.keySet())
-	//			difference += Math.abs(this.linkTravelTime.get(key) - other.get(key));
-	//
-	//		return difference;
-	//	}
 
 	/**
 	 * Getter method for the road network.
@@ -3593,12 +3565,12 @@ public class RoadNetworkAssignment {
 		LOGGER.debug("Saving link-based assignment results.");
 
 		//calculate peak capacities and densities
-		HashMap<Integer, Double> capacities = this.calculatePeakLinkPointCapacities();
-		HashMap<Integer, Double> averageCapacities = this.calculateAveragePeakLinkPointCapacities();
-		HashMap<Integer, Double> maximumCapacities = this.calculateMaximumPeakLinkPointCapacities();
-		HashMap<Integer, Double> densities = this.calculatePeakLinkDensities();
-		HashMap<Integer, Double> GEHStats = null;
-		Map<VehicleType, HashMap<Integer, Double>> GEHStatsFreight = null;
+		double[] capacities = this.calculatePeakLinkPointCapacities();
+		double[] averageCapacities = this.calculateAveragePeakLinkPointCapacities();
+		double[] maximumCapacities = this.calculateMaximumPeakLinkPointCapacities();
+		double[] densities = this.calculatePeakLinkDensities();
+		Double[] GEHStats = null;
+		Map<VehicleType, Double[]> GEHStatsFreight = null;
 		if (year == this.baseYear) {
 			GEHStats = this.calculateGEHStatisticForCarCounts(this.volumeToFlowFactor); //GEH can be calculated for base year only
 			GEHStatsFreight = this.calculateGEHStatisticForFreightCounts(this.volumeToFlowFactor);
@@ -3663,52 +3635,52 @@ public class RoadNetworkAssignment {
 				record.add(String.format("%.3f", this.roadNetwork.getEdgeLength(edgeID)));
 				record.add(String.format("%.4f", this.roadNetwork.getFreeFlowTravelTime()[edgeID]));
 				record.add(String.format("%.4f", this.linkTravelTimePerTimeOfDay.get(TimeOfDay.EIGHTAM)[edgeID]));
-				Integer linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edgeID);
+				Integer linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
 				if (linkVolume == null) record.add(Integer.toString(0));
 				else 					record.add(Integer.toString(linkVolume));
-				linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.VAN).get(edgeID);
+				linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.VAN)[edgeID];
 				if (linkVolume == null) record.add(Integer.toString(0));
 				else 					record.add(Integer.toString(linkVolume));
-				linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.RIGID).get(edgeID);
+				linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.RIGID)[edgeID];
 				if (linkVolume == null) record.add(Integer.toString(0));
 				else 					record.add(Integer.toString(linkVolume));
-				linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC).get(edgeID);
+				linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC)[edgeID];
 				if (linkVolume == null) record.add(Integer.toString(0));
 				else 					record.add(Integer.toString(linkVolume));
-				linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.CAR_AV).get(edgeID);
+				linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.CAR_AV)[edgeID];
 				if (linkVolume == null) record.add(Integer.toString(0));
 				else 					record.add(Integer.toString(linkVolume));
-				linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.VAN_AV).get(edgeID);
+				linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.VAN_AV)[edgeID];
 				if (linkVolume == null) record.add(Integer.toString(0));
 				else 					record.add(Integer.toString(linkVolume));
-				linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.RIGID_AV).get(edgeID);
+				linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.RIGID_AV)[edgeID];
 				if (linkVolume == null) record.add(Integer.toString(0));
 				else 					record.add(Integer.toString(linkVolume));
-				linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC_AV).get(edgeID);
+				linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC_AV)[edgeID];
 				if (linkVolume == null) record.add(Integer.toString(0));
 				else 					record.add(Integer.toString(linkVolume));
-				Double linkVolumePCU = this.linkVolumesInPCU.get(edgeID);
+				Double linkVolumePCU = this.linkVolumesInPCU[edgeID];
 				if (linkVolumePCU == null) record.add(Double.toString(0.0));
 				else					   record.add(Double.toString(linkVolumePCU));
-				record.add(String.format("%.2f", capacities.get(edgeID)));
-				record.add(String.format("%.2f", densities.get(edgeID)));
+				record.add(String.format("%.2f", capacities[edgeID]));
+				record.add(String.format("%.2f", densities[edgeID]));
 				//get max capacity from road type
 				if (edgeType == EdgeType.MOTORWAY) { //motorway
 					record.add(Integer.toString(maximumCapacityMRoad));
-					double utilisation = capacities.get(edgeID) / maximumCapacityMRoad;
+					double utilisation = capacities[edgeID] / maximumCapacityMRoad;
 					record.add(String.format("%.4f", utilisation));
-					double averageUtilisation = averageCapacities.get(edgeID) / maximumCapacityMRoad;
+					double averageUtilisation = averageCapacities[edgeID] / maximumCapacityMRoad;
 					record.add(String.format("%.4f", averageUtilisation));
-					double maximumUtilisation = maximumCapacities.get(edgeID) / maximumCapacityMRoad;
+					double maximumUtilisation = maximumCapacities[edgeID] / maximumCapacityMRoad;
 					record.add(String.format("%.4f", maximumUtilisation));
 				}	
 				else if (edgeType == EdgeType.AROAD) { //A road
 					record.add(Integer.toString(maximumCapacityARoad));
-					double utilisation = capacities.get(edgeID) / maximumCapacityARoad;
+					double utilisation = capacities[edgeID] / maximumCapacityARoad;
 					record.add(String.format("%.4f", utilisation));
-					double averageUtilisation = averageCapacities.get(edgeID) / maximumCapacityARoad;
+					double averageUtilisation = averageCapacities[edgeID] / maximumCapacityARoad;
 					record.add(String.format("%.4f", averageUtilisation));
-					double maximumUtilisation = maximumCapacities.get(edgeID) / maximumCapacityARoad;
+					double maximumUtilisation = maximumCapacities[edgeID] / maximumCapacityARoad;
 					record.add(String.format("%.4f", maximumUtilisation));
 				}
 				else { //ferry
@@ -3733,13 +3705,13 @@ public class RoadNetworkAssignment {
 					record.add(Long.toString(rigidCount));
 					long articCount = (long) feature.getAttribute("FdHGVA3") + (long) feature.getAttribute("FdHGVA5") + (long) feature.getAttribute("FdHGVA6");
 					record.add(Long.toString(articCount));
-					double gehCar = GEHStats.get(edgeID);
+					double gehCar = GEHStats[edgeID];
 					record.add(String.format("%.4f", gehCar));
-					double gehVan = GEHStatsFreight.get(VehicleType.VAN).get(edgeID);
+					double gehVan = GEHStatsFreight.get(VehicleType.VAN)[edgeID];
 					record.add(String.format("%.4f", gehVan));
-					double gehRigid = GEHStatsFreight.get(VehicleType.RIGID).get(edgeID);
+					double gehRigid = GEHStatsFreight.get(VehicleType.RIGID)[edgeID];
 					record.add(String.format("%.4f", gehRigid));
-					double gehArtic = GEHStatsFreight.get(VehicleType.ARTIC).get(edgeID);
+					double gehArtic = GEHStatsFreight.get(VehicleType.ARTIC)[edgeID];
 					record.add(String.format("%.4f", gehArtic));
 				}
 				else { //future years, ferry or a newly developed road with no count point
@@ -3821,13 +3793,13 @@ public class RoadNetworkAssignment {
 					record.add("N/A");
 
 				//Integer linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edge.getID());
-				Double linkVolume = this.linkVolumesInPCU.get(edge.getID());
+				Double linkVolume = this.linkVolumesInPCU[edge.getID()];
 
 				if (linkVolume == null) record.add(Integer.toString(0));
 				else 					record.add(Integer.toString((int)Math.round(linkVolume)));
 
 				for (TimeOfDay hour: TimeOfDay.values()) {
-					Double linkVolumeInPCU = this.linkVolumesInPCUPerTimeOfDay.get(hour).get(edge.getID()); //TODO there should be one per vehicle type
+					Double linkVolumeInPCU = this.linkVolumesInPCUPerTimeOfDay.get(hour)[edge.getID()]; //TODO there should be one per vehicle type
 					if (linkVolumeInPCU == null) record.add(Integer.toString(0));
 					else 					record.add(Integer.toString((int)Math.round(linkVolumeInPCU)));
 				}
@@ -4218,7 +4190,7 @@ public class RoadNetworkAssignment {
 		LOGGER.debug("Saving peak link point capacities.");
 		
 		//calculate capacities
-		HashMap<Integer, Double> capacities = this.calculatePeakLinkPointCapacities();
+		double[] capacities = this.calculatePeakLinkPointCapacities();
 
 		//save them to a file
 		String NEW_LINE_SEPARATOR = "\n";
@@ -4241,7 +4213,7 @@ public class RoadNetworkAssignment {
 				record.add(Integer.toString(year));
 				record.add(Integer.toString(edge.getID()));
 				//record.add(String.format("%.2f", capacities.get(edge.getID())));
-				record.add(Double.toString(capacities.get(edge.getID())));
+				record.add(Double.toString(capacities[edge.getID()]));
 				csvFilePrinter.printRecord(record);
 			}
 		} catch (Exception e) {
@@ -4695,11 +4667,13 @@ public class RoadNetworkAssignment {
 		Map<String, Map<VehicleType, Double>> vehicleKilometres = new HashMap<String, Map<VehicleType, Double>>();
 
 		for (VehicleType vht: VehicleType.values()) {
-			for (Map.Entry<Integer, Integer> pair: this.linkVolumesPerVehicleType.get(vht).entrySet()) {
-				Integer edgeID = pair.getKey();
-				Integer volume = pair.getValue();
-				if (volume == 0) LOGGER.debug("0 volume!");
-
+			int[] linkVolumes = this.linkVolumesPerVehicleType.get(vht);
+			for (int edgeID = 1; edgeID < linkVolumes.length; edgeID++) {
+				
+				DirectedEdge edge = (DirectedEdge)this.roadNetwork.getEdgeIDtoEdge()[edgeID];
+				if (edge == null) continue; //skip if not pointing to an edge
+				
+				int volume = linkVolumes[edgeID];
 				//get zone
 				String zone = this.roadNetwork.getEdgeToZone().get(edgeID);
 				if (zone != null) { //edge to zone mapping exists for this edge
@@ -4721,7 +4695,6 @@ public class RoadNetworkAssignment {
 					vehicleKilometres.get(zone).put(vht, vehkm);
 				} else { //zone == null
 					//check if ferry
-					DirectedEdge edge = (DirectedEdge)this.roadNetwork.getEdgeIDtoEdge()[edgeID];
 					SimpleFeature sf = (SimpleFeature)edge.getObject();
 					String roadNumber = (String) sf.getAttribute("RoadNumber");
 					if (roadNumber.charAt(0) != 'F') {
@@ -5012,19 +4985,35 @@ public class RoadNetworkAssignment {
 	public void resetLinkVolumes () {
 
 		//reset link volumes in PCU
-		for (Integer key: this.linkVolumesInPCU.keySet()) this.linkVolumesInPCU.put(key, 0.0);
+		if (this.linkVolumesInPCU == null)
+			this.linkVolumesInPCU = new double[this.roadNetwork.maximumEdgeID];
+		for (int edgeID = 1; edgeID < this.linkVolumesInPCU.length; edgeID++)
+			this.linkVolumesInPCU[edgeID] = 0.0;
 
 		//reset link volumes per vehicle type
+		if (this.linkVolumesPerVehicleType == null)
+			this.linkVolumesPerVehicleType = new EnumMap<VehicleType, int[]>(VehicleType.class);
 		for (VehicleType vht: VehicleType.values()) {
-			HashMap<Integer, Integer> map = new HashMap<Integer, Integer>();
-			this.linkVolumesPerVehicleType.put(vht, map);
+			int[] linkVolumes = this.linkVolumesPerVehicleType.get(vht);
+			if (linkVolumes == null) {
+				linkVolumes = new int[this.roadNetwork.getMaximumEdgeID()];
+				this.linkVolumesPerVehicleType.put(vht, linkVolumes);
+			}
+			for (int edgeID = 1; edgeID < linkVolumes.length; edgeID++)
+				linkVolumes[edgeID] = 0;
 		}
 
 		//reset link volumes per time of day
-		this.linkVolumesInPCUPerTimeOfDay = new EnumMap<>(TimeOfDay.class);
+		if (this.linkVolumesInPCUPerTimeOfDay == null) 
+			this.linkVolumesInPCUPerTimeOfDay = new EnumMap<TimeOfDay, double[]>(TimeOfDay.class);
 		for (TimeOfDay hour: TimeOfDay.values()) {
-			Map<Integer, Double> hourlyMap = new HashMap<Integer, Double>();
-			this.linkVolumesInPCUPerTimeOfDay.put(hour, hourlyMap);
+			double[] hourlyVolumes = this.linkVolumesInPCUPerTimeOfDay.get(hour);
+			if (hourlyVolumes == null) {
+				hourlyVolumes = new double[this.roadNetwork.getMaximumEdgeID()];
+				this.linkVolumesInPCUPerTimeOfDay.put(hour, hourlyVolumes);
+			}
+			for (int edgeID = 1; edgeID < hourlyVolumes.length; edgeID++)
+				hourlyVolumes[edgeID] = 0.0;
 		}
 	}
 
@@ -5049,30 +5038,27 @@ public class RoadNetworkAssignment {
 	/**
 	 * Calculates link volumes in PCU per time of day.
 	 * @param tripList Trip list.
-	 * @return Map of link volumes in PCU per time of day
+	 * @return Link volumes in PCU per time of day
 	 */
-	public Map<TimeOfDay, Map<Integer, Double>> calculateLinkVolumeInPCUPerTimeOfDay(List<Trip> tripList) {
+	public Map<TimeOfDay, double[]> calculateLinkVolumeInPCUPerTimeOfDay(List<Trip> tripList) {
 
 		//Map<Object, Long> collect = tripList.stream().collect(Collectors.groupingBy(t -> t.getTimeOfDay(), Collectors.counting()));
 
 		//Long countOfPetrolTrips2 = tripList.parallelStream().filter(t -> t.getEngine() == EngineType.PETROL).count();
 
-		Map<TimeOfDay, Map<Integer, Double>> map = new EnumMap<>(TimeOfDay.class);
+		Map<TimeOfDay, double[]> map = new EnumMap<TimeOfDay, double[]>(TimeOfDay.class);
 		for (TimeOfDay hour: TimeOfDay.values()) {
-			Map<Integer, Double> hourlyMap = new HashMap<Integer, Double>();
-			map.put(hour, hourlyMap);
+			double[] hourlyVolumes = new double[this.roadNetwork.getMaximumEdgeID()];
+			map.put(hour, hourlyVolumes);
 		}
 
 		for (Trip trip: tripList) {
 			Route route = trip.getRoute();
 			if (route == null) continue;
 			int multiplier = trip.getMultiplier();
-			Map<Integer, Double> hourlyMap = map.get(trip.getTimeOfDay());
+			double[] hourlyVolumes = map.get(trip.getTimeOfDay());
 			for (int edgeID: route.getEdges().toArray()) {
-				Double currentCount = hourlyMap.get(edgeID);
-				if (currentCount == null) currentCount = 0.0;
-				currentCount += this.vehicleTypeToPCU.get(trip.getVehicle()) * multiplier; //add PCU of the vehicle
-				hourlyMap.put(edgeID, currentCount);
+				hourlyVolumes[edgeID] += this.vehicleTypeToPCU.get(trip.getVehicle()) * multiplier; //add PCU of the vehicle
 			}
 		}
 
@@ -5091,7 +5077,7 @@ public class RoadNetworkAssignment {
 	 * Getter method for link volumes in PCU per time of day.
 	 * @return Link volumes in PCU per time of day.
 	 */
-	public Map<TimeOfDay, Map<Integer, Double>> getLinkVolumeInPCUPerTimeOfDay() {
+	public Map<TimeOfDay, double[]> getLinkVolumeInPCUPerTimeOfDay() {
 
 		return this.linkVolumesInPCUPerTimeOfDay;
 	}
@@ -5101,23 +5087,20 @@ public class RoadNetworkAssignment {
 	 * @param tripList Trip list.
 	 * @return Map of link volumes in PCU.
 	 */
-	public Map<Integer, Double> calculateLinkVolumeInPCU(List<Trip> tripList) {
+	public double[] calculateLinkVolumeInPCU(List<Trip> tripList) {
 
-		Map<Integer, Double> map = new HashMap<Integer, Double>();
+		double[] volumes = new double[this.roadNetwork.getMaximumEdgeID()];
 
 		for (Trip trip: tripList) {
 			Route route = trip.getRoute();
 			if (route == null) continue;
 			int multiplier = trip.getMultiplier();
 			for (int edgeID: route.getEdges().toArray()) {
-				Double currentCount = map.get(edgeID);
-				if (currentCount == null) currentCount = 0.0;
-				currentCount += this.vehicleTypeToPCU.get(trip.getVehicle()) * multiplier; //add PCU of the vehicle
-				map.put(edgeID, currentCount);
+				volumes[edgeID] += this.vehicleTypeToPCU.get(trip.getVehicle()) * multiplier; //add PCU of the vehicle
 			}
 		}
 
-		return map;
+		return volumes;
 	}
 
 	/**
@@ -5132,7 +5115,7 @@ public class RoadNetworkAssignment {
 	 * Getter method for daily link volumes in PCU.
 	 * @return Link volumes in PCU.
 	 */
-	public Map<Integer, Double> getLinkVolumeInPCU() {
+	public double[] getLinkVolumeInPCU() {
 
 		return this.linkVolumesInPCU;
 	}
@@ -5142,24 +5125,21 @@ public class RoadNetworkAssignment {
 	 * @param tripList Trip list.
 	 * @return Map of link volumes per vehicle type.
 	 */
-	public Map<VehicleType, Map<Integer, Integer>> calculateLinkVolumePerVehicleType(List<Trip> tripList) {
+	public Map<VehicleType, int[]> calculateLinkVolumePerVehicleType(List<Trip> tripList) {
 
-		Map<VehicleType, Map<Integer, Integer>> map = new EnumMap<>(VehicleType.class);
+		Map<VehicleType, int[]> map = new EnumMap<VehicleType, int[]>(VehicleType.class);
 		for (VehicleType vht: VehicleType.values()) {
-			Map<Integer, Integer> vehicleMap = new HashMap<Integer, Integer>();
-			map.put(vht, vehicleMap);
+			int[] vehicleVolumes = new int[this.roadNetwork.getMaximumEdgeID()];
+			map.put(vht, vehicleVolumes);
 		}
 
 		for (Trip trip: tripList) {
 			Route route = trip.getRoute();
 			if (route == null) continue;
 			int multiplier = trip.getMultiplier();
-			Map<Integer, Integer> vehicleMap = map.get(trip.getVehicle());
+			int[] vehicleVolumes = map.get(trip.getVehicle());
 			for (int edgeID: trip.getRoute().getEdges().toArray()) {
-				Integer currentCount = vehicleMap.get(edgeID);
-				if (currentCount == null) currentCount = 0;
-				currentCount += multiplier;
-				vehicleMap.put(edgeID, currentCount);
+				vehicleVolumes[edgeID] += multiplier;
 			}
 		}
 
@@ -5178,7 +5158,7 @@ public class RoadNetworkAssignment {
 	 * Getter method for daily link volumes per vehicle type.
 	 * @return Link volumes in PCU per time of day.
 	 */
-	public Map<VehicleType, Map<Integer, Integer>> getLinkVolumePerVehicleType() {
+	public Map<VehicleType, int[]> getLinkVolumePerVehicleType() {
 
 		return this.linkVolumesPerVehicleType;
 	}
@@ -5187,7 +5167,7 @@ public class RoadNetworkAssignment {
 	 * Getter method for AADF car traffic counts.
 	 * @return Car traffic counts.
 	 */
-	public Map<Integer, Integer> getAADFCarTrafficCounts() {
+	public Integer[] getAADFCarTrafficCounts() {
 
 		return this.roadNetwork.getAADFCarTrafficCounts();
 
@@ -5222,7 +5202,7 @@ public class RoadNetworkAssignment {
 
 				long carCount = (long) sf.getAttribute("FdCar");
 				long carVolume;
-				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edgeID);
+				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
 				if (carVolumeFetch == null) carVolume = 0;
 				else 						carVolume = carVolumeFetch;
 
@@ -5236,14 +5216,14 @@ public class RoadNetworkAssignment {
 
 				//get volumes for this direction
 				long carVolume;
-				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edgeID);
+				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
 				if (carVolumeFetch == null) carVolume = 0;
 				else 						carVolume = carVolumeFetch;
 
 				//get volumes for other direction (if exists)
 				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edgeID];
 				long carVolume2;
-				Integer carVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edge2);
+				Integer carVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edge2];
 				if (carVolumeFetch2 == null) carVolume2 = 0;
 				else 						 carVolume2 = carVolumeFetch2;
 
@@ -5337,7 +5317,7 @@ public class RoadNetworkAssignment {
 
 				long carCount = (long) sf.getAttribute("FdCar");
 				long carVolume;
-				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edgeID);
+				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
 				if (carVolumeFetch == null) carVolume = 0;
 				else 						carVolume = carVolumeFetch;
 
@@ -5351,14 +5331,14 @@ public class RoadNetworkAssignment {
 
 				//get volumes for this direction
 				long carVolume;
-				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edgeID);
+				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
 				if (carVolumeFetch == null) carVolume = 0;
 				else 						carVolume = carVolumeFetch;
 
 				//get volumes for other direction (if exists)
 				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edgeID];
 				long carVolume2;
-				Integer carVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edge2);
+				Integer carVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edge2];
 				if (carVolumeFetch2 == null) carVolume2 = 0;
 				else 						 carVolume2 = carVolumeFetch2;
 
@@ -5381,9 +5361,9 @@ public class RoadNetworkAssignment {
 	 * @param volumeToFlowFactor Converts daily vehicle volume to hourly flow (e.g. 0.1 for peak flow; 1/24.0 for daily average)  
 	 * @return GEH statistic for simulated and observed hourly car flows.
 	 */
-	public HashMap<Integer, Double> calculateGEHStatisticForCarCounts (double volumeToFlowFactor) {
+	public Double[] calculateGEHStatisticForCarCounts (double volumeToFlowFactor) {
 
-		HashMap<Integer, Double> GEH = new HashMap<Integer, Double>();
+		Double[] GEH = new Double[this.roadNetwork.getMaximumEdgeID()]; //null used when GEH is undefined, e.g. for ferry edges
 
 		Iterator iter = this.roadNetwork.getNetwork().getEdges().iterator();
 		ArrayList<Long> checkedCP = new ArrayList<Long>(); 
@@ -5405,7 +5385,7 @@ public class RoadNetworkAssignment {
 
 				long carCount = (long) sf.getAttribute("FdCar");
 				long carVolume;
-				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edgeID);
+				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
 				if (carVolumeFetch == null) carVolume = 0;
 				else 						carVolume = carVolumeFetch;
 
@@ -5413,7 +5393,7 @@ public class RoadNetworkAssignment {
 				double carFlowObserved = carCount * volumeToFlowFactor;
 				double geh = Math.abs(carFlowSimulated - carFlowObserved) / Math.sqrt((carFlowSimulated + carFlowObserved) / 2.0);
 
-				GEH.put(edgeID, geh);
+				GEH[edgeID] = geh;
 			}
 
 			if (dir == 'C' && !checkedCP.contains(countPoint)) { //for combined counts check if this countPoint has been processed already
@@ -5423,14 +5403,14 @@ public class RoadNetworkAssignment {
 
 				//get volumes for this direction
 				long carVolume;
-				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edgeID);
+				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
 				if (carVolumeFetch == null) carVolume = 0;
 				else 						carVolume = carVolumeFetch;
 
 				//get volumes for other direction (if exists)
 				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edgeID];
 				long carVolume2;
-				Integer carVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edge2);
+				Integer carVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edge2];
 				if (carVolumeFetch2 == null) carVolume2 = 0;
 				else 						 carVolume2 = carVolumeFetch2;
 
@@ -5440,8 +5420,8 @@ public class RoadNetworkAssignment {
 				double carFlowObserved = carCount * volumeToFlowFactor;
 				double geh = Math.abs(carFlowSimulated - carFlowObserved) / Math.sqrt((carFlowSimulated + carFlowObserved) / 2.0);
 
-				GEH.put(edgeID, geh);
-				if (edge2 != null) GEH.put(edge2, geh); //store in other direction too
+				GEH[edgeID] = geh;
+				if (edge2 != null) GEH[edge2] = geh; //store in other direction too
 			}
 		}
 
@@ -5463,19 +5443,22 @@ public class RoadNetworkAssignment {
 	 */
 	public void printGEHstatistic(double volumeToFlowFactor) {
 
-		HashMap<Integer, Double> GEH = this.calculateGEHStatisticForCarCounts(volumeToFlowFactor);
+		Double[] GEH = this.calculateGEHStatisticForCarCounts(volumeToFlowFactor);
 
+		int counter = 0;
 		int validFlows = 0;
 		int suspiciousFlows = 0;
 		int invalidFlows = 0;
-		for (Integer edgeID: GEH.keySet()) {
-			if (GEH.get(edgeID) < 5.0) validFlows++;
-			else if (GEH.get(edgeID) < 10.0) suspiciousFlows++;
+		for (int edgeID = 1; edgeID < GEH.length; edgeID++) {
+			if (GEH[edgeID] == null) continue; //skip null values
+			if (GEH[edgeID] < 5.0) validFlows++;
+			else if (GEH[edgeID] < 10.0) suspiciousFlows++;
 			else invalidFlows++;
+			counter++;
 		}
-		LOGGER.info("Percentage of edges with valid flows (GEH < 5.0) is: {}%", Math.round((double) validFlows / GEH.size() * 100));
-		LOGGER.info("Percentage of edges with suspicious flows (5.0 <= GEH < 10.0) is: {}%", Math.round((double) suspiciousFlows / GEH.size() * 100));
-		LOGGER.info("Percentage of edges with invalid flows (GEH >= 10.0) is: {}%", Math.round((double) invalidFlows / GEH.size() * 100));		
+		LOGGER.info("Percentage of edges with valid flows (GEH < 5.0) is: {}%", Math.round((double) validFlows / counter * 100));
+		LOGGER.info("Percentage of edges with suspicious flows (5.0 <= GEH < 10.0) is: {}%", Math.round((double) suspiciousFlows / counter * 100));
+		LOGGER.info("Percentage of edges with invalid flows (GEH >= 10.0) is: {}%", Math.round((double) invalidFlows / counter * 100));		
 	}
 	
 	/**
@@ -5492,46 +5475,55 @@ public class RoadNetworkAssignment {
 	 */
 	public void printGEHstatisticFreight(double volumeToFlowFactor) {
 		
-		Map<VehicleType, HashMap<Integer, Double>> freightGEH = this.calculateGEHStatisticForFreightCounts(volumeToFlowFactor);
+		Map<VehicleType, Double[]> freightGEH = this.calculateGEHStatisticForFreightCounts(volumeToFlowFactor);
 		
-		HashMap<Integer, Double> GEH = freightGEH.get(VehicleType.VAN);
+		Double[] GEH = freightGEH.get(VehicleType.VAN);
+		int counter = 0;
 		int validFlows = 0;
 		int suspiciousFlows = 0;
 		int invalidFlows = 0;
-		for (Integer edgeID: GEH.keySet()) {
-			if (GEH.get(edgeID) < 5.0) validFlows++;
-			else if (GEH.get(edgeID) < 10.0) suspiciousFlows++;
+		for (int edgeID = 1; edgeID < GEH.length; edgeID++) {
+			if (GEH[edgeID] == null) continue;
+			if (GEH[edgeID] < 5.0) validFlows++;
+			else if (GEH[edgeID] < 10.0) suspiciousFlows++;
 			else invalidFlows++;
+			counter++;
 		}
-		LOGGER.info("Percentage of edges with valid van flows (GEH < 5.0) is: {}%", Math.round((double) validFlows / GEH.size() * 100));
-		LOGGER.info("Percentage of edges with suspicious van flows (5.0 <= GEH < 10.0) is: {}%", Math.round((double) suspiciousFlows / GEH.size() * 100));
-		LOGGER.info("Percentage of edges with invalid van flows (GEH >= 10.0) is: {}%", Math.round((double) invalidFlows / GEH.size() * 100));
+		LOGGER.info("Percentage of edges with valid van flows (GEH < 5.0) is: {}%", Math.round((double) validFlows / counter * 100));
+		LOGGER.info("Percentage of edges with suspicious van flows (5.0 <= GEH < 10.0) is: {}%", Math.round((double) suspiciousFlows / counter * 100));
+		LOGGER.info("Percentage of edges with invalid van flows (GEH >= 10.0) is: {}%", Math.round((double) invalidFlows / counter * 100));
 		
 		GEH = freightGEH.get(VehicleType.RIGID);
+		counter = 0;
 		validFlows = 0;
 		suspiciousFlows = 0;
 		invalidFlows = 0;
-		for (Integer edgeID: GEH.keySet()) {
-			if (GEH.get(edgeID) < 5.0) validFlows++;
-			else if (GEH.get(edgeID) < 10.0) suspiciousFlows++;
+		for (int edgeID = 1; edgeID < GEH.length; edgeID++) {
+			if (GEH[edgeID] == null) continue;
+			if (GEH[edgeID] < 5.0) validFlows++;
+			else if (GEH[edgeID] < 10.0) suspiciousFlows++;
 			else invalidFlows++;
+			counter++;
 		}
-		LOGGER.info("Percentage of edges with valid rigid flows (GEH < 5.0) is: {}%", Math.round((double) validFlows / GEH.size() * 100));
-		LOGGER.info("Percentage of edges with suspicious rigid flows (5.0 <= GEH < 10.0) is: {}%", Math.round((double) suspiciousFlows / GEH.size() * 100));
-		LOGGER.info("Percentage of edges with invalid rigid flows (GEH >= 10.0) is: {}%", Math.round((double) invalidFlows / GEH.size() * 100));	
+		LOGGER.info("Percentage of edges with valid rigid flows (GEH < 5.0) is: {}%", Math.round((double) validFlows / counter * 100));
+		LOGGER.info("Percentage of edges with suspicious rigid flows (5.0 <= GEH < 10.0) is: {}%", Math.round((double) suspiciousFlows / counter * 100));
+		LOGGER.info("Percentage of edges with invalid rigid flows (GEH >= 10.0) is: {}%", Math.round((double) invalidFlows / counter * 100));	
 		
 		GEH = freightGEH.get(VehicleType.ARTIC);
+		counter = 0;
 		validFlows = 0;
 		suspiciousFlows = 0;
 		invalidFlows = 0;
-		for (Integer edgeID: GEH.keySet()) {
-			if (GEH.get(edgeID) < 5.0) validFlows++;
-			else if (GEH.get(edgeID) < 10.0) suspiciousFlows++;
+		for (int edgeID = 1; edgeID < GEH.length; edgeID++) {
+			if (GEH[edgeID] == null) continue;
+			if (GEH[edgeID] < 5.0) validFlows++;
+			else if (GEH[edgeID] < 10.0) suspiciousFlows++;
 			else invalidFlows++;
+			counter++;
 		}
-		LOGGER.info("Percentage of edges with valid artic flows (GEH < 5.0) is: {}%", Math.round((double) validFlows / GEH.size() * 100));
-		LOGGER.info("Percentage of edges with suspicious artic flows (5.0 <= GEH < 10.0) is: {}%", Math.round((double) suspiciousFlows / GEH.size() * 100));
-		LOGGER.info("Percentage of edges with invalid artic flows (GEH >= 10.0) is: {}%", Math.round((double) invalidFlows / GEH.size() * 100));	
+		LOGGER.info("Percentage of edges with valid artic flows (GEH < 5.0) is: {}%", Math.round((double) validFlows / counter * 100));
+		LOGGER.info("Percentage of edges with suspicious artic flows (5.0 <= GEH < 10.0) is: {}%", Math.round((double) suspiciousFlows / counter * 100));
+		LOGGER.info("Percentage of edges with invalid artic flows (GEH >= 10.0) is: {}%", Math.round((double) invalidFlows / counter * 100));	
 	}
 	
 	/**
@@ -5542,9 +5534,9 @@ public class RoadNetworkAssignment {
 	 * @param hour Hour for which to calculate GEH statistics.
 	 * @return GEH statistic for simulated and observed hourly car flows.
 	 */
-	public HashMap<Integer, Double> calculateGEHStatisticPerTimeOfDay (TimeOfDay hour) {
+	public Double[] calculateGEHStatisticPerTimeOfDay (TimeOfDay hour) {
 		
-		HashMap<Integer, Double> GEH = new HashMap<Integer, Double>();
+		Double[] GEH = new Double[this.roadNetwork.getMaximumEdgeID()];
 
 		Iterator iter = this.roadNetwork.getNetwork().getEdges().iterator();
 		ArrayList<Long> checkedCP = new ArrayList<Long>(); 
@@ -5566,7 +5558,7 @@ public class RoadNetworkAssignment {
 
 				long carCount = (long) sf.getAttribute("FdCar");
 				double carVolume;
-				Double carVolumeFetch = this.linkVolumesInPCUPerTimeOfDay.get(hour).get(edgeID);
+				Double carVolumeFetch = this.linkVolumesInPCUPerTimeOfDay.get(hour)[edgeID];
 				if (carVolumeFetch == null) carVolume = 0.0;
 				else 						carVolume = carVolumeFetch;
 
@@ -5574,7 +5566,7 @@ public class RoadNetworkAssignment {
 				double carFlowObserved = carCount * this.timeOfDayDistribution.get(hour);
 				double geh = Math.abs(carFlowSimulated - carFlowObserved) / Math.sqrt((carFlowSimulated + carFlowObserved) / 2.0);
 
-				GEH.put(edgeID, geh);
+				GEH[edgeID] = geh;
 			}
 
 			if (dir == 'C' && !checkedCP.contains(countPoint)) { //for combined counts check if this countPoint has been processed already
@@ -5584,14 +5576,14 @@ public class RoadNetworkAssignment {
 
 				//get volumes for this direction
 				double carVolume;
-				Double carVolumeFetch = this.linkVolumesInPCUPerTimeOfDay.get(hour).get(edgeID);
+				Double carVolumeFetch = this.linkVolumesInPCUPerTimeOfDay.get(hour)[edgeID];
 				if (carVolumeFetch == null) carVolume = 0.0;
 				else 						carVolume = carVolumeFetch;
 
 				//get volumes for other direction (if exists)
 				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edgeID];
 				double carVolume2;
-				Double carVolumeFetch2 = this.linkVolumesInPCUPerTimeOfDay.get(hour).get(edge2);
+				Double carVolumeFetch2 = this.linkVolumesInPCUPerTimeOfDay.get(hour)[edge2];
 				if (carVolumeFetch2 == null) carVolume2 = 0.0;
 				else 						 carVolume2 = carVolumeFetch2;
 
@@ -5601,8 +5593,8 @@ public class RoadNetworkAssignment {
 				double carFlowObserved = carCount * this.timeOfDayDistribution.get(hour);
 				double geh = Math.abs(carFlowSimulated - carFlowObserved) / Math.sqrt((carFlowSimulated + carFlowObserved) / 2.0);
 
-				GEH.put(edgeID, geh);
-				if (edge2 != null) GEH.put(edge2, geh); //store in other direction too
+				GEH[edgeID] = geh;
+				if (edge2 != null) GEH[edge2] = geh; //store in other direction too
 			}
 		}
 
@@ -5618,19 +5610,22 @@ public class RoadNetworkAssignment {
 
 		for (TimeOfDay hour: TimeOfDay.values()) {
 			
-			HashMap<Integer, Double> GEH = this.calculateGEHStatisticPerTimeOfDay(hour);
+			Double[] GEH = this.calculateGEHStatisticPerTimeOfDay(hour);
+			int counter = 0;
 			int validFlows = 0;
 			int suspiciousFlows = 0;
 			int invalidFlows = 0;
-			for (Integer edgeID: GEH.keySet()) {
-				if (GEH.get(edgeID) < 5.0) validFlows++;
-				else if (GEH.get(edgeID) < 10.0) suspiciousFlows++;
+			for (int edgeID = 1; edgeID < GEH.length; edgeID++) {
+				if (GEH[edgeID] == null) continue;
+				if (GEH[edgeID] < 5.0) validFlows++;
+				else if (GEH[edgeID] < 10.0) suspiciousFlows++;
 				else invalidFlows++;
+				counter++;
 			}
 			
-			double valid = (double) validFlows / GEH.size() * 100;
-			double suspicious = (double) suspiciousFlows / GEH.size() * 100;
-			double invalid = (double) invalidFlows / GEH.size() * 100;
+			double valid = (double) validFlows / counter * 100;
+			double suspicious = (double) suspiciousFlows / counter * 100;
+			double invalid = (double) invalidFlows / counter * 100;
 			
 			/*
 			LOGGER.info("GEH statistic for hour: {}", hour);
@@ -5703,7 +5698,7 @@ public class RoadNetworkAssignment {
 
 				long carCount = (long) sf.getAttribute("FdCar");
 				long carVolume;
-				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edgeID);
+				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
 				if (carVolumeFetch == null) carVolume = 0;
 				else 						carVolume = carVolumeFetch;
 
@@ -5722,7 +5717,7 @@ public class RoadNetworkAssignment {
 
 				//get volumes for this direction
 				long carVolume;
-				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edgeID);
+				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
 				if (carVolumeFetch == null) carVolume = 0;
 				else 						carVolume = carVolumeFetch;
 
@@ -5732,7 +5727,7 @@ public class RoadNetworkAssignment {
 				//get volumes for other direction (if exists)
 				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edgeID];
 				long carVolume2;
-				Integer carVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edge2);
+				Integer carVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edge2];
 				if (carVolumeFetch2 == null) carVolume2 = 0;
 				else 						 carVolume2 = carVolumeFetch2;
 
@@ -5796,17 +5791,17 @@ public class RoadNetworkAssignment {
 				long articCount = (long) sf.getAttribute("FdHGVA3") + (long) sf.getAttribute("FdHGVA5") + (long) sf.getAttribute("FdHGVA6");
 
 				long vanVolume;
-				Integer vanVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.VAN).get(edgeID);
+				Integer vanVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.VAN)[edgeID];
 				if (vanVolumeFetch == null) vanVolume = 0;
 				else 						vanVolume = vanVolumeFetch;
 
 				long rigidVolume;
-				Integer rigidVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.RIGID).get(edgeID);
+				Integer rigidVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.RIGID)[edgeID];
 				if (rigidVolumeFetch == null) rigidVolume = 0;
 				else 						  rigidVolume = rigidVolumeFetch;
 
 				long articVolume;
-				Integer articVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC).get(edgeID);
+				Integer articVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC)[edgeID];
 				if (articVolumeFetch == null) articVolume = 0;
 				else 						  articVolume = articVolumeFetch;
 
@@ -5824,17 +5819,17 @@ public class RoadNetworkAssignment {
 
 				//get volumes for this direction
 				long vanVolume;
-				Integer vanVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.VAN).get(edgeID);
+				Integer vanVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.VAN)[edgeID];
 				if (vanVolumeFetch == null) vanVolume = 0;
 				else 						vanVolume = vanVolumeFetch;
 
 				long rigidVolume;
-				Integer rigidVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.RIGID).get(edgeID);
+				Integer rigidVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.RIGID)[edgeID];
 				if (rigidVolumeFetch == null) rigidVolume = 0;
 				else 						  rigidVolume = rigidVolumeFetch;
 
 				long articVolume;
-				Integer articVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC).get(edgeID);
+				Integer articVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC)[edgeID];
 				if (articVolumeFetch == null) articVolume = 0;
 				else 						  articVolume = articVolumeFetch;
 
@@ -5842,17 +5837,17 @@ public class RoadNetworkAssignment {
 				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edgeID];
 
 				long vanVolume2;
-				Integer vanVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.VAN).get(edge2);
+				Integer vanVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.VAN)[edge2];
 				if (vanVolumeFetch2 == null) vanVolume2 = 0;
 				else 						 vanVolume2 = vanVolumeFetch2;
 
 				long rigidVolume2;
-				Integer rigidVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.RIGID).get(edge2);
+				Integer rigidVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.RIGID)[edge2];
 				if (rigidVolumeFetch2 == null) rigidVolume2 = 0;
 				else 						   rigidVolume2 = rigidVolumeFetch2;
 
 				long articVolume2;
-				Integer articVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC).get(edge2);
+				Integer articVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC)[edge2];
 				if (articVolumeFetch2 == null) articVolume2 = 0;
 				else 						   articVolume2 = articVolumeFetch2;
 
@@ -5878,12 +5873,12 @@ public class RoadNetworkAssignment {
 	 * @param volumeToFlowFactor Converts daily vehicle volume to hourly flow (e.g. 0.1 for peak flow; 1/24.0 for daily average)  
 	 * @return GEH statistic for simulated and observed hourly freight vehicle flows, per vehicle type.
 	 */
-	public Map<VehicleType, HashMap<Integer, Double>> calculateGEHStatisticForFreightCounts (double volumeToFlowFactor) {
+	public Map<VehicleType, Double[]> calculateGEHStatisticForFreightCounts (double volumeToFlowFactor) {
 
-		Map<VehicleType, HashMap<Integer, Double>> GEH = new EnumMap<>(VehicleType.class);
-		HashMap<Integer, Double> vanGEH = new HashMap<Integer, Double>();
-		HashMap<Integer, Double> rigidGEH = new HashMap<Integer, Double>();
-		HashMap<Integer, Double> articGEH = new HashMap<Integer, Double>();
+		Map<VehicleType, Double[]> GEH = new EnumMap<VehicleType, Double[]>(VehicleType.class);
+		Double[] vanGEH = new Double[this.roadNetwork.getMaximumEdgeID()];
+		Double[] rigidGEH = new Double[this.roadNetwork.getMaximumEdgeID()];
+		Double[] articGEH = new Double[this.roadNetwork.getMaximumEdgeID()];
 		GEH.put(VehicleType.VAN, vanGEH);
 		GEH.put(VehicleType.RIGID, rigidGEH);
 		GEH.put(VehicleType.ARTIC, articGEH);
@@ -5911,34 +5906,34 @@ public class RoadNetworkAssignment {
 				long articCount = (long) sf.getAttribute("FdHGVA3") + (long) sf.getAttribute("FdHGVA5") + (long) sf.getAttribute("FdHGVA6");
 
 				long vanVolume;
-				Integer vanVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.VAN).get(edgeID);
+				Integer vanVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.VAN)[edgeID];
 				if (vanVolumeFetch == null) vanVolume = 0;
 				else 						vanVolume = vanVolumeFetch;
 				
 				long rigidVolume;
-				Integer rigidVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.RIGID).get(edgeID);
+				Integer rigidVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.RIGID)[edgeID];
 				if (rigidVolumeFetch == null) rigidVolume = 0;
 				else 						  rigidVolume = rigidVolumeFetch;
 				
 				long articVolume;
-				Integer articVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC).get(edgeID);
+				Integer articVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC)[edgeID];
 				if (articVolumeFetch == null) articVolume = 0;
 				else 						  articVolume = articVolumeFetch;
 				
 				double vanFlowSimulated = vanVolume * volumeToFlowFactor;
 				double vanFlowObserved = vanCount * volumeToFlowFactor;
 				double geh = Math.abs(vanFlowSimulated - vanFlowObserved) / Math.sqrt((vanFlowSimulated + vanFlowObserved) / 2.0);
-				vanGEH.put(edgeID, geh);
+				vanGEH[edgeID] = geh;
 				
 				double rigidFlowSimulated = rigidVolume * volumeToFlowFactor;
 				double rigidFlowObserved = rigidCount * volumeToFlowFactor;
 				geh = Math.abs(rigidFlowSimulated - rigidFlowObserved) / Math.sqrt((rigidFlowSimulated + rigidFlowObserved) / 2.0);
-				rigidGEH.put(edgeID, geh);
+				rigidGEH[edgeID] = geh;
 				
 				double articFlowSimulated = articVolume * volumeToFlowFactor;
 				double articFlowObserved = articCount * volumeToFlowFactor;
 				geh = Math.abs(articFlowSimulated - articFlowObserved) / Math.sqrt((articFlowSimulated + articFlowObserved) / 2.0);
-				articGEH.put(edgeID, geh);
+				articGEH[edgeID] = geh;
 			}
 
 			if (dir == 'C' && !checkedCP.contains(countPoint)) { //for combined counts check if this countPoint has been processed already
@@ -5950,34 +5945,34 @@ public class RoadNetworkAssignment {
 
 				//get volumes for this direction
 				long vanVolume;
-				Integer vanVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.VAN).get(edgeID);
+				Integer vanVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.VAN)[edgeID];
 				if (vanVolumeFetch == null) vanVolume = 0;
 				else 						vanVolume = vanVolumeFetch;
 
 				long rigidVolume;
-				Integer rigidVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.RIGID).get(edgeID);
+				Integer rigidVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.RIGID)[edgeID];
 				if (rigidVolumeFetch == null) rigidVolume = 0;
 				else 						  rigidVolume = rigidVolumeFetch;
 				
 				long articVolume;
-				Integer articVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC).get(edgeID);
+				Integer articVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC)[edgeID];
 				if (articVolumeFetch == null) articVolume = 0;
 				else 						  articVolume = articVolumeFetch;
 				
 				//get volumes for other direction (if exists)
 				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edgeID];
 				long vanVolume2;
-				Integer vanVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.VAN).get(edge2);
+				Integer vanVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.VAN)[edge2];
 				if (vanVolumeFetch2 == null) vanVolume2 = 0;
 				else 						 vanVolume2 = vanVolumeFetch2;
 				
 				long rigidVolume2;
-				Integer rigidVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.RIGID).get(edge2);
+				Integer rigidVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.RIGID)[edge2];
 				if (rigidVolumeFetch2 == null) rigidVolume2 = 0;
 				else 						   rigidVolume2 = rigidVolumeFetch2;
 				
 				long articVolume2;
-				Integer articVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC).get(edge2);
+				Integer articVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC)[edge2];
 				if (articVolumeFetch2 == null) articVolume2 = 0;
 				else 						   articVolume2 = articVolumeFetch2;
 
@@ -5986,20 +5981,20 @@ public class RoadNetworkAssignment {
 				double vanFlowSimulated = (vanVolume + vanVolume2) * volumeToFlowFactor;
 				double vanFlowObserved = vanCount * volumeToFlowFactor;
 				double geh = Math.abs(vanFlowSimulated - vanFlowObserved) / Math.sqrt((vanFlowSimulated + vanFlowObserved) / 2.0);
-				vanGEH.put(edgeID, geh);
-				if (edge2 != null) vanGEH.put(edge2, geh); //store in other direction too
+				vanGEH[edgeID] = geh;
+				if (edge2 != null) vanGEH[edge2] = geh; //store in other direction too
 				
 				double rigidFlowSimulated = (rigidVolume + rigidVolume2) * volumeToFlowFactor;
 				double rigidFlowObserved = rigidCount * volumeToFlowFactor;
 				geh = Math.abs(rigidFlowSimulated - rigidFlowObserved) / Math.sqrt((rigidFlowSimulated + rigidFlowObserved) / 2.0);
-				rigidGEH.put(edgeID, geh);
-				if (edge2 != null) rigidGEH.put(edge2, geh); //store in other direction too
+				rigidGEH[edgeID] = geh;
+				if (edge2 != null) rigidGEH[edge2] = geh; //store in other direction too
 				
 				double articFlowSimulated = (articVolume + articVolume2) * volumeToFlowFactor;
 				double articFlowObserved = articCount * volumeToFlowFactor;
 				geh = Math.abs(articFlowSimulated - articFlowObserved) / Math.sqrt((articFlowSimulated + articFlowObserved) / 2.0);
-				articGEH.put(edgeID, geh);
-				if (edge2 != null) articGEH.put(edge2, geh); //store in other direction too
+				articGEH[edgeID] = geh;
+				if (edge2 != null) articGEH[edge2] = geh; //store in other direction too
 			}
 		}
 
@@ -6037,7 +6032,7 @@ public class RoadNetworkAssignment {
 
 				long carCount = (long) sf.getAttribute("FdCar");
 				long carVolume;
-				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edgeID);
+				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
 				if (carVolumeFetch == null) carVolume = 0;
 				else 						carVolume = carVolumeFetch;
 
@@ -6056,7 +6051,7 @@ public class RoadNetworkAssignment {
 
 				//get volumes for this direction
 				long carVolume;
-				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edgeID);
+				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
 				if (carVolumeFetch == null) carVolume = 0;
 				else 						carVolume = carVolumeFetch;
 
@@ -6066,7 +6061,7 @@ public class RoadNetworkAssignment {
 				//get volumes for other direction (if exists)
 				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edgeID];
 				long carVolume2;
-				Integer carVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edge2);
+				Integer carVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edge2];
 				if (carVolumeFetch2 == null) carVolume2 = 0;
 				else 						 carVolume2 = carVolumeFetch2;
 

@@ -1,5 +1,6 @@
 package nismod.transport.disruption;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -133,10 +134,14 @@ public class RoadDisruptionTest {
 		
 		rna.updateLinkVolumeInPCU();
 		
-		Map<Integer, Double> dailyVolume = rna.getLinkVolumeInPCU();
+		double[] dailyVolume = rna.getLinkVolumeInPCU();
 		System.out.println(dailyVolume);
 		
-		NetworkVisualiser.visualise(roadNetwork, "Network with traffic volume", dailyVolume, "DayVolume", null);
+		HashMap<Integer, Double> dailyVolumeMap = new HashMap<Integer, Double>();
+		for (int edgeID = 1; edgeID < dailyVolume.length; edgeID++)
+			dailyVolumeMap.put(edgeID, dailyVolume[edgeID]);
+		
+		NetworkVisualiser.visualise(roadNetwork, "Network with traffic volume", dailyVolumeMap, "DayVolume", null);
 		
 		rd3.uninstall(rsg);
 		//rsg.printChoiceSets();
@@ -149,7 +154,10 @@ public class RoadDisruptionTest {
 		
 		rna.updateLinkVolumeInPCU();
 		dailyVolume = rna.getLinkVolumeInPCU();
-		NetworkVisualiser.visualise(roadNetwork, "Network with traffic volume", dailyVolume, "DayVolume", null);
+		dailyVolumeMap = new HashMap<Integer, Double>();
+		for (int edgeID = 1; edgeID < dailyVolume.length; edgeID++)
+			dailyVolumeMap.put(edgeID, dailyVolume[edgeID]);
+		NetworkVisualiser.visualise(roadNetwork, "Network with traffic volume", dailyVolumeMap, "DayVolume", null);
 	}
 	
 	@Test
@@ -327,7 +335,9 @@ public class RoadDisruptionTest {
 		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
 		rna.updateLinkVolumeInPCU();
 
-		assertNull("There should be no traffic volume for the removed link", rna.getLinkVolumeInPCU().get(561));
+		//assertNull("There should be no traffic volume for the removed link", rna.getLinkVolumeInPCU()[561]);
+		final double EPSILON = 1e-9;
+		assertEquals("There should be no traffic volume for the removed link", 0.0, rna.getLinkVolumeInPCU()[561], EPSILON);
 				
 		rd3.uninstall(rsg);
 		//rsg.printChoiceSets();

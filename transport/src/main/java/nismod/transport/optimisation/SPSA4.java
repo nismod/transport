@@ -228,24 +228,27 @@ public class SPSA4 {
 		rna.updateLinkTravelTimes(0.9);
 		
 		//calculate GEH
-		HashMap<Integer, Double> GEH = rna.calculateGEHStatisticForCarCounts(rna.getVolumeToFlowFactor());
+		Double[] GEH = rna.calculateGEHStatisticForCarCounts(rna.getVolumeToFlowFactor());
 		
+		int counter = 0;
 		int validFlows = 0;
 		int suspiciousFlows = 0;
 		int invalidFlows = 0;
-		for (Integer edgeID: GEH.keySet()) {
-			if (GEH.get(edgeID) < 5.0) validFlows++;
-			else if (GEH.get(edgeID) < 10.0) suspiciousFlows++;
+		for (int edgeID = 1; edgeID < GEH.length; edgeID++) {
+			if (GEH[edgeID] == null) continue;
+			if (GEH[edgeID] < 5.0) validFlows++;
+			else if (GEH[edgeID] < 10.0) suspiciousFlows++;
 			else invalidFlows++;
+			counter++;
 		}
 
 		LOGGER.trace("validFlows = {}", validFlows);
 		LOGGER.trace("suspiciousFlows = {}", suspiciousFlows);
 		LOGGER.trace("invalidFlows = {}", invalidFlows);
-		LOGGER.trace("GEH size = {}", GEH.size());
-		LOGGER.trace("loss function = {}", 1.0 * (invalidFlows - validFlows) / GEH.size() * 100);
+		LOGGER.trace("GEH size = {}", counter);
+		LOGGER.trace("loss function = {}", 1.0 * (invalidFlows - validFlows) / counter * 100);
 		
-		return 1.0 * (invalidFlows - validFlows) / GEH.size() * 100;
+		return 1.0 * (invalidFlows - validFlows) / counter * 100;
 	}
 	
 	/**

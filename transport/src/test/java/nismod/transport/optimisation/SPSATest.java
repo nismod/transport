@@ -3,8 +3,10 @@ package nismod.transport.optimisation;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 
 import org.jfree.data.category.DefaultCategoryDataset;
@@ -304,8 +306,10 @@ public class SPSATest {
 		System.out.printf("Final RMSN: %.2f%% %n", rna.calculateRMSNforExpandedSimulatedVolumes(1.0));
 		System.out.printf("Final MAD: %.2f%% %n", rna.calculateMADforExpandedSimulatedVolumes(1.0));
 				
-		int sumVolumes = rna.getLinkVolumePerVehicleType().get(VehicleType.CAR).values().stream().mapToInt(Number::intValue).sum();
-		int sumCounts = roadNetwork.getAADFCarTrafficCounts().values().stream().mapToInt(Number::intValue).sum();;
+		//int sumVolumes = rna.getLinkVolumePerVehicleType().get(VehicleType.CAR).values().stream().mapToInt(Number::intValue).sum();
+		//int sumCounts = roadNetwork.getAADFCarTrafficCounts().values().stream().mapToInt(Number::intValue).sum();;
+		int sumVolumes = Arrays.stream(rna.getLinkVolumePerVehicleType().get(VehicleType.CAR)).sum();
+		int sumCounts = Arrays.stream(roadNetwork.getAADFCarTrafficCounts()).filter(Objects::nonNull).mapToInt(Number::intValue).sum();
 		System.out.println("Sum of volumes : " + sumVolumes);
 		System.out.println("Sum of counts : " + sumCounts);
 				

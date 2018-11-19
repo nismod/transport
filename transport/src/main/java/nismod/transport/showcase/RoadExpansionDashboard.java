@@ -510,12 +510,15 @@ public class RoadExpansionDashboard extends JFrame {
 				rnaAfterExpansion.updateLinkTravelTimes(1.0);
 				//SkimMatrix sm = rnaAfterExpansion.calculateTimeSkimMatrix();
 
-				HashMap<Integer, Double> capacityAfter = rnaAfterExpansion.calculateDirectionAveragedPeakLinkCapacityUtilisation();
+				double[] capacityAfter = rnaAfterExpansion.calculateDirectionAveragedPeakLinkCapacityUtilisation();
+				HashMap<Integer, Double> capacityAfterMap = new HashMap<Integer, Double>();
+				for (int edgeID = 1; edgeID < capacityAfter.length; edgeID++)
+					capacityAfterMap.put(edgeID, capacityAfter[edgeID]);
 				//String shapefilePathAfter = "./temp/networkWithCapacityUtilisationAfter.shp";
 				String shapefilePathAfter = "./temp/after" +  LandingGUI.counter++ + ".shp";
 				JFrame rightFrame;
 				try {
-					rightFrame = NetworkVisualiserDemo.visualise(roadNetwork, "Capacity Utilisation After Intervention", capacityAfter, "CapUtil", shapefilePathAfter);
+					rightFrame = NetworkVisualiserDemo.visualise(roadNetwork, "Capacity Utilisation After Intervention", capacityAfterMap, "CapUtil", shapefilePathAfter);
 					rightFrame.setVisible(true);
 					//rightFrame.repaint();
 					
@@ -1278,8 +1281,11 @@ public class RoadExpansionDashboard extends JFrame {
 		String shapefilePathBefore = "./temp/networkWithCapacityUtilisationBefore.shp";
 		//String shapefilePathAfter = "./temp/networkWithCapacityUtilisationAfter.shp";
 
-		HashMap<Integer, Double> capacityBefore = rnaBefore.calculateDirectionAveragedPeakLinkCapacityUtilisation();
-		JFrame leftFrame = NetworkVisualiserDemo.visualise(roadNetwork, "Capacity Utilisation Before Intervention", capacityBefore, "CapUtil", shapefilePathBefore);
+		double[] capacityBefore = rnaBefore.calculateDirectionAveragedPeakLinkCapacityUtilisation();
+		HashMap<Integer, Double> capacityBeforeMap = new HashMap<Integer, Double>();
+		for (int edgeID = 1; edgeID < capacityBefore.length; edgeID++)
+			capacityBeforeMap.put(edgeID, capacityBefore[edgeID]);
+		JFrame leftFrame = NetworkVisualiserDemo.visualise(roadNetwork, "Capacity Utilisation Before Intervention", capacityBeforeMap, "CapUtil", shapefilePathBefore);
 	
 		//Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		//leftFrame.setSize(screenSize.width / 2, (int)Math.round(screenSize.height * 0.65));

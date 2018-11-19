@@ -5,6 +5,7 @@ import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Logger;
@@ -92,7 +93,10 @@ public class NetworkVisualiserDemo {
 
 		rna.updateLinkVolumeInPCU();
 		rna.updateLinkVolumePerVehicleType();
-		Map<Integer, Double> dailyVolumeMap = rna.getLinkVolumeInPCU();
+		double[] dailyVolume = rna.getLinkVolumeInPCU();
+		Map<Integer, Double> dailyVolumeMap = new HashMap<Integer, Double>();
+		for (int edgeID = 0; edgeID < dailyVolume.length; edgeID++)
+			dailyVolumeMap.put(edgeID, dailyVolume[edgeID]);
 //		double[] dailyVolume = new double[rna.getLinkFreeFlowTravelTimes().length];
 //		for (int key: dailyVolumeMap.keySet())
 //			dailyVolume[key] = dailyVolumeMap.get(key);
