@@ -109,7 +109,7 @@ public class RoadNetwork {
 	private Integer[] edgeIDtoOtherDirectionEdgeID; //for direct access
 	
 	private Boolean[] isEdgeUrban; //true = urban, false = rural, null = unknown/ferry
-	private boolean[] isEdgeFerry; //true = ferry, false = not ferry
+	private EdgeType[] edgesType; //A-road, Motorway, Ferry
 	
 	private List<Integer> startNodeBlacklist;
 	private List<Integer> endNodeBlacklist;
@@ -124,6 +124,10 @@ public class RoadNetwork {
 	public int numberOfLanesARoad; //for one direction
 	public int maximumEdgeID; //for the entire network (include roads developed in the future).
 	public int maximumNodeID; //for the entire network
+	
+	public static enum EdgeType {
+		AROAD, MOTORWAY, FERRY
+	}
 		
 	/**
 	 * @param zonesUrl Url for the shapefile with zone polygons.
@@ -284,7 +288,7 @@ public class RoadNetwork {
 			//update information on urban/rural
 			this.determineEdgesUrbanRural();
 			//update information on ferry or not
-			this.determineEdgesFerry();
+			this.determineEdgesType();
 		} finally {
 			//feature iterator is a live connection that must be closed
 			iter.close();
@@ -1273,13 +1277,13 @@ public class RoadNetwork {
 	}
 	
 	/**
-	 * Getter method for the array saying if the edge is ferry (true) or not (false).
+	 * Getter method for the array saying if the edge is A-road, motorway, or ferry.
 	 * Array index is edge ID (without -1 shift).
 	 * @return Map between the edge ID and whether the edge is ferry.
 	 */
-	public boolean[]  getIsEdgeFerry() {
+	public EdgeType[]  getEdgesType() {
 
-		return this.isEdgeFerry;
+		return this.edgesType;
 	}
 	
 	/**
@@ -1708,9 +1712,9 @@ public class RoadNetwork {
 		
 		determineEdgesUrbanRural();
 		
-		LOGGER.info("Determining whether edges are ferry or not...");
+		LOGGER.info("Determining edges type...");
 		
-		determineEdgesFerry();
+		determineEdgesType();
 		
 		LOGGER.trace("Undirected graph representation of the road network:");
 		LOGGER.trace(undirectedGraph);
@@ -2175,9 +2179,9 @@ public class RoadNetwork {
 	/**
 	 * Determines if edges are ferry or not.
 	 */
-	private void determineEdgesFerry() {
+	private void determineEdgesType() {
 		
-		this.isEdgeFerry = new boolean[this.maximumEdgeID];
+		this.edgesType = new EdgeType[this.maximumEdgeID];
 		
 		//iterate through all the edges in the graph
 		Iterator iter = this.network.getEdges().iterator();
@@ -2186,10 +2190,14 @@ public class RoadNetwork {
 			Edge edge = (Edge) iter.next();
 			SimpleFeature sf = (SimpleFeature) edge.getObject();
 			String roadNumber = (String) sf.getAttribute("RoadNumber");
-			if (roadNumber.toUpperCase().charAt(0) == 'F')//ferry
-				isEdgeFerry[edge.getID()] = true;
-			else									
-				isEdgeFerry[edge.getID()] = false;
+			if (roadNumber.toUpperCase().charAt(0) == 'A') //A-road
+				this.edgesType[edge.getID()] = EdgeType.AROAD;
+			else if (roadNumber.toUpperCase().charAt(0) == 'M') //Motorway
+				this.edgesType[edge.getID()] = EdgeType.MOTORWAY;
+			else if (roadNumber.toUpperCase().charAt(0) == 'F') //ferry
+				this.edgesType[edge.getID()] = EdgeType.FERRY;
+			else
+				LOGGER.warn("Edge {} has unknown type (aroad/motorway/ferry)", edge.getID());
 		}
 	}
 	

@@ -33,6 +33,7 @@ import org.junit.Test;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 
+import nismod.transport.network.road.RoadNetwork.EdgeType;
 import nismod.transport.utility.ConfigReader;
 import nismod.transport.visualisation.NetworkVisualiser;
 
@@ -1041,10 +1042,10 @@ public class RoadNetworkTest {
 		assertNull("Edge is neither urban nor rural", roadNetwork.getIsEdgeUrban()[556]);
 		
 		//TEST WHETHER EDGE IS FERRY
-		assertTrue("Edge is ferry", roadNetwork.getIsEdgeFerry()[555]);
-		assertTrue("Edge is ferry", roadNetwork.getIsEdgeFerry()[556]);
-		assertTrue("Edge is not ferry", !roadNetwork.getIsEdgeFerry()[541]);
-		assertTrue("Edge is not ferry", !roadNetwork.getIsEdgeFerry()[540]);
+		assertTrue("Edge is ferry", roadNetwork.getEdgesType()[555] == EdgeType.FERRY);
+		assertTrue("Edge is ferry", roadNetwork.getEdgesType()[556] == EdgeType.FERRY);
+		assertTrue("Edge is not ferry", roadNetwork.getEdgesType()[541] != EdgeType.FERRY);
+		assertTrue("Edge is not ferry", roadNetwork.getEdgesType()[540] != EdgeType.FERRY);
 		
 		//TEST EDGE TO OTHER DIRECTION EDGE MAPPING
 		System.out.println("\n\n*** Testing edge to other direction edge mapping ***");

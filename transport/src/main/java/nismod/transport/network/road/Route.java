@@ -16,6 +16,7 @@ import org.geotools.graph.structure.Node;
 import org.opengis.feature.simple.SimpleFeature;
 
 import gnu.trove.list.array.TIntArrayList;
+import nismod.transport.network.road.RoadNetwork.EdgeType;
 import nismod.transport.network.road.RoadNetworkAssignment.EnergyType;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
@@ -332,16 +333,16 @@ public class Route {
 
 			double consumption = 0.0;
 			for (int edgeID: edges.toArray()) {
-				double len = roadNetwork.getEdgeLength(edgeID); //in [km]
-				double time = linkTravelTime[edgeID]; //in [min]
-				double speed = len / (time / 60);
-
+				
 				//skip ferry
-				if (roadNetwork.getIsEdgeFerry()[edgeID]) {
+				if (roadNetwork.getEdgesType()[edgeID] == EdgeType.FERRY) {
 					LOGGER.trace("Skipping ferry edge in consumption calculation.");
 					continue;
 				}
-
+				
+				double len = roadNetwork.getEdgeLength(edgeID); //in [km]
+				double time = linkTravelTime[edgeID]; //in [min]
+				double speed = len / (time / 60);
 				consumption += len * (parameters.get(WebTAG.A) / speed + parameters.get(WebTAG.B) + parameters.get(WebTAG.C) * speed + parameters.get(WebTAG.D) * speed  * speed);
 			}
 			//apply relative fuel efficiency
