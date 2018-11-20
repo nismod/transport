@@ -9,6 +9,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -49,12 +50,7 @@ public class ZoningTest {
 		final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
 		final URL AADFurl = new URL(props.getProperty("AADFurl"));
 
-		final String baseYearODMatrixFile = props.getProperty("baseYearODMatrixFile");
-		final String freightMatrixFile = props.getProperty("baseYearFreightMatrixFile");
-		final String passengerRoutesFile = props.getProperty("passengerRoutesFile");
-		final String freightRoutesFile = props.getProperty("freightRoutesFile");
 		final String outputFolder = props.getProperty("outputFolder");
-		final String assignmentResultsFile = props.getProperty("assignmentResultsFile");
 		
 		//create output directory
 	     File file = new File(outputFolder);
@@ -72,7 +68,7 @@ public class ZoningTest {
 		
 		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
 		
-		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
+		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
 		
 		System.out.println("Number of TEMPRO zones: " + zoning.getZoneToNearestNodeIDMap().size());
 		System.out.println("Number of nodes: " + zoning.getNodeToZoneMap().size());
@@ -105,7 +101,7 @@ public class ZoningTest {
 		double[][] matrix = zoning.getZoneToNodeDistanceMatrix();
 		System.out.println("matrix length: " + matrix.length);
 		System.out.println("matrix width: " + matrix[0].length);
-		System.out.println("number of tempro zones: " + zoning.getZoneIDToCodeMap().size());
+		System.out.println("number of tempro zones: " + (zoning.getZoneIDToCodeMap().length - 1));
 		System.out.println("number of nodes: " + zoning.getNodeToZoneMap().size());
 		
 		
@@ -148,7 +144,7 @@ public class ZoningTest {
 		
 		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
 		
-		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
+		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
 		
 		//test mapping for a few zones
 		assertEquals("Zone E02004779 is mapped to the correct node", 79, zoning.getZoneToNearestNodeIDMap().get("E02004779").intValue());
@@ -193,7 +189,7 @@ public class ZoningTest {
 		assertEquals("Distance to nearest node is correct", expectedDistance, distance, DELTA);
 		
 		int zoneID = zoning.getZoneCodeToIDMap().get("E02003559");
-		double distance2 = zoning.getZoneToNodeDistanceMatrix()[zoneID-1][nearestNodeID-1];
+		double distance2 = zoning.getZoneToNodeDistanceMatrix()[zoneID][nearestNodeID];
 		assertEquals("Distance to nearest node is correct", expectedDistance, distance2, DELTA);
 	
 		Pair<Integer, Double> pair = zoning.getZoneToSortedListOfNodeAndDistancePairs().get("E02003559").get(0);
@@ -230,7 +226,7 @@ public class ZoningTest {
 						
 			Integer nodeID = listOfOriginNodes.get(j);
 			int originZoneID = zoning.getZoneCodeToIDMap().get(originZone);
-			double dist = zoning.getZoneToNodeDistanceMatrix()[originZoneID - 1][nodeID - 1];
+			double dist = zoning.getZoneToNodeDistanceMatrix()[originZoneID][nodeID];
 
 			System.out.printf("Distance to node %d is %f %n", nodeID, dist);
 			if (dist < minDistance) {
@@ -244,14 +240,12 @@ public class ZoningTest {
 		assertEquals("The closest node among the top nodes is correct", 6, zoning.getZoneToNearestNodeIDFromLADTopNodesMap().get(originZone).intValue());
 		
 		//test zone to zone distances
-		Set<Integer> zonesSet = zoning.getZoneIDToCodeMap().keySet();
 		double [][] zoneDistances = zoning.getZoneToZoneDistanceMatrix();
-		
 		final double EPSILON = 1e-5;
-		for (Integer zoneID1: zonesSet) {
-			for (Integer zoneID2: zonesSet) {
-				if (zoneID1 == zoneID2) assertEquals("Distance between the same zones should be zero", 0.0, zoneDistances[zoneID1-1][zoneID2-1], EPSILON);
-				else assertEquals("Distance is a symetric measure", zoneDistances[zoneID2-1][zoneID1-1], zoneDistances[zoneID1-1][zoneID2-1], EPSILON);
+		for (int zoneID1 = 1; zoneID1 < zoning.getZoneIDToCodeMap().length; zoneID1++) {
+			for (int zoneID2 = 1; zoneID2 < zoning.getZoneIDToCodeMap().length; zoneID2++) {
+				if (zoneID1 == zoneID2) assertEquals("Distance between the same zones should be zero", 0.0, zoneDistances[zoneID1][zoneID2], EPSILON);
+				else assertEquals("Distance is a symetric measure", zoneDistances[zoneID2][zoneID1], zoneDistances[zoneID1][zoneID2], EPSILON);
 			}
 		}
 	}
@@ -281,7 +275,7 @@ public class ZoningTest {
 		
 		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
 		
-		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
+		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
 		
 		System.out.println("Zones to nearest Nodes: " + zoning.getZoneToNearestNodeIDMap());
 		System.out.println("Zones to nearest nodes distances: " + zoning.getZoneToNearestNodeDistanceMap());

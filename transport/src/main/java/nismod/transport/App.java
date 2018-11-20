@@ -230,7 +230,7 @@ public class App {
 				
 				final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
 				final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
-				Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
+				Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
 				
 				final String temproODMatrixFile = props.getProperty("temproODMatrixFile");
 				//ODMatrix temproODM = new ODMatrix(temproODMatrixFile);
@@ -303,7 +303,7 @@ public class App {
 				RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, props);
 				final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
 				final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
-				Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
+				Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
 
 				//generate single node routes
 				rsg.generateSingleNodeRoutes();
@@ -375,7 +375,7 @@ public class App {
 				RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, props);
 				final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
 				final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
-				Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
+				Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
 
 				//generate single node routes
 				rsg.generateSingleNodeRoutes();
@@ -510,7 +510,7 @@ public class App {
 				if (assignmentType.equals("tempro") || assignmentType.equals("combined")) {
 					final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
 					final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
-					zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
+					zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
 					
 					if (flagUseRouteChoiceModel) { 
 						//read tempro routes

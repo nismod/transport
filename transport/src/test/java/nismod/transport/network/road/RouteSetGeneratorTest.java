@@ -318,7 +318,7 @@ public class RouteSetGeneratorTest {
 		
 		
 		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
-		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
+		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
 		
 		rsg2.clearRoutes();
 		

@@ -97,7 +97,7 @@ public class EstimatedODMatrixTest {
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, props);
 		
 		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
-		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
+		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
 		
 		ODMatrix temproODM = ODMatrix.createUnitMatrix(zoning.getZoneCodeToIDMap().keySet());
 		rna.assignPassengerFlowsTempro(temproODM, zoning, rsg, props);

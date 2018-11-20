@@ -120,7 +120,7 @@ public class RoadNetworkAssignmentTest {
 		//rna.setAssignmentFraction(0.1);
 		
 		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
-		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
+		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
 		
 		//read passenger car flows
 		//ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
@@ -201,7 +201,7 @@ public class RoadNetworkAssignmentTest {
 		
 		System.out.println(rna.getTripList().size());
 		System.out.println(count);
-		System.out.println(zoning.getZoneIDToCodeMap().keySet());
+		System.out.println(Arrays.toString(zoning.getZoneIDToCodeMap()));
 		
 		System.out.println("Total flows: " + odm.getSumOfFlows());
 		System.out.println(odm.getUnsortedOrigins().size());
@@ -742,7 +742,7 @@ public class RoadNetworkAssignmentTest {
 		rna.resetTripList();
 		
 		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
-		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
+		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
 		
 		System.out.println("Zones to nearest Nodes: " + zoning.getZoneToNearestNodeIDMap());
 		System.out.println("Zones to nearest nodes distances: " + zoning.getZoneToNearestNodeDistanceMap());
@@ -1255,7 +1255,7 @@ public class RoadNetworkAssignmentTest {
 		rna.resetTripList();
 		
 		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
-		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
+		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
 		
 		System.out.println("Zones to nearest Nodes: " + zoning.getZoneToNearestNodeIDMap());
 		System.out.println("Zones to nearest nodes distances: " + zoning.getZoneToNearestNodeDistanceMap());

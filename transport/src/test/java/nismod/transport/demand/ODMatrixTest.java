@@ -181,7 +181,7 @@ public class ODMatrixTest {
 		
 		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
 		
-		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
+		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
 		
 		//E06000045 (E02003552, E02003553)
 		//E07000091  (E02004801, E02004800)

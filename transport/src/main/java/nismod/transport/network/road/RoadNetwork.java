@@ -2035,7 +2035,7 @@ public class RoadNetwork {
 	
 	private void createDirectAccessNodeMap() {
 		
-		this.nodeIDtoNode = new Node[this.maximumNodeID];
+		this.nodeIDtoNode = new Node[this.maximumNodeID + 1];
 		
 		Iterator nodeIter = (Iterator) network.getNodes().iterator();
 		while (nodeIter.hasNext()) {

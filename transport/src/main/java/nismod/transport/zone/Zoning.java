@@ -8,6 +8,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -48,10 +49,10 @@ public class Zoning {
 	
 	private HashMap<String, List<Pair<Integer, Double>>> zoneToSortedListOfNodeAndDistancePairs;
 	
-	private double[][] zoneToNodeDistanceMatrix;
-	private double[][] zoneToZoneDistanceMatrix; //distance between zone centroids
+	private double[][] zoneToNodeDistanceMatrix; //distance between zone centroids and all the nodes
+	private double[][] zoneToZoneDistanceMatrix; //distance between each two zone centroids
 	
-	private double[][] zoneToMinMaxDimension; //[zoneID][0] is the minimum dimension, [zoneID][1] is the maximum dimension
+	private double[][] zoneToMinMaxDimension; //[zoneID][0] is the minimum dimension, [zoneID][1] is the maximum dimension (used for minor trips length)
 	
 	private HashMap<Integer, String> nodeToZoneInWhichLocated; //maps node to Tempro zone in which it is located //TODO There are unmapped nodes (outside polygons)!
 	private HashMap<String, List<Integer>> zoneToListOfContainedNodes; //maps Tempro zone to a list of nodes within that zone (if they exist)
@@ -61,17 +62,18 @@ public class Zoning {
 	
 	private HashMap<String, String> LADToName; //maps LAD code to LAD name
 	
-	private HashMap<String, Integer> temproCodeToID;
-	private HashMap<Integer, String> temproIDToCode;
+	private HashMap<String, Integer> temproCodeToID; //maps Tempro ONS code to Tempro ID
+	private String[] temproIDToCode; //maps Tempro ID to Tempro ONS code
 		
 	/**
 	 * Constructor for the zoning system.
 	 * @param zonesUrl Url for the zones shapefile.
 	 * @param nodesUrl Url for the nodes shapefile.
 	 * @param rn Road network.
+	 * @param paramas Properties file with parameters.
 	 * @throws IOException if any.
 	 */
-	public Zoning(URL zonesUrl, URL nodesUrl, RoadNetwork rn) throws IOException {
+	public Zoning(URL zonesUrl, URL nodesUrl, RoadNetwork rn, Properties params) throws IOException {
 		
 		LOGGER.info("Creating the Tempro zoning system.");
 	
@@ -86,7 +88,7 @@ public class Zoning {
 		
 		//map codes and IDs
 		LOGGER.debug("Mapping Tempro zones IDs to their ONS codes...");
-		mapCodesAndIDs(zonesFeatureCollection);
+		mapCodesAndIDs(zonesFeatureCollection, params);
 		
 		//map zones to nearest nodes
 		LOGGER.debug("Mapping Tempro zones to the nearest node...");
@@ -123,13 +125,17 @@ public class Zoning {
 	}
 	
 	/**
-	 * Maps tempro zone IDs to codes.
+	 * Maps Tempro zone IDs to codes.
 	 * @param zonesFeatureCollection Feature collection with the zones.
+	 * @param params Properties file.
 	 */
-	private void mapCodesAndIDs(SimpleFeatureCollection zonesFeatureCollection) {
+	private void mapCodesAndIDs(SimpleFeatureCollection zonesFeatureCollection, Properties params) {
 
 		this.temproCodeToID = new HashMap<String, Integer>();
-		this.temproIDToCode = new HashMap<Integer, String>();
+		
+		int maxTemproID = Integer.parseInt(params.getProperty("MAXIMUM_TEMPRO_ZONE_ID"));
+		
+		this.temproIDToCode = new String[maxTemproID + 1];
 
 		//iterate through the zones and through the nodes
 		SimpleFeatureIterator iter = zonesFeatureCollection.features();
@@ -140,7 +146,7 @@ public class Zoning {
 				String zoneCode = (String) sf.getAttribute("Zone_Code");
 				
 				this.temproCodeToID.put(zoneCode, zoneID);
-				this.temproIDToCode.put(zoneID, zoneCode);
+				this.temproIDToCode[zoneID] = zoneCode;
 			} 
 		} finally {
 			//feature iterator is a live connection that must be closed
@@ -161,8 +167,8 @@ public class Zoning {
 		this.zoneToLAD = new HashMap<String, String>();
 		this.LADToName = new HashMap<String, String>();
 		
-		int maxZones = Collections.max(this.getZoneIDToCodeMap().keySet()); //find maximum index
-		this.zoneToMinMaxDimension = new double[maxZones+1][2]; //zoneID used without -1 shift (0 is not used).
+		int maxZones = this.getZoneIDToCodeMap().length;
+		this.zoneToMinMaxDimension = new double[maxZones][2]; //zoneID used without -1 shift (0 is not used).
 
 		//iterate through the zones and through the nodes
 		SimpleFeatureIterator iter = zonesFeatureCollection.features();
@@ -290,11 +296,10 @@ public class Zoning {
 	 */
 	private void zoneToNodeAndZoneToZoneDistanceMatrices(SimpleFeatureCollection zonesFeatureCollection) {
 
-		int maxZones = Collections.max(this.getZoneIDToCodeMap().keySet()); //find maximum index
-		//int maxNodes = Collections.max(this.rn.getNodeIDtoNode().keySet()); //find maximum node id
+		int maxZones = this.getZoneIDToCodeMap().length;
 		int maxNodes = this.rn.getMaximumNodeID();
 		
-		this.zoneToNodeDistanceMatrix = new double[maxZones][maxNodes];
+		this.zoneToNodeDistanceMatrix = new double[maxZones][maxNodes + 1];
 		this.zoneToZoneDistanceMatrix = new double[maxZones][maxZones];		
 
 		//iterate through zones
@@ -318,44 +323,20 @@ public class Zoning {
 					Point point = (Point) sfn.getDefaultGeometry();
 					double distanceToNode = centroid.distance(point);
 
-					this.zoneToNodeDistanceMatrix[this.temproCodeToID.get(zoneID) - 1][node.getID() - 1] = distanceToNode;
+					this.zoneToNodeDistanceMatrix[this.temproCodeToID.get(zoneID)][node.getID()] = distanceToNode;
 				}
 
-				//iterate through zones
-				/*
-				SimpleFeatureIterator iter2 = zonesFeatureCollection.features();
-				try {
-					while (iter2.hasNext()) {
-						SimpleFeature sf2 = iter2.next();
-						MultiPolygon polygon2 = (MultiPolygon) sf2.getDefaultGeometry();
-						String zoneID2 = (String) sf2.getAttribute("Zone_Code");
-
-						//if zones are the same, or distance is already calculated, skip
-						if (zoneID != zoneID2 && this.zoneToZoneDistanceMatrix[this.temproCodeToID.get(zoneID) - 1][this.temproCodeToID.get(zoneID2) - 1] > 0) continue;
-
-						//calculate centroid and distance
-						Point centroid2 = polygon2.getCentroid(); //calculate centroid
-						double zoneToZoneDistance = centroid2.distance(centroid); //calculate distance
-						this.zoneToZoneDistanceMatrix[this.temproCodeToID.get(zoneID) - 1][this.temproCodeToID.get(zoneID2) - 1] = zoneToZoneDistance;
-						this.zoneToZoneDistanceMatrix[this.temproCodeToID.get(zoneID2) - 1][this.temproCodeToID.get(zoneID) - 1] = zoneToZoneDistance;
-					}
-				} finally {
-					//feature iterator is a live connection that must be closed
-					iter2.close();
-				}
-				*/
-				
 				//assume centroids have already been calculated
 				for (String zoneID2: this.zoneToCentroid.keySet()) {
 					
 					//if zones are the same, or distance is already calculated, skip
-					if (zoneID != zoneID2 && this.zoneToZoneDistanceMatrix[this.temproCodeToID.get(zoneID) - 1][this.temproCodeToID.get(zoneID2) - 1] > 0) continue;
+					if (zoneID != zoneID2 && this.zoneToZoneDistanceMatrix[this.temproCodeToID.get(zoneID)][this.temproCodeToID.get(zoneID2)] > 0) continue;
 					
 					//calculate distance
 					Point centroid2 = this.zoneToCentroid.get(zoneID2); //fetch centroid
 					double zoneToZoneDistance = centroid2.distance(centroid); //calculate distance
-					this.zoneToZoneDistanceMatrix[this.temproCodeToID.get(zoneID) - 1][this.temproCodeToID.get(zoneID2) - 1] = zoneToZoneDistance;
-					this.zoneToZoneDistanceMatrix[this.temproCodeToID.get(zoneID2) - 1][this.temproCodeToID.get(zoneID) - 1] = zoneToZoneDistance;
+					this.zoneToZoneDistanceMatrix[this.temproCodeToID.get(zoneID)][this.temproCodeToID.get(zoneID2)] = zoneToZoneDistance;
+					this.zoneToZoneDistanceMatrix[this.temproCodeToID.get(zoneID2)][this.temproCodeToID.get(zoneID)] = zoneToZoneDistance;
 				}
 				
 			}
@@ -401,7 +382,7 @@ public class Zoning {
 							continue;
 						}
 						
-						double distanceZoneToNode = this.zoneToNodeDistanceMatrix[this.temproCodeToID.get(zoneCode)-1][topNodeID-1];
+						double distanceZoneToNode = this.zoneToNodeDistanceMatrix[this.temproCodeToID.get(zoneCode)][topNodeID];
 						if (distanceZoneToNode < minDistance) {
 							minDistance = distanceZoneToNode;
 							nearestNodeID = topNodeID;
@@ -493,8 +474,8 @@ public class Zoning {
 	}
 		
 	/**
-	 * Getter for tempro zone code to ID.
-	 * @return Tempro zone code to tempro zone ID map.
+	 * Getter for Tempro zone code to ID.
+	 * @return Tempro zone code to Tempro zone ID map.
 	 */
 	public HashMap<String, Integer> getZoneCodeToIDMap() {
 		
@@ -502,10 +483,10 @@ public class Zoning {
 	}
 	
 	/**
-	 * Getter for tempro zone ID to code.
-	 * @return Tempro zone ID to tempro zone code.
+	 * Getter for Tempro zone ID to code.
+	 * @return Tempro zone ID to Tempro zone code.
 	 */
-	public HashMap<Integer, String> getZoneIDToCodeMap() {
+	public String[] getZoneIDToCodeMap() {
 		
 		return this.temproIDToCode;
 	}
@@ -548,7 +529,7 @@ public class Zoning {
 	
 	
 	/**
-	 * Getter for tempro zone to LAD zone mapping.
+	 * Getter for Tempro zone to LAD zone mapping.
 	 * @return Tempro zone to LAD zone map.
 	 */
 	public HashMap<String, String> getZoneToLADMap() {
@@ -557,7 +538,7 @@ public class Zoning {
 	}
 	
 	/**
-	 * Getter for tempro zone to sorted node distances mapping (distances to ALL nodes in the network).
+	 * Getter for Tempro zone to sorted node distances mapping (distances to ALL nodes in the network).
 	 * @return Zone to sorted list of nodes and distances.
 	 */
 	public HashMap<String, List<Pair<Integer, Double>>> getZoneToSortedListOfNodeAndDistancePairs() {
@@ -566,7 +547,7 @@ public class Zoning {
 	}
 	
 	/**
-	 * Getter for tempro zone to list of contained nodes mapping.
+	 * Getter for Tempro zone to list of contained nodes mapping.
 	 * @return Zone to list of contained nodes.
 	 */
 	public HashMap<String, List<Integer>> getZoneToListOfContainedNodes() {
@@ -575,7 +556,7 @@ public class Zoning {
 	}
 	
 	/**
-	 * Getter for tempro zone to all nodes distance matrix [in metres].
+	 * Getter for Tempro zone to all nodes distance matrix [in metres].
 	 * @return Zone to node distance matrix.
 	 */
 	public double[][] getZoneToNodeDistanceMatrix() {
@@ -584,7 +565,7 @@ public class Zoning {
 	}
 	
 	/**
-	 * Getter for tempro zone (centroid) to tempro zone (centroid) distance matrix [in metres].
+	 * Getter for Tempro zone (centroid) to Tempro zone (centroid) distance matrix [in metres].
 	 * @return Zone to node distance matrix.
 	 */
 	public double[][] getZoneToZoneDistanceMatrix() {
@@ -593,7 +574,7 @@ public class Zoning {
 	}
 	
 	/**
-	 * Getter for tempro zone ID to min [0] and max [1] dimension of the zone bounding box (envelope) [in km].
+	 * Getter for Tempro zone ID to min [0] and max [1] dimension of the zone bounding box (envelope) [in km].
 	 * @return Zone min and max dimension (width or height).
 	 */
 	public double[][] getZoneToMinMaxDimension() {
@@ -602,7 +583,7 @@ public class Zoning {
 	}
 	
 	/**
-	 * Getter for LAD to list of contained tempro zones mapping.
+	 * Getter for LAD to list of contained Tempro zones mapping.
 	 * @return LAD to list of contained zones.
 	 */
 	public HashMap<String, List<String>> getLADToListOfContainedZones() {
@@ -620,7 +601,7 @@ public class Zoning {
 	}
 	
 	/**
-	 * Getter for tempro zone to its centroid mapping.
+	 * Getter for Tempro zone to its centroid mapping.
 	 * @return Tempro zone to centroid mapping.
 	 */
 	public HashMap<String, Point> getZoneToCentroid() {

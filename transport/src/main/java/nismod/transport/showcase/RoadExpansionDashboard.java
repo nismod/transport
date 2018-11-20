@@ -1247,7 +1247,7 @@ public class RoadExpansionDashboard extends JFrame {
 															props);
 
 		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
-		zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
+		zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
 
 		odm = new ODMatrix(baseYearODMatrixFile); 
 		//odm = new ODMatrix("./src/test/resources/testdata/csvfiles/tempro2LAD.csv");

@@ -73,7 +73,7 @@ public class RealODMatrixTemproTest {
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
 
 		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
-		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
+		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
 		
 		RealODMatrixTempro temproODM = new RealODMatrixTempro(temproODMatrixFile, zoning);
 		//temproODM.deleteInterzonalFlows("E02006781");
@@ -175,7 +175,7 @@ public class RealODMatrixTemproTest {
 		
 		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
 		
-		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
+		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
 		
 		RealODMatrixTempro tempro = new RealODMatrixTempro(zoning);
 		tempro.setFlow("E02003565", "E02003568", 1.0);
@@ -258,8 +258,8 @@ public class RealODMatrixTemproTest {
 		
 		tempro.sumMatrixSubset(origins, destinations);
 		
-		int numberOfZones = zoning.getZoneIDToCodeMap().keySet().size();
-		System.out.println("Number of zones = " + zoning.getZoneIDToCodeMap().keySet().size());
+		int numberOfZones = zoning.getZoneIDToCodeMap().length - 1;
+		System.out.println("Number of zones = " + numberOfZones);
 		
 		//unit matrix
 		tempro = RealODMatrixTempro.createUnitMatrix(zoning);
@@ -312,7 +312,7 @@ public class RealODMatrixTemproTest {
 		
 		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
 		
-		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
+		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
 		
 		//E06000045 (E02003552, E02003553)
 		//E07000091  (E02004801, E02004800)
@@ -396,8 +396,8 @@ public class RealODMatrixTemproTest {
 		
 		tempro.sumMatrixSubset(origins, destinations);
 		
-		int numberOfZones = zoning.getZoneIDToCodeMap().keySet().size();
-		System.out.println("Number of zones = " + zoning.getZoneIDToCodeMap().keySet().size());
+		int numberOfZones = zoning.getZoneIDToCodeMap().length - 1;
+		System.out.println("Number of zones = " + numberOfZones);
 		RealODMatrixTempro unit = RealODMatrixTempro.createUnitMatrix(zoning);
 		assertEquals("Total flows for unit matrix should be as expected", numberOfZones*numberOfZones, unit.getSumOfFlows(), DELTA);
 		

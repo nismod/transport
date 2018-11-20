@@ -1490,7 +1490,7 @@ public class RoadNetworkAssignment {
 				//get distance between Tempro zone centroids
 				int originZoneID = zoning.getZoneCodeToIDMap().get(originZone);
 				int destinationZoneID = zoning.getZoneCodeToIDMap().get(destinationZone);
-				final double centroidDistance = zoning.getZoneToZoneDistanceMatrix()[originZoneID-1][destinationZoneID-1];
+				final double centroidDistance = zoning.getZoneToZoneDistanceMatrix()[originZoneID][destinationZoneID];
 
 				/*
 			List<Integer> listOfOriginNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(originZone)); //the list is already sorted

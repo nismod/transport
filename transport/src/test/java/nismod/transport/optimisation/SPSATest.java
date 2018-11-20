@@ -254,7 +254,7 @@ public class SPSATest {
 		//Assign tempro matrix
 		
 		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
-		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork);
+		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
 		
 		System.out.println("Zones to nearest Nodes: " + zoning.getZoneToNearestNodeIDMap());
 		System.out.println("Zones to nearest nodes distances: " + zoning.getZoneToNearestNodeDistanceMap());
