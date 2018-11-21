@@ -43,7 +43,10 @@ public class Zoning {
 	
 	private HashMap<String, Integer> zoneToNearestNodeID;
 	private HashMap<String, Double> zoneToNearestNodeDistance;
+	private int[] zoneIDToNearestNodeID;
+	private double[] zoneIDToNearestNodeDistance;	
 	private HashMap<String, Integer> zoneToNearestNodeIDFromLADTopNodes;
+	private int[] zoneIDToNearestNodeIDFromLADTopNodes;
 	
 	private HashMap<String, Point> zoneToCentroid;
 	
@@ -160,8 +163,11 @@ public class Zoning {
 	 */
 	private void mapZonesToNodes(SimpleFeatureCollection zonesFeatureCollection) {
 
-		this.zoneToNearestNodeID = new HashMap<String, Integer>();
-		this.zoneToNearestNodeDistance = new HashMap<String, Double>();
+		this.zoneToNearestNodeID = new HashMap<String, Integer>(); //TODO remove
+		this.zoneToNearestNodeDistance = new HashMap<String, Double>(); //TODO remove
+		this.zoneIDToNearestNodeID = new int[temproIDToCode.length];
+		this.zoneIDToNearestNodeDistance = new double[temproIDToCode.length];
+		
 		this.zoneToCentroid = new HashMap<String, Point>();
 		
 		this.zoneToLAD = new HashMap<String, String>();
@@ -176,17 +182,18 @@ public class Zoning {
 			while (iter.hasNext()) {
 				SimpleFeature sf = iter.next();
 				MultiPolygon polygon = (MultiPolygon) sf.getDefaultGeometry();
-				String zoneID = (String) sf.getAttribute("Zone_Code");
+				String zoneCode = (String) sf.getAttribute("Zone_Code");
+				int zoneID = this.temproCodeToID.get(zoneCode);
 				
 				String ladID = (String) sf.getAttribute("LAD_Code");
-				this.zoneToLAD.put(zoneID, ladID);
+				this.zoneToLAD.put(zoneCode, ladID);
 				
 				String ladName = (String) sf.getAttribute("Local_Auth");
 				this.LADToName.put(ladID, ladName);
 				
 				//store centroid
 				Point centroid = polygon.getCentroid();
-				this.zoneToCentroid.put(zoneID, centroid);
+				this.zoneToCentroid.put(zoneCode, centroid);
 				
 				//get width and height of the polygon bounding box (envelope)
 				Polygon po = (Polygon) polygon.getEnvelope();
@@ -195,11 +202,11 @@ public class Zoning {
 				double height = en.getHeight() / 1000.0; //[km]
 				
 				if (width < height) {
-					this.zoneToMinMaxDimension[this.temproCodeToID.get(zoneID)][0] = width;
-					this.zoneToMinMaxDimension[this.temproCodeToID.get(zoneID)][1] = height;
+					this.zoneToMinMaxDimension[zoneID][0] = width;
+					this.zoneToMinMaxDimension[zoneID][1] = height;
 				} else {
-					this.zoneToMinMaxDimension[this.temproCodeToID.get(zoneID)][0] = height;
-					this.zoneToMinMaxDimension[this.temproCodeToID.get(zoneID)][1] = width;
+					this.zoneToMinMaxDimension[zoneID][0] = height;
+					this.zoneToMinMaxDimension[zoneID][1] = width;
 				}
 			
 				double minDistance = Double.MAX_VALUE;
@@ -222,8 +229,10 @@ public class Zoning {
 						nearestNodeID = node.getID();
 					}
 				}
-				this.zoneToNearestNodeID.put(zoneID, nearestNodeID);
-				this.zoneToNearestNodeDistance.put(zoneID, minDistance);
+				this.zoneToNearestNodeID.put(zoneCode, nearestNodeID);
+				this.zoneToNearestNodeDistance.put(zoneCode, minDistance);
+				this.zoneIDToNearestNodeID[zoneID] = nearestNodeID;
+				this.zoneIDToNearestNodeDistance[zoneID] = minDistance;
 			} 
 		} finally {
 			//feature iterator is a live connection that must be closed
@@ -353,6 +362,7 @@ public class Zoning {
 	private void mapZonesToLADTopNodes(SimpleFeatureCollection zonesFeatureCollection) {
 
 		this.zoneToNearestNodeIDFromLADTopNodes = new HashMap<String, Integer>();
+		this.zoneIDToNearestNodeIDFromLADTopNodes = new int[this.temproIDToCode.length];
 
 		this.rn.sortGravityNodes(); //to get top nodes for each LAD
 		
@@ -362,6 +372,7 @@ public class Zoning {
 			while (iter.hasNext()) {
 				SimpleFeature sf = iter.next();
 				String zoneCode = (String) sf.getAttribute("Zone_Code");
+				int zoneID = this.temproCodeToID.get(zoneCode);
 									
 				double minDistance = Double.MAX_VALUE;
 				Integer nearestNodeID = null;
@@ -382,7 +393,7 @@ public class Zoning {
 							continue;
 						}
 						
-						double distanceZoneToNode = this.zoneToNodeDistanceMatrix[this.temproCodeToID.get(zoneCode)][topNodeID];
+						double distanceZoneToNode = this.zoneToNodeDistanceMatrix[zoneID][topNodeID];
 						if (distanceZoneToNode < minDistance) {
 							minDistance = distanceZoneToNode;
 							nearestNodeID = topNodeID;
@@ -398,6 +409,7 @@ public class Zoning {
 					LOGGER.warn("The nearest node {} for Tempro zone {} is blacklisted as end node!", nearestNodeID, zoneCode);
 								
 				this.zoneToNearestNodeIDFromLADTopNodes.put(zoneCode, nearestNodeID);
+				this.zoneIDToNearestNodeIDFromLADTopNodes[zoneID] = nearestNodeID;
 			} 
 		} finally {
 			//feature iterator is a live connection that must be closed
@@ -501,6 +513,15 @@ public class Zoning {
 	}
 	
 	/**
+	 * Getter for zone ID to nearest node ID mapping.
+	 * @return Zone to node map.
+	 */
+	public int[] getZoneIDToNearestNodeIDMap() {
+		
+		return this.zoneIDToNearestNodeID;
+	}
+	
+	/**
 	 * Getter for zone centroid to nearest node ID among top LAD nodes mapping.
 	 * @return Zone to node map.
 	 */
@@ -510,12 +531,30 @@ public class Zoning {
 	}
 	
 	/**
+	 * Getter for zone ID to nearest node ID among top LAD nodes mapping.
+	 * @return Zone to node map.
+	 */
+	public int[] getZoneIDToNearestNodeIDFromLADTopNodesMap() {
+		
+		return this.zoneIDToNearestNodeIDFromLADTopNodes;
+	}
+	
+	/**
 	 * Getter for zone centroid to nearest node distance mapping (in meters).
 	 * @return Zone to distance map.
 	 */
 	public HashMap<String, Double> getZoneToNearestNodeDistanceMap() {
 		
 		return this.zoneToNearestNodeDistance;
+	}
+	
+	/**
+	 * Getter for zone ID to nearest node distance mapping (in meters).
+	 * @return Zone to distance map.
+	 */
+	public double[] getZoneIDToNearestNodeDistanceMap() {
+		
+		return this.zoneIDToNearestNodeDistance;
 	}
 	
 	/**

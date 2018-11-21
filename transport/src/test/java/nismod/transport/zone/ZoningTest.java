@@ -283,9 +283,14 @@ public class ZoningTest {
 		//test mapping for a few zones
 		assertEquals("Zone E02003560 is mapped to the correct node", 31, zoning.getZoneToNearestNodeIDMap().get("E02003560").intValue());
 		System.out.println("Distance: " + zoning.getZoneToNearestNodeDistanceMap().get("E02003560"));
-		
+				
 		assertEquals("Zone E02004795 is mapped to the correct node", 27, zoning.getZoneToNearestNodeIDMap().get("E02003561").intValue());
+		int zoneID = zoning.getZoneCodeToIDMap().get("E02003561");
+		assertEquals("Zone E02004795 is mapped to the correct node", 27, zoning.getZoneIDToNearestNodeIDMap()[zoneID]);
+		
 		assertEquals("Zone E02003568 is mapped to the correct node", 105, zoning.getZoneToNearestNodeIDMap().get("E02003580").intValue());
+		zoneID = zoning.getZoneCodeToIDMap().get("E02003580");
+		assertEquals("Zone E02003568 is mapped to the correct node", 105, zoning.getZoneIDToNearestNodeIDMap()[zoneID]);
 		
 		System.out.println(zoning.getZoneToNearestNodeIDMap().keySet());
 	}
