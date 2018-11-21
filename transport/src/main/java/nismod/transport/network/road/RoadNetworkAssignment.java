@@ -730,13 +730,13 @@ public class RoadNetworkAssignment {
 			//removing blacklisted nodes
 			for (Integer originNode: roadNetwork.getZoneToNodes().get(originZone))
 				//check if any of the nodes is blacklisted
-				if (this.roadNetwork.getStartNodeBlacklist().contains(originNode)) 
+				if (this.roadNetwork.getStartNodeBlacklist()[originNode]) 
 					listOfOriginNodes.remove(originNode);
 
 			//removing blacklisted nodes
 			for (Integer destinationNode: roadNetwork.getZoneToNodes().get(destinationZone))
 				//check if any of the nodes is blacklisted
-				if (this.roadNetwork.getEndNodeBlacklist().contains(destinationNode)) 
+				if (this.roadNetwork.getEndNodeBlacklist()[destinationNode]) 
 					listOfDestinationNodes.remove(destinationNode);
 
 			//calculate number of trip assignments
@@ -1254,9 +1254,7 @@ public class RoadNetworkAssignment {
 				//check if any of the nodes is blacklisted
 				if (this.roadNetwork.isBlacklistedAsEndNode(destinationNode)) 
 					listOfDestinationNodes.remove(destinationNode);
-
 			 */
-
 
 			//calculate number of trip assignments
 			int flow = (int) Math.floor(passengerODM.getIntFlow(originZone, destinationZone) * this.assignmentFraction); //assigned fractionally and later augmented
@@ -4603,12 +4601,7 @@ public class RoadNetworkAssignment {
 				//get origin node
 				Node originNode = trip.getOriginNode();
 				if (originNode == null) LOGGER.error("Trip does not have origin node!");
-				Double access = roadNetwork.getNodeToAverageAccessEgressDistance().get(originNode.getID());
-				if (access == null) {
-					LOGGER.trace("Node {} does not have access length! Assume zero access.", originNode.getID());
-					access = 0.0;
-				}
-				else access /= 1000; //km
+				double access = roadNetwork.getNodeToAverageAccessEgressDistance()[originNode.getID()] / 1000; //km
 				String accessZone = roadNetwork.getNodeToZone().get(originNode.getID());
 								
 				//fetch current map
@@ -4628,12 +4621,7 @@ public class RoadNetworkAssignment {
 
 				Node destinationNode = trip.getDestinationNode();
 				if (destinationNode == null) LOGGER.error("Trip does not have destination node!");
-				Double egress = roadNetwork.getNodeToAverageAccessEgressDistance().get(destinationNode.getID());
-				if (egress == null) {
-					LOGGER.trace("Node {} does not have egress length! Assume zero egress.", destinationNode.getID());
-					egress = 0.0;
-				}
-				else egress /= 1000; //km
+				double egress = roadNetwork.getNodeToAverageAccessEgressDistance()[destinationNode.getID()] / 1000; //km
 				String egressZone = roadNetwork.getNodeToZone().get(destinationNode.getID());
 
 				//fetch current map
@@ -4843,6 +4831,7 @@ public class RoadNetworkAssignment {
 					}
 					*/
 					access = TripTempro.zoning.getZoneToNearestNodeDistanceMap().get(originTemproZone);
+					
 					if (access == null) access = 0.0;
 					else access /= 1000;
 
@@ -4851,9 +4840,10 @@ public class RoadNetworkAssignment {
 					accessLAD = trip.getOriginLAD(this.roadNetwork.getNodeToZone());
 					
 					if (vht == VehicleType.CAR || vht == VehicleType.CAR_AV)
-						access = this.roadNetwork.getNodeToAverageAccessEgressDistance().get(originNode.getID());
+						access = this.roadNetwork.getNodeToAverageAccessEgressDistance()[originNode.getID()];
 					else //freight vehicle
-						access = this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight().get(originNode.getID());
+						access = this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight()[originNode.getID()];
+					
 					if (access == null) access = 0.0;
 					else access /= 1000;
 				}
@@ -4895,6 +4885,7 @@ public class RoadNetworkAssignment {
 					}
 					*/
 					egress = TripTempro.zoning.getZoneToNearestNodeDistanceMap().get(destinationTemproZone);
+					
 					if (egress == null) egress = 0.0;
 					else egress /= 1000;
 					
@@ -4903,9 +4894,9 @@ public class RoadNetworkAssignment {
 					egressLAD = trip.getDestinationLAD(this.roadNetwork.getNodeToZone());
 					
 					if (vht == VehicleType.CAR || vht == VehicleType.CAR_AV)
-						egress = this.roadNetwork.getNodeToAverageAccessEgressDistance().get(destinationNode.getID());
+						egress = this.roadNetwork.getNodeToAverageAccessEgressDistance()[destinationNode.getID()];
 					else //freight vehicle
-						egress = this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight().get(destinationNode.getID());
+						egress = this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight()[destinationNode.getID()];
 					if (egress == null) egress = 0.0;
 					else egress /= 1000;
 				}

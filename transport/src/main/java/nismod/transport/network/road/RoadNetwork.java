@@ -99,10 +99,11 @@ public class RoadNetwork {
 	private HashMap<String, Double> workplaceZoneToNearestNodeDistance; //[m]
 	private HashMap<String, Integer> workplaceZoneToPopulation;
 	private HashMap<String, List<String>> zoneToWorkplaceCodes;
-	private HashMap<Integer, Integer> nodeToGravitatingPopulation;
-	private HashMap<Integer, Integer> nodeToGravitatingWorkplacePopulation;
-	private HashMap<Integer, Double> nodeToAverageAccessEgressDistance; //[m]
-	private HashMap<Integer, Double> nodeToAverageAccessEgressDistanceFreight; //[m]
+	
+	private int[] nodeToGravitatingPopulation;
+	private int[] nodeToGravitatingWorkplacePopulation;
+	private double[] nodeToAverageAccessEgressDistance; //[m]
+	private double[] nodeToAverageAccessEgressDistanceFreight; //[m]
 
 	private Node[] nodeIDtoNode; //for direct access
 	private Edge[] edgeIDtoEdge; //for direct access
@@ -111,8 +112,9 @@ public class RoadNetwork {
 	private Boolean[] isEdgeUrban; //true = urban, false = rural, null = unknown/ferry
 	private EdgeType[] edgesType; //A-road, Motorway, Ferry
 	
-	private List<Integer> startNodeBlacklist;
-	private List<Integer> endNodeBlacklist;
+	private boolean[] startNodeBlacklist;
+	private boolean[] endNodeBlacklist;
+	
 	private double[] freeFlowTravelTime;
 	private double[] edgeLengths;
 	private int[] numberOfLanes;
@@ -1388,7 +1390,7 @@ public class RoadNetwork {
 	 * Getter method for the node to gravitating population mapping.
 	 * @return Node to gravitating population mapping.
 	 */
-	public HashMap<Integer, Integer> getNodeToGravitatingPopulation() {
+	public int[] getNodeToGravitatingPopulation() {
 
 		return this.nodeToGravitatingPopulation;
 	}
@@ -1400,10 +1402,7 @@ public class RoadNetwork {
 	 */
 	public int getGravitatingPopulation(int node) {
 		
-		Integer population = this.nodeToGravitatingPopulation.get(node);
-		if (population == null) population = 0;
-		
-		return population;
+		return this.nodeToGravitatingPopulation[node];
 	}
 	
 	/**
@@ -1413,26 +1412,23 @@ public class RoadNetwork {
 	 */
 	public int getGravitatingWorkplacePopulation(int node) {
 		
-		Integer population = this.nodeToGravitatingWorkplacePopulation.get(node);
-		if (population == null) population = 0;
-		
-		return population;
+		return this.nodeToGravitatingWorkplacePopulation[node];
 	}
 	
 	/**
 	 * Getter method for the node to average access/egress distance mapping [in metres].
-	 * @return Node to average access/egress distance mapping.
+	 * @return Node ID to average access/egress distance mapping.
 	 */
-	public HashMap<Integer, Double> getNodeToAverageAccessEgressDistance() {
+	public double[] getNodeToAverageAccessEgressDistance() {
 
 		return this.nodeToAverageAccessEgressDistance;
 	}
 	
 	/**
 	 * Getter method for the node to average access/egress distance mapping for freight [in metres].
-	 * @return Node to average access/egress distance mapping for freight.
+	 * @return Node ID to average access/egress distance mapping for freight.
 	 */
-	public HashMap<Integer, Double> getNodeToAverageAccessEgressDistanceFreight() {
+	public double[] getNodeToAverageAccessEgressDistanceFreight() {
 
 		return this.nodeToAverageAccessEgressDistanceFreight;
 	}
@@ -1444,10 +1440,7 @@ public class RoadNetwork {
 	 */
 	public double getAverageAcessEgressDistance(int node) {
 		
-		Double distance = this.nodeToAverageAccessEgressDistance.get(node);
-		if (distance == null) distance = 0.0; //TODO
-		
-		return distance;
+		return this.nodeToAverageAccessEgressDistance[node];
 	}
 	
 	/**
@@ -1457,10 +1450,8 @@ public class RoadNetwork {
 	 */
 	public double getAverageAcessEgressDistanceFreight(int node) {
 		
-		Double distance = this.nodeToAverageAccessEgressDistanceFreight.get(node);
-		if (distance == null) distance = 0.0; //TODO there could be some distance if a node has no gravitating population but is the nearest node to a point-based freight zone
-		
-		return distance;
+		//TODO there could be some distance if a node has no gravitating population but is the nearest node to a point-based freight zone
+		return this.nodeToAverageAccessEgressDistanceFreight[node];
 	}
 	
 	/**
@@ -1509,12 +1500,12 @@ public class RoadNetwork {
 	}
 	
 	
-	public List<Integer> getStartNodeBlacklist() {
+	public boolean[] getStartNodeBlacklist() {
 		
 		return this.startNodeBlacklist;
 	}
 	
-	public List<Integer> getEndNodeBlacklist() {
+	public boolean[] getEndNodeBlacklist() {
 		
 		return this.endNodeBlacklist;
 	}
@@ -1526,7 +1517,7 @@ public class RoadNetwork {
 	 */
 	public boolean isBlacklistedAsStartNode(int nodeId) {
 		
-		return (this.startNodeBlacklist.contains(nodeId)); 
+		return this.startNodeBlacklist[nodeId]; 
 	}
 	
 	/**
@@ -1536,7 +1527,7 @@ public class RoadNetwork {
 	 */
 	public boolean isBlacklistedAsEndNode(int nodeId) {
 		
-		return (this.endNodeBlacklist.contains(nodeId)); 
+		return this.endNodeBlacklist[nodeId]; 
 	}
 	
 	/**
@@ -2103,16 +2094,14 @@ public class RoadNetwork {
 	
 	private void createNodeBlacklists() {
 
-		this.startNodeBlacklist = new ArrayList<Integer>();
-		this.endNodeBlacklist = new ArrayList<Integer>();
-
+		this.startNodeBlacklist = new boolean[this.maximumNodeID + 1];
+		this.endNodeBlacklist = new boolean[this.maximumNodeID + 1];
 
 		Iterator nodeIter = (Iterator) network.getNodes().iterator();
 		while (nodeIter.hasNext()) {
-
 			DirectedNode node = (DirectedNode) nodeIter.next();
-			if (node.getOutDegree() == 0) this.startNodeBlacklist.add(node.getID());
-			if (node.getInDegree() == 0) this.endNodeBlacklist.add(node.getID());
+			if (node.getOutDegree() == 0) this.startNodeBlacklist[node.getID()] = true;
+			if (node.getInDegree() == 0) this.endNodeBlacklist[node.getID()] = true;
 		}		
 	}
 	
@@ -2382,21 +2371,17 @@ public class RoadNetwork {
 	 */
 	private void calculateNodeGravitatingPopulation() {
 		
-		HashMap<Integer, Integer> map = new HashMap<Integer, Integer>();
+		int[] total = new int[this.maximumNodeID + 1];
 		
 		for (String areaCode: this.areaCodeToNearestNodeID.keySet()) {
 			
 			int node = this.areaCodeToNearestNodeID.get(areaCode);
 			int population = this.areaCodeToPopulation.get(areaCode);
 			
-			Integer currentPopulation = map.get(node);
-			if (currentPopulation == null) currentPopulation = population;
-			else  currentPopulation += population;
-			
-			map.put(node, currentPopulation);
+			total[node] += population;
 		}
 		
-		this.nodeToGravitatingPopulation = map;
+		this.nodeToGravitatingPopulation = total;
 	}
 	
 	/**
@@ -2406,43 +2391,35 @@ public class RoadNetwork {
 	 */
 	private void calculateNodeGravitatingWorkplacePopulation() {
 		
-		HashMap<Integer, Integer> map = new HashMap<Integer, Integer>();
+		int[] total = new int[this.maximumNodeID + 1];
 		
 		for (String workplaceZone: this.workplaceZoneToNearestNodeID.keySet()) {
 			
 			int node = this.workplaceZoneToNearestNodeID.get(workplaceZone);
 			int population = this.workplaceZoneToPopulation.get(workplaceZone);
 			
-			Integer currentPopulation = map.get(node);
-			if (currentPopulation == null) currentPopulation = population;
-			else  currentPopulation += population;
-			
-			map.put(node, currentPopulation);
+			total[node] += population;
 		}
 		
-		this.nodeToGravitatingWorkplacePopulation = map;
+		this.nodeToGravitatingWorkplacePopulation = total;
 	}
 	
 	/**
 	 * Calculates average access/egress distance to each node that has a gravitating population
-	 * Nodes with 0 gravitating population are not a member of this map!
 	 */
 	private void calculateNodeAccessEgressDistance() {
 		
-		HashMap<Integer, Double> map = new HashMap<Integer, Double>();
+		double[] map = new double[this.maximumNodeID + 1];
 		
 		for (String areaCode: this.areaCodeToNearestNodeID.keySet()) {
 			
 			int node = this.areaCodeToNearestNodeID.get(areaCode);
 			int population = this.areaCodeToPopulation.get(areaCode);
 			double distance = this.areaCodeToNearestNodeDistance.get(areaCode);
-			double gravitatingPopulation = this.nodeToGravitatingPopulation.get(node);
+			double gravitatingPopulation = this.nodeToGravitatingPopulation[node];
 			
-			Double weightedDistance = map.get(node);
-			if (weightedDistance == null) weightedDistance = population * distance / gravitatingPopulation;
-			else  weightedDistance += population * distance / gravitatingPopulation;
-			
-			map.put(node, weightedDistance);
+			double weightedDistance = distance * population / gravitatingPopulation;
+			map[node] += weightedDistance;
 		}
 		
 		this.nodeToAverageAccessEgressDistance = map;
@@ -2455,20 +2432,17 @@ public class RoadNetwork {
 	 */
 	private void calculateNodeAccessEgressDistanceFreight() {
 		
-		HashMap<Integer, Double> map = new HashMap<Integer, Double>();
+		double[] map = new double[this.maximumNodeID + 1];
 		
 		for (String workplaceZone: this.workplaceZoneToNearestNodeID.keySet()) {
 			
 			int node = this.workplaceZoneToNearestNodeID.get(workplaceZone);
 			int population = this.workplaceZoneToPopulation.get(workplaceZone);
 			double distance = this.workplaceZoneToNearestNodeDistance.get(workplaceZone);
-			double gravitatingPopulation = this.nodeToGravitatingWorkplacePopulation.get(node);
+			double gravitatingPopulation = this.nodeToGravitatingWorkplacePopulation[node];
 			
-			Double weightedDistance = map.get(node);
-			if (weightedDistance == null) weightedDistance = population * distance / gravitatingPopulation;
-			else  weightedDistance += population * distance / gravitatingPopulation;
-			
-			map.put(node, weightedDistance);
+			double weightedDistance = distance * population / gravitatingPopulation;
+			map[node] += weightedDistance;
 		}
 		
 		this.nodeToAverageAccessEgressDistanceFreight = map;
@@ -2479,15 +2453,13 @@ public class RoadNetwork {
 	 */
 	public void sortGravityNodes() {
 		
-		HashMap<Integer, Integer> nodeToPop = this.nodeToGravitatingPopulation;
+		int[] nodeToPop = this.nodeToGravitatingPopulation;
 		
 		Comparator<Integer> c = new Comparator<Integer>() {
 		    public int compare(Integer s, Integer s2) {
-		    	Integer population = nodeToPop.get(s);
-		    	if (population == null) population = 0; //no population gravitates to this node
-		    	Integer population2 = nodeToPop.get(s2);
-		    	if (population2 == null) population2 = 0;
-		    	
+		    	Integer population = nodeToPop[s];
+		    	Integer population2 = nodeToPop[s2];
+	    	
 		    	return population2.compareTo(population);
 		    	}
 		};
@@ -2503,15 +2475,13 @@ public class RoadNetwork {
 	 */
 	public void sortGravityNodesFreight() {
 		
-		HashMap<Integer, Integer> nodeToPop = this.nodeToGravitatingWorkplacePopulation;
+		int[] nodeToPop = this.nodeToGravitatingWorkplacePopulation;
 		
 		Comparator<Integer> c = new Comparator<Integer>() {
 		    public int compare(Integer s, Integer s2) {
-		    	Integer population = nodeToPop.get(s);
-		    	if (population == null) population = 0; //no population gravitates to this node
-		    	Integer population2 = nodeToPop.get(s2);
-		    	if (population2 == null) population2 = 0;
-		    	
+		    	Integer population = nodeToPop[s];
+		    	Integer population2 = nodeToPop[s2];
+		    			    	
 		    	return population2.compareTo(population);
 		    	}
 		};

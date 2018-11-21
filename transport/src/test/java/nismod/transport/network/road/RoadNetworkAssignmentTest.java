@@ -674,8 +674,8 @@ public class RoadNetworkAssignmentTest {
 		for (Trip trip: rna.getTripList()) {
 			int originNode = trip.getOriginNode().getID();
 			int destinationNode = trip.getDestinationNode().getID();
-			double access = roadNetwork.getNodeToAverageAccessEgressDistance().get(originNode) / 1000;
-			double egress = roadNetwork.getNodeToAverageAccessEgressDistance().get(destinationNode) / 1000;
+			double access = roadNetwork.getNodeToAverageAccessEgressDistance()[originNode] / 1000;
+			double egress = roadNetwork.getNodeToAverageAccessEgressDistance()[destinationNode] / 1000;
 			int volume = trip.getMultiplier();
 			vehicleKilometresWithAccessEgress += volume * (access + egress); 
 			

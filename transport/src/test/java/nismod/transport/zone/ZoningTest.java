@@ -212,7 +212,7 @@ public class ZoningTest {
 		//removing blacklisted nodes
 		for (Integer on: roadNetwork.getZoneToNodes().get(originLAD))
 			//check if any of the nodes is blacklisted
-			if (roadNetwork.getStartNodeBlacklist().contains(on)) 
+			if (roadNetwork.getStartNodeBlacklist()[on]) 
 				listOfOriginNodes.remove(on);
 
 		int originNode = 0;

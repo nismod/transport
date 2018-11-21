@@ -163,7 +163,7 @@ public class TripMinor extends Trip {
 	}
 	
 	@Override
-	public double getTravelTime(double[] linkTravelTime, double avgIntersectionDelay, HashMap<Integer, Double> distanceFromTemproZoneToNearestNode, double averageAccessEgressSpeed, boolean flagIncludeAccessEgress) {
+	public double getTravelTime(double[] linkTravelTime, double avgIntersectionDelay, double[] distanceFromTemproZoneToNearestNode, double averageAccessEgressSpeed, boolean flagIncludeAccessEgress) {
 		
 		double time = this.length / averageAccessEgressSpeed * 60; // in [min]
 		return time;
@@ -183,7 +183,7 @@ public class TripMinor extends Trip {
 	}
 	
 	@Override
-	public double getCost(double[] linkTravelTime, HashMap<Integer, Double> distanceFromTemproZoneToNearestNode, double averageAccessEgressSpeed, Map<EnergyType, Double> energyUnitCosts, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency, HashMap<String, MultiKeyMap> congestionCharges, boolean flagIncludeAccessEgress) {
+	public double getCost(double[] linkTravelTime, double[] distanceFromTemproZoneToNearestNode, double averageAccessEgressSpeed, Map<EnergyType, Double> energyUnitCosts, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency, HashMap<String, MultiKeyMap> congestionCharges, boolean flagIncludeAccessEgress) {
 		
 		Map<EnergyType, Double> tripConsumptions = this.getConsumption(linkTravelTime, distanceFromTemproZoneToNearestNode, averageAccessEgressSpeed, energyConsumptionParameters, relativeFuelEfficiency, false);
 		
@@ -210,7 +210,7 @@ public class TripMinor extends Trip {
 	}
 	
 	@Override
-	public Map<EnergyType, Double> getConsumption(double[] linkTravelTime, HashMap<Integer, Double> distanceFromTemproZoneToNearestNode, double averageAccessEgressSpeed, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency, boolean flagIncludeAccessEgress) {
+	public Map<EnergyType, Double> getConsumption(double[] linkTravelTime, double[] distanceFromTemproZoneToNearestNode, double averageAccessEgressSpeed, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency, boolean flagIncludeAccessEgress) {
 
 		Map<EnergyType, Double> tripConsumptions = new EnumMap<>(EnergyType.class);
 		for (EnergyType et: EnergyType.values())
@@ -264,7 +264,7 @@ public class TripMinor extends Trip {
 	}
 	
 	@Override
-	protected Map<EnergyType, Double> getAccessEgressConsumption(double[] linkTravelTime, HashMap<Integer, Double> distanceFromTemproZoneToNearestNode, double averageAccessEgressSpeed, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency) {
+	protected Map<EnergyType, Double> getAccessEgressConsumption(double[] linkTravelTime, double[] distanceFromTemproZoneToNearestNode, double averageAccessEgressSpeed, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency) {
 			
 		Map<EnergyType, Double> accessEgressConsumptions = new EnumMap<>(EnergyType.class);
 
@@ -284,7 +284,7 @@ public class TripMinor extends Trip {
 	}
 	
 	@Override
-	public Double getCO2emission(double[] linkTravelTime, HashMap<Integer, Double> distanceFromTemproZoneToNearestNode, double averageAccessEgressSpeed, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency, Map<EnergyType, Double> unitCO2Emissions, boolean flagIncludeAccessEgress) {
+	public Double getCO2emission(double[] linkTravelTime, double[] distanceFromTemproZoneToNearestNode, double averageAccessEgressSpeed, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency, Map<EnergyType, Double> unitCO2Emissions, boolean flagIncludeAccessEgress) {
 		
 		Map<EnergyType, Double> consumption = this.getConsumption(null, null, averageAccessEgressSpeed, energyConsumptionParameters, relativeFuelEfficiency, false);
 		

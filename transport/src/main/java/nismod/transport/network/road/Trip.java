@@ -203,17 +203,15 @@ public class Trip {
 	 * @param averageAccessEgressMap Mapping between nodeID and average access/egress for that node.
 	 * @return Trip length including access/egress [in km]
 	 */
-	public double getLength(HashMap<Integer, Double> averageAccessEgressMap) {
+	public double getLength(double[] averageAccessEgressMap) {
 
 		double length = this.route.getLength(); //route length is not changing so it can be calculated only once and stored
 		if (length == 0.0) {
 			this.route.calculateLength();
 			length = this.route.getLength();
 		}
-		Double access = averageAccessEgressMap.get(this.getOriginNode().getID());
-		if (access == null) access = 0.0; //TODO use some default access/egress distances?
-		Double egress = averageAccessEgressMap.get(this.getDestinationNode().getID());
-		if (egress == null) egress = 0.0;
+		double access = averageAccessEgressMap[this.getOriginNode().getID()];
+		double egress = averageAccessEgressMap[this.getDestinationNode().getID()];
 		
 		return length + access / 1000 + egress / 1000;
 	}
@@ -227,16 +225,15 @@ public class Trip {
 	 * @param flagIncludeAccessEgress Whether to include access/egress travel time.
 	 * @return Trip travel time including access/egress [in min].
 	 */
-	public double getTravelTime(double[] linkTravelTime, double avgIntersectionDelay, HashMap<Integer, Double> averageAccessEgressMap, double averageAccessEgressSpeed, boolean flagIncludeAccessEgress) {
+	public double getTravelTime(double[] linkTravelTime, double avgIntersectionDelay, double[] averageAccessEgressMap, double averageAccessEgressSpeed, boolean flagIncludeAccessEgress) {
 		
 		this.route.calculateTravelTime(linkTravelTime, avgIntersectionDelay); //route travel time needs to be recalculated every time (as it depends on time of day).
 		Double time = this.route.getTime();
 			
 			if (flagIncludeAccessEgress) {	
-				Double access = averageAccessEgressMap.get(this.getOriginNode().getID());
-				if (access == null) access = 0.0; //TODO use some default access/egress distances?
-				Double egress = averageAccessEgressMap.get(this.getDestinationNode().getID());
-				if (egress == null) egress = 0.0;
+				double access = averageAccessEgressMap[this.getOriginNode().getID()];
+				//TODO if zero, use some default access/egress distances?
+				double egress = averageAccessEgressMap[this.getDestinationNode().getID()];
 				double averageAccessTime = access / 1000 / averageAccessEgressSpeed * 60;
 				double averageEgressTime = egress / 1000 / averageAccessEgressSpeed * 60;
 				time += averageAccessTime + averageEgressTime;
@@ -257,7 +254,7 @@ public class Trip {
 	 * @param boolean flagIncludeAccessEgress Whether to include access/egress.
 	 * @return Total trip cost.
 	 */
-	public double getCost(double[] linkTravelTime, HashMap<Integer, Double> averageAccessEgressMap, double averageAccessEgressSpeed, Map<EnergyType, Double> energyUnitCosts, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency, HashMap<String, MultiKeyMap> congestionCharges, boolean flagIncludeAccessEgress) {
+	public double getCost(double[] linkTravelTime, double[] averageAccessEgressMap, double averageAccessEgressSpeed, Map<EnergyType, Double> energyUnitCosts, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency, HashMap<String, MultiKeyMap> congestionCharges, boolean flagIncludeAccessEgress) {
 		
 		//double distance = this.getLength(averageAccessEgressMap);
 		//double cost = distance / 100 * energyConsumptionsPer100km.get(this.engine) * energyUnitCosts.get(this.engine);
@@ -294,7 +291,7 @@ public class Trip {
 	 * @param boolean flagIncludeAccessEgress Whether to include access/egress.
 	 * @return Trip consumptions.
 	 */
-	public Map<EnergyType, Double> getConsumption(double[] linkTravelTime, HashMap<Integer, Double> averageAccessEgressMap, double averageAccessEgressSpeed, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency, boolean flagIncludeAccessEgress) {
+	public Map<EnergyType, Double> getConsumption(double[] linkTravelTime, double[] averageAccessEgressMap, double averageAccessEgressSpeed, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency, boolean flagIncludeAccessEgress) {
 		
 		//double distance = this.getLength(averageAccessEgressMap);
 		//double consumption = distance / 100 * energyConsumptionsPer100km.get(this.engine);
@@ -326,7 +323,7 @@ public class Trip {
 	 * @param relativeFuelEfficiency
 	 * @return Trip consumptions.
 	 */
-	protected Map<EnergyType, Double> getAccessEgressConsumption(double[] linkTravelTime, HashMap<Integer, Double> averageAccessEgressMap, double averageAccessEgressSpeed, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency) {
+	protected Map<EnergyType, Double> getAccessEgressConsumption(double[] linkTravelTime, double[] averageAccessEgressMap, double averageAccessEgressSpeed, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency) {
 		
 		//double distance = this.getLength(averageAccessEgressMap);
 		//double consumption = distance / 100 * energyConsumptionsPer100km.get(this.engine);
@@ -360,11 +357,10 @@ public class Trip {
 		}
 
 		//get access and egress
-		Double access = averageAccessEgressMap.get(this.getOriginNode().getID());
-		if (access == null) access = 0.0; //TODO use some default access/egress distances?
-		Double egress = averageAccessEgressMap.get(this.getDestinationNode().getID());
-		if (egress == null) egress = 0.0;
-
+		double access = averageAccessEgressMap[this.getOriginNode().getID()];
+		//TODO if zero, use some default access/egress distances?
+		double egress = averageAccessEgressMap[this.getDestinationNode().getID()];
+		
 		//for PHEVs it is more complicated (depends on urban/rural road type
 		//it is assumed electricity is used on urban road links and fuel on rural road links
 		if (this.engine == EngineType.PHEV_PETROL || this.engine == EngineType.PHEV_DIESEL) { 
@@ -485,7 +481,7 @@ public class Trip {
 	 * @param boolean flagIncludeAccessEgress Whether to include access/egress.
 	 * @return CO2 emissions per energy type.
 	 */
-	public Double getCO2emission(double[] linkTravelTime, HashMap<Integer, Double> averageAccessEgressMap, double averageAccessEgressSpeed, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency, Map<EnergyType, Double> unitCO2Emissions, boolean flagIncludeAccessEgress) {
+	public Double getCO2emission(double[] linkTravelTime, double[] averageAccessEgressMap, double averageAccessEgressSpeed, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency, Map<EnergyType, Double> unitCO2Emissions, boolean flagIncludeAccessEgress) {
 		
 		//Map<EnergyType, Double> consumption = this.route.calculateConsumption(this.vehicle, this.engine, linkTravelTime, energyConsumptionParameters, relativeFuelEfficiency);
 		Map<EnergyType, Double> consumption = this.getConsumption(linkTravelTime, averageAccessEgressMap, averageAccessEgressSpeed, energyConsumptionParameters, relativeFuelEfficiency, flagIncludeAccessEgress);

@@ -147,25 +147,22 @@ public class TripTempro extends Trip {
 			this.route.calculateLength();
 			length = this.route.getLength();
 		}
-		Double access = TripTempro.zoning.getZoneToNearestNodeDistanceMap().get(this.getOriginTemproZone());
-		if (access == null) access = 0.0; //TODO use some default access/egress distances?
-		Double egress = TripTempro.zoning.getZoneToNearestNodeDistanceMap().get(this.getDestinationTemproZone());
-		if (egress == null) egress = 0.0;
-		
+		double access = TripTempro.zoning.getZoneToNearestNodeDistanceMap().get(this.getOriginTemproZone());
+		double egress = TripTempro.zoning.getZoneToNearestNodeDistanceMap().get(this.getDestinationTemproZone());
+				
 		return length + access / 1000 + egress / 1000;
 	}
 	
 	@Override
-	public double getTravelTime(double[] linkTravelTime, double avgIntersectionDelay, HashMap<Integer, Double> distanceFromTemproZoneToNearestNode, double averageAccessEgressSpeed, boolean flagIncludeAccessEgress) {
+	public double getTravelTime(double[] linkTravelTime, double avgIntersectionDelay, double[] distanceFromTemproZoneToNearestNode, double averageAccessEgressSpeed, boolean flagIncludeAccessEgress) {
 		
 		this.route.calculateTravelTime(linkTravelTime, avgIntersectionDelay); //route travel time needs to be recalculated every time (as it depends on time of day).
 		Double time = this.route.getTime();
 
 		if (flagIncludeAccessEgress) {
-			Double access = distanceFromTemproZoneToNearestNode.get(this.origin);
-			if (access == null) access = 0.0; //TODO use some default access/egress distances?
-			Double egress = distanceFromTemproZoneToNearestNode.get(this.destination);
-			if (egress == null) egress = 0.0;
+			double access = distanceFromTemproZoneToNearestNode[this.origin];
+			double egress = distanceFromTemproZoneToNearestNode[this.destination];
+		
 			double averageAccessTime = access / 1000 / averageAccessEgressSpeed * 60;
 			double averageEgressTime = egress / 1000 / averageAccessEgressSpeed * 60;
 
@@ -176,7 +173,7 @@ public class TripTempro extends Trip {
 	}
 	
 	@Override
-	public double getCost(double[] linkTravelTime, HashMap<Integer, Double> distanceFromTemproZoneToNearestNode, double averageAccessEgressSpeed, Map<EnergyType, Double> energyUnitCosts, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency, HashMap<String, MultiKeyMap> congestionCharges, boolean flagIncludeAccessEgress) {
+	public double getCost(double[] linkTravelTime, double[] distanceFromTemproZoneToNearestNode, double averageAccessEgressSpeed, Map<EnergyType, Double> energyUnitCosts, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency, HashMap<String, MultiKeyMap> congestionCharges, boolean flagIncludeAccessEgress) {
 		
 		//double distance = this.getLength(averageAccessEgressMap);
 		//double cost = distance / 100 * energyConsumptionsPer100km.get(this.engine) * energyUnitCosts.get(this.engine);
@@ -204,7 +201,7 @@ public class TripTempro extends Trip {
 	}
 	
 	@Override
-	public Map<EnergyType, Double> getConsumption(double[] linkTravelTime, HashMap<Integer, Double> distanceFromTemproZoneToNearestNode, double averageAccessEgressSpeed, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency, boolean flagIncludeAccessEgress) {
+	public Map<EnergyType, Double> getConsumption(double[] linkTravelTime, double[] distanceFromTemproZoneToNearestNode, double averageAccessEgressSpeed, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency, boolean flagIncludeAccessEgress) {
 
 		//double distance = this.getLength(averageAccessEgressMap);
 		//double consumption = distance / 100 * energyConsumptionsPer100km.get(this.engine);
@@ -228,7 +225,7 @@ public class TripTempro extends Trip {
 	}
 	
 	@Override
-	protected Map<EnergyType, Double> getAccessEgressConsumption(double[] linkTravelTime, HashMap<Integer, Double> distanceFromTemproZoneToNearestNode, double averageAccessEgressSpeed, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency) {
+	protected Map<EnergyType, Double> getAccessEgressConsumption(double[] linkTravelTime, double[] distanceFromTemproZoneToNearestNode, double averageAccessEgressSpeed, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency) {
 			
 		//double distance = this.getLength(averageAccessEgressMap);
 		//double consumption = distance / 100 * energyConsumptionsPer100km.get(this.engine);
@@ -263,9 +260,9 @@ public class TripTempro extends Trip {
 		}
 
 		//get access and egress
-		Double access = distanceFromTemproZoneToNearestNode.get(this.origin);
+		Double access = distanceFromTemproZoneToNearestNode[this.origin];
 		if (access == null) access = 0.0; //TODO use some default access/egress distances?
-		Double egress = distanceFromTemproZoneToNearestNode.get(this.destination);
+		Double egress = distanceFromTemproZoneToNearestNode[this.destination];
 		if (egress == null) egress = 0.0;
 
 		//for PHEVs it is more complicated (depends on urban/rural road type
@@ -378,7 +375,7 @@ public class TripTempro extends Trip {
 	}
 	
 	@Override
-	public Double getCO2emission(double[] linkTravelTime, HashMap<Integer, Double> distanceFromTemproZoneToNearestNode, double averageAccessEgressSpeed, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency, Map<EnergyType, Double> unitCO2Emissions, boolean flagIncludeAccessEgress) {
+	public Double getCO2emission(double[] linkTravelTime, double[] distanceFromTemproZoneToNearestNode, double averageAccessEgressSpeed, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency, Map<EnergyType, Double> unitCO2Emissions, boolean flagIncludeAccessEgress) {
 		
 		//Map<EnergyType, Double> consumption = this.route.calculateConsumption(this.vehicle, this.engine, linkTravelTime, energyConsumptions, relativeFuelEfficiency);
 		Map<EnergyType, Double> consumption = this.getConsumption(linkTravelTime, distanceFromTemproZoneToNearestNode, averageAccessEgressSpeed, energyConsumptionParameters, relativeFuelEfficiency, flagIncludeAccessEgress);
