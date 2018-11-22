@@ -73,12 +73,12 @@ public class Route {
 	public Route(RoadPath path, RoadNetwork roadNetwork) {
 		
 		if (path == null) {
-			System.err.println("Route constructur: Path is null!");
+			LOGGER.warn("Route constructor: Path is null!");
 			return;
 		}
 		
 		if (!path.isValid()) {
-			System.err.println("Route constructor: Path is not valid!");
+			LOGGER.warn("Route constructor: Path is not valid!");
 			return;
 		}
 		
@@ -86,14 +86,14 @@ public class Route {
 		List<DirectedEdge> builtEdges = (List<DirectedEdge>) path.getEdges(); //builds edges
 		
 		if (builtEdges == null) {
-			System.err.println("Route constructor: Edge list is null!");
+			LOGGER.warn("Route constructor: Edge list is null!");
 			return;
 		}
 		if (builtEdges.isEmpty()) {
 			if (path.getFirst().equals(path.getLast()))
 				this.singleNode = path.getFirst(); 	//single node path can be accepted
 			else {
-				System.err.println("Route constructor: Path has no edges!");
+				LOGGER.warn("Route constructor: Path has no edges!");
 				return;
 			}
 		}
@@ -228,7 +228,7 @@ public class Route {
 					if (flags.get(policyName)) continue; //skip if policy already applied
 					HashMap<Integer, Double> charges = linkCharges.get(policyName);
 					if (charges == null) {
-						System.err.println("No link charges for policy " + policyName);
+						LOGGER.warn("No link charges for policy {}." , policyName);
 						flags.put(policyName, true);
 						continue; //skip this policy then
 					}
@@ -563,7 +563,7 @@ public class Route {
 	    if (obj == null) {
 	        return false;
 	    }
-	    if (!Route.class.isAssignableFrom(obj.getClass())) {
+	    if (!(obj instanceof Route)) {
 	        return false;
 	    }
 	    final Route other = (Route) obj;
@@ -571,6 +571,12 @@ public class Route {
 	        return false;
 	    }
 	    return true;
+	}
+	
+	@Override
+    public int hashCode() {
+		
+		return this.edges.hashCode();
 	}
 	
 	@Override

@@ -75,11 +75,10 @@ public class RouteSet {
 				return;
 			}
 			//check that route does not already exist
-			for (Route r: this.choiceSet)
-				if (r.equals(route)) {
-					LOGGER.trace("Trying to add a duplicate route to the choice set. Ignoring request.");
-					return;
-				}
+			if (this.choiceSet.contains(route)) {
+				LOGGER.trace("Trying to add a duplicate route to the choice set. Ignoring request.");
+				return;
+			}
 		}
 		//add route to the choice set
 		this.choiceSet.add(route);
@@ -101,11 +100,10 @@ public class RouteSet {
 				return;
 			}
 			//check that route does not already exist
-			for (Route r: this.choiceSet)
-				if (r.equals(route)) {
-					LOGGER.trace("Trying to add a duplicate route to the choice set. Ignoring request.");
-					return;
-				}
+			if (this.choiceSet.contains(route)) {
+				LOGGER.trace("Trying to add a duplicate route to the choice set. Ignoring request.");
+				return;
+			}
 		}
 		//add route to the choice set
 		this.choiceSet.add(route);
@@ -122,11 +120,10 @@ public class RouteSet {
 		if (!this.choiceSet.isEmpty()) { //if not empty
 
 			//check that route does not already exist
-			for (Route r: choiceSet)
-				if (r.equals(route)) {
-					LOGGER.trace("Trying to add a duplicate route to the choice set. Ignoring request.");
-					return;
-				}
+			if (this.choiceSet.contains(route)) {
+				LOGGER.trace("Trying to add a duplicate route to the choice set. Ignoring request.");
+				return;
+			}
 		}
 		//add route to the choice set
 		this.choiceSet.add(route);
