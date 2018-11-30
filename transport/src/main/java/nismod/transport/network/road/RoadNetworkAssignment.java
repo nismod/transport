@@ -1316,12 +1316,13 @@ public class RoadNetworkAssignment {
 		LOGGER.info("Assigning the passenger flows from the tempro passenger matrix using a combined tempro/LAD route set...");
 
 		final double distanceThreshold = Double.parseDouble(routeChoiceParameters.getProperty("DISTANCE_THRESHOLD"));
+		final double minLength = Double.parseDouble(routeChoiceParameters.getProperty("MINIMUM_MINOR_TRIP_LENGTH"));
 		//read route choice parameters from the properties file
-		double paramTime = Double.parseDouble(routeChoiceParameters.getProperty("TIME"));
-		double paramLength = Double.parseDouble(routeChoiceParameters.getProperty("LENGTH"));
-		double paramCost = Double.parseDouble(routeChoiceParameters.getProperty("COST"));
-		double paramIntersections = Double.parseDouble(routeChoiceParameters.getProperty("INTERSECTIONS"));
-		double avgIntersectionDelay = Double.parseDouble(routeChoiceParameters.getProperty("AVERAGE_INTERSECTION_DELAY"));
+		final double paramTime = Double.parseDouble(routeChoiceParameters.getProperty("TIME"));
+		final double paramLength = Double.parseDouble(routeChoiceParameters.getProperty("LENGTH"));
+		final double paramCost = Double.parseDouble(routeChoiceParameters.getProperty("COST"));
+		final double paramIntersections = Double.parseDouble(routeChoiceParameters.getProperty("INTERSECTIONS"));
+		final double avgIntersectionDelay = Double.parseDouble(routeChoiceParameters.getProperty("AVERAGE_INTERSECTION_DELAY"));
 		
 		//set route choice parameters
 		Map<RouteChoiceParams, Double> params = new EnumMap<>(RouteChoiceParams.class);
@@ -1431,7 +1432,7 @@ public class RoadNetworkAssignment {
 						counterAssignedTrips += multiplier;
 
 						//generate minor trip length
-						double minLength = zoning.getZoneToMinMaxDimension()[originZoneID][0];
+						//double minLength = zoning.getZoneToMinMaxDimension()[originZoneID][0];
 						double maxLength = zoning.getZoneToMinMaxDimension()[originZoneID][1];
 						double length = minLength + rng.nextDouble() * (maxLength - minLength);
 

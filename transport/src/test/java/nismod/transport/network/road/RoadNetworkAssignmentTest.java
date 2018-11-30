@@ -1119,6 +1119,7 @@ public class RoadNetworkAssignmentTest {
 		params.setProperty("INTERSECTIONS", "-3.1");
 		params.setProperty("AVERAGE_INTERSECTION_DELAY", "0.8");
 		params.setProperty("DISTANCE_THRESHOLD", "20000.0");
+		params.setProperty("MINIMUM_MINOR_TRIP_LENGTH", "0.4");
 		
 		//rsg.calculateAllUtilities(rna.getLinkTravelTimes(), params);
 		rna.assignPassengerFlowsRouteChoice(odm, rsg, params);

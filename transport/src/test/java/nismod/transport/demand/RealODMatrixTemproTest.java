@@ -76,6 +76,17 @@ public class RealODMatrixTemproTest {
 		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
 		
 		RealODMatrixTempro temproODM = new RealODMatrixTempro(temproODMatrixFile, zoning);
+		System.out.println("Sum of flows: " + temproODM.getSumOfFlows());
+		
+		RealODMatrix lad = RealODMatrixTempro.createLadMatrixFromTEMProMatrix(temproODM, zoning);
+		
+		System.out.println("Sum of flows: " + lad.getSumOfFlows());
+		lad.saveMatrixFormatted2("ladBasedWithMinor.csv");
+		
+		RealODMatrixTempro temproODM2 = RealODMatrixTempro.createTEMProFromLadMatrix(lad, temproODM, zoning);
+		
+		temproODM2.saveMatrixFormatted2("temproWithMinorRecreated.csv");
+				
 		//temproODM.deleteInterzonalFlows("E02006781");
 
 //		//RealODMatrix ladODM = RealODMatrixTempro.createLadMatrixFromTEMProMatrix(temproODM, zoning);
@@ -120,19 +131,19 @@ public class RealODMatrixTemproTest {
 //		System.out.println("Total flow: " + tempro4.getTotalIntFlow());
 		
 			
-		System.in.read(); System.in.read();
-		
-		
-		final String ladMatrixFile = props.getProperty("baseYearODMatrixFile");
-		ODMatrix ladMatrix = new ODMatrix(ladMatrixFile);
-		ladMatrix.scaleMatrixValue(2);
-	
-		ODMatrix baseTempro = new ODMatrix(temproODMatrixFile);
-		RealODMatrixTempro todm = RealODMatrixTempro.createTEMProFromLadMatrix(ladMatrix, temproODM, zoning);
-		ODMatrix odm = ODMatrix.createTEMProFromLadMatrix(ladMatrix, baseTempro, zoning);
-		
-		System.out.println(todm.getTotalIntFlow());
-		System.out.println(odm.getTotalIntFlow());
+//		System.in.read(); System.in.read();
+//		
+//		
+//		final String ladMatrixFile = props.getProperty("baseYearODMatrixFile");
+//		ODMatrix ladMatrix = new ODMatrix(ladMatrixFile);
+//		ladMatrix.scaleMatrixValue(2);
+//	
+//		ODMatrix baseTempro = new ODMatrix(temproODMatrixFile);
+//		RealODMatrixTempro todm = RealODMatrixTempro.createTEMProFromLadMatrix(ladMatrix, temproODM, zoning);
+//		ODMatrix odm = ODMatrix.createTEMProFromLadMatrix(ladMatrix, baseTempro, zoning);
+//		
+//		System.out.println(todm.getTotalIntFlow());
+//		System.out.println(odm.getTotalIntFlow());
 		
 		
 	}
