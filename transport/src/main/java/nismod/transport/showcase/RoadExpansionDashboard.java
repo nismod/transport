@@ -282,7 +282,7 @@ public class RoadExpansionDashboard extends JFrame {
 			DirectedEdge e = (DirectedEdge) o;
 			DirectedNode other = e.getOutNode();
 			//if (roadNetwork.getNumberOfLanes().get(e.getID()) != null)	listOfNodes.add(other.getID()); //if there is no lane number information (e.g. ferry) skip edge
-			if (roadNetwork.getNumberOfLanes()[e.getID()] == 0)	listOfNodes.add(other.getID()); //if there is no lane number information (e.g. ferry) skip edge
+			if (roadNetwork.getNumberOfLanes()[e.getID()] != 0)	listOfNodes.add(other.getID()); //if there is no lane number information (e.g. ferry) skip edge
 		}
 		Integer[] arrayOfNodes = listOfNodes.toArray(new Integer[0]);
 		Arrays.sort(arrayOfNodes);
@@ -306,7 +306,7 @@ public class RoadExpansionDashboard extends JFrame {
 				for (Object o: edges) {
 					DirectedEdge e2 = (DirectedEdge) o;
 					DirectedNode other = e2.getOutNode();//e2.getOtherNode(nodeA);
-					if (roadNetwork.getNumberOfLanes()[e2.getID()] == 0)	
+					if (roadNetwork.getNumberOfLanes()[e2.getID()] != 0)	
 						listOfNodes.add(other.getID()); //if there is no lane number information (e.g. ferry) skip edge
 				}
 				Integer[] arrayOfNodes = listOfNodes.toArray(new Integer[0]);
@@ -591,18 +591,18 @@ public class RoadExpansionDashboard extends JFrame {
 				//System.out.println("Time skim matrix after demand prediction:");
 				sm.printMatrixFormatted();
 				
-				rows = sm.getOrigins().size();
-				columns = sm.getDestinations().size();
+				rows = sm.getSortedOrigins().size();
+				columns = sm.getSortedDestinations().size();
 				Object[][] data2 = new Object[rows][columns + 1];
 				for (int i = 0; i < rows; i++) {
-					data2[i][0] = zoning.getLADToName().get(sm.getOrigins().get(i));
+					data2[i][0] = zoning.getLADToName().get(sm.getSortedOrigins().get(i));
 					for (int j = 0; j < columns; j++) {
-						data2[i][j+1] = String.format("%.2f", sm.getCost(sm.getOrigins().get(i), sm.getDestinations().get(j)));
+						data2[i][j+1] = String.format("%.2f", sm.getCost(sm.getSortedOrigins().get(i), sm.getSortedDestinations().get(j)));
 					}
 				}
 				String[] labels2 = new String[columns + 1];
 				labels2[0] = "ORIG \\ DEST";
-				for (int j = 0; j < columns; j++) labels2[j+1] = zoning.getLADToName().get(sm.getDestinations().get(j));
+				for (int j = 0; j < columns; j++) labels2[j+1] = zoning.getLADToName().get(sm.getSortedDestinations().get(j));
 				table_3.setModel(new DefaultTableModel(data2, labels2));
 
 				/*
@@ -1350,18 +1350,18 @@ public class RoadExpansionDashboard extends JFrame {
 		table.setModel(new DefaultTableModel(data, labels));
 
 		SkimMatrix sm = rnaBefore.calculateTimeSkimMatrix();
-		rows = sm.getOrigins().size();
-		columns = sm.getDestinations().size();
+		rows = sm.getSortedOrigins().size();
+		columns = sm.getSortedDestinations().size();
 		Object[][] data2 = new Object[rows][columns + 1];
 		for (int i = 0; i < rows; i++) {
-			data2[i][0] = zoning.getLADToName().get(sm.getOrigins().get(i));
+			data2[i][0] = zoning.getLADToName().get(sm.getSortedOrigins().get(i));
 			for (int j = 0; j < columns; j++) {
-				data2[i][j+1] = String.format("%.2f", sm.getCost(sm.getOrigins().get(i), sm.getDestinations().get(j)));
+				data2[i][j+1] = String.format("%.2f", sm.getCost(sm.getSortedOrigins().get(i), sm.getSortedDestinations().get(j)));
 			}
 		}
 		String[] labels2 = new String[columns + 1];
 		labels2[0] = "ORIG \\ DEST";
-		for (int j = 0; j < columns; j++) labels2[j+1] = zoning.getLADToName().get(sm.getDestinations().get(j));
+		for (int j = 0; j < columns; j++) labels2[j+1] = zoning.getLADToName().get(sm.getSortedDestinations().get(j));
 
 		table_1.setModel(new DefaultTableModel(data2, labels2));	
 		

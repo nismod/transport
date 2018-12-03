@@ -755,11 +755,11 @@ public class DemandModel {
 			this.yearToFreightODMatrix.put(fromYear, freightODM);
 
 			inputFile = inputFolder + File.separator +  timeSkimMatrixFile;
-			SkimMatrix timeSkimMatrix = new SkimMatrix(inputFile);
+			SkimMatrix timeSkimMatrix = new SkimMatrixMultiKey(inputFile);
 			this.yearToTimeSkimMatrix.put(fromYear, timeSkimMatrix);
 
 			inputFile = inputFolder + File.separator +  costSkimMatrixFile;
-			SkimMatrix costSkimMatrix = new SkimMatrix(inputFile);
+			SkimMatrix costSkimMatrix = new SkimMatrixMultiKey(inputFile);
 			this.yearToCostSkimMatrix.put(fromYear, costSkimMatrix);
 
 			inputFile = inputFolder + File.separator +  timeSkimMatrixFreightFile;

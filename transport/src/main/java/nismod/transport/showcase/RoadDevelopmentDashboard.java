@@ -272,11 +272,12 @@ public class RoadDevelopmentDashboard extends JFrame {
 		Integer[] arrayOfNodes = listOfNodes.toArray(new Integer[0]);
 		Arrays.sort(arrayOfNodes);
 		JComboBox comboBox_1 = new JComboBox();
-		Set<Integer> nodes_1 = new HashSet<Integer>();
-		for (Node node:	roadNetwork.getNodeIDtoNode())
-			if (node != null) 
-				nodes.add(node.getID());
-		comboBox_1.setModel(new DefaultComboBoxModel(nodes_1.toArray()));
+//		Set<Integer> nodes_1 = new HashSet<Integer>();
+//		for (Node node:	roadNetwork.getNodeIDtoNode())
+//			if (node != null) 
+//				nodes.add(node.getID());
+//		comboBox_1.setModel(new DefaultComboBoxModel(nodes_1.toArray()));
+		comboBox_1.setModel(new DefaultComboBoxModel(arrayOfNodes));
 		comboBox_1.setBounds(SECOND_MARGIN, 728, 149, 22);
 		comboBox_1.setFont(new Font("Lato", Font.BOLD, 14));
 		comboBox_1.setBorder(COMBOBOX_BORDER);
@@ -582,18 +583,18 @@ public class RoadDevelopmentDashboard extends JFrame {
 
 
 				SkimMatrix sm = rnaAfterDevelopment.calculateTimeSkimMatrix();
-				rows = sm.getOrigins().size();
-				columns = sm.getDestinations().size();
+				rows = sm.getSortedOrigins().size();
+				columns = sm.getSortedDestinations().size();
 				Object[][] data2 = new Object[rows][columns + 1];
 				for (int i = 0; i < rows; i++) {
-					data2[i][0] = zoning.getLADToName().get(sm.getOrigins().get(i));
+					data2[i][0] = zoning.getLADToName().get(sm.getSortedOrigins().get(i));
 					for (int j = 0; j < columns; j++) {
-						data2[i][j+1] = String.format("%.2f", sm.getCost(sm.getOrigins().get(i), sm.getDestinations().get(j)));
+						data2[i][j+1] = String.format("%.2f", sm.getCost(sm.getSortedOrigins().get(i), sm.getSortedDestinations().get(j)));
 					}
 				}
 				String[] labels2 = new String[columns + 1];
 				labels2[0] = "ORIG \\ DEST";
-				for (int j = 0; j < columns; j++) labels2[j+1] = zoning.getLADToName().get(sm.getDestinations().get(j));
+				for (int j = 0; j < columns; j++) labels2[j+1] = zoning.getLADToName().get(sm.getSortedDestinations().get(j));
 				table_3.setModel(new DefaultTableModel(data2, labels2));
 
 				/*
@@ -1355,18 +1356,18 @@ public class RoadDevelopmentDashboard extends JFrame {
 		table.setModel(new DefaultTableModel(data, labels));
 
 		SkimMatrix sm = rnaBefore.calculateTimeSkimMatrix();
-		rows = sm.getOrigins().size();
-		columns = sm.getDestinations().size();
+		rows = sm.getSortedOrigins().size();
+		columns = sm.getSortedDestinations().size();
 		Object[][] data2 = new Object[rows][columns + 1];
 		for (int i = 0; i < rows; i++) {
-			data2[i][0] = zoning.getLADToName().get(sm.getOrigins().get(i));
+			data2[i][0] = zoning.getLADToName().get(sm.getSortedOrigins().get(i));
 			for (int j = 0; j < columns; j++) {
-				data2[i][j+1] = String.format("%.2f", sm.getCost(sm.getOrigins().get(i), sm.getDestinations().get(j)));
+				data2[i][j+1] = String.format("%.2f", sm.getCost(sm.getSortedOrigins().get(i), sm.getSortedDestinations().get(j)));
 			}
 		}
 		String[] labels2 = new String[columns + 1];
 		labels2[0] = "ORIG \\ DEST";
-		for (int j = 0; j < columns; j++) labels2[j+1] = zoning.getLADToName().get(sm.getDestinations().get(j));
+		for (int j = 0; j < columns; j++) labels2[j+1] = zoning.getLADToName().get(sm.getSortedDestinations().get(j));
 
 		table_1.setModel(new DefaultTableModel(data2, labels2));	
 		

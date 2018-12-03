@@ -162,7 +162,7 @@ public class EstimatedODMatrixTest {
 		//{0.074923547, 0.372579001, 0.072884811, 0.127930683, 0.22069317, 0.130988787};
 		//{147, 731, 143, 251, 433, 257};
 
-		SkimMatrix distanceSkimMatrix = new SkimMatrix();
+		SkimMatrix distanceSkimMatrix = new SkimMatrixMultiKey();
 
 		distanceSkimMatrix.setCost("1", "1", 1.2);
 		distanceSkimMatrix.setCost("1", "2", 9.4);
@@ -215,7 +215,7 @@ public class EstimatedODMatrixTest {
 		
 		odmpa.iterate();
 
-		SkimMatrix distanceSkimMatrix2 = new SkimMatrix();
+		SkimMatrix distanceSkimMatrix2 = new SkimMatrixMultiKey();
 
 		distanceSkimMatrix2.setCost("E06000045", "E06000045", 0.5);
 		distanceSkimMatrix2.setCost("E06000045", "E07000086", 1.1);

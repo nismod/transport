@@ -525,18 +525,18 @@ public class CongestionChargingDashboard extends JFrame {
 					System.out.println("Time Skim Matrix Final:");
 					sm.printMatrixFormatted();
 
-					rows = sm.getOrigins().size();
-					columns = sm.getDestinations().size();
+					rows = sm.getSortedOrigins().size();
+					columns = sm.getSortedDestinations().size();
 					Object[][] data2 = new Object[rows][columns + 1];
 					for (int i = 0; i < rows; i++) {
-						data2[i][0] = zoning.getLADToName().get(sm.getOrigins().get(i));
+						data2[i][0] = zoning.getLADToName().get(sm.getSortedOrigins().get(i));
 						for (int j = 0; j < columns; j++) {
-							data2[i][j+1] = String.format("%.2f", sm.getCost(sm.getOrigins().get(i), sm.getDestinations().get(j)));
+							data2[i][j+1] = String.format("%.2f", sm.getCost(sm.getSortedOrigins().get(i), sm.getSortedDestinations().get(j)));
 						}
 					}
 					String[] labels2 = new String[columns + 1];
 					labels2[0] = "ORIG \\ DEST";
-					for (int j = 0; j < columns; j++) labels2[j+1] = zoning.getLADToName().get(sm.getDestinations().get(j));
+					for (int j = 0; j < columns; j++) labels2[j+1] = zoning.getLADToName().get(sm.getSortedDestinations().get(j));
 					table_3.setModel(new DefaultTableModel(data2, labels2));
 
 
@@ -1228,18 +1228,18 @@ public class CongestionChargingDashboard extends JFrame {
 		table.setModel(new DefaultTableModel(data, labels));
 
 		SkimMatrix sm = rnaBefore.calculateTimeSkimMatrix();
-		rows = sm.getOrigins().size();
-		columns = sm.getDestinations().size();
+		rows = sm.getSortedOrigins().size();
+		columns = sm.getSortedDestinations().size();
 		Object[][] data2 = new Object[rows][columns + 1];
 		for (int i = 0; i < rows; i++) {
-			data2[i][0] = zoning.getLADToName().get(sm.getOrigins().get(i));
+			data2[i][0] = zoning.getLADToName().get(sm.getSortedOrigins().get(i));
 			for (int j = 0; j < columns; j++) {
-				data2[i][j+1] = String.format("%.2f", sm.getCost(sm.getOrigins().get(i), sm.getDestinations().get(j)));
+				data2[i][j+1] = String.format("%.2f", sm.getCost(sm.getSortedOrigins().get(i), sm.getSortedDestinations().get(j)));
 			}
 		}
 		String[] labels2 = new String[columns + 1];
 		labels2[0] = "ORIG \\ DEST";
-		for (int j = 0; j < columns; j++) labels2[j+1] = zoning.getLADToName().get(sm.getDestinations().get(j));
+		for (int j = 0; j < columns; j++) labels2[j+1] = zoning.getLADToName().get(sm.getSortedDestinations().get(j));
 
 		table_1.setModel(new DefaultTableModel(data2, labels2));	
 	}

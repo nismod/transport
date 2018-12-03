@@ -36,6 +36,7 @@ import nismod.transport.demand.AssignableODMatrix;
 import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.SkimMatrix;
 import nismod.transport.demand.SkimMatrixFreight;
+import nismod.transport.demand.SkimMatrixMultiKey;
 import nismod.transport.network.road.RoadNetwork.EdgeType;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
@@ -2458,7 +2459,7 @@ public class RoadNetworkAssignment {
 
 		//this.updateLinkTravelTimes();
 
-		SkimMatrix counter = new SkimMatrix();
+		SkimMatrix counter = new SkimMatrixMultiKey();
 
 		for (Trip trip: this.tripList) {
 
@@ -2477,13 +2478,12 @@ public class RoadNetworkAssignment {
 			timeSkimMatrix.setCost(originLAD, destinationLAD, sum + tripTravelTime);
 		}
 
-		for (MultiKey mk: timeSkimMatrix.getKeySet()) {
-			String originLAD = (String) mk.getKey(0);
-			String destinationLAD = (String) mk.getKey(1);
-
-			double averageODtraveltime = timeSkimMatrix.getCost(originLAD, destinationLAD) / counter.getCost(originLAD, destinationLAD);
-
-			timeSkimMatrix.setCost(originLAD, destinationLAD, averageODtraveltime);
+		List<String> origins = timeSkimMatrix.getUnsortedOrigins();
+		List<String> destinations = timeSkimMatrix.getUnsortedDestinations();
+		for (String originLAD: origins)
+			for (String destinationLAD: destinations) {
+				double averageODtraveltime = timeSkimMatrix.getCost(originLAD, destinationLAD) / counter.getCost(originLAD, destinationLAD);
+				timeSkimMatrix.setCost(originLAD, destinationLAD, averageODtraveltime);
 		}
 	}
 
@@ -2493,7 +2493,7 @@ public class RoadNetworkAssignment {
 	 */
 	public SkimMatrix calculateTimeSkimMatrix() {
 
-		SkimMatrix timeSkimMatrix = new SkimMatrix();
+		SkimMatrix timeSkimMatrix = new SkimMatrixMultiKey();
 		this.updateTimeSkimMatrix(timeSkimMatrix);
 
 		return timeSkimMatrix;
@@ -2563,7 +2563,7 @@ public class RoadNetworkAssignment {
 
 		//this.updateLinkTravelTimes();
 
-		SkimMatrix counter = new SkimMatrix();
+		SkimMatrix counter = new SkimMatrixMultiKey();
 
 		for (Trip trip: this.tripList) {
 
@@ -2582,15 +2582,15 @@ public class RoadNetworkAssignment {
 			double tripFuelCost = trip.getCost(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistance(), averageAccessEgressSpeedCar, this.energyUnitCosts, this.energyConsumptions, this.relativeFuelEfficiencies, this.congestionCharges, this.flagIncludeAccessEgress);
 			costSkimMatrix.setCost(originLAD, destinationLAD, sum + tripFuelCost * multiplier);
 		}
-
-		for (MultiKey mk: costSkimMatrix.getKeySet()) {
-			String originLAD = (String) mk.getKey(0);
-			String destinationLAD = (String) mk.getKey(1);
-
-			double averageODtraveltime = costSkimMatrix.getCost(originLAD, destinationLAD) / counter.getCost(originLAD, destinationLAD);
-
-			costSkimMatrix.setCost(originLAD, destinationLAD, averageODtraveltime);
+		
+		List<String> origins = costSkimMatrix.getUnsortedOrigins();
+		List<String> destinations = costSkimMatrix.getUnsortedDestinations();
+		for (String originLAD: origins)
+			for (String destinationLAD: destinations) {
+				double averageODcost = costSkimMatrix.getCost(originLAD, destinationLAD) / counter.getCost(originLAD, destinationLAD);
+				costSkimMatrix.setCost(originLAD, destinationLAD, averageODcost);
 		}
+
 	}
 
 	/**
@@ -2599,7 +2599,7 @@ public class RoadNetworkAssignment {
 	 */
 	public SkimMatrix calculateCostSkimMatrix() {
 
-		SkimMatrix costSkimMatrix = new SkimMatrix();
+		SkimMatrix costSkimMatrix = new SkimMatrixMultiKey();
 		this.updateCostSkimMatrix(costSkimMatrix);
 
 		return costSkimMatrix;
@@ -2611,8 +2611,8 @@ public class RoadNetworkAssignment {
 	 */
 	public SkimMatrix calculateDistanceSkimMatrix() {
 
-		SkimMatrix distanceSkimMatrix = new SkimMatrix();
-		SkimMatrix counter = new SkimMatrix();
+		SkimMatrix distanceSkimMatrix = new SkimMatrixMultiKey();
+		SkimMatrix counter = new SkimMatrixMultiKey();
 
 		for (Trip trip: this.tripList) {
 
@@ -2632,14 +2632,14 @@ public class RoadNetworkAssignment {
 			distanceSkimMatrix.setCost(originLAD, destinationLAD, sum + distance * multiplier);
 		}
 
-		for (MultiKey mk: distanceSkimMatrix.getKeySet()) {
-			String originLAD = (String) mk.getKey(0);
-			String destinationLAD = (String) mk.getKey(1);
-
-			double averageODtraveltime = distanceSkimMatrix.getCost(originLAD, destinationLAD) / counter.getCost(originLAD, destinationLAD);
-
-			distanceSkimMatrix.setCost(originLAD, destinationLAD, averageODtraveltime);
+		List<String> origins = distanceSkimMatrix.getUnsortedOrigins();
+		List<String> destinations = distanceSkimMatrix.getUnsortedDestinations();
+		for (String originLAD: origins)
+			for (String destinationLAD: destinations) {
+				double averageODtraveltime = distanceSkimMatrix.getCost(originLAD, destinationLAD) / counter.getCost(originLAD, destinationLAD);
+				distanceSkimMatrix.setCost(originLAD, destinationLAD, averageODtraveltime);
 		}
+
 
 		return distanceSkimMatrix;
 	}
@@ -2650,8 +2650,8 @@ public class RoadNetworkAssignment {
 	 */
 	public SkimMatrix calculateDistanceSkimMatrixTempro() {
 
-		SkimMatrix distanceSkimMatrix = new SkimMatrix();
-		SkimMatrix counter = new SkimMatrix();
+		SkimMatrix distanceSkimMatrix = new SkimMatrixMultiKey();
+		SkimMatrix counter = new SkimMatrixMultiKey();
 
 		for (Trip trip: this.tripList) {
 
@@ -2673,14 +2673,13 @@ public class RoadNetworkAssignment {
 				distanceSkimMatrix.setCost(originZone, destinationZone, sum + distance * multiplier);
 			}
 		}
-
-		for (MultiKey mk: distanceSkimMatrix.getKeySet()) {
-			String originLAD = (String) mk.getKey(0);
-			String destinationLAD = (String) mk.getKey(1);
-
-			double averageODtraveltime = distanceSkimMatrix.getCost(originLAD, destinationLAD) / counter.getCost(originLAD, destinationLAD);
-
-			distanceSkimMatrix.setCost(originLAD, destinationLAD, averageODtraveltime);
+		
+		List<String> origins = distanceSkimMatrix.getUnsortedOrigins();
+		List<String> destinations = distanceSkimMatrix.getUnsortedDestinations();
+		for (String originLAD: origins)
+			for (String destinationLAD: destinations) {
+				double averageODtraveltime = distanceSkimMatrix.getCost(originLAD, destinationLAD) / counter.getCost(originLAD, destinationLAD);
+				distanceSkimMatrix.setCost(originLAD, destinationLAD, averageODtraveltime);
 		}
 
 		return distanceSkimMatrix;
@@ -3015,7 +3014,7 @@ public class RoadNetworkAssignment {
 		//initialise hashmaps
 		Map<EnergyType, SkimMatrix> zonalConsumptions = new EnumMap<>(EnergyType.class);
 		for (EnergyType energy: EnergyType.values()) {
-			SkimMatrix consumption = new SkimMatrix();
+			SkimMatrix consumption = new SkimMatrixMultiKey();
 			zonalConsumptions.put(energy, consumption);
 		}
 

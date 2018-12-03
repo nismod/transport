@@ -81,11 +81,10 @@ public class RealODMatrixTemproTest {
 		RealODMatrix lad = RealODMatrixTempro.createLadMatrixFromTEMProMatrix(temproODM, zoning);
 		
 		System.out.println("Sum of flows: " + lad.getSumOfFlows());
-		lad.saveMatrixFormatted2("ladBasedWithMinor.csv");
+		lad.saveMatrixFormatted2("ladBasedWithMinor2.csv");
 		
-		RealODMatrixTempro temproODM2 = RealODMatrixTempro.createTEMProFromLadMatrix(lad, temproODM, zoning);
-		
-		temproODM2.saveMatrixFormatted2("temproWithMinorRecreated.csv");
+//		RealODMatrixTempro temproODM2 = RealODMatrixTempro.createTEMProFromLadMatrix(lad, temproODM, zoning);
+//		temproODM2.saveMatrixFormatted2("temproWithMinorRecreated.csv");
 				
 		//temproODM.deleteInterzonalFlows("E02006781");
 
