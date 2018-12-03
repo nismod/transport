@@ -1317,6 +1317,7 @@ public class RoadNetworkAssignment {
 
 		final double distanceThreshold = Double.parseDouble(routeChoiceParameters.getProperty("DISTANCE_THRESHOLD"));
 		final double minLength = Double.parseDouble(routeChoiceParameters.getProperty("MINIMUM_MINOR_TRIP_LENGTH"));
+		final double maxLengthFactor = Double.parseDouble(routeChoiceParameters.getProperty("MAXIMUM_MINOR_TRIP_FACTOR"));
 		//read route choice parameters from the properties file
 		final double paramTime = Double.parseDouble(routeChoiceParameters.getProperty("TIME"));
 		final double paramLength = Double.parseDouble(routeChoiceParameters.getProperty("LENGTH"));
@@ -1433,7 +1434,7 @@ public class RoadNetworkAssignment {
 
 						//generate minor trip length
 						//double minLength = zoning.getZoneToMinMaxDimension()[originZoneID][0];
-						double maxLength = zoning.getZoneToMinMaxDimension()[originZoneID][1];
+						double maxLength = zoning.getZoneToMinMaxDimension()[originZoneID][1] * maxLengthFactor;
 						double length = minLength + rng.nextDouble() * (maxLength - minLength);
 
 						//store trip in trip list
