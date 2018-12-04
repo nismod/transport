@@ -136,6 +136,24 @@ public class Trip {
 	}
 	
 	/**
+	 * Gets trip origin LAD zone ID.
+	 * @return Origin zone LAD ID.
+	 */
+	public int getOriginLadID() {
+
+		return origin;
+	}
+	
+	/**
+	 * Gets trip destination LAD zone ID.
+	 * @return Trip destination zone LAD ID.
+	 */
+	public int getDestinationLadID() {
+
+		return destination;
+	}
+	
+	/**
 	 * Gets freight trip origin zone (using DfT BYFM zone coding).
 	 * @return Freight trip origin zone.
 	 */

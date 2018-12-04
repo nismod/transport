@@ -71,26 +71,28 @@ public class TripTempro extends Trip {
 	}
 	
 	/**
-	 * Gets trip origin zone (LAD), from tempro to LAD mapping (not from route nodes).
+	 * Gets trip origin zone (LAD), from Tempro to LAD mapping (not from route nodes).
 	 * @return Trip origin zone.
 	 */
 	public String getOriginLAD() {
+
+		int originLadID = TripTempro.zoning.getZoneIDToLadID()[this.origin];
+		String originLADCode = TripTempro.zoning.getLadIDToCodeMap()[originLadID];
 		
-		String originTemproZone = TripTempro.zoning.getTemproIDToCodeMap()[this.origin];
-		String originLADZone = TripTempro.zoning.getZoneToLADMap().get(originTemproZone);
-		return originLADZone;
+		return originLADCode;
 	}
 	
 	
 	/**
-	 * Gets trip destination zone (LAD), from tempro to LAD mapping (not from route nodes).
+	 * Gets trip destination zone (LAD), from Tempro to LAD mapping (not from route nodes).
 	 * @return Trip destination zone.
 	 */
 	public String getDestinationLAD() {
 		
-		String destinationTemproZone = TripTempro.zoning.getTemproIDToCodeMap()[this.destination];
-		String destinationLADZone = TripTempro.zoning.getZoneToLADMap().get(destinationTemproZone);
-		return destinationLADZone;
+		int destinationLadID = TripTempro.zoning.getZoneIDToLadID()[this.destination];
+		String destinationLADCode = TripTempro.zoning.getLadIDToCodeMap()[destinationLadID];
+		
+		return destinationLADCode;
 	}
 	
 	/**
@@ -114,6 +116,30 @@ public class TripTempro extends Trip {
 	public String getDestinationLAD(Map<Integer, String> nodeToZoneMap) {
 		
 		return this.getDestinationLAD();
+	}
+	
+	/**
+	 * Gets trip origin LAD zone ID.
+	 * @return Origin zone LAD ID.
+	 */
+	@Override
+	public int getOriginLadID() {
+
+		int originLadID = TripTempro.zoning.getZoneIDToLadID()[this.origin];
+		
+		return originLadID;
+	}
+	
+	/**
+	 * Gets trip destination LAD zone ID.
+	 * @return Trip destination zone LAD ID.
+	 */
+	@Override
+	public int getDestinationLadID() {
+		
+		int destinationLadID = TripTempro.zoning.getZoneIDToLadID()[this.destination];
+
+		return destinationLadID;
 	}
 	
 	/**

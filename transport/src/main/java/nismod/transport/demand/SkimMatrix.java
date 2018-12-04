@@ -95,4 +95,11 @@ public interface SkimMatrix {
 	 * @param outputFile Path to the output file.
 	 */
 	public void saveMatrixFormattedList(String outputFile);
+	
+	/**
+	 * Gets sum of absolute differences between elements of two matrices.
+	 * @param other The other matrix.
+	 * @return Sum of absolute differences.
+	 */
+	public double getAbsoluteDifference(SkimMatrix other);
 }

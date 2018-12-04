@@ -61,6 +61,7 @@ public class Zoning {
 	private HashMap<String, List<Integer>> zoneToListOfContainedNodes; //maps Tempro zone to a list of nodes within that zone (if they exist)
 	
 	private HashMap<String, String> zoneToLAD; //maps Tempro zone to LAD zone
+	private int[] zoneIDToLadID; //maps Tempro zone ID to LAD zone ID
 	private HashMap<String, List<String>> ladToListOfContainedZones; //maps LAD zones to a list of contained Tempro zones
 	
 	private HashMap<String, String> ladToName; //maps LAD code to LAD name
@@ -180,6 +181,7 @@ public class Zoning {
 		this.zoneToCentroid = new HashMap<String, Point>();
 		
 		this.zoneToLAD = new HashMap<String, String>();
+		this.zoneIDToLadID = new int[temproIDToCode.length];
 		this.ladToName = new HashMap<String, String>();
 		
 		int maxZones = this.getTemproIDToCodeMap().length;
@@ -193,12 +195,14 @@ public class Zoning {
 				MultiPolygon polygon = (MultiPolygon) sf.getDefaultGeometry();
 				String zoneCode = (String) sf.getAttribute("Zone_Code");
 				int zoneID = this.temproCodeToID.get(zoneCode);
-				
-				String ladID = (String) sf.getAttribute("LAD_Code");
-				this.zoneToLAD.put(zoneCode, ladID);
+								
+				String ladONS = (String) sf.getAttribute("LAD_Code");
+				int ladID = this.ladCodeToID.get(ladONS);
+				this.zoneToLAD.put(zoneCode, ladONS);
+				this.zoneIDToLadID[zoneID] = ladID;
 				
 				String ladName = (String) sf.getAttribute("Local_Auth");
-				this.ladToName.put(ladID, ladName);
+				this.ladToName.put(ladONS, ladName);
 				
 				//store centroid
 				Point centroid = polygon.getCentroid();
@@ -601,6 +605,15 @@ public class Zoning {
 	public HashMap<String, String> getZoneToLADMap() {
 		
 		return this.zoneToLAD;
+	}
+	
+	/**
+	 * Getter for Tempro zone ID to LAD zone ID mapping.
+	 * @return Tempro zone ID to LAD zone ID array.
+	 */
+	public int[] getZoneIDToLadID() {
+		
+		return this.zoneIDToLadID;
 	}
 	
 	/**

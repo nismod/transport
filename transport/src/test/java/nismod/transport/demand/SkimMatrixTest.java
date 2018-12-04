@@ -8,9 +8,15 @@ import static org.junit.Assert.assertEquals;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URL;
+import java.util.Properties;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import nismod.transport.network.road.RoadNetwork;
+import nismod.transport.utility.ConfigReader;
+import nismod.transport.zone.Zoning;
 
 /**
  * Tests for the SkimMatrix class
@@ -92,6 +98,52 @@ public class SkimMatrixTest {
 		double demandWeigthedCost = skimMatrix2.getAverageCost(odMatrix);
 		assertEquals("Sum of weighted matrix costs is the same", averageCost, demandWeigthedCost, DELTA);
 		
+		final String configFile = "./src/test/config/testConfig.properties";
+		Properties props = ConfigReader.getProperties(configFile);
 		
+		final String areaCodeFileName = props.getProperty("areaCodeFileName");
+		final String areaCodeNearestNodeFile = props.getProperty("areaCodeNearestNodeFile");
+		final String workplaceZoneFileName = props.getProperty("workplaceZoneFileName");
+		final String workplaceZoneNearestNodeFile = props.getProperty("workplaceZoneNearestNodeFile");
+		final String freightZoneToLADfile = props.getProperty("freightZoneToLADfile");
+		final String freightZoneNearestNodeFile = props.getProperty("freightZoneNearestNodeFile");
+
+		final URL zonesUrl = new URL(props.getProperty("zonesUrl"));
+		final URL networkUrl = new URL(props.getProperty("networkUrl"));
+		final URL networkUrlFixedEdgeIDs = new URL(props.getProperty("networkUrlFixedEdgeIDs"));
+		final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
+		final URL AADFurl = new URL(props.getProperty("AADFurl"));
+
+		//create a road network
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
+		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
+
+		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
+		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
+		
+		SkimMatrix skimMatrixArray = new SkimMatrixArray(zoning);
+		
+		skimMatrixArray.setCost("E06000045", "E06000045", 6.2);
+		skimMatrixArray.setCost("E06000045", "E07000086", 5.5);
+		skimMatrixArray.setCost("E06000045", "E07000091", 12.55); 
+		skimMatrixArray.setCost("E06000045", "E06000046", 4.8);
+		skimMatrixArray.setCost("E07000086", "E06000045", 6.5);
+		skimMatrixArray.setCost("E07000086", "E07000086", 5.5); 
+		skimMatrixArray.setCost("E07000086", "E07000091", 9.0);
+		skimMatrixArray.setCost("E07000086", "E06000046", 12.0);
+		skimMatrixArray.setCost("E07000091", "E06000045", 4.56);
+		skimMatrixArray.setCost("E07000091", "E07000086", 14.0);
+		skimMatrixArray.setCost("E07000091", "E07000091", 6.0);
+		skimMatrixArray.setCost("E07000091", "E06000046", 10.0);
+		skimMatrixArray.setCost("E06000046", "E06000045", 20.43);
+		skimMatrixArray.setCost("E06000046", "E07000086", 15.12);
+		skimMatrixArray.setCost("E06000046", "E07000091", 9.4);
+		//skimMatrixArray.setCost("E06000046", "E06000046", 6.2);
+		
+		skimMatrixArray.printMatrixFormatted();
+		
+		SkimMatrix skimMatrixArray2 = new SkimMatrixArray("./temp/skimMatrix.csv", zoning);
+		diff = skimMatrixArray2.getAbsoluteDifference(skimMatrixArray);
+		assertEquals("Matrices are the same", 0.0, diff, DELTA);
 	}
 }

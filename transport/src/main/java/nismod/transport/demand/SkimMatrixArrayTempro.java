@@ -9,6 +9,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -27,9 +28,9 @@ import nismod.transport.zone.Zoning;
  * @author Milan Lovric
  *
  */
-public class SkimMatrixArray implements SkimMatrix{
+public class SkimMatrixArrayTempro implements SkimMatrix{
 	
-	private final static Logger LOGGER = LogManager.getLogger(SkimMatrixArray.class);
+	private final static Logger LOGGER = LogManager.getLogger(SkimMatrixArrayTempro.class);
 	
 	private double[][] matrix;
 	
@@ -37,14 +38,14 @@ public class SkimMatrixArray implements SkimMatrix{
 		
 	/**
 	 * Constructor for an empty skim matrix.
-	 * Uses the maximum LAD ID.
+	 * Uses the maximum Tempro ID.
 	 * @param zoning Zoning system.
 	 */
-	public SkimMatrixArray(Zoning zoning) {
+	public SkimMatrixArrayTempro(Zoning zoning) {
 						
 		this.zoning = zoning;
-		int maxZones = zoning.getLadIDToCodeMap().length;
-		matrix = new double[maxZones][maxZones]; //[0][0] is not used to allow a direct fetch via LAD ID
+		int maxZones = zoning.getTemproIDToCodeMap().length;
+		matrix = new double[maxZones][maxZones]; //[0][0] is not used to allow a direct fetch via Tempro ID
 	}
 	
 	/**
@@ -54,11 +55,11 @@ public class SkimMatrixArray implements SkimMatrix{
 	 * @throws FileNotFoundException if any.
 	 * @throws IOException if any.
 	 */
-	public SkimMatrixArray(String fileName, Zoning zoning) throws FileNotFoundException, IOException {
+	public SkimMatrixArrayTempro(String fileName, Zoning zoning) throws FileNotFoundException, IOException {
 		
 		this.zoning = zoning;
-		int maxZones = zoning.getLadIDToCodeMap().length;
-		matrix = new double[maxZones][maxZones]; //[0][0] is not used to allow a direct fetch via LAD ID
+		int maxZones = zoning.getTemproIDToCodeMap().length;
+		matrix = new double[maxZones][maxZones]; //[0][0] is not used to allow a direct fetch via Tempro ID
 		
 		CSVParser parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
 		Set<String> keySet = parser.getHeaderMap().keySet();
@@ -102,8 +103,8 @@ public class SkimMatrixArray implements SkimMatrix{
 	 */
 	public double getCost(String originZone, String destinationZone) {
 		
-		int i = this.zoning.getLadCodeToIDMap().get(originZone);
-		int j = this.zoning.getLadCodeToIDMap().get(destinationZone);
+		int i = this.zoning.getTemproCodeToIDMap().get(originZone);
+		int j = this.zoning.getTemproCodeToIDMap().get(destinationZone);
 		
 		return this.matrix[i][j];
 	}
@@ -116,8 +117,8 @@ public class SkimMatrixArray implements SkimMatrix{
 	 */
 	public void setCost(String originZone, String destinationZone, double cost) {
 		
-		int i = this.zoning.getLadCodeToIDMap().get(originZone);
-		int j = this.zoning.getLadCodeToIDMap().get(destinationZone);
+		int i = this.zoning.getTemproCodeToIDMap().get(originZone);
+		int j = this.zoning.getTemproCodeToIDMap().get(destinationZone);
 		
 		this.matrix[i][j] = cost;
 	}
@@ -159,7 +160,7 @@ public class SkimMatrixArray implements SkimMatrix{
 	 */
 	public List<String> getSortedOrigins() {
 		
-		Set<String> firstKey = zoning.getLadCodeToIDMap().keySet();
+		Set<String> firstKey = zoning.getTemproCodeToIDMap().keySet();
 		
 		//put them into a list and sort them
 		List<String> firstKeyList = new ArrayList<String>(firstKey);
@@ -174,7 +175,7 @@ public class SkimMatrixArray implements SkimMatrix{
 	 */
 	public List<String> getSortedDestinations() {
 		
-		Set<String> secondKey = zoning.getLadCodeToIDMap().keySet();
+		Set<String> secondKey = zoning.getTemproCodeToIDMap().keySet();
 		//put them into a list and sort them
 		List<String> secondKeyList = new ArrayList<String>(secondKey);
 		Collections.sort(secondKeyList);
@@ -188,7 +189,7 @@ public class SkimMatrixArray implements SkimMatrix{
 	 */
 	public List<String> getUnsortedOrigins() {
 		
-		Set<String> firstKey = zoning.getLadCodeToIDMap().keySet();
+		Set<String> firstKey = zoning.getTemproCodeToIDMap().keySet();
 		//put them into a list
 		List<String> firstKeyList = new ArrayList<String>(firstKey);
 		
@@ -201,7 +202,7 @@ public class SkimMatrixArray implements SkimMatrix{
 	 */
 	public List<String> getUnsortedDestinations() {
 		
-		Set<String> secondKey = zoning.getLadCodeToIDMap().keySet();
+		Set<String> secondKey = zoning.getTemproCodeToIDMap().keySet();
 		//put them into a list
 		List<String> secondKeyList = new ArrayList<String>(secondKey);
 		

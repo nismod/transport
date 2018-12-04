@@ -35,8 +35,9 @@ import org.opengis.feature.simple.SimpleFeature;
 import nismod.transport.demand.AssignableODMatrix;
 import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.SkimMatrix;
+import nismod.transport.demand.SkimMatrixArray;
+import nismod.transport.demand.SkimMatrixArrayTempro;
 import nismod.transport.demand.SkimMatrixFreight;
-import nismod.transport.demand.SkimMatrixMultiKey;
 import nismod.transport.network.road.RoadNetwork.EdgeType;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
@@ -378,8 +379,8 @@ public class RoadNetworkAssignment {
 		for (String originZone: origins)
 			for (String destinationZone: destinations) {
 				
-			if (passengerODM.getIntFlow(originZone, destinationZone) == 0) continue;	
-				
+			if (passengerODM.getIntFlow(originZone, destinationZone) == 0) continue;
+		
 			List<Integer> listOfOriginNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(originZone)); //the list is already sorted
 			List<Integer> listOfDestinationNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(destinationZone)); //the list is already sorted
 
@@ -493,9 +494,13 @@ public class RoadNetworkAssignment {
 					int multiplier = 1;
 					if (i < flow) multiplier = (int) Math.round(1 / this.assignmentFraction);
 					counterAssignedTrips += multiplier;
+					
+					//get zone IDs for storing into trips
+					int originZoneID = this.zoning.getLadCodeToIDMap().get(originZone);
+					int destinationZoneID = this.zoning.getLadCodeToIDMap().get(destinationZone);
 
 					//store trip in trip list
-					Trip trip = new Trip(vht, engine, foundRoute, hour, 0, 0, multiplier);
+					Trip trip = new Trip(vht, engine, foundRoute, hour, originZoneID, destinationZoneID, multiplier);
 					this.tripList.add(trip);
 
 				} catch (Exception e) {
@@ -661,9 +666,13 @@ public class RoadNetworkAssignment {
 					int multiplier = 1;
 					if (i < flow) multiplier = (int) Math.round(1 / this.assignmentFraction);
 					counterAssignedTrips += multiplier;
+					
+					//get zone IDs for storing into trips
+					int originZoneID = this.zoning.getLadCodeToIDMap().get(originZone);
+					int destinationZoneID = this.zoning.getLadCodeToIDMap().get(destinationZone);
 
 					//store trip in trip list
-					Trip trip = new Trip(vht, engine, foundRoute, hour, 0, 0, multiplier);
+					Trip trip = new Trip(vht, engine, foundRoute, hour, originZoneID, destinationZoneID, multiplier);
 					this.tripList.add(trip);
 
 				} catch (Exception e) {
@@ -727,8 +736,7 @@ public class RoadNetworkAssignment {
 			for (String destinationZone: destinations) {
 				
 			if (passengerODM.getIntFlow(originZone, destinationZone) == 0) continue;	
-			
-
+	
 			List<Integer> listOfOriginNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(originZone)); //the list is already sorted
 			List<Integer> listOfDestinationNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(destinationZone)); //the list is already sorted
 
@@ -934,9 +942,13 @@ public class RoadNetworkAssignment {
 				int multiplier = 1;
 				if (i < flow) multiplier = (int) Math.round(1 / this.assignmentFraction);
 				counterAssignedTrips += multiplier;
+				
+				//get zone IDs for storing into trips
+				int originZoneID = this.zoning.getLadCodeToIDMap().get(originZone);
+				int destinationZoneID = this.zoning.getLadCodeToIDMap().get(destinationZone);
 
 				//store trip in trip list
-				Trip trip = new Trip(vht, engine, chosenRoute, hour, 0, 0, multiplier);
+				Trip trip = new Trip(vht, engine, chosenRoute, hour, originZoneID, destinationZoneID, multiplier);
 				this.tripList.add(trip);
 
 			}//for each trip
@@ -2463,21 +2475,19 @@ public class RoadNetworkAssignment {
 
 		//this.updateLinkTravelTimes();
 
-		SkimMatrix counter = new SkimMatrixMultiKey(zoning);
+		SkimMatrix counter = new SkimMatrixArray(zoning);
 
 		for (Trip trip: this.tripList) {
 
-			if (trip.getVehicle() != VehicleType.CAR) continue; //skip freight vehicles
+			if (trip.getVehicle() != VehicleType.CAR && trip.getVehicle() != VehicleType.CAR_AV) continue; //skip freight vehicles
 
-			String originLAD = trip.getOriginLAD(this.roadNetwork.getNodeToZone());
-			String destinationLAD = trip.getDestinationLAD(this.roadNetwork.getNodeToZone());
-
-			Double count = counter.getCost(originLAD, destinationLAD);
-			if (count == null) count = 0.0;
+			int originLAD = trip.getOriginLadID();
+			int destinationLAD = trip.getDestinationLadID();
+	
+			double count = counter.getCost(originLAD, destinationLAD);
 			counter.setCost(originLAD, destinationLAD, count + 1);
 
-			Double sum = timeSkimMatrix.getCost(originLAD, destinationLAD);
-			if (sum == null) sum = 0.0;
+			double sum = timeSkimMatrix.getCost(originLAD, destinationLAD);
 			double tripTravelTime = trip.getTravelTime(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), averageIntersectionDelay, this.roadNetwork.getNodeToAverageAccessEgressDistance(), this.averageAccessEgressSpeedCar, this.flagIncludeAccessEgress);
 			timeSkimMatrix.setCost(originLAD, destinationLAD, sum + tripTravelTime);
 		}
@@ -2497,7 +2507,7 @@ public class RoadNetworkAssignment {
 	 */
 	public SkimMatrix calculateTimeSkimMatrix() {
 
-		SkimMatrix timeSkimMatrix = new SkimMatrixMultiKey(zoning);
+		SkimMatrix timeSkimMatrix = new SkimMatrixArray(zoning);
 		this.updateTimeSkimMatrix(timeSkimMatrix);
 
 		return timeSkimMatrix;
@@ -2567,22 +2577,21 @@ public class RoadNetworkAssignment {
 
 		//this.updateLinkTravelTimes();
 
-		SkimMatrix counter = new SkimMatrixMultiKey(zoning);
+		SkimMatrix counter = new SkimMatrixArray(zoning);
 
 		for (Trip trip: this.tripList) {
 
 			if (trip.getVehicle() != VehicleType.CAR && trip.getVehicle() != VehicleType.CAR_AV) continue; //skip freight vehicles
 
-			String originLAD = trip.getOriginLAD(this.roadNetwork.getNodeToZone());
-			String destinationLAD = trip.getDestinationLAD(this.roadNetwork.getNodeToZone());
+			int originLAD = trip.getOriginLadID();
+			int destinationLAD = trip.getDestinationLadID();
+			
 			int multiplier = trip.getMultiplier();
 
-			Double count = counter.getCost(originLAD, destinationLAD);
-			if (count == null) count = 0.0;
+			double count = counter.getCost(originLAD, destinationLAD);
 			counter.setCost(originLAD, destinationLAD, count + multiplier);
 
-			Double sum = costSkimMatrix.getCost(originLAD, destinationLAD);
-			if (sum == null) sum = 0.0;
+			double sum = costSkimMatrix.getCost(originLAD, destinationLAD);
 			double tripFuelCost = trip.getCost(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistance(), averageAccessEgressSpeedCar, this.energyUnitCosts, this.energyConsumptions, this.relativeFuelEfficiencies, this.congestionCharges, this.flagIncludeAccessEgress);
 			costSkimMatrix.setCost(originLAD, destinationLAD, sum + tripFuelCost * multiplier);
 		}
@@ -2603,7 +2612,7 @@ public class RoadNetworkAssignment {
 	 */
 	public SkimMatrix calculateCostSkimMatrix() {
 
-		SkimMatrix costSkimMatrix = new SkimMatrixMultiKey(zoning);
+		SkimMatrix costSkimMatrix = new SkimMatrixArray(zoning);
 		this.updateCostSkimMatrix(costSkimMatrix);
 
 		return costSkimMatrix;
@@ -2615,8 +2624,8 @@ public class RoadNetworkAssignment {
 	 */
 	public SkimMatrix calculateDistanceSkimMatrix() {
 
-		SkimMatrix distanceSkimMatrix = new SkimMatrixMultiKey(zoning);
-		SkimMatrix counter = new SkimMatrixMultiKey(zoning);
+		SkimMatrix distanceSkimMatrix = new SkimMatrixArray(zoning);
+		SkimMatrix counter = new SkimMatrixArray(zoning);
 
 		for (Trip trip: this.tripList) {
 
@@ -2655,8 +2664,8 @@ public class RoadNetworkAssignment {
 	 */
 	public SkimMatrix calculateDistanceSkimMatrixTempro() {
 
-		SkimMatrix distanceSkimMatrix = new SkimMatrixMultiKey(zoning);
-		SkimMatrix counter = new SkimMatrixMultiKey(zoning);
+		SkimMatrix distanceSkimMatrix = new SkimMatrixArrayTempro(zoning);
+		SkimMatrix counter = new SkimMatrixArrayTempro(zoning);
 
 		for (Trip trip: this.tripList) {
 
@@ -2668,12 +2677,10 @@ public class RoadNetworkAssignment {
 				String destinationZone = temproTrip.getDestinationTemproZone();
 				int multiplier = trip.getMultiplier();
 
-				Double count = counter.getCost(originZone, destinationZone);
-				if (count == null) count = 0.0;
+				double count = counter.getCost(originZone, destinationZone);
 				counter.setCost(originZone, destinationZone, count + multiplier);
 
-				Double sum = distanceSkimMatrix.getCost(originZone, destinationZone);
-				if (sum == null) sum = 0.0;
+				double sum = distanceSkimMatrix.getCost(originZone, destinationZone);
 				double distance = temproTrip.getLength();
 				distanceSkimMatrix.setCost(originZone, destinationZone, sum + distance * multiplier);
 			}
@@ -2681,10 +2688,10 @@ public class RoadNetworkAssignment {
 		
 		List<String> origins = distanceSkimMatrix.getUnsortedOrigins();
 		List<String> destinations = distanceSkimMatrix.getUnsortedDestinations();
-		for (String originLAD: origins)
-			for (String destinationLAD: destinations) {
-				double averageODtraveltime = distanceSkimMatrix.getCost(originLAD, destinationLAD) / counter.getCost(originLAD, destinationLAD);
-				distanceSkimMatrix.setCost(originLAD, destinationLAD, averageODtraveltime);
+		for (String origin: origins)
+			for (String destination: destinations) {
+				double averageODtraveltime = distanceSkimMatrix.getCost(origin, destination) / counter.getCost(origin, destination);
+				distanceSkimMatrix.setCost(origin, destination, averageODtraveltime);
 		}
 
 		return distanceSkimMatrix;
@@ -3019,7 +3026,7 @@ public class RoadNetworkAssignment {
 		//initialise hashmaps
 		Map<EnergyType, SkimMatrix> zonalConsumptions = new EnumMap<>(EnergyType.class);
 		for (EnergyType energy: EnergyType.values()) {
-			SkimMatrix consumption = new SkimMatrixMultiKey(zoning);
+			SkimMatrix consumption = new SkimMatrixArray(zoning);
 			zonalConsumptions.put(energy, consumption);
 		}
 

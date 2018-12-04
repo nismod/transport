@@ -83,9 +83,10 @@ public class TripMinor extends Trip {
 	 */
 	public String getOriginLAD() {
 		
-		String originTemproZone = TripMinor.zoning.getTemproIDToCodeMap()[this.origin];
-		String originLADZone = TripMinor.zoning.getZoneToLADMap().get(originTemproZone);
-		return originLADZone;
+		int originLadID = TripTempro.zoning.getZoneIDToLadID()[this.origin];
+		String originLADCode = TripTempro.zoning.getLadIDToCodeMap()[originLadID];
+		
+		return originLADCode;
 	}
 	
 	
@@ -94,10 +95,11 @@ public class TripMinor extends Trip {
 	 * @return Trip destination zone.
 	 */
 	public String getDestinationLAD() {
+				
+		int destinationLadID = TripTempro.zoning.getZoneIDToLadID()[this.destination];
+		String destinationLADCode = TripTempro.zoning.getLadIDToCodeMap()[destinationLadID];
 		
-		String destinationTemproZone = TripMinor.zoning.getTemproIDToCodeMap()[this.destination];
-		String destinationLADZone = TripMinor.zoning.getZoneToLADMap().get(destinationTemproZone);
-		return destinationLADZone;
+		return destinationLADCode;
 	}
 	
 	/**
@@ -121,6 +123,30 @@ public class TripMinor extends Trip {
 	public String getDestinationLAD(Map<Integer, String> nodeToZoneMap) {
 		
 		return this.getDestinationLAD();
+	}
+	
+	/**
+	 * Gets trip origin LAD zone ID.
+	 * @return Origin zone LAD ID.
+	 */
+	@Override
+	public int getOriginLadID() {
+
+		int originLadID = TripTempro.zoning.getZoneIDToLadID()[this.origin];
+		
+		return originLadID;
+	}
+	
+	/**
+	 * Gets trip destination LAD zone ID.
+	 * @return Trip destination zone LAD ID.
+	 */
+	@Override
+	public int getDestinationLadID() {
+		
+		int destinationLadID = TripTempro.zoning.getZoneIDToLadID()[this.destination];
+
+		return destinationLadID;
 	}
 	
 	/**

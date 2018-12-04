@@ -251,6 +251,7 @@ public class ZoningTest {
 		
 		System.out.println(zoning.getLadCodeToIDMap());
 		System.out.println(Arrays.toString(zoning.getLadIDToCodeMap()));
+		System.out.println(Arrays.toString(zoning.getZoneIDToLadID()));
 	}
 	
 	@Test

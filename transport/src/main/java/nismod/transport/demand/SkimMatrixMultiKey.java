@@ -431,8 +431,8 @@ public class SkimMatrixMultiKey implements SkimMatrix {
 			String destination = (String) mk.getKey(1);
 			Double cost = this.getCost(origin, destination);
 			int flow = flows.getFlow(origin, destination);
-			if (cost.isNaN()) continue; //ignore NaN values
-			sumOfCosts += cost * flow;
+			if (cost > 0.0)
+				sumOfCosts += cost * flow;
 		}
 		return sumOfCosts;
 	}
@@ -442,17 +442,19 @@ public class SkimMatrixMultiKey implements SkimMatrix {
 	 * @param other The other matrix.
 	 * @return Sum of absolute differences.
 	 */
-	public double getAbsoluteDifference(SkimMatrixMultiKey other) {
+	public double getAbsoluteDifference(SkimMatrix other) {
 		
 		double difference = 0.0;
-		for (MultiKey mk: other.getKeySet()) {
-			String origin = (String) mk.getKey(0);
-			String destination = (String) mk.getKey(1);
-			Double thisCost = this.getCost(origin, destination);
-			Double otherCost = other.getCost(origin, destination);
-			if (thisCost.isNaN() || otherCost.isNaN()) continue;
-			difference += Math.abs(thisCost - otherCost);
-		}
+		
+		List<String> firstKeyList = this.getSortedOrigins();
+		List<String> secondKeyList = this.getSortedDestinations();
+		
+		for (String origin: firstKeyList)
+			for (String destination: secondKeyList) {
+				double thisCost = this.getCost(origin, destination);
+				double otherCost = other.getCost(origin, destination);
+				difference += Math.abs(thisCost - otherCost);
+			}
 	
 		return difference;
 	}
