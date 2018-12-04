@@ -35,7 +35,7 @@ public class SkimMatrixTest {
 	@Test
 	public void test() throws FileNotFoundException, IOException {
 		
-		SkimMatrixMultiKey skimMatrix = new SkimMatrixMultiKey();
+		SkimMatrixMultiKey skimMatrix = new SkimMatrixMultiKey(null);
 		
 		skimMatrix.setCost("E06000045", "E06000045", 6.2);
 		skimMatrix.setCost("E06000045", "E07000086", 5.5);
@@ -57,7 +57,7 @@ public class SkimMatrixTest {
 		skimMatrix.printMatrixFormatted();
 		skimMatrix.saveMatrixFormatted("./temp/skimMatrix.csv");
 		
-		SkimMatrixMultiKey skimMatrix2 = new SkimMatrixMultiKey("./temp/skimMatrix.csv");
+		SkimMatrixMultiKey skimMatrix2 = new SkimMatrixMultiKey("./temp/skimMatrix.csv", null);
 		double diff = skimMatrix2.getAbsoluteDifference(skimMatrix);
 		
 		final double DELTA = 0.000001;

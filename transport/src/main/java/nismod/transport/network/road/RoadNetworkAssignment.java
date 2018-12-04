@@ -127,6 +127,7 @@ public class RoadNetworkAssignment {
 	private Map<EnergyType, Double> unitCO2Emissions;
 
 	private RoadNetwork roadNetwork;
+	private Zoning zoning;
 
 	private double[] linkVolumesInPCU;
 	private Map<VehicleType, int[]> linkVolumesPerVehicleType;
@@ -155,6 +156,7 @@ public class RoadNetworkAssignment {
 	
 	/**
 	 * @param roadNetwork Road network.
+	 * @param zoning Zoning system.
 	 * @param energyUnitCosts Energy unit costs.
 	 * @param unitCO2Emissions Unit CO2 emissions.
 	 * @param engineTypeFractions Market shares of different engine/fuel types.
@@ -170,7 +172,8 @@ public class RoadNetworkAssignment {
 	 * @param congestionCharges Congestion charges.
 	 * @param params Assignment parameters.
 	 */
-	public RoadNetworkAssignment(RoadNetwork roadNetwork, 
+	public RoadNetworkAssignment(RoadNetwork roadNetwork,
+			Zoning zoning,
 			Map<EnergyType, Double> energyUnitCosts, 
 			Map<EnergyType, Double> unitCO2Emissions,
 			Map<VehicleType, Map<EngineType, Double>> engineTypeFractions,
@@ -187,6 +190,7 @@ public class RoadNetworkAssignment {
 			Properties params) {
 
 		this.roadNetwork = roadNetwork;
+		this.zoning = zoning;
 		this.params = params;
 		this.linkVolumesInPCU = new double[this.roadNetwork.getMaximumEdgeID()];
 		this.linkVolumesPerVehicleType = new EnumMap<VehicleType, int[]>(VehicleType.class);
@@ -1177,8 +1181,8 @@ public class RoadNetworkAssignment {
 					counterAssignedTrips += multiplier;
 
 					//store trip in trip list
-					Integer originZoneID = zoning.getZoneCodeToIDMap().get(originZone);
-					Integer destinationZoneID = zoning.getZoneCodeToIDMap().get(destinationZone);
+					Integer originZoneID = zoning.getTemproCodeToIDMap().get(originZone);
+					Integer destinationZoneID = zoning.getTemproCodeToIDMap().get(destinationZone);
 					Trip trip = new TripTempro(vht, engine, foundRoute, hour, originZoneID, destinationZoneID, zoning, multiplier);
 					this.tripList.add(trip);
 
@@ -1289,8 +1293,8 @@ public class RoadNetworkAssignment {
 				counterAssignedTrips += multiplier;
 
 				//store trip in trip list
-				Integer originZoneID = zoning.getZoneCodeToIDMap().get(originZone);
-				Integer destinationZoneID = zoning.getZoneCodeToIDMap().get(destinationZone);
+				Integer originZoneID = zoning.getTemproCodeToIDMap().get(originZone);
+				Integer destinationZoneID = zoning.getTemproCodeToIDMap().get(destinationZone);
 				Trip trip = new TripTempro(vht, engine, chosenRoute, hour, originZoneID, destinationZoneID, zoning, multiplier);
 				this.tripList.add(trip);
 
@@ -1352,8 +1356,8 @@ public class RoadNetworkAssignment {
 				if (passengerODM.getIntFlow(originZone, destinationZone) == 0) continue;
 
 				//get distance between Tempro zone centroids
-				int originZoneID = zoning.getZoneCodeToIDMap().get(originZone);
-				int destinationZoneID = zoning.getZoneCodeToIDMap().get(destinationZone);
+				int originZoneID = zoning.getTemproCodeToIDMap().get(originZone);
+				int destinationZoneID = zoning.getTemproCodeToIDMap().get(destinationZone);
 				final double centroidDistance = zoning.getZoneToZoneDistanceMatrix()[originZoneID][destinationZoneID];
 
 				//calculate number of trip assignments
@@ -2459,7 +2463,7 @@ public class RoadNetworkAssignment {
 
 		//this.updateLinkTravelTimes();
 
-		SkimMatrix counter = new SkimMatrixMultiKey();
+		SkimMatrix counter = new SkimMatrixMultiKey(zoning);
 
 		for (Trip trip: this.tripList) {
 
@@ -2493,7 +2497,7 @@ public class RoadNetworkAssignment {
 	 */
 	public SkimMatrix calculateTimeSkimMatrix() {
 
-		SkimMatrix timeSkimMatrix = new SkimMatrixMultiKey();
+		SkimMatrix timeSkimMatrix = new SkimMatrixMultiKey(zoning);
 		this.updateTimeSkimMatrix(timeSkimMatrix);
 
 		return timeSkimMatrix;
@@ -2563,7 +2567,7 @@ public class RoadNetworkAssignment {
 
 		//this.updateLinkTravelTimes();
 
-		SkimMatrix counter = new SkimMatrixMultiKey();
+		SkimMatrix counter = new SkimMatrixMultiKey(zoning);
 
 		for (Trip trip: this.tripList) {
 
@@ -2599,7 +2603,7 @@ public class RoadNetworkAssignment {
 	 */
 	public SkimMatrix calculateCostSkimMatrix() {
 
-		SkimMatrix costSkimMatrix = new SkimMatrixMultiKey();
+		SkimMatrix costSkimMatrix = new SkimMatrixMultiKey(zoning);
 		this.updateCostSkimMatrix(costSkimMatrix);
 
 		return costSkimMatrix;
@@ -2611,8 +2615,8 @@ public class RoadNetworkAssignment {
 	 */
 	public SkimMatrix calculateDistanceSkimMatrix() {
 
-		SkimMatrix distanceSkimMatrix = new SkimMatrixMultiKey();
-		SkimMatrix counter = new SkimMatrixMultiKey();
+		SkimMatrix distanceSkimMatrix = new SkimMatrixMultiKey(zoning);
+		SkimMatrix counter = new SkimMatrixMultiKey(zoning);
 
 		for (Trip trip: this.tripList) {
 
@@ -2646,12 +2650,13 @@ public class RoadNetworkAssignment {
 
 	/**
 	 * Updates cost skim matrix (zone-to-zone distances).
+	 * @param zoning Zoning system.
 	 * @return Inter-zonal skim matrix (distance).
 	 */
 	public SkimMatrix calculateDistanceSkimMatrixTempro() {
 
-		SkimMatrix distanceSkimMatrix = new SkimMatrixMultiKey();
-		SkimMatrix counter = new SkimMatrixMultiKey();
+		SkimMatrix distanceSkimMatrix = new SkimMatrixMultiKey(zoning);
+		SkimMatrix counter = new SkimMatrixMultiKey(zoning);
 
 		for (Trip trip: this.tripList) {
 
@@ -3014,7 +3019,7 @@ public class RoadNetworkAssignment {
 		//initialise hashmaps
 		Map<EnergyType, SkimMatrix> zonalConsumptions = new EnumMap<>(EnergyType.class);
 		for (EnergyType energy: EnergyType.values()) {
-			SkimMatrix consumption = new SkimMatrixMultiKey();
+			SkimMatrix consumption = new SkimMatrixMultiKey(zoning);
 			zonalConsumptions.put(energy, consumption);
 		}
 

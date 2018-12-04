@@ -435,6 +435,7 @@ public class RoadExpansionDashboard extends JFrame {
 			
 				//create a road network assignment
 				RoadNetworkAssignment rnaAfterExpansion = new RoadNetworkAssignment(roadNetwork,
+						zoning,
 						yearToUnitCO2Emissions.get(BASE_YEAR),
 						yearToEnergyUnitCosts.get(BASE_YEAR),
 						yearToEngineTypeFractions.get(BASE_YEAR),
@@ -1230,7 +1231,8 @@ public class RoadExpansionDashboard extends JFrame {
 		yearToAVFractions = InputFileReader.readAVFractionsFile(AVFractionsFile);
 	
 		//create a road network assignment
-		RoadNetworkAssignment rnaBefore = new RoadNetworkAssignment(roadNetwork, 
+		RoadNetworkAssignment rnaBefore = new RoadNetworkAssignment(roadNetwork,
+															zoning,
 															yearToEnergyUnitCosts.get(BASE_YEAR),
 															yearToUnitCO2Emissions.get(BASE_YEAR),
 															yearToEngineTypeFractions.get(BASE_YEAR),

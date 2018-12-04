@@ -45,8 +45,8 @@ public class Zoning {
 	private HashMap<String, Double> zoneToNearestNodeDistance;
 	private int[] zoneIDToNearestNodeID;
 	private double[] zoneIDToNearestNodeDistance;	
-	private HashMap<String, Integer> zoneToNearestNodeIDFromLADTopNodes;
-	private int[] zoneIDToNearestNodeIDFromLADTopNodes;
+	private HashMap<String, Integer> zoneToNearestNodeIDFromLadTopNodes;
+	private int[] zoneIDToNearestNodeIDFromLadTopNodes;
 	
 	private HashMap<String, Point> zoneToCentroid;
 	
@@ -61,12 +61,15 @@ public class Zoning {
 	private HashMap<String, List<Integer>> zoneToListOfContainedNodes; //maps Tempro zone to a list of nodes within that zone (if they exist)
 	
 	private HashMap<String, String> zoneToLAD; //maps Tempro zone to LAD zone
-	private HashMap<String, List<String>> LADToListOfContainedZones; //maps LAD zones to a list of contained Tempro zones
+	private HashMap<String, List<String>> ladToListOfContainedZones; //maps LAD zones to a list of contained Tempro zones
 	
-	private HashMap<String, String> LADToName; //maps LAD code to LAD name
+	private HashMap<String, String> ladToName; //maps LAD code to LAD name
 	
 	private HashMap<String, Integer> temproCodeToID; //maps Tempro ONS code to Tempro ID
 	private String[] temproIDToCode; //maps Tempro ID to Tempro ONS code
+	
+	private HashMap<String, Integer> ladCodeToID; //maps LAD ONS code to LAD ID number
+	private String[] ladIDToCode; //maps LAD ID number to LAD ONS code
 		
 	/**
 	 * Constructor for the zoning system.
@@ -128,17 +131,19 @@ public class Zoning {
 	}
 	
 	/**
-	 * Maps Tempro zone IDs to codes.
+	 * Maps Tempro and LAD zone IDs to their ONS codes and vice versa.
 	 * @param zonesFeatureCollection Feature collection with the zones.
 	 * @param params Properties file.
 	 */
 	private void mapCodesAndIDs(SimpleFeatureCollection zonesFeatureCollection, Properties params) {
 
 		this.temproCodeToID = new HashMap<String, Integer>();
-		
 		int maxTemproID = Integer.parseInt(params.getProperty("MAXIMUM_TEMPRO_ZONE_ID"));
-		
 		this.temproIDToCode = new String[maxTemproID + 1];
+		
+		this.ladCodeToID = new HashMap<String, Integer>();
+		int maxLadID = Integer.parseInt(params.getProperty("MAXIMUM_LAD_ZONE_ID"));
+		this.ladIDToCode = new String[maxLadID + 1];
 
 		//iterate through the zones and through the nodes
 		SimpleFeatureIterator iter = zonesFeatureCollection.features();
@@ -147,9 +152,13 @@ public class Zoning {
 				SimpleFeature sf = iter.next();
 				Integer zoneID = ((Long) sf.getAttribute("Zone_ID")).intValue();
 				String zoneCode = (String) sf.getAttribute("Zone_Code");
-				
 				this.temproCodeToID.put(zoneCode, zoneID);
 				this.temproIDToCode[zoneID] = zoneCode;
+				
+				Integer ladID = ((Long) sf.getAttribute("LAD_ID")).intValue();
+				String ladCode = (String) sf.getAttribute("LAD_Code");
+				this.ladCodeToID.put(ladCode, ladID);
+				this.ladIDToCode[ladID] = ladCode;
 			} 
 		} finally {
 			//feature iterator is a live connection that must be closed
@@ -171,9 +180,9 @@ public class Zoning {
 		this.zoneToCentroid = new HashMap<String, Point>();
 		
 		this.zoneToLAD = new HashMap<String, String>();
-		this.LADToName = new HashMap<String, String>();
+		this.ladToName = new HashMap<String, String>();
 		
-		int maxZones = this.getZoneIDToCodeMap().length;
+		int maxZones = this.getTemproIDToCodeMap().length;
 		this.zoneToMinMaxDimension = new double[maxZones][2]; //zoneID used without -1 shift (0 is not used).
 
 		//iterate through the zones and through the nodes
@@ -189,7 +198,7 @@ public class Zoning {
 				this.zoneToLAD.put(zoneCode, ladID);
 				
 				String ladName = (String) sf.getAttribute("Local_Auth");
-				this.LADToName.put(ladID, ladName);
+				this.ladToName.put(ladID, ladName);
 				
 				//store centroid
 				Point centroid = polygon.getCentroid();
@@ -305,7 +314,7 @@ public class Zoning {
 	 */
 	private void zoneToNodeAndZoneToZoneDistanceMatrices(SimpleFeatureCollection zonesFeatureCollection) {
 
-		int maxZones = this.getZoneIDToCodeMap().length;
+		int maxZones = this.getTemproIDToCodeMap().length;
 		int maxNodes = this.rn.getMaximumNodeID();
 		
 		this.zoneToNodeDistanceMatrix = new double[maxZones][maxNodes + 1];
@@ -361,8 +370,8 @@ public class Zoning {
 	 */
 	private void mapZonesToLADTopNodes(SimpleFeatureCollection zonesFeatureCollection) {
 
-		this.zoneToNearestNodeIDFromLADTopNodes = new HashMap<String, Integer>();
-		this.zoneIDToNearestNodeIDFromLADTopNodes = new int[this.temproIDToCode.length];
+		this.zoneToNearestNodeIDFromLadTopNodes = new HashMap<String, Integer>();
+		this.zoneIDToNearestNodeIDFromLadTopNodes = new int[this.temproIDToCode.length];
 
 		this.rn.sortGravityNodes(); //to get top nodes for each LAD
 		
@@ -378,7 +387,7 @@ public class Zoning {
 				Integer nearestNodeID = null;
 		
 				//iterate over all LADs (not only LAD to which Tempro zone belongs!) and all of their top nodes
-				for (String zoneLAD: this.LADToName.keySet()) {
+				for (String zoneLAD: this.ladToName.keySet()) {
 					
 					List<Integer> nodesList = this.rn.getZoneToNodes().get(zoneLAD); //all nodes within LAD
 					int nodesToConsider = TOP_LAD_NODES<nodesList.size()?TOP_LAD_NODES:nodesList.size(); //because LAD might have less nodes than TOP_LAD_NODES
@@ -408,8 +417,8 @@ public class Zoning {
 				if (this.rn.isBlacklistedAsEndNode(nearestNodeID))
 					LOGGER.warn("The nearest node {} for Tempro zone {} is blacklisted as end node!", nearestNodeID, zoneCode);
 								
-				this.zoneToNearestNodeIDFromLADTopNodes.put(zoneCode, nearestNodeID);
-				this.zoneIDToNearestNodeIDFromLADTopNodes[zoneID] = nearestNodeID;
+				this.zoneToNearestNodeIDFromLadTopNodes.put(zoneCode, nearestNodeID);
+				this.zoneIDToNearestNodeIDFromLadTopNodes[zoneID] = nearestNodeID;
 			} 
 		} finally {
 			//feature iterator is a live connection that must be closed
@@ -435,14 +444,14 @@ public class Zoning {
 	
 	private void mapLADsToContainedZones() {
 		
-		this.LADToListOfContainedZones = new HashMap<String, List<String>>();
+		this.ladToListOfContainedZones = new HashMap<String, List<String>>();
 		
 		for (String zone: this.zoneToLAD.keySet()) {
 			String lad = this.zoneToLAD.get(zone);
-			List<String> list = this.LADToListOfContainedZones.get(lad);
+			List<String> list = this.ladToListOfContainedZones.get(lad);
 			if (list == null) {
 				list = new ArrayList<String>();
-				this.LADToListOfContainedZones.put(lad, list);
+				this.ladToListOfContainedZones.put(lad, list);
 			}
 			list.add(zone);
 		}
@@ -486,25 +495,43 @@ public class Zoning {
 	}
 		
 	/**
-	 * Getter for Tempro zone code to ID.
+	 * Getter for Tempro zone ONS code to ID.
 	 * @return Tempro zone code to Tempro zone ID map.
 	 */
-	public HashMap<String, Integer> getZoneCodeToIDMap() {
+	public HashMap<String, Integer> getTemproCodeToIDMap() {
 		
 		return this.temproCodeToID;
 	}
 	
 	/**
-	 * Getter for Tempro zone ID to code.
-	 * @return Tempro zone ID to Tempro zone code.
+	 * Getter for LAD zone ID to ONS code.
+	 * @return Tempro zone ID to Tempro zone ONS code.
 	 */
-	public String[] getZoneIDToCodeMap() {
+	public String[] getTemproIDToCodeMap() {
 		
 		return this.temproIDToCode;
 	}
 	
 	/**
-	 * Getter for zone centroid to nearest node ID mapping.
+	 * Getter for LAD zone ONS code to ID.
+	 * @return LAD zone ONS code to LAD zone ID map.
+	 */
+	public HashMap<String, Integer> getLadCodeToIDMap() {
+		
+		return this.ladCodeToID;
+	}
+	
+	/**
+	 * Getter for LAD zone ID to ONS code.
+	 * @return LAD zone ID to LAD zone ONS code.
+	 */
+	public String[] getLadIDToCodeMap() {
+		
+		return this.ladIDToCode;
+	}
+	
+	/**
+	 * Getter for Tempro zone centroid to nearest node ID mapping.
 	 * @return Zone to node map.
 	 */
 	public HashMap<String, Integer> getZoneToNearestNodeIDMap() {
@@ -513,7 +540,7 @@ public class Zoning {
 	}
 	
 	/**
-	 * Getter for zone ID to nearest node ID mapping.
+	 * Getter for Tempro zone ID to nearest node ID mapping.
 	 * @return Zone to node map.
 	 */
 	public int[] getZoneIDToNearestNodeIDMap() {
@@ -527,7 +554,7 @@ public class Zoning {
 	 */
 	public HashMap<String, Integer> getZoneToNearestNodeIDFromLADTopNodesMap() {
 		
-		return this.zoneToNearestNodeIDFromLADTopNodes;
+		return this.zoneToNearestNodeIDFromLadTopNodes;
 	}
 	
 	/**
@@ -536,7 +563,7 @@ public class Zoning {
 	 */
 	public int[] getZoneIDToNearestNodeIDFromLADTopNodesMap() {
 		
-		return this.zoneIDToNearestNodeIDFromLADTopNodes;
+		return this.zoneIDToNearestNodeIDFromLadTopNodes;
 	}
 	
 	/**
@@ -627,7 +654,7 @@ public class Zoning {
 	 */
 	public HashMap<String, List<String>> getLADToListOfContainedZones() {
 		
-		return this.LADToListOfContainedZones;
+		return this.ladToListOfContainedZones;
 	}
 	
 	/**
@@ -636,7 +663,7 @@ public class Zoning {
 	 */
 	public HashMap<String, String> getLADToName() {
 		
-		return this.LADToName;
+		return this.ladToName;
 	}
 	
 	/**

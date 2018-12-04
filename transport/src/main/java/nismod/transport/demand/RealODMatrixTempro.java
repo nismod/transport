@@ -40,13 +40,13 @@ public class RealODMatrixTempro implements AssignableODMatrix {
 	
 	/**
 	 * Constructor for an empty OD matrix.
-	 * Uses the maximum zone code which will create a rather large matrix.
+	 * Uses the maximum Tempro zone ID which will create a rather large matrix.
 	 * @param zoning Zoning system.
 	 */
 	public RealODMatrixTempro(Zoning zoning) {
 		
 		this.zoning = zoning;
-		int maxZones = zoning.getZoneIDToCodeMap().length;
+		int maxZones = zoning.getTemproIDToCodeMap().length;
 		matrix = new double[maxZones][maxZones]; //[0][0] is not used to allow a direct fetch via tempro ID
 	}
 	
@@ -62,7 +62,7 @@ public class RealODMatrixTempro implements AssignableODMatrix {
 		LOGGER.info("Reading OD matrix from file: {}", fileName);
 		
 		this.zoning = zoning;
-		int maxZones = zoning.getZoneIDToCodeMap().length;
+		int maxZones = zoning.getTemproIDToCodeMap().length;
 		matrix = new double[maxZones][maxZones];
 		
 		CSVParser parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
@@ -102,8 +102,8 @@ public class RealODMatrixTempro implements AssignableODMatrix {
 	 */
 	public double getFlow(String originZone, String destinationZone) {
 		
-		int i = this.zoning.getZoneCodeToIDMap().get(originZone);
-		int j = this.zoning.getZoneCodeToIDMap().get(destinationZone);
+		int i = this.zoning.getTemproCodeToIDMap().get(originZone);
+		int j = this.zoning.getTemproCodeToIDMap().get(destinationZone);
 		
 		return this.matrix[i][j];
 		
@@ -136,8 +136,8 @@ public class RealODMatrixTempro implements AssignableODMatrix {
 				matrix.removeMultiKey(originZone, destinationZone);
 		*/
 		
-		int i = this.zoning.getZoneCodeToIDMap().get(originZone);
-		int j = this.zoning.getZoneCodeToIDMap().get(destinationZone);
+		int i = this.zoning.getTemproCodeToIDMap().get(originZone);
+		int j = this.zoning.getTemproCodeToIDMap().get(destinationZone);
 
 		matrix[i][j] = flow;
 	}
@@ -258,7 +258,7 @@ public class RealODMatrixTempro implements AssignableODMatrix {
 	 */
 	public List<String> getSortedOrigins() {
 		
-		Set<String> firstKey = zoning.getZoneCodeToIDMap().keySet();
+		Set<String> firstKey = zoning.getTemproCodeToIDMap().keySet();
 		
 		//put them into a list and sort them
 		List<String> firstKeyList = new ArrayList<String>(firstKey);
@@ -273,7 +273,7 @@ public class RealODMatrixTempro implements AssignableODMatrix {
 	 */
 	public List<String> getSortedDestinations() {
 		
-		Set<String> secondKey = zoning.getZoneCodeToIDMap().keySet();
+		Set<String> secondKey = zoning.getTemproCodeToIDMap().keySet();
 		//put them into a list and sort them
 		List<String> secondKeyList = new ArrayList<String>(secondKey);
 		Collections.sort(secondKeyList);
@@ -287,7 +287,7 @@ public class RealODMatrixTempro implements AssignableODMatrix {
 	 */
 	public List<String> getUnsortedOrigins() {
 		
-		Set<String> firstKey = zoning.getZoneCodeToIDMap().keySet();
+		Set<String> firstKey = zoning.getTemproCodeToIDMap().keySet();
 		
 		//put them into a list
 		List<String> firstKeyList = new ArrayList<String>(firstKey);
@@ -301,7 +301,7 @@ public class RealODMatrixTempro implements AssignableODMatrix {
 	 */
 	public List<String> getUnsortedDestinations() {
 		
-		Set<String> secondKey = zoning.getZoneCodeToIDMap().keySet();
+		Set<String> secondKey = zoning.getTemproCodeToIDMap().keySet();
 		//put them into a list and sort them
 		List<String> secondKeyList = new ArrayList<String>(secondKey);
 		
@@ -447,7 +447,7 @@ public class RealODMatrixTempro implements AssignableODMatrix {
 	public static RealODMatrixTempro createUnitMatrix(Zoning zoning) {
 		
 		RealODMatrixTempro odm = new RealODMatrixTempro(zoning);
-		Set<String> zones = zoning.getZoneCodeToIDMap().keySet();
+		Set<String> zones = zoning.getTemproCodeToIDMap().keySet();
 
 		for (String origin: zones)
 			for (String destination: zones)
@@ -557,8 +557,8 @@ public class RealODMatrixTempro implements AssignableODMatrix {
 		for (int i=1; i<temproMatrix.matrix.length; i++)
 			for (int j=1; j<temproMatrix.matrix[0].length; j++) {
 							
-				String originTempro = zoning.getZoneIDToCodeMap()[i];
-				String destinationTempro = zoning.getZoneIDToCodeMap()[j];
+				String originTempro = zoning.getTemproIDToCodeMap()[i];
+				String destinationTempro = zoning.getTemproIDToCodeMap()[j];
 				
 				if (originTempro == null || destinationTempro == null) continue; //this will only occur for test datasets
 				
@@ -749,8 +749,8 @@ public class RealODMatrixTempro implements AssignableODMatrix {
 					double flow = this.getFlow(origin, destination);
 					if (flow > 0) {
 						record.clear();
-						record.add(String.valueOf(this.zoning.getZoneCodeToIDMap().get(origin)));
-						record.add(String.valueOf(this.zoning.getZoneCodeToIDMap().get(destination)));
+						record.add(String.valueOf(this.zoning.getTemproCodeToIDMap().get(origin)));
+						record.add(String.valueOf(this.zoning.getTemproCodeToIDMap().get(destination)));
 						record.add(String.format("%d", (int) Math.round(flow)));
 						csvFilePrinter.printRecord(record);
 					}

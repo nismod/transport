@@ -74,6 +74,9 @@ public class RebalancedTemproODMatrixTest {
 		//create a road network
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
+		
+		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
+		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
 				
 		final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
 		final String unitCO2EmissionsFile = props.getProperty("unitCO2EmissionsFile");
@@ -87,7 +90,8 @@ public class RebalancedTemproODMatrixTest {
 		final int BASE_YEAR = Integer.parseInt(props.getProperty("baseYear"));
 	
 		//create a road network assignment
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, 
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork,
+															zoning,
 															InputFileReader.readEnergyUnitCostsFile(energyUnitCostsFile).get(BASE_YEAR),
 															InputFileReader.readUnitCO2EmissionFile(unitCO2EmissionsFile).get(BASE_YEAR),
 															InputFileReader.readEngineTypeFractionsFile(engineTypeFractionsFile).get(BASE_YEAR),
@@ -105,14 +109,10 @@ public class RebalancedTemproODMatrixTest {
 
 		//create route set generator
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, props);
-		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
-		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
-		
-		
-		
+	
 		//CREATING UNIT TEMPRO MATRIX
 		
-		RealODMatrixTempro temproODM = RealODMatrixTempro.createUnitMatrix(zoning.getZoneCodeToIDMap().keySet(), zoning);
+		RealODMatrixTempro temproODM = RealODMatrixTempro.createUnitMatrix(zoning.getTemproCodeToIDMap().keySet(), zoning);
 		//System.out.println("Sparse unit matrix: " + temproODM.getSumOfFlows());
 		temproODM.deleteInterzonalFlows("E02006781");
 		System.out.println("Unit matrix after inter-zonal deletion: " + temproODM.getSumOfFlows());
@@ -503,7 +503,10 @@ public class RebalancedTemproODMatrixTest {
 		//create a road network
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
-				
+		
+		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
+		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
+		
 		final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
 		final String unitCO2EmissionsFile = props.getProperty("unitCO2EmissionsFile");
 		final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
@@ -517,6 +520,7 @@ public class RebalancedTemproODMatrixTest {
 	
 		//create a road network assignment
 		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, 
+															zoning,
 															InputFileReader.readEnergyUnitCostsFile(energyUnitCostsFile).get(BASE_YEAR),
 															InputFileReader.readUnitCO2EmissionFile(unitCO2EmissionsFile).get(BASE_YEAR),
 															InputFileReader.readEngineTypeFractionsFile(engineTypeFractionsFile).get(BASE_YEAR),
@@ -538,9 +542,6 @@ public class RebalancedTemproODMatrixTest {
 		rsg.readRoutesBinaryWithoutValidityCheck(passengerRoutesFile);
 		rsg.calculateAllPathsizes();
 		
-		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
-		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
-				
 		roadNetwork.sortGravityNodes();
 
 		ODMatrix passengerODM = new ODMatrix(temproODMatrixFile);

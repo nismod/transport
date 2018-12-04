@@ -76,7 +76,7 @@ public class TripTempro extends Trip {
 	 */
 	public String getOriginLAD() {
 		
-		String originTemproZone = TripTempro.zoning.getZoneIDToCodeMap()[this.origin];
+		String originTemproZone = TripTempro.zoning.getTemproIDToCodeMap()[this.origin];
 		String originLADZone = TripTempro.zoning.getZoneToLADMap().get(originTemproZone);
 		return originLADZone;
 	}
@@ -88,7 +88,7 @@ public class TripTempro extends Trip {
 	 */
 	public String getDestinationLAD() {
 		
-		String destinationTemproZone = TripTempro.zoning.getZoneIDToCodeMap()[this.destination];
+		String destinationTemproZone = TripTempro.zoning.getTemproIDToCodeMap()[this.destination];
 		String destinationLADZone = TripTempro.zoning.getZoneToLADMap().get(destinationTemproZone);
 		return destinationLADZone;
 	}
@@ -122,7 +122,7 @@ public class TripTempro extends Trip {
 	 */
 	public String getOriginTemproZone() {
 
-		String temproCode = TripTempro.zoning.getZoneIDToCodeMap()[this.origin];
+		String temproCode = TripTempro.zoning.getTemproIDToCodeMap()[this.origin];
 		return temproCode;
 	}
 	
@@ -132,7 +132,7 @@ public class TripTempro extends Trip {
 	 */
 	public String getDestinationTemproZone() {
 
-		String temproCode = TripTempro.zoning.getZoneIDToCodeMap()[this.destination];
+		String temproCode = TripTempro.zoning.getTemproIDToCodeMap()[this.destination];
 		return temproCode;
 	}
 	

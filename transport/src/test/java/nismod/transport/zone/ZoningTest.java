@@ -92,8 +92,8 @@ public class ZoningTest {
 		System.out.println("Number of cross-assigned zones: " + counter);
 		
 		System.out.println("Tempro zone to LAD zone map: " + zoning.getZoneToLADMap());
-		System.out.println("Tempro zone code to tempro zone ID map: " + zoning.getZoneCodeToIDMap());
-		System.out.println("Tempro zone ID to tempro zone code map: " + zoning.getZoneIDToCodeMap());
+		System.out.println("Tempro zone code to tempro zone ID map: " + zoning.getTemproCodeToIDMap());
+		System.out.println("Tempro zone ID to tempro zone code map: " + zoning.getTemproIDToCodeMap());
 		
 		System.out.println(zoning.getZoneToSortedListOfNodeAndDistancePairs());
 		System.out.println(zoning.getZoneToListOfContainedNodes());
@@ -101,7 +101,7 @@ public class ZoningTest {
 		double[][] matrix = zoning.getZoneToNodeDistanceMatrix();
 		System.out.println("matrix length: " + matrix.length);
 		System.out.println("matrix width: " + matrix[0].length);
-		System.out.println("number of tempro zones: " + (zoning.getZoneIDToCodeMap().length - 1));
+		System.out.println("number of tempro zones: " + (zoning.getTemproIDToCodeMap().length - 1));
 		System.out.println("number of nodes: " + zoning.getNodeToZoneMap().size());
 		
 		
@@ -188,7 +188,7 @@ public class ZoningTest {
 		double expectedDistance = centroid.distance(point);
 		assertEquals("Distance to nearest node is correct", expectedDistance, distance, DELTA);
 		
-		int zoneID = zoning.getZoneCodeToIDMap().get("E02003559");
+		int zoneID = zoning.getTemproCodeToIDMap().get("E02003559");
 		double distance2 = zoning.getZoneToNodeDistanceMatrix()[zoneID][nearestNodeID];
 		assertEquals("Distance to nearest node is correct", expectedDistance, distance2, DELTA);
 	
@@ -225,7 +225,7 @@ public class ZoningTest {
 		for (int j=0; j<originNodesToConsider; j++) {
 						
 			Integer nodeID = listOfOriginNodes.get(j);
-			int originZoneID = zoning.getZoneCodeToIDMap().get(originZone);
+			int originZoneID = zoning.getTemproCodeToIDMap().get(originZone);
 			double dist = zoning.getZoneToNodeDistanceMatrix()[originZoneID][nodeID];
 
 			System.out.printf("Distance to node %d is %f %n", nodeID, dist);
@@ -242,12 +242,15 @@ public class ZoningTest {
 		//test zone to zone distances
 		double [][] zoneDistances = zoning.getZoneToZoneDistanceMatrix();
 		final double EPSILON = 1e-5;
-		for (int zoneID1 = 1; zoneID1 < zoning.getZoneIDToCodeMap().length; zoneID1++) {
-			for (int zoneID2 = 1; zoneID2 < zoning.getZoneIDToCodeMap().length; zoneID2++) {
+		for (int zoneID1 = 1; zoneID1 < zoning.getTemproIDToCodeMap().length; zoneID1++) {
+			for (int zoneID2 = 1; zoneID2 < zoning.getTemproIDToCodeMap().length; zoneID2++) {
 				if (zoneID1 == zoneID2) assertEquals("Distance between the same zones should be zero", 0.0, zoneDistances[zoneID1][zoneID2], EPSILON);
 				else assertEquals("Distance is a symetric measure", zoneDistances[zoneID2][zoneID1], zoneDistances[zoneID1][zoneID2], EPSILON);
 			}
 		}
+		
+		System.out.println(zoning.getLadCodeToIDMap());
+		System.out.println(Arrays.toString(zoning.getLadIDToCodeMap()));
 	}
 	
 	@Test
@@ -285,13 +288,16 @@ public class ZoningTest {
 		System.out.println("Distance: " + zoning.getZoneToNearestNodeDistanceMap().get("E02003560"));
 				
 		assertEquals("Zone E02004795 is mapped to the correct node", 27, zoning.getZoneToNearestNodeIDMap().get("E02003561").intValue());
-		int zoneID = zoning.getZoneCodeToIDMap().get("E02003561");
+		int zoneID = zoning.getTemproCodeToIDMap().get("E02003561");
 		assertEquals("Zone E02004795 is mapped to the correct node", 27, zoning.getZoneIDToNearestNodeIDMap()[zoneID]);
 		
 		assertEquals("Zone E02003568 is mapped to the correct node", 105, zoning.getZoneToNearestNodeIDMap().get("E02003580").intValue());
-		zoneID = zoning.getZoneCodeToIDMap().get("E02003580");
+		zoneID = zoning.getTemproCodeToIDMap().get("E02003580");
 		assertEquals("Zone E02003568 is mapped to the correct node", 105, zoning.getZoneIDToNearestNodeIDMap()[zoneID]);
 		
 		System.out.println(zoning.getZoneToNearestNodeIDMap().keySet());
+		
+		System.out.println(zoning.getLadCodeToIDMap());
+		System.out.println(Arrays.toString(zoning.getLadIDToCodeMap()));
 	}
 }

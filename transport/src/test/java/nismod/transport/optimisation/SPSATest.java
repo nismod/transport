@@ -72,6 +72,9 @@ public class SPSATest {
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
 		
+		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
+		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
+		
 		//set nodes probability weighting
 		props.setProperty("NODES_PROBABILITY_WEIGHTING", Double.toHexString(0.5));
 		//set inter-zonal top nodes
@@ -89,7 +92,8 @@ public class SPSATest {
 		final int BASE_YEAR = Integer.parseInt(props.getProperty("baseYear"));
 	
 		//create a road network assignment
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, 
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork,
+															zoning,
 															InputFileReader.readEnergyUnitCostsFile(energyUnitCostsFile).get(BASE_YEAR),
 															InputFileReader.readUnitCO2EmissionFile(unitCO2EmissionsFile).get(BASE_YEAR),
 															InputFileReader.readEngineTypeFractionsFile(engineTypeFractionsFile).get(BASE_YEAR),
@@ -252,10 +256,6 @@ public class SPSATest {
 		
 	
 		//Assign tempro matrix
-		
-		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
-		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
-		
 		System.out.println("Zones to nearest Nodes: " + zoning.getZoneToNearestNodeIDMap());
 		System.out.println("Zones to nearest nodes distances: " + zoning.getZoneToNearestNodeDistanceMap());
 		

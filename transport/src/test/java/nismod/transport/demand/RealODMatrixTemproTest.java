@@ -268,7 +268,7 @@ public class RealODMatrixTemproTest {
 		
 		tempro.sumMatrixSubset(origins, destinations);
 		
-		int numberOfZones = zoning.getZoneIDToCodeMap().length - 1;
+		int numberOfZones = zoning.getTemproIDToCodeMap().length - 1;
 		System.out.println("Number of zones = " + numberOfZones);
 		
 		//unit matrix
@@ -406,7 +406,7 @@ public class RealODMatrixTemproTest {
 		
 		tempro.sumMatrixSubset(origins, destinations);
 		
-		int numberOfZones = zoning.getZoneIDToCodeMap().length - 1;
+		int numberOfZones = zoning.getTemproIDToCodeMap().length - 1;
 		System.out.println("Number of zones = " + numberOfZones);
 		RealODMatrixTempro unit = RealODMatrixTempro.createUnitMatrix(zoning);
 		assertEquals("Total flows for unit matrix should be as expected", numberOfZones*numberOfZones, unit.getSumOfFlows(), DELTA);

@@ -13,20 +13,36 @@ import java.util.List;
 public interface SkimMatrix {
 	
 	/**
-	 * Gets cost for a given origin-destination pair.
-	 * @param originZone Origin zone.
-	 * @param destinationZone Destination zone.
+	 * Gets cost for a given origin-destination pair using ONS codes.
+	 * @param originZone Origin zone ONS code.
+	 * @param destinationZone Destination zone ONS code.
 	 * @return Origin-destination cost.
 	 */
 	public double getCost(String originZone, String destinationZone);
 	
 	/**
-	 * Sets cost for a given origin-destination pair.
+	 * Sets cost for a given origin-destination pair using ONS codes.
 	 * @param originZone Origin zone.
 	 * @param destinationZone Destination zone.
 	 * @param cost Origin-destination cost.
 	 */
 	public void setCost(String originZone, String destinationZone, double cost);
+	
+	/**
+	 * Gets cost for a given origin-destination pair using int zone IDs.
+	 * @param originZone Origin zone ID.
+	 * @param destinationZone Destination zone ID.
+	 * @return Origin-destination cost.
+	 */
+	public double getCost(int originZoneID, int destinationZoneID);
+	
+	/**
+	 * Sets cost for a given origin-destination pair using int zone IDs.
+	 * @param originZoneID Origin zone ID.
+	 * @param destinationZoneID Destination zone ID.
+	 * @param cost Origin-destination cost.
+	 */
+	public void setCost(int originZoneID, int destinationZoneID, double cost);
 	
 	/**
 	 * Gets the unsorted list of origins.
@@ -69,8 +85,14 @@ public interface SkimMatrix {
 	public void printMatrixFormatted(String s);
 	
 	/**
-	 * Saves the matrix into a csv file.
+	 * Saves the matrix into a csv file (matrix format).
 	 * @param outputFile Path to the output file.
 	 */
 	public void saveMatrixFormatted(String outputFile);
+	
+	/**
+	 * Saves the matrix into a csv file (list format).
+	 * @param outputFile Path to the output file.
+	 */
+	public void saveMatrixFormattedList(String outputFile);
 }

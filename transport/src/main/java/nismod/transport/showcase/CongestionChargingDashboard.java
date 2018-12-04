@@ -374,6 +374,7 @@ public class CongestionChargingDashboard extends JFrame {
 					
 					//create a road network assignment
 					RoadNetworkAssignment rnaAfterCongestionCharging = new RoadNetworkAssignment(roadNetwork,
+							zoning,
 							yearToUnitCO2Emissions.get(BASE_YEAR),
 							yearToEnergyUnitCosts.get(BASE_YEAR),
 							yearToEngineTypeFractions.get(BASE_YEAR),
@@ -1106,7 +1107,8 @@ public class CongestionChargingDashboard extends JFrame {
 		yearToAVFractions = InputFileReader.readAVFractionsFile(AVFractionsFile);
 	
 		//create a road network assignment
-		rnaBefore = new RoadNetworkAssignment(roadNetwork, 
+		rnaBefore = new RoadNetworkAssignment(roadNetwork,
+											zoning,
 											yearToEnergyUnitCosts.get(BASE_YEAR),
 											yearToUnitCO2Emissions.get(BASE_YEAR),
 											yearToEngineTypeFractions.get(BASE_YEAR),

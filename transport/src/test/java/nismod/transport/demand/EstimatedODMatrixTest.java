@@ -65,6 +65,9 @@ public class EstimatedODMatrixTest {
 		//create a road network
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
+		
+		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
+		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
 				
 		final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
 		final String unitCO2EmissionsFile = props.getProperty("unitCO2EmissionsFile");
@@ -78,7 +81,8 @@ public class EstimatedODMatrixTest {
 		final int BASE_YEAR = Integer.parseInt(props.getProperty("baseYear"));
 	
 		//create a road network assignment
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, 
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork,
+															zoning,
 															InputFileReader.readEnergyUnitCostsFile(energyUnitCostsFile).get(BASE_YEAR),
 															InputFileReader.readUnitCO2EmissionFile(unitCO2EmissionsFile).get(BASE_YEAR),
 															InputFileReader.readEngineTypeFractionsFile(engineTypeFractionsFile).get(BASE_YEAR),
@@ -96,10 +100,7 @@ public class EstimatedODMatrixTest {
 		
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, props);
 		
-		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
-		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
-		
-		ODMatrix temproODM = ODMatrix.createUnitMatrix(zoning.getZoneCodeToIDMap().keySet());
+		ODMatrix temproODM = ODMatrix.createUnitMatrix(zoning.getTemproCodeToIDMap().keySet());
 		rna.assignPassengerFlowsTempro(temproODM, zoning, rsg, props);
 		rna.calculateDistanceSkimMatrixTempro().printMatrixFormatted();
 				
@@ -162,7 +163,7 @@ public class EstimatedODMatrixTest {
 		//{0.074923547, 0.372579001, 0.072884811, 0.127930683, 0.22069317, 0.130988787};
 		//{147, 731, 143, 251, 433, 257};
 
-		SkimMatrix distanceSkimMatrix = new SkimMatrixMultiKey();
+		SkimMatrix distanceSkimMatrix = new SkimMatrixMultiKey(null);
 
 		distanceSkimMatrix.setCost("1", "1", 1.2);
 		distanceSkimMatrix.setCost("1", "2", 9.4);
@@ -215,7 +216,7 @@ public class EstimatedODMatrixTest {
 		
 		odmpa.iterate();
 
-		SkimMatrix distanceSkimMatrix2 = new SkimMatrixMultiKey();
+		SkimMatrix distanceSkimMatrix2 = new SkimMatrixMultiKey(null);
 
 		distanceSkimMatrix2.setCost("E06000045", "E06000045", 0.5);
 		distanceSkimMatrix2.setCost("E06000045", "E07000086", 1.1);

@@ -468,6 +468,9 @@ public class RouteSetGeneratorTest {
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
 		
+		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
+		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
+		
 		roadNetwork.makeEdgesAdmissible();
 		roadNetwork.sortGravityNodesFreight(); //must!
 		
@@ -488,7 +491,8 @@ public class RouteSetGeneratorTest {
 		final int BASE_YEAR = Integer.parseInt(props.getProperty("baseYear"));
 	
 		//create a road network assignment
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, 
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork,
+															zoning,
 															InputFileReader.readEnergyUnitCostsFile(energyUnitCostsFile).get(BASE_YEAR),
 															InputFileReader.readUnitCO2EmissionFile(unitCO2EmissionsFile).get(BASE_YEAR),
 															InputFileReader.readEngineTypeFractionsFile(engineTypeFractionsFile).get(BASE_YEAR),
@@ -620,6 +624,9 @@ public class RouteSetGeneratorTest {
 		//create a road network
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 		
+		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
+		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
+		
 		DirectedNode  node1 = (DirectedNode) roadNetwork.getNodeIDtoNode()[7293];
 		DirectedNode  node2 = (DirectedNode) roadNetwork.getNodeIDtoNode()[12175];
 		
@@ -639,7 +646,7 @@ public class RouteSetGeneratorTest {
 		System.out.printf("Node %d edges to node %d: %s \n", node1.getID(), node2.getID(), node1.getEdges(node2));
 
 		//create a road network assignment
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, null, null, null, null, null, null, null, null, null, null, null, null, null, props);
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, zoning, null, null, null, null, null, null, null, null, null, null, null, null, null, props);
 
 		//set route generation parameters
 		Properties params = new Properties();

@@ -12,6 +12,7 @@ import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.showcase.NetworkVisualiserDemo;
 import nismod.transport.utility.ConfigReader;
 import nismod.transport.utility.InputFileReader;
+import nismod.transport.zone.Zoning;
 
 /**
  * Test for the NetworkVisualizer class
@@ -42,6 +43,9 @@ public class NetworkVisualiserTest {
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
 		
+		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
+		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
+		
 		final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
 		final String unitCO2EmissionsFile = props.getProperty("unitCO2EmissionsFile");
 		final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
@@ -55,6 +59,7 @@ public class NetworkVisualiserTest {
 
 		//create a road network assignment
 		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork,
+															zoning,
 															InputFileReader.readEnergyUnitCostsFile(energyUnitCostsFile).get(BASE_YEAR),
 															InputFileReader.readUnitCO2EmissionFile(unitCO2EmissionsFile).get(BASE_YEAR),
 															InputFileReader.readEngineTypeFractionsFile(engineTypeFractionsFile).get(BASE_YEAR),

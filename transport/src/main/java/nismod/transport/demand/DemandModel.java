@@ -261,7 +261,8 @@ public class DemandModel {
 					defaultLinkTravelTime = InputFileReader.readLinkTravelTimeFile(this.baseYear, defaultLinkTravelTimeFile);
 				
 				//create a network assignment and assign the demand
-				rna = new RoadNetworkAssignment(this.roadNetwork, 
+				rna = new RoadNetworkAssignment(this.roadNetwork,
+												this.zoning,
 												this.yearToEnergyUnitCosts.get(fromYear),
 												this.yearToUnitCO2Emissions.get(fromYear),
 												this.yearToEngineTypeFractions.get(fromYear), 
@@ -431,7 +432,8 @@ public class DemandModel {
 
 				if (predictedRna == null)
 					//assign predicted year - using link travel times from fromYear
-					predictedRna = new RoadNetworkAssignment(this.roadNetwork, 
+					predictedRna = new RoadNetworkAssignment(this.roadNetwork,
+															 this.zoning,
 															 this.yearToEnergyUnitCosts.get(predictedYear),
 															 this.yearToUnitCO2Emissions.get(predictedYear),
 															 this.yearToEngineTypeFractions.get(predictedYear), 
@@ -448,7 +450,8 @@ public class DemandModel {
 															 this.props);
 				else
 					//using latest link travel times
-					predictedRna = new RoadNetworkAssignment(this.roadNetwork, 
+					predictedRna = new RoadNetworkAssignment(this.roadNetwork,
+															 this.zoning,
 															 this.yearToEnergyUnitCosts.get(predictedYear),
 															 this.yearToUnitCO2Emissions.get(predictedYear),
 															 this.yearToEngineTypeFractions.get(predictedYear), 
@@ -558,7 +561,8 @@ public class DemandModel {
 				//if (LogManager.getRootLogger().getLevel().isLessSpecificThan(Level.DEBUG)) predictedFreightODMatrix.printMatrixFormatted();
 				
 				//assign predicted year again using latest link travel times
-				predictedRna = new RoadNetworkAssignment(this.roadNetwork, 
+				predictedRna = new RoadNetworkAssignment(this.roadNetwork,
+														 this.zoning,
 														 this.yearToEnergyUnitCosts.get(predictedYear),
 														 this.yearToUnitCO2Emissions.get(predictedYear),
 														 this.yearToEngineTypeFractions.get(predictedYear), 
@@ -645,7 +649,8 @@ public class DemandModel {
 			defaultLinkTravelTime = InputFileReader.readLinkTravelTimeFile(this.baseYear, defaultLinkTravelTimeFile);
 		
 		//create a network assignment and assign the demand
-		RoadNetworkAssignment rna = new RoadNetworkAssignment(this.roadNetwork, 
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(this.roadNetwork,
+											this.zoning,
 											this.yearToEnergyUnitCosts.get(baseYear),
 											this.yearToUnitCO2Emissions.get(baseYear),
 											this.yearToEngineTypeFractions.get(baseYear), 
@@ -755,11 +760,11 @@ public class DemandModel {
 			this.yearToFreightODMatrix.put(fromYear, freightODM);
 
 			inputFile = inputFolder + File.separator +  timeSkimMatrixFile;
-			SkimMatrix timeSkimMatrix = new SkimMatrixMultiKey(inputFile);
+			SkimMatrix timeSkimMatrix = new SkimMatrixMultiKey(inputFile, zoning);
 			this.yearToTimeSkimMatrix.put(fromYear, timeSkimMatrix);
 
 			inputFile = inputFolder + File.separator +  costSkimMatrixFile;
-			SkimMatrix costSkimMatrix = new SkimMatrixMultiKey(inputFile);
+			SkimMatrix costSkimMatrix = new SkimMatrixMultiKey(inputFile, zoning);
 			this.yearToCostSkimMatrix.put(fromYear, costSkimMatrix);
 
 			inputFile = inputFolder + File.separator +  timeSkimMatrixFreightFile;
@@ -897,7 +902,8 @@ public class DemandModel {
 
 			if (predictedRna == null)
 				//assign predicted year - using link travel times from fromYear
-				predictedRna = new RoadNetworkAssignment(this.roadNetwork, 
+				predictedRna = new RoadNetworkAssignment(this.roadNetwork,
+						this.zoning,
 						this.yearToEnergyUnitCosts.get(predictedYear),
 						this.yearToUnitCO2Emissions.get(predictedYear),
 						this.yearToEngineTypeFractions.get(predictedYear), 
@@ -914,7 +920,8 @@ public class DemandModel {
 						this.props);
 			else
 				//using latest link travel times
-				predictedRna = new RoadNetworkAssignment(this.roadNetwork, 
+				predictedRna = new RoadNetworkAssignment(this.roadNetwork,
+						this.zoning,
 						this.yearToEnergyUnitCosts.get(predictedYear),
 						this.yearToUnitCO2Emissions.get(predictedYear),
 						this.yearToEngineTypeFractions.get(predictedYear), 
@@ -1024,7 +1031,8 @@ public class DemandModel {
 			//if (LogManager.getRootLogger().getLevel().isLessSpecificThan(Level.DEBUG)) predictedFreightODMatrix.printMatrixFormatted();
 
 			//assign predicted year again using latest link travel times
-			predictedRna = new RoadNetworkAssignment(this.roadNetwork, 
+			predictedRna = new RoadNetworkAssignment(this.roadNetwork,
+					this.zoning,
 					this.yearToEnergyUnitCosts.get(predictedYear),
 					this.yearToUnitCO2Emissions.get(predictedYear),
 					this.yearToEngineTypeFractions.get(predictedYear), 

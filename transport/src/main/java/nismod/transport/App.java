@@ -332,7 +332,8 @@ public class App {
 					defaultLinkTravelTime = InputFileReader.readLinkTravelTimeFile(BASE_YEAR, defaultLinkTravelTimeFile);
 				
 				//create a road network assignment
-				RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, 
+				RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork,
+																	zoning,
 																	InputFileReader.readEnergyUnitCostsFile(energyUnitCostsFile).get(BASE_YEAR),
 																	InputFileReader.readUnitCO2EmissionFile(unitCO2EmissionsFile).get(BASE_YEAR),
 																	InputFileReader.readEngineTypeFractionsFile(engineTypeFractionsFile).get(BASE_YEAR),
@@ -404,7 +405,8 @@ public class App {
 					defaultLinkTravelTime = InputFileReader.readLinkTravelTimeFile(BASE_YEAR, defaultLinkTravelTimeFile);
 				
 				//create a road network assignment
-				RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, 
+				RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork,
+																	zoning,
 																	InputFileReader.readEnergyUnitCostsFile(energyUnitCostsFile).get(BASE_YEAR),
 																	InputFileReader.readUnitCO2EmissionFile(unitCO2EmissionsFile).get(BASE_YEAR),
 																	InputFileReader.readEngineTypeFractionsFile(engineTypeFractionsFile).get(BASE_YEAR),
