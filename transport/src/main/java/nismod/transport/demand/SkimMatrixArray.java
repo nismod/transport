@@ -223,8 +223,8 @@ public class SkimMatrixArray implements SkimMatrix{
 			System.out.print(o);
 			for (String s: secondKeyList) {
 				double cost = this.getCost(o,s);
-				if (cost != 0.0)	System.out.printf("%10.2f", this.getCost(o,s));
-				else				System.out.printf("%10s", "N/A");
+				if (cost > 0.0)	System.out.printf("%10.2f", this.getCost(o,s));
+				else			System.out.printf("%10d", 0);
 			}
 			System.out.println();
 		}
@@ -268,8 +268,8 @@ public class SkimMatrixArray implements SkimMatrix{
 				record.add(origin);
 				for (String destination: secondKeyList) {
 					double cost = this.getCost(origin, destination);
-					if (cost != 0.0)	record.add(String.format("%.2f", cost));
-					else				record.add("N/A");
+					if (cost > 0.0)	record.add(String.format("%.2f", cost));
+					else			record.add("0.0");
 				}
 				csvFilePrinter.printRecord(record);
 			}

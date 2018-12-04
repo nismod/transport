@@ -75,7 +75,8 @@ public class SkimMatrixMultiKey implements SkimMatrix {
 					this.setCost(record.get(0), destination, cost);
 				} catch(NumberFormatException e) {
 					LOGGER.error(e);
-					this.setCost(record.get(0), destination, Double.NaN);
+					//this.setCost(record.get(0), destination, Double.NaN);
+					this.setCost(record.get(0), destination, 0.0);
 				}
 			}
 		}
@@ -238,9 +239,9 @@ public class SkimMatrixMultiKey implements SkimMatrix {
 		for (String o: firstKeyList) {
 			System.out.print(o);
 			for (String s: secondKeyList) {
-				Double cost = this.getCost(o,s);
-				if (cost != null)	System.out.printf("%10.2f", this.getCost(o,s));
-				else				System.out.printf("%10s", "N/A");
+				double cost = this.getCost(o,s);
+				if (cost > 0)	System.out.printf("%10.2f", this.getCost(o,s));
+				else			System.out.printf("%10d", 0);
 			}
 			System.out.println();
 		}
@@ -283,9 +284,9 @@ public class SkimMatrixMultiKey implements SkimMatrix {
 				record.clear();
 				record.add(origin);
 				for (String destination: secondKeyList) {
-					Double cost = this.getCost(origin, destination);
-					if (cost != null)	record.add(String.format("%.2f", cost));
-					else				record.add("N/A");
+					double cost = this.getCost(origin, destination);
+					if (cost > 0.0)	record.add(String.format("%.2f", cost));
+					else			record.add("0.0");
 				}
 				csvFilePrinter.printRecord(record);
 			}
@@ -328,8 +329,8 @@ public class SkimMatrixMultiKey implements SkimMatrix {
 			ArrayList<String> record = new ArrayList<String>();
 			for (String origin: firstKeyList)
 				for (String destination: secondKeyList) {
-					Double cost = this.getCost(origin, destination);
-					if (cost != null) {
+					double cost = this.getCost(origin, destination);
+					if (cost > 0.0) {
 						record.clear();
 						record.add(origin);
 						record.add(destination);

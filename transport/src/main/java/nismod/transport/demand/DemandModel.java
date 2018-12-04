@@ -493,20 +493,20 @@ public class DemandModel {
 					if (this.yearToTimeSkimMatrix.get(predictedYear) == null) LOGGER.error("No time skim matrix in the demand model.");
 					if (this.yearToCostSkimMatrix.get(predictedYear) == null) LOGGER.error("No cost skim matrix in the demand model.");
 										
-					Double oldODTravelTime = this.yearToTimeSkimMatrix.get(predictedYear).getCost(originZone, destinationZone);
-					Double newODTravelTime = tsm.getCost(originZone, destinationZone);
-					Double oldODTravelCost = this.yearToCostSkimMatrix.get(predictedYear).getCost(originZone, destinationZone);
-					Double newODTravelCost = csm.getCost(originZone, destinationZone);
+					double oldODTravelTime = this.yearToTimeSkimMatrix.get(predictedYear).getCost(originZone, destinationZone);
+					double newODTravelTime = tsm.getCost(originZone, destinationZone);
+					double oldODTravelCost = this.yearToCostSkimMatrix.get(predictedYear).getCost(originZone, destinationZone);
+					double newODTravelCost = csm.getCost(originZone, destinationZone);
 					
-					if (oldODTravelTime == null) LOGGER.warn("Unknown old travel time between zone {} and zone {}.", originZone, destinationZone);
-					if (newODTravelTime == null) LOGGER.warn("Unknown new travel time between zone {} and zone {}.", originZone, destinationZone);
-					if (oldODTravelCost == null) LOGGER.warn("Unknown old travel cost between zone {} and zone {}.", originZone, destinationZone);
-					if (newODTravelCost == null) LOGGER.warn("Unknown new travel cost between zone {} and zone {}.", originZone, destinationZone);
-					if (oldODTravelTime == null || newODTravelTime == null)	{ //if either is undefined assume the ratio is 1, i.e. not affecting the prediction
+					if (oldODTravelTime == 0.0) LOGGER.warn("Unknown old travel time between zone {} and zone {}.", originZone, destinationZone);
+					if (newODTravelTime == 0.0) LOGGER.warn("Unknown new travel time between zone {} and zone {}.", originZone, destinationZone);
+					if (oldODTravelCost == 0.0) LOGGER.warn("Unknown old travel cost between zone {} and zone {}.", originZone, destinationZone);
+					if (newODTravelCost == 0.0) LOGGER.warn("Unknown new travel cost between zone {} and zone {}.", originZone, destinationZone);
+					if (oldODTravelTime == 0.0 || newODTravelTime == 0.0)	{ //if either is undefined assume the ratio is 1, i.e. not affecting the prediction
 						oldODTravelTime = 1.0;
 						newODTravelTime = 1.0;
 					}
-					if (oldODTravelCost == null || newODTravelCost == null) { 
+					if (oldODTravelCost == 0.0 || newODTravelCost == 0.0) { 
 						oldODTravelCost = 1.0;
 						newODTravelCost = 1.0;
 					}
@@ -963,20 +963,20 @@ public class DemandModel {
 				if (this.yearToTimeSkimMatrix.get(predictedYear) == null) LOGGER.error("No time skim matrix in the demand model.");
 				if (this.yearToCostSkimMatrix.get(predictedYear) == null) LOGGER.error("No cost skim matrix in the demand model.");
 
-				Double oldODTravelTime = this.yearToTimeSkimMatrix.get(predictedYear).getCost(originZone, destinationZone);
-				Double newODTravelTime = tsm.getCost(originZone, destinationZone);
-				Double oldODTravelCost = this.yearToCostSkimMatrix.get(predictedYear).getCost(originZone, destinationZone);
-				Double newODTravelCost = csm.getCost(originZone, destinationZone);
+				double oldODTravelTime = this.yearToTimeSkimMatrix.get(predictedYear).getCost(originZone, destinationZone);
+				double newODTravelTime = tsm.getCost(originZone, destinationZone);
+				double oldODTravelCost = this.yearToCostSkimMatrix.get(predictedYear).getCost(originZone, destinationZone);
+				double newODTravelCost = csm.getCost(originZone, destinationZone);
 
-				if (oldODTravelTime == null) LOGGER.warn("Unknown old travel time between zone {} and zone {}.", originZone, destinationZone);
-				if (newODTravelTime == null) LOGGER.warn("Unknown new travel time between zone {} and zone {}.", originZone, destinationZone);
-				if (oldODTravelCost == null) LOGGER.warn("Unknown old travel cost between zone {} and zone {}.", originZone, destinationZone);
-				if (newODTravelCost == null) LOGGER.warn("Unknown new travel cost between zone {} and zone {}.", originZone, destinationZone);
-				if (oldODTravelTime == null || newODTravelTime == null)	{ //if either is undefined assume the ratio is 1, i.e. not affecting the prediction
+				if (oldODTravelTime == 0.0) LOGGER.warn("Unknown old travel time between zone {} and zone {}.", originZone, destinationZone);
+				if (newODTravelTime == 0.0) LOGGER.warn("Unknown new travel time between zone {} and zone {}.", originZone, destinationZone);
+				if (oldODTravelCost == 0.0) LOGGER.warn("Unknown old travel cost between zone {} and zone {}.", originZone, destinationZone);
+				if (newODTravelCost == 0.0) LOGGER.warn("Unknown new travel cost between zone {} and zone {}.", originZone, destinationZone);
+				if (oldODTravelTime == 0.0 || newODTravelTime == 0.0)	{ //if either is undefined assume the ratio is 1, i.e. not affecting the prediction
 					oldODTravelTime = 1.0;
 					newODTravelTime = 1.0;
 				}
-				if (oldODTravelCost == null || newODTravelCost == null) { 
+				if (oldODTravelCost == 0.0 || newODTravelCost == 0.0) { 
 					oldODTravelCost = 1.0;
 					newODTravelCost = 1.0;
 				}
