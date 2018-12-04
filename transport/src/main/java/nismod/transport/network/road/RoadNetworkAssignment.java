@@ -34,10 +34,12 @@ import org.opengis.feature.simple.SimpleFeature;
 
 import nismod.transport.demand.AssignableODMatrix;
 import nismod.transport.demand.FreightMatrix;
+import nismod.transport.demand.ODMatrix;
 import nismod.transport.demand.SkimMatrix;
 import nismod.transport.demand.SkimMatrixArray;
 import nismod.transport.demand.SkimMatrixArrayTempro;
 import nismod.transport.demand.SkimMatrixFreight;
+import nismod.transport.demand.SkimMatrixMultiKey;
 import nismod.transport.network.road.RoadNetwork.EdgeType;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
@@ -2466,7 +2468,33 @@ public class RoadNetworkAssignment {
 			this.assignFlowsAndUpdateLinkTravelTimes(passengerODM, freightODM, rsg, zoning, params, weight);
 		}
 	}
+	
+	/**
+	 * Calculate assigned OD matrix from trip list.
+	 * @param ODMatrix OD matrix.
+	 */
+	public ODMatrix calculateAssignedODMatrix() {
 
+		ODMatrix counter = new ODMatrix();
+
+		for (Trip trip: this.tripList) {
+
+			if (trip.getVehicle() != VehicleType.CAR && trip.getVehicle() != VehicleType.CAR_AV) continue; //skip freight vehicles
+
+			int originLadID = trip.getOriginLadID();
+			int destinationLadID = trip.getDestinationLadID();
+			int multiplier = trip.getMultiplier();
+			
+			String originLAD = this.zoning.getLadIDToCodeMap()[originLadID];
+			String destinationLAD = this.zoning.getLadIDToCodeMap()[destinationLadID];
+			
+			int count = counter.getFlow(originLAD, destinationLAD);
+			counter.setFlow(originLAD, destinationLAD, count + multiplier);
+		}
+		
+		return counter;
+	}
+	
 	/**
 	 * Updates travel time skim matrix (zone-to-zone travel times).
 	 * @param timeSkimMatrix Inter-zonal skim matrix (time).
@@ -2483,15 +2511,16 @@ public class RoadNetworkAssignment {
 
 			int originLAD = trip.getOriginLadID();
 			int destinationLAD = trip.getDestinationLadID();
-	
+			int multiplier = trip.getMultiplier();
+				
 			double count = counter.getCost(originLAD, destinationLAD);
-			counter.setCost(originLAD, destinationLAD, count + 1);
+			counter.setCost(originLAD, destinationLAD, count + multiplier);
 
 			double sum = timeSkimMatrix.getCost(originLAD, destinationLAD);
 			double tripTravelTime = trip.getTravelTime(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), averageIntersectionDelay, this.roadNetwork.getNodeToAverageAccessEgressDistance(), this.averageAccessEgressSpeedCar, this.flagIncludeAccessEgress);
-			timeSkimMatrix.setCost(originLAD, destinationLAD, sum + tripTravelTime);
+			timeSkimMatrix.setCost(originLAD, destinationLAD, sum + tripTravelTime * multiplier);
 		}
-
+		
 		List<String> origins = timeSkimMatrix.getUnsortedOrigins();
 		List<String> destinations = timeSkimMatrix.getUnsortedDestinations();
 		for (String originLAD: origins)
@@ -2585,7 +2614,6 @@ public class RoadNetworkAssignment {
 
 			int originLAD = trip.getOriginLadID();
 			int destinationLAD = trip.getDestinationLadID();
-			
 			int multiplier = trip.getMultiplier();
 
 			double count = counter.getCost(originLAD, destinationLAD);

@@ -141,7 +141,7 @@ public class SkimMatrixArray implements SkimMatrix{
 	 */
 	public void setCost(int originZoneID, int destinationZoneID, double cost) {
 		
-		this.matrix[originZoneID][originZoneID] = cost;
+		this.matrix[originZoneID][destinationZoneID] = cost;
 	}
 	
 	

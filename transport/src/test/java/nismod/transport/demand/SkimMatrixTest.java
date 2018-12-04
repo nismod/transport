@@ -15,7 +15,10 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import nismod.transport.network.road.RoadNetwork;
+import nismod.transport.network.road.RoadNetworkAssignment;
+import nismod.transport.network.road.Trip;
 import nismod.transport.utility.ConfigReader;
+import nismod.transport.utility.InputFileReader;
 import nismod.transport.zone.Zoning;
 
 /**
@@ -145,5 +148,43 @@ public class SkimMatrixTest {
 		SkimMatrix skimMatrixArray2 = new SkimMatrixArray("./temp/skimMatrix.csv", zoning);
 		diff = skimMatrixArray2.getAbsoluteDifference(skimMatrixArray);
 		assertEquals("Matrices are the same", 0.0, diff, DELTA);
+		
+		final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
+		final String unitCO2EmissionsFile = props.getProperty("unitCO2EmissionsFile");
+		final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
+		final String AVFractionsFile = props.getProperty("autonomousVehiclesFile");
+		final String vehicleTypeToPCUFile = props.getProperty("vehicleTypeToPCUFile");
+		final String timeOfDayDistributionFile = props.getProperty("timeOfDayDistributionFile");
+		final String timeOfDayDistributionFreightFile = props.getProperty("timeOfDayDistributionFreightFile");
+		final String baseFuelConsumptionRatesFile = props.getProperty("baseFuelConsumptionRatesFile");
+		final String relativeFuelEfficiencyFile = props.getProperty("relativeFuelEfficiencyFile");
+		final int BASE_YEAR = Integer.parseInt(props.getProperty("baseYear"));
+	
+		//create a road network assignment
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork,
+															zoning,
+															InputFileReader.readEnergyUnitCostsFile(energyUnitCostsFile).get(BASE_YEAR),
+															InputFileReader.readUnitCO2EmissionFile(unitCO2EmissionsFile).get(BASE_YEAR),
+															InputFileReader.readEngineTypeFractionsFile(engineTypeFractionsFile).get(BASE_YEAR),
+															InputFileReader.readAVFractionsFile(AVFractionsFile).get(BASE_YEAR),
+															InputFileReader.readVehicleTypeToPCUFile(vehicleTypeToPCUFile),
+															InputFileReader.readEnergyConsumptionParamsFile(baseFuelConsumptionRatesFile),
+															InputFileReader.readRelativeFuelEfficiencyFile(relativeFuelEfficiencyFile).get(BASE_YEAR),
+															InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFile).get(BASE_YEAR),
+															InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFreightFile).get(BASE_YEAR),
+															null,
+															null,
+															null,
+															null,
+															props);
+
+		//assign passenger flows
+		final String baseYearODMatrixFile = props.getProperty("baseYearODMatrixFile");
+		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
+		rna.assignPassengerFlowsRouting(odm, null, props);
+		//rna.assignPassengerFlowsRouteChoice(odm, null, props);
+		odm.printMatrixFormatted("OD matrix:");
+		rna.calculateAssignedODMatrix().printMatrixFormatted("Assigned matrix:");
+		rna.calculateTimeSkimMatrix().printMatrixFormatted("Time skim matrix:");
 	}
 }

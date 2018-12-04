@@ -1230,6 +1230,9 @@ public class RoadExpansionDashboard extends JFrame {
 		yearToEngineTypeFractions = InputFileReader.readEngineTypeFractionsFile(engineTypeFractionsFile);
 		yearToAVFractions = InputFileReader.readAVFractionsFile(AVFractionsFile);
 	
+		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
+		zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
+		
 		//create a road network assignment
 		RoadNetworkAssignment rnaBefore = new RoadNetworkAssignment(roadNetwork,
 															zoning,
@@ -1247,9 +1250,6 @@ public class RoadExpansionDashboard extends JFrame {
 															null,
 															null,
 															props);
-
-		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
-		zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
 
 		odm = new ODMatrix(baseYearODMatrixFile); 
 		//odm = new ODMatrix("./src/test/resources/testdata/csvfiles/tempro2LAD.csv");

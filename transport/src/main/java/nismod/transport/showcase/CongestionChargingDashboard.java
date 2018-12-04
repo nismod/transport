@@ -1105,7 +1105,10 @@ public class CongestionChargingDashboard extends JFrame {
 		yearToUnitCO2Emissions = InputFileReader.readEnergyUnitCostsFile(unitCO2EmissionsFile);
 		yearToEngineTypeFractions = InputFileReader.readEngineTypeFractionsFile(engineTypeFractionsFile);
 		yearToAVFractions = InputFileReader.readAVFractionsFile(AVFractionsFile);
-	
+
+		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
+		zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
+		
 		//create a road network assignment
 		rnaBefore = new RoadNetworkAssignment(roadNetwork,
 											zoning,
@@ -1123,9 +1126,6 @@ public class CongestionChargingDashboard extends JFrame {
 											null,
 											null,
 											props);
-
-		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
-		zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
 
 		odm = new ODMatrix(baseYearODMatrixFile);
 		odm.scaleMatrixValue(MATRIX_SCALING_FACTOR);
