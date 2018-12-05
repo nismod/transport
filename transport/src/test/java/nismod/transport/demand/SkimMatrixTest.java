@@ -65,6 +65,7 @@ public class SkimMatrixTest {
 		
 		skimMatrix.printMatrixFormatted();
 		skimMatrix.saveMatrixFormatted("./temp/skimMatrix.csv");
+		skimMatrix.saveMatrixFormattedList("./temp/skimMatrixList.csv");
 		
 		SkimMatrixMultiKey skimMatrix2 = new SkimMatrixMultiKey("./temp/skimMatrix.csv", null);
 		double diff = skimMatrix2.getAbsoluteDifference(skimMatrix);
@@ -143,12 +144,31 @@ public class SkimMatrixTest {
 		skimMatrixArray.setCost("E06000046", "E07000091", 9.4);
 		//skimMatrixArray.setCost("E06000046", "E06000046", 6.2);
 		
-		skimMatrixArray.printMatrixFormatted();
+		skimMatrixArray.printMatrixFormatted("Array skim matrix:");
+		skimMatrixArray.saveMatrixFormattedList("./temp/skimMatrix2.csv");
 		
-		SkimMatrix skimMatrixArray2 = new SkimMatrixArray("./temp/skimMatrix.csv", zoning);
+		SkimMatrix skimMatrixArray2 = new SkimMatrixArray("./temp/skimMatrix2.csv", zoning);
+		skimMatrixArray2.printMatrixFormatted("Array skim matrix2:");
 		diff = skimMatrixArray2.getAbsoluteDifference(skimMatrixArray);
 		assertEquals("Matrices are the same", 0.0, diff, DELTA);
+				
+		SkimMatrix skimMatrixMultiKey = new SkimMatrixMultiKey("./temp/skimMatrixList.csv", zoning);
+		skimMatrixMultiKey.printMatrixFormatted("Multikey skim matrix:");
 		
+		final double EPSILON = 1e-5;
+		assertEquals("Getter method works", skimMatrixMultiKey.getCost("E06000046", "E06000046"), skimMatrixMultiKey.getCost(46, 46), EPSILON);
+		
+		skimMatrixMultiKey.getUnsortedOrigins();
+		skimMatrixMultiKey.getUnsortedDestinations();
+		
+		diff = skimMatrixMultiKey.getAbsoluteDifference(skimMatrixArray2);
+		assertEquals("Matrices are the same", 0.0, diff, DELTA);
+		
+		System.out.println("Sum of costs: " + ((SkimMatrixArray)skimMatrixArray2).getSumOfCosts());
+		System.out.println("Average cost: " + ((SkimMatrixArray)skimMatrixArray2).getAverageCost());
+		System.out.println("Sum of costs: " + ((SkimMatrixArray)skimMatrixArray2).getSumOfCosts(odMatrix));
+		System.out.println("Average cost: " + ((SkimMatrixArray)skimMatrixArray2).getAverageCost(odMatrix));
+				
 		final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
 		final String unitCO2EmissionsFile = props.getProperty("unitCO2EmissionsFile");
 		final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
@@ -186,5 +206,10 @@ public class SkimMatrixTest {
 		odm.printMatrixFormatted("OD matrix:");
 		rna.calculateAssignedODMatrix().printMatrixFormatted("Assigned matrix:");
 		rna.calculateTimeSkimMatrix().printMatrixFormatted("Time skim matrix:");
+		
+		SkimMatrix skimMatrixArrayTempro = new SkimMatrixArrayTempro(zoning);
+		skimMatrixArrayTempro.saveMatrixFormatted("./temp/skimMatrixTempro.csv");
+		skimMatrixArrayTempro = new SkimMatrixArrayTempro("./temp/skimMatrixTempro.csv", zoning);
+		skimMatrixArrayTempro.saveMatrixFormattedList("./temp/skimMatrixTemproList.csv");
 	}
 }

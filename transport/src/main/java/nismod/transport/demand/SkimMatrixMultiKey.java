@@ -48,7 +48,7 @@ public class SkimMatrixMultiKey implements SkimMatrix {
 	}
 	
 	/**
-	 * Constructor that reads skim matrix from an input csv file.
+	 * Constructor that reads skim matrix from an input csv file. Can use both matrix and list format.
 	 * @param fileName Path to the input file.
 	 * @param zoning Zoning system.
 	 * @throws FileNotFoundException if any.
@@ -60,27 +60,37 @@ public class SkimMatrixMultiKey implements SkimMatrix {
 		this.zoning = zoning;
 		
 		CSVParser parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
-		//System.out.println(parser.getHeaderMap().toString());
 		Set<String> keySet = parser.getHeaderMap().keySet();
-		keySet.remove("origin");
-		//System.out.println("keySet = " + keySet);
-		double cost;
-		for (CSVRecord record : parser) { 
-			//System.out.println(record);
-			//System.out.println("Origin zone = " + record.get(0));
-			for (String destination: keySet) {
-				//System.out.println("Destination zone = " + destination);
-				try {
-					cost = Double.parseDouble(record.get(destination));
-					this.setCost(record.get(0), destination, cost);
-				} catch(NumberFormatException e) {
-					LOGGER.error(e);
-					//this.setCost(record.get(0), destination, Double.NaN);
-					this.setCost(record.get(0), destination, 0.0);
+
+		if (keySet.contains("origin") &&  keySet.contains("destination") && keySet.contains("cost")) { //use list format
+			for (CSVRecord record : parser) { 
+					String origin = record.get(0);
+					String destination = record.get(1);
+					try {
+						double cost = Double.parseDouble(record.get(2));
+						this.setCost(origin, destination, cost);
+					} catch(NumberFormatException e) {
+						LOGGER.error(e);
+						this.setCost(origin, destination, 0.0);
+					}
+			}
+		} else { //use matrix format
+			keySet.remove("origin");
+			double cost;
+			for (CSVRecord record : parser) { 
+				for (String destination: keySet) {
+					try {
+						cost = Double.parseDouble(record.get(destination));
+						this.setCost(record.get(0), destination, cost);
+					} catch(NumberFormatException e) {
+						LOGGER.error(e);
+						this.setCost(record.get(0), destination, 0.0);
+					}
 				}
 			}
 		}
-		parser.close(); 
+		parser.close();
+		LOGGER.debug("Finished reading skim matrix from file.");
 	}
 	
 	/**

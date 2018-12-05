@@ -269,8 +269,8 @@ public class SkimMatrixArrayTempro implements SkimMatrix{
 				record.add(origin);
 				for (String destination: secondKeyList) {
 					double cost = this.getCost(origin, destination);
-					if (cost != 0.0)	record.add(String.format("%.2f", cost));
-					else				record.add("N/A");
+					if (cost > 0.0)	record.add(String.format("%.2f", cost));
+					else			record.add("0.0");
 				}
 				csvFilePrinter.printRecord(record);
 			}
