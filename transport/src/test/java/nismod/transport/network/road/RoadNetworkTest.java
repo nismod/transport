@@ -410,8 +410,7 @@ public class RoadNetworkTest {
 			Integer maxNode = null;
 			while (iterator.hasNext()) {
 				Integer node = iterator.next();
-				Integer population = roadNetwork.getGravitatingPopulation(node);
-				if (population == null) population = 0;
+				int population = roadNetwork.getGravitatingPopulation(node);
 				if (population >  maxPopulation) {
 					maxPopulation = population;
 					maxNode = node;
@@ -1010,8 +1009,7 @@ public class RoadNetworkTest {
 			Integer maxNode = null;
 			while (iterator.hasNext()) {
 				Integer node = iterator.next();
-				Integer population = roadNetwork.getGravitatingPopulation(node);
-				if (population == null) population = 0;
+				int population = roadNetwork.getGravitatingPopulation(node);
 				if (population >  maxPopulation) {
 					maxPopulation = population;
 					maxNode = node;
@@ -1495,7 +1493,6 @@ public class RoadNetworkTest {
 			while (iterator.hasNext()) {
 				Integer node = iterator.next();
 				Integer population = roadNetwork.getGravitatingPopulation(node);
-				if (population == null) population = 0;
 				if (population >  maxPopulation) {
 					maxPopulation = population;
 					maxNode = node;

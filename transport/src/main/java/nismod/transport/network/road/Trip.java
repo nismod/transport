@@ -33,8 +33,8 @@ public class Trip {
 	protected EngineType engine;
 	protected Route route;
 	protected TimeOfDay hour;
-	protected Integer origin; //for freight trips
-	protected Integer destination; //for freight trips
+	protected int origin; //for freight trips
+	protected int destination; //for freight trips
 	protected int multiplier; //multiplies the same trip multiplier times
 		
 	/**

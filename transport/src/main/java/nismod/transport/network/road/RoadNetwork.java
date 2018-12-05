@@ -564,8 +564,7 @@ public class RoadNetwork {
 					objList.add(null);
 					objList.add(null);
 				}
-				Integer lanes = this.numberOfLanes[edge.getID()];
-				if (lanes == null) lanes = 0;
+				int lanes = this.numberOfLanes[edge.getID()];
 				objList.add(lanes);
 				Double volume = linkData.get(edge.getID());
 				if (volume == null) volume = 0.0;

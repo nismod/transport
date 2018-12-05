@@ -286,10 +286,10 @@ public class TripTempro extends Trip {
 		}
 
 		//get access and egress
-		Double access = distanceFromTemproZoneToNearestNode[this.origin];
-		if (access == null) access = 0.0; //TODO use some default access/egress distances?
+		double access = distanceFromTemproZoneToNearestNode[this.origin];
+		//if (access == 0.0) access = 0.0; //TODO use some default access/egress distances?
 		Double egress = distanceFromTemproZoneToNearestNode[this.destination];
-		if (egress == null) egress = 0.0;
+		//if (egress == 0.0) egress = 0.0;
 
 		//for PHEVs it is more complicated (depends on urban/rural road type
 		//it is assumed electricity is used on urban road links and fuel on rural road links

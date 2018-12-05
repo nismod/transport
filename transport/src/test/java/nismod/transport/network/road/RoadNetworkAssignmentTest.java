@@ -732,8 +732,7 @@ public class RoadNetworkAssignmentTest {
 			double sum = 0.0;
 			for (TimeOfDay hour: map.keySet()) {
 				double[] hourlyVolumes = map.get(hour);
-				Double volume = hourlyVolumes[edgeID];
-				if (volume == null) volume = 0.0;
+				double volume = hourlyVolumes[edgeID];
 				sum += volume;
 			}
 		assertEquals("PCU flows for each edge are correct", linkVolumesInPCU[edgeID], sum, EPSILON);
@@ -758,7 +757,7 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("Trip list size: " + rna.getTripList().size());
 		rna.updateLinkVolumePerVehicleType();
 		System.out.println(rna.getLinkVolumePerVehicleType());
-		System.out.println(roadNetwork.getAADFCarTrafficCounts());
+		System.out.println(Arrays.toString(roadNetwork.getAADFCarTrafficCounts()));
 		System.out.println(rna.calculateRMSNforSimulatedVolumes());
 		
 		int sumVolumes = Arrays.stream(rna.getLinkVolumePerVehicleType().get(VehicleType.CAR)).sum();
@@ -1179,10 +1178,9 @@ public class RoadNetworkAssignmentTest {
 					String fetchedZone = roadNetwork.getEdgeToZone().get(edgeID);
 					if (fetchedZone != null && fetchedZone.equals(zone)) {
 
-						Double volume  = rna.getLinkVolumeInPCU()[edgeID];
-						if (volume == null) {
+						double volume  = rna.getLinkVolumeInPCU()[edgeID];
+						if (volume == 0.0) {
 							System.out.println("No volume for edge " + edgeID);
-							volume = 0.0;
 						}
 						double length = roadNetwork.getEdgeLength(edgeID);
 						zonalVehicleKilometres += volume * length;
@@ -1238,8 +1236,7 @@ public class RoadNetworkAssignmentTest {
 			double sum = 0.0;
 			for (TimeOfDay hour: map.keySet()) {
 				double[] hourlyVolumes = map.get(hour);
-				Double volume = hourlyVolumes[edgeID];
-				if (volume == null) volume = 0.0;
+				double volume = hourlyVolumes[edgeID];
 				sum += volume;
 			}
 		assertEquals("PCU flows for each edge are correct", linkVolumesInPCU[edgeID], sum, EPSILON);

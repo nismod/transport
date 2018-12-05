@@ -432,8 +432,7 @@ public class RealODMatrix implements AssignableODMatrix {
 			String originLAD = zoning.getZoneToLADMap().get(origin);
 			String destinationLAD = zoning.getZoneToLADMap().get(destination);
 			
-			Double flowLAD = ladMatrix.getFlow(originLAD, destinationLAD);
-			if (flowLAD == null) flowLAD = 0.0;
+			double flowLAD = ladMatrix.getFlow(originLAD, destinationLAD);
 			flowLAD += flow;
 			ladMatrix.setFlow(originLAD, destinationLAD, flowLAD);
 		}

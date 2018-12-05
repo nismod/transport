@@ -191,8 +191,8 @@ public class EstimatedODMatrix extends RealODMatrix {
 		for (String o: this.zones)
 			for (String d: this.zones) {
 
-				Double distance = distanceSkimMatrix.getCost(o, d);
-				if (distance == null) {
+				double distance = distanceSkimMatrix.getCost(o, d);
+				if (distance == 0.0 && !o.equals(d)) {
 					System.err.printf("No distance from %s to %s\n", o, d);
 					continue;
 				}

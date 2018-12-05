@@ -2663,12 +2663,10 @@ public class RoadNetworkAssignment {
 			String destinationLAD = trip.getDestinationLAD(this.roadNetwork.getNodeToZone());
 			int multiplier = trip.getMultiplier();
 
-			Double count = counter.getCost(originLAD, destinationLAD);
-			if (count == null) count = 0.0;
+			double count = counter.getCost(originLAD, destinationLAD);
 			counter.setCost(originLAD, destinationLAD, count + multiplier);
 
-			Double sum = distanceSkimMatrix.getCost(originLAD, destinationLAD);
-			if (sum == null) sum = 0.0;
+			double sum = distanceSkimMatrix.getCost(originLAD, destinationLAD);
 			double distance = trip.getLength(this.roadNetwork.getNodeToAverageAccessEgressDistance());
 			distanceSkimMatrix.setCost(originLAD, destinationLAD, sum + distance * multiplier);
 		}
@@ -3068,8 +3066,7 @@ public class RoadNetworkAssignment {
 			int multiplier = trip.getMultiplier();
 
 			for (EnergyType et: EnergyType.values()) {
-				Double currentConsumption = zonalConsumptions.get(et).getCost(originLAD, destinationLAD);
-				if (currentConsumption == null) currentConsumption = 0.0;
+				double currentConsumption = zonalConsumptions.get(et).getCost(originLAD, destinationLAD);
 				currentConsumption += tripConsumption.get(et) * multiplier;
 				zonalConsumptions.get(et).setCost(originLAD, destinationLAD, currentConsumption);
 			}
@@ -3457,33 +3454,33 @@ public class RoadNetworkAssignment {
 				record.add(String.format("%.3f", this.roadNetwork.getEdgeLength(edgeID)));
 				record.add(String.format("%.4f", this.roadNetwork.getFreeFlowTravelTime()[edgeID]));
 				record.add(String.format("%.4f", this.linkTravelTimePerTimeOfDay.get(TimeOfDay.EIGHTAM)[edgeID]));
-				Integer linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
-				if (linkVolume == null) record.add(Integer.toString(0));
+				int linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
+				if (linkVolume == 0.0) 	record.add(Integer.toString(0));
 				else 					record.add(Integer.toString(linkVolume));
 				linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.VAN)[edgeID];
-				if (linkVolume == null) record.add(Integer.toString(0));
+				if (linkVolume == 0.0) 	record.add(Integer.toString(0));
 				else 					record.add(Integer.toString(linkVolume));
 				linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.RIGID)[edgeID];
-				if (linkVolume == null) record.add(Integer.toString(0));
+				if (linkVolume == 0.0) 	record.add(Integer.toString(0));
 				else 					record.add(Integer.toString(linkVolume));
 				linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC)[edgeID];
-				if (linkVolume == null) record.add(Integer.toString(0));
+				if (linkVolume == 0.0) 	record.add(Integer.toString(0));
 				else 					record.add(Integer.toString(linkVolume));
 				linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.CAR_AV)[edgeID];
-				if (linkVolume == null) record.add(Integer.toString(0));
+				if (linkVolume == 0.0) 	record.add(Integer.toString(0));
 				else 					record.add(Integer.toString(linkVolume));
 				linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.VAN_AV)[edgeID];
-				if (linkVolume == null) record.add(Integer.toString(0));
+				if (linkVolume == 0.0) 	record.add(Integer.toString(0));
 				else 					record.add(Integer.toString(linkVolume));
 				linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.RIGID_AV)[edgeID];
-				if (linkVolume == null) record.add(Integer.toString(0));
+				if (linkVolume == 0.0) 	record.add(Integer.toString(0));
 				else 					record.add(Integer.toString(linkVolume));
 				linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC_AV)[edgeID];
-				if (linkVolume == null) record.add(Integer.toString(0));
+				if (linkVolume == 0.0) 	record.add(Integer.toString(0));
 				else 					record.add(Integer.toString(linkVolume));
-				Double linkVolumePCU = this.linkVolumesInPCU[edgeID];
-				if (linkVolumePCU == null) record.add(Double.toString(0.0));
-				else					   record.add(Double.toString(linkVolumePCU));
+				double linkVolumePCU = this.linkVolumesInPCU[edgeID];
+				if (linkVolumePCU == 0.0) record.add(Double.toString(0.0));
+				else					  record.add(Double.toString(linkVolumePCU));
 				record.add(String.format("%.2f", capacities[edgeID]));
 				record.add(String.format("%.2f", densities[edgeID]));
 				//get max capacity from road type
@@ -3615,15 +3612,15 @@ public class RoadNetworkAssignment {
 					record.add("N/A");
 
 				//Integer linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.CAR).get(edge.getID());
-				Double linkVolume = this.linkVolumesInPCU[edge.getID()];
+				double linkVolume = this.linkVolumesInPCU[edge.getID()];
 
-				if (linkVolume == null) record.add(Integer.toString(0));
+				if (linkVolume == 0.0) 	record.add(Integer.toString(0));
 				else 					record.add(Integer.toString((int)Math.round(linkVolume)));
 
 				for (TimeOfDay hour: TimeOfDay.values()) {
-					Double linkVolumeInPCU = this.linkVolumesInPCUPerTimeOfDay.get(hour)[edge.getID()]; //TODO there should be one per vehicle type
-					if (linkVolumeInPCU == null) record.add(Integer.toString(0));
-					else 					record.add(Integer.toString((int)Math.round(linkVolumeInPCU)));
+					double linkVolumeInPCU = this.linkVolumesInPCUPerTimeOfDay.get(hour)[edge.getID()]; //TODO there should be one per vehicle type
+					if (linkVolumeInPCU == 0.0) record.add(Integer.toString(0));
+					else 						record.add(Integer.toString((int)Math.round(linkVolumeInPCU)));
 				}
 				csvFilePrinter.printRecord(record);
 			}
@@ -4655,9 +4652,7 @@ public class RoadNetworkAssignment {
 					}
 					*/
 					access = TripTempro.zoning.getZoneToNearestNodeDistanceMap().get(originTemproZone);
-					
-					if (access == null) access = 0.0;
-					else access /= 1000;
+					access /= 1000;
 
 				} else { //LAD-based trip
 
@@ -4667,9 +4662,7 @@ public class RoadNetworkAssignment {
 						access = this.roadNetwork.getNodeToAverageAccessEgressDistance()[originNode.getID()];
 					else //freight vehicle
 						access = this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight()[originNode.getID()];
-					
-					if (access == null) access = 0.0;
-					else access /= 1000;
+					access /= 1000;
 				}
 								
 				//fetch current map
@@ -4709,9 +4702,7 @@ public class RoadNetworkAssignment {
 					}
 					*/
 					egress = TripTempro.zoning.getZoneToNearestNodeDistanceMap().get(destinationTemproZone);
-					
-					if (egress == null) egress = 0.0;
-					else egress /= 1000;
+					egress /= 1000;
 					
 				} else { //LAD-based trip
 
@@ -4721,8 +4712,7 @@ public class RoadNetworkAssignment {
 						egress = this.roadNetwork.getNodeToAverageAccessEgressDistance()[destinationNode.getID()];
 					else //freight vehicle
 						egress = this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight()[destinationNode.getID()];
-					if (egress == null) egress = 0.0;
-					else egress /= 1000;
+					egress /= 1000;
 				}
 								
 				//fetch current map
@@ -5016,11 +5006,8 @@ public class RoadNetworkAssignment {
 			if (dir == 'N' || dir == 'S' || dir == 'W' || dir == 'E') {
 
 				long carCount = (long) sf.getAttribute("FdCar");
-				long carVolume;
-				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
-				if (carVolumeFetch == null) carVolume = 0;
-				else 						carVolume = carVolumeFetch;
-
+				long carVolume = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
+				
 				absoluteDifferences.put(edgeID, (int) Math.abs(carCount - carVolume));
 			}
 
@@ -5030,22 +5017,16 @@ public class RoadNetworkAssignment {
 				long carCount = (long) sf.getAttribute("FdCar");
 
 				//get volumes for this direction
-				long carVolume;
-				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
-				if (carVolumeFetch == null) carVolume = 0;
-				else 						carVolume = carVolumeFetch;
-
+				long carVolume = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
+		
 				//get volumes for other direction (if exists)
-				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edgeID];
-				long carVolume2;
-				Integer carVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edge2];
-				if (carVolumeFetch2 == null) carVolume2 = 0;
-				else 						 carVolume2 = carVolumeFetch2;
-
+				int edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edgeID];
+				long carVolume2 = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edge2];
+			
 				long absoluteDifference = Math.abs(carCount - carVolume - carVolume2) / 2;
 				checkedCP.add(countPoint);
 				absoluteDifferences.put(edgeID, (int) absoluteDifference);
-				if (edge2 != null) absoluteDifferences.put(edge2, (int) absoluteDifference); //store in other direction too
+				if (edge2 != 0) absoluteDifferences.put(edge2, (int) absoluteDifference); //store in other direction too
 			}
 		}
 
@@ -5131,11 +5112,8 @@ public class RoadNetworkAssignment {
 			if (dir == 'N' || dir == 'S' || dir == 'W' || dir == 'E') {
 
 				long carCount = (long) sf.getAttribute("FdCar");
-				long carVolume;
-				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
-				if (carVolumeFetch == null) carVolume = 0;
-				else 						carVolume = carVolumeFetch;
-
+				long carVolume = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
+			
 				differences.put(edgeID, (int) (carCount - carVolume));
 			}
 
@@ -5145,17 +5123,11 @@ public class RoadNetworkAssignment {
 				long carCount = (long) sf.getAttribute("FdCar");
 
 				//get volumes for this direction
-				long carVolume;
-				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
-				if (carVolumeFetch == null) carVolume = 0;
-				else 						carVolume = carVolumeFetch;
-
+				long carVolume = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
+			
 				//get volumes for other direction (if exists)
 				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edgeID];
-				long carVolume2;
-				Integer carVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edge2];
-				if (carVolumeFetch2 == null) carVolume2 = 0;
-				else 						 carVolume2 = carVolumeFetch2;
+				long carVolume2 = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edge2];
 
 				long difference = (carCount - carVolume - carVolume2) / 2;
 				checkedCP.add(countPoint);
@@ -5199,11 +5171,8 @@ public class RoadNetworkAssignment {
 			if (dir == 'N' || dir == 'S' || dir == 'W' || dir == 'E') {
 
 				long carCount = (long) sf.getAttribute("FdCar");
-				long carVolume;
-				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
-				if (carVolumeFetch == null) carVolume = 0;
-				else 						carVolume = carVolumeFetch;
-
+				long carVolume = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
+		
 				double carFlowSimulated = carVolume * volumeToFlowFactor;
 				double carFlowObserved = carCount * volumeToFlowFactor;
 				double geh = Math.abs(carFlowSimulated - carFlowObserved) / Math.sqrt((carFlowSimulated + carFlowObserved) / 2.0);
@@ -5217,17 +5186,11 @@ public class RoadNetworkAssignment {
 				long carCount = (long) sf.getAttribute("FdCar");
 
 				//get volumes for this direction
-				long carVolume;
-				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
-				if (carVolumeFetch == null) carVolume = 0;
-				else 						carVolume = carVolumeFetch;
+				long carVolume = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
 
 				//get volumes for other direction (if exists)
 				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edgeID];
-				long carVolume2;
-				Integer carVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edge2];
-				if (carVolumeFetch2 == null) carVolume2 = 0;
-				else 						 carVolume2 = carVolumeFetch2;
+				long carVolume2 = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edge2];
 
 				checkedCP.add(countPoint);
 
@@ -5372,11 +5335,8 @@ public class RoadNetworkAssignment {
 			if (dir == 'N' || dir == 'S' || dir == 'W' || dir == 'E') {
 
 				long carCount = (long) sf.getAttribute("FdCar");
-				double carVolume;
-				Double carVolumeFetch = this.linkVolumesInPCUPerTimeOfDay.get(hour)[edgeID];
-				if (carVolumeFetch == null) carVolume = 0.0;
-				else 						carVolume = carVolumeFetch;
-
+				double carVolume = this.linkVolumesInPCUPerTimeOfDay.get(hour)[edgeID];
+			
 				double carFlowSimulated = carVolume;
 				double carFlowObserved = carCount * this.timeOfDayDistribution.get(hour);
 				double geh = Math.abs(carFlowSimulated - carFlowObserved) / Math.sqrt((carFlowSimulated + carFlowObserved) / 2.0);
@@ -5390,18 +5350,12 @@ public class RoadNetworkAssignment {
 				long carCount = (long) sf.getAttribute("FdCar");
 
 				//get volumes for this direction
-				double carVolume;
-				Double carVolumeFetch = this.linkVolumesInPCUPerTimeOfDay.get(hour)[edgeID];
-				if (carVolumeFetch == null) carVolume = 0.0;
-				else 						carVolume = carVolumeFetch;
-
+				double carVolume = this.linkVolumesInPCUPerTimeOfDay.get(hour)[edgeID];
+	
 				//get volumes for other direction (if exists)
 				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edgeID];
-				double carVolume2;
-				Double carVolumeFetch2 = this.linkVolumesInPCUPerTimeOfDay.get(hour)[edge2];
-				if (carVolumeFetch2 == null) carVolume2 = 0.0;
-				else 						 carVolume2 = carVolumeFetch2;
-
+				double carVolume2 = this.linkVolumesInPCUPerTimeOfDay.get(hour)[edge2];
+	
 				checkedCP.add(countPoint);
 
 				double carFlowSimulated = carVolume + carVolume2;
@@ -5512,11 +5466,8 @@ public class RoadNetworkAssignment {
 			if (dir == 'N' || dir == 'S' || dir == 'W' || dir == 'E') {
 
 				long carCount = (long) sf.getAttribute("FdCar");
-				long carVolume;
-				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
-				if (carVolumeFetch == null) carVolume = 0;
-				else 						carVolume = carVolumeFetch;
-
+				long carVolume = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
+	
 				//expand simulated volumes with the expansion factor and round
 				carVolume = Math.round(carVolume * expansionFactor);
 
@@ -5531,21 +5482,15 @@ public class RoadNetworkAssignment {
 				long carCount = (long) sf.getAttribute("FdCar");
 
 				//get volumes for this direction
-				long carVolume;
-				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
-				if (carVolumeFetch == null) carVolume = 0;
-				else 						carVolume = carVolumeFetch;
-
+				long carVolume = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
+		
 				//expand simulated volumes with the expansion factor and round
 				carVolume = Math.round(carVolume * expansionFactor);
 
 				//get volumes for other direction (if exists)
-				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edgeID];
-				long carVolume2;
-				Integer carVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edge2];
-				if (carVolumeFetch2 == null) carVolume2 = 0;
-				else 						 carVolume2 = carVolumeFetch2;
-
+				int edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edgeID];
+				long carVolume2 = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edge2];
+			
 				//expand simulated volumes with the expansion factor and round
 				carVolume2 = Math.round(carVolume2 * expansionFactor);
 
@@ -5561,15 +5506,6 @@ public class RoadNetworkAssignment {
 
 		double RMSE = Math.sqrt(sumOfSquaredDiffs / countOfCounts);
 		double averageTrueCount = (double) sumOfCounts / countOfCounts;
-
-		//		System.out.println("Checking RMSE: ");
-		//		System.out.println("Is finite: " + Double.isFinite(RMSE));
-		//		System.out.println("Is infinite: " + Double.isInfinite(RMSE));
-		//		System.out.println("Is NaN: " + Double.isNaN(RMSE));
-
-		//		System.out.println("RMSE = " + RMSE);
-		//		System.out.println("averageTrueCount = " + averageTrueCount);
-
 
 		return (RMSE / averageTrueCount ) * 100;
 	}
@@ -5605,20 +5541,9 @@ public class RoadNetworkAssignment {
 				long rigidCount = (long) sf.getAttribute("FdHGVR2") + (long) sf.getAttribute("FdHGVR3") + (long) sf.getAttribute("FdHGVR4");
 				long articCount = (long) sf.getAttribute("FdHGVA3") + (long) sf.getAttribute("FdHGVA5") + (long) sf.getAttribute("FdHGVA6");
 
-				long vanVolume;
-				Integer vanVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.VAN)[edgeID];
-				if (vanVolumeFetch == null) vanVolume = 0;
-				else 						vanVolume = vanVolumeFetch;
-
-				long rigidVolume;
-				Integer rigidVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.RIGID)[edgeID];
-				if (rigidVolumeFetch == null) rigidVolume = 0;
-				else 						  rigidVolume = rigidVolumeFetch;
-
-				long articVolume;
-				Integer articVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC)[edgeID];
-				if (articVolumeFetch == null) articVolume = 0;
-				else 						  articVolume = articVolumeFetch;
+				long vanVolume = this.linkVolumesPerVehicleType.get(VehicleType.VAN)[edgeID];
+				long rigidVolume = this.linkVolumesPerVehicleType.get(VehicleType.RIGID)[edgeID];
+				long articVolume = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC)[edgeID];
 
 				countOfCounts += 3;
 				sumOfCounts += vanCount + rigidCount + articCount;
@@ -5633,39 +5558,17 @@ public class RoadNetworkAssignment {
 				long articCount = (long) sf.getAttribute("FdHGVA3") + (long) sf.getAttribute("FdHGVA5") + (long) sf.getAttribute("FdHGVA6");
 
 				//get volumes for this direction
-				long vanVolume;
-				Integer vanVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.VAN)[edgeID];
-				if (vanVolumeFetch == null) vanVolume = 0;
-				else 						vanVolume = vanVolumeFetch;
-
-				long rigidVolume;
-				Integer rigidVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.RIGID)[edgeID];
-				if (rigidVolumeFetch == null) rigidVolume = 0;
-				else 						  rigidVolume = rigidVolumeFetch;
-
-				long articVolume;
-				Integer articVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC)[edgeID];
-				if (articVolumeFetch == null) articVolume = 0;
-				else 						  articVolume = articVolumeFetch;
+				long vanVolume = this.linkVolumesPerVehicleType.get(VehicleType.VAN)[edgeID];
+				long rigidVolume = this.linkVolumesPerVehicleType.get(VehicleType.RIGID)[edgeID];
+				long articVolume = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC)[edgeID];
 
 				//get volumes for other direction (if exists)
-				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edgeID];
+				int edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edgeID];
 
-				long vanVolume2;
-				Integer vanVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.VAN)[edge2];
-				if (vanVolumeFetch2 == null) vanVolume2 = 0;
-				else 						 vanVolume2 = vanVolumeFetch2;
-
-				long rigidVolume2;
-				Integer rigidVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.RIGID)[edge2];
-				if (rigidVolumeFetch2 == null) rigidVolume2 = 0;
-				else 						   rigidVolume2 = rigidVolumeFetch2;
-
-				long articVolume2;
-				Integer articVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC)[edge2];
-				if (articVolumeFetch2 == null) articVolume2 = 0;
-				else 						   articVolume2 = articVolumeFetch2;
-
+				long vanVolume2 = this.linkVolumesPerVehicleType.get(VehicleType.VAN)[edge2];
+				long rigidVolume2 = this.linkVolumesPerVehicleType.get(VehicleType.RIGID)[edge2];
+				long articVolume2 = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC)[edge2];
+	
 				countOfCounts += 3;
 				sumOfCounts += vanCount + rigidCount + articCount;
 				sumOfSquaredDiffs += Math.pow(vanCount - vanVolume - vanVolume2, 2) + Math.pow(rigidCount - rigidVolume - rigidVolume2, 2) + Math.pow(articCount - articVolume - articVolume2, 2);
@@ -5720,21 +5623,10 @@ public class RoadNetworkAssignment {
 				long rigidCount = (long) sf.getAttribute("FdHGVR2") + (long) sf.getAttribute("FdHGVR3") + (long) sf.getAttribute("FdHGVR4");
 				long articCount = (long) sf.getAttribute("FdHGVA3") + (long) sf.getAttribute("FdHGVA5") + (long) sf.getAttribute("FdHGVA6");
 
-				long vanVolume;
-				Integer vanVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.VAN)[edgeID];
-				if (vanVolumeFetch == null) vanVolume = 0;
-				else 						vanVolume = vanVolumeFetch;
-				
-				long rigidVolume;
-				Integer rigidVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.RIGID)[edgeID];
-				if (rigidVolumeFetch == null) rigidVolume = 0;
-				else 						  rigidVolume = rigidVolumeFetch;
-				
-				long articVolume;
-				Integer articVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC)[edgeID];
-				if (articVolumeFetch == null) articVolume = 0;
-				else 						  articVolume = articVolumeFetch;
-				
+				long vanVolume = this.linkVolumesPerVehicleType.get(VehicleType.VAN)[edgeID];
+				long rigidVolume = this.linkVolumesPerVehicleType.get(VehicleType.RIGID)[edgeID];
+				long articVolume = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC)[edgeID];
+
 				double vanFlowSimulated = vanVolume * volumeToFlowFactor;
 				double vanFlowObserved = vanCount * volumeToFlowFactor;
 				double geh = Math.abs(vanFlowSimulated - vanFlowObserved) / Math.sqrt((vanFlowSimulated + vanFlowObserved) / 2.0);
@@ -5759,57 +5651,35 @@ public class RoadNetworkAssignment {
 				long articCount = (long) sf.getAttribute("FdHGVA3") + (long) sf.getAttribute("FdHGVA5") + (long) sf.getAttribute("FdHGVA6");
 
 				//get volumes for this direction
-				long vanVolume;
-				Integer vanVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.VAN)[edgeID];
-				if (vanVolumeFetch == null) vanVolume = 0;
-				else 						vanVolume = vanVolumeFetch;
-
-				long rigidVolume;
-				Integer rigidVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.RIGID)[edgeID];
-				if (rigidVolumeFetch == null) rigidVolume = 0;
-				else 						  rigidVolume = rigidVolumeFetch;
-				
-				long articVolume;
-				Integer articVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC)[edgeID];
-				if (articVolumeFetch == null) articVolume = 0;
-				else 						  articVolume = articVolumeFetch;
-				
+				long vanVolume = this.linkVolumesPerVehicleType.get(VehicleType.VAN)[edgeID];
+				long rigidVolume = this.linkVolumesPerVehicleType.get(VehicleType.RIGID)[edgeID];
+				long articVolume = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC)[edgeID];
+	
 				//get volumes for other direction (if exists)
-				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edgeID];
-				long vanVolume2;
-				Integer vanVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.VAN)[edge2];
-				if (vanVolumeFetch2 == null) vanVolume2 = 0;
-				else 						 vanVolume2 = vanVolumeFetch2;
+				int edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edgeID];
+				long vanVolume2 = this.linkVolumesPerVehicleType.get(VehicleType.VAN)[edge2];
+				long rigidVolume2 = this.linkVolumesPerVehicleType.get(VehicleType.RIGID)[edge2];
+				long articVolume2 = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC)[edge2];
 				
-				long rigidVolume2;
-				Integer rigidVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.RIGID)[edge2];
-				if (rigidVolumeFetch2 == null) rigidVolume2 = 0;
-				else 						   rigidVolume2 = rigidVolumeFetch2;
-				
-				long articVolume2;
-				Integer articVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC)[edge2];
-				if (articVolumeFetch2 == null) articVolume2 = 0;
-				else 						   articVolume2 = articVolumeFetch2;
-
 				checkedCP.add(countPoint);
 
 				double vanFlowSimulated = (vanVolume + vanVolume2) * volumeToFlowFactor;
 				double vanFlowObserved = vanCount * volumeToFlowFactor;
 				double geh = Math.abs(vanFlowSimulated - vanFlowObserved) / Math.sqrt((vanFlowSimulated + vanFlowObserved) / 2.0);
 				vanGEH[edgeID] = geh;
-				if (edge2 != null) vanGEH[edge2] = geh; //store in other direction too
+				if (edge2 != 0) vanGEH[edge2] = geh; //store in other direction too
 				
 				double rigidFlowSimulated = (rigidVolume + rigidVolume2) * volumeToFlowFactor;
 				double rigidFlowObserved = rigidCount * volumeToFlowFactor;
 				geh = Math.abs(rigidFlowSimulated - rigidFlowObserved) / Math.sqrt((rigidFlowSimulated + rigidFlowObserved) / 2.0);
 				rigidGEH[edgeID] = geh;
-				if (edge2 != null) rigidGEH[edge2] = geh; //store in other direction too
+				if (edge2 != 0) rigidGEH[edge2] = geh; //store in other direction too
 				
 				double articFlowSimulated = (articVolume + articVolume2) * volumeToFlowFactor;
 				double articFlowObserved = articCount * volumeToFlowFactor;
 				geh = Math.abs(articFlowSimulated - articFlowObserved) / Math.sqrt((articFlowSimulated + articFlowObserved) / 2.0);
 				articGEH[edgeID] = geh;
-				if (edge2 != null) articGEH[edge2] = geh; //store in other direction too
+				if (edge2 != 0) articGEH[edge2] = geh; //store in other direction too
 			}
 		}
 
@@ -5846,11 +5716,8 @@ public class RoadNetworkAssignment {
 			if (dir == 'N' || dir == 'S' || dir == 'W' || dir == 'E') {
 
 				long carCount = (long) sf.getAttribute("FdCar");
-				long carVolume;
-				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
-				if (carVolumeFetch == null) carVolume = 0;
-				else 						carVolume = carVolumeFetch;
-
+				long carVolume = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
+	
 				//expand simulated volumes with the expansion factor and round
 				carVolume = Math.round(carVolume * expansionFactor);
 
@@ -5865,21 +5732,15 @@ public class RoadNetworkAssignment {
 				long carCount = (long) sf.getAttribute("FdCar");
 
 				//get volumes for this direction
-				long carVolume;
-				Integer carVolumeFetch = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
-				if (carVolumeFetch == null) carVolume = 0;
-				else 						carVolume = carVolumeFetch;
-
+				long carVolume = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
+		
 				//expand simulated volumes with the expansion factor and round
 				carVolume = Math.round(carVolume * expansionFactor);
 
 				//get volumes for other direction (if exists)
-				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edgeID];
-				long carVolume2;
-				Integer carVolumeFetch2 = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edge2];
-				if (carVolumeFetch2 == null) carVolume2 = 0;
-				else 						 carVolume2 = carVolumeFetch2;
-
+				int edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edgeID];
+				long carVolume2 = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edge2];
+	
 				//expand simulated volumes with the expansion factor and round
 				carVolume2 = Math.round(carVolume2 * expansionFactor);
 

@@ -570,8 +570,7 @@ public class RealODMatrixTempro implements AssignableODMatrix {
 				if (originLAD == null) LOGGER.warn("originLAD is null!");
 				if (destinationLAD == null) LOGGER.warn("destinationLAD is null!");
 				
-				Double flowLAD = ladMatrix.getFlow(originLAD, destinationLAD);
-				if (flowLAD == null) flowLAD = 0.0;
+				double flowLAD = ladMatrix.getFlow(originLAD, destinationLAD);
 				flowLAD += flow;
 				ladMatrix.setFlow(originLAD, destinationLAD, flowLAD);
 			}
