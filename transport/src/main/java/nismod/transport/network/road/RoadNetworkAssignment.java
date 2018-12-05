@@ -1261,6 +1261,10 @@ public class RoadNetworkAssignment {
 			int flow = (int) Math.floor(passengerODM.getIntFlow(originZone, destinationZone) * this.assignmentFraction); //assigned fractionally and later augmented
 			int remainder = passengerODM.getIntFlow(originZone, destinationZone) - (int) Math.round(flow / this.assignmentFraction); //remainder of trips will be assigned individually (each trip)
 			counterTotalFlow += passengerODM.getIntFlow(originZone, destinationZone);
+			
+			//get zone IDs
+			Integer originZoneID = zoning.getTemproCodeToIDMap().get(originZone);
+			Integer destinationZoneID = zoning.getTemproCodeToIDMap().get(destinationZone);
 
 			//for each trip
 			for (int i=0; i < (flow + remainder); i++) {
@@ -1278,21 +1282,21 @@ public class RoadNetworkAssignment {
 				if (engine == null) LOGGER.warn("Engine type not chosen!");
 
 				//choose origin node
-				Integer originNode = zoning.getZoneToNearestNodeIDMap().get(originZone);
-				if (originNode == null) LOGGER.warn("Origin node was not chosen for zone {}", originZone);
+				int originNode = zoning.getZoneIDToNearestNodeIDMap()[originZoneID];
+				if (originNode == 0) LOGGER.warn("Origin node was not chosen for zone {}", originZone);
 
 				if (this.roadNetwork.isBlacklistedAsStartNode(originNode)) 
 					LOGGER.warn("Origin node is blacklisted! node: {}", originNode);
 
 				//choose destination node
-				Integer destinationNode = zoning.getZoneToNearestNodeIDMap().get(destinationZone);
-				if (destinationNode == null) LOGGER.warn("Destination node was not chosen for zone {}", destinationZone);
+				int destinationNode = zoning.getZoneIDToNearestNodeIDMap()[destinationZoneID];
+				if (destinationNode == 0) LOGGER.warn("Destination node was not chosen for zone {}", destinationZone);
 
 				if (this.roadNetwork.isBlacklistedAsEndNode(destinationNode)) 
 					LOGGER.warn("Destination node is blacklisted! node: {}", destinationNode);
 
 				//choose the route
-				Route chosenRoute = this.chooseRoute(originNode.intValue(), destinationNode.intValue(), vht, engine, hour, rsg, params);
+				Route chosenRoute = this.chooseRoute(originNode, destinationNode, vht, engine, hour, rsg, params);
 				if (chosenRoute == null) {
 					LOGGER.warn("No chosen route between nodes {} and {}", originNode, destinationNode);
 					continue;
@@ -1306,9 +1310,6 @@ public class RoadNetworkAssignment {
 				if (i < flow) multiplier = (int) Math.round(1 / this.assignmentFraction);
 				counterAssignedTrips += multiplier;
 
-				//store trip in trip list
-				Integer originZoneID = zoning.getTemproCodeToIDMap().get(originZone);
-				Integer destinationZoneID = zoning.getTemproCodeToIDMap().get(destinationZone);
 				Trip trip = new TripTempro(vht, engine, chosenRoute, hour, originZoneID, destinationZoneID, zoning, multiplier);
 				this.tripList.add(trip);
 
@@ -2563,8 +2564,8 @@ public class RoadNetworkAssignment {
 			if (vht == VehicleType.RIGID_AV) vht = VehicleType.RIGID;
 			if (vht == VehicleType.VAN_AV) vht = VehicleType.VAN;			
 
-			int origin = trip.getFreightOriginZone();
-			int destination = trip.getFreightDestinationZone();
+			int origin = trip.getOrigin();
+			int destination = trip.getDestination();
 
 			Double count = counter.getCost(origin, destination, vht.value);
 			if (count == null) count = 0.0;
@@ -2743,8 +2744,8 @@ public class RoadNetworkAssignment {
 			if (vht == VehicleType.RIGID_AV) vht = VehicleType.RIGID;
 			if (vht == VehicleType.VAN_AV) vht = VehicleType.VAN;	
 
-			int origin = trip.getFreightOriginZone();
-			int destination = trip.getFreightDestinationZone();
+			int origin = trip.getOrigin();
+			int destination = trip.getDestination();
 			int multiplier = trip.getMultiplier();
 
 			Double count = counter.getCost(origin, destination, vht.value);
@@ -2863,8 +2864,8 @@ public class RoadNetworkAssignment {
 			if (vht == VehicleType.RIGID_AV) vht = VehicleType.RIGID;
 			if (vht == VehicleType.VAN_AV) vht = VehicleType.VAN;	
 
-			int origin = trip.getFreightOriginZone();
-			int destination = trip.getFreightDestinationZone();
+			int origin = trip.getOrigin();
+			int destination = trip.getDestination();
 			int multiplier = trip.getMultiplier();
 
 			Double count = counter.getCost(origin, destination, vht.value);
@@ -4640,7 +4641,8 @@ public class RoadNetworkAssignment {
 				if (trip instanceof TripTempro) {
 
 					accessLAD = ((TripTempro)trip).getOriginLAD();
-					String originTemproZone = ((TripTempro)trip).getOriginTemproZone();
+					//String originTemproZone = ((TripTempro)trip).getOriginTemproZone();
+					int originTemproZoneID = ((TripTempro)trip).getOrigin();
 					/*
 					//this is a more general (slower) version where Tempro trip can start from any node (node just the nearest).
 					List<Pair<Integer, Double>> accessList = ((TripTempro)trip).getZoning().getZoneToSortedListOfNodeAndDistancePairs().get(originTemproZone);
@@ -4651,7 +4653,7 @@ public class RoadNetworkAssignment {
 					}
 					}
 					*/
-					access = TripTempro.zoning.getZoneToNearestNodeDistanceMap().get(originTemproZone);
+					access = TripTempro.zoning.getZoneIDToNearestNodeDistanceMap()[originTemproZoneID];
 					access /= 1000;
 
 				} else { //LAD-based trip
@@ -4690,7 +4692,8 @@ public class RoadNetworkAssignment {
 				if (trip instanceof TripTempro) {
 
 					egressLAD = ((TripTempro)trip).getDestinationLAD();
-					String destinationTemproZone = ((TripTempro)trip).getDestinationTemproZone();
+					//String destinationTemproZone = ((TripTempro)trip).getDestinationTemproZone();
+					int destinationTemproZoneID = ((TripTempro)trip).getDestination();
 					/*
 					//this is a more general (slower) version where Tempro trip can end in any node (node just the nearest).
 					List<Pair<Integer, Double>> egressList = ((TripTempro)trip).getZoning().getZoneToSortedListOfNodeAndDistancePairs().get(destinationTemproZone);
@@ -4701,7 +4704,7 @@ public class RoadNetworkAssignment {
 					}
 					}
 					*/
-					egress = TripTempro.zoning.getZoneToNearestNodeDistanceMap().get(destinationTemproZone);
+					egress = TripTempro.zoning.getZoneIDToNearestNodeDistanceMap()[destinationTemproZoneID];
 					egress /= 1000;
 					
 				} else { //LAD-based trip

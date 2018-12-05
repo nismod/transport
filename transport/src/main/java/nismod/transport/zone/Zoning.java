@@ -34,7 +34,7 @@ public class Zoning {
 	
 	public static int MAX_NEAREST_NODES = 1; //the number of nearest nodes to each Tempro zone to consider
 	public static int TOP_LAD_NODES = 5; //when mapping Tempro zone to top LAD nodes based on the gravitating population
-	
+		
 	private final static Logger LOGGER = LogManager.getLogger(Zoning.class);
 	
 	private ShapefileDataStore zonesShapefile;
@@ -71,6 +71,8 @@ public class Zoning {
 	
 	private HashMap<String, Integer> ladCodeToID; //maps LAD ONS code to LAD ID number
 	private String[] ladIDToCode; //maps LAD ID number to LAD ONS code
+	
+	private double accessEgressFactor;
 		
 	/**
 	 * Constructor for the zoning system.
@@ -87,6 +89,8 @@ public class Zoning {
 		this.zonesShapefile = new ShapefileDataStore(zonesUrl);
 		this.nodesShapefile = new ShapefileDataStore(nodesUrl);
 		this.rn = rn;
+		
+		this.accessEgressFactor = Double.parseDouble(params.getProperty("ACCESS_EGRESS_DISTANCE_SCALING_FACTOR"));
 		
 		CachingFeatureSource cache3 = new CachingFeatureSource(nodesShapefile.getFeatureSource());
 		SimpleFeatureCollection nodesFeatureCollection = cache3.getFeatures();
@@ -127,7 +131,6 @@ public class Zoning {
 		mapLADsToContainedZones();
 			
 		//mapZoneToNodeMatrices();
-		
 		LOGGER.debug("Done creating the zoning system.");
 	}
 	
@@ -236,12 +239,14 @@ public class Zoning {
 					SimpleFeature sfn = (SimpleFeature) node.getObject();
 					Point point = (Point) sfn.getDefaultGeometry();
 
-					double distanceToNode = centroid.distance(point);
+					double distanceToNode = centroid.distance(point) * this.accessEgressFactor;
 					if (distanceToNode < minDistance) {
 						minDistance = distanceToNode;
 						nearestNodeID = node.getID();
 					}
 				}
+
+				//store nearest node IDs and distances
 				this.zoneToNearestNodeID.put(zoneCode, nearestNodeID);
 				this.zoneToNearestNodeDistance.put(zoneCode, minDistance);
 				this.zoneIDToNearestNodeID[zoneID] = nearestNodeID;
@@ -284,7 +289,7 @@ public class Zoning {
 					
 					SimpleFeature sfn = (SimpleFeature) node.getObject();
 					Point point = (Point) sfn.getDefaultGeometry();
-					double distanceToNode = centroid.distance(point);
+					double distanceToNode = centroid.distance(point) * this.accessEgressFactor;
 
 					Pair<Integer, Double> pair = Pair.of(node.getID(), distanceToNode);
 					list.add(pair);
@@ -343,7 +348,7 @@ public class Zoning {
 
 					SimpleFeature sfn = (SimpleFeature) node.getObject();
 					Point point = (Point) sfn.getDefaultGeometry();
-					double distanceToNode = centroid.distance(point);
+					double distanceToNode = centroid.distance(point) * this.accessEgressFactor;
 
 					this.zoneToNodeDistanceMatrix[this.temproCodeToID.get(zoneID)][node.getID()] = distanceToNode;
 				}
@@ -686,5 +691,14 @@ public class Zoning {
 	public HashMap<String, Point> getZoneToCentroid() {
 		
 		return this.zoneToCentroid;
+	}
+	
+	/**
+	 * Getter for access/egress scaling factor.
+	 * @return Access/egress scaling factor.
+	 */
+	public double getAccessEgressFactor() {
+		
+		return this.accessEgressFactor;
 	}
 }

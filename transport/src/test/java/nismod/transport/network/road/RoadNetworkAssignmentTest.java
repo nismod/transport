@@ -1519,8 +1519,8 @@ public class RoadNetworkAssignmentTest {
 			
 			int counter = 0;
 			for (Trip trip: tripList) {
-				int originZone = trip.getFreightOriginZone();
-				int destinationZone = trip.getFreightDestinationZone();
+				int originZone = trip.getOrigin();
+				int destinationZone = trip.getDestination();
 				VehicleType vht = trip.getVehicle(); 
 				if (originZone == origin && destinationZone == destination && vehicle == vht.getValue()) counter++;
 			}

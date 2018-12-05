@@ -157,7 +157,7 @@ public class Trip {
 	 * Gets freight trip origin zone (using DfT BYFM zone coding).
 	 * @return Freight trip origin zone.
 	 */
-	public int getFreightOriginZone() {
+	public int getOrigin() {
 
 		return origin;
 	}
@@ -166,7 +166,7 @@ public class Trip {
 	 * Gets freight trip destination zone (using DfT BYFM zone coding).
 	 * @return Freight trip destination zone.
 	 */
-	public int getFreightDestinationZone() {
+	public int getDestination() {
 
 		return destination;
 	}

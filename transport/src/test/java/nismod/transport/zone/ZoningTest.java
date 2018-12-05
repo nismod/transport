@@ -185,7 +185,7 @@ public class ZoningTest {
 		Point point = (Point) sfn.getDefaultGeometry();
 		double DELTA = 0.000001;
 		double distance = zoning.getZoneToNearestNodeDistanceMap().get("E02003559");
-		double expectedDistance = centroid.distance(point);
+		double expectedDistance = centroid.distance(point) * zoning.getAccessEgressFactor();
 		assertEquals("Distance to nearest node is correct", expectedDistance, distance, DELTA);
 		
 		int zoneID = zoning.getTemproCodeToIDMap().get("E02003559");

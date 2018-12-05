@@ -173,8 +173,8 @@ public class TripTempro extends Trip {
 			this.route.calculateLength();
 			length = this.route.getLength();
 		}
-		double access = TripTempro.zoning.getZoneToNearestNodeDistanceMap().get(this.getOriginTemproZone());
-		double egress = TripTempro.zoning.getZoneToNearestNodeDistanceMap().get(this.getDestinationTemproZone());
+		double access = TripTempro.zoning.getZoneIDToNearestNodeDistanceMap()[this.origin];
+		double egress = TripTempro.zoning.getZoneIDToNearestNodeDistanceMap()[this.destination];
 				
 		return length + access / 1000 + egress / 1000;
 	}
@@ -288,7 +288,7 @@ public class TripTempro extends Trip {
 		//get access and egress
 		double access = distanceFromTemproZoneToNearestNode[this.origin];
 		//if (access == 0.0) access = 0.0; //TODO use some default access/egress distances?
-		Double egress = distanceFromTemproZoneToNearestNode[this.destination];
+		double egress = distanceFromTemproZoneToNearestNode[this.destination];
 		//if (egress == 0.0) egress = 0.0;
 
 		//for PHEVs it is more complicated (depends on urban/rural road type
