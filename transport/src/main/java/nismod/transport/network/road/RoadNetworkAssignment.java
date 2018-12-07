@@ -34,11 +34,11 @@ import org.opengis.feature.simple.SimpleFeature;
 
 import nismod.transport.demand.AssignableODMatrix;
 import nismod.transport.demand.FreightMatrix;
-import nismod.transport.demand.ODMatrix;
+import nismod.transport.demand.ODMatrixMultiKey;
 import nismod.transport.demand.SkimMatrix;
 import nismod.transport.demand.SkimMatrixArray;
 import nismod.transport.demand.SkimMatrixArrayTempro;
-import nismod.transport.demand.SkimMatrixFreight;
+import nismod.transport.demand.SkimMatrixFreightMultiKey;
 import nismod.transport.demand.SkimMatrixMultiKey;
 import nismod.transport.network.road.RoadNetwork.EdgeType;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
@@ -2472,11 +2472,11 @@ public class RoadNetworkAssignment {
 	
 	/**
 	 * Calculate assigned OD matrix from trip list.
-	 * @param ODMatrix OD matrix.
+	 * @param ODMatrixMultiKey OD matrix.
 	 */
-	public ODMatrix calculateAssignedODMatrix() {
+	public ODMatrixMultiKey calculateAssignedODMatrix() {
 
-		ODMatrix counter = new ODMatrix();
+		ODMatrixMultiKey counter = new ODMatrixMultiKey();
 
 		for (Trip trip: this.tripList) {
 
@@ -2547,11 +2547,11 @@ public class RoadNetworkAssignment {
 	 * Updates travel time skim matrix (zone-to-zone travel times) for freight.
 	 * @param timeSkimMatrixFreight Inter-zonal skim matrix (time).
 	 */
-	public void updateTimeSkimMatrixFreight(SkimMatrixFreight timeSkimMatrixFreight) {
+	public void updateTimeSkimMatrixFreight(SkimMatrixFreightMultiKey timeSkimMatrixFreight) {
 
 		//this.updateLinkTravelTimes();
 
-		SkimMatrixFreight counter = new SkimMatrixFreight();
+		SkimMatrixFreightMultiKey counter = new SkimMatrixFreightMultiKey();
 
 		for (Trip trip: this.tripList) {
 
@@ -2567,12 +2567,10 @@ public class RoadNetworkAssignment {
 			int origin = trip.getOrigin();
 			int destination = trip.getDestination();
 
-			Double count = counter.getCost(origin, destination, vht.value);
-			if (count == null) count = 0.0;
+			double count = counter.getCost(origin, destination, vht.value);
 			counter.setCost(origin, destination, vht.value, count + 1);
 
-			Double sum = timeSkimMatrixFreight.getCost(origin, destination, vht.value);
-			if (sum == null) sum = 0.0;
+			double sum = timeSkimMatrixFreight.getCost(origin, destination, vht.value);
 			double tripTravelTime = trip.getTravelTime(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.averageIntersectionDelay, this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), this.averageAccessEgressSpeedFreight, this.flagIncludeAccessEgress);
 			timeSkimMatrixFreight.setCost(origin, destination, vht.value, sum + tripTravelTime);
 		}
@@ -2591,9 +2589,9 @@ public class RoadNetworkAssignment {
 	 * Calculated travel time skim matrix (zone-to-zone travel times) for freight.
 	 * @return Inter-zonal skim matrix (time).
 	 */
-	public SkimMatrixFreight calculateTimeSkimMatrixFreight() {
+	public SkimMatrixFreightMultiKey calculateTimeSkimMatrixFreight() {
 
-		SkimMatrixFreight timeSkimMatrixFreight = new SkimMatrixFreight();
+		SkimMatrixFreightMultiKey timeSkimMatrixFreight = new SkimMatrixFreightMultiKey();
 		this.updateTimeSkimMatrixFreight(timeSkimMatrixFreight);
 
 		return timeSkimMatrixFreight;
@@ -2728,10 +2726,10 @@ public class RoadNetworkAssignment {
 	 * Updates cost skim matrix (zone-to-zone distances) for freight.
 	 * @return Inter-zonal skim matrix (distance).
 	 */
-	public SkimMatrixFreight calculateDistanceSkimMatrixFreight() {
+	public SkimMatrixFreightMultiKey calculateDistanceSkimMatrixFreight() {
 
-		SkimMatrixFreight distanceSkimMatrixFreight = new SkimMatrixFreight();
-		SkimMatrixFreight counter = new SkimMatrixFreight();
+		SkimMatrixFreightMultiKey distanceSkimMatrixFreight = new SkimMatrixFreightMultiKey();
+		SkimMatrixFreightMultiKey counter = new SkimMatrixFreightMultiKey();
 
 		for (Trip trip: this.tripList) {
 
@@ -2748,12 +2746,10 @@ public class RoadNetworkAssignment {
 			int destination = trip.getDestination();
 			int multiplier = trip.getMultiplier();
 
-			Double count = counter.getCost(origin, destination, vht.value);
-			if (count == null) count = 0.0;
+			double count = counter.getCost(origin, destination, vht.value);
 			counter.setCost(origin, destination, vht.value, count + multiplier);
 
-			Double sum = distanceSkimMatrixFreight.getCost(origin, destination, vht.value);
-			if (sum == null) sum = 0.0;
+			double sum = distanceSkimMatrixFreight.getCost(origin, destination, vht.value);
 			double distance = trip.getLength(this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight());
 			distanceSkimMatrixFreight.setCost(origin, destination, vht.value, sum + distance * multiplier);
 		}
@@ -2843,10 +2839,10 @@ public class RoadNetworkAssignment {
 	 * Updates cost skim matrix (zone-to-zone financial costs) for freight.
 	 * @param costSkimMatrixFreight Inter-zonal skim matrix (cost) for freight.
 	 */
-	public void updateCostSkimMatrixFreight(SkimMatrixFreight costSkimMatrixFreight) {
+	public void updateCostSkimMatrixFreight(SkimMatrixFreightMultiKey costSkimMatrixFreight) {
 
 		//this.updateLinkTravelTimes();
-		SkimMatrixFreight counter = new SkimMatrixFreight();
+		SkimMatrixFreightMultiKey counter = new SkimMatrixFreightMultiKey();
 
 		if (this.tripList == null || this.tripList.size() == 0) {
 			LOGGER.warn("TripList is empty! Cannot update cost skim matrix for freight.");
@@ -2868,12 +2864,10 @@ public class RoadNetworkAssignment {
 			int destination = trip.getDestination();
 			int multiplier = trip.getMultiplier();
 
-			Double count = counter.getCost(origin, destination, vht.value);
-			if (count == null) count = 0.0;
+			double count = counter.getCost(origin, destination, vht.value);
 			counter.setCost(origin, destination, vht.value, count + multiplier);
 
-			Double sum = costSkimMatrixFreight.getCost(origin, destination, vht.value);
-			if (sum == null) sum = 0.0;
+			double sum = costSkimMatrixFreight.getCost(origin, destination, vht.value);
 			double tripFuelCost = trip.getCost(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyUnitCosts, this.energyConsumptions, this.relativeFuelEfficiencies, this.congestionCharges, this.flagIncludeAccessEgress);
 
 			costSkimMatrixFreight.setCost(origin, destination, vht.value, sum + tripFuelCost * multiplier);
@@ -2893,9 +2887,9 @@ public class RoadNetworkAssignment {
 	 * Calculates cost skim matrix (zone-to-zone financial costs) for freight.
 	 * @return Inter-zonal skim matrix (cost).
 	 */
-	public SkimMatrixFreight calculateCostSkimMatrixFreight() {
+	public SkimMatrixFreightMultiKey calculateCostSkimMatrixFreight() {
 
-		SkimMatrixFreight costSkimMatrixFreight = new SkimMatrixFreight();
+		SkimMatrixFreightMultiKey costSkimMatrixFreight = new SkimMatrixFreightMultiKey();
 		this.updateCostSkimMatrixFreight(costSkimMatrixFreight);
 
 		return costSkimMatrixFreight;

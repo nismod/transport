@@ -66,7 +66,7 @@ import nismod.transport.decision.CongestionCharging;
 import nismod.transport.decision.Intervention;
 import nismod.transport.demand.DemandModel;
 import nismod.transport.demand.DemandModel.ElasticityTypes;
-import nismod.transport.demand.ODMatrix;
+import nismod.transport.demand.ODMatrixMultiKey;
 import nismod.transport.demand.SkimMatrix;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
@@ -109,7 +109,7 @@ public class CongestionChargingDashboard extends JFrame {
 	private static final String configFile = "./src/test/config/testConfig.properties";
 	private static RoadNetwork roadNetwork;
 	private static Properties props;
-	private static ODMatrix odm;
+	private static ODMatrixMultiKey odm;
 	private static SkimMatrix tsmBefore;
 	private static SkimMatrix csmBefore;
 	private static RouteSetGenerator rsg;
@@ -403,7 +403,7 @@ public class CongestionChargingDashboard extends JFrame {
 					SkimMatrix csm = rnaAfterCongestionCharging.calculateCostSkimMatrix();
 
 					//predicted demand	
-					ODMatrix predictedODM = new ODMatrix();
+					ODMatrixMultiKey predictedODM = new ODMatrixMultiKey();
 
 					//final String elasticitiesFile = props.getProperty("elasticitiesFile");
 					Map<ElasticityTypes, Double> elasticities = InputFileReader.readElasticitiesFile(elasticitiesFile);
@@ -1127,7 +1127,7 @@ public class CongestionChargingDashboard extends JFrame {
 											null,
 											props);
 
-		odm = new ODMatrix(baseYearODMatrixFile);
+		odm = new ODMatrixMultiKey(baseYearODMatrixFile);
 		odm.scaleMatrixValue(MATRIX_SCALING_FACTOR);
 		rsg = new RouteSetGenerator(roadNetwork, props);
 

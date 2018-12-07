@@ -43,7 +43,7 @@ import org.opengis.filter.FilterFactory2;
 import org.opengis.filter.expression.Function;
 import org.opengis.filter.expression.PropertyName;
 
-import nismod.transport.demand.ODMatrix;
+import nismod.transport.demand.ODMatrixMultiKey;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.utility.ConfigReader;
@@ -88,7 +88,7 @@ public class NetworkVisualiserDemo {
 		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
 		
 		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, zoning, null, null, null, null, null, null, null, null, null, null, null, null, null, props);
-		ODMatrix odm = new ODMatrix("./src/test/resources/testdata/csvfiles/passengerODM.csv");
+		ODMatrixMultiKey odm = new ODMatrixMultiKey("./src/test/resources/testdata/csvfiles/passengerODM.csv");
 		rna.assignPassengerFlowsRouting(odm, null, props);
 
 		final URL congestionChargeZoneUrl = new URL("file://src/test/resources/testdata/shapefiles/congestionChargingZone.shp");

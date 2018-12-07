@@ -13,7 +13,7 @@ import java.util.Properties;
 
 import org.junit.Test;
 
-import nismod.transport.demand.ODMatrix;
+import nismod.transport.demand.ODMatrixMultiKey;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.network.road.Route;
@@ -63,7 +63,7 @@ public class RoadDisruptionTest {
 		RoadDisruption rd3 = new RoadDisruption(props2);
 
 		//read OD matrix
-		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
+		ODMatrixMultiKey odm = new ODMatrixMultiKey(baseYearODMatrixFile);
 			
 		//set route generation parameters
 		Properties params = new Properties();
@@ -273,7 +273,7 @@ public class RoadDisruptionTest {
 		RoadDisruption rd3 = new RoadDisruption(props2);
 
 		//read OD matrix
-		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
+		ODMatrixMultiKey odm = new ODMatrixMultiKey(baseYearODMatrixFile);
 		
 		//set route generation parameters
 		Properties params = new Properties();

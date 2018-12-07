@@ -8,7 +8,7 @@ import java.util.Properties;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import nismod.transport.demand.ODMatrix;
+import nismod.transport.demand.ODMatrixMultiKey;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.utility.RandomSingleton;
@@ -46,7 +46,7 @@ public class SPSA2 {
 	private List<Double> lossFunctionValues;
 	private RoadNetworkAssignment rna;
 	private Properties props;
-	private ODMatrix odm;
+	private ODMatrixMultiKey odm;
 
 	public SPSA2() {
 	}
@@ -64,7 +64,7 @@ public class SPSA2 {
 	 * @param alpha SPSA parameter.
 	 * @param gamma SPSA parameter.
 	 */
-	public void initialise(RoadNetworkAssignment rna, Properties props, ODMatrix odm, HashMap<Integer, Double> initialThetaStart, HashMap<Integer, Double> initialThetaEnd, double a, double A, double c, double alpha, double gamma) {
+	public void initialise(RoadNetworkAssignment rna, Properties props, ODMatrixMultiKey odm, HashMap<Integer, Double> initialThetaStart, HashMap<Integer, Double> initialThetaEnd, double a, double A, double c, double alpha, double gamma) {
 			
 		this.rna = rna;
 		this.props = props;

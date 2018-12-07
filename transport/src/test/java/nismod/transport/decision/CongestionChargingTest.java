@@ -17,7 +17,7 @@ import java.util.Properties;
 import org.junit.Test;
 
 import nismod.transport.demand.DemandModel;
-import nismod.transport.demand.ODMatrix;
+import nismod.transport.demand.ODMatrixMultiKey;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.network.road.RouteSetGenerator;
@@ -94,7 +94,7 @@ public class CongestionChargingTest {
 		System.out.println("Congestion charges 2015: " + dm.getCongestionCharges(2015));
 		System.out.println("Congestion charges 2016: " + dm.getCongestionCharges(2016));
 		
-		ODMatrix passengerODM = new ODMatrix(baseYearODMatrixFile);
+		ODMatrixMultiKey passengerODM = new ODMatrixMultiKey(baseYearODMatrixFile);
 //		dm.getRoadNetworkAssignment(2015).assignPassengerFlowsRouteChoice(passengerODM, rsg, props);
 		
 		dm.predictHighwayDemand(2016, 2015);

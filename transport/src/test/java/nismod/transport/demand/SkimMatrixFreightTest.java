@@ -48,7 +48,7 @@ public class SkimMatrixFreightTest {
 		//  2   1   2   1.50
 		//  2   1   3   1.00
 		
-		SkimMatrixFreight skimMatrixFreight = new SkimMatrixFreight();
+		SkimMatrixFreightMultiKey skimMatrixFreight = new SkimMatrixFreightMultiKey();
 		
 		skimMatrixFreight.setCost(1, 1, 1, 0.50);
 		skimMatrixFreight.setCost(1, 1, 2, 1.00);
@@ -80,7 +80,7 @@ public class SkimMatrixFreightTest {
 		skimMatrixFreight.saveMatrixFormatted("./temp/skimMatrixFreight.csv");
 		
 		
-		SkimMatrixFreight skimMatrixFreight2 = new SkimMatrixFreight("./src/test/resources/testdata/costSkimMatrixFreight.csv");
+		SkimMatrixFreightMultiKey skimMatrixFreight2 = new SkimMatrixFreightMultiKey("./src/test/resources/testdata/costSkimMatrixFreight.csv");
 			
 //		System.out.println(skimMatrixFreight2.getKeySet());
 //		for (MultiKey mk: skimMatrixFreight2.getKeySet()) {
@@ -102,7 +102,7 @@ public class SkimMatrixFreightTest {
 					
 		assertTrue("Selected matrix elements are correct", condition);
 		
-		SkimMatrixFreight skimMatrixFreight3 = new SkimMatrixFreight("./temp/skimMatrixFreight.csv");
+		SkimMatrixFreightMultiKey skimMatrixFreight3 = new SkimMatrixFreightMultiKey("./temp/skimMatrixFreight.csv");
 		
 		double diff = skimMatrixFreight3.getAbsoluteDifference(skimMatrixFreight);
 		

@@ -115,7 +115,7 @@ public class RebalancedODMatrixTest {
 		
 		roadNetwork.sortGravityNodes();
 
-		ODMatrix passengerODM = new ODMatrix(baseYearODMatrixFile);
+		ODMatrixMultiKey passengerODM = new ODMatrixMultiKey(baseYearODMatrixFile);
 //		rna.assignPassengerFlowsRouteChoice(passengerODM, rsg, props);
 //		rna.updateLinkVolumePerVehicleType();
 //		rna.printRMSNstatistic();
@@ -123,7 +123,7 @@ public class RebalancedODMatrixTest {
 //		rna.resetLinkVolumes();
 //		rna.resetTripStorages();
 				
-		passengerODM = ODMatrix.createUnitMatrix(passengerODM.getSortedOrigins(), passengerODM.getSortedDestinations());
+		passengerODM = ODMatrixMultiKey.createUnitMatrix(passengerODM.getSortedOrigins(), passengerODM.getSortedDestinations());
 		passengerODM.deleteInterzonalFlows("E06000053"); //delete flows from/to Isle of Scilly
 		passengerODM.printMatrixFormatted("Initial OD matrix:");
 		
@@ -134,7 +134,7 @@ public class RebalancedODMatrixTest {
 		rodm.iterate(50);
 		
 		//round values
-		ODMatrix odm = new ODMatrix(rodm);
+		ODMatrixMultiKey odm = new ODMatrixMultiKey(rodm);
 		odm.printMatrixFormatted("Rounded values:");
 		odm.saveMatrixFormatted("rebalancedODM2.csv");
 		
@@ -309,8 +309,8 @@ public class RebalancedODMatrixTest {
 		
 		roadNetwork.sortGravityNodes();
 
-		ODMatrix passengerODM = new ODMatrix(baseYearODMatrixFile);
-		passengerODM = ODMatrix.createUnitMatrix(passengerODM.getSortedOrigins(), passengerODM.getSortedDestinations());
+		ODMatrixMultiKey passengerODM = new ODMatrixMultiKey(baseYearODMatrixFile);
+		passengerODM = ODMatrixMultiKey.createUnitMatrix(passengerODM.getSortedOrigins(), passengerODM.getSortedDestinations());
 					
 		RebalancedODMatrix rodm = new RebalancedODMatrix(passengerODM.getSortedOrigins(), passengerODM.getSortedDestinations(), rna, rsg, props);
 		rodm.printMatrixFormatted("Initial rebalanced matrix:", 2);
@@ -319,7 +319,7 @@ public class RebalancedODMatrixTest {
 		System.out.println("RMSN values: " + rodm.getRMSNvalues());
 		
 		//round values
-		ODMatrix odm = new ODMatrix(rodm);
+		ODMatrixMultiKey odm = new ODMatrixMultiKey(rodm);
 		odm.printMatrixFormatted("Rounded values:");
 	}
 }

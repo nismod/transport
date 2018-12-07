@@ -45,7 +45,7 @@ public class SkimMatrixArrayTempro implements SkimMatrix{
 						
 		this.zoning = zoning;
 		int maxZones = zoning.getTemproIDToCodeMap().length;
-		matrix = new double[maxZones][maxZones]; //[0][0] is not used to allow a direct fetch via Tempro ID
+		this.matrix = new double[maxZones][maxZones]; //[0][0] is not used to allow a direct fetch via Tempro ID
 	}
 	
 	/**
@@ -59,7 +59,7 @@ public class SkimMatrixArrayTempro implements SkimMatrix{
 		
 		this.zoning = zoning;
 		int maxZones = zoning.getTemproIDToCodeMap().length;
-		matrix = new double[maxZones][maxZones]; //[0][0] is not used to allow a direct fetch via Tempro ID
+		this.matrix = new double[maxZones][maxZones]; //[0][0] is not used to allow a direct fetch via Tempro ID
 		
 		CSVParser parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
 		Set<String> keySet = parser.getHeaderMap().keySet();
@@ -379,7 +379,7 @@ public class SkimMatrixArrayTempro implements SkimMatrix{
 	 * @param flows The demand as an origin-destination matrix.
 	 * @return Average cost.
 	 */
-	public double getAverageCost(ODMatrix flows) {
+	public double getAverageCost(ODMatrixMultiKey flows) {
 		
 		double averageCost = 0.0;
 		long totalFlows = 0;
@@ -402,7 +402,7 @@ public class SkimMatrixArrayTempro implements SkimMatrix{
 	 * @param flows The demand as an origin-destination matrix.
 	 * @return Sum of costs.
 	 */
-	public double getSumOfCosts(ODMatrix flows) {
+	public double getSumOfCosts(ODMatrixMultiKey flows) {
 		
 		double sumOfCosts = 0.0;
 		for (MultiKey mk: flows.getKeySet()) {

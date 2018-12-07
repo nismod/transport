@@ -104,7 +104,7 @@ public class RebalancedODMatrix extends RealODMatrix {
 		
 		this.rna.resetLinkVolumes();
 		this.rna.resetTripList();
-		ODMatrix odm = new ODMatrix(this);
+		ODMatrixMultiKey odm = new ODMatrixMultiKey(this);
 		//	odm.printMatrixFormatted();
 		
 		final Boolean flagUseRouteChoiceModel = Boolean.parseBoolean(params.getProperty("USE_ROUTE_CHOICE_MODEL"));
@@ -166,7 +166,7 @@ public class RebalancedODMatrix extends RealODMatrix {
 		LOGGER.trace("link factors = {}", linkFactors);
 		
 		RealODMatrix factors = new RealODMatrix();
-		ODMatrix counter = new ODMatrix();
+		ODMatrixMultiKey counter = new ODMatrixMultiKey();
 		RealODMatrix scalingFactors = new RealODMatrix();
 		
 		for (Trip t: tripList) 

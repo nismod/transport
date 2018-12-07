@@ -55,12 +55,12 @@ public class DemandModel {
 	private HashMap<Integer, Map<VehicleType, Map<EngineType, Double>>> yearToRelativeFuelEfficiencies;
 	private Map<Integer, Map<TimeOfDay, Double>> yearToTimeOfDayDistribution;
 	private Map<Integer, Map<TimeOfDay, Double>> yearToTimeOfDayDistributionFreight;
-	private HashMap<Integer, ODMatrix> yearToPassengerODMatrix; //passenger demand
+	private HashMap<Integer, ODMatrixMultiKey> yearToPassengerODMatrix; //passenger demand
 	private HashMap<Integer, FreightMatrix> yearToFreightODMatrix; //freight demand
 	private HashMap<Integer, SkimMatrix> yearToTimeSkimMatrix;
-	private HashMap<Integer, SkimMatrixFreight> yearToTimeSkimMatrixFreight;
+	private HashMap<Integer, SkimMatrixFreightMultiKey> yearToTimeSkimMatrixFreight;
 	private HashMap<Integer, SkimMatrix> yearToCostSkimMatrix;
-	private HashMap<Integer, SkimMatrixFreight> yearToCostSkimMatrixFreight;
+	private HashMap<Integer, SkimMatrixFreightMultiKey> yearToCostSkimMatrixFreight;
 	private HashMap<Integer, HashMap<String, Integer>> yearToZoneToPopulation;
 	private HashMap<Integer, HashMap<String, Double>> yearToZoneToGVA;
 	private HashMap<Integer, RoadNetworkAssignment> yearToRoadNetworkAssignment;
@@ -77,7 +77,7 @@ public class DemandModel {
 	private List<Intervention> interventions;
 	private RoadNetwork roadNetwork;
 	private Zoning zoning;
-	private ODMatrix temproMatrixTemplate;
+	private ODMatrixMultiKey temproMatrixTemplate;
 
 	/**
 	 * The constructor for the demand prediction model.
@@ -101,12 +101,12 @@ public class DemandModel {
 	 */
 	public DemandModel(RoadNetwork roadNetwork, String baseYearODMatrixFile, String baseYearFreightMatrixFile, String populationFile, String GVAFile, String elasticitiesFile, String elasticitiesFreightFile, String energyUnitCostsFile, String unitCO2EmissionsFile, String engineTypeFractionsFile, String autonomousVehiclesFractionsFile, List<Intervention> interventions, RouteSetGenerator rsg, Zoning zoning, Properties props) throws FileNotFoundException, IOException {
 
-		this.yearToPassengerODMatrix = new HashMap<Integer, ODMatrix>();
+		this.yearToPassengerODMatrix = new HashMap<Integer, ODMatrixMultiKey>();
 		this.yearToFreightODMatrix = new HashMap<Integer, FreightMatrix>();
 		this.yearToTimeSkimMatrix = new HashMap<Integer, SkimMatrix>();
-		this.yearToTimeSkimMatrixFreight = new HashMap<Integer, SkimMatrixFreight>();
+		this.yearToTimeSkimMatrixFreight = new HashMap<Integer, SkimMatrixFreightMultiKey>();
 		this.yearToCostSkimMatrix = new HashMap<Integer, SkimMatrix>();
-		this.yearToCostSkimMatrixFreight = new HashMap<Integer, SkimMatrixFreight>();
+		this.yearToCostSkimMatrixFreight = new HashMap<Integer, SkimMatrixFreightMultiKey>();
 		this.yearToZoneToPopulation = new HashMap<Integer, HashMap<String, Integer>>();
 		this.yearToZoneToGVA = new HashMap<Integer, HashMap<String, Double>>();
 		this.yearToRoadNetworkAssignment = new HashMap<Integer, RoadNetworkAssignment>();
@@ -131,7 +131,7 @@ public class DemandModel {
 		this.predictionIterations = Integer.parseInt(props.getProperty("PREDICTION_ITERATIONS"));
 				
 		//read base-year passenger matrix
-		ODMatrix passengerODMatrix = new ODMatrix(baseYearODMatrixFile);
+		ODMatrixMultiKey passengerODMatrix = new ODMatrixMultiKey(baseYearODMatrixFile);
 		//passengerODMatrix.printMatrixFormatted();
 		this.yearToPassengerODMatrix.put(this.baseYear, passengerODMatrix);
 		
@@ -172,7 +172,7 @@ public class DemandModel {
 		if (assignmentType.equals("tempro") || assignmentType.equals("combined")) {
 			
 			final String temproODMatrixFile = props.getProperty("temproODMatrixFile");
-			this.temproMatrixTemplate = new ODMatrix(temproODMatrixFile);
+			this.temproMatrixTemplate = new ODMatrixMultiKey(temproODMatrixFile);
 		}
 	}
 	
@@ -279,7 +279,7 @@ public class DemandModel {
 				//if tempro or combined assignment used, disaggregate LAD-based matrix to tempro level using the template
 				final String assignmentType = props.getProperty("ASSIGNMENT_TYPE").toLowerCase();
 				if (assignmentType.equals("tempro") || assignmentType.equals("combined")) {
-					passengerODM = ODMatrix.createTEMProFromLadMatrix(this.yearToPassengerODMatrix.get(fromYear), this.temproMatrixTemplate, zoning);
+					passengerODM = ODMatrixMultiKey.createTEMProFromLadMatrix(this.yearToPassengerODMatrix.get(fromYear), this.temproMatrixTemplate, zoning);
 				} else
 					passengerODM = this.yearToPassengerODMatrix.get(fromYear);
 				
@@ -294,8 +294,8 @@ public class DemandModel {
 				//calculate skim matrices
 				SkimMatrix tsm = rna.calculateTimeSkimMatrix();
 				SkimMatrix csm = rna.calculateCostSkimMatrix();
-				SkimMatrixFreight tsmf = rna.calculateTimeSkimMatrixFreight();
-				SkimMatrixFreight csmf = rna.calculateCostSkimMatrixFreight();
+				SkimMatrixFreightMultiKey tsmf = rna.calculateTimeSkimMatrixFreight();
+				SkimMatrixFreightMultiKey csmf = rna.calculateCostSkimMatrixFreight();
 				yearToTimeSkimMatrix.put(fromYear, tsm);
 				yearToCostSkimMatrix.put(fromYear, csm);
 				yearToTimeSkimMatrixFreight.put(fromYear, tsmf);
@@ -325,7 +325,7 @@ public class DemandModel {
 			yearToCostSkimMatrixFreight.put(predictedYear, yearToCostSkimMatrixFreight.get(fromYear));
 
 			//predicted demand	
-			ODMatrix predictedPassengerODMatrix = new ODMatrix();
+			ODMatrixMultiKey predictedPassengerODMatrix = new ODMatrixMultiKey();
 			FreightMatrix predictedFreightODMatrix = new FreightMatrix();
 			
 			//FIRST STAGE PREDICTION (FROM POPULATION AND GVA)
@@ -423,7 +423,7 @@ public class DemandModel {
 			//SECOND STAGE PREDICTION (FROM CHANGES IN COST AND TIME)
 			
 			SkimMatrix tsm = null, csm = null;
-			SkimMatrixFreight tsmf = null, csmf = null;
+			SkimMatrixFreightMultiKey tsmf = null, csmf = null;
 			RoadNetworkAssignment predictedRna = null;
 			for (int i=0; i<this.predictionIterations; i++) {
 
@@ -468,7 +468,7 @@ public class DemandModel {
 				//if tempro or combined assignment used, disaggregate LAD-based matrix to tempro level using the template
 				final String assignmentType = props.getProperty("ASSIGNMENT_TYPE").toLowerCase();
 				if (assignmentType.equals("tempro") || assignmentType.equals("combined")) {
-					predictedPassengerODMatrixToAssign = ODMatrix.createTEMProFromLadMatrix(predictedPassengerODMatrix, this.temproMatrixTemplate, zoning);
+					predictedPassengerODMatrixToAssign = ODMatrixMultiKey.createTEMProFromLadMatrix(predictedPassengerODMatrix, this.temproMatrixTemplate, zoning);
 				} else
 					predictedPassengerODMatrixToAssign = predictedPassengerODMatrix;
 				
@@ -529,20 +529,20 @@ public class DemandModel {
 
 					double oldFlow = predictedFreightODMatrix.getFlow(origin, destination, vehicleType);
 
-					Double oldODTravelTime = this.yearToTimeSkimMatrixFreight.get(predictedYear).getCost(origin, destination, vehicleType);
-					Double newODTravelTime = tsmf.getCost(origin, destination, vehicleType);
-					Double oldODTravelCost = this.yearToCostSkimMatrixFreight.get(predictedYear).getCost(origin, destination, vehicleType);
-					Double newODTravelCost = csmf.getCost(origin, destination, vehicleType);
+					double oldODTravelTime = this.yearToTimeSkimMatrixFreight.get(predictedYear).getCost(origin, destination, vehicleType);
+					double newODTravelTime = tsmf.getCost(origin, destination, vehicleType);
+					double oldODTravelCost = this.yearToCostSkimMatrixFreight.get(predictedYear).getCost(origin, destination, vehicleType);
+					double newODTravelCost = csmf.getCost(origin, destination, vehicleType);
 					
-					if (oldODTravelTime == null) LOGGER.warn("Unknown old travel time between freight zone {} and freight zone {} for vehicle {}.", origin, destination, vehicleType);
-					if (newODTravelTime == null) LOGGER.warn("Unknown new travel time between freight zone {} and freight zone {} for vehicle {}.", origin, destination, vehicleType);
-					if (oldODTravelCost == null) LOGGER.warn("Unknown old travel cost between freight zone {} and freight zone {} for vehicle {}.", origin, destination, vehicleType);
-					if (newODTravelCost == null) LOGGER.warn("Unknown new travel cost between freight zone {} and freight zone {} for vehicle {}.", origin, destination, vehicleType);
-					if (oldODTravelTime == null || newODTravelTime == null)	{ //if either is undefined assume the ratio is 1, i.e. not affecting the prediction
+					if (oldODTravelTime == 0.0) LOGGER.warn("Unknown old travel time between freight zone {} and freight zone {} for vehicle {}.", origin, destination, vehicleType);
+					if (newODTravelTime == 0.0) LOGGER.warn("Unknown new travel time between freight zone {} and freight zone {} for vehicle {}.", origin, destination, vehicleType);
+					if (oldODTravelCost == 0.0) LOGGER.warn("Unknown old travel cost between freight zone {} and freight zone {} for vehicle {}.", origin, destination, vehicleType);
+					if (newODTravelCost == 0.0) LOGGER.warn("Unknown new travel cost between freight zone {} and freight zone {} for vehicle {}.", origin, destination, vehicleType);
+					if (oldODTravelTime == 0.0 || newODTravelTime == 0.0) { //if either is undefined assume the ratio is 1, i.e. not affecting the prediction
 						oldODTravelTime = 1.0;
 						newODTravelTime = 1.0;
 					}
-					if (oldODTravelCost == null || newODTravelCost == null) { 
+					if (oldODTravelCost == 0.0 || newODTravelCost == 0.0) { 
 						oldODTravelCost = 1.0;
 						newODTravelCost = 1.0;
 					}
@@ -580,7 +580,7 @@ public class DemandModel {
 				
 				//if tempro or combined assignment used, disaggregate LAD-based matrix to tempro level using the template
 				if (assignmentType.equals("tempro") || assignmentType.equals("combined")) {
-					predictedPassengerODMatrixToAssign = ODMatrix.createTEMProFromLadMatrix(predictedPassengerODMatrix, this.temproMatrixTemplate, zoning);
+					predictedPassengerODMatrixToAssign = ODMatrixMultiKey.createTEMProFromLadMatrix(predictedPassengerODMatrix, this.temproMatrixTemplate, zoning);
 				} else
 					predictedPassengerODMatrixToAssign = predictedPassengerODMatrix;
 				
@@ -667,7 +667,7 @@ public class DemandModel {
 			//if tempro or combined assignment used, disaggregate LAD-based matrix to tempro level using the template
 			final String assignmentType = props.getProperty("ASSIGNMENT_TYPE").toLowerCase();
 			if (assignmentType.equals("tempro") || assignmentType.equals("combined")) {
-				passengerODM = ODMatrix.createTEMProFromLadMatrix(this.yearToPassengerODMatrix.get(baseYear), this.temproMatrixTemplate, zoning);
+				passengerODM = ODMatrixMultiKey.createTEMProFromLadMatrix(this.yearToPassengerODMatrix.get(baseYear), this.temproMatrixTemplate, zoning);
 			} else
 				passengerODM = this.yearToPassengerODMatrix.get(baseYear);
 			
@@ -682,8 +682,8 @@ public class DemandModel {
 			//calculate skim matrices
 			SkimMatrix tsm = rna.calculateTimeSkimMatrix();
 			SkimMatrix csm = rna.calculateCostSkimMatrix();
-			SkimMatrixFreight tsmf = rna.calculateTimeSkimMatrixFreight();
-			SkimMatrixFreight csmf = rna.calculateCostSkimMatrixFreight();
+			SkimMatrixFreightMultiKey tsmf = rna.calculateTimeSkimMatrixFreight();
+			SkimMatrixFreightMultiKey csmf = rna.calculateCostSkimMatrixFreight();
 			
 			yearToTimeSkimMatrix.put(baseYear, tsm);
 			yearToCostSkimMatrix.put(baseYear, csm);
@@ -749,7 +749,7 @@ public class DemandModel {
 
 		try {
 			String inputFile = inputFolder + File.separator + predictedODMatrixFile;
-			ODMatrix passengerODM = new ODMatrix(inputFile);
+			ODMatrixMultiKey passengerODM = new ODMatrixMultiKey(inputFile);
 			this.yearToPassengerODMatrix.put(fromYear, passengerODM);
 
 			inputFile = inputFolder + File.separator + predictedFreightMatrixFile;
@@ -765,11 +765,11 @@ public class DemandModel {
 			this.yearToCostSkimMatrix.put(fromYear, costSkimMatrix);
 
 			inputFile = inputFolder + File.separator +  timeSkimMatrixFreightFile;
-			SkimMatrixFreight timeSkimMatrixFreight = new SkimMatrixFreight(inputFile);
+			SkimMatrixFreightMultiKey timeSkimMatrixFreight = new SkimMatrixFreightMultiKey(inputFile);
 			this.yearToTimeSkimMatrixFreight.put(fromYear, timeSkimMatrixFreight);
 
 			inputFile = inputFolder + File.separator +  costSkimMatrixFreightFile;
-			SkimMatrixFreight costSkimMatrixFreight = new SkimMatrixFreight(inputFile);
+			SkimMatrixFreightMultiKey costSkimMatrixFreight = new SkimMatrixFreightMultiKey(inputFile);
 			this.yearToCostSkimMatrixFreight.put(fromYear, costSkimMatrixFreight);
 
 			inputFile = inputFolder + File.separator + linkTravelTimesFile;
@@ -795,7 +795,7 @@ public class DemandModel {
 		yearToCostSkimMatrixFreight.put(predictedYear, yearToCostSkimMatrixFreight.get(fromYear));
 
 		//predicted demand	
-		ODMatrix predictedPassengerODMatrix = new ODMatrix();
+		ODMatrixMultiKey predictedPassengerODMatrix = new ODMatrixMultiKey();
 		FreightMatrix predictedFreightODMatrix = new FreightMatrix();
 
 		//FIRST STAGE PREDICTION (FROM POPULATION AND GVA)
@@ -893,7 +893,7 @@ public class DemandModel {
 		//SECOND STAGE PREDICTION (FROM CHANGES IN COST AND TIME)
 
 		SkimMatrix tsm = null, csm = null;
-		SkimMatrixFreight tsmf = null, csmf = null;
+		SkimMatrixFreightMultiKey tsmf = null, csmf = null;
 		RoadNetworkAssignment predictedRna = null;
 		for (int i=0; i<this.predictionIterations; i++) {
 
@@ -938,7 +938,7 @@ public class DemandModel {
 			//if tempro or combined assignment used, disaggregate LAD-based matrix to tempro level using the template
 			final String assignmentType = props.getProperty("ASSIGNMENT_TYPE").toLowerCase();
 			if (assignmentType.equals("tempro") || assignmentType.equals("combined")) {
-				predictedPassengerODMatrixToAssign = ODMatrix.createTEMProFromLadMatrix(predictedPassengerODMatrix, this.temproMatrixTemplate, zoning);
+				predictedPassengerODMatrixToAssign = ODMatrixMultiKey.createTEMProFromLadMatrix(predictedPassengerODMatrix, this.temproMatrixTemplate, zoning);
 			} else
 				predictedPassengerODMatrixToAssign = predictedPassengerODMatrix;
 
@@ -999,20 +999,20 @@ public class DemandModel {
 
 				double oldFlow = predictedFreightODMatrix.getFlow(origin, destination, vehicleType);
 
-				Double oldODTravelTime = this.yearToTimeSkimMatrixFreight.get(predictedYear).getCost(origin, destination, vehicleType);
-				Double newODTravelTime = tsmf.getCost(origin, destination, vehicleType);
-				Double oldODTravelCost = this.yearToCostSkimMatrixFreight.get(predictedYear).getCost(origin, destination, vehicleType);
-				Double newODTravelCost = csmf.getCost(origin, destination, vehicleType);
+				double oldODTravelTime = this.yearToTimeSkimMatrixFreight.get(predictedYear).getCost(origin, destination, vehicleType);
+				double newODTravelTime = tsmf.getCost(origin, destination, vehicleType);
+				double oldODTravelCost = this.yearToCostSkimMatrixFreight.get(predictedYear).getCost(origin, destination, vehicleType);
+				double newODTravelCost = csmf.getCost(origin, destination, vehicleType);
 
-				if (oldODTravelTime == null) LOGGER.warn("Unknown old travel time between freight zone {} and freight zone {} for vehicle {}.", origin, destination, vehicleType);
-				if (newODTravelTime == null) LOGGER.warn("Unknown new travel time between freight zone {} and freight zone {} for vehicle {}.", origin, destination, vehicleType);
-				if (oldODTravelCost == null) LOGGER.warn("Unknown old travel cost between freight zone {} and freight zone {} for vehicle {}.", origin, destination, vehicleType);
-				if (newODTravelCost == null) LOGGER.warn("Unknown new travel cost between freight zone {} and freight zone {} for vehicle {}.", origin, destination, vehicleType);
-				if (oldODTravelTime == null || newODTravelTime == null)	{ //if either is undefined assume the ratio is 1, i.e. not affecting the prediction
+				if (oldODTravelTime == 0.0) LOGGER.warn("Unknown old travel time between freight zone {} and freight zone {} for vehicle {}.", origin, destination, vehicleType);
+				if (newODTravelTime == 0.0) LOGGER.warn("Unknown new travel time between freight zone {} and freight zone {} for vehicle {}.", origin, destination, vehicleType);
+				if (oldODTravelCost == 0.0) LOGGER.warn("Unknown old travel cost between freight zone {} and freight zone {} for vehicle {}.", origin, destination, vehicleType);
+				if (newODTravelCost == 0.0) LOGGER.warn("Unknown new travel cost between freight zone {} and freight zone {} for vehicle {}.", origin, destination, vehicleType);
+				if (oldODTravelTime == 0.0 || newODTravelTime == 0.0)	{ //if either is undefined assume the ratio is 1, i.e. not affecting the prediction
 					oldODTravelTime = 1.0;
 					newODTravelTime = 1.0;
 				}
-				if (oldODTravelCost == null || newODTravelCost == null) { 
+				if (oldODTravelCost == 0.0 || newODTravelCost == 0.0) { 
 					oldODTravelCost = 1.0;
 					newODTravelCost = 1.0;
 				}
@@ -1050,7 +1050,7 @@ public class DemandModel {
 
 			//if tempro or combined assignment used, disaggregate LAD-based matrix to tempro level using the template
 			if (assignmentType.equals("tempro") || assignmentType.equals("combined")) {
-				predictedPassengerODMatrixToAssign = ODMatrix.createTEMProFromLadMatrix(predictedPassengerODMatrix, this.temproMatrixTemplate, zoning);
+				predictedPassengerODMatrixToAssign = ODMatrixMultiKey.createTEMProFromLadMatrix(predictedPassengerODMatrix, this.temproMatrixTemplate, zoning);
 			} else
 				predictedPassengerODMatrixToAssign = predictedPassengerODMatrix;
 
@@ -1098,7 +1098,7 @@ public class DemandModel {
 	 * @param year Year for which the demand is requested.
 	 * @return Origin-destination matrix with passenger vehicle flows.
 	 */
-	public ODMatrix getPassengerDemand (int year) {
+	public ODMatrixMultiKey getPassengerDemand (int year) {
 
 		return yearToPassengerODMatrix.get(year);
 	}
@@ -1138,7 +1138,7 @@ public class DemandModel {
 	 * @param year Year for which the the skim matrix is requested.
 	 * @return Time skim matrix.
 	 */
-	public SkimMatrixFreight getTimeSkimMatrixFreight (int year) {
+	public SkimMatrixFreightMultiKey getTimeSkimMatrixFreight (int year) {
 
 		return 	yearToTimeSkimMatrixFreight.get(year);
 	}
@@ -1158,7 +1158,7 @@ public class DemandModel {
 	 * @param year Year for which the the skim matrix is requested.
 	 * @return Cost skim matrix.
 	 */
-	public SkimMatrixFreight getCostSkimMatrixFreight (int year) {
+	public SkimMatrixFreightMultiKey getCostSkimMatrixFreight (int year) {
 
 		return 	yearToCostSkimMatrixFreight.get(year);
 	}

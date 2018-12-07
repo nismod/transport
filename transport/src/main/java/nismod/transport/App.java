@@ -26,7 +26,7 @@ import nismod.transport.decision.Intervention;
 import nismod.transport.decision.Intervention.InterventionType;
 import nismod.transport.demand.DemandModel;
 import nismod.transport.demand.FreightMatrix;
-import nismod.transport.demand.ODMatrix;
+import nismod.transport.demand.ODMatrixMultiKey;
 import nismod.transport.demand.RealODMatrixTempro;
 import nismod.transport.demand.RebalancedTemproODMatrix;
 import nismod.transport.network.road.RoadNetwork;
@@ -202,7 +202,7 @@ public class App {
 				roadNetwork.sortGravityNodes();
 				routes = new RouteSetGenerator(roadNetwork, props);
 				final String baseYearODMatrixFile = props.getProperty("baseYearODMatrixFile");
-				ODMatrix passengerODM = new ODMatrix(baseYearODMatrixFile);
+				ODMatrixMultiKey passengerODM = new ODMatrixMultiKey(baseYearODMatrixFile);
 
 				if (Integer.parseInt(topNodes) > 0) {
 					//generate only between top nodes

@@ -32,7 +32,7 @@ import org.geotools.graph.structure.Node;
 import org.locationtech.jts.geom.Point;
 
 import nismod.transport.demand.FreightMatrix;
-import nismod.transport.demand.ODMatrix;
+import nismod.transport.demand.ODMatrixMultiKey;
 import nismod.transport.demand.RealODMatrixTempro;
 import nismod.transport.utility.RandomSingleton;
 import nismod.transport.zone.Zoning;
@@ -519,7 +519,7 @@ public class RouteSetGenerator{
 	 * @param matrix Origin-destination matrix.
 	 * @param topNodes Number of topNodes to consider for inter-zonal routes.
 	 */
-	public void generateRouteSetForODMatrix(ODMatrix matrix, int topNodes) {
+	public void generateRouteSetForODMatrix(ODMatrixMultiKey matrix, int topNodes) {
 		
 		for (MultiKey mk: matrix.getKeySet()) {
 				String originLAD = (String) ((MultiKey)mk).getKey(0);
@@ -533,7 +533,7 @@ public class RouteSetGenerator{
 	 * Generates routes for all non-zero OD flows in the OD matrix.
 	 * @param matrix Origin-destination matrix.
 	 */
-	public void generateRouteSetForODMatrix(ODMatrix matrix) {
+	public void generateRouteSetForODMatrix(ODMatrixMultiKey matrix) {
 		
 		for (MultiKey mk: matrix.getKeySet()) {
 				String originLAD = (String) ((MultiKey)mk).getKey(0);
@@ -548,7 +548,7 @@ public class RouteSetGenerator{
 	 * @param matrix Origin-destination matrix.
 	 * @param zoning Tempro zoning system.
 	 */
-	public void generateRouteSetForODMatrixTempro(ODMatrix matrix, Zoning zoning) {
+	public void generateRouteSetForODMatrixTempro(ODMatrixMultiKey matrix, Zoning zoning) {
 		
 		for (MultiKey mk: matrix.getKeySet()) {
 				String originZone = (String) ((MultiKey)mk).getKey(0);
@@ -631,7 +631,7 @@ public class RouteSetGenerator{
 	 * @param sliceNumber Number of slices to divide matrix into (N).
 	 * @param topNodes Number of topNodes to consider for inter-zonal routes.
 	 */
-	public void generateRouteSetForODMatrix(ODMatrix matrix, int sliceIndex, int sliceNumber, int topNodes) {
+	public void generateRouteSetForODMatrix(ODMatrixMultiKey matrix, int sliceIndex, int sliceNumber, int topNodes) {
 		
 		List<String> origins = matrix.getSortedOrigins();
 		List<String> destinations = matrix.getSortedDestinations();
@@ -662,7 +662,7 @@ public class RouteSetGenerator{
 	 * @param sliceIndex Index of the OD matrix slice for which to generate routes [1..N].
 	 * @param sliceNumber Number of slices to divide matrix into (N).
 	 */
-	public void generateRouteSetForODMatrix(ODMatrix matrix, int sliceIndex, int sliceNumber) {
+	public void generateRouteSetForODMatrix(ODMatrixMultiKey matrix, int sliceIndex, int sliceNumber) {
 		
 		List<String> origins = matrix.getSortedOrigins();
 		List<String> destinations = matrix.getSortedDestinations();

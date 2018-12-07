@@ -378,7 +378,7 @@ public class SkimMatrixArray implements SkimMatrix{
 	 * @param flows The demand as an origin-destination matrix.
 	 * @return Average cost.
 	 */
-	public double getAverageCost(ODMatrix flows) {
+	public double getAverageCost(ODMatrixMultiKey flows) {
 		
 		double averageCost = 0.0;
 		long totalFlows = 0;
@@ -401,7 +401,7 @@ public class SkimMatrixArray implements SkimMatrix{
 	 * @param flows The demand as an origin-destination matrix.
 	 * @return Sum of costs.
 	 */
-	public double getSumOfCosts(ODMatrix flows) {
+	public double getSumOfCosts(ODMatrixMultiKey flows) {
 		
 		double sumOfCosts = 0.0;
 		for (MultiKey mk: flows.getKeySet()) {
@@ -424,8 +424,8 @@ public class SkimMatrixArray implements SkimMatrix{
 		
 		double difference = 0.0;
 		
-		List<String> firstKeyList = this.getSortedOrigins();
-		List<String> secondKeyList = this.getSortedDestinations();
+		List<String> firstKeyList = this.getUnsortedOrigins();
+		List<String> secondKeyList = this.getUnsortedDestinations();
 		
 		for (String origin: firstKeyList)
 			for (String destination: secondKeyList) {

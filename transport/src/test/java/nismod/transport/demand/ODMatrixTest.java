@@ -53,7 +53,7 @@ public class ODMatrixTest {
 		//3 987 876 765 654
 		//4 456 567 678 789
 		
-		ODMatrix passengerODMatrix = new ODMatrix();
+		ODMatrixMultiKey passengerODMatrix = new ODMatrixMultiKey();
 		
 		passengerODMatrix.setFlow("1", "1", 123);
 		passengerODMatrix.setFlow("1", "2", 234);
@@ -73,7 +73,7 @@ public class ODMatrixTest {
 		passengerODMatrix.setFlow("4", "4", 987);
 	
 		passengerODMatrix.printMatrixFormatted("OD matrix:");
-		ODMatrix copy = passengerODMatrix.clone();
+		ODMatrixMultiKey copy = passengerODMatrix.clone();
 		copy.printMatrixFormatted("Cloned matrix:");
 		
 		passengerODMatrix.setFlow("4",  "4", 0);
@@ -107,7 +107,7 @@ public class ODMatrixTest {
 		System.out.println("Trip starts: " + passengerODMatrix.calculateTripStarts());
 		System.out.println("Trip ends: " + passengerODMatrix.calculateTripEnds());
 		
-		ODMatrix passengerODMatrix2 = new ODMatrix("./src/test/resources/testdata/csvfiles/passengerODM.csv");
+		ODMatrixMultiKey passengerODMatrix2 = new ODMatrixMultiKey("./src/test/resources/testdata/csvfiles/passengerODM.csv");
 		passengerODMatrix2.printMatrixFormatted();
 		
 		condition = passengerODMatrix2.getFlow("E06000045", "E06000045") == 5000 &&
@@ -150,13 +150,13 @@ public class ODMatrixTest {
 		zones.add("E07000091");
 		zones.add("E06000046");
 		
-		ODMatrix odm = ODMatrix.createUnitMatrix(zones);
+		ODMatrixMultiKey odm = ODMatrixMultiKey.createUnitMatrix(zones);
 		odm.printMatrixFormatted();
 		
-		ODMatrix odm2 = ODMatrix.createUnitMatrix(zones, zones);
+		ODMatrixMultiKey odm2 = ODMatrixMultiKey.createUnitMatrix(zones, zones);
 		odm2.printMatrixFormatted();
 		
-		ODMatrix odm3 = ODMatrix.createUnitMatrix(zoneSet);
+		ODMatrixMultiKey odm3 = ODMatrixMultiKey.createUnitMatrix(zoneSet);
 		odm3.printMatrixFormatted();
 		
 		final String configFile = "./src/test/config/testConfig.properties";
@@ -186,14 +186,14 @@ public class ODMatrixTest {
 		//E06000045 (E02003552, E02003553)
 		//E07000091  (E02004801, E02004800)
 		
-		ODMatrix tempro = new ODMatrix();
+		ODMatrixMultiKey tempro = new ODMatrixMultiKey();
 		tempro.setFlow("E02004800", "E02003552", 1);
 		tempro.setFlow("E02004800", "E02003553", 2);
 		tempro.setFlow("E02004801", "E02003552", 3);
 		tempro.setFlow("E02004801", "E02003553", 4);
 		
 		tempro.printMatrixFormatted("Tempro matrix:");
-		ODMatrix ladMatrix = ODMatrix.createLadMatrixFromTEMProMatrix(tempro, zoning);
+		ODMatrixMultiKey ladMatrix = ODMatrixMultiKey.createLadMatrixFromTEMProMatrix(tempro, zoning);
 		ladMatrix.printMatrixFormatted("Lad matrix:");
 		//ladMatrix.saveMatrixFormatted("ladFromTempro.csv");
 		
@@ -208,12 +208,12 @@ public class ODMatrixTest {
 		ladMatrix.scaleMatrixValue(2);
 		ladMatrix.printMatrixFormatted("Lad matrix after scaling:");
 		
-		ODMatrix tempro2 = ODMatrix.createTEMProFromLadMatrix(ladMatrix, tempro, zoning);
+		ODMatrixMultiKey tempro2 = ODMatrixMultiKey.createTEMProFromLadMatrix(ladMatrix, tempro, zoning);
 		tempro2.printMatrixFormatted("New tempro from LAD:");
 		
-		ODMatrix temproODM = new ODMatrix("./src/test/resources/testdata/csvfiles/temproODM.csv");
+		ODMatrixMultiKey temproODM = new ODMatrixMultiKey("./src/test/resources/testdata/csvfiles/temproODM.csv");
 		//temproODM.printMatrixFormatted("tempro");
-		ladMatrix = ODMatrix.createLadMatrixFromTEMProMatrix(temproODM, zoning);
+		ladMatrix = ODMatrixMultiKey.createLadMatrixFromTEMProMatrix(temproODM, zoning);
 		ladMatrix.printMatrixFormatted("from tempro to LAD:");
 		
 		assertEquals("Sum of flows of two matrices should be equal", temproODM.getSumOfFlows(), ladMatrix.getSumOfFlows());
@@ -225,7 +225,7 @@ public class ODMatrixTest {
 		real.setFlow("E02004801", "E02003553", 4.0);
 		real.printMatrix();
 		
-		ODMatrix matrix = new ODMatrix(real);
+		ODMatrixMultiKey matrix = new ODMatrixMultiKey(real);
 		
 		final double DELTA = 0.000001;
 		double difference = matrix.getAbsoluteDifference(tempro);

@@ -11,7 +11,7 @@ import java.util.Properties;
 
 import org.jfree.data.category.DefaultCategoryDataset;
 
-import nismod.transport.demand.ODMatrix;
+import nismod.transport.demand.ODMatrixMultiKey;
 import nismod.transport.demand.RealODMatrix;
 import nismod.transport.demand.RealODMatrixTempro;
 import nismod.transport.network.road.RoadNetwork;

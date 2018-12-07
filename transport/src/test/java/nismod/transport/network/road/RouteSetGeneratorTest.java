@@ -22,7 +22,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import nismod.transport.demand.FreightMatrix;
-import nismod.transport.demand.ODMatrix;
+import nismod.transport.demand.ODMatrixMultiKey;
 import nismod.transport.demand.RealODMatrixTempro;
 import nismod.transport.utility.ConfigReader;
 import nismod.transport.utility.InputFileReader;
@@ -64,7 +64,7 @@ public class RouteSetGeneratorTest {
 		System.out.println(Arrays.toString(roadNetwork.getEdgeIDtoEdge()));
 				
 		//load base year matrices
-		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
+		ODMatrixMultiKey odm = new ODMatrixMultiKey(baseYearODMatrixFile);
 		FreightMatrix fm = new FreightMatrix(baseYearFreightMatrixFile);
 		
 		odm.printMatrixFormatted("Passenger OD matrix:");
@@ -174,7 +174,7 @@ public class RouteSetGeneratorTest {
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
 		DirectedGraph rn = roadNetwork.getNetwork();
-		ODMatrix passengerODM = new ODMatrix(baseYearODMatrixFile);
+		ODMatrixMultiKey passengerODM = new ODMatrixMultiKey(baseYearODMatrixFile);
 
 		//set route generation parameters
 		Properties params = new Properties();
@@ -322,7 +322,7 @@ public class RouteSetGeneratorTest {
 		
 		rsg2.clearRoutes();
 		
-		ODMatrix tempro1 = new ODMatrix();
+		ODMatrixMultiKey tempro1 = new ODMatrixMultiKey();
 		tempro1.setFlow("E02004800", "E02003552", 1);
 		tempro1.setFlow("E02004800", "E02003553", 2);
 		tempro1.setFlow("E02004801", "E02003552", 3);
@@ -663,7 +663,7 @@ public class RouteSetGeneratorTest {
 		rsg.generateRouteSetZoneToZone("E07000202", "E07000203", 10);
 		
 		//assign passenger flows
-		ODMatrix odm = new ODMatrix();
+		ODMatrixMultiKey odm = new ODMatrixMultiKey();
 		odm.setFlow("E07000202", "E07000203", 1000000);
 		odm.printMatrixFormatted();
 

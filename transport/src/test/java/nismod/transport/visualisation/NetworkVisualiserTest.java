@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import nismod.transport.demand.ODMatrix;
+import nismod.transport.demand.ODMatrixMultiKey;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.showcase.NetworkVisualiserDemo;
@@ -74,7 +74,7 @@ public class NetworkVisualiserTest {
 															null,
 															null,
 															props);
-		ODMatrix odm = new ODMatrix("./src/test/resources/testdata/csvfiles/passengerODM.csv");
+		ODMatrixMultiKey odm = new ODMatrixMultiKey("./src/test/resources/testdata/csvfiles/passengerODM.csv");
 		rna.assignPassengerFlowsRouting(odm, null, props);
 
 		final URL congestionChargeZoneUrl = new URL("file://src/test/resources/testdata/shapefiles/congestionChargingZone.shp");

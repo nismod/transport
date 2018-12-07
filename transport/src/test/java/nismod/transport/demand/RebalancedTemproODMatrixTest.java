@@ -544,8 +544,8 @@ public class RebalancedTemproODMatrixTest {
 		
 		roadNetwork.sortGravityNodes();
 
-		ODMatrix passengerODM = new ODMatrix(temproODMatrixFile);
-		passengerODM = ODMatrix.createUnitMatrix(passengerODM.getSortedOrigins(), passengerODM.getSortedDestinations());
+		ODMatrixMultiKey passengerODM = new ODMatrixMultiKey(temproODMatrixFile);
+		passengerODM = ODMatrixMultiKey.createUnitMatrix(passengerODM.getSortedOrigins(), passengerODM.getSortedDestinations());
 					
 		RebalancedTemproODMatrix rodm = new RebalancedTemproODMatrix(passengerODM.getSortedOrigins(), passengerODM.getSortedDestinations(), rna, rsg, zoning, props);
 		//rodm.printMatrixFormatted("Initial rebalanced matrix:", 2);

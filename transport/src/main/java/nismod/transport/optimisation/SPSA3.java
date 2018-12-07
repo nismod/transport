@@ -16,7 +16,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.geotools.graph.structure.Node;
 
-import nismod.transport.demand.ODMatrix;
+import nismod.transport.demand.ODMatrixMultiKey;
 import nismod.transport.demand.RealODMatrix;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
@@ -398,7 +398,7 @@ public class SPSA3 {
 	private double lossFunction(RealODMatrix theta, HashMap<Integer, Double> thetaStart, HashMap<Integer, Double> thetaEnd) {
 		
 		//round values
-		ODMatrix odm = new ODMatrix(theta);
+		ODMatrixMultiKey odm = new ODMatrixMultiKey(theta);
 		
 		//reset as we are re-using the same road network assignment
 		rna.resetLinkVolumes();

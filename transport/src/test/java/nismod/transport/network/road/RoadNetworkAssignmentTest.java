@@ -30,9 +30,9 @@ import org.junit.Test;
 
 import nismod.transport.demand.EstimatedODMatrix;
 import nismod.transport.demand.FreightMatrix;
-import nismod.transport.demand.ODMatrix;
+import nismod.transport.demand.ODMatrixMultiKey;
 import nismod.transport.demand.RealODMatrixTempro;
-import nismod.transport.demand.SkimMatrixFreight;
+import nismod.transport.demand.SkimMatrixFreightMultiKey;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
@@ -485,7 +485,7 @@ public class RoadNetworkAssignmentTest {
 															props);
 		
 		//assign passenger flows
-		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
+		ODMatrixMultiKey odm = new ODMatrixMultiKey(baseYearODMatrixFile);
 		rna.assignPassengerFlowsRouting(odm, null, props);
 		
 		//TEST OUTPUT AREA PROBABILITIES
@@ -749,7 +749,7 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("Zones to nearest nodes distances: " + zoning.getZoneToNearestNodeDistanceMap());
 		
 		final String temproODMatrixFile = props.getProperty("temproODMatrixFile");
-		ODMatrix temproODM = new ODMatrix(temproODMatrixFile);
+		ODMatrixMultiKey temproODM = new ODMatrixMultiKey(temproODMatrixFile);
 		
 		temproODM.printMatrixFormatted("Tempro OD Matrix");
 
@@ -768,7 +768,7 @@ public class RoadNetworkAssignmentTest {
 		
 		rna.calculateDistanceSkimMatrixTempro().printMatrixFormatted();
 		
-		ODMatrix temproODM2 = ODMatrix.createUnitMatrix(temproODM.getSortedOrigins());
+		ODMatrixMultiKey temproODM2 = ODMatrixMultiKey.createUnitMatrix(temproODM.getSortedOrigins());
 		rna.resetTripList();
 		rna.resetLinkVolumes();
 		rna.assignPassengerFlowsTempro(temproODM2, zoning, rsg, props);
@@ -842,7 +842,7 @@ public class RoadNetworkAssignmentTest {
 															props);
 
 		//assign passenger flows
-		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
+		ODMatrixMultiKey odm = new ODMatrixMultiKey(baseYearODMatrixFile);
 		rna.assignPassengerFlowsRouting(odm, null, props);
 		
 		//TEST OUTPUT AREA PROBABILITIES
@@ -1263,13 +1263,13 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("Zones to nearest nodes distances: " + zoning.getZoneToNearestNodeDistanceMap());
 		
 		final String temproODMatrixFile = props.getProperty("temproODMatrixFile");
-		ODMatrix temproODM = new ODMatrix(temproODMatrixFile);
+		ODMatrixMultiKey temproODM = new ODMatrixMultiKey(temproODMatrixFile);
 		
 		//temproODM.printMatrixFormatted("Tempro OD Matrix");
 		rna.assignPassengerFlowsTempro(temproODM, zoning, rsg, props);
 		rna.calculateDistanceSkimMatrixTempro();
 		
-		ODMatrix temproODM2 = ODMatrix.createUnitMatrix(temproODM.getSortedOrigins());
+		ODMatrixMultiKey temproODM2 = ODMatrixMultiKey.createUnitMatrix(temproODM.getSortedOrigins());
 		rna.resetTripList();
 		rna.assignPassengerFlowsTempro(temproODM2, zoning, rsg, props);
 		rna.calculateDistanceSkimMatrixTempro();
@@ -1297,7 +1297,7 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("Trip starts: " + rna.calculateLADTripStarts());
 		System.out.println("Trip ends: " + rna.calculateLADTripEnds());
 		System.out.println("Tempro to LAD OD matrix:");
-		ODMatrix t2odm = ODMatrix.createLadMatrixFromTEMProMatrix(temproODM2, zoning);
+		ODMatrixMultiKey t2odm = ODMatrixMultiKey.createLadMatrixFromTEMProMatrix(temproODM2, zoning);
 		t2odm.printMatrixFormatted();
 		System.out.println("Trip starts from OD matrix: " + t2odm.calculateTripStarts());
 		System.out.println("Trip ends from OD matrix: " + t2odm.calculateTripEnds());
@@ -1405,7 +1405,7 @@ public class RoadNetworkAssignmentTest {
 															props);
 
 		//assign passenger flows
-		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
+		ODMatrixMultiKey odm = new ODMatrixMultiKey(baseYearODMatrixFile);
 		//rna.assignPassengerFlows(odm);
 		
 		//assign freight flows
@@ -1491,7 +1491,7 @@ public class RoadNetworkAssignmentTest {
 		rna.calculateTimeSkimMatrixFreight().printMatrixFormatted();
 		
 		System.out.println("Distance skim matrix for freight:");
-		SkimMatrixFreight distanceSkimMatrixFreight = rna.calculateDistanceSkimMatrixFreight();
+		SkimMatrixFreightMultiKey distanceSkimMatrixFreight = rna.calculateDistanceSkimMatrixFreight();
 		distanceSkimMatrixFreight.printMatrixFormatted();
 		
 		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforFreightCounts());
@@ -1606,7 +1606,7 @@ public class RoadNetworkAssignmentTest {
 		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, zoning, null, null, null, null, null, null, null, null, null, null, null, null, null, props);
 
 		//assign passenger flows
-		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
+		ODMatrixMultiKey odm = new ODMatrixMultiKey(baseYearODMatrixFile);
 		
 		odm.printMatrixFormatted();
 		

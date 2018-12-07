@@ -100,7 +100,7 @@ public class EstimatedODMatrixTest {
 		
 		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, props);
 		
-		ODMatrix temproODM = ODMatrix.createUnitMatrix(zoning.getTemproCodeToIDMap().keySet());
+		ODMatrixMultiKey temproODM = ODMatrixMultiKey.createUnitMatrix(zoning.getTemproCodeToIDMap().keySet());
 		rna.assignPassengerFlowsTempro(temproODM, zoning, rsg, props);
 		rna.calculateDistanceSkimMatrixTempro().printMatrixFormatted();
 				
@@ -133,7 +133,7 @@ public class EstimatedODMatrixTest {
 		
 		odmpa.printMatrixFormatted("After 10 further iterations:", 2);
 		//odmpa.saveMatrixFormatted(outputFolder + "balancedTemproODMatrix.csv");
-		ODMatrix estimatedODM = new ODMatrix(odmpa);
+		ODMatrixMultiKey estimatedODM = new ODMatrixMultiKey(odmpa);
 		
 		rna.resetTripList();
 		rna.resetLinkVolumes();

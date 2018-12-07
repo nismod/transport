@@ -9,7 +9,7 @@ import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import nismod.transport.demand.ODMatrix;
+import nismod.transport.demand.ODMatrixMultiKey;
 import nismod.transport.demand.RealODMatrix;
 import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.utility.RandomSingleton;
@@ -201,7 +201,7 @@ public class SPSA {
 	private double lossFunction(RealODMatrix theta) {
 		
 		//round values
-		ODMatrix odm = new ODMatrix(theta);
+		ODMatrixMultiKey odm = new ODMatrixMultiKey(theta);
 		
 		//reset as we are re-using the same road network assignment
 		rna.resetLinkVolumes();

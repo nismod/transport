@@ -41,7 +41,7 @@ public class EstimatedODMatrix extends RealODMatrix {
 	private HashMap<String, Integer> attractions;
 	private List<String> zones;
 
-	private ODMatrix binIndexMatrix;
+	private ODMatrixMultiKey binIndexMatrix;
 	private double[] tripLengthDistribution;
 	private RoadNetworkAssignment rna;
 
@@ -63,7 +63,7 @@ public class EstimatedODMatrix extends RealODMatrix {
 		this.productions = productions;
 		this.attractions = attractions;
 		this.zones = new ArrayList<String>();
-		this.binIndexMatrix = new ODMatrix();
+		this.binIndexMatrix = new ODMatrixMultiKey();
 		this.tripLengthDistribution = new double[observedTripLengthDistribution.length];
 
 		for (String zone: productions.keySet()) zones.add(zone);
@@ -232,7 +232,7 @@ public class EstimatedODMatrix extends RealODMatrix {
 	 * Getter method for the bin index matrix.
 	 * @return Bin index matrix
 	 */
-	public ODMatrix getBinIndexMatrix() {
+	public ODMatrixMultiKey getBinIndexMatrix() {
 
 		return this.binIndexMatrix;
 	}

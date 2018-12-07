@@ -78,7 +78,7 @@ public class SkimMatrixTest {
 		skimMatrix2.printMatrixFormatted();
 		skimMatrix2.printMatrixFormatted("Skim matrix");
 		
-		ODMatrix odMatrix = new ODMatrix();
+		ODMatrixMultiKey odMatrix = new ODMatrixMultiKey();
 		odMatrix.setFlow("E06000045", "E06000045", 10);
 		odMatrix.setFlow("E06000045", "E07000086", 10);
 		odMatrix.setFlow("E06000045", "E07000091", 10); 
@@ -200,7 +200,7 @@ public class SkimMatrixTest {
 
 		//assign passenger flows
 		final String baseYearODMatrixFile = props.getProperty("baseYearODMatrixFile");
-		ODMatrix odm = new ODMatrix(baseYearODMatrixFile);
+		ODMatrixMultiKey odm = new ODMatrixMultiKey(baseYearODMatrixFile);
 		rna.assignPassengerFlowsRouting(odm, null, props);
 		//rna.assignPassengerFlowsRouteChoice(odm, null, props);
 		odm.printMatrixFormatted("OD matrix:");

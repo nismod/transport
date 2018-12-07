@@ -32,28 +32,61 @@ import nismod.transport.zone.Zoning;
  * @author Milan Lovric
  *
  */
-public class ODMatrix implements AssignableODMatrix {
+public class ODMatrixArray implements AssignableODMatrix {
 	
-	private final static Logger LOGGER = LogManager.getLogger(ODMatrix.class);
+	private final static Logger LOGGER = LogManager.getLogger(ODMatrixArray.class);
 	
-	private MultiKeyMap matrix;
+	private int[][] matrix;
 	
-	public ODMatrix() {
+	private Zoning zoning;
+	
+	/**
+	 * Constructor.
+	 * @param zoning Zoning system.
+	 */
+	public ODMatrixArray(Zoning zoning) {
+
+		this.zoning = zoning;
+		int maxZones = zoning.getLadIDToCodeMap().length;
+		this.matrix = new int[maxZones][maxZones]; //[0][0] is not used to allow a direct fetch via LAD ID
+	}
+	
+	/**
+	 * Constructor that rounds the flows of a real-valued OD matrix. 
+	 * @param realMatrix Origin-destination matrix with real-valued flows.
+	 * @param zoning Zoning system.
+	 */
+	public ODMatrixArray(RealODMatrix realMatrix, Zoning zoning) {
 		
-		matrix = new MultiKeyMap();
+		this.zoning = zoning;
+		int maxZones = zoning.getLadIDToCodeMap().length;
+		this.matrix = new int[maxZones][maxZones]; //[0][0] is not used to allow a direct fetch via LAD ID
+		
+		List<String> origins = realMatrix.getUnsortedOrigins();
+		List<String> destinations = realMatrix.getUnsortedDestinations();
+		
+		for (String o: origins)
+			for (String d: destinations) {
+				int flow = (int) Math.round(realMatrix.getFlow(o, d));
+				this.setFlow(o, d, flow);
+			}
 	}
 	
 	/**
 	 * Constructor that reads OD matrix from an input csv file.
 	 * @param fileName Path to the input file.
+	 * @param zoning Zoning system.
 	 * @throws FileNotFoundException if any.
 	 * @throws IOException if any.
 	 */
-	public ODMatrix(String fileName) throws FileNotFoundException, IOException {
+	public ODMatrixArray(String fileName, Zoning zoning) throws FileNotFoundException, IOException {
 		
 		LOGGER.info("Reading OD matrix from file: {}", fileName);
 
-		matrix = new MultiKeyMap();
+		this.zoning = zoning;
+		int maxZones = zoning.getLadIDToCodeMap().length;
+		this.matrix = new int[maxZones][maxZones]; //[0][0] is not used to allow a direct fetch via LAD ID
+		
 		CSVParser parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
 		//System.out.println(parser.getHeaderMap().toString());
 		Set<String> keySet = parser.getHeaderMap().keySet();
@@ -85,30 +118,28 @@ public class ODMatrix implements AssignableODMatrix {
 	}
 	
 	/**
-	 * Constructor that rounds the flows of a real-valued OD matrix. 
-	 * @param realMatrix Origin-destination matrix with real-valued flows.
-	 */
-	public ODMatrix(RealODMatrix realMatrix) {
-		
-		matrix = new MultiKeyMap();
-		for (String o: realMatrix.getUnsortedOrigins())
-			for (String d: realMatrix.getUnsortedDestinations()) {
-				int flow = (int) Math.round(realMatrix.getFlow(o, d));
-				this.setFlow(o, d, flow);
-			}
-	}
-	
-	/**
 	 * Gets the flow for a given origin-destination pair.
 	 * @param originZone Origin zone.
 	 * @param destinationZone Destination zone.
 	 * @return Origin-destination flow.
 	 */
 	public int getFlow(String originZone, String destinationZone) {
+
+		int i = this.zoning.getLadCodeToIDMap().get(originZone);
+		int j = this.zoning.getLadCodeToIDMap().get(destinationZone);
 		
-		Integer flow = (Integer) matrix.get(originZone, destinationZone);
-		if (flow == null) return 0;
-		else return flow;
+		return this.matrix[i][j];
+	}
+	
+	/**
+	 * Gets the flow for a given origin-destination pair.
+	 * @param originZoneID Origin zone ID.
+	 * @param destinationZoneID Destination zone ID.
+	 * @return Origin-destination flow.
+	 */
+	public int getFlow(int originZoneID, int destinationZoneID) {
+
+		return this.matrix[originZoneID][destinationZoneID];
 	}
 	
 	/**
@@ -123,18 +154,28 @@ public class ODMatrix implements AssignableODMatrix {
 	}
 	
 	/**
+	 * Gets the flow for a given origin-destination pair as a whole number.
+	 * @param originZoneID Origin zone ID.
+	 * @param destinationZoneID Destination zone ID.
+	 * @return Origin-destination flow.
+	 */
+	public int getIntFlow(int originZoneID, int destinationZoneID) {
+		
+		return getFlow(originZoneID, destinationZoneID);
+	}
+	
+	/**
 	 * Sets the flow for a given origin-destination pair.
 	 * @param originZone Origin zone.
 	 * @param destinationZone Destination zone.
 	 * @param flow Origin-destination flow.
 	 */
 	public void setFlow(String originZone, String destinationZone, int flow) {
+		
+		int i = this.zoning.getLadCodeToIDMap().get(originZone);
+		int j = this.zoning.getLadCodeToIDMap().get(destinationZone);
 	
-		if (flow != 0)		matrix.put(originZone, destinationZone, flow);
-		//do not store zero flows into the matrix (skip zero flow or remove if already exists)
-		else // flow == 0 
-			if (this.getFlow(originZone, destinationZone) != 0)
-							matrix.removeMultiKey(originZone, destinationZone);
+		this.matrix[i][j] = flow;
 	}
 	
 	/**
@@ -145,14 +186,15 @@ public class ODMatrix implements AssignableODMatrix {
 		
 		HashMap<String, Integer> tripStarts = new HashMap<String, Integer>();
 		
-		for (Object mk: matrix.keySet()) {
-			String origin = (String) ((MultiKey)mk).getKey(0);
-			String destination = (String) ((MultiKey)mk).getKey(1);
-	
-			Integer number = tripStarts.get(origin);
-			if (number == null) number = 0;
-			number += this.getFlow(origin, destination);
-			tripStarts.put(origin, number);
+		List<String> origins = this.getUnsortedOrigins();
+		List<String> destinations = this.getUnsortedDestinations();
+		
+		for (String origin: origins)
+			for (String destination: destinations) {
+				Integer number = tripStarts.get(origin);
+				if (number == null) number = 0;
+				number += this.getFlow(origin, destination);
+				tripStarts.put(origin, number);
 		}
 		
 		return tripStarts;
@@ -166,14 +208,15 @@ public class ODMatrix implements AssignableODMatrix {
 		
 		HashMap<String, Integer> tripEnds = new HashMap<String, Integer>();
 		
-		for (Object mk: matrix.keySet()) {
-			String origin = (String) ((MultiKey)mk).getKey(0);
-			String destination = (String) ((MultiKey)mk).getKey(1);
-	
-			Integer number = tripEnds.get(destination);
-			if (number == null) number = 0;
-			number += this.getFlow(origin, destination);
-			tripEnds.put(destination, number);
+		List<String> origins = this.getUnsortedOrigins();
+		List<String> destinations = this.getUnsortedDestinations();
+		
+		for (String origin: origins)
+			for (String destination: destinations) {
+				Integer number = tripEnds.get(destination);
+				if (number == null) number = 0;
+				number += this.getFlow(origin, destination);
+				tripEnds.put(destination, number);
 		}
 		
 		return tripEnds;
@@ -218,38 +261,18 @@ public class ODMatrix implements AssignableODMatrix {
 		this.printMatrixFormatted();
 	}
 	
-	
-	/**
-	 * Gets the keyset of the multimap.
-	 * @return Key set.
-	 */
-	public Set<MultiKey> getKeySet() {
-		
-		return matrix.keySet();
-	}
-	
 	/**
 	 * Gets the sorted list of origins.
 	 * @return List of origins.
 	 */
 	public List<String> getSortedOrigins() {
 		
-		LOGGER.debug("Getting the sorted origins.");
-			
-		Set<String> firstKey = new HashSet<String>();
+		Set<String> firstKey = zoning.getLadCodeToIDMap().keySet();
 		
-		LOGGER.trace("Extracting row keysets.");
-		//extract row keysets
-		for (Object mk: matrix.keySet()) {
-			String origin = (String) ((MultiKey)mk).getKey(0);
-			firstKey.add(origin);
-		}
 		//put them into a list and sort them
-		List<String> firstKeyList = new ArrayList(firstKey);
-		LOGGER.trace("Sorting the origins.");
+		List<String> firstKeyList = new ArrayList<String>(firstKey);
 		Collections.sort(firstKeyList);
 		
-		LOGGER.trace("Origins sorted and returned.");
 		return firstKeyList;
 	}
 	
@@ -259,43 +282,24 @@ public class ODMatrix implements AssignableODMatrix {
 	 */
 	public List<String> getSortedDestinations() {
 		
-		LOGGER.debug("Getting the sorted destinations.");
-		
-		Set<String> secondKey = new HashSet<String>();
-		
-		LOGGER.debug("Extracting column keysets.");
-		//extract column keysets
-		for (Object mk: matrix.keySet()) {
-			String destination = (String) ((MultiKey)mk).getKey(1);
-			secondKey.add(destination);
-		}
+		Set<String> secondKey = zoning.getLadCodeToIDMap().keySet();
 		//put them into a list and sort them
-		List<String> secondKeyList = new ArrayList(secondKey);
-		LOGGER.debug("Sorting the destinations.");
+		List<String> secondKeyList = new ArrayList<String>(secondKey);
 		Collections.sort(secondKeyList);
 		
-		LOGGER.debug("Destinations sorted and returned.");
 		return secondKeyList;
 	}
 	
-	/**
+	/** 
 	 * Gets the unsorted list of origins.
 	 * @return List of origins.
 	 */
 	public List<String> getUnsortedOrigins() {
 		
-		LOGGER.trace("Getting the unsorted origins.");
-			
-		Set<String> firstKey = new HashSet<String>();
-				
-		//extract row keysets
-		for (Object mk: matrix.keySet()) {
-			String origin = (String) ((MultiKey)mk).getKey(0);
-			firstKey.add(origin);
-		}
+		Set<String> firstKey = zoning.getLadCodeToIDMap().keySet();
 		//put them into a list
-		List<String> firstKeyList = new ArrayList(firstKey);
-				
+		List<String> firstKeyList = new ArrayList<String>(firstKey);
+		
 		return firstKeyList;
 	}
 	
@@ -305,17 +309,9 @@ public class ODMatrix implements AssignableODMatrix {
 	 */
 	public List<String> getUnsortedDestinations() {
 		
-		LOGGER.trace("Getting the unsorted destinations.");
-		
-		Set<String> secondKey = new HashSet<String>();
-		
-		//extract column keysets
-		for (Object mk: matrix.keySet()) {
-			String destination = (String) ((MultiKey)mk).getKey(1);
-			secondKey.add(destination);
-		}
+		Set<String> secondKey = zoning.getLadCodeToIDMap().keySet();
 		//put them into a list
-		List<String> secondKeyList = new ArrayList(secondKey);
+		List<String> secondKeyList = new ArrayList<String>(secondKey);
 		
 		return secondKeyList;
 	}
@@ -327,12 +323,12 @@ public class ODMatrix implements AssignableODMatrix {
 	public int getTotalFlow() {
 		
 		int totalFlow = 0;
-		for (MultiKey mk: this.getKeySet()) {
-			String origin = (String) mk.getKey(0);
-			String destination = (String) mk.getKey(1);
-			totalFlow += this.getFlow(origin, destination);
-		}
-	
+		for (int i=1; i<this.matrix.length; i++)
+			for (int j=1; j<this.matrix[0].length; j++) {
+				double flow = this.matrix[i][j];
+				if (flow > 0.0) totalFlow += flow;
+			}
+		
 		return totalFlow;
 	}
 	
@@ -350,14 +346,19 @@ public class ODMatrix implements AssignableODMatrix {
 	 * @param other The other matrix.
 	 * @return Sum of absolute differences.
 	 */
-	public double getAbsoluteDifference(ODMatrix other) {
+	public double getAbsoluteDifference(ODMatrixArray other) {
 		
-		double difference = 0.0;
-		for (MultiKey mk: other.getKeySet()) {
-			String origin = (String) mk.getKey(0);
-			String destination = (String) mk.getKey(1);
-			difference += Math.abs(this.getFlow(origin, destination) - other.getFlow(origin, destination));
-		}
+		int difference = 0;
+		
+		List<String> firstKeyList = this.getUnsortedOrigins();
+		List<String> secondKeyList = this.getUnsortedDestinations();
+		
+		for (String origin: firstKeyList)
+			for (String destination: secondKeyList) {
+				double thisFlow = this.getFlow(origin, destination);
+				double otherFlow = other.getFlow(origin, destination);
+				difference += Math.abs(thisFlow - otherFlow);
+			}
 	
 		return difference;
 	}
@@ -369,53 +370,26 @@ public class ODMatrix implements AssignableODMatrix {
 	 */
 	public void scaleMatrixValue(double factor) {
 		
-		for (MultiKey mk: this.getKeySet()) {
-			String origin = (String) mk.getKey(0);
-			String destination = (String) mk.getKey(1);
-			double flow = this.getFlow(origin, destination);
-			flow = flow * factor;
-			this.setFlow(origin, destination, (int) Math.round(flow));
-		}		
-	}
-	
-	/**
-	 * Gets sum of all the flows.
-	 * @return Sum of flows.
-	 */
-	public int getSumOfFlows() {
+		List<String> firstKeyList = this.getUnsortedOrigins();
+		List<String> secondKeyList = this.getUnsortedDestinations();
 		
-		int sumOfFlows = 0;
-		for (Object flow: matrix.values()) sumOfFlows += (int) flow;
-		
-		return sumOfFlows;
-	}
-	
-	/**
-	 * Creates a new OD matrix (a matrix subset) for given lists of origin and destination zones.
-	 * @param origins List of origin zones.
-	 * @param destinations List of destination zones.
-	 * @return Matrix subset.
-	 */
-	public ODMatrix getMatrixSubset(List<String> origins, List<String> destinations) {
-		
-		ODMatrix odm = new ODMatrix();
-		
-		for (String origin: origins)
-			for (String destination: destinations)
-				odm.setFlow(origin, destination, this.getFlow(origin, destination));
-		
-		return odm;
+		for (String origin: firstKeyList)
+			for (String destination: secondKeyList) {
+				int flow = this.getFlow(origin, destination);
+				this.setFlow(origin, destination, (int) Math.round(flow * factor));
+			}
 	}
 	
 	/**
 	 * Creates a unit OD matrix for given lists of origin and destination zones.
 	 * @param origins List of origin zones.
 	 * @param destinations List of destination zones.
+	 * @param zoning Zoning system.
 	 * @return Unit OD matrix.
 	 */
-	public static ODMatrix createUnitMatrix(List<String> origins, List<String> destinations) {
+	public static ODMatrixArray createUnitMatrix(List<String> origins, List<String> destinations, Zoning zoning) {
 		
-		ODMatrix odm = new ODMatrix();
+		ODMatrixArray odm = new ODMatrixArray(zoning);
 		
 		for (String origin: origins)
 			for (String destination: destinations)
@@ -427,11 +401,12 @@ public class ODMatrix implements AssignableODMatrix {
 	/**
 	 * Creates a quadratic unit OD matrix for a given lists of zones.
 	 * @param zones List of origin zones.
+	 * @param zoning Zoning system.
 	 * @return Unit OD matrix.
 	 */
-	public static ODMatrix createUnitMatrix(List<String> zones) {
+	public static ODMatrixArray createUnitMatrix(List<String> zones, Zoning zoning) {
 		
-		ODMatrix odm = new ODMatrix();
+		ODMatrixArray odm = new ODMatrixArray(zoning);
 		
 		for (String origin: zones)
 			for (String destination: zones)
@@ -443,15 +418,14 @@ public class ODMatrix implements AssignableODMatrix {
 	/**
 	 * Creates a quadratic unit OD matrix for a given lists of zones.
 	 * @param zones Set of origin zones.
+	 * @param zoning Zoning system.
 	 * @return Unit OD matrix.
 	 */
-	public static ODMatrix createUnitMatrix(Set<String> zones) {
+	public static ODMatrixArray createUnitMatrix(Set<String> zones, Zoning zoning) {
 		
 		LOGGER.info("Creating the unit matrix for {} x {} zones.", zones.size(), zones.size());
-		
-		System.gc();
-		
-		ODMatrix odm = new ODMatrix();
+
+		ODMatrixArray odm = new ODMatrixArray(zoning);
 		
 		for (String origin: zones)
 			for (String destination: zones)
@@ -460,52 +434,7 @@ public class ODMatrix implements AssignableODMatrix {
 		LOGGER.debug("Done creating the unit matrix.");
 		return odm;
 	}
-	
-	/**
-	 * Creates a unit OD matrix for a given lists of zones with a distance threshold.
-	 * If straight line distance between origin and destination zone centroids is larger than threshold that flow is zero.
-	 * @param zones Set of origin zones.
-	 * @param centroids List of zone centroids.
-	 * @param threshold Distance threshold in [m].
-	 * @return Unit OD matrix.
-	 */
-	public static ODMatrix createSparseUnitMatrix(Set<String> zones, HashMap<String, Point> centroids, double threshold) {
 		
-		LOGGER.info("Creating the sparse unit matrix for {} x {} zones with threshold set to {}.", zones.size(), zones.size(), threshold);
-		
-		System.gc();
-		
-		ODMatrix odm = new ODMatrix();
-		
-		for (String origin: zones) {
-			for (String destination: zones) {
-				Point originCentroid = centroids.get(origin);
-				Point destinationCentroid = centroids.get(destination);
-				if (originCentroid.isWithinDistance(destinationCentroid, threshold))
-					odm.setFlow(origin, destination, 1);
-			}
-		}
-	
-		LOGGER.debug("Done creating the unit matrix.");
-		return odm;
-	}
-		
-	/**
-	 * Sums the elements of a matrix subset (provided as two lists of origins and destinations).
-	 * @param origins List of origin zones (a subset).
-	 * @param destinations List of destination zones (a subset).
-	 * @return Sum of the subset.
-	 */
-	public int sumMatrixSubset(List<String> origins, List<String> destinations) {
-		
-		int sum = 0;
-		for (String origin: origins)
-			for (String destination: destinations)
-				sum += this.getFlow(origin, destination);
-		
-		return sum;
-	}
-	
 	/**
 	 * Creates tempro OD matrix from LAD OD matrix.
 	 * @param ladODMatrix LAD to LAD OD matrix.
@@ -513,15 +442,17 @@ public class ODMatrix implements AssignableODMatrix {
 	 * @param zoning Zoning system with mapping between TEMPro and LAD zones.
 	 * @return TEMPro based OD matrix.
 	 */
-	public static ODMatrix createTEMProFromLadMatrix(ODMatrix ladODMatrix, ODMatrix baseTempro, Zoning zoning) {
+	public static ODMatrixArrayTempro createTEMProFromLadMatrix(ODMatrixArray ladODMatrix, ODMatrixArrayTempro baseTempro, Zoning zoning) {
 		
 		LOGGER.info("Dissaggregating LAD OD matrix to TEMPro OD matrix.");
 		
-		ODMatrix temproMatrix = new ODMatrix();
+		ODMatrixArrayTempro temproMatrix = new ODMatrixArrayTempro(zoning);
 		
-		for (MultiKey mk: ladODMatrix.getKeySet()) {
-			String originLAD = (String) mk.getKey(0);
-			String destinationLAD = (String) mk.getKey(1);
+		List<String> origins = ladODMatrix.getUnsortedOrigins();
+		List<String> destinations = ladODMatrix.getUnsortedDestinations();
+		
+		for (String originLAD: origins)
+			for (String destinationLAD: destinations) {
 			
 			int ladFlow = ladODMatrix.getFlow(originLAD, destinationLAD);
 					
@@ -536,7 +467,8 @@ public class ODMatrix implements AssignableODMatrix {
 			for (String origin: temproOrigins)
 				for (String destination: temproDestinations) {
 					int temproFlow = 0;
-					if (temproSum > 0) temproFlow = (int) Math.round(1.0 * baseTempro.getFlow(origin, destination) / temproSum * ladFlow);
+					if (temproSum > 0)
+						temproFlow = (int) Math.round(1.0 * baseTempro.getFlow(origin, destination) / temproSum * ladFlow);
 					temproMatrix.setFlow(origin, destination, temproFlow);
 				}
 		}
@@ -551,23 +483,33 @@ public class ODMatrix implements AssignableODMatrix {
 	 * @param zoning Zoning system with mapping between TEMPro and LAD zones.
 	 * @return LAD based OD matrix.
 	 */
-	public static ODMatrix createLadMatrixFromTEMProMatrix(ODMatrix temproMatrix, Zoning zoning) {
+	public static ODMatrixArray createLadMatrixFromTEMProMatrix(ODMatrixArrayTempro temproMatrix, Zoning zoning) {
 		
-		ODMatrix ladMatrix = new ODMatrix();
+		LOGGER.info("Aggregating TEMPro OD matrix into LAD matrix.");
 		
-		for (MultiKey mk: temproMatrix.getKeySet()) {
-			String origin = (String) mk.getKey(0);
-			String destination = (String) mk.getKey(1);
-			int flow = temproMatrix.getFlow(origin, destination);
+		ODMatrixArray ladMatrix = new ODMatrixArray(zoning);
+				
+		List<String> origins = temproMatrix.getUnsortedOrigins();
+		List<String> destinations = temproMatrix.getUnsortedDestinations();
+		
+		for (String originTempro: origins)
+			for (String destinationTempro: destinations) {
+
+			int flow = temproMatrix.getFlow(originTempro, destinationTempro);
 			
-			String originLAD = zoning.getZoneToLADMap().get(origin);
-			String destinationLAD = zoning.getZoneToLADMap().get(destination);
+			String originLAD = zoning.getZoneToLADMap().get(originTempro);
+			String destinationLAD = zoning.getZoneToLADMap().get(destinationTempro);
+			
+			if (originLAD == null) LOGGER.warn("originLAD is null!");
+			if (destinationLAD == null) LOGGER.warn("destinationLAD is null!");
 			
 			int flowLAD = ladMatrix.getFlow(originLAD, destinationLAD);
 			flowLAD += flow;
 			ladMatrix.setFlow(originLAD, destinationLAD, flowLAD);
 		}
 		
+		LOGGER.info("Finished aggregating TEMPro OD matrix into LAD matrix.");
+
 		return ladMatrix;
 	}
 	
@@ -592,22 +534,6 @@ public class ODMatrix implements AssignableODMatrix {
 		
 	}
 	
-	@Override
-	public ODMatrix clone() {
-
-		ODMatrix odm = new ODMatrix();
-		
-		for (MultiKey mk: this.getKeySet()) {
-			String origin = (String) mk.getKey(0);
-			String destination = (String) mk.getKey(1);
-			odm.setFlow(origin, destination, this.getFlow(origin, destination));
-		}
-
-		return odm;
-	}
-	
-	
-	
 	/**
 	 * Saves the matrix into a csv file.
 	 * @param outputFile Path to the output file.
@@ -616,24 +542,8 @@ public class ODMatrix implements AssignableODMatrix {
 		
 		LOGGER.info("Saving passenger OD matrix to a csv file.");
 		
-		Set<String> firstKey = new HashSet<String>();
-		Set<String> secondKey = new HashSet<String>();
-		
-		//extract row and column keysets
-		for (Object mk: matrix.keySet()) {
-			String origin = (String) ((MultiKey)mk).getKey(0);
-			String destination = (String) ((MultiKey)mk).getKey(1);
-			firstKey.add(origin);
-			secondKey.add(destination);
-		}
-	
-		//put them to a list and sort them
-		List<String> firstKeyList = new ArrayList<String>(firstKey);
-		List<String> secondKeyList = new ArrayList<String>(secondKey);
-		Collections.sort(firstKeyList);
-		Collections.sort(secondKeyList);
-		//System.out.println(firstKeyList);
-		//System.out.println(secondKeyList);
+		List<String> firstKeyList = this.getSortedOrigins();
+		List<String> secondKeyList = this.getSortedDestinations();
 	
 		String NEW_LINE_SEPARATOR = "\n";
 		ArrayList<String> header = new ArrayList<String>();
@@ -673,7 +583,7 @@ public class ODMatrix implements AssignableODMatrix {
 	 * Saves the matrix into a csv file. Uses a list format (origin, destination, flow).
 	 * @param outputFile Path to the output file.
 	 */
-	public void saveMatrixFormatted2(String outputFile) {
+	public void saveMatrixFormattedList(String outputFile) {
 		
 		LOGGER.info("Saving OD matrix to a csv file using list format...");
 		
