@@ -123,5 +123,15 @@ public class SkimMatrixFreightTest {
 		double averageCost = skimMatrixFreight.getAverageCost();
 		double demandWeigthedCost = skimMatrixFreight.getAverageCost(freightMatrix);
 		assertEquals("Sum of weighted matrix costs is the same", averageCost, demandWeigthedCost, DELTA);
+		
+		SkimMatrixFreightArray skimMatrixFreight4 = new SkimMatrixFreightArray("./temp/skimMatrixFreight.csv");
+		skimMatrixFreight4.printMatrixFormatted("Array based matrix:");
+		
+		diff = skimMatrixFreight4.getAbsoluteDifference(skimMatrixFreight);
+		assertEquals("Matrices are the same", 0.0, diff, DELTA);
+		
+		averageCost = skimMatrixFreight4.getAverageCost();
+		demandWeigthedCost = skimMatrixFreight4.getAverageCost(freightMatrix);
+		assertEquals("Sum of weighted matrix costs is the same", averageCost, demandWeigthedCost, DELTA);
 	}
 }

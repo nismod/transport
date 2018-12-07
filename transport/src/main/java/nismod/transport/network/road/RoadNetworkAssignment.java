@@ -38,7 +38,8 @@ import nismod.transport.demand.ODMatrixMultiKey;
 import nismod.transport.demand.SkimMatrix;
 import nismod.transport.demand.SkimMatrixArray;
 import nismod.transport.demand.SkimMatrixArrayTempro;
-import nismod.transport.demand.SkimMatrixFreightMultiKey;
+import nismod.transport.demand.SkimMatrixFreight;
+import nismod.transport.demand.SkimMatrixFreightArray;
 import nismod.transport.demand.SkimMatrixMultiKey;
 import nismod.transport.network.road.RoadNetwork.EdgeType;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
@@ -2547,11 +2548,11 @@ public class RoadNetworkAssignment {
 	 * Updates travel time skim matrix (zone-to-zone travel times) for freight.
 	 * @param timeSkimMatrixFreight Inter-zonal skim matrix (time).
 	 */
-	public void updateTimeSkimMatrixFreight(SkimMatrixFreightMultiKey timeSkimMatrixFreight) {
+	public void updateTimeSkimMatrixFreight(SkimMatrixFreight timeSkimMatrixFreight) {
 
 		//this.updateLinkTravelTimes();
 
-		SkimMatrixFreightMultiKey counter = new SkimMatrixFreightMultiKey();
+		SkimMatrixFreight counter = new SkimMatrixFreightArray();
 
 		for (Trip trip: this.tripList) {
 
@@ -2575,13 +2576,11 @@ public class RoadNetworkAssignment {
 			timeSkimMatrixFreight.setCost(origin, destination, vht.value, sum + tripTravelTime);
 		}
 
-		for (MultiKey mk: timeSkimMatrixFreight.getKeySet()) {
-			int origin = (int) mk.getKey(0);
-			int destination = (int) mk.getKey(1);
-			int vehicle = (int) mk.getKey(2);
-
-			double averageODtraveltime = timeSkimMatrixFreight.getCost(origin, destination, vehicle) / counter.getCost(origin, destination, vehicle);
-			timeSkimMatrixFreight.setCost(origin, destination, vehicle, averageODtraveltime);
+		for (int origin = 1; origin <= SkimMatrixFreightArray.MAX_FREIGHT_ZONE_ID; origin++)
+			for (int destination = 1; destination <= SkimMatrixFreightArray.MAX_FREIGHT_ZONE_ID; destination++)
+				for (int vehicleType = 1; vehicleType <= SkimMatrixFreightArray.MAX_VEHICLE_ID; vehicleType++) {
+					double averageODtraveltime = timeSkimMatrixFreight.getCost(origin, destination, vehicleType) / counter.getCost(origin, destination, vehicleType);
+					timeSkimMatrixFreight.setCost(origin, destination, vehicleType, averageODtraveltime);
 		}
 	}
 
@@ -2589,9 +2588,9 @@ public class RoadNetworkAssignment {
 	 * Calculated travel time skim matrix (zone-to-zone travel times) for freight.
 	 * @return Inter-zonal skim matrix (time).
 	 */
-	public SkimMatrixFreightMultiKey calculateTimeSkimMatrixFreight() {
+	public SkimMatrixFreight calculateTimeSkimMatrixFreight() {
 
-		SkimMatrixFreightMultiKey timeSkimMatrixFreight = new SkimMatrixFreightMultiKey();
+		SkimMatrixFreight timeSkimMatrixFreight = new SkimMatrixFreightArray();
 		this.updateTimeSkimMatrixFreight(timeSkimMatrixFreight);
 
 		return timeSkimMatrixFreight;
@@ -2726,10 +2725,10 @@ public class RoadNetworkAssignment {
 	 * Updates cost skim matrix (zone-to-zone distances) for freight.
 	 * @return Inter-zonal skim matrix (distance).
 	 */
-	public SkimMatrixFreightMultiKey calculateDistanceSkimMatrixFreight() {
+	public SkimMatrixFreight calculateDistanceSkimMatrixFreight() {
 
-		SkimMatrixFreightMultiKey distanceSkimMatrixFreight = new SkimMatrixFreightMultiKey();
-		SkimMatrixFreightMultiKey counter = new SkimMatrixFreightMultiKey();
+		SkimMatrixFreight distanceSkimMatrixFreight = new SkimMatrixFreightArray();
+		SkimMatrixFreight counter = new SkimMatrixFreightArray();
 
 		for (Trip trip: this.tripList) {
 
@@ -2754,13 +2753,11 @@ public class RoadNetworkAssignment {
 			distanceSkimMatrixFreight.setCost(origin, destination, vht.value, sum + distance * multiplier);
 		}
 
-		for (MultiKey mk: distanceSkimMatrixFreight.getKeySet()) {
-			int origin = (int) mk.getKey(0);
-			int destination = (int) mk.getKey(1);
-			int vehicle = (int) mk.getKey(2);
-
-			double averageODtraveltime = distanceSkimMatrixFreight.getCost(origin, destination, vehicle) / counter.getCost(origin, destination, vehicle);
-			distanceSkimMatrixFreight.setCost(origin, destination, vehicle, averageODtraveltime);
+		for (int origin = 1; origin <= SkimMatrixFreightArray.MAX_FREIGHT_ZONE_ID; origin++)
+			for (int destination = 1; destination <= SkimMatrixFreightArray.MAX_FREIGHT_ZONE_ID; destination++)
+				for (int vehicleType = 1; vehicleType <= SkimMatrixFreightArray.MAX_VEHICLE_ID; vehicleType++) {
+					double averageODtraveltime = distanceSkimMatrixFreight.getCost(origin, destination, vehicleType) / counter.getCost(origin, destination, vehicleType);
+					distanceSkimMatrixFreight.setCost(origin, destination, vehicleType, averageODtraveltime);
 		}
 
 		return distanceSkimMatrixFreight;
@@ -2839,10 +2836,10 @@ public class RoadNetworkAssignment {
 	 * Updates cost skim matrix (zone-to-zone financial costs) for freight.
 	 * @param costSkimMatrixFreight Inter-zonal skim matrix (cost) for freight.
 	 */
-	public void updateCostSkimMatrixFreight(SkimMatrixFreightMultiKey costSkimMatrixFreight) {
+	public void updateCostSkimMatrixFreight(SkimMatrixFreight costSkimMatrixFreight) {
 
 		//this.updateLinkTravelTimes();
-		SkimMatrixFreightMultiKey counter = new SkimMatrixFreightMultiKey();
+		SkimMatrixFreight counter = new SkimMatrixFreightArray();
 
 		if (this.tripList == null || this.tripList.size() == 0) {
 			LOGGER.warn("TripList is empty! Cannot update cost skim matrix for freight.");
@@ -2873,13 +2870,11 @@ public class RoadNetworkAssignment {
 			costSkimMatrixFreight.setCost(origin, destination, vht.value, sum + tripFuelCost * multiplier);
 		}
 
-		for (MultiKey mk: costSkimMatrixFreight.getKeySet()) {
-			int origin = (int) mk.getKey(0);
-			int destination = (int) mk.getKey(1);
-			int vehicle = (int) mk.getKey(2);
-
-			double averageODcost = costSkimMatrixFreight.getCost(origin, destination, vehicle) / counter.getCost(origin, destination, vehicle);
-			costSkimMatrixFreight.setCost(origin, destination, vehicle, averageODcost);
+		for (int origin = 1; origin <= SkimMatrixFreightArray.MAX_FREIGHT_ZONE_ID; origin++)
+			for (int destination = 1; destination <= SkimMatrixFreightArray.MAX_FREIGHT_ZONE_ID; destination++)
+				for (int vehicleType = 1; vehicleType <= SkimMatrixFreightArray.MAX_VEHICLE_ID; vehicleType++) {
+					double averageODcost = costSkimMatrixFreight.getCost(origin, destination, vehicleType) / counter.getCost(origin, destination, vehicleType);
+					costSkimMatrixFreight.setCost(origin, destination, vehicleType, averageODcost);
 		}
 	}
 
@@ -2887,9 +2882,9 @@ public class RoadNetworkAssignment {
 	 * Calculates cost skim matrix (zone-to-zone financial costs) for freight.
 	 * @return Inter-zonal skim matrix (cost).
 	 */
-	public SkimMatrixFreightMultiKey calculateCostSkimMatrixFreight() {
+	public SkimMatrixFreight calculateCostSkimMatrixFreight() {
 
-		SkimMatrixFreightMultiKey costSkimMatrixFreight = new SkimMatrixFreightMultiKey();
+		SkimMatrixFreight costSkimMatrixFreight = new SkimMatrixFreightArray();
 		this.updateCostSkimMatrixFreight(costSkimMatrixFreight);
 
 		return costSkimMatrixFreight;

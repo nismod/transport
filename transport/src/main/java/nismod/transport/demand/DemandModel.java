@@ -58,9 +58,9 @@ public class DemandModel {
 	private HashMap<Integer, ODMatrixMultiKey> yearToPassengerODMatrix; //passenger demand
 	private HashMap<Integer, FreightMatrix> yearToFreightODMatrix; //freight demand
 	private HashMap<Integer, SkimMatrix> yearToTimeSkimMatrix;
-	private HashMap<Integer, SkimMatrixFreightMultiKey> yearToTimeSkimMatrixFreight;
+	private HashMap<Integer, SkimMatrixFreight> yearToTimeSkimMatrixFreight;
 	private HashMap<Integer, SkimMatrix> yearToCostSkimMatrix;
-	private HashMap<Integer, SkimMatrixFreightMultiKey> yearToCostSkimMatrixFreight;
+	private HashMap<Integer, SkimMatrixFreight> yearToCostSkimMatrixFreight;
 	private HashMap<Integer, HashMap<String, Integer>> yearToZoneToPopulation;
 	private HashMap<Integer, HashMap<String, Double>> yearToZoneToGVA;
 	private HashMap<Integer, RoadNetworkAssignment> yearToRoadNetworkAssignment;
@@ -104,9 +104,9 @@ public class DemandModel {
 		this.yearToPassengerODMatrix = new HashMap<Integer, ODMatrixMultiKey>();
 		this.yearToFreightODMatrix = new HashMap<Integer, FreightMatrix>();
 		this.yearToTimeSkimMatrix = new HashMap<Integer, SkimMatrix>();
-		this.yearToTimeSkimMatrixFreight = new HashMap<Integer, SkimMatrixFreightMultiKey>();
+		this.yearToTimeSkimMatrixFreight = new HashMap<Integer, SkimMatrixFreight>();
 		this.yearToCostSkimMatrix = new HashMap<Integer, SkimMatrix>();
-		this.yearToCostSkimMatrixFreight = new HashMap<Integer, SkimMatrixFreightMultiKey>();
+		this.yearToCostSkimMatrixFreight = new HashMap<Integer, SkimMatrixFreight>();
 		this.yearToZoneToPopulation = new HashMap<Integer, HashMap<String, Integer>>();
 		this.yearToZoneToGVA = new HashMap<Integer, HashMap<String, Double>>();
 		this.yearToRoadNetworkAssignment = new HashMap<Integer, RoadNetworkAssignment>();
@@ -294,8 +294,8 @@ public class DemandModel {
 				//calculate skim matrices
 				SkimMatrix tsm = rna.calculateTimeSkimMatrix();
 				SkimMatrix csm = rna.calculateCostSkimMatrix();
-				SkimMatrixFreightMultiKey tsmf = rna.calculateTimeSkimMatrixFreight();
-				SkimMatrixFreightMultiKey csmf = rna.calculateCostSkimMatrixFreight();
+				SkimMatrixFreight tsmf = rna.calculateTimeSkimMatrixFreight();
+				SkimMatrixFreight csmf = rna.calculateCostSkimMatrixFreight();
 				yearToTimeSkimMatrix.put(fromYear, tsm);
 				yearToCostSkimMatrix.put(fromYear, csm);
 				yearToTimeSkimMatrixFreight.put(fromYear, tsmf);
@@ -423,7 +423,7 @@ public class DemandModel {
 			//SECOND STAGE PREDICTION (FROM CHANGES IN COST AND TIME)
 			
 			SkimMatrix tsm = null, csm = null;
-			SkimMatrixFreightMultiKey tsmf = null, csmf = null;
+			SkimMatrixFreight tsmf = null, csmf = null;
 			RoadNetworkAssignment predictedRna = null;
 			for (int i=0; i<this.predictionIterations; i++) {
 
@@ -682,8 +682,8 @@ public class DemandModel {
 			//calculate skim matrices
 			SkimMatrix tsm = rna.calculateTimeSkimMatrix();
 			SkimMatrix csm = rna.calculateCostSkimMatrix();
-			SkimMatrixFreightMultiKey tsmf = rna.calculateTimeSkimMatrixFreight();
-			SkimMatrixFreightMultiKey csmf = rna.calculateCostSkimMatrixFreight();
+			SkimMatrixFreight tsmf = rna.calculateTimeSkimMatrixFreight();
+			SkimMatrixFreight csmf = rna.calculateCostSkimMatrixFreight();
 			
 			yearToTimeSkimMatrix.put(baseYear, tsm);
 			yearToCostSkimMatrix.put(baseYear, csm);
@@ -765,11 +765,11 @@ public class DemandModel {
 			this.yearToCostSkimMatrix.put(fromYear, costSkimMatrix);
 
 			inputFile = inputFolder + File.separator +  timeSkimMatrixFreightFile;
-			SkimMatrixFreightMultiKey timeSkimMatrixFreight = new SkimMatrixFreightMultiKey(inputFile);
+			SkimMatrixFreight timeSkimMatrixFreight = new SkimMatrixFreightArray(inputFile);
 			this.yearToTimeSkimMatrixFreight.put(fromYear, timeSkimMatrixFreight);
 
 			inputFile = inputFolder + File.separator +  costSkimMatrixFreightFile;
-			SkimMatrixFreightMultiKey costSkimMatrixFreight = new SkimMatrixFreightMultiKey(inputFile);
+			SkimMatrixFreight costSkimMatrixFreight = new SkimMatrixFreightArray(inputFile);
 			this.yearToCostSkimMatrixFreight.put(fromYear, costSkimMatrixFreight);
 
 			inputFile = inputFolder + File.separator + linkTravelTimesFile;
@@ -893,7 +893,7 @@ public class DemandModel {
 		//SECOND STAGE PREDICTION (FROM CHANGES IN COST AND TIME)
 
 		SkimMatrix tsm = null, csm = null;
-		SkimMatrixFreightMultiKey tsmf = null, csmf = null;
+		SkimMatrixFreight tsmf = null, csmf = null;
 		RoadNetworkAssignment predictedRna = null;
 		for (int i=0; i<this.predictionIterations; i++) {
 
@@ -1138,7 +1138,7 @@ public class DemandModel {
 	 * @param year Year for which the the skim matrix is requested.
 	 * @return Time skim matrix.
 	 */
-	public SkimMatrixFreightMultiKey getTimeSkimMatrixFreight (int year) {
+	public SkimMatrixFreight getTimeSkimMatrixFreight (int year) {
 
 		return 	yearToTimeSkimMatrixFreight.get(year);
 	}
@@ -1158,7 +1158,7 @@ public class DemandModel {
 	 * @param year Year for which the the skim matrix is requested.
 	 * @return Cost skim matrix.
 	 */
-	public SkimMatrixFreightMultiKey getCostSkimMatrixFreight (int year) {
+	public SkimMatrixFreight getCostSkimMatrixFreight (int year) {
 
 		return 	yearToCostSkimMatrixFreight.get(year);
 	}

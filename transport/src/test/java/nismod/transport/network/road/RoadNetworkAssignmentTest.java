@@ -32,6 +32,7 @@ import nismod.transport.demand.EstimatedODMatrix;
 import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.ODMatrixMultiKey;
 import nismod.transport.demand.RealODMatrixTempro;
+import nismod.transport.demand.SkimMatrixFreight;
 import nismod.transport.demand.SkimMatrixFreightMultiKey;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
@@ -1491,7 +1492,7 @@ public class RoadNetworkAssignmentTest {
 		rna.calculateTimeSkimMatrixFreight().printMatrixFormatted();
 		
 		System.out.println("Distance skim matrix for freight:");
-		SkimMatrixFreightMultiKey distanceSkimMatrixFreight = rna.calculateDistanceSkimMatrixFreight();
+		SkimMatrixFreight distanceSkimMatrixFreight = rna.calculateDistanceSkimMatrixFreight();
 		distanceSkimMatrixFreight.printMatrixFormatted();
 		
 		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforFreightCounts());

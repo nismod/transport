@@ -34,9 +34,6 @@ public class SkimMatrixFreightArray implements SkimMatrixFreight {
 	
 	private final static Logger LOGGER = LogManager.getLogger(SkimMatrixFreightArray.class);
 	
-	public final static int MAX_FREIGHT_ZONE_ID = 1388;
-	public final static int MAX_VEHICLE_ID = 3;
-	
 	//private EnumMap<VehicleType, Double>[][] matrix; //cost = [origin][destination].get(vht)
 	private double[][][] matrix; //cost = [origin][destination][vht]
 		
@@ -110,11 +107,11 @@ public class SkimMatrixFreightArray implements SkimMatrixFreight {
 		
 		//formatted print
 		System.out.printf("%6s%12s%12s%7s\n", "origin", "destination", "vehicleType", "cost");
-		for (int o=1; o<=MAX_FREIGHT_ZONE_ID; o++)
-			for (int d=1; d<=MAX_FREIGHT_ZONE_ID; o++)
-				for (int v=1; v<=MAX_VEHICLE_ID; v++)
-					if (this.getCost(o, d, v) > 0.0) //print only if there is a cost
-						System.out.printf("%6d%12d%12d%7.2f\n", o, d, v, this.getCost(o, d, v));
+		for (int origin = 1; origin <= MAX_FREIGHT_ZONE_ID; origin++)
+			for (int destination = 1; destination <= MAX_FREIGHT_ZONE_ID; destination++)
+				for (int vehicleType = 1; vehicleType <= MAX_VEHICLE_ID; vehicleType++)
+					if (this.getCost(origin, destination, vehicleType) > 0.0) //print only if there is a cost
+						System.out.printf("%6d%12d%12d%7.2f\n", origin, destination, vehicleType, this.getCost(origin, destination, vehicleType));
 	}
 	
 	/**
@@ -149,14 +146,14 @@ public class SkimMatrixFreightArray implements SkimMatrixFreight {
 			csvFilePrinter = new CSVPrinter(fileWriter, csvFileFormat);
 			csvFilePrinter.printRecord(header);
 			ArrayList<String> record = new ArrayList<String>();
-			for (int o=1; o<=MAX_FREIGHT_ZONE_ID; o++)
-				for (int d=1; d<=MAX_FREIGHT_ZONE_ID; o++)
-					for (int v=1; v<=MAX_VEHICLE_ID; v++) {
-						double cost = this.getCost(o, d, v);
+			for (int origin = 1; origin <= MAX_FREIGHT_ZONE_ID; origin++)
+				for (int destination = 1; destination <= MAX_FREIGHT_ZONE_ID; destination++)
+					for (int vehicleType = 1; vehicleType <= MAX_VEHICLE_ID; vehicleType++) {
+						double cost = this.getCost(origin, destination, vehicleType);
 						record.clear();
-						record.add(Integer.toString(d));
-						record.add(Integer.toString(o));
-						record.add(Integer.toString(v));
+						record.add(Integer.toString(destination));
+						record.add(Integer.toString(origin));
+						record.add(Integer.toString(vehicleType));
 						if (cost > 0.0)	record.add(String.format("%.2f", cost));
 						else				//record.add("N/A");
 											continue; //do not save record if unknown cost
@@ -186,8 +183,9 @@ public class SkimMatrixFreightArray implements SkimMatrixFreight {
 		for (int origin = 1; origin <= MAX_FREIGHT_ZONE_ID; origin++)
 			for (int destination = 1; destination <= MAX_FREIGHT_ZONE_ID; destination++)
 				for (int vehicleType = 1; vehicleType <= MAX_VEHICLE_ID; vehicleType++) {
-					averageCost += this.getCost(origin, destination, vehicleType);
-					if (averageCost > 0.0) 
+					double cost = this.getCost(origin, destination, vehicleType);
+					averageCost += cost; 
+					if (cost > 0.0) 
 						nonZeroCounter++;
 				}
 		averageCost /= nonZeroCounter;

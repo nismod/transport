@@ -12,6 +12,9 @@ import java.util.List;
  */
 public interface SkimMatrixFreight {
 	
+	public final static int MAX_FREIGHT_ZONE_ID = 1388;
+	public final static int MAX_VEHICLE_ID = 3;
+	
 	/**
 	 * Gets cost for a given origin-destination pair and a vehicle type.
 	 * @param originZone Origin zone.
@@ -58,4 +61,17 @@ public interface SkimMatrixFreight {
 	 * @return Sum of absolute differences.
 	 */
 	public double getAbsoluteDifference(SkimMatrixFreight other);
+	
+	/**
+	 * Gets average cost.
+	 * @return Average cost.
+	 */
+	public double getAverageCost();
+	
+	/**
+	 * Gets average cost weighted by the freight demand.
+	 * @param demand Freight OD matrix.
+	 * @return Average cost weighted by freight matrix.
+	 */
+	public double getAverageCost(FreightMatrix demand);
 }
