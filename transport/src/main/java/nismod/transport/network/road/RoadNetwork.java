@@ -126,6 +126,7 @@ public class RoadNetwork {
 	public int numberOfLanesARoad; //for one direction
 	public int maximumEdgeID; //for the entire network (include roads developed in the future).
 	public int maximumNodeID; //for the entire network
+	private double accessEgressFactor;
 	
 	public static enum EdgeType {
 		AROAD, MOTORWAY, FERRY
@@ -160,6 +161,7 @@ public class RoadNetwork {
 		this.numberOfLanesARoad = Integer.parseInt(params.getProperty("NUMBER_OF_LANES_A_ROAD"));
 		this.maximumEdgeID = Integer.parseInt(params.getProperty("MAXIMUM_EDGE_ID"));
 		this.maximumNodeID = Integer.parseInt(params.getProperty("MAXIMUM_NODE_ID"));
+		this.accessEgressFactor = Double.parseDouble(params.getProperty("ACCESS_EGRESS_LAD_DISTANCE_SCALING_FACTOR"));
 		
 		//build the graph
 		this.build();
@@ -2414,13 +2416,13 @@ public class RoadNetwork {
 			
 			int node = this.areaCodeToNearestNodeID.get(areaCode);
 			int population = this.areaCodeToPopulation.get(areaCode);
-			double distance = this.areaCodeToNearestNodeDistance.get(areaCode);
+			double distance = this.areaCodeToNearestNodeDistance.get(areaCode) * this.accessEgressFactor;
 			double gravitatingPopulation = this.nodeToGravitatingPopulation[node];
 			
 			double weightedDistance = distance * population / gravitatingPopulation;
 			map[node] += weightedDistance;
 		}
-		
+				
 		this.nodeToAverageAccessEgressDistance = map;
 	}
 	
@@ -2437,7 +2439,7 @@ public class RoadNetwork {
 			
 			int node = this.workplaceZoneToNearestNodeID.get(workplaceZone);
 			int population = this.workplaceZoneToPopulation.get(workplaceZone);
-			double distance = this.workplaceZoneToNearestNodeDistance.get(workplaceZone);
+			double distance = this.workplaceZoneToNearestNodeDistance.get(workplaceZone) * this.accessEgressFactor;
 			double gravitatingPopulation = this.nodeToGravitatingWorkplacePopulation[node];
 			
 			double weightedDistance = distance * population / gravitatingPopulation;

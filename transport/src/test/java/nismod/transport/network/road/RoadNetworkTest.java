@@ -422,9 +422,11 @@ public class RoadNetworkTest {
 
 		System.out.println("Node to average access/egress distance:");
 		System.out.println(roadNetwork.getNodeToAverageAccessEgressDistance());
+		
+		double accessEgressFactor = Double.parseDouble(props.getProperty("ACCESS_EGRESS_LAD_DISTANCE_SCALING_FACTOR"));
 
 		//node 9 -> area code (population): E00087214(488), E00086616(416), E00087213(299), E00086589(324), E00087208(388)
-		assertEquals("Average access/egress distance is correct", (488 * 1086.68018 + 416 * 331.586619 + 299 * 968.4972698 + 324 * 125.6523948 + 388 * 1401.943333) / (488 + 416 + 299 + 324 + 388) , (double) roadNetwork.getAverageAcessEgressDistance(9), 1e-5);
+		assertEquals("Average access/egress distance is correct", (488 * 1086.68018 + 416 * 331.586619 + 299 * 968.4972698 + 324 * 125.6523948 + 388 * 1401.943333) * accessEgressFactor / (488 + 416 + 299 + 324 + 388) , (double) roadNetwork.getAverageAcessEgressDistance(9), 1e-5);
 
 		//TEST SHORTEST PATH ALGORITHMS
 		System.out.println("\n\n*** Testing the shortest path algorithms ***");
