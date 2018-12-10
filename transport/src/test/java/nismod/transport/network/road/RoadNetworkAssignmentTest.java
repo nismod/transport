@@ -1495,8 +1495,6 @@ public class RoadNetworkAssignmentTest {
 		SkimMatrixFreight distanceSkimMatrixFreight = rna.calculateDistanceSkimMatrixFreight();
 		distanceSkimMatrixFreight.printMatrixFormatted();
 		
-		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforFreightCounts());
-		
 		//TEST TRIP LIST
 		System.out.println("\n\n*** Testing trip list ***");
 		

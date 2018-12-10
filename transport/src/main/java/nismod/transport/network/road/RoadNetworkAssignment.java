@@ -5416,8 +5416,10 @@ public class RoadNetworkAssignment {
 	 */
 	public void printRMSNstatisticFreight() {
 
-		double RMSN = this.calculateRMSNforFreightCounts();
-		LOGGER.info("RMSN for freight traffic counts is: {}%", Math.round(RMSN));
+		Map<VehicleType, Double> RMSN = this.calculateRMSNforFreightCounts();
+		LOGGER.info("RMSN for van traffic counts is: {}%", Math.round(RMSN.get(VehicleType.VAN)));
+		LOGGER.info("RMSN for rigid traffic counts is: {}%", Math.round(RMSN.get(VehicleType.RIGID)));
+		LOGGER.info("RMSN for artic traffic counts is: {}%", Math.round(RMSN.get(VehicleType.ARTIC)));
 	}
 
 	/**
@@ -5504,14 +5506,16 @@ public class RoadNetworkAssignment {
 
 	/**
 	 * Calculate prediction error (RMSN for for simulated freight volumes and observed traffic counts).
-	 * @return Normalised root mean square error.
+	 * @return Normalised root mean square errors for each freight vehicle separately.
 	 */
-	public double calculateRMSNforFreightCounts () {
-
+	public Map<VehicleType, Double> calculateRMSNforFreightCounts () {
+		
+		Map<VehicleType, Double> RMSN = new EnumMap<VehicleType, Double>(VehicleType.class);
+		
 		Iterator iter = this.roadNetwork.getNetwork().getEdges().iterator();
-		int countOfCounts = 0;
-		long sumOfCounts = 0;
-		double sumOfSquaredDiffs = 0.0;
+		int vanCountOfCounts = 0, rigidCountOfCounts = 0, articCountOfCounts = 0;
+		long vanSumOfCounts = 0, rigidSumOfCounts = 0, articSumOfCounts = 0;
+		double vanSumOfSquaredDiffs = 0.0, rigidSumOfSquaredDiffs = 0.0, articSumOfSquaredDiffs = 0.0;
 		ArrayList<Long> checkedCP = new ArrayList<Long>(); 
 
 		while (iter.hasNext()) {
@@ -5537,9 +5541,17 @@ public class RoadNetworkAssignment {
 				long rigidVolume = this.linkVolumesPerVehicleType.get(VehicleType.RIGID)[edgeID];
 				long articVolume = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC)[edgeID];
 
-				countOfCounts += 3;
-				sumOfCounts += vanCount + rigidCount + articCount;
-				sumOfSquaredDiffs += Math.pow(vanCount - vanVolume, 2) + Math.pow(rigidCount - rigidVolume, 2) + Math.pow(articCount - articVolume, 2);
+				vanCountOfCounts++;
+				rigidCountOfCounts++;
+				articCountOfCounts++;
+				
+				vanSumOfCounts += vanCount;
+				rigidSumOfCounts += rigidCount;
+				articSumOfCounts += articCount;
+				
+				vanSumOfSquaredDiffs += Math.pow(vanCount - vanVolume, 2);
+				rigidSumOfSquaredDiffs += Math.pow(rigidCount - rigidVolume, 2);
+				articSumOfSquaredDiffs += Math.pow(articCount - articVolume, 2);
 			}
 
 			if (dir == 'C' && !checkedCP.contains(countPoint)) { //for combined counts check if this countPoint has been processed already
@@ -5561,18 +5573,35 @@ public class RoadNetworkAssignment {
 				long rigidVolume2 = this.linkVolumesPerVehicleType.get(VehicleType.RIGID)[edge2];
 				long articVolume2 = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC)[edge2];
 	
-				countOfCounts += 3;
-				sumOfCounts += vanCount + rigidCount + articCount;
-				sumOfSquaredDiffs += Math.pow(vanCount - vanVolume - vanVolume2, 2) + Math.pow(rigidCount - rigidVolume - rigidVolume2, 2) + Math.pow(articCount - articVolume - articVolume2, 2);
-
+				vanCountOfCounts++;
+				rigidCountOfCounts++;
+				articCountOfCounts++;
+				
+				vanSumOfCounts += vanCount;
+				rigidSumOfCounts += rigidCount;
+				articSumOfCounts += articCount;
+				
+				vanSumOfSquaredDiffs += Math.pow(vanCount - vanVolume - vanVolume2, 2);
+				rigidSumOfSquaredDiffs += Math.pow(rigidCount - rigidVolume - rigidVolume2, 2);
+				articSumOfSquaredDiffs += Math.pow(articCount - articVolume - articVolume2, 2);
+								
 				checkedCP.add(countPoint);
 			}
 		}
 
-		double RMSE = Math.sqrt(sumOfSquaredDiffs / countOfCounts);
-		double averageTrueCount = (double) sumOfCounts / countOfCounts;
+		double vanRMSE = Math.sqrt(vanSumOfSquaredDiffs / vanCountOfCounts);
+		double rigidRMSE = Math.sqrt(rigidSumOfSquaredDiffs / rigidCountOfCounts);
+		double articRMSE = Math.sqrt(articSumOfSquaredDiffs / articCountOfCounts);
 
-		return (RMSE / averageTrueCount ) * 100;
+		double vanAverageTrueCount = (double) vanSumOfCounts / vanCountOfCounts;
+		double rigidAverageTrueCount = (double) rigidSumOfCounts / rigidCountOfCounts;
+		double articAverageTrueCount = (double) articSumOfCounts / articCountOfCounts;
+		
+		RMSN.put(VehicleType.VAN, (vanRMSE / vanAverageTrueCount ) * 100);
+		RMSN.put(VehicleType.RIGID, (rigidRMSE / rigidAverageTrueCount ) * 100);
+		RMSN.put(VehicleType.ARTIC, (articRMSE / articAverageTrueCount ) * 100);
+		
+		return RMSN;
 	}
 
 	/**

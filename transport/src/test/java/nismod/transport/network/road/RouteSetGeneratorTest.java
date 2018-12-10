@@ -571,7 +571,7 @@ public class RouteSetGeneratorTest {
 		//assign freight flows
 		rna.assignFreightFlowsRouteChoice(fm, rsg, params);
 		
-		System.out.printf("RMSN: %.2f%%\n", rna.calculateRMSNforFreightCounts());
+		rna.printRMSNstatisticFreight();
 		
 		//rna.saveAssignmentResults(2015, "testAssignmentResultsWithFreight.csv");
 
