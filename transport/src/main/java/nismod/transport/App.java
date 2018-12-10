@@ -507,13 +507,12 @@ public class App {
 				final Boolean flagUseRouteChoiceModel = Boolean.parseBoolean(props.getProperty("USE_ROUTE_CHOICE_MODEL"));
 				
 				final String assignmentType = props.getProperty("ASSIGNMENT_TYPE").toLowerCase();
-				//create zoning system if necessary
-				Zoning zoning = null;
+								
+				final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
+				final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
+				Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
+				
 				if (assignmentType.equals("tempro") || assignmentType.equals("combined")) {
-					final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
-					final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
-					zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
-					
 					if (flagUseRouteChoiceModel) { 
 						//read tempro routes
 						final String temproRoutesFile = props.getProperty("temproRoutesFile");

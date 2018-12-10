@@ -13,8 +13,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
@@ -28,7 +26,6 @@ import org.geotools.graph.build.line.BasicDirectedLineGraphBuilder;
 import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedNode;
 import org.geotools.graph.structure.Node;
-
 import org.locationtech.jts.geom.Point;
 
 import nismod.transport.demand.FreightMatrix;

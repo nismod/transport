@@ -50,8 +50,8 @@ public class RoadNetworkAssignmentTest {
 
 	public static void main( String[] args ) throws IOException	{
 		
-		//final String configFile = "./src/main/full/config/config.properties";
-		final String configFile = "./src/test/config/testConfig.properties";
+		final String configFile = "./src/main/full/config/config.properties";
+		//final String configFile = "./src/test/config/testConfig.properties";
 		Properties props = ConfigReader.getProperties(configFile);
 		
 		final String areaCodeFileName = props.getProperty("areaCodeFileName");
