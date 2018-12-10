@@ -243,5 +243,93 @@ public class ODMatrixTest {
 		tempro.printMatrixFormatted();
 		tempro.saveMatrixFormatted("./temp/tempro.csv");
 		tempro.saveMatrixFormatted2("./temp/tempro2.csv");
+		
+	}
+	
+	@Test
+	public void miniTest() throws FileNotFoundException, IOException {
+		
+		final String configFile = "./src/test/config/miniTestConfig.properties";
+		Properties props = ConfigReader.getProperties(configFile);
+		
+		final String areaCodeFileName = props.getProperty("areaCodeFileName");
+		final String areaCodeNearestNodeFile = props.getProperty("areaCodeNearestNodeFile");
+		final String workplaceZoneFileName = props.getProperty("workplaceZoneFileName");
+		final String workplaceZoneNearestNodeFile = props.getProperty("workplaceZoneNearestNodeFile");
+		final String freightZoneToLADfile = props.getProperty("freightZoneToLADfile");
+		final String freightZoneNearestNodeFile = props.getProperty("freightZoneNearestNodeFile");
+
+		final URL zonesUrl = new URL(props.getProperty("zonesUrl"));
+		final URL networkUrl = new URL(props.getProperty("networkUrl"));
+		final URL networkUrlFixedEdgeIDs = new URL(props.getProperty("networkUrlFixedEdgeIDs"));
+		final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
+		final URL AADFurl = new URL(props.getProperty("AADFurl"));
+
+		//create a road network
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
+		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
+		
+		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
+		
+		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
+		
+		ODMatrixArray miniODM = new ODMatrixArray("./src/test/resources/minitestdata/csvfiles/passengerODM.csv", zoning);
+		
+		miniODM.printMatrixFormatted("mini ODM");
+		miniODM.saveMatrixFormatted("./temp/miniODM.csv");
+		miniODM.saveMatrixFormattedList("./temp/miniODMList.csv");
+		assertEquals("Trips ends are equal", miniODM.calculateTripEnds(), miniODM.calculateTripStarts());
+		
+		int totalFlow = miniODM.getTotalFlow();
+		miniODM.deleteInterzonalFlows("E06000045");
+		assertEquals("Flows are still the same", totalFlow, miniODM.getTotalFlow());
+		
+		miniODM.getUnsortedDestinations();
+		miniODM.getUnsortedOrigins();
+		miniODM.getSortedOrigins();
+		miniODM.getSortedDestinations();
+		
+		int flow1 = miniODM.getFlow("E06000045", "E06000045");
+		int flow2 = miniODM.getFlow(45, 45);
+		int flow3 = miniODM.getIntFlow(45, 45);
+		assertEquals("Flows are equal", flow1, flow2);
+		assertEquals("Flows are equal", flow2, flow3);
+		miniODM.setFlow(45, 45, 100);
+		assertEquals("Flows are correct", 100, miniODM.getFlow(45,  45));
+		miniODM.setFlow("E06000045", "E06000045", 200);
+		assertEquals("Flows are correct", 200, miniODM.getFlow(45,  45));
+		
+		miniODM.scaleMatrixValue(0.5);
+		assertEquals("Flows are correct", 100, miniODM.getFlow(45,  45));
+
+		ODMatrixArray miniODM2 = new ODMatrixArray("./temp/miniODMList.csv", zoning);
+		int diff = miniODM.getAbsoluteDifference(miniODM2);
+		assertEquals("Absolute difference is correct", 4900, diff);
+				
+		ODMatrixArrayTempro miniTemproODM = new ODMatrixArrayTempro("./src/test/resources/minitestdata/csvfiles/temproODM.csv", zoning);
+		
+		miniTemproODM.printMatrixFormatted("mini tempro ODM");
+				
+		miniODM2.setFlow(45, 45, 317683);
+		ODMatrixArrayTempro miniTemproODM2 = ODMatrixArray.createTEMProFromLadMatrix(miniODM2, miniTemproODM, zoning);
+		diff = miniTemproODM2.getAbsoluteDifference(miniTemproODM);
+		assertEquals("Matrices are the same", 0, diff);
+		
+		ODMatrixArrayTempro miniTemproODM3 = ODMatrixArrayTempro.createTEMProFromLadMatrix(miniODM2, miniTemproODM, zoning);
+		diff = miniTemproODM3.getAbsoluteDifference(miniTemproODM);
+		assertEquals("Matrices are the same", 0, diff);
+		
+		ODMatrixArray odm2 = ODMatrixArray.createLadMatrixFromTEMProMatrix(miniTemproODM2, zoning);
+		RealODMatrix odm3 = ODMatrixArrayTempro.createLadMatrixFromTEMProMatrix(miniTemproODM3, zoning);
+		assertEquals("Total flows are the same", odm2.getTotalIntFlow(), odm3.getTotalIntFlow());
+		
+		miniTemproODM2.getSortedOrigins();
+		miniTemproODM2.getSortedDestinations();
+		miniTemproODM2.getUnsortedOrigins();
+		miniTemproODM2.getUnsortedDestinations();
+		
+		assertEquals("Trips starts are equal", miniTemproODM2.calculateTripStarts(), miniTemproODM3.calculateTripStarts());
+		assertEquals("Trips ends are equal", miniTemproODM2.calculateTripEnds(), miniTemproODM3.calculateTripEnds());
+
 	}
 }

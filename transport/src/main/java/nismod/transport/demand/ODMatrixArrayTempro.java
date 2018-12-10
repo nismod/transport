@@ -469,7 +469,7 @@ public class ODMatrixArrayTempro implements AssignableODMatrix {
 				for (String destination: temproDestinations) {
 					int temproFlow = 0;
 					if (temproSum > 0) 
-						temproFlow = (int) Math.round(baseTempro.getFlow(origin, destination) * ladFlow / temproSum);
+						temproFlow = (int) Math.round((double)baseTempro.getFlow(origin, destination) * ladFlow / temproSum);
 					temproMatrix.setFlow(origin, destination, temproFlow);
 				}
 		}
@@ -506,7 +506,7 @@ public class ODMatrixArrayTempro implements AssignableODMatrix {
 				for (String destination: temproDestinations) {
 					int temproFlow = 0;
 					if (temproSum > 0) 
-						temproFlow = (int) Math.round(baseTempro.getFlow(origin, destination) * ladFlow / temproSum);
+						temproFlow = (int) Math.round((double)baseTempro.getFlow(origin, destination) * ladFlow / temproSum);
 					temproMatrix.setFlow(origin, destination, temproFlow);
 				}
 		}
@@ -566,20 +566,6 @@ public class ODMatrixArrayTempro implements AssignableODMatrix {
 		}
 		
 		LOGGER.debug("Done deleting inter-zonal flows.");
-	}
-	
-	/**
-	 * Gets sum of all the flows.
-	 * @return Sum of flows.
-	 */
-	public double getSumOfFlows() {
-		
-		double sumOfFlows = 0.0;
-		for (int i=1; i<this.matrix.length; i++)
-			for (int j=1; j<this.matrix[0].length; j++)
-				sumOfFlows += this.matrix[i][j];
-		
-		return sumOfFlows;
 	}
 	
 	@Override

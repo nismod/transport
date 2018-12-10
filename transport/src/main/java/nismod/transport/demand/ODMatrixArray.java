@@ -166,6 +166,17 @@ public class ODMatrixArray implements AssignableODMatrix {
 	
 	/**
 	 * Sets the flow for a given origin-destination pair.
+	 * @param originZoneID Origin zone ID.
+	 * @param destinationZoneID Destination zone ID.
+	 * @param flow Origin-destination flow.
+	 */
+	public void setFlow(int originZoneID, int destinationZoneID, int flow) {
+		
+		this.matrix[originZoneID][destinationZoneID] = flow;
+	}
+	
+	/**
+	 * Sets the flow for a given origin-destination pair.
 	 * @param originZone Origin zone.
 	 * @param destinationZone Destination zone.
 	 * @param flow Origin-destination flow.
@@ -346,7 +357,7 @@ public class ODMatrixArray implements AssignableODMatrix {
 	 * @param other The other matrix.
 	 * @return Sum of absolute differences.
 	 */
-	public double getAbsoluteDifference(ODMatrixArray other) {
+	public int getAbsoluteDifference(ODMatrixArray other) {
 		
 		int difference = 0;
 		
