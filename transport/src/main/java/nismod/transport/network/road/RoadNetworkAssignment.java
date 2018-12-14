@@ -2000,13 +2000,14 @@ public class RoadNetworkAssignment {
 						//check if any of the nodes is blacklisted
 						if (this.roadNetwork.isBlacklistedAsStartNode(node)) 
 							listOfOriginNodes.remove(node);
+							
 					List<Integer> listOfDestinationNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(destinationLAD)); //the list is already sorted
 					//removing blacklisted nodes
 					for (Integer node: roadNetwork.getZoneToNodes().get(destinationLAD))
 						//check if any of the nodes is blacklisted
-						if (this.roadNetwork.isBlacklistedAsEndNode(node)) 
+						if (this.roadNetwork.isBlacklistedAsEndNode(node))
 							listOfDestinationNodes.remove(node);
-
+							
 					if (originLAD == destinationLAD) { //intra-zonal trip!
 
 						//choose any origin node
@@ -2049,21 +2050,23 @@ public class RoadNetworkAssignment {
 						//make a choice based on the gravitating workzone population size
 						int originNodesToConsider = interzonalTopNodes<listOfOriginNodes.size()?interzonalTopNodes:listOfOriginNodes.size();
 						int destinationNodesToConsider = interzonalTopNodes<listOfDestinationNodes.size()?interzonalTopNodes:listOfDestinationNodes.size();
+						
+						originNode = null;
 						//sums of gravitating population
-
 						double sum = 0.0;
-						for (int j=0; j<originNodesToConsider; j++) sum += startNodeProbabilitiesFreight.get(listOfOriginNodes.get(j)); 
+						for (int j=0; j<originNodesToConsider; j++) sum += startNodeProbabilitiesFreight.get(listOfOriginNodes.get(j));
 						//choose origin node
 						double cumulativeProbability = 0.0;
 						double random = rng.nextDouble();
-						for (Integer node: listOfOriginNodes) {
+						for (Integer node: listOfOriginNodes.subList(0, originNodesToConsider)) {
 							cumulativeProbability += startNodeProbabilitiesFreight.get(node) / sum; //scale with sum
 							if (Double.compare(cumulativeProbability, random) > 0) {
 								originNode = node;
 								break;
 							}
 						}
-
+					
+						destinationNode = null;
 						sum = 0.0;
 						for (int j=0; j<destinationNodesToConsider; j++) sum += endNodeProbabilitiesFreight.get(listOfDestinationNodes.get(j)); 
 						//choose destination node
@@ -2171,13 +2174,15 @@ public class RoadNetworkAssignment {
 						LOGGER.debug("Point-to-point freight trip in which both points are mapped to the same network node.");
 				}
 
-				if (originNode == null) LOGGER.warn("Could not find origin node for a freight trip!");
-				if (destinationNode == null) LOGGER.warn("Could not find destination node for a freight trip!");
+				if (originNode == null)
+					LOGGER.warn("Could not find origin node for a freight trip! Origin zone = {}.", origin);
+				if (destinationNode == null)
+					LOGGER.warn("Could not find destination node for a freight trip! Destination zone = {}.", destination);
 
 				Route chosenRoute = null;
 				RouteSet fetchedRouteSet = rsg.getRouteSet(originNode.intValue(), destinationNode.intValue());
 				if (fetchedRouteSet == null) {
-					LOGGER.warn("Can't fetch the route set between nodes {} and {}!", originNode, destinationNode);
+					LOGGER.warn("Can't fetch the route set between nodes {} and {}! Freight zones {} and {}! LAD zones {} and {}!", originNode, destinationNode, origin, destination, originLAD, destinationLAD);
 
 					if (!flagAStarIfEmptyRouteSet && originNode != destinationNode)	continue;
 					else { //try finding a path with aStar
@@ -2244,10 +2249,6 @@ public class RoadNetworkAssignment {
 				int multiplier = 1;
 				if (i < flow) multiplier = (int) Math.round(1 / this.assignmentFraction);
 				counterAssignedTrips += multiplier;
-
-				//check to which LAD chosen origin and destination nodes belong to!
-				originLAD = roadNetwork.getNodeToZone().get(originNode);
-				destinationLAD = roadNetwork.getNodeToZone().get(destinationNode);
 
 				//store trip in trip list
 				Trip trip = new Trip(vht, engine, chosenRoute, hour, origin , destination, multiplier);
@@ -2473,7 +2474,7 @@ public class RoadNetworkAssignment {
 	
 	/**
 	 * Calculate assigned OD matrix from trip list.
-	 * @param ODMatrixMultiKey OD matrix.
+	 * @return ODMatrixMultiKey OD matrix.
 	 */
 	public ODMatrixMultiKey calculateAssignedODMatrix() {
 
@@ -2492,6 +2493,30 @@ public class RoadNetworkAssignment {
 			
 			int count = counter.getFlow(originLAD, destinationLAD);
 			counter.setFlow(originLAD, destinationLAD, count + multiplier);
+		}
+		
+		return counter;
+	}
+	
+	/**
+	 * Calculate freight OD matrix from trip list.
+	 * @return Freight matrix.
+	 */
+	public FreightMatrix calculateAssignedFreightMatrix() {
+
+		FreightMatrix counter = new FreightMatrix();
+
+		for (Trip trip: this.tripList) {
+
+			if (trip.getVehicle() == VehicleType.CAR || trip.getVehicle() == VehicleType.CAR_AV) continue; //skip passenger vehicles
+
+			int origin = trip.getOrigin();
+			int destination = trip.getDestination();
+			int vehicleType = trip.getVehicle().value;
+			int multiplier = trip.getMultiplier();
+			
+			int count = counter.getFlow(origin, destination, vehicleType);
+			counter.setFlow(origin, destination, vehicleType, count + multiplier);
 		}
 		
 		return counter;
@@ -4969,6 +4994,16 @@ public class RoadNetworkAssignment {
 		return this.roadNetwork.getAADFCarTrafficCounts();
 
 	}
+	
+	/**
+	 * Getter method for AADF freight traffic counts.
+	 * @return Freight traffic counts.
+	 */
+	public Map<VehicleType, Integer[]> getAADFFreightTrafficCounts() {
+
+		LOGGER.info("Getting the freight traffic counts...");
+		return this.roadNetwork.getAADFFreightTrafficCounts();
+	}
 
 	/**
 	 * Calculates absolute differences between car volumes and traffic counts.
@@ -5509,6 +5544,8 @@ public class RoadNetworkAssignment {
 	 * @return Normalised root mean square errors for each freight vehicle separately.
 	 */
 	public Map<VehicleType, Double> calculateRMSNforFreightCounts () {
+		
+		LOGGER.debug("Calculating RMSN for freight traffic counts");
 		
 		Map<VehicleType, Double> RMSN = new EnumMap<VehicleType, Double>(VehicleType.class);
 		

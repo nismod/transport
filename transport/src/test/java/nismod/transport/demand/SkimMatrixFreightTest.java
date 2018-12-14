@@ -9,9 +9,17 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URL;
+import java.util.Properties;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import nismod.transport.network.road.RoadNetwork;
+import nismod.transport.network.road.RoadNetworkAssignment;
+import nismod.transport.utility.ConfigReader;
+import nismod.transport.utility.InputFileReader;
+import nismod.transport.zone.Zoning;
 
 /**
  * Tests for the SkimMatrixFreight class
@@ -133,5 +141,101 @@ public class SkimMatrixFreightTest {
 		averageCost = skimMatrixFreight4.getAverageCost();
 		demandWeigthedCost = skimMatrixFreight4.getAverageCost(freightMatrix);
 		assertEquals("Sum of weighted matrix costs is the same", averageCost, demandWeigthedCost, DELTA);
+		
+		final String configFile = "./src/test/config/testConfig.properties";
+		Properties props = ConfigReader.getProperties(configFile);
+		
+		final String areaCodeFileName = props.getProperty("areaCodeFileName");
+		final String areaCodeNearestNodeFile = props.getProperty("areaCodeNearestNodeFile");
+		final String workplaceZoneFileName = props.getProperty("workplaceZoneFileName");
+		final String workplaceZoneNearestNodeFile = props.getProperty("workplaceZoneNearestNodeFile");
+		final String freightZoneToLADfile = props.getProperty("freightZoneToLADfile");
+		final String freightZoneNearestNodeFile = props.getProperty("freightZoneNearestNodeFile");
+
+		final URL zonesUrl = new URL(props.getProperty("zonesUrl"));
+		final URL networkUrl = new URL(props.getProperty("networkUrl"));
+		final URL networkUrlFixedEdgeIDs = new URL(props.getProperty("networkUrlFixedEdgeIDs"));
+		final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
+		final URL AADFurl = new URL(props.getProperty("AADFurl"));
+
+		//create a road network
+		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
+		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
+
+		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
+		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
+		
+		SkimMatrixFreightArray smFreight = new SkimMatrixFreightArray();
+		
+		smFreight.setCost(1, 1, 1, 0.50);
+		smFreight.setCost(1, 1, 2, 1.00);
+		smFreight.setCost(1, 1, 3, 5.00);
+		smFreight.setCost(1, 2, 1, 2.00);
+		smFreight.setCost(1, 2, 2, 5.00);
+		smFreight.setCost(1, 2, 3, 6.00);
+		smFreight.setCost(2, 1, 1, 2.50);
+		smFreight.setCost(2, 1, 2, 1.50);
+		smFreight.setCost(2, 1, 3, 1.00);
+		
+		smFreight.printMatrixFormatted("Array skim matrix:");
+		smFreight.saveMatrixFormatted("./temp/skimMatrixFreight.csv");
+		
+		SkimMatrixFreight smFreight2 = new SkimMatrixFreightArray("./temp/skimMatrixFreight.csv");
+		smFreight2.printMatrixFormatted("Array skim matrix2:");
+		diff = smFreight2.getAbsoluteDifference(smFreight);
+		assertEquals("Matrices are the same", 0.0, diff, DELTA);
+				
+		SkimMatrixFreight skimMatrixFreightMultiKey = new SkimMatrixFreightMultiKey("./temp/skimMatrixFreight.csv");
+		skimMatrixFreightMultiKey.printMatrixFormatted("Multikey skim matrix:");
+		
+		final double EPSILON = 1e-5;
+		assertEquals("Getter method works", 0.5, skimMatrixFreightMultiKey.getCost(1,1,1), EPSILON);
+		
+		diff = skimMatrixFreightMultiKey.getAbsoluteDifference(smFreight2);
+		assertEquals("Matrices are the same", 0.0, diff, DELTA);
+		
+		System.out.println("Average cost: " + ((SkimMatrixFreightArray)smFreight2).getAverageCost());
+		System.out.println("Average cost: " + ((SkimMatrixFreightArray)smFreight2).getAverageCost(freightMatrix));
+				
+		final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
+		final String unitCO2EmissionsFile = props.getProperty("unitCO2EmissionsFile");
+		final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
+		final String AVFractionsFile = props.getProperty("autonomousVehiclesFile");
+		final String vehicleTypeToPCUFile = props.getProperty("vehicleTypeToPCUFile");
+		final String timeOfDayDistributionFile = props.getProperty("timeOfDayDistributionFile");
+		final String timeOfDayDistributionFreightFile = props.getProperty("timeOfDayDistributionFreightFile");
+		final String baseFuelConsumptionRatesFile = props.getProperty("baseFuelConsumptionRatesFile");
+		final String relativeFuelEfficiencyFile = props.getProperty("relativeFuelEfficiencyFile");
+		final int BASE_YEAR = Integer.parseInt(props.getProperty("baseYear"));
+	
+		//create a road network assignment
+		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork,
+															zoning,
+															InputFileReader.readEnergyUnitCostsFile(energyUnitCostsFile).get(BASE_YEAR),
+															InputFileReader.readUnitCO2EmissionFile(unitCO2EmissionsFile).get(BASE_YEAR),
+															InputFileReader.readEngineTypeFractionsFile(engineTypeFractionsFile).get(BASE_YEAR),
+															InputFileReader.readAVFractionsFile(AVFractionsFile).get(BASE_YEAR),
+															InputFileReader.readVehicleTypeToPCUFile(vehicleTypeToPCUFile),
+															InputFileReader.readEnergyConsumptionParamsFile(baseFuelConsumptionRatesFile),
+															InputFileReader.readRelativeFuelEfficiencyFile(relativeFuelEfficiencyFile).get(BASE_YEAR),
+															InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFile).get(BASE_YEAR),
+															InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFreightFile).get(BASE_YEAR),
+															null,
+															null,
+															null,
+															null,
+															props);
+
+		//assign passenger flows
+		final String baseYearFreightMatrixFile = props.getProperty("baseYearFreightMatrixFile");
+		FreightMatrix fm = new FreightMatrix(baseYearFreightMatrixFile);
+		rna.assignFreightFlowsRouting(fm, null, props);
+		fm.printMatrixFormatted("Freight matrix:");
+		
+		FreightMatrix fmAssigned = rna.calculateAssignedFreightMatrix();
+		diff = fmAssigned.getAbsoluteDifference(fm);
+		assertEquals("Matrices are the same", 0.0, diff, DELTA);
+		
+		rna.calculateTimeSkimMatrixFreight().printMatrixFormatted("Time skim matrix:");
 	}
 }

@@ -9,8 +9,10 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -59,6 +61,8 @@ import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.NoSuchAuthorityCodeException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+
+import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -1260,6 +1264,54 @@ public class RoadNetwork {
 	}
 	
 	/**
+	 * Get car traffic counts data for each link (for combined counts return 1/2 of the count per direction).
+	 * @return AADF traffic counts per freight vehicle type and per link.
+	 */
+	public Map<VehicleType, Integer[]> getAADFFreightTrafficCounts () {
+
+		Map<VehicleType, Integer[]> counts = new EnumMap<VehicleType, Integer[]>(VehicleType.class);
+		Integer[] vanCounts = new Integer[this.maximumEdgeID];
+		Integer[] rigidCounts = new Integer[this.maximumEdgeID];
+		Integer[] articCounts = new Integer[this.maximumEdgeID];
+		
+		Iterator iter = this.getNetwork().getEdges().iterator();
+		while (iter.hasNext()) {
+			DirectedEdge edge = (DirectedEdge) iter.next();
+			int edgeID = edge.getID();
+			EdgeType edgeType = this.edgesType[edgeID];
+			SimpleFeature sf = (SimpleFeature) edge.getObject(); 
+
+			if (edgeType == EdgeType.FERRY) continue; //ferry
+
+			//Long countPoint = (long) sf.getAttribute("CP");
+			String direction = (String) sf.getAttribute("iDir");
+			char dir = direction.charAt(0);
+
+			long vanCount = (long) sf.getAttribute("FdLGV");
+			long rigidCount = (long) sf.getAttribute("FdHGVR2") + (long) sf.getAttribute("FdHGVR3") + (long) sf.getAttribute("FdHGVR4");
+			long articCount = (long) sf.getAttribute("FdHGVA3") + (long) sf.getAttribute("FdHGVA5") + (long) sf.getAttribute("FdHGVA6");
+
+			//directional counts
+			if (dir == 'N' || dir == 'S' || dir == 'W' || dir == 'E') {
+				vanCounts[edgeID] = (int) vanCount;
+				rigidCounts[edgeID] = (int) rigidCount;
+				articCounts[edgeID] = (int) articCount;
+			}
+			if (dir == 'C')	{
+				vanCounts[edgeID] = (int) Math.round(vanCount/2.0);
+				rigidCounts[edgeID] = (int) Math.round(rigidCount/2.0);
+				articCounts[edgeID] = (int) Math.round(articCount/2.0);
+			}
+		}
+		
+		counts.put(VehicleType.VAN, vanCounts);
+		counts.put(VehicleType.RIGID, rigidCounts);
+		counts.put(VehicleType.ARTIC, articCounts);
+		
+		return counts;
+	}
+	
+	/**
 	 * Getter method for the number of lanes for each link.
 	 * @return Link id to number of lanes mapping.
 	 */
@@ -1686,8 +1738,8 @@ public class RoadNetwork {
 		
 		LOGGER.info("Populating blacklists with unallowed starting/ending node IDs...");
 		createNodeBlacklists();
-		LOGGER.debug("Start node blacklist: " + this.startNodeBlacklist);
-		LOGGER.debug("End node blacklist: " + this.endNodeBlacklist);
+		//LOGGER.debug("Start node blacklist: {}", Arrays.toString(this.startNodeBlacklist));
+		//LOGGER.debug("End node blacklist: {}", Arrays.toString(this.endNodeBlacklist));
 		
 		LOGGER.info("Determining edges type...");
 		
@@ -2097,13 +2149,25 @@ public class RoadNetwork {
 
 		this.startNodeBlacklist = new boolean[this.maximumNodeID + 1];
 		this.endNodeBlacklist = new boolean[this.maximumNodeID + 1];
+		
+		List<Integer> startBlackList = new ArrayList<Integer>();
+		List<Integer> endBlackList = new ArrayList<Integer>();
 
 		Iterator nodeIter = (Iterator) network.getNodes().iterator();
 		while (nodeIter.hasNext()) {
 			DirectedNode node = (DirectedNode) nodeIter.next();
-			if (node.getOutDegree() == 0) this.startNodeBlacklist[node.getID()] = true;
-			if (node.getInDegree() == 0) this.endNodeBlacklist[node.getID()] = true;
-		}		
+			if (node.getOutDegree() == 0) {
+				this.startNodeBlacklist[node.getID()] = true;
+				startBlackList.add(node.getID());
+			}
+			if (node.getInDegree() == 0) {
+				this.endNodeBlacklist[node.getID()] = true;
+				endBlackList.add(node.getID());
+			}
+		}
+		
+		LOGGER.debug("Start node blacklist: {}", startBlackList);
+		LOGGER.debug("End node blacklist: {}", endBlackList);
 	}
 	
 	/**

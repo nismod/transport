@@ -31,6 +31,9 @@ public class FreightMatrix {
 	
 	private final static Logger LOGGER = LogManager.getLogger(FreightMatrix.class);
 	
+	public final static int MAX_FREIGHT_ZONE_ID = 1388;
+	public final static int MAX_VEHICLE_ID = 3;
+	
 	private MultiKeyMap matrix;
 	
 	public FreightMatrix() {
@@ -131,9 +134,19 @@ public class FreightMatrix {
 		System.out.printf("%6s%12s%12s%7s\n", "origin", "destination", "vehicleType", "flow");
 		for (int o: firstKeyList)
 			for (int d: secondKeyList)
-				for (int v=0; v<=3; v++)
+				for (int v=1; v<=3; v++)
 					if (this.getFlow(o, d, v) != 0) //print only if there is a flow
 						System.out.printf("%6d%12d%12d%7d\n", o, d, v, this.getFlow(o, d, v));
+	}
+	
+	/**
+	 * Prints the matrix as a formatted table, with a print message.
+	 * @param s Print message
+	 */
+	public void printMatrixFormatted(String s) {
+				
+		System.out.println(s);
+		this.printMatrixFormatted();
 	}
 	
 	/**
@@ -245,6 +258,73 @@ public class FreightMatrix {
 	}
 	
 	/**
+	 * Creates a unit freight matrix for given lists of origin and destination zones.
+	 * @param origins List of origin zones.
+	 * @param destinations List of destination zones.
+	 * @return Unit freight matrix.
+	 */
+	public static FreightMatrix createUnitMatrix(List<Integer> origins, List<Integer> destinations) {
+		
+		FreightMatrix fm = new FreightMatrix();
+		
+		for (int origin: origins)
+			for (int destination: destinations)
+				for (int vehicleType = 1; vehicleType <= 3; vehicleType++)
+					fm.setFlow(origin, destination, vehicleType, 1);
+		
+		return fm;
+	}
+	
+	/**
+	 * Creates a unit freight matrix for the specific DfT BYFM 2006 zoning system.
+	 * @return Unit BYFM freight matrix.
+	 */
+	public static FreightMatrix createUnitBYFMMatrix() {
+		
+		List<Integer> origins = new ArrayList<Integer>();
+		for (int i=1; i<=33; i++) origins.add(i);
+		for (int i=101; i<=123; i++) origins.add(i);
+		for (int i=201; i<=243; i++) origins.add(i);
+		for (int i=301; i<=321; i++) origins.add(i);
+		for (int i=401; i<=440; i++) origins.add(i);
+		for (int i=501; i<=534; i++) origins.add(i);
+		for (int i=601; i<=645; i++) origins.add(i);
+		for (int i=701; i<=748; i++) origins.add(i);
+		for (int i=801; i<=867; i++) origins.add(i);
+		for (int i=901; i<=922; i++) origins.add(i);
+		for (int i=1001; i<=1032; i++) origins.add(i);
+		for (int i=1111; i<=1115; i++) origins.add(i);
+		for (int i=1201; i<=1256; i++) origins.add(i);
+		for (int i=1301; i<=1388; i++) origins.add(i);
+		
+		List<Integer> destinations = new ArrayList<Integer>(origins);
+		FreightMatrix fm = FreightMatrix.createUnitMatrix(origins, destinations);
+		fm.deleteInterzonalFlows(645); //delete flows from/to Isle of Scilly (645=E06000053)
+		
+		return fm;
+	}
+	
+	/**
+	 * Deletes all inter-zonal flows to/from a particular zone (leaving only intra-zonal flows)
+	 * @param zone Zone for which inter-zonal flows need to be deleted from the freight matrix.
+	 */
+	public void deleteInterzonalFlows(int zone) {
+		
+		LOGGER.debug("Deleting inter-zonal flows from/to zone {}...", zone);
+		
+		List<Integer> origins = this.getUnsortedOrigins();
+		List<Integer> destinations = this.getUnsortedDestinations();
+			
+		for (Integer origin: origins)
+			for (Integer destination: destinations)
+				for (int vehicleType = 1; vehicleType <= 3; vehicleType++)
+					if (origin.equals(zone) && !destination.equals(zone) || !origin.equals(zone) && destination.equals(zone)) //this will leave only intra-zonal flow
+						this.setFlow(origin, destination, vehicleType, 0);
+			
+		LOGGER.debug("Done deleting inter-zonal flows.");
+	}
+	
+	/**
 	 * Gets the keyset of the multimap.
 	 * @return Key set.
 	 */
@@ -307,6 +387,25 @@ public class FreightMatrix {
 	}
 	
 	/**
+	 * Scales matrix flows using a real-valued scaling matrix.
+	 * @param scale Scaling factors.
+	 */
+	public void scaleMatrix(SkimMatrixFreight scale) {
+		
+		FreightMatrix scaled = new FreightMatrix();
+		
+		for (MultiKey mk: this.getKeySet()) {
+			int origin = (int) mk.getKey(0);
+			int destination = (int) mk.getKey(1);
+			int vehicleType = (int) mk.getKey(2);
+			int flow = (int) Math.round(this.getFlow(origin, destination, vehicleType) * scale.getCost(origin,  destination,  vehicleType));
+			scaled.setFlow(origin, destination, vehicleType, flow);
+		}
+		
+		this.matrix = scaled.matrix;
+	}
+	
+	/**
 	 * Saves the matrix into a csv file.
 	 * @param outputFile Path to the output file.
 	 */
@@ -333,7 +432,7 @@ public class FreightMatrix {
 			ArrayList<String> record = new ArrayList<String>();
 			for (Integer d: firstKeyList)
 				for (Integer o: secondKeyList)
-					for (Integer v=0; v<=3; v++)
+					for (Integer v=1; v<=3; v++)
 						if (this.getFlow(o, d, v) != 0) {//print only if there is a flow
 							record.clear();
 							record.add(d.toString());

@@ -9,6 +9,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import org.apache.sanselan.ImageWriteException;
 import org.junit.Test;
 
 /**
@@ -17,6 +18,17 @@ import org.junit.Test;
  *
  */
 public class FreightMatrixTest {
+	
+	public static void main( String[] args ) throws FileNotFoundException, IOException, ImageWriteException {
+		
+		FreightMatrix fm = FreightMatrix.createUnitBYFMMatrix();
+		//fm.printMatrixFormatted("Unit freight matrix:");
+
+		System.out.println("Origins: " + fm.getSortedOrigins().size());
+		System.out.println("Destinations: " + fm.getUnsortedDestinations().size());
+		System.out.println("Total flow: " + fm.getTotalIntFlow());
+		fm.saveMatrixFormatted("unitFreightMatrix.csv");
+	}
 
 	@Test
 	public void test() throws FileNotFoundException, IOException {

@@ -75,13 +75,14 @@ public class RealODMatrixTemproTest {
 		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
 		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
 		
-		RealODMatrixTempro temproODM = new RealODMatrixTempro(temproODMatrixFile, zoning);
+		//RealODMatrixTempro temproODM = new RealODMatrixTempro(temproODMatrixFile, zoning);
+		RealODMatrixTempro temproODM = new RealODMatrixTempro("temproMatrixListBased198WithMinor4.csv", zoning);
 		System.out.println("Sum of flows: " + temproODM.getSumOfFlows());
 		
 		RealODMatrix lad = RealODMatrixTempro.createLadMatrixFromTEMProMatrix(temproODM, zoning);
 		
 		System.out.println("Sum of flows: " + lad.getSumOfFlows());
-		lad.saveMatrixFormatted2("ladBasedWithMinor2.csv");
+		lad.saveMatrixFormatted2("ladFromTempro198ODMWithMinor4.csv");
 		
 //		RealODMatrixTempro temproODM2 = RealODMatrixTempro.createTEMProFromLadMatrix(lad, temproODM, zoning);
 //		temproODM2.saveMatrixFormatted2("temproWithMinorRecreated.csv");

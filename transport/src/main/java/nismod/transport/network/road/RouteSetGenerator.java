@@ -12,6 +12,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -493,17 +494,29 @@ public class RouteSetGenerator{
 		else { //if inter-zonal, use only top nodes
 		
 		//assume pre-sorted (sortGravityNodes method must be used!)
-		List<Integer> originNodes = this.roadNetwork.getZoneToNodes().get(originLAD);
-		//System.out.println("origin nodes: " + originNodes);
-		List<Integer> destinationNodes = this.roadNetwork.getZoneToNodes().get(destinationLAD);
-		//System.out.println("destination nodes: " + destinationNodes);
-				
+		//List<Integer> originNodes = this.roadNetwork.getZoneToNodes().get(originLAD);
+		//List<Integer> destinationNodes = this.roadNetwork.getZoneToNodes().get(destinationLAD);
+			
+		//copy list and remove blacklisted nodes
+		List<Integer> listOfOriginNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(originLAD)); //the list is already sorted
+		//removing blacklisted nodes
+		for (Integer node: roadNetwork.getZoneToNodes().get(originLAD))
+			//check if any of the nodes is blacklisted
+			if (this.roadNetwork.isBlacklistedAsStartNode(node)) 
+				listOfOriginNodes.remove(node);
+		List<Integer> listOfDestinationNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(destinationLAD)); //the list is already sorted
+		//removing blacklisted nodes
+		for (Integer node: roadNetwork.getZoneToNodes().get(destinationLAD))
+			//check if any of the nodes is blacklisted
+			if (this.roadNetwork.isBlacklistedAsEndNode(node))
+				listOfDestinationNodes.remove(node);
+					
 		//System.out.printf("Generating routes between top %d nodes from %s to %s %n", topNodes, originLAD, destinationLAD);
-		for (int i = 0; i < topNodes && i < originNodes.size(); i++)
-			for (int j = 0; j < topNodes && j < destinationNodes.size(); j++)	{
+		for (int i = 0; i < topNodes && i < listOfOriginNodes.size(); i++)
+			for (int j = 0; j < topNodes && j < listOfDestinationNodes.size(); j++)	{
 				
-				int origin = originNodes.get(i);
-				int destination = destinationNodes.get(j);
+				int origin = listOfOriginNodes.get(i);
+				int destination = listOfDestinationNodes.get(j);
 				//System.out.printf("Generating routes between nodes %d and %d \n", origin, destination);
 				this.generateRouteSetNodeToNode(origin, destination);
 			}
@@ -858,7 +871,8 @@ public class RouteSetGenerator{
 			List<Integer> originNodes = 
 					this.roadNetwork.getZoneToNodes().get(originLAD);
 			for (int i= 0; i < originNodes.size(); i++)			this.generateRouteSetNodeToNode(originNodes.get(i), destinationNode);
-		} else LOGGER.warn("Problem in generating route set for freight!");
+		} else 
+			LOGGER.warn("Problem in generating route set for freight for originZone {} and destinationZone {}!", originFreightZone, destinationFreightZone);
 	}
 	
 	/**
@@ -914,7 +928,8 @@ public class RouteSetGenerator{
 			List<Integer> originNodes = 
 					this.roadNetwork.getZoneToNodes().get(originLAD);
 			for (int i= 0; i < topNodes && i < originNodes.size(); i++)			this.generateRouteSetNodeToNode(originNodes.get(i), destinationNode);
-		} else LOGGER.warn("Problem in generating route set for freight!");
+		} else 
+			LOGGER.warn("Problem in generating route set for freight for originZone {} and destinationZone {}!", originFreightZone, destinationFreightZone);
 	}
 	
 	/**
@@ -972,8 +987,8 @@ public class RouteSetGenerator{
 	 */
 	public void printStatistics() {
 
-		System.out.println("Number of OD pairs / route sets: " + this.getNumberOfRouteSets());
-		System.out.println("Total number of routes: " + this.getNumberOfRoutes());
+		LOGGER.info("Number of OD pairs / route sets: {}", this.getNumberOfRouteSets());
+		LOGGER.info("Total number of routes: {}", this.getNumberOfRoutes());
 	}
 	
 	/**
