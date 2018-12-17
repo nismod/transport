@@ -915,19 +915,34 @@ public class RouteSetGenerator{
 		//System.out.println("destinationLAD = " + destinationLAD + " destinationNode = " + destinationNode);
 		
 		//generate routes depending if it is node-to-node, LAD-to-LAD, node-to-LAD or LAD-to-node
-		if (originNode != null && destinationNode != null) 						this.generateRouteSetNodeToNode(originNode, destinationNode);
-		else if (originLAD != null && destinationLAD != null) 					this.generateRouteSetZoneToZone(originLAD, destinationLAD, topNodes);
-		else if (originNode != null && destinationLAD != null) {
+		if (originNode != null && destinationNode != null) {
+			this.generateRouteSetNodeToNode(originNode, destinationNode);
+		
+		} else if (originLAD != null && destinationLAD != null) {
+			this.generateRouteSetZoneToZone(originLAD, destinationLAD, topNodes);
+		
+		} else if (originNode != null && destinationLAD != null) {
 			//assume pre-sorted (sortGravityNodesFreight method must be used!)
-			List<Integer> destinationNodes = 
-					this.roadNetwork.getZoneToNodes().get(destinationLAD);
-			for (int j= 0; j < topNodes && j < destinationNodes.size(); j++)	this.generateRouteSetNodeToNode(originNode, destinationNodes.get(j));
-		}
-		else if (originLAD != null && destinationNode != null) {
+			List<Integer> listOfDestinationNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(destinationLAD)); //the list is already sorted
+			//removing blacklisted nodes
+			for (Integer node: roadNetwork.getZoneToNodes().get(destinationLAD))
+				//check if any of the nodes is blacklisted
+				if (this.roadNetwork.isBlacklistedAsEndNode(node))
+					listOfDestinationNodes.remove(node);
+			for (int j = 0; j < topNodes && j < listOfDestinationNodes.size(); j++)
+				this.generateRouteSetNodeToNode(originNode, listOfDestinationNodes.get(j));
+		
+		} else if (originLAD != null && destinationNode != null) {
 			//assume pre-sorted (sortGravityNodesFreight method must be used!)
-			List<Integer> originNodes = 
-					this.roadNetwork.getZoneToNodes().get(originLAD);
-			for (int i= 0; i < topNodes && i < originNodes.size(); i++)			this.generateRouteSetNodeToNode(originNodes.get(i), destinationNode);
+			List<Integer> listOfOriginNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(originLAD)); //the list is already sorted
+			//removing blacklisted nodes
+			for (Integer node: roadNetwork.getZoneToNodes().get(originLAD))
+				//check if any of the nodes is blacklisted
+				if (this.roadNetwork.isBlacklistedAsStartNode(node)) 
+					listOfOriginNodes.remove(node);
+			for (int i= 0; i < topNodes && i < listOfOriginNodes.size(); i++)
+				this.generateRouteSetNodeToNode(listOfOriginNodes.get(i), destinationNode);
+			
 		} else 
 			LOGGER.warn("Problem in generating route set for freight for originZone {} and destinationZone {}!", originFreightZone, destinationFreightZone);
 	}
