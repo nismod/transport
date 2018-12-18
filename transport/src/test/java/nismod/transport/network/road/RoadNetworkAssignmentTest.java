@@ -68,7 +68,10 @@ public class RoadNetworkAssignmentTest {
 		final URL AADFurl = new URL(props.getProperty("AADFurl"));
 
 		final String baseYearODMatrixFile = props.getProperty("baseYearODMatrixFile");
+		final String baseYearFreightMatrixFile = props.getProperty("baseYearFreightMatrixFile");
+		
 		final String passengerRoutesFile = props.getProperty("passengerRoutesFile");
+		final String freightRoutesFile = props.getProperty("freightRoutesFile");
 		final String temproRoutesFile = props.getProperty("temproRoutesFile");
 		final String outputFolder = props.getProperty("outputFolder");
 		
@@ -86,8 +89,9 @@ public class RoadNetworkAssignmentTest {
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
 
-		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
-		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
+		//final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
+		//Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
+		Zoning zoning = null;
 		
 		final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
 		final String unitCO2EmissionsFile = props.getProperty("unitCO2EmissionsFile");
@@ -98,8 +102,13 @@ public class RoadNetworkAssignmentTest {
 		final String timeOfDayDistributionFreightFile = props.getProperty("timeOfDayDistributionFreightFile");
 		final String baseFuelConsumptionRatesFile = props.getProperty("baseFuelConsumptionRatesFile");
 		final String relativeFuelEfficiencyFile = props.getProperty("relativeFuelEfficiencyFile");
+		final String defaultLinkTravelTimeFile = props.getProperty("defaultLinkTravelTimeFile");
 		final int BASE_YEAR = Integer.parseInt(props.getProperty("baseYear"));
 	
+		Map<TimeOfDay, Map<Integer, Double>> defaultLinkTravelTime = null;
+		if (defaultLinkTravelTimeFile != null) 
+			defaultLinkTravelTime = InputFileReader.readLinkTravelTimeFile(BASE_YEAR, defaultLinkTravelTimeFile);
+			
 		//create a road network assignment
 		RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork, 
 															zoning,
@@ -112,7 +121,7 @@ public class RoadNetworkAssignmentTest {
 															InputFileReader.readRelativeFuelEfficiencyFile(relativeFuelEfficiencyFile).get(BASE_YEAR),
 															InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFile).get(BASE_YEAR),
 															InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFreightFile).get(BASE_YEAR),
-															null,
+															defaultLinkTravelTime,
 															null,
 															null,
 															null,
@@ -129,9 +138,13 @@ public class RoadNetworkAssignmentTest {
 			
 		//RealODMatrixTempro odm = RealODMatrixTempro.createUnitMatrix(zoning);
 		//odm.deleteInterzonalFlows("E02006781"); //Isle of Scilly in Tempro
-		final String temproODMatrixFile = props.getProperty("temproODMatrixFile");
-		RealODMatrixTempro odm = new RealODMatrixTempro(temproODMatrixFile, zoning);
 		
+		//final String temproODMatrixFile = props.getProperty("temproODMatrixFile");
+		//RealODMatrixTempro odm = new RealODMatrixTempro(temproODMatrixFile, zoning);
+		FreightMatrix fm = new FreightMatrix(baseYearFreightMatrixFile);
+		System.out.println("Total freight flow: " + fm.getTotalIntFlow());
+		
+		roadNetwork.sortGravityNodesFreight();
 		
 		//odm.scaleMatrixValue(8.0);
 		//odm.printMatrixFormatted("Tempro unit OD matrix:", 2);
@@ -145,14 +158,17 @@ public class RoadNetworkAssignmentTest {
 //		rsg.printStatistics();
 		
 		//read routes
-		timeNow = System.currentTimeMillis();
-		rsg.readRoutesBinaryWithoutValidityCheck(temproRoutesFile);
+//		timeNow = System.currentTimeMillis();
+//		rsg.readRoutesBinaryWithoutValidityCheck(temproRoutesFile);
 //		rsg.readRoutesBinaryWithoutValidityCheck(passengerRoutesFile);
+		rsg.readRoutesBinaryGZIPpedWithoutValidityCheck(freightRoutesFile);
 		timeNow = System.currentTimeMillis() - timeNow;
 		System.out.printf("Routes read in %d milliseconds.\n", timeNow);
+		
 		rsg.printStatistics();
 		
-		rsg.calculateAllPathsizes();
+			
+		//rsg.calculateAllPathsizes();
 		rsg.generateSingleNodeRoutes();
 		
 		//set route choice parameters
@@ -164,7 +180,12 @@ public class RoadNetworkAssignmentTest {
 		params.setProperty("AVERAGE_INTERSECTION_DELAY", "0.8");
 		params.setProperty("DISTANCE_THRESHOLD", "200000.0");
 		
-		
+		List<Integer> originNodes = roadNetwork.getZoneToNodes().get("W06000002");
+		System.out.println(originNodes);
+		for (int node: originNodes) {
+			System.out.println("Node = " + node + " population: " + roadNetwork.getGravitatingWorkplacePopulation(node));
+		}
+				
 //		HashMap<TimeOfDay, RouteSetGenerator> routeStorage = new HashMap<TimeOfDay, RouteSetGenerator>();
 //		for (TimeOfDay hour: TimeOfDay.values()) {
 //			routeStorage.put(hour, new RouteSetGenerator(roadNetwork));
@@ -178,36 +199,40 @@ public class RoadNetworkAssignmentTest {
 		//}
 		
 		//rna.assignPassengerFlowsRouteChoice(odm, rsg, params);
-		rna.assignPassengerFlowsRouteChoiceTemproDistanceBased(odm, zoning, rsg, params);
-		
-		
+		//rna.assignPassengerFlowsRouteChoiceTemproDistanceBased(odm, zoning, rsg, params);
+		rna.assignFreightFlowsRouteChoice(fm, rsg, props);
 		
 		timeNow = System.currentTimeMillis() - timeNow;
-		System.out.printf("Passenger flows assigned in %d seconds.\n", timeNow / 1000);
+		System.out.printf("Freight flows assigned in %d seconds.\n", timeNow / 1000);
 		
+
 		rna.updateLinkVolumeInPCU();
 		rna.updateLinkVolumeInPCUPerTimeOfDay();
 		rna.updateLinkVolumePerVehicleType();
 		
-		rna.printRMSNstatistic();
-		rna.printGEHstatistic();
-		rna.printHourlyGEHstatistic();
+		//rna.printRMSNstatistic();
+		//rna.printGEHstatistic();
+		//rna.printHourlyGEHstatistic();
+		rna.printRMSNstatisticFreight();
+		rna.printGEHstatisticFreight();
+		//rna.printHourlyGEHstatistic();
 		
-		int count = 0;
-		for (Trip trip:	rna.getTripList()) {
-				if (trip instanceof TripMinor) {
-					count++;
-					System.out.println(((TripMinor)trip).getLength());
-				}
-		}
+		//int count = 0;
+		//for (Trip trip:	rna.getTripList()) {
+		//		if (trip instanceof TripMinor) {
+		//			count++;
+		//			System.out.println(((TripMinor)trip).getLength());
+		//		}
+		//}
+		//
+		//System.out.println(rna.getTripList().size());
+		//System.out.println(count);
+		//System.out.println(Arrays.toString(zoning.getTemproIDToCodeMap()));
 		
-		System.out.println(rna.getTripList().size());
-		System.out.println(count);
-		System.out.println(Arrays.toString(zoning.getTemproIDToCodeMap()));
+		//System.out.println("Total flows: " + odm.getSumOfFlows());
+		//System.out.println(odm.getUnsortedOrigins().size());
+		//System.out.println(odm.getUnsortedDestinations().size());
 		
-		System.out.println("Total flows: " + odm.getSumOfFlows());
-		System.out.println(odm.getUnsortedOrigins().size());
-		System.out.println(odm.getUnsortedDestinations().size());
 		
 //		rna.updateLinkVolumeInPCU();
 //		rna.updateLinkVolumeInPCUPerTimeOfDay();

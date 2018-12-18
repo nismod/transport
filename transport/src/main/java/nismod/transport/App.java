@@ -28,10 +28,12 @@ import nismod.transport.demand.DemandModel;
 import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.ODMatrixMultiKey;
 import nismod.transport.demand.RealODMatrixTempro;
+import nismod.transport.demand.RebalancedFreightMatrix;
 import nismod.transport.demand.RebalancedTemproODMatrix;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
+import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.optimisation.SPSA5;
 import nismod.transport.showcase.LandingGUI;
@@ -44,7 +46,6 @@ import nismod.transport.zone.Zoning;
 /**
  * NISMOD V2.0.0 Transport Model.
  * @author Milan Lovric
- *
  */
 public class App {
 
@@ -117,6 +118,16 @@ public class App {
 				.valueSeparator(' ')
 				.build();
 		options.addOption(estimateMatrix);
+		
+		Option estimateFreightMatrix = Option.builder("ef")
+				.longOpt("estimateFreightMatrix")
+				.argName("ITERATIONS")
+				.hasArg()
+				.numberOfArgs(1)
+				.desc("Estimate freight matrix with traffic counts.")
+				.valueSeparator(' ')
+				.build();
+		options.addOption(estimateFreightMatrix);
 		
 		Option optimiseMatrix = Option.builder("o")
 				.longOpt("optimiseMatrix")
@@ -191,6 +202,8 @@ public class App {
 			}
 
 			if (line.hasOption("p")) {
+				
+				LOGGER.info("Generating routes for passenger OD matrix.");
 
 				String[] values = line.getOptionValues("passengerRoutes");
 				
@@ -218,6 +231,8 @@ public class App {
 			}
 			
 			else if (line.hasOption("t")) {
+				
+				LOGGER.info("Generating routes for passenger tempro OD matrix.");
 
 				String[] values = line.getOptionValues("temproRoutes");
 
@@ -247,6 +262,8 @@ public class App {
 			}
 
 			else if (line.hasOption("f")) {
+				
+				LOGGER.info("Generating routes for freight OD matrix.");
 
 				String[] values = line.getOptionValues("freightRoutes");
 
@@ -273,6 +290,8 @@ public class App {
 			}
 			
 			if (line.hasOption("m")) {
+				
+				LOGGER.info("Merging two route files into one (and removing duplicates).");
 
 				String[] values = line.getOptionValues("mergeRoutes");
 				
@@ -293,6 +312,8 @@ public class App {
 			else if (line.hasOption("d")) LandingGUI.main(null);
 			
 			else if (line.hasOption("e")) {
+				
+				LOGGER.info("Estimating passenger tempro OD matrix using traffic counts.");
 				
 				String[] values = line.getOptionValues("estimateMatrix");
 				final String iterations = values[0];
@@ -363,7 +384,88 @@ public class App {
 				graph.saveToPNG("temproRebalancing.png");
 			}
 			
+			else if (line.hasOption("ef")) {
+				
+				LOGGER.info("Estimating freight OD matrix using traffic counts.");
+				
+				String[] values = line.getOptionValues("estimateFreightMatrix");
+				final String iterations = values[0];
+				
+				roadNetwork.sortGravityNodesFreight();
+						
+				//create route set generator
+				RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, props);
+				//final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
+				//final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
+				//Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
+
+				//generate single node routes
+				rsg.generateSingleNodeRoutes();
+				LOGGER.debug(rsg.getStatistics());
+				
+				//read tempro routes
+				final String freightRoutesFile = props.getProperty("freightRoutesFile");
+				rsg.readRoutesBinaryGZIPpedWithoutValidityCheck(freightRoutesFile);
+				LOGGER.debug(rsg.getStatistics());
+				//rsg.calculateAllPathsizes();
+				
+				final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
+				final String unitCO2EmissionsFile = props.getProperty("unitCO2EmissionsFile");
+				final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
+				final String AVFractionsFile = props.getProperty("autonomousVehiclesFile");
+				final String vehicleTypeToPCUFile = props.getProperty("vehicleTypeToPCUFile");
+				final String timeOfDayDistributionFile = props.getProperty("timeOfDayDistributionFile");
+				final String timeOfDayDistributionFreightFile = props.getProperty("timeOfDayDistributionFreightFile");
+				final String baseFuelConsumptionRatesFile = props.getProperty("baseFuelConsumptionRatesFile");
+				final String relativeFuelEfficiencyFile = props.getProperty("relativeFuelEfficiencyFile");
+				final String defaultLinkTravelTimeFile = props.getProperty("defaultLinkTravelTimeFile");
+				final int BASE_YEAR = Integer.parseInt(props.getProperty("baseYear"));
+			
+				Map<TimeOfDay, Map<Integer, Double>> defaultLinkTravelTime = null;
+				if (defaultLinkTravelTimeFile != null) 
+					defaultLinkTravelTime = InputFileReader.readLinkTravelTimeFile(BASE_YEAR, defaultLinkTravelTimeFile);
+				
+				//create a road network assignment
+				RoadNetworkAssignment rna = new RoadNetworkAssignment(roadNetwork,
+																	null,
+																	InputFileReader.readEnergyUnitCostsFile(energyUnitCostsFile).get(BASE_YEAR),
+																	InputFileReader.readUnitCO2EmissionFile(unitCO2EmissionsFile).get(BASE_YEAR),
+																	InputFileReader.readEngineTypeFractionsFile(engineTypeFractionsFile).get(BASE_YEAR),
+																	InputFileReader.readAVFractionsFile(AVFractionsFile).get(BASE_YEAR),
+																	InputFileReader.readVehicleTypeToPCUFile(vehicleTypeToPCUFile),
+																	InputFileReader.readEnergyConsumptionParamsFile(baseFuelConsumptionRatesFile),
+																	InputFileReader.readRelativeFuelEfficiencyFile(relativeFuelEfficiencyFile).get(BASE_YEAR),
+																	InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFile).get(BASE_YEAR),
+																	InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFreightFile).get(BASE_YEAR),
+																	defaultLinkTravelTime,
+																	null,
+																	null,
+																	null,
+																	props);
+				
+				final String baseYearFreightMatrixFile = props.getProperty("baseYearFreightMatrixFile");
+				RebalancedFreightMatrix rfm = new RebalancedFreightMatrix(baseYearFreightMatrixFile, rna, rsg, props);
+				
+				rfm.iterate(Integer.parseInt(iterations)); //all matrices will be saved, the latest one is the one
+				
+				DefaultCategoryDataset lineDataset = new DefaultCategoryDataset();
+				Map<VehicleType, List<Double>> RMSNvalues = rfm.getRMSNvalues();
+				for (int i = 0; i < RMSNvalues.get(VehicleType.VAN).size(); i++)
+					lineDataset.addValue(RMSNvalues.get(VehicleType.VAN).get(i), "VAN", Integer.toString(i));
+				for (int i = 0; i < RMSNvalues.get(VehicleType.RIGID).size(); i++)
+					lineDataset.addValue(RMSNvalues.get(VehicleType.RIGID).get(i), "RIGID", Integer.toString(i));
+				for (int i = 0; i < RMSNvalues.get(VehicleType.ARTIC).size(); i++)
+					lineDataset.addValue(RMSNvalues.get(VehicleType.ARTIC).get(i), "ARTIC", Integer.toString(i));
+				
+				LineVisualiser graph = new LineVisualiser(lineDataset, "RMSN values");
+				graph.setSize(600, 400);
+				graph.setVisible(true);
+				graph.saveToPNG("freightRebalancing.png");
+			}
+			
 			else if (line.hasOption("o")) {
+				
+				LOGGER.info("Optimising passenger OD matrix using SPSA algorithm.");
 				
 				String[] values = line.getOptionValues("optimiseMatrix");
 				final String iterations = values[0];
@@ -447,6 +549,8 @@ public class App {
 			}
 
 			else if (line.hasOption("b") || line.hasOption("r")) { //run the main demand model
+				
+				LOGGER.info("Running the main demand model.");
 
 				final String baseYear = props.getProperty("baseYear");
 				//final String fromYear = props.getProperty("fromYear");

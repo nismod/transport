@@ -2171,7 +2171,7 @@ public class RoadNetworkAssignment {
 				} else if (originNode != null && destinationNode != null) { //point to point
 
 					if (originNode == destinationNode) 
-						LOGGER.debug("Point-to-point freight trip in which both points are mapped to the same network node.");
+						LOGGER.trace("Point-to-point freight trip in which both points are mapped to the same network node.");
 				}
 
 				if (originNode == null)

@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.sanselan.ImageWriteException;
 import org.junit.Test;
@@ -21,13 +22,35 @@ public class FreightMatrixTest {
 	
 	public static void main( String[] args ) throws FileNotFoundException, IOException, ImageWriteException {
 		
+		//CREATE UNIT FREIGHT MATRIX
 		FreightMatrix fm = FreightMatrix.createUnitBYFMMatrix();
 		//fm.printMatrixFormatted("Unit freight matrix:");
 
 		System.out.println("Origins: " + fm.getSortedOrigins().size());
 		System.out.println("Destinations: " + fm.getUnsortedDestinations().size());
-		System.out.println("Total flow: " + fm.getTotalIntFlow());
-		fm.saveMatrixFormatted("unitFreightMatrix.csv");
+		System.out.println("Total flow unit Matrix: " + fm.getTotalIntFlow());
+		//fm.saveMatrixFormatted("unitFreightMatrix.csv");
+		
+		String freightMatrixFile = "./src/main/full/data/csvfiles/freightMatrix2.csv";
+		FreightMatrix fm2 = new FreightMatrix(freightMatrixFile);
+		System.out.println("Total flow: " + fm2.getTotalIntFlow());
+		
+		List<Integer> origins =	fm.getUnsortedOrigins();
+		List<Integer> destinations = fm.getUnsortedDestinations();
+		List<Integer> vehicles = fm.getVehicleTypes();
+		
+		for (int origin: origins)
+			for (int destination: destinations)
+				for (int vehicleType: vehicles) 
+					if (fm2.getFlow(origin, destination, vehicleType) == 0)
+						if (fm.getFlow(origin, destination, vehicleType) == 1)
+							fm2.setFlow(origin, destination, vehicleType, 1);
+		
+		fm2.deleteInterzonalFlows(645); //from BYFM dataset
+		
+		System.out.println("Total flow: " + fm2.getTotalIntFlow());
+		String freightMatrixOutputFile = "./src/main/full/data/csvfiles/freightMatrixBYFMPlusUnit.csv";
+		fm2.saveMatrixFormatted(freightMatrixOutputFile);
 	}
 
 	@Test
