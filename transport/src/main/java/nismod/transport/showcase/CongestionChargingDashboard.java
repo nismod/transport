@@ -120,7 +120,7 @@ public class CongestionChargingDashboard extends JFrame {
 	private static Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> baseFuelConsumptionRates;
 	private static HashMap<Integer, Map<VehicleType, Map<EngineType, Double>>> relativeFuelEfficiency;
 	private static Map<Integer, Map<TimeOfDay, Double>> timeOfDayDistribution;
-	private static Map<Integer, Map<TimeOfDay, Double>> timeOfDayDistributionFreight;
+	private static Map<Integer, Map<VehicleType, Map<TimeOfDay, Double>>> timeOfDayDistributionFreight;
 	private static HashMap<Integer, Map<EnergyType, Double>> yearToEnergyUnitCosts;
 	private static HashMap<Integer, Map<EnergyType, Double>> yearToUnitCO2Emissions;
 	private static HashMap<Integer, Map<VehicleType, Map<EngineType, Double>>> yearToEngineTypeFractions;
@@ -1100,7 +1100,7 @@ public class CongestionChargingDashboard extends JFrame {
 		baseFuelConsumptionRates = InputFileReader.readEnergyConsumptionParamsFile(baseFuelConsumptionRatesFile);
 		relativeFuelEfficiency = InputFileReader.readRelativeFuelEfficiencyFile(relativeFuelEfficiencyFile);
 		timeOfDayDistribution = InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFile);
-		timeOfDayDistributionFreight = InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFreightFile);
+		timeOfDayDistributionFreight = InputFileReader.readTimeOfDayDistributionFreightFile(timeOfDayDistributionFreightFile);
 		yearToEnergyUnitCosts = InputFileReader.readEnergyUnitCostsFile(energyUnitCostsFile);
 		yearToUnitCO2Emissions = InputFileReader.readEnergyUnitCostsFile(unitCO2EmissionsFile);
 		yearToEngineTypeFractions = InputFileReader.readEngineTypeFractionsFile(engineTypeFractionsFile);

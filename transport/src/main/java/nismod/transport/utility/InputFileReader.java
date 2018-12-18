@@ -202,7 +202,7 @@ public class InputFileReader {
 	}
 	
 	/**
-	 * Reads time of day distribution file file.
+	 * Reads time of day distribution file for passenger car vehicles.
 	 * @param fileName File name.
 	 * @return Time of day distribution.
 	 */
@@ -247,6 +247,63 @@ public class InputFileReader {
 		return map;
 	}
 	
+	/**
+	 * Reads time of day distribution file for freight vehicles.
+	 * @param fileName File name.
+	 * @return Time of day distribution.
+	 */
+	public static Map<Integer, Map<VehicleType, Map<TimeOfDay, Double>>> readTimeOfDayDistributionFreightFile (String fileName) {
+
+		Map<Integer, Map<VehicleType, Map<TimeOfDay, Double>>> map = new HashMap<Integer, Map<VehicleType, Map<TimeOfDay, Double>>>();
+		CSVParser parser = null;
+		try {
+			parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
+			//System.out.println(parser.getHeaderMap().toString());
+			Set<String> keySet = parser.getHeaderMap().keySet();
+			keySet.remove("year");
+			keySet.remove("vehicle");
+			//System.out.println("keySet = " + keySet);
+			for (CSVRecord record : parser) {
+				//System.out.println(record);
+				int year = Integer.parseInt(record.get(0));
+				
+				Map<VehicleType, Map<TimeOfDay, Double>> vehicleToTimeOfDayFractions = map.get(year);
+				if (vehicleToTimeOfDayFractions == null) { 
+					vehicleToTimeOfDayFractions = new EnumMap<>(VehicleType.class);
+					map.put(year, vehicleToTimeOfDayFractions);
+				}
+
+				VehicleType vht = VehicleType.valueOf(record.get(1));
+				Map<TimeOfDay, Double> timeDistribution = vehicleToTimeOfDayFractions.get(vht);
+				if (timeDistribution == null) { 
+					timeDistribution = new EnumMap<>(TimeOfDay.class);
+					vehicleToTimeOfDayFractions.put(vht, timeDistribution);
+				}
+					
+				for (String time: keySet) {
+					TimeOfDay hour = TimeOfDay.valueOf(time);
+					Double frequency = Double.parseDouble(record.get(time));
+					timeDistribution.put(hour, frequency);
+				}
+			}
+		} catch (FileNotFoundException e) {
+			LOGGER.error(e);
+		} catch (IOException e) {
+			LOGGER.error(e);
+		} finally {
+			try {
+				parser.close();
+			} catch (IOException e) {
+				LOGGER.error(e);
+			}
+		}
+		
+		LOGGER.debug("Time of day distribution:");
+		LOGGER.debug(map);
+
+		return map;
+	}
+
 	/**
 	 * Reads energy unit costs file.
 	 * @param fileName File name.

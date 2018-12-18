@@ -126,7 +126,7 @@ public class RoadNetworkAssignment {
 	private Map<VehicleType, Double> AVFractions;
 
 	private Map<TimeOfDay, Double> timeOfDayDistribution;
-	private Map<TimeOfDay, Double> timeOfDayDistributionFreight;
+	private Map<VehicleType, Map<TimeOfDay, Double>> timeOfDayDistributionFreight;
 
 	private Map<EnergyType, Double> unitCO2Emissions;
 
@@ -186,7 +186,7 @@ public class RoadNetworkAssignment {
 			Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParams,
 			Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiencies,
 			Map<TimeOfDay, Double> timeOfDayDistribution,
-			Map<TimeOfDay, Double> timeOfDayDistributionFreight, 
+			Map<VehicleType, Map<TimeOfDay, Double>> timeOfDayDistributionFreight, 
 			Map<TimeOfDay, Map<Integer, Double>> defaultLinkTravelTime, 
 			HashMap<String, Double> areaCodeProbabilities, 
 			HashMap<String, Double> workplaceZoneProbabilities,
@@ -1515,16 +1515,16 @@ public class RoadNetworkAssignment {
 			//for each trip
 			for (int i=0; i < (flow + remainder); i++) {
 
-				//choose time of day
-				TimeOfDay hour = this.chooseTimeOfDay(timeOfDayDistributionFreight);
-				if (hour == null) LOGGER.warn("Time of day not chosen!");
-
 				//get freight vehicle type from the freight matrix value
 				VehicleType fvht = VehicleType.values()[vehicleType];
 				//choose actual vehicle type (autonomous or non-autonomous)
 				VehicleType vht = this.chooseFreightVehicleType(fvht, this.AVFractions);
 				if (vht == null) LOGGER.warn("Vehicle type not chosen!");
 
+				//choose time of day
+				TimeOfDay hour = this.chooseTimeOfDay(timeOfDayDistributionFreight.get(fvht));
+				if (hour == null) LOGGER.warn("Time of day not chosen!");
+				
 				//choose engine
 				EngineType engine = this.chooseEngineType(engineTypeFractions.get(vht));
 				if (engine == null) LOGGER.warn("Engine type not chosen!");
@@ -1733,16 +1733,16 @@ public class RoadNetworkAssignment {
 			//for each trip
 			for (int i=0; i < (flow + remainder); i++) {
 
-				//choose time of day
-				TimeOfDay hour = this.chooseTimeOfDay(timeOfDayDistributionFreight);
-				if (hour == null) LOGGER.warn("Time of day not chosen!");
-
 				//get freight vehicle type from the freight matrix value
 				VehicleType fvht = VehicleType.values()[vehicleType];
 				//choose actual vehicle type (autonomous or non-autonomous)
 				VehicleType vht = this.chooseFreightVehicleType(fvht, this.AVFractions);
 				if (vht == null) LOGGER.warn("Vehicle type not chosen!");
 
+				//choose time of day
+				TimeOfDay hour = this.chooseTimeOfDay(timeOfDayDistributionFreight.get(fvht));
+				if (hour == null) LOGGER.warn("Time of day not chosen!");
+				
 				//choose engine
 				EngineType engine = this.chooseEngineType(engineTypeFractions.get(vht));
 				if (engine == null) LOGGER.warn("Engine type not chosen!");
@@ -1955,15 +1955,15 @@ public class RoadNetworkAssignment {
 			//for each trip
 			for (int i=0; i < (flow + remainder); i++) {
 
-				//choose time of day
-				TimeOfDay hour = this.chooseTimeOfDay(timeOfDayDistributionFreight);
-				if (hour == null) LOGGER.warn("Time of day not chosen!");
-
 				//get freight vehicle type from the freight matrix value
 				VehicleType fvht = VehicleType.values()[vehicleType];
 				//choose actual vehicle type (autonomous or non-autonomous)
 				VehicleType vht = this.chooseFreightVehicleType(fvht, this.AVFractions);
 				if (vht == null) LOGGER.warn("Vehicle type not chosen!");
+
+				//choose time of day
+				TimeOfDay hour = this.chooseTimeOfDay(timeOfDayDistributionFreight.get(fvht));
+				if (hour == null) LOGGER.warn("Time of day not chosen!");
 
 				//choose engine
 				EngineType engine = this.chooseEngineType(engineTypeFractions.get(vht));

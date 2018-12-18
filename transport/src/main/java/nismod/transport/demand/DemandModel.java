@@ -54,7 +54,7 @@ public class DemandModel {
 	private Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> baseFuelConsumptionRates;
 	private HashMap<Integer, Map<VehicleType, Map<EngineType, Double>>> yearToRelativeFuelEfficiencies;
 	private Map<Integer, Map<TimeOfDay, Double>> yearToTimeOfDayDistribution;
-	private Map<Integer, Map<TimeOfDay, Double>> yearToTimeOfDayDistributionFreight;
+	private Map<Integer, Map<VehicleType, Map<TimeOfDay, Double>>> yearToTimeOfDayDistributionFreight;
 	private HashMap<Integer, ODMatrixMultiKey> yearToPassengerODMatrix; //passenger demand
 	private HashMap<Integer, FreightMatrix> yearToFreightODMatrix; //freight demand
 	private HashMap<Integer, SkimMatrix> yearToTimeSkimMatrix;
@@ -164,7 +164,7 @@ public class DemandModel {
 		this.vehicleTypeToPCU = InputFileReader.readVehicleTypeToPCUFile(vehicleTypeToPCUFile);
 		this.baseFuelConsumptionRates = InputFileReader.readEnergyConsumptionParamsFile(baseFuelConsumptionRatesFile);
 		this.yearToTimeOfDayDistribution = InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFile);
-		this.yearToTimeOfDayDistributionFreight = InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFreightFile);
+		this.yearToTimeOfDayDistributionFreight = InputFileReader.readTimeOfDayDistributionFreightFile(timeOfDayDistributionFreightFile);
 		this.yearToRelativeFuelEfficiencies = InputFileReader.readRelativeFuelEfficiencyFile(relativeFuelEfficiencyFile);
 		
 		//load Tempro matrix template if necessary

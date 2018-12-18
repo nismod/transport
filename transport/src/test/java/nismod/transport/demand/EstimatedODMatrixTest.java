@@ -91,7 +91,7 @@ public class EstimatedODMatrixTest {
 															InputFileReader.readEnergyConsumptionParamsFile(baseFuelConsumptionRatesFile),
 															InputFileReader.readRelativeFuelEfficiencyFile(relativeFuelEfficiencyFile).get(BASE_YEAR),
 															InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFile).get(BASE_YEAR),
-															InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFreightFile).get(BASE_YEAR),
+															InputFileReader.readTimeOfDayDistributionFreightFile(timeOfDayDistributionFreightFile).get(BASE_YEAR),
 															null,
 															null,
 															null,
