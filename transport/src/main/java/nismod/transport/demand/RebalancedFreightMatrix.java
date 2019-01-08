@@ -114,16 +114,16 @@ public class RebalancedFreightMatrix extends FreightMatrix {
 	        }
 
 		for (int i=0; i<number; i++) {
+			LOGGER.info("Iteration of freight OD matrix estimation: {}", i);
 			this.assignAndCalculateRMSN();
 			this.scaleToTrafficCounts();
 			this.saveMatrixFormatted(file + "/freightMatrixAfterIteration" + i + ".csv");
-			this.rna.saveLinkTravelTimes(2015, file + "/linkTravelTimesWithFreightAfterIteration" + i + ".csv");
+			//this.rna.saveLinkTravelTimes(2015, file + "/linkTravelTimesWithFreightAfterIteration" + i + ".csv");
 		}
 		
 		//assign ones more to get the latest RMSN
 		this.assignAndCalculateRMSN();
 	}
-
 
 	/**
 	 * Creates a unit OD matrix (all ones).
@@ -162,7 +162,7 @@ public class RebalancedFreightMatrix extends FreightMatrix {
 		rna.updateLinkVolumeInPCU();
 		rna.updateLinkVolumeInPCUPerTimeOfDay();
 		rna.updateLinkVolumePerVehicleType();
-		rna.updateLinkTravelTimes(0.9);
+		//rna.updateLinkTravelTimes(0.9);
 		
 		Map<VehicleType, Double> RMSN = this.rna.calculateRMSNforFreightCounts();
 		this.RMSNvalues.get(VehicleType.VAN).add(RMSN.get(VehicleType.VAN));
