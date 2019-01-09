@@ -623,7 +623,7 @@ public class App {
 	//					rsg.readRoutesBinaryWithoutValidityCheck(temproRoutesFile);
 						rsg.readRoutesBinaryGZIPpedWithoutValidityCheck(temproRoutesFile);
 						LOGGER.debug(rsg.getStatistics());
-						rsg.readRoutesBinaryWithoutValidityCheck(freightRoutesFile);
+						rsg.readRoutesBinaryGZIPpedWithoutValidityCheck(freightRoutesFile);
 						LOGGER.debug(rsg.getStatistics());
 					}
 				} else if (assignmentType.equals("lad")) {
