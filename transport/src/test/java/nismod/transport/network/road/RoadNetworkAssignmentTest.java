@@ -699,7 +699,7 @@ public class RoadNetworkAssignmentTest {
 				vehicleKilometres += volume * length; 
 		}
 		System.out.println("Total vehicle-kilometres: " + vehicleKilometres);
-		assertEquals("Vehicle kilometres are correct", vehicleKilometres, rna.calculateZonalVehicleKilometresPerVehicleType().get("E06000045").get(VehicleType.CAR), EPSILON);
+		assertEquals("Vehicle kilometres are correct", vehicleKilometres, rna.calculateZonalVehicleKilometresPerVehicleType().get("E06000045").get(VehicleType.CAR), PRECISION);
 		
 		double vehicleKilometresWithAccessEgress = 0.0;
 		for (Trip trip: rna.getTripList()) {
@@ -717,7 +717,7 @@ public class RoadNetworkAssignmentTest {
 		
 		}
 		System.out.println("Total vehicle-kilometres: " + vehicleKilometresWithAccessEgress);
-		assertEquals("Vehicle kilometres with access and egress are correct", vehicleKilometresWithAccessEgress, rna.calculateZonalVehicleKilometresPerVehicleTypeFromTripList(true).get("E06000045").get(VehicleType.CAR), EPSILON*100);
+		assertEquals("Vehicle kilometres with access and egress are correct", vehicleKilometresWithAccessEgress, rna.calculateZonalVehicleKilometresPerVehicleTypeFromTripList(true).get("E06000045").get(VehicleType.CAR), PRECISION);
 		
 		System.out.println("Trip list: ");
 		ArrayList<Trip> tripList = rna.getTripList();
@@ -1193,7 +1193,8 @@ public class RoadNetworkAssignmentTest {
 
 		System.out.println("Link volumes in PCU:");
 		System.out.println(rna.getLinkVolumeInPCU());
-
+		
+		final double PRECISION = 1e-6;
 		for (String zone: roadNetwork.getZoneToNodes().keySet()) {
 
 			double zonalVehicleKilometres = 0.0;
@@ -1213,7 +1214,7 @@ public class RoadNetworkAssignmentTest {
 					}
 				}
 			System.out.printf("Total vehicle-kilometres for zone %s: %f %n", zone, zonalVehicleKilometres);
-			assertEquals("Zonal vehicle kilometres are correct", zonalVehicleKilometres, rna.calculateZonalVehicleKilometresPerVehicleType().get(zone).get(VehicleType.CAR), EPSILON);
+			assertEquals("Zonal vehicle kilometres are correct", zonalVehicleKilometres, rna.calculateZonalVehicleKilometresPerVehicleType().get(zone).get(VehicleType.CAR), PRECISION);
 		}
 		
 		//TEST TRIP LIST
@@ -1265,7 +1266,7 @@ public class RoadNetworkAssignmentTest {
 				double volume = hourlyVolumes[edgeID];
 				sum += volume;
 			}
-		assertEquals("PCU flows for each edge are correct", linkVolumesInPCU[edgeID], sum, EPSILON);
+		assertEquals("PCU flows for each edge are correct", linkVolumesInPCU[edgeID], sum, PRECISION);
 		}
 		
 		//rna.saveHourlyCarVolumes(2015, "hourlyCarVolumes.csv");
