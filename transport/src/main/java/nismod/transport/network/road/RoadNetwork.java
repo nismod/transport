@@ -316,6 +316,7 @@ public class RoadNetwork {
 		LOGGER.info("Checking the admissibility of edge lenghts by comparing them to a straight line distance.");
 		
 		int counter = 0;
+		double bendinessSum = 0.0;
 		for (Object o: this.network.getEdges()) {
 			DirectedEdge edge = (DirectedEdge) o;
 			DirectedNode fromNode = edge.getInNode();
@@ -338,9 +339,13 @@ public class RoadNetwork {
 				this.edgeLengths[edge.getID()] = distance; //write into instance map
 				counter++;
 			}
+			
+			double bendiness = length / distance;
+			bendinessSum += bendiness;
 		}
-		if (counter > 0)
-			LOGGER.debug("{} edge lengths were corrected with a calculated straight line distance.", counter);
+		
+		LOGGER.debug("{} edge lengths were corrected with a calculated straight line distance.", counter);
+		LOGGER.info("Average road bendiness factor (actual length / straight-line distance): {}", bendinessSum / this.network.getEdges().size());
 	}
 		
 	/**
