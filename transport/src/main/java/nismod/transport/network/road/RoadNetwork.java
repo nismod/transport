@@ -631,7 +631,6 @@ public class RoadNetwork {
 		}
 		
 		return featureSource.getFeatures();
-		
 	}
 	
 //	/**

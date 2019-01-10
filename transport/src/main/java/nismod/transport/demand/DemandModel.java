@@ -16,6 +16,7 @@ import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.map.MultiKeyMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.geotools.data.simple.SimpleFeatureCollection;
 
 import nismod.transport.decision.Intervention;
 import nismod.transport.network.road.RoadNetwork;
@@ -1304,6 +1305,7 @@ public class DemandModel {
 		String zonalTemporalEVTripStartsFile = this.props.getProperty("zonalTemporalEVTripStartsFile");
 		String zonalTemporalEVTripElectricityFile = this.props.getProperty("zonalTemporalEVTripElectricityFile");
 		String tripsFile = this.props.getProperty("tripsFile");
+		String outputNetworkFile = this.props.getProperty("outputNetworkFile");
 	
 		if (year == Integer.parseInt(baseYear)) { //rename output files for base year
 			predictedODMatrixFile = "baseYearODMatrix.csv";
@@ -1350,6 +1352,25 @@ public class DemandModel {
 		
 		outputFile = file.getPath() + File.separator + zonalTemporalEVTripElectricityFile;
 		this.yearToRoadNetworkAssignment.get(year).saveZonalTemporalCarElectricity(year, 1.0, outputFile);
+		
+		//before saving output network file - make sure correct interventions are installed!
+		if (interventions != null) 
+			for (Intervention i: interventions) {
+				if (i.getStartYear() <= year && i.getEndYear() >= year && !i.getState())				i.install(this);
+				if (i.getEndYear() < year && i.getState() || i.getStartYear() > year && i.getState()) 	i.uninstall(this);
+			}
+		
+		outputFile = file.getPath() + File.separator + outputNetworkFile;
+		double[] capUtil = this.yearToRoadNetworkAssignment.get(year).calculateDirectionAveragedPeakLinkCapacityUtilisation();
+		Map<Integer, Double> capUtilMap = new HashMap<Integer, Double>();
+		for (int edgeID = 0; edgeID < capUtil.length; edgeID++)
+			capUtilMap.put(edgeID, capUtil[edgeID]);
+		try {
+			LOGGER.debug("Saving road network shapefile for year {}.", year);
+			SimpleFeatureCollection sfc = roadNetwork.createNetworkFeatureCollection(capUtilMap, "CapUtil", outputFile);
+		} catch (IOException e) {
+			LOGGER.error("Error while saving road network for year {}",  year);
+		}
 	}
 	
 	/**
