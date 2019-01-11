@@ -1037,10 +1037,11 @@ public class RoadNetworkTest {
 			DirectedEdge edge = (DirectedEdge) iter.next();
 			SimpleFeature sf = (SimpleFeature) edge.getObject(); 
 			String roadNumber = (String) sf.getAttribute("RoadNumber");
+			String wayType = (String) sf.getAttribute("ORWayType");
 			if (roadNumber.charAt(0) == 'M') {//motorway
-				assertEquals("The number of lanes is correct for the road type", roadNetwork.getNumberOfLanesMRoad(), roadNetwork.getNumberOfLanes()[edge.getID()]);
+				assertEquals("The number of lanes is correct for the road type", roadNetwork.getNumberOfLanesMRoad(wayType), roadNetwork.getNumberOfLanes()[edge.getID()]);
 			} else if (roadNumber.charAt(0) == 'A') {//A road
-				assertEquals("The number of lanes is correct for the road type", roadNetwork.getNumberOfLanesARoad(), roadNetwork.getNumberOfLanes()[edge.getID()]);
+				assertEquals("The number of lanes is correct for the road type", roadNetwork.getNumberOfLanesARoad(wayType), roadNetwork.getNumberOfLanes()[edge.getID()]);
 			} else {//ferry
 				assertEquals("The number of lanes for ferries is 0", 0, roadNetwork.getNumberOfLanes()[edge.getID()]);
 			}

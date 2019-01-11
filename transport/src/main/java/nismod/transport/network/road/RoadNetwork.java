@@ -126,8 +126,15 @@ public class RoadNetwork {
 	public double freeFlowSpeedMRoad; //kph
 	public double freeFlowSpeedARoad; //kph
 	public double averageSpeedFerry; //kph
-	public int numberOfLanesMRoad; //for one direction
-	public int numberOfLanesARoad; //for one direction
+	public int numberOfLanesARoadSingleCarriageway; //for one direction
+	public int numberOfLanesARoadDualCarriageway; //for one direction
+	public int numberOfLanesARoadCollapsedDualCarriageway; //for one direction
+	public int numberOfLanesARoadSlipRoad; //for one direction
+	public int numberOfLanesARoadRoundabout; //for one direction
+	public int numberOfLanesMRoadDualCarriageway; //for one direction
+	public int numberOfLanesMRoadCollapsedDualCarriageway; //for one direction
+	public int numberOfLanesMRoadSlipRoad; //for one direction
+	
 	public int maximumEdgeID; //for the entire network (include roads developed in the future).
 	public int maximumNodeID; //for the entire network
 	private double accessEgressFactor;
@@ -161,8 +168,16 @@ public class RoadNetwork {
 		this.freeFlowSpeedMRoad = Double.parseDouble(params.getProperty("FREE_FLOW_SPEED_M_ROAD"));
 		this.freeFlowSpeedARoad = Double.parseDouble(params.getProperty("FREE_FLOW_SPEED_A_ROAD"));
 		this.averageSpeedFerry = Double.parseDouble(params.getProperty("AVERAGE_SPEED_FERRY"));
-		this.numberOfLanesMRoad = Integer.parseInt(params.getProperty("NUMBER_OF_LANES_M_ROAD"));
-		this.numberOfLanesARoad = Integer.parseInt(params.getProperty("NUMBER_OF_LANES_A_ROAD"));
+
+		this.numberOfLanesARoadSingleCarriageway = Integer.parseInt(params.getProperty("NUMBER_OF_LANES_A_ROAD_SC"));
+		this.numberOfLanesARoadDualCarriageway = Integer.parseInt(params.getProperty("NUMBER_OF_LANES_A_ROAD_DC"));
+		this.numberOfLanesARoadCollapsedDualCarriageway = Integer.parseInt(params.getProperty("NUMBER_OF_LANES_A_ROAD_CDC"));
+		this.numberOfLanesARoadSlipRoad = Integer.parseInt(params.getProperty("NUMBER_OF_LANES_A_ROAD_SR"));
+		this.numberOfLanesARoadRoundabout = Integer.parseInt(params.getProperty("NUMBER_OF_LANES_A_ROAD_R"));
+		this.numberOfLanesMRoadDualCarriageway = Integer.parseInt(params.getProperty("NUMBER_OF_LANES_M_ROAD_DC"));
+		this.numberOfLanesMRoadCollapsedDualCarriageway = Integer.parseInt(params.getProperty("NUMBER_OF_LANES_M_ROAD_CDC"));
+		this.numberOfLanesMRoadSlipRoad = Integer.parseInt(params.getProperty("NUMBER_OF_LANES_M_ROAD_SR"));
+
 		this.maximumEdgeID = Integer.parseInt(params.getProperty("MAXIMUM_EDGE_ID"));
 		this.maximumNodeID = Integer.parseInt(params.getProperty("MAXIMUM_NODE_ID"));
 		this.accessEgressFactor = Double.parseDouble(params.getProperty("ACCESS_EGRESS_LAD_DISTANCE_SCALING_FACTOR"));
@@ -1647,14 +1662,34 @@ public class RoadNetwork {
 		return this.averageSpeedFerry;
 	}
 	
-	public int getNumberOfLanesMRoad() {
+	public int getNumberOfLanesMRoad(String wayType) {
 		
-		return this.numberOfLanesMRoad;
+		int lanes = 0;
+		if (wayType.equals("DC"))
+			lanes = this.numberOfLanesMRoadDualCarriageway;
+		else if (wayType.equals("CDC"))
+			lanes = this.numberOfLanesMRoadCollapsedDualCarriageway;
+		else if (wayType.equals("SR"))
+			lanes = this.numberOfLanesMRoadSlipRoad;
+		
+		return lanes;
 	}
 	
-	public int getNumberOfLanesARoad() {
+	public int getNumberOfLanesARoad(String wayType) {
 		
-		return this.numberOfLanesARoad;
+		int lanes = 0;
+		if (wayType.equals("SC"))
+			lanes = this.numberOfLanesARoadSingleCarriageway;
+		if (wayType.equals("DC"))
+			lanes = this.numberOfLanesARoadDualCarriageway;
+		else if (wayType.equals("CDC"))
+			lanes = this.numberOfLanesARoadCollapsedDualCarriageway;
+		else if (wayType.equals("SR"))
+			lanes = this.numberOfLanesARoadSlipRoad;
+		else if (wayType.equals("R"))
+			lanes = this.numberOfLanesARoadRoundabout;
+			
+		return lanes;
 	}
 			
 	/* (non-Javadoc)
@@ -2185,15 +2220,35 @@ public class RoadNetwork {
 		Iterator iter = this.network.getEdges().iterator();
 		while(iter.hasNext()) {
 			
-			Edge edge = (Edge) iter.next();
+			DirectedEdge edge = (DirectedEdge) iter.next();
+			SimpleFeature sf = (SimpleFeature) edge.getObject();
+			String wayType = (String) sf.getAttribute("ORWayType");
+					
 			int edgeID = edge.getID();
 			EdgeType edgeType = this.edgesType[edgeID];
 			Integer lanes = 0;
-			if (edgeType == EdgeType.MOTORWAY) //motorway
-				lanes = numberOfLanesMRoad;
-			else if (edgeType == EdgeType.AROAD) //A-road
-				lanes = numberOfLanesARoad;
-			else if (edgeType == EdgeType.FERRY)//ferry
+			if (edgeType == EdgeType.MOTORWAY) {//motorway
+				
+				if (wayType.equals("DC"))
+					lanes = this.numberOfLanesMRoadDualCarriageway;
+				else if (wayType.equals("CDC"))
+					lanes = this.numberOfLanesMRoadCollapsedDualCarriageway;
+				else if (wayType.equals("SR"))
+					lanes = this.numberOfLanesMRoadSlipRoad;
+
+			} else if (edgeType == EdgeType.AROAD) {//A-road
+				if (wayType.equals("SC"))
+					lanes = this.numberOfLanesARoadSingleCarriageway;
+				if (wayType.equals("DC"))
+					lanes = this.numberOfLanesARoadDualCarriageway;
+				else if (wayType.equals("CDC"))
+					lanes = this.numberOfLanesARoadCollapsedDualCarriageway;
+				else if (wayType.equals("SR"))
+					lanes = this.numberOfLanesARoadSlipRoad;
+				else if (wayType.equals("R"))
+					lanes = this.numberOfLanesARoadRoundabout;
+			
+			} else if (edgeType == EdgeType.FERRY)//ferry
 				lanes = 0;
 			else {
 				LOGGER.warn("Link with unknown road type: {}", edgeID);
