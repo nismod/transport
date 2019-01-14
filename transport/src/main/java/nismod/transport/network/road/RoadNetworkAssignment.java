@@ -1183,7 +1183,7 @@ public class RoadNetworkAssignment {
 						//RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTime);
 						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
 						if (fastestPath == null) {
-							LOGGER.warn("Not even aStar could find a route between node {} and node {}!", originNode, destinationNode);
+//							LOGGER.warn("Not even aStar could find a route between node {} and node {}!", originNode, destinationNode);
 							continue;
 						}
 
@@ -1659,9 +1659,6 @@ public class RoadNetworkAssignment {
 
 					int multiplier = 1;
 					if (i < flow) multiplier = (int) Math.round(1 / this.assignmentFraction);
-					counterAssignedTrips += multiplier;
-
-					//trip was assigned
 					counterAssignedTrips += multiplier;
 
 					//store trip in trip list

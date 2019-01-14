@@ -321,8 +321,10 @@ public class TripTempro extends Trip {
 						break;
 					}
 			}
-			if (isUrban == null)
-				LOGGER.error("It was not possible to determine whether access was urban or rural.");
+			if (isUrban == null) {
+				LOGGER.warn("It was not possible to determine whether access was urban or rural. Assuming rural.");
+				isUrban = false;
+			}
 			//if the first edge is urban use electricity for access, otherwise (rural) use fuel for access
 			if (isUrban)
 				electricityConsumption += (access / 1000) * (parametersElectricity.get(WebTAG.A) / averageAccessEgressSpeed + parametersElectricity.get(WebTAG.B) + parametersElectricity.get(WebTAG.C) * averageAccessEgressSpeed + parametersElectricity.get(WebTAG.D) * averageAccessEgressSpeed  * averageAccessEgressSpeed);
@@ -355,8 +357,10 @@ public class TripTempro extends Trip {
 						break;
 					}
 			}
-			if (isUrban == null)
-				LOGGER.error("It was not possible to determine whether egress was urban or rural.");
+			if (isUrban == null) {
+				LOGGER.warn("It was not possible to determine whether egress was urban or rural. Assuming rural.");
+				isUrban = false;
+			}
 			//if the last edge is urban use electricity for access, otherwise (rural) use fuel for access
 			if (isUrban)
 				electricityConsumption += (egress / 1000) * (parametersElectricity.get(WebTAG.A) / averageAccessEgressSpeed + parametersElectricity.get(WebTAG.B) + parametersElectricity.get(WebTAG.C) * averageAccessEgressSpeed + parametersElectricity.get(WebTAG.D) * averageAccessEgressSpeed  * averageAccessEgressSpeed);
