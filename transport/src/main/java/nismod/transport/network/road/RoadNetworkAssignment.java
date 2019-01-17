@@ -3415,6 +3415,7 @@ public class RoadNetworkAssignment {
 		header.add("nodeB");
 		header.add("roadNumber");
 		header.add("length");
+		header.add("lanes");
 		header.add("freeFlowTravelTime");
 		header.add("peakHourtravelTime");
 		header.add("linkVolumeCar");
@@ -3464,6 +3465,7 @@ public class RoadNetworkAssignment {
 				String roadNumber = (String) feature.getAttribute("RoadNumber");
 				record.add(roadNumber);
 				record.add(String.format("%.3f", this.roadNetwork.getEdgeLength(edgeID)));
+				record.add(Integer.toString(this.roadNetwork.getNumberOfLanes()[edgeID]));
 				record.add(String.format("%.4f", this.roadNetwork.getFreeFlowTravelTime()[edgeID]));
 				record.add(String.format("%.4f", this.linkTravelTimePerTimeOfDay.get(TimeOfDay.EIGHTAM)[edgeID]));
 				int linkVolume = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
