@@ -178,6 +178,15 @@ public class RoadNetwork {
 		this.numberOfLanesMRoadCollapsedDualCarriageway = Integer.parseInt(params.getProperty("NUMBER_OF_LANES_M_ROAD_CDC"));
 		this.numberOfLanesMRoadSlipRoad = Integer.parseInt(params.getProperty("NUMBER_OF_LANES_M_ROAD_SR"));
 
+		LOGGER.debug("Number of lanes on A road single carriageway: {}", this.numberOfLanesARoadSingleCarriageway);
+		LOGGER.debug("Number of lanes on A road dual carriageway: {}", this.numberOfLanesARoadDualCarriageway);
+		LOGGER.debug("Number of lanes on A road collapsed dual carriageway: {}", this.numberOfLanesARoadCollapsedDualCarriageway);
+		LOGGER.debug("Number of lanes on A road slip road: {}", this.numberOfLanesARoadSlipRoad);
+		LOGGER.debug("Number of lanes on A road roundabout: {}", this.numberOfLanesARoadRoundabout);
+		LOGGER.debug("Number of lanes on M road dual carriageway: {}", this.numberOfLanesMRoadDualCarriageway);
+		LOGGER.debug("Number of lanes on M road collapsed dual carriageway: {}", this.numberOfLanesMRoadCollapsedDualCarriageway);
+		LOGGER.debug("Number of lanes on M road slip road: {}", this.numberOfLanesMRoadSlipRoad);
+				
 		this.maximumEdgeID = Integer.parseInt(params.getProperty("MAXIMUM_EDGE_ID"));
 		this.maximumNodeID = Integer.parseInt(params.getProperty("MAXIMUM_NODE_ID"));
 		this.accessEgressFactor = Double.parseDouble(params.getProperty("ACCESS_EGRESS_LAD_DISTANCE_SCALING_FACTOR"));
@@ -2235,11 +2244,15 @@ public class RoadNetwork {
 					lanes = this.numberOfLanesMRoadCollapsedDualCarriageway;
 				else if (wayType.equals("SR"))
 					lanes = this.numberOfLanesMRoadSlipRoad;
+				else {
+					LOGGER.warn("M road with wayType {} does not have a known number of lanes. Asuming dual carriageway.", wayType);
+					lanes = this.numberOfLanesMRoadDualCarriageway;
+				}
 
 			} else if (edgeType == EdgeType.AROAD) {//A-road
 				if (wayType.equals("SC"))
 					lanes = this.numberOfLanesARoadSingleCarriageway;
-				if (wayType.equals("DC"))
+				else if (wayType.equals("DC"))
 					lanes = this.numberOfLanesARoadDualCarriageway;
 				else if (wayType.equals("CDC"))
 					lanes = this.numberOfLanesARoadCollapsedDualCarriageway;
@@ -2247,11 +2260,15 @@ public class RoadNetwork {
 					lanes = this.numberOfLanesARoadSlipRoad;
 				else if (wayType.equals("R"))
 					lanes = this.numberOfLanesARoadRoundabout;
+				else {
+					LOGGER.warn("A road with wayType {} does not have a known number of lanes! Assuming single carriageway", wayType);
+					lanes = this.numberOfLanesARoadSingleCarriageway; 
+				}
 			
 			} else if (edgeType == EdgeType.FERRY)//ferry
 				lanes = 0;
 			else {
-				LOGGER.warn("Link with unknown road type: {}", edgeID);
+				LOGGER.warn("Link with unknown road class: {}", edgeID);
 				lanes = 0;
 			}
 			
