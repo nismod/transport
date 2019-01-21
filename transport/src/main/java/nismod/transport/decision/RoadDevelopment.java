@@ -67,7 +67,8 @@ public class RoadDevelopment extends Intervention {
 		int numberOfLanesPerDirection = Integer.parseInt(this.props.getProperty("lanesPerDirection"));
 		double length = Double.parseDouble(this.props.getProperty("length"));
 		char roadCategory = this.props.getProperty("roadClass").charAt(0);
-				
+		int edgeID1 = Integer.parseInt(this.props.getProperty("edgeID1"));
+						
 		Node fromNode = rn.getNodeIDtoNode()[fromNodeId];
 		Node toNode = rn.getNodeIDtoNode()[toNodeId];
 		if (fromNode == null || toNode == null) {
@@ -76,9 +77,9 @@ public class RoadDevelopment extends Intervention {
 		}
 		
 		//create one edge
-		Edge newEdge = rn.createNewRoadLink(fromNode, toNode, numberOfLanesPerDirection, roadCategory, length);
+		Edge newEdge = rn.createNewRoadLink(fromNode, toNode, numberOfLanesPerDirection, roadCategory, length, edgeID1);
 		if (newEdge == null) {
-			LOGGER.error("Edge creation was not sucessful");
+			LOGGER.error("Edge creation was not sucessful.");
 			return;
 		}
 		//store edge ID
@@ -86,9 +87,10 @@ public class RoadDevelopment extends Intervention {
 		
 		//if bidirectional, create the second edge too (in the other direction)
 		if(biDirectional) {
-			Edge newEdge2 = rn.createNewRoadLink(toNode, fromNode, numberOfLanesPerDirection, roadCategory, length);
+			int edgeID2 = Integer.parseInt(this.props.getProperty("edgeID2"));
+			Edge newEdge2 = rn.createNewRoadLink(toNode, fromNode, numberOfLanesPerDirection, roadCategory, length, edgeID2);
 			if (newEdge2 == null) {
-				LOGGER.error("Second edge creation was not sucessful");
+				LOGGER.error("Second edge creation was not sucessful.");
 				return;
 			}
 			//update map that maps edgeId to the edgeID of other direction

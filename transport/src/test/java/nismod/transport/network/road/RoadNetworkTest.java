@@ -100,8 +100,8 @@ public class RoadNetworkTest {
 		//create new road link
 		Node fromNode = roadNetwork2.getNodeIDtoNode()[86];
 		Node toNode = roadNetwork2.getNodeIDtoNode()[48];
-		DirectedEdge newEdge = (DirectedEdge) roadNetwork2.createNewRoadLink(fromNode, toNode, 2, 'A', 0.6);
-		DirectedEdge newEdge2 = (DirectedEdge) roadNetwork2.createNewRoadLink(toNode, fromNode, 2, 'A', 0.6);
+		DirectedEdge newEdge = (DirectedEdge) roadNetwork2.createNewRoadLink(fromNode, toNode, 2, 'A', 0.6, 19000);
+		DirectedEdge newEdge2 = (DirectedEdge) roadNetwork2.createNewRoadLink(toNode, fromNode, 2, 'A', 0.6, 19001);
 
 		//export to shapefile
 		roadNetwork2.exportToShapefile("midiOutputNetwork");
@@ -628,7 +628,7 @@ public class RoadNetworkTest {
 		Node fromNode = roadNetwork.getNodeIDtoNode()[86];
 		Node toNode = roadNetwork.getNodeIDtoNode()[48];
 
-		DirectedEdge newEdge = (DirectedEdge) roadNetwork.createNewRoadLink(fromNode, toNode, 2, 'A', 0.6);
+		DirectedEdge newEdge = (DirectedEdge) roadNetwork.createNewRoadLink(fromNode, toNode, 2, 'A', 0.6, 19000);
 
 		//find path from node 86 to node 19
 		from = roadNetwork.getNodeIDtoNode()[86];

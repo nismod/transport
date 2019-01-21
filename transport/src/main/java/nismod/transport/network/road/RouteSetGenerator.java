@@ -82,7 +82,7 @@ public class RouteSetGenerator{
 		}
 		*/
 		if (!route.isValid()) {
-			LOGGER.debug("Route is not valid. Not adding the route!");
+			LOGGER.debug("Route {} is not valid. Not adding the route!", route.toString());
 			return;
 		}
 		int origin = route.getOriginNode().getID();

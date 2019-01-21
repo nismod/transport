@@ -837,12 +837,29 @@ public class RoadNetwork {
 	 * @param length Length of the road link.
 	 * @return Newly created edge.
 	 */
-	public Edge createNewRoadLink(Node fromNode, Node toNode, int numberOfLanes, char roadCategory, double length) {
+	public Edge createNewRoadLink(Node fromNode, Node toNode, int numberOfLanes, char roadCategory, double length, int edgeID) {
+		
+		//check if valid ID
+		if (edgeID >= this.maximumEdgeID) {
+			LOGGER.warn("New edgeID is larger than the maximum allowed edge ID {}. Not adding this road link.", edgeID, this.maximumEdgeID);
+			return null;
+		}
+		
+		//check if ID already used
+		if (this.edgeIDtoEdge[edgeID] != null) {
+			LOGGER.warn("Edge with ID {} already exists! Not adding this road link.", edgeID);
+			return null;
+		}
 		
 		BasicDirectedLineGraphBuilder graphBuilder = new BasicDirectedLineGraphBuilder();
 		graphBuilder.importGraph(this.network);
 		
 		DirectedEdge directedEdge = (DirectedEdge) graphBuilder.buildEdge(fromNode, toNode);
+		LOGGER.debug("New edge between node {} and node {} with id {} created.", fromNode, toNode, directedEdge.getID());
+	
+		directedEdge.setID(edgeID);
+		LOGGER.debug("Replacing edge ID to {}.", edgeID);
+				
 		graphBuilder.addEdge(directedEdge);
 		
 		this.network = (DirectedGraph) graphBuilder.getGraph();
@@ -871,7 +888,8 @@ public class RoadNetwork {
 		else 
 			LOGGER.warn("Newly created road link does not have correct road category.");
 		
-		//TODO urban/rural
+		//assume new development is rural
+		this.isEdgeUrban[directedEdge.getID()] = false;
 		
 		//create an object to add to edge
 		//dynamically creates a feature type to describe the shapefile contents

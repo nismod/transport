@@ -61,6 +61,8 @@ public class RoadDevelopmentTest {
 		props2.setProperty("lanesPerDirection", "2");
 		props2.setProperty("length", "10.23");
 		props2.setProperty("roadClass", "A");
+		props2.setProperty("edgeID1", "19003");
+		props2.setProperty("edgeID2", "19004");
 		RoadDevelopment rd = new RoadDevelopment(props2);
 		
 		RoadDevelopment rd2 = new RoadDevelopment(roadDevelopmentFileName);

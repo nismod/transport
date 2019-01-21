@@ -439,6 +439,8 @@ public class RoadDevelopmentDashboard extends JFrame {
 				props2.setProperty("lanesPerDirection", Integer.toString(lanes));
 				props2.setProperty("length", Double.toString(length));
 				props2.setProperty("roadClass", roadClass);
+				props2.setProperty("edgeID1", "19000");
+				props2.setProperty("edgeID2", "19001");
 				RoadDevelopment rd = new RoadDevelopment(props2);
 
 				System.out.println("Road development intervention: " + rd.toString());

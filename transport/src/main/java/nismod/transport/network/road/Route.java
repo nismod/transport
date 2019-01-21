@@ -550,7 +550,14 @@ public class Route {
 			DirectedEdge edge1 = (DirectedEdge) roadNetwork.getEdgeIDtoEdge()[edgeID1];
 			DirectedEdge edge2 = (DirectedEdge) roadNetwork.getEdgeIDtoEdge()[edgeID2];
 			
-			if (!edge1.getOutNode().equals(edge2.getInNode())) return false; //if edges are not connected
+			DirectedNode outNode1 = edge1.getOutNode();
+			DirectedNode inNode2 = edge2.getInNode();
+			
+			//if (!edge1.getOutNode().equals(edge2.getInNode())) {
+			if (outNode1.getID() != inNode2.getID()) {
+				LOGGER.debug("Out node {} of edge {} is not in node {} of edge{}", outNode1.getID(), edge1.getID(), inNode2.getID(), edge2.getID());
+				return false; //if edges are not connected
+			}
 		}
 		return true;
 	}
