@@ -322,7 +322,7 @@ public class TripTempro extends Trip {
 					}
 			}
 			if (isUrban == null) {
-				LOGGER.warn("It was not possible to determine whether access was urban or rural. Assuming rural.");
+				LOGGER.trace("It was not possible to determine whether access was urban or rural. Assuming rural.");
 				isUrban = false;
 			}
 			//if the first edge is urban use electricity for access, otherwise (rural) use fuel for access
@@ -358,7 +358,7 @@ public class TripTempro extends Trip {
 					}
 			}
 			if (isUrban == null) {
-				LOGGER.warn("It was not possible to determine whether egress was urban or rural. Assuming rural.");
+				LOGGER.trace("It was not possible to determine whether egress was urban or rural. Assuming rural.");
 				isUrban = false;
 			}
 			//if the last edge is urban use electricity for access, otherwise (rural) use fuel for access

@@ -5190,6 +5190,8 @@ public class RoadNetworkAssignment {
 
 			SimpleFeature sf = (SimpleFeature) edge.getObject();
 			Long countPoint = (long) sf.getAttribute("CP");
+			if (countPoint == 0) continue; //new links
+			
 			String direction = (String) sf.getAttribute("iDir");
 			char dir = direction.charAt(0);
 
@@ -5487,6 +5489,8 @@ public class RoadNetworkAssignment {
 
 			SimpleFeature sf = (SimpleFeature) edge.getObject(); 
 			Long countPoint = (long) sf.getAttribute("CP");
+			if (countPoint == 0) continue; //new links
+						
 			String direction = (String) sf.getAttribute("iDir");
 			char dir = direction.charAt(0);
 
@@ -5563,6 +5567,8 @@ public class RoadNetworkAssignment {
 
 			SimpleFeature sf = (SimpleFeature) edge.getObject(); 
 			Long countPoint = (long) sf.getAttribute("CP");
+			if (countPoint == 0) continue; //new links
+			
 			String direction = (String) sf.getAttribute("iDir");
 			char dir = direction.charAt(0);
 
@@ -5670,6 +5676,8 @@ public class RoadNetworkAssignment {
 
 			SimpleFeature sf = (SimpleFeature) edge.getObject(); 
 			Long countPoint = (long) sf.getAttribute("CP");
+			if (countPoint == 0) continue; //new links
+			
 			String direction = (String) sf.getAttribute("iDir");
 			char dir = direction.charAt(0);
 
