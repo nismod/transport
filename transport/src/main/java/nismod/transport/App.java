@@ -673,6 +673,8 @@ public class App {
 			LOGGER.error(e);
 		} catch (Exception e) {
 			LOGGER.error(ExceptionUtils.getStackTrace(e));
+		} catch (Error e) {
+			LOGGER.error(ExceptionUtils.getStackTrace(e));
 		} finally {
 			LOGGER.info("Program ended unsuccessfully.");
 			System.exit(1);
