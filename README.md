@@ -53,10 +53,15 @@ https://github.com/nismod/smif
     * Make sure the Java home environment variable is set for the operating system and pointing to the directory where *Java Development Kit* has been installed.
     * Download maven, install it and set the environment variables: http://maven.apache.org/. Then type:  
        `mvn clean install`
-    * To run the base-year model (2015) type:  
-       `java -cp target/transport-0.0.1-SNAPSHOT-main-jar-with-dependencies.jar nismod.transport.App -c ./path/to/config.properties -b`
-    * To predict and run a future year (e.g. 2020) using the results of a previously run year (e.g. 2015) type:  
-       `java -cp target/transport-0.0.1-SNAPSHOT-main-jar-with-dependencies.jar nismod.transport.App -c ./path/to/config.properties -r 2020 2015`
+    * To run the base-year model (2015) type:
+       `java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -b`
+    * To predict and run a future year (e.g. 2020) using the results of a previously run year (e.g. 2015) type:
+       `java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -r 2020 2015`
+
+    * Options:
+
+        * To increase the max heap size, run with `java -XX:MaxHeapSize=120g ...`
+        * To enable debug messages, run with `java -Dlog4j2.debug ...`
 
 
 ## Showcase demo
@@ -66,8 +71,8 @@ The model provides an interactive showcase demo with three policy interventions 
 * *Road development* - building new road links between two existing intersections.
 * *Congestion charging* - time-based (peak and off-peak) congestion charging in the policy area.
 
-To run the showcase demo type:  
-    `java -cp target/transport-0.0.1-SNAPSHOT-main-jar-with-dependencies.jar nismod.transport.App -c ./path/to/config.properties -d`
+To run the showcase demo type:
+    `java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -d`
 
 [<img alt="Landing GUI" src="images/LandingGUI.png" style="max-width:500px"/>](images/LandingGUI.png)
 
