@@ -1,0 +1,33 @@
+NLC,Mode,Station,NaPTANname,Easting,Northing,YearUsage,DayUsage,RunDays,LADcode,LADname
+5906,NRAIL,Ashurst New Forest,Ashurst New Forest Rail Station,433392,110147,129164,356,363,E07000091,New Forest
+5890,NRAIL,Beaulieu Road,Beaulieu Road Rail Station,434957,106287,9228,25,363,E07000091,New Forest
+5945,NRAIL,Bitterne,Bitterne Rail Station,443890,113380,97946,270,363,E06000045,Southampton
+5530,NRAIL,Brading,Brading Rail Station,460950,86877,43846,121,363,E06000046,Isle of Wight
+5886,NRAIL,Brockenhurst,Brockenhurst Rail Station,430140,102008,1094160,3014,363,E07000091,New Forest
+5927,NRAIL,Bursledon,Bursledon Rail Station,448985,109585,64756,178,363,E07000086,Eastleigh
+5836,NRAIL,Chandlers Ford,Chandlers Ford Rail Station,443255,120655,224034,617,363,E07000086,Eastleigh
+5899,NRAIL,Eastleigh,Eastleigh Rail Station,445732,119071,1677878,4622,363,E07000086,Eastleigh
+5947,NRAIL,Hamble,Hamble Rail Station,447300,108200,111634,308,363,E07000086,Eastleigh
+5893,NRAIL,Hedge End,Hedge End Rail Station,449674,115000,508982,1402,363,E07000086,Eastleigh
+5880,NRAIL,Hinton Admiral,Hinton Admiral Rail Station,420263,94821,167106,460,363,E07000091,New Forest
+5892,NRAIL,Lymington Pier,Lymington Pier Rail Station,433287,95517,130860,360,363,E07000091,New Forest
+5887,NRAIL,Lymington Town,Lymington Town Rail Station,432741,95804,255144,703,363,E07000091,New Forest
+5911,NRAIL,Netley,Netley Rail Station,446400,108585,116830,322,363,E07000086,Eastleigh
+5881,NRAIL,New Milton,New Milton Rail Station,424234,95184,619686,1707,363,E07000091,New Forest
+5542,NRAIL,Ryde Esplanade,Ryde Esplanade Rail Station,459405,92920,281344,775,363,E06000046,Isle of Wight
+5541,NRAIL,Ryde Pier Head,Ryde Pier Head Rail Station,459361,93622,218410,602,363,E06000046,Isle of Wight
+5525,NRAIL,Sandown,Sandown Rail Station,459305,84467,194276,535,363,E06000046,Isle of Wight
+5529,NRAIL,Shanklin,Shanklin Rail Station,458100,81900,293654,809,363,E06000046,Isle of Wight
+5930,NRAIL,Sholing,Sholing Rail Station,444760,111000,120880,333,363,E06000045,Southampton
+5494,NRAIL,Smallbrook Junction,Smallbrook Junction Rail Station,459815,90504,12134,33,363,E06000046,Isle of Wight
+5932,NRAIL,Southampton Central,Southampton Central Rail Station,441327,112161,6359692,17520,363,E06000045,Southampton
+5884,NRAIL,Sway,Sway Rail Station,427590,98420,111560,307,363,E07000091,New Forest
+5933,NRAIL,Swaythling,Swaythling Rail Station,443910,115930,132472,365,363,E06000045,Southampton
+5921,NRAIL,Totton,Totton Rail Station,436480,113285,311406,858,363,E07000091,New Forest
+5925,NRAIL,Woolston,Woolston Rail Station,443904,111234,171778,473,363,E06000045,Southampton
+5504,NRAIL,Lake,Lake (Isle of Wight) Rail Station,459038,83308,52310,144,363,E06000046,Isle of Wight
+5543,NRAIL,Ryde St.John's Road,Ryde St Johns Road Rail Station,459631,91977,180220,496,363,E06000046,Isle of Wight
+5909,NRAIL,Millbrook (Hampshire),Millbrook (Hants) Rail Station,439900,112600,38596,106,363,E06000045,Southampton
+5912,NRAIL,Redbridge,Redbridge (Hants) Rail Station,437340,113520,46066,127,363,E06000045,Southampton
+5914,NRAIL,St.Denys,St Denys Rail Station,443130,113815,318044,876,363,E06000045,Southampton
+5922,NRAIL,Southampton Airport (Parkway),Southampton Airport Parkway Rail Station,444836,117013,1819432,5012,363,E07000086,Eastleigh
