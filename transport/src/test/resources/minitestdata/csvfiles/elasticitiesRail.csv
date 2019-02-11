@@ -1,0 +1,6 @@
+variable,elasticity
+POPULATION,1
+GVA,0.63
+TIME,-0.8
+COST_RAIL,-0.7
+COST_CAR,-0.7

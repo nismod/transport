@@ -12,6 +12,7 @@ import java.util.Set;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,6 +23,7 @@ import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.network.road.Route.WebTAG;
+import nismod.transport.rail.RailDemandModel;
 
 /**
  * InputFileReader reads input files and provides them as various data structures required by other classes.
@@ -43,13 +45,13 @@ public class InputFileReader {
 	public static HashMap<Integer, HashMap<String, Integer>> readPopulationFile (String fileName) {
 
 		HashMap<Integer, HashMap<String, Integer>> map = new HashMap<Integer, HashMap<String, Integer>>();
-
 		CSVParser parser = null;
+		int zonesNumber = 0;
 		try {
 			parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
-			//System.out.println(parser.getHeaderMap().toString());
 			Set<String> keySet = parser.getHeaderMap().keySet();
-			//System.out.println("keySet = " + keySet);
+			keySet.remove("year");
+			zonesNumber = keySet.size();
 			int population;
 			for (CSVRecord record : parser) {
 				//System.out.println(record);
@@ -74,8 +76,7 @@ public class InputFileReader {
 			}
 		}
 		
-		LOGGER.debug("Population:");
-		LOGGER.debug(map);
+		LOGGER.debug("Population file read with data values for {} years and {} zones.", map.keySet().size(), zonesNumber);
 
 		return map;
 	}
@@ -89,11 +90,13 @@ public class InputFileReader {
 
 		HashMap<Integer, HashMap<String, Double>> map = new HashMap<Integer, HashMap<String, Double>>();
 		CSVParser parser = null;
+		int zonesNumber = 0;
 		try {
 			parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
 			//System.out.println(parser.getHeaderMap().toString());
 			Set<String> keySet = parser.getHeaderMap().keySet();
 			keySet.remove("year");
+			zonesNumber = keySet.size();
 			//System.out.println("keySet = " + keySet);
 			double GVA;
 			for (CSVRecord record : parser) {
@@ -119,8 +122,7 @@ public class InputFileReader {
 			}
 		}
 
-		LOGGER.debug("GVA:");
-		LOGGER.debug(map);
+		LOGGER.debug("GVA file read with data values for {} years and {} zones.", map.keySet().size(), zonesNumber);
 		
 		return map;
 	}
@@ -142,6 +144,44 @@ public class InputFileReader {
 			for (CSVRecord record : parser) {
 				//System.out.println(record);
 				ElasticityTypes et = ElasticityTypes.valueOf(record.get(0));
+				Double elasticity = Double.parseDouble(record.get(1));		
+				map.put(et, elasticity);
+			}
+		} catch (FileNotFoundException e) {
+			LOGGER.error(e);
+		} catch (IOException e) {
+			LOGGER.error(e);
+		} finally {
+			try {
+				parser.close();
+			} catch (IOException e) {
+				LOGGER.error(e);
+			}
+		}
+		
+		LOGGER.debug("Elasticities:");
+		LOGGER.debug(map);
+
+		return map;
+	}
+	
+	/**
+	 * Reads rail elasticities file.
+	 * @param fileName File name.
+	 * @return Map with elasticity parameters.
+	 */
+	public static Map<RailDemandModel.ElasticityTypes, Double> readRailElasticitiesFile (String fileName) {
+
+		Map<RailDemandModel.ElasticityTypes, Double> map = new EnumMap<>(RailDemandModel.ElasticityTypes.class);
+		CSVParser parser = null;
+		try {
+			parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
+			//System.out.println(parser.getHeaderMap().toString());
+			Set<String> keySet = parser.getHeaderMap().keySet();
+			//System.out.println("keySet = " + keySet);
+			for (CSVRecord record : parser) {
+				//System.out.println(record);
+				RailDemandModel.ElasticityTypes et = RailDemandModel.ElasticityTypes.valueOf(record.get(0));
 				Double elasticity = Double.parseDouble(record.get(1));		
 				map.put(et, elasticity);
 			}
@@ -669,4 +709,105 @@ public class InputFileReader {
 
 		return yearToLinkTravelTimePerTimeOfDay.get(year);
 	}
+	
+	/**
+	 * Reads zonal car journey costs file.
+	 * @param fileName File name.
+	 * @return Map with cost data.
+	 */
+	public static HashMap<Integer, HashMap<String, Double>> readZonalCarCostsFile(String fileName) {
+
+		HashMap<Integer, HashMap<String, Double>> map = new HashMap<Integer, HashMap<String, Double>>();
+		CSVParser parser = null;
+		int zonesNumber = 0;
+		try {
+			parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
+			//System.out.println(parser.getHeaderMap().toString());
+			Set<String> keySet = parser.getHeaderMap().keySet();
+			keySet.remove("year");
+			zonesNumber = keySet.size();
+			//System.out.println("keySet = " + keySet);
+			double cost;
+			for (CSVRecord record : parser) {
+				//System.out.println(record);
+				int year = Integer.parseInt(record.get(0));
+				HashMap<String, Double> zoneToCost = new HashMap<String, Double>();
+				for (String zone: keySet) {
+					//System.out.println("Destination zone = " + destination);
+					cost = Double.parseDouble(record.get(zone));
+					zoneToCost.put(zone, cost);			
+				}
+				map.put(year, zoneToCost);
+			}
+		} catch (FileNotFoundException e) {
+			LOGGER.error(e);
+		} catch (IOException e) {
+			LOGGER.error(e);
+		} finally {
+			try {
+				parser.close();
+			} catch (IOException e) {
+				LOGGER.error(e);
+			}
+		}
+
+		LOGGER.debug("Zonal car costs file read with data values for {} years and {} zones.", map.keySet().size(), zonesNumber);
+		//LOGGER.debug("Cost:");
+		//LOGGER.debug(map);
+		
+		return map;
+	}
+	
+	/**
+	 * Reads rail station costs file.
+	 * @param fileName File name.
+	 * @return Map with rail journey costs.
+	 */
+	public static HashMap<Integer, HashMap<Integer, Double>> readRailStationCostsFile(String fileName) {
+
+		HashMap<Integer, HashMap<Integer, Double>> map = new HashMap<Integer, HashMap<Integer, Double>>();
+		
+		System.out.println(fileName);
+		
+		CSVParser parser = null;
+		int stationNumber = 0;
+		try {
+			parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
+			//System.out.println(parser.getHeaderMap().toString());
+			Set<String> keySet = parser.getHeaderMap().keySet();
+			keySet.remove("year");
+			System.out.println("keySet = " + keySet);
+			stationNumber = keySet.size();
+			for (CSVRecord record : parser) {
+				//System.out.println(record);
+				int year = Integer.parseInt(record.get(0));
+				HashMap<Integer, Double> nlcToCost = new HashMap<Integer, Double>();
+				for (String nlc: keySet) {
+					double cost = Double.parseDouble(record.get(nlc));
+					int nlcCode = Integer.parseInt(nlc);
+					nlcToCost.put(nlcCode, cost);			
+				}
+				map.put(year, nlcToCost);
+			}
+		} catch (FileNotFoundException e) {
+			LOGGER.error(e);
+		} catch (IOException e) {
+			LOGGER.error(e);
+		} catch (Exception e) {
+			LOGGER.error(e);
+		} finally {
+			try {
+				parser.close();
+			} catch (IOException e) {
+				LOGGER.error(e);
+			}
+		}
+
+		LOGGER.debug("Rail station costs file read with data values for {} years and {} stations.", map.keySet().size(), stationNumber);
+		//LOGGER.debug("Cost:");
+		//LOGGER.debug(map);
+		
+		return map;
+	}
+	
 }

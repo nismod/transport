@@ -2,20 +2,23 @@ package nismod.transport.rail;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Set;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import nismod.transport.rail.Station.RailModeType;
+import nismod.transport.rail.RailStation.RailModeType;
 
 /**
  * This class stores passenger rail demand = station usage data (entries + exists).
@@ -23,25 +26,26 @@ import nismod.transport.rail.Station.RailModeType;
  *
  */
 public class RailStationDemand {
-	
-	private final static Logger LOGGER = LogManager.getLogger(RailStationDemand.class);
-	
-	private HashMap<Integer, Station> railDemandMap; //maps NLC to station object
-	private ArrayList<Station> railDemandList; //list of station objects
-	
-	public RailStationDemand(String fileName) throws FileNotFoundException, IOException {
-	
-		LOGGER.info("Reading rail station demand from the file: {}", fileName);
-		
-		this.railDemandMap = new HashMap<Integer, Station>();
-		this.railDemandList = new ArrayList<Station>();
-		
-		CSVParser parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
-		//System.out.println(parser.getHeaderMap().toString());
-		Set<String> keySet = parser.getHeaderMap().keySet();
 
+	private final static Logger LOGGER = LogManager.getLogger(RailStationDemand.class);
+
+	private Map<Integer, RailStation> railDemandMap; //maps NLC to station object
+	private List<RailStation> railDemandList; //list of station objects
+	private List<String> header;
+
+	public RailStationDemand(String fileName) throws FileNotFoundException, IOException {
+
+		LOGGER.info("Reading rail station demand from the file: {}", fileName);
+
+		this.railDemandMap = new HashMap<Integer, RailStation>();
+		this.railDemandList = new ArrayList<RailStation>();
+		this.header = new ArrayList<String>();
+
+		CSVParser parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
+		for (Map.Entry<String, Integer> e: parser.getHeaderMap().entrySet()) {
+			this.header.add(e.getKey());
+		}
 		for (CSVRecord record : parser) { 
-		
 			int nlc = Integer.parseInt(record.get(0));
 			RailModeType mode = RailModeType.valueOf(record.get(1));
 			String stationName = record.get(2);
@@ -49,12 +53,13 @@ public class RailStationDemand {
 			int easting = Integer.parseInt(record.get(4));
 			int northing = Integer.parseInt(record.get(5));
 			int yearUsage = Integer.parseInt(record.get(6));
-			int dayUsage = Integer.parseInt(record.get(7));
+			double dayUsage = Double.parseDouble(record.get(7));
 			int runDays = Integer.parseInt(record.get(8));
 			String ladCode = record.get(9);
 			String ladName = record.get(10);
-			
-			Station station = new Station(nlc, mode, stationName, naptanName, easting, northing, yearUsage, dayUsage, runDays, ladCode, ladName);
+
+			//create station object and store into map and list
+			RailStation station = new RailStation(nlc, mode, stationName, naptanName, easting, northing, yearUsage, dayUsage, runDays, ladCode, ladName);
 			this.railDemandMap.put(nlc, station);
 			this.railDemandList.add(station);
 		}
@@ -62,77 +67,204 @@ public class RailStationDemand {
 		parser.close();
 		LOGGER.debug("Finished reading rail station demand from the file.");
 	}
-	
+
+	/**
+	 * Constructor for empty rail station demand.
+	 * @param header
+	 */
+	public RailStationDemand(List<String> header) {
+
+		this.railDemandMap = new HashMap<Integer, RailStation>();
+		this.railDemandList = new ArrayList<RailStation>();
+		this.header = header;
+	}
+
+	/**
+	 * Add a rail station data to the rail demand.
+	 * @param station
+	 */
+	public void addStation(RailStation station) {
+
+		this.railDemandMap.put(station.getNLC(), station);
+		this.railDemandList.add(station);
+	}
+
+	/**
+	 * Getter method for the header.
+	 * @return header
+	 */
+	public List<String> getHeader() {
+
+		return this.header;
+	}
+
+	/**
+	 * Getter method for the rail demand map.
+	 * @return Rail demand map.
+	 */
+	public Map<Integer, RailStation> getRailDemandMap() {
+
+		return this.railDemandMap;
+	}
+
+	/**
+	 * Getter method for the rail demand list.
+	 * @return Rail demand list
+	 */
+	public List<RailStation> getRailDemandList() {
+
+		return this.railDemandList;
+	}
+
 	/**
 	 * Print rail demand.
 	 * @param message Message to print before the demand.
 	 */
 	public void printRailDemand(String message) {
-		
+
 		System.out.println(message);
-		for (Station station: this.railDemandList) {
-			
+		System.out.println(this.header);
+		for (RailStation station: this.railDemandList)
 			System.out.println(station.toString());
-		}
 	}
-	
+
 	/**
 	 * Print rail demand sorted on NLC.
 	 * @param message Message to print before the demand.
 	 */
 	public void printRailDemandNLCSorted(String message) {
-	
+
 		this.sortStationsOnNLC();
 		System.out.println(message);
-		for (Station station: this.railDemandList) {
+		System.out.println(this.header);
+		for (RailStation station: this.railDemandList)
 			System.out.println(station.toString());
-		}
 	}
-	
+
 	/**
 	 * Print rail demand sorted on station name.
 	 * @param message Message to print before the demand.
 	 */
 	public void printRailDemandNameSorted(String message) {
-		
+
 		this.sortStationsOnName();
 		System.out.println(message);
-		for (Station station: this.railDemandList) {
-			
+		System.out.println(this.header);
+		for (RailStation station: this.railDemandList)
 			System.out.println(station.toString());
-		}
 	}
-	
+
+	/**
+	 * Print rail demand sorted on station usage.
+	 * @param message Message to print before the demand.
+	 */
+	public void printRailDemandUsageSorted(String message) {
+
+		this.sortStationsOnUsage();
+		System.out.println(message);
+		System.out.println(this.header);
+		for (RailStation station: this.railDemandList)
+			System.out.println(station.toString());
+	}
+
 	/**
 	 * Sorts stations on NLC in an ascending order.
 	 */
 	private void sortStationsOnNLC() {
 
-		Comparator<Station> c = new Comparator<Station>() {
-		public int compare(Station s, Station s2) {
-		    	Integer nlc = s.getNLC();
-		       	Integer nlc2 = s2.getNLC();
-		       	return nlc.compareTo(nlc2);
-		    	}
+		Comparator<RailStation> c = new Comparator<RailStation>() {
+			public int compare(RailStation s, RailStation s2) {
+				Integer nlc = s.getNLC();
+				Integer nlc2 = s2.getNLC();
+				return nlc.compareTo(nlc2);
+			}
 		};
-		
+
 		Collections.sort(this.railDemandList, c);
 	}
-	
+
+	/**
+	 * Saves rail station demand to an output file.
+	 * @param year Year of the data.
+	 * @param outputFile Output file name (with path).
+	 */
+	public void saveRailStationDemand(int year, String outputFile) {
+
+		LOGGER.debug("Saving rail station demand to a file.");
+
+		String NEW_LINE_SEPARATOR = "\n";
+		ArrayList<String> outputHeader = new ArrayList<String>();
+		outputHeader.add("year");
+		outputHeader.addAll(this.header);
+
+		FileWriter fileWriter = null;
+		CSVPrinter csvFilePrinter = null;
+		CSVFormat csvFileFormat = CSVFormat.DEFAULT.withRecordSeparator(NEW_LINE_SEPARATOR);
+		try {
+			fileWriter = new FileWriter(outputFile);
+			csvFilePrinter = new CSVPrinter(fileWriter, csvFileFormat);
+			csvFilePrinter.printRecord(outputHeader);
+			ArrayList<String> record = new ArrayList<String>();
+
+			for (RailStation station: this.railDemandList) {
+				record.clear();
+				record.add(Integer.toString(year));
+				record.add(String.valueOf(station.getNLC()));
+				record.add(station.getMode().name());
+				record.add(station.getName());
+				record.add(station.getNaPTANName());
+				record.add(String.valueOf(station.getEasting()));
+				record.add(String.valueOf(station.getNorthing()));
+				record.add(String.valueOf(station.getYearlyUsage()));
+				record.add(String.valueOf(station.getDayUsage()));
+				record.add(String.valueOf(station.getRunDays()));
+				record.add(station.getLADCode());
+				record.add(station.getLADName());
+
+				csvFilePrinter.printRecord(record);	
+			}		
+		} catch (Exception e) {
+			LOGGER.error(e);
+		} finally {
+			try {
+				fileWriter.flush();
+				fileWriter.close();
+				csvFilePrinter.close();
+			} catch (IOException e) {
+				LOGGER.error(e);
+			}
+		}
+	}
+
 	/**
 	 * Sorts stations on station name in an ascending order.
 	 */
 	private void sortStationsOnName() {
 
-		Comparator<Station> c = new Comparator<Station>() {
-		public int compare(Station s, Station s2) {
-		    	String name = s.getName();
-		       	String name2 = s2.getName();
-		       	return name.compareTo(name2);
-		    	}
+		Comparator<RailStation> c = new Comparator<RailStation>() {
+			public int compare(RailStation s, RailStation s2) {
+				String name = s.getName();
+				String name2 = s2.getName();
+				return name.compareTo(name2);
+			}
 		};
-		
+
 		Collections.sort(this.railDemandList, c);
 	}
-	
+
+	/**
+	 * Sorts stations on usage in a descending order.
+	 */
+	private void sortStationsOnUsage() {
+
+		Comparator<RailStation> c = new Comparator<RailStation>() {
+			public int compare(RailStation s, RailStation s2) {
+				Integer usage = s.getYearlyUsage();
+				Integer usage2 = s2.getYearlyUsage();
+				return usage2.compareTo(usage);
+			}
+		};
+
+		Collections.sort(this.railDemandList, c);
+	}
 }
