@@ -1,15 +1,12 @@
 package nismod.transport.rail;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.URL;
 import java.util.Properties;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import nismod.transport.rail.RailStation.RailModeType;
 import nismod.transport.utility.ConfigReader;
 
 /**
@@ -90,6 +87,8 @@ public class RailDemandModelTest {
 		final String railStationGeneralisedJourneyTimesFile = props.getProperty("railStationGeneralisedJourneyTimesFile");
 		final String carZonalJourneyCostsFile = props.getProperty("carZonalJourneyCostsFile");
 		
+		props.setProperty("FLAG_USE_CAR_COST_FROM_ROAD_MODEL", "false");
+		
 		RailDemandModel rdm = new RailDemandModel(railStationDemandFileName,
 													populationFile,
 													GVAFile,
@@ -121,6 +120,8 @@ public class RailDemandModelTest {
 		final String railStationJourneyFaresFile = props.getProperty("railStationJourneyFaresFile");
 		final String railStationGeneralisedJourneyTimesFile = props.getProperty("railStationGeneralisedJourneyTimesFile");
 		final String carZonalJourneyCostsFile = props.getProperty("carZonalJourneyCostsFile");
+		
+		props.setProperty("FLAG_USE_CAR_COST_FROM_ROAD_MODEL", "false");
 	        
 		RailDemandModel rdm = new RailDemandModel(railStationDemandFileName,
 													populationFile,
@@ -131,6 +132,8 @@ public class RailDemandModelTest {
 													carZonalJourneyCostsFile,
 													null,
 													props);
+		
+		
 		
 		rdm.predictRailwayDemand(2020, 2015);
 		

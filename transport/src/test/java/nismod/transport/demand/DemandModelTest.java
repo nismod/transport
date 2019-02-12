@@ -29,6 +29,7 @@ import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
+import nismod.transport.rail.RailDemandModel;
 import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.utility.ConfigReader;
 import nismod.transport.utility.InputFileReader;
@@ -427,55 +428,30 @@ public class DemandModelTest {
 		dm.predictHighwayDemandUsingResultsOfFromYear(2025, 2015);
 		dm.saveAllResults(2025);
 
-		/*
-		RoadNetworkAssignment rna2015 = dm.getRoadNetworkAssignment(2015);
-		RoadNetworkAssignment rna2016 = dm.getRoadNetworkAssignment(2016);
-		System.out.println("Base-year (2015) car energy consumptions:");
-		System.out.println(rna2015.calculateCarEnergyConsumptions());
-		System.out.println("Predicted (2016) car energy consumptions:");
-		System.out.println(rna2016.calculateCarEnergyConsumptions());
-		
-		ODMatrix odm2015 = dm.getPassengerDemand(2015);
-		ODMatrix odm2016 = dm.getPassengerDemand(2016);
-		SkimMatrix tm2015 = dm.getTimeSkimMatrix(2015);
-		SkimMatrix tm2016 = dm.getTimeSkimMatrix(2016);
-		SkimMatrix cm2015 = dm.getCostSkimMatrix(2015);
-		SkimMatrix cm2016 = dm.getCostSkimMatrix(2016);
 
-		odm2015.printMatrixFormatted("2015 demand:");
-		odm2016.printMatrixFormatted("2016 demand:");
-		tm2015.printMatrixFormatted("2015 travel time:");
-		tm2016.printMatrixFormatted("2016 travel time:");
-		cm2015.printMatrixFormatted("2015 travel cost:");
-		cm2016.printMatrixFormatted("2016 travel cost:");
+		//Run rail model demand test that uses outputs from the road model
 		
-		HashMap<Integer, HashMap<String, Integer>> population = InputFileReader.readPopulationFile(populationFile);
-		HashMap<String, Integer> pop2015 = population.get(2015);
-		HashMap<String, Integer> pop2016 = population.get(2016);
+		final String railStationDemandFileName = props.getProperty("baseYearRailStationUsageFile");
+		final String elasticitiesRailFile = props.getProperty("elasticitiesRailFile");
+		final String railStationJourneyFaresFile = props.getProperty("railStationJourneyFaresFile");
+		final String railStationGeneralisedJourneyTimesFile = props.getProperty("railStationGeneralisedJourneyTimesFile");
+		final String carZonalJourneyCostsFile = props.getProperty("carZonalJourneyCostsFile");
+	        
+		RailDemandModel rdm = new RailDemandModel(railStationDemandFileName,
+													populationFile,
+													GVAFile,
+													elasticitiesRailFile,
+													railStationJourneyFaresFile,
+													railStationGeneralisedJourneyTimesFile,
+													carZonalJourneyCostsFile,
+													null,
+													props);
 		
-		List<String> origins = odm2016.getSortedOrigins();
-		List<String> destinations = odm2016.getSortedDestinations();
+		rdm.predictRailwayDemand(2025, 2015);
 		
-		for (String originZone: origins)
-			for (String destinationZone: destinations) {
-				int flow2015 = odm2015.getFlow(originZone, destinationZone);
-				int flow2016 = odm2016.getFlow(originZone, destinationZone);
-				
-				double time2015 = tm2015.getCost(originZone, destinationZone);
-				double time2016 = tm2016.getCost(originZone, destinationZone);
-				double cost2015 = cm2015.getCost(originZone, destinationZone);
-				double cost2016 = cm2016.getCost(originZone, destinationZone);
-				int po2015 = pop2015.get(originZone);
-				int pd2015 = pop2015.get(destinationZone);
-				int po2016 = pop2016.get(originZone);
-				int pd2016 = pop2016.get(destinationZone);
-				
-				//if the population has increased and costs have decreased, the flow should increase
-				if (po2016 > po2015 && pd2016 > pd2015 && time2016 < time2015 && cost2016 < cost2015) {
-					//System.out.printf("Origin = %s destination = %s %n", originZone, destinationZone);
-					//assertTrue("Flow should increase", flow2016 >= flow2015); //not possible to test as the demand model uses intermediate time and cost matrices, not the final 2016 one!
-				}
-			}
-		*/
+		rdm.saveRailStationDemand(2015, "./temp/railDemand2015.csv");
+		rdm.saveRailStationDemand(2025, "./temp/railDemand2025.csv");
+		
+		
 	}
 }
