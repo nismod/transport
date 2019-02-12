@@ -9,6 +9,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -427,6 +428,86 @@ public class SkimMatrixMultiKey implements SkimMatrix {
 		averageCost /= totalFlows;
 		
 		return averageCost;
+	}
+	
+	/**
+	 * Gets average zonal cost (used for the rail model).
+	 * @param zones Zones for which zonal costs are required.
+	 * @return Map of average zonal costs.
+	 */
+	public HashMap<String, Double> getAverageZonalCosts(List<String> zones) {
+		
+		HashMap<String, Double> map = new HashMap<String, Double>();
+		
+		for (String zone: zones) {
+			double averageCost = 0.0;
+			long totalFlows = 0;
+			for (Object mk: matrix.keySet()) {
+				String origin = (String) ((MultiKey)mk).getKey(0);
+				String destination = (String) ((MultiKey)mk).getKey(1);
+				
+				//if either origin or destination (but not both!) equals zone
+				if (origin.equals(zone) && !destination.equals(zone) || !origin.equals(zone) && destination.equals(zone)) {
+					Double cost = (Double) matrix.get(origin, destination);
+					if (cost == null) continue; //ignore null values
+					if (cost.isNaN()) continue; //ignore NaN values
+					averageCost += cost;
+					totalFlows ++;
+				}
+			}
+			//add intra-zonal flow
+			Double cost = (Double) matrix.get(zone, zone);
+			if (cost != null && !cost.isNaN()) { //ignore null and NaN values
+				averageCost += cost;
+				totalFlows++;
+			}
+			
+			averageCost /= totalFlows;
+			map.put(zone, averageCost);
+		}
+		
+		return map;
+	}
+	
+	/**
+	 * Gets average zonal cost weighted by demand (used for the rail model).
+	 * @param zones Zones for which zonal costs are required.
+	 * @param flows The demand as an origin-destination matrix.
+	 * @return Map of average zonal costs.
+	 */
+	public HashMap<String, Double> getAverageZonalCosts(List<String> zones, ODMatrixMultiKey flows) {
+		
+		HashMap<String, Double> map = new HashMap<String, Double>();
+		
+		for (String zone: zones) {
+			
+			double averageCost = 0.0;
+			long totalFlows = 0;
+			for (MultiKey mk: flows.getKeySet()) {
+				String origin = (String) mk.getKey(0);
+				String destination = (String) mk.getKey(1);
+				
+				//if either origin or destination (but not both!) equals zone
+				if (origin.equals(zone) && !destination.equals(zone) || !origin.equals(zone) && destination.equals(zone)) {
+					Double cost = (Double) matrix.get(origin, destination);
+					if (cost.isNaN()) continue; //ignore NaN values
+					if (cost == null) continue; //ignore null values
+					averageCost += flows.getFlow(origin, destination) * cost;
+					totalFlows += flows.getFlow(origin, destination);
+				}
+			}
+			//add intra-zonal flow
+			Double cost = (Double) matrix.get(zone, zone);
+			if (cost != null && !cost.isNaN()) { //ignore null and NaN values
+				averageCost += flows.getFlow(zone, zone) * cost;
+				totalFlows += flows.getFlow(zone, zone);
+			}
+				
+			averageCost /= totalFlows;
+			map.put(zone, averageCost);
+		}
+				
+		return map;
 	}
 	
 	/**

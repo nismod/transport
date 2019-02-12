@@ -56,10 +56,10 @@ public class RailDemandModelTest {
 													props);
 		
 		rdm.predictRailwayDemand(2020, 2015);
-
-		rdm.saveRailStationDemand(2015, file.getPath() + File.separator + "railDemand2015.csv");
-		rdm.saveRailStationDemand(2020, file.getPath() + File.separator + "railDemand2020.csv");
 		
+		String predictedRailDemandFile = props.getProperty("predictedRailDemandFile");
+		rdm.saveRailStationDemand(2015, file.getPath() + File.separator + 2015 + File.separator + "baseYearRailDemand.csv");
+		rdm.saveRailStationDemand(2020, file.getPath() + File.separator + 2020 + File.separator + predictedRailDemandFile);
 	}
 	
 	@BeforeClass

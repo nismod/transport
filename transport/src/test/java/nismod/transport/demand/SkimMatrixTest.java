@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.Properties;
 
 import org.junit.BeforeClass;
@@ -168,7 +169,22 @@ public class SkimMatrixTest {
 		System.out.println("Average cost: " + ((SkimMatrixArray)skimMatrixArray2).getAverageCost());
 		System.out.println("Sum of costs: " + ((SkimMatrixArray)skimMatrixArray2).getSumOfCosts(odMatrix));
 		System.out.println("Average cost: " + ((SkimMatrixArray)skimMatrixArray2).getAverageCost(odMatrix));
-				
+		
+		SkimMatrixMultiKey skimMatrixMultiKey2 = new SkimMatrixMultiKey("./temp/skimMatrixList.csv", zoning);
+		//skimMatrixMultiKey2.setCost("E06000046", "E06000046", 6.2);
+		skimMatrixMultiKey2.printMatrixFormatted();
+		
+		HashMap<String, Double> zonalCosts = skimMatrixMultiKey2.getAverageZonalCosts(skimMatrixMultiKey.getSortedOrigins());
+		System.out.println(zonalCosts);
+		double avgCost = skimMatrixMultiKey2.getAverageCost();
+		double sum = 0.0;
+		for(String zone: zonalCosts.keySet()) {
+			sum += zonalCosts.get(zone);
+		}
+		
+		HashMap<String, Double> zonalCostsWeighted = skimMatrixMultiKey2.getAverageZonalCosts(skimMatrixMultiKey.getSortedOrigins(), odMatrix);
+		System.out.println(zonalCostsWeighted);
+		
 		final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
 		final String unitCO2EmissionsFile = props.getProperty("unitCO2EmissionsFile");
 		final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");

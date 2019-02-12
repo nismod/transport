@@ -767,8 +767,6 @@ public class InputFileReader {
 
 		HashMap<Integer, HashMap<Integer, Double>> map = new HashMap<Integer, HashMap<Integer, Double>>();
 		
-		System.out.println(fileName);
-		
 		CSVParser parser = null;
 		int stationNumber = 0;
 		try {
@@ -776,7 +774,6 @@ public class InputFileReader {
 			//System.out.println(parser.getHeaderMap().toString());
 			Set<String> keySet = parser.getHeaderMap().keySet();
 			keySet.remove("year");
-			System.out.println("keySet = " + keySet);
 			stationNumber = keySet.size();
 			for (CSVRecord record : parser) {
 				//System.out.println(record);

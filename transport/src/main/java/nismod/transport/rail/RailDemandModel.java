@@ -1,5 +1,6 @@
 package nismod.transport.rail;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
@@ -7,29 +8,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.commons.collections4.keyvalue.MultiKey;
-import org.apache.commons.collections4.map.MultiKeyMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import nismod.transport.decision.Intervention;
-import nismod.transport.demand.AssignableODMatrix;
-import nismod.transport.demand.DemandModel;
-import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.ODMatrixMultiKey;
-import nismod.transport.demand.SkimMatrix;
-import nismod.transport.demand.SkimMatrixFreight;
-import nismod.transport.demand.DemandModel.ElasticityTypes;
-import nismod.transport.network.road.RoadNetwork;
-import nismod.transport.network.road.RoadNetworkAssignment;
-import nismod.transport.network.road.RouteSetGenerator;
-import nismod.transport.network.road.RoadNetworkAssignment.EnergyType;
-import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
-import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
-import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
-import nismod.transport.network.road.Route.WebTAG;
+import nismod.transport.demand.SkimMatrixMultiKey;
 import nismod.transport.utility.InputFileReader;
-import nismod.transport.zone.Zoning;
 
 public class RailDemandModel {
 
@@ -159,7 +144,68 @@ public class RailDemandModel {
 
 		//predicted demand	
 		RailStationDemand predictedDemand = new RailStationDemand(fromDemand.getHeader());
-	
+		
+		//check if car travel costs should be used from the input file or from the output of the road traffic model
+		boolean flagUseCarCostsFromRoadModel = Boolean.parseBoolean(this.props.getProperty("FLAG_USE_CAR_COST_FROM_ROAD_MODEL"));
+		if (flagUseCarCostsFromRoadModel) {
+			
+			LOGGER.debug("Using car costs from road traffic model: {}", flagUseCarCostsFromRoadModel);
+			
+			//erase data read from file
+			this.yearToCarCosts = new HashMap<Integer, HashMap<String, Double>>();
+			
+			String outputFolder = this.props.getProperty("outputFolder");
+			String costsFile = this.props.getProperty("costSkimMatrixFile");
+			String odMatrixFile;
+			if (fromYear == this.baseYear) 
+				odMatrixFile = "baseYearODMatrix.csv";
+			else 
+				odMatrixFile = this.props.getProperty("predictedODMatrixFile");
+			
+			//read OD matrix for fromYear
+			ODMatrixMultiKey odMatrix = null;
+			try {
+				odMatrix = new ODMatrixMultiKey(outputFolder + File.separator + fromYear + File.separator + odMatrixFile);
+			} catch (IOException e) {
+				LOGGER.error(e);
+				LOGGER.error("Unable to read car OD matrix file for year {}", fromYear);
+			}
+			//read cost skim matrix for fromYear
+			SkimMatrixMultiKey carCostMatrix = null;
+			try {
+				carCostMatrix = new SkimMatrixMultiKey(outputFolder + File.separator + fromYear + File.separator + costsFile, null);
+				carCostMatrix.printMatrixFormatted("Car cost matrix for year " + fromYear + ":");
+			} catch (IOException e) {
+				LOGGER.error(e);
+				LOGGER.error("Unable to read car costs file for year {}", fromYear);
+			}
+			
+			HashMap<String, Double> fromYearCarCosts = carCostMatrix.getAverageZonalCosts(odMatrix.getUnsortedOrigins(), odMatrix);
+			System.out.println("Zonal car costs in year " + fromYear + ":" + fromYearCarCosts);
+			this.yearToCarCosts.put(fromYear, fromYearCarCosts);
+					
+			//read OD matrix
+			odMatrixFile = this.props.getProperty("predictedODMatrixFile");
+			try {
+				odMatrix = new ODMatrixMultiKey(outputFolder + File.separator + predictedYear + File.separator + odMatrixFile);
+			} catch (IOException e) {
+				LOGGER.error(e);
+				LOGGER.error("Unable to read car OD matrix file for year {}", predictedYear);
+			}
+			
+			try {
+				carCostMatrix = new SkimMatrixMultiKey(outputFolder + File.separator + predictedYear + File.separator + costsFile, null);
+				carCostMatrix.printMatrixFormatted("Car cost matrix for year " + predictedYear + ":");
+			} catch (IOException e) {
+				LOGGER.error(e);
+				LOGGER.error("Unable to read car costs file for year {}", predictedYear);
+			}
+			
+			HashMap<String, Double> predictedYearCarCosts = carCostMatrix.getAverageZonalCosts(odMatrix.getUnsortedOrigins(), odMatrix);
+			System.out.println("Zonal car costs in year " + predictedYear + ":" + predictedYearCarCosts);
+			this.yearToCarCosts.put(predictedYear, predictedYearCarCosts);
+		}
+					
 		//PREDICTION
 		//for each station predict changes from the variables
 		for (RailStation station: fromDemand.getRailDemandList()) {
@@ -199,9 +245,7 @@ public class RailDemandModel {
 			RailStation predictedStation = new RailStation(station);
 			predictedStation.setYearlyUsage(predictedUsage);
 
-			int predictedDayUsage = (int) Math.round(predictedUsage / station.getRunDays());
-			if (predictedDayUsage == 0) 
-				predictedDayUsage = 1; //stops demand from disappearing.
+			double predictedDayUsage = (double) predictedUsage / station.getRunDays();
 			predictedStation.setDailyUsage(predictedDayUsage);
 
 			//store in predicted demand
