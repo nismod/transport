@@ -428,9 +428,7 @@ public class DemandModelTest {
 		dm.predictHighwayDemandUsingResultsOfFromYear(2025, 2015);
 		dm.saveAllResults(2025);
 
-
 		//Run rail model demand test that uses outputs from the road model
-		
 		final String railStationDemandFileName = props.getProperty("baseYearRailStationUsageFile");
 		final String elasticitiesRailFile = props.getProperty("elasticitiesRailFile");
 		final String railStationJourneyFaresFile = props.getProperty("railStationJourneyFaresFile");
@@ -446,12 +444,9 @@ public class DemandModelTest {
 													carZonalJourneyCostsFile,
 													null,
 													props);
-		
 		rdm.predictRailwayDemand(2025, 2015);
 		
 		rdm.saveRailStationDemand(2015, "./temp/railDemand2015.csv");
 		rdm.saveRailStationDemand(2025, "./temp/railDemand2025.csv");
-		
-		
 	}
 }

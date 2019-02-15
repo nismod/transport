@@ -36,6 +36,7 @@ import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.optimisation.SPSA5;
+import nismod.transport.rail.RailDemandModel;
 import nismod.transport.showcase.LandingGUI;
 import nismod.transport.utility.ConfigReader;
 import nismod.transport.utility.InputFileReader;
@@ -69,15 +70,25 @@ public class App {
 				.build();
 		options.addOption(configFile);
 		
-		Option runDemandModel = Option.builder("r")
-				.longOpt("runDemandModel")
+		Option runRoadModel = Option.builder("road")
+				.longOpt("runRoadModel")
 				.argName("PREDICTED_YEAR> <FROM_YEAR")
 				.hasArg()
 				.numberOfArgs(2)
-				.desc("Run demand model for a future year.")
+				.desc("Run road model for a future year.")
 				.valueSeparator(' ')
 				.build();
-		options.addOption(runDemandModel);
+		options.addOption(runRoadModel);
+		
+		Option runRailModel = Option.builder("rail")
+				.longOpt("runRailModel")
+				.argName("PREDICTED_YEAR> <FROM_YEAR")
+				.hasArg()
+				.numberOfArgs(2)
+				.desc("Run rail model for a future year.")
+				.valueSeparator(' ')
+				.build();
+		options.addOption(runRailModel);
 
 		Option passengerRoutes = Option.builder("p")
 				.longOpt("passengerRoutes")
@@ -163,11 +174,29 @@ public class App {
 			RoadNetwork roadNetwork = null;
 			Properties props = null;
 			File file = null;
+			
+			//read the config file
 			if (line.hasOption("c")) {
 				String path = ((String)line.getParsedOptionValue("configFile"));
 				LOGGER.info("Path to the config file: {}", path);
 
 				props = ConfigReader.getProperties(path);
+				final String outputFolder = props.getProperty("outputFolder");
+
+				//create output directory
+				file = new File(outputFolder);
+				if (!file.exists()) {
+					if (file.mkdirs()) {
+						LOGGER.info("Output directory is created.");
+					} else {
+						LOGGER.error("Failed to create output directory.");
+					}
+				}
+			}
+			
+			//create road network for options that use it
+			if (line.hasOption("p") || line.hasOption("t") || line.hasOption("f") || line.hasOption("m") || 
+				line.hasOption("e") || line.hasOption("ef") || line.hasOption("o") || line.hasOption("b") || line.hasOption("road")) {
 
 				final String areaCodeFileName = props.getProperty("areaCodeFileName");
 				final String areaCodeNearestNodeFile = props.getProperty("areaCodeNearestNodeFile");
@@ -182,24 +211,12 @@ public class App {
 				final URL nodesUrl = new URL(props.getProperty("nodesUrl"));
 				final URL AADFurl = new URL(props.getProperty("AADFurl"));
 
-				final String outputFolder = props.getProperty("outputFolder");
-
-				//create output directory
-				file = new File(outputFolder);
-				if (!file.exists()) {
-					if (file.mkdirs()) {
-						LOGGER.info("Output directory is created.");
-					} else {
-						LOGGER.error("Failed to create output directory.");
-					}
-				}
-
 				//create a road network
 				roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
 				roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
 				roadNetwork.makeEdgesAdmissible();
-
 			}
+
 
 			if (line.hasOption("p")) {
 				
@@ -228,9 +245,8 @@ public class App {
 					routes.generateRouteSetForODMatrix(passengerODM, Integer.parseInt(sliceIndex), Integer.parseInt(sliceNumber));
 					routes.saveRoutesBinary(file.getPath() + "routes" + sliceIndex + "of" + sliceNumber + ".dat", false);
 				}
-			}
 			
-			else if (line.hasOption("t")) {
+			} else if (line.hasOption("t")) {
 				
 				LOGGER.info("Generating routes for passenger tempro OD matrix.");
 
@@ -259,9 +275,8 @@ public class App {
 				routes.generateRouteSetForODMatrixTemproDistanceBased(temproODM, zoning, Integer.parseInt(sliceIndex), Integer.parseInt(sliceNumber));
 				LOGGER.debug(routes.getStatistics());
 				routes.saveRoutesBinary(file.getPath() + "TemproRoutes" + sliceIndex + "of" + sliceNumber + ".dat", false);
-			}
-
-			else if (line.hasOption("f")) {
+			
+			} else if (line.hasOption("f")) {
 				
 				LOGGER.info("Generating routes for freight OD matrix.");
 
@@ -287,9 +302,8 @@ public class App {
 					routes.generateRouteSetForFreightMatrix(freightMatrix, Integer.parseInt(sliceIndex), Integer.parseInt(sliceNumber));
 					routes.saveRoutesBinary(file.getPath() + "freightRoutes" + sliceIndex + "of" + sliceNumber + ".dat", false);
 				}
-			}
 			
-			if (line.hasOption("m")) {
+			} else if (line.hasOption("m")) {
 				
 				LOGGER.info("Merging two route files into one (and removing duplicates).");
 
@@ -307,11 +321,12 @@ public class App {
 				routes.readRoutesBinary(routesInputFile2);
 				routes.saveRoutesBinary(routeOutputFile, false);
 				//routes.saveRoutesBinary(file.getPath() + "mergedRoutes.dat", false);
-			}
-
-			else if (line.hasOption("d")) LandingGUI.main(null);
 			
-			else if (line.hasOption("e")) {
+			} else if (line.hasOption("d")) {
+				
+				LandingGUI.main(null); 
+			
+			} else if (line.hasOption("e")) {
 				
 				LOGGER.info("Estimating passenger tempro OD matrix using traffic counts.");
 				
@@ -382,9 +397,8 @@ public class App {
 				graph.setSize(600, 400);
 				graph.setVisible(true);
 				graph.saveToPNG("temproRebalancing.png");
-			}
 			
-			else if (line.hasOption("ef")) {
+			} else if (line.hasOption("ef")) {
 				
 				LOGGER.info("Estimating freight OD matrix using traffic counts.");
 				
@@ -548,9 +562,9 @@ public class App {
 				graph.saveToPNG("temproOptimising.png");
 			}
 
-			else if (line.hasOption("b") || line.hasOption("r")) { //run the main demand model
+			else if (line.hasOption("b") || line.hasOption("road")) { //run the road model
 				
-				LOGGER.info("Running the main demand model.");
+				LOGGER.info("Running the road traffic model.");
 
 				final String baseYear = props.getProperty("baseYear");
 				//final String fromYear = props.getProperty("fromYear");
@@ -649,9 +663,9 @@ public class App {
 					dm.saveAllResults(Integer.parseInt(baseYear));
 				}
 				
-				if (line.hasOption("r")) {
+				if (line.hasOption("road")) {
 					
-					String[] values = line.getOptionValues("runDemandModel");
+					String[] values = line.getOptionValues("runRoadModel");
 
 					final String predictedYear = values[0];
 					final String fromYear = values[1];
@@ -659,6 +673,36 @@ public class App {
 					dm.predictHighwayDemandUsingResultsOfFromYear(Integer.parseInt(predictedYear), Integer.parseInt(fromYear));
 					dm.saveAllResults(Integer.parseInt(predictedYear));
 				}
+			
+			} else if (line.hasOption("rail")) {
+				
+				LOGGER.info("Running the rail model.");
+				
+				String[] values = line.getOptionValues("runRailModel");
+
+				final String predictedYear = values[0];
+				final String fromYear = values[1];
+								
+				final String railStationDemandFileName = props.getProperty("baseYearRailStationUsageFile");
+				final String populationFile = props.getProperty("populationFile");
+				final String GVAFile = props.getProperty("GVAFile");
+				final String elasticitiesRailFile = props.getProperty("elasticitiesRailFile");
+				final String railStationJourneyFaresFile = props.getProperty("railStationJourneyFaresFile");
+				final String railStationGeneralisedJourneyTimesFile = props.getProperty("railStationGeneralisedJourneyTimesFile");
+				final String carZonalJourneyCostsFile = props.getProperty("carZonalJourneyCostsFile");
+				
+				RailDemandModel rdm = new RailDemandModel(railStationDemandFileName,
+						populationFile,
+						GVAFile,
+						elasticitiesRailFile,
+						railStationJourneyFaresFile,
+						railStationGeneralisedJourneyTimesFile,
+						carZonalJourneyCostsFile,
+						null,
+						props);
+
+				rdm.predictRailwayDemandUsingResultsOfFromYear(Integer.parseInt(predictedYear), Integer.parseInt(fromYear));
+				rdm.saveAllResults(Integer.parseInt(predictedYear));
 			}
 			
 			LOGGER.info("Program ended successfully.");

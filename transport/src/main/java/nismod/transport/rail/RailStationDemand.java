@@ -40,23 +40,25 @@ public class RailStationDemand {
 		this.railDemandMap = new HashMap<Integer, RailStation>();
 		this.railDemandList = new ArrayList<RailStation>();
 		this.header = new ArrayList<String>();
-
+		
 		CSVParser parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
 		for (Map.Entry<String, Integer> e: parser.getHeaderMap().entrySet()) {
 			this.header.add(e.getKey());
 		}
+		if (this.header.contains("year")) this.header.remove("year"); //model outputs will also contain year column
+
 		for (CSVRecord record : parser) { 
-			int nlc = Integer.parseInt(record.get(0));
-			RailModeType mode = RailModeType.valueOf(record.get(1));
-			String stationName = record.get(2);
-			String naptanName = record.get(3);
-			int easting = Integer.parseInt(record.get(4));
-			int northing = Integer.parseInt(record.get(5));
-			int yearUsage = Integer.parseInt(record.get(6));
-			double dayUsage = Double.parseDouble(record.get(7));
-			int runDays = Integer.parseInt(record.get(8));
-			String ladCode = record.get(9);
-			String ladName = record.get(10);
+			int nlc = Integer.parseInt(record.get("NLC"));
+			RailModeType mode = RailModeType.valueOf(record.get("Mode"));
+			String stationName = record.get("Station");
+			String naptanName = record.get("NaPTANname");
+			int easting = Integer.parseInt(record.get("Easting"));
+			int northing = Integer.parseInt(record.get("Northing"));
+			int yearUsage = Integer.parseInt(record.get("YearUsage"));
+			double dayUsage = Double.parseDouble(record.get("DayUsage"));
+			int runDays = Integer.parseInt(record.get("RunDays"));
+			String ladCode = record.get("LADcode");
+			String ladName = record.get("LADname");
 
 			//create station object and store into map and list
 			RailStation station = new RailStation(nlc, mode, stationName, naptanName, easting, northing, yearUsage, dayUsage, runDays, ladCode, ladName);

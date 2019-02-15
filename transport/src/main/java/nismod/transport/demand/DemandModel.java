@@ -743,8 +743,8 @@ public class DemandModel {
 			predictedFreightMatrixFile = "baseYearFreightMatrix.csv";
 		}
 
-		//load OD matrices, time and cost skim matrices, and link trave times for fromYear
-		LOGGER.info("Loading ouput data (OD matrices, time/cost skim matrices and link travel times) from year {}", fromYear);
+		//load OD matrices, time and cost skim matrices, and link travel times for fromYear
+		LOGGER.info("Loading output data (OD matrices, time/cost skim matrices and link travel times) from year {}", fromYear);
 
 		Map<TimeOfDay, Map<Integer, Double>> linkTravelTime = null;
 
