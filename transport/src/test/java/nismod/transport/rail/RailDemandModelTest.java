@@ -29,6 +29,7 @@ public class RailDemandModelTest {
 		final String railStationJourneyFaresFile = props.getProperty("railStationJourneyFaresFile");
 		final String railStationGeneralisedJourneyTimesFile = props.getProperty("railStationGeneralisedJourneyTimesFile");
 		final String carZonalJourneyCostsFile = props.getProperty("carZonalJourneyCostsFile");
+		final String railTripRatesFile = props.getProperty("railTripRatesFile");
 		
 		final String outputFolder = props.getProperty("outputFolder");
 				
@@ -49,6 +50,7 @@ public class RailDemandModelTest {
 													railStationJourneyFaresFile,
 													railStationGeneralisedJourneyTimesFile,
 													carZonalJourneyCostsFile,
+													railTripRatesFile,
 													null,
 													props);
 		
@@ -86,6 +88,7 @@ public class RailDemandModelTest {
 		final String railStationJourneyFaresFile = props.getProperty("railStationJourneyFaresFile");
 		final String railStationGeneralisedJourneyTimesFile = props.getProperty("railStationGeneralisedJourneyTimesFile");
 		final String carZonalJourneyCostsFile = props.getProperty("carZonalJourneyCostsFile");
+		final String railTripRatesFile = props.getProperty("railTripRatesFile");
 		
 		props.setProperty("FLAG_USE_CAR_COST_FROM_ROAD_MODEL", "false");
 		
@@ -96,6 +99,7 @@ public class RailDemandModelTest {
 													railStationJourneyFaresFile,
 													railStationGeneralisedJourneyTimesFile,
 													carZonalJourneyCostsFile,
+													railTripRatesFile,
 													null,
 													props);
 		
@@ -120,6 +124,7 @@ public class RailDemandModelTest {
 		final String railStationJourneyFaresFile = props.getProperty("railStationJourneyFaresFile");
 		final String railStationGeneralisedJourneyTimesFile = props.getProperty("railStationGeneralisedJourneyTimesFile");
 		final String carZonalJourneyCostsFile = props.getProperty("carZonalJourneyCostsFile");
+		final String railTripRatesFile = props.getProperty("railTripRatesFile");
 		
 		props.setProperty("FLAG_USE_CAR_COST_FROM_ROAD_MODEL", "false");
 			        
@@ -130,6 +135,7 @@ public class RailDemandModelTest {
 													railStationJourneyFaresFile,
 													railStationGeneralisedJourneyTimesFile,
 													carZonalJourneyCostsFile,
+													railTripRatesFile,
 													null,
 													props);
 		

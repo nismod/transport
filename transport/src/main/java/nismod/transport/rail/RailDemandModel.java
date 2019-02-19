@@ -55,25 +55,29 @@ public class RailDemandModel {
 	//station data
 	private HashMap<Integer, HashMap<Integer, Double>> yearToStationFares; //journey fares
 	private HashMap<Integer, HashMap<Integer, Double>> yearToStationGJTs; //generalised journey times
+	
+	//trip rates
+	private HashMap<Integer, Double> yearToTripRate; //trip rates
 
 	private List<Intervention> interventions;
 	private Properties props;
 
 	/**
 	 * Constructor for the rail demand model.
-	 * @param baseYearRailStationUsageFile
-	 * @param populationFile
-	 * @param GVAFile
-	 * @param elasticitiesFile
-	 * @param railStationJourneyFaresFile
-	 * @param railStationGeneralisedJourneyTimesFile
-	 * @param carZonalJourneyCostsFile
-	 * @param interventions
-	 * @param props
+	 * @param baseYearRailStationUsageFile Base year rail station usage file (demand).
+	 * @param populationFile Population file.
+	 * @param GVAFile GVA file.
+	 * @param elasticitiesFile Elasticites file.
+	 * @param railStationJourneyFaresFile Rail fares file.
+	 * @param railStationGeneralisedJourneyTimesFile GJT file.
+	 * @param carZonalJourneyCostsFile Zonal car journey costs file.
+	 * @param railTripRatesFile Rail trip rates file.
+	 * @param interventions List of interventions.
+	 * @param props Properties.
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
-	public RailDemandModel(String baseYearRailStationUsageFile, String populationFile, String GVAFile, String elasticitiesFile, String railStationJourneyFaresFile, String railStationGeneralisedJourneyTimesFile, String carZonalJourneyCostsFile, List<Intervention> interventions, Properties props) throws FileNotFoundException, IOException {
+	public RailDemandModel(String baseYearRailStationUsageFile, String populationFile, String GVAFile, String elasticitiesFile, String railStationJourneyFaresFile, String railStationGeneralisedJourneyTimesFile, String carZonalJourneyCostsFile, String railTripRatesFile, List<Intervention> interventions, Properties props) throws FileNotFoundException, IOException {
 
 		this.interventions = interventions;
 		this.props = props;
@@ -98,6 +102,9 @@ public class RailDemandModel {
 		this.yearToStationFares = InputFileReader.readRailStationCostsFile(railStationJourneyFaresFile);
 		//read station generalised journey times
 		this.yearToStationGJTs = InputFileReader.readRailStationCostsFile(railStationGeneralisedJourneyTimesFile);
+		
+		//read trip rates
+		this.yearToTripRate = InputFileReader.readRailTripRatesFile(railTripRatesFile);
 
 		//create map to store rail station demands for all years
 		this.yearToRailDemand = new HashMap<Integer, RailStationDemand>();
@@ -229,6 +236,9 @@ public class RailDemandModel {
 			System.out.println("Zonal car costs in year " + predictedYear + ":" + predictedYearCarCosts);
 			this.yearToCarCosts.put(predictedYear, predictedYearCarCosts);
 		}
+		
+		//get trip rate for predicted year
+		double tripRate = this.yearToTripRate.get(predictedYear);
 					
 		//PREDICTION
 		//for each station predict changes from the variables
@@ -254,11 +264,12 @@ public class RailDemandModel {
 			double newGJTRailStationZone = this.yearToStationGJTs.get(predictedYear).get(nlc);
 
 			//predict station usage
-			int predictedUsage = (int) Math.round(oldUsage * Math.pow((double) newPopulationRailStationZone / oldPopulationRailStationZone, elasticities.get(ElasticityTypes.POPULATION).get(station.getArea()))
-															* Math.pow((double) newGVARailStationZone / oldGVARailStationZone, elasticities.get(ElasticityTypes.GVA).get(station.getArea()))
-															* Math.pow((double) newCarCostsRailStationZone / oldCarCostsRailStationZone, elasticities.get(ElasticityTypes.COST_CAR).get(station.getArea()))
-															* Math.pow((double) newFaresRailStation / oldFaresRailStation, elasticities.get(ElasticityTypes.COST_RAIL).get(station.getArea()))
-															* Math.pow((double) newGJTRailStationZone / oldGJTRailStationZone, elasticities.get(ElasticityTypes.TIME).get(station.getArea())));
+			int predictedUsage = (int) Math.round(oldUsage * tripRate 
+												* Math.pow((double) newPopulationRailStationZone / oldPopulationRailStationZone, elasticities.get(ElasticityTypes.POPULATION).get(station.getArea()))
+												* Math.pow((double) newGVARailStationZone / oldGVARailStationZone, elasticities.get(ElasticityTypes.GVA).get(station.getArea()))
+												* Math.pow((double) newCarCostsRailStationZone / oldCarCostsRailStationZone, elasticities.get(ElasticityTypes.COST_CAR).get(station.getArea()))
+												* Math.pow((double) newFaresRailStation / oldFaresRailStation, elasticities.get(ElasticityTypes.COST_RAIL).get(station.getArea()))
+												* Math.pow((double) newGJTRailStationZone / oldGJTRailStationZone, elasticities.get(ElasticityTypes.TIME).get(station.getArea())));
 
 			if (predictedUsage == 0 && oldUsage != 0) 
 				predictedUsage = 1; //stops demand from disappearing (unless oldUsage was also 0)
@@ -401,6 +412,9 @@ public class RailDemandModel {
 			System.out.println("Zonal car costs in year " + predictedYear + ":" + predictedYearCarCosts);
 			this.yearToCarCosts.put(predictedYear, predictedYearCarCosts);
 		}
+		
+		//get trip rate for predicted year
+		double tripRate = this.yearToTripRate.get(predictedYear);
 					
 		//PREDICTION
 		//for each station predict changes from the variables
@@ -426,11 +440,12 @@ public class RailDemandModel {
 			double newGJTRailStationZone = this.yearToStationGJTs.get(predictedYear).get(nlc);
 
 			//predict station usage
-			int predictedUsage = (int) Math.round(oldUsage * Math.pow((double) newPopulationRailStationZone / oldPopulationRailStationZone, elasticities.get(ElasticityTypes.POPULATION).get(station.getArea()))
-															* Math.pow((double) newGVARailStationZone / oldGVARailStationZone, elasticities.get(ElasticityTypes.GVA).get(station.getArea()))
-															* Math.pow((double) newCarCostsRailStationZone / oldCarCostsRailStationZone, elasticities.get(ElasticityTypes.COST_CAR).get(station.getArea()))
-															* Math.pow((double) newFaresRailStation / oldFaresRailStation, elasticities.get(ElasticityTypes.COST_RAIL).get(station.getArea()))
-															* Math.pow((double) newGJTRailStationZone / oldGJTRailStationZone, elasticities.get(ElasticityTypes.TIME).get(station.getArea())));
+			int predictedUsage = (int) Math.round(oldUsage * tripRate 
+												* Math.pow((double) newPopulationRailStationZone / oldPopulationRailStationZone, elasticities.get(ElasticityTypes.POPULATION).get(station.getArea()))
+												* Math.pow((double) newGVARailStationZone / oldGVARailStationZone, elasticities.get(ElasticityTypes.GVA).get(station.getArea()))
+												* Math.pow((double) newCarCostsRailStationZone / oldCarCostsRailStationZone, elasticities.get(ElasticityTypes.COST_CAR).get(station.getArea()))
+												* Math.pow((double) newFaresRailStation / oldFaresRailStation, elasticities.get(ElasticityTypes.COST_RAIL).get(station.getArea()))
+												* Math.pow((double) newGJTRailStationZone / oldGJTRailStationZone, elasticities.get(ElasticityTypes.TIME).get(station.getArea())));
 
 			if (predictedUsage == 0 && oldUsage != 0) 
 				predictedUsage = 1; //stops demand from disappearing (unless oldUsage was also 0)

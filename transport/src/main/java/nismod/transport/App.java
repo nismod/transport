@@ -690,6 +690,7 @@ public class App {
 				final String railStationJourneyFaresFile = props.getProperty("railStationJourneyFaresFile");
 				final String railStationGeneralisedJourneyTimesFile = props.getProperty("railStationGeneralisedJourneyTimesFile");
 				final String carZonalJourneyCostsFile = props.getProperty("carZonalJourneyCostsFile");
+				final String railTripRatesFile = props.getProperty("railTripRatesFile");
 				
 				RailDemandModel rdm = new RailDemandModel(railStationDemandFileName,
 						populationFile,
@@ -698,6 +699,7 @@ public class App {
 						railStationJourneyFaresFile,
 						railStationGeneralisedJourneyTimesFile,
 						carZonalJourneyCostsFile,
+						railTripRatesFile,
 						null,
 						props);
 

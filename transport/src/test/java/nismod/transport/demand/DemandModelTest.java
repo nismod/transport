@@ -434,6 +434,7 @@ public class DemandModelTest {
 		final String railStationJourneyFaresFile = props.getProperty("railStationJourneyFaresFile");
 		final String railStationGeneralisedJourneyTimesFile = props.getProperty("railStationGeneralisedJourneyTimesFile");
 		final String carZonalJourneyCostsFile = props.getProperty("carZonalJourneyCostsFile");
+		final String railTripRatesFile = props.getProperty("railTripRatesFile");
 	        
 		RailDemandModel rdm = new RailDemandModel(railStationDemandFileName,
 													populationFile,
@@ -442,6 +443,7 @@ public class DemandModelTest {
 													railStationJourneyFaresFile,
 													railStationGeneralisedJourneyTimesFile,
 													carZonalJourneyCostsFile,
+													railTripRatesFile,
 													null,
 													props);
 		rdm.predictRailwayDemand(2025, 2015);

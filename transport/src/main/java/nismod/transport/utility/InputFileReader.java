@@ -816,4 +816,44 @@ public class InputFileReader {
 		return map;
 	}
 	
+	/**
+	 * Reads rail trip rates file.
+	 * @param fileName File name.
+	 * @return Map with rail trip rates.
+	 */
+	public static HashMap<Integer, Double> readRailTripRatesFile(String fileName) {
+
+		HashMap<Integer, Double> map = new HashMap<Integer, Double>();
+		
+		CSVParser parser = null;
+		try {
+			parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
+			//System.out.println(parser.getHeaderMap().toString());
+			Set<String> keySet = parser.getHeaderMap().keySet();
+			for (CSVRecord record : parser) {
+				int year = Integer.parseInt(record.get(0));
+				double tripRate = Double.parseDouble(record.get(1));
+				map.put(year, tripRate);
+			}
+		} catch (FileNotFoundException e) {
+			LOGGER.error(e);
+		} catch (IOException e) {
+			LOGGER.error(e);
+		} catch (Exception e) {
+			LOGGER.error(e);
+		} finally {
+			try {
+				parser.close();
+			} catch (IOException e) {
+				LOGGER.error(e);
+			}
+		}
+
+		LOGGER.debug("Rail station costs file read with data values for {} years.", map.keySet().size());
+		//LOGGER.debug("Cost:");
+		//LOGGER.debug(map);
+		
+		return map;
+	}
+	
 }
