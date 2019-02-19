@@ -1,9 +1,9 @@
-NLC,Mode,Station,NaPTANname,Easting,Northing,YearUsage,DayUsage,RunDays,LADcode,LADname
-5945,NRAIL,Bitterne,Bitterne Rail Station,443890,113380,97946,269.8236915,363,E06000045,Southampton
-5930,NRAIL,Sholing,Sholing Rail Station,444760,111000,120880,333.0027548,363,E06000045,Southampton
-5932,NRAIL,Southampton Central,Southampton Central Rail Station,441327,112161,6359692,17519.81267,363,E06000045,Southampton
-5933,NRAIL,Swaythling,Swaythling Rail Station,443910,115930,132472,364.9366391,363,E06000045,Southampton
-5925,NRAIL,Woolston,Woolston Rail Station,443904,111234,171778,473.2176309,363,E06000045,Southampton
-5909,NRAIL,Millbrook (Hampshire),Millbrook (Hants) Rail Station,439900,112600,38596,106.3250689,363,E06000045,Southampton
-5912,NRAIL,Redbridge,Redbridge (Hants) Rail Station,437340,113520,46066,126.9035813,363,E06000045,Southampton
-5914,NRAIL,St.Denys,St Denys Rail Station,443130,113815,318044,876.15427,363,E06000045,Southampton
+NLC,Mode,Station,NaPTANname,Easting,Northing,YearUsage,DayUsage,RunDays,LADcode,LADname,Area
+5945,NRAIL,Bitterne,Bitterne Rail Station,443890,113380,97946,269.8236915,363,E06000045,Southampton,SE
+5930,NRAIL,Sholing,Sholing Rail Station,444760,111000,120880,333.0027548,363,E06000045,Southampton,SE
+5932,NRAIL,Southampton Central,Southampton Central Rail Station,441327,112161,6359692,17519.81267,363,E06000045,Southampton,SE
+5933,NRAIL,Swaythling,Swaythling Rail Station,443910,115930,132472,364.9366391,363,E06000045,Southampton,SE
+5925,NRAIL,Woolston,Woolston Rail Station,443904,111234,171778,473.2176309,363,E06000045,Southampton,SE
+5909,NRAIL,Millbrook (Hampshire),Millbrook (Hants) Rail Station,439900,112600,38596,106.3250689,363,E06000045,Southampton,SE
+5912,NRAIL,Redbridge,Redbridge (Hants) Rail Station,437340,113520,46066,126.9035813,363,E06000045,Southampton,SE
+5914,NRAIL,St.Denys,St Denys Rail Station,443130,113815,318044,876.15427,363,E06000045,Southampton,SE
