@@ -5,6 +5,7 @@ import java.util.Properties;
 
 import org.junit.Test;
 
+import nismod.transport.rail.RailDemandModel.ElasticityArea;
 import nismod.transport.rail.RailStation.RailModeType;
 import nismod.transport.utility.ConfigReader;
 
@@ -20,7 +21,7 @@ public class RailStationDemandTest {
 		final String configFile = "./src/test/config/miniTestConfig.properties";
 		Properties props = ConfigReader.getProperties(configFile);
 		
-		RailStation st1 = new RailStation(0, RailModeType.NRAIL, "London Waterloo", "London Waterloo Rail Station", 12340, 12450, 12450, 15044, 363, "E06000006", "London Camden");
+		RailStation st1 = new RailStation(0, RailModeType.NRAIL, "London Waterloo", "London Waterloo Rail Station", 12340, 12450, 12450, 15044, 363, "E06000006", "London Camden", ElasticityArea.LT);
 		System.out.println(st1);
 		
 		final String railStationDemandFileName = props.getProperty("baseYearRailStationUsageFile");
@@ -39,7 +40,7 @@ public class RailStationDemandTest {
 		final String configFile = "./src/test/config/testConfig.properties";
 		Properties props = ConfigReader.getProperties(configFile);
 		
-		RailStation st1 = new RailStation(0, RailModeType.NRAIL, "London Waterloo", "London Waterloo Rail Station", 12340, 12450, 12450, 15044, 363, "E06000006", "London Camden");
+		RailStation st1 = new RailStation(0, RailModeType.NRAIL, "London Waterloo", "London Waterloo Rail Station", 12340, 12450, 12450, 15044, 363, "E06000006", "London Camden", ElasticityArea.LT);
 		System.out.println(st1);
 		
 		final String railStationDemandFileName = props.getProperty("baseYearRailStationUsageFile");

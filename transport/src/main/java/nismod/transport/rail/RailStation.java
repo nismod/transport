@@ -3,6 +3,8 @@ package nismod.transport.rail;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import nismod.transport.rail.RailDemandModel.ElasticityArea;
+
 /**
  * This class stores information about a rail station. 
  * @author Milan Lovric
@@ -23,12 +25,13 @@ public class RailStation {
 	private int runDays;
 	private String ladCode;
 	private String ladName;
+	private ElasticityArea area;
 	
 	public static enum RailModeType {
 		NRAIL, //National Rail (including London Overground, TfL rail)
 		TUBE, //London Underground
 		DLR, //Docklands Light Railway
-		TRAM //Trams
+		LRAIL //Light rail & Trams (e.g. Croydon Tramlink, Manchester Metrolink, Tyne & Wear (Newcastle) Metro
 	}
 	
 	/**
@@ -44,8 +47,9 @@ public class RailStation {
 	 * @param runDays The number of operational days in a year.
 	 * @param ladCode LAD code of the zone in which the station is located.
 	 * @param ladName LAD name of the zone in which the station is located.
+	 * @param area Elasticity area in which the station is located.
 	 */
-	public RailStation(int nlc, RailModeType mode, String stationName, String naptanName, int easting, int northing, int yearUsage, double dayUsage, int runDays, String ladCode, String ladName) {
+	public RailStation(int nlc, RailModeType mode, String stationName, String naptanName, int easting, int northing, int yearUsage, double dayUsage, int runDays, String ladCode, String ladName, ElasticityArea area) {
 		
 		this.nlc = nlc;
 		this.mode = mode;
@@ -58,6 +62,7 @@ public class RailStation {
 		this.runDays = runDays;
 		this.ladCode = ladCode;
 		this.ladName = ladName;
+		this.area = area;
 	}
 	
 	/**
@@ -68,7 +73,7 @@ public class RailStation {
 		
 		this(station.getNLC(), station.getMode(), station.getName(), station.getNaPTANName(),
 			 station.getEasting(), station.getNorthing(), station.getYearlyUsage(), 
-			 station.getDayUsage(), station.getRunDays(), station.getLADCode(), station.getLADName());
+			 station.getDayUsage(), station.getRunDays(), station.getLADCode(), station.getLADName(), station.getArea());
 	}
 	
 	/**
@@ -188,6 +193,15 @@ public class RailStation {
 		return this.ladName;
 	}
 	
+	/**
+	 * Getter method for the elasticity area in which station is located.
+	 * @return LAD name.
+	 */
+	public ElasticityArea getArea() {
+		
+		return this.area;
+	}
+	
 	@Override
 	public String toString() {
 		
@@ -213,6 +227,8 @@ public class RailStation {
 		sb.append(this.ladCode);
 		sb.append(", ");
 		sb.append(this.ladName);
+		sb.append(", ");
+		sb.append(this.area);
 
 		return sb.toString();
 	}

@@ -35,7 +35,15 @@ public class RailDemandModel {
 		COST_CAR, //passenger car trip cost (fuel + congestion)
 		TIME, //generalised journey time
 	}
-	private Map<ElasticityTypes, Double> elasticities;
+	
+	public static enum ElasticityArea {
+		LT, //London Travelcard
+		SE, //South East
+		PTE, //Passenger Transport Executives
+		OTHER //Other areas
+	}
+	
+	private Map<ElasticityTypes, Map<ElasticityArea, Double>> elasticities;
 
 	private HashMap<Integer, RailStationDemand> yearToRailDemand; //rail demand
 
@@ -246,11 +254,11 @@ public class RailDemandModel {
 			double newGJTRailStationZone = this.yearToStationGJTs.get(predictedYear).get(nlc);
 
 			//predict station usage
-			int predictedUsage = (int) Math.round(oldUsage	* Math.pow((double) newPopulationRailStationZone / oldPopulationRailStationZone, elasticities.get(ElasticityTypes.POPULATION))
-					* Math.pow((double) newGVARailStationZone / oldGVARailStationZone, elasticities.get(ElasticityTypes.GVA))
-					* Math.pow((double) newCarCostsRailStationZone / oldCarCostsRailStationZone, elasticities.get(ElasticityTypes.COST_CAR))
-					* Math.pow((double) newFaresRailStation / oldFaresRailStation, elasticities.get(ElasticityTypes.COST_RAIL))
-					* Math.pow((double) newGJTRailStationZone / oldGJTRailStationZone, elasticities.get(ElasticityTypes.TIME)));
+			int predictedUsage = (int) Math.round(oldUsage * Math.pow((double) newPopulationRailStationZone / oldPopulationRailStationZone, elasticities.get(ElasticityTypes.POPULATION).get(station.getArea()))
+															* Math.pow((double) newGVARailStationZone / oldGVARailStationZone, elasticities.get(ElasticityTypes.GVA).get(station.getArea()))
+															* Math.pow((double) newCarCostsRailStationZone / oldCarCostsRailStationZone, elasticities.get(ElasticityTypes.COST_CAR).get(station.getArea()))
+															* Math.pow((double) newFaresRailStation / oldFaresRailStation, elasticities.get(ElasticityTypes.COST_RAIL).get(station.getArea()))
+															* Math.pow((double) newGJTRailStationZone / oldGJTRailStationZone, elasticities.get(ElasticityTypes.TIME).get(station.getArea())));
 
 			if (predictedUsage == 0 && oldUsage != 0) 
 				predictedUsage = 1; //stops demand from disappearing (unless oldUsage was also 0)
@@ -418,11 +426,11 @@ public class RailDemandModel {
 			double newGJTRailStationZone = this.yearToStationGJTs.get(predictedYear).get(nlc);
 
 			//predict station usage
-			int predictedUsage = (int) Math.round(oldUsage	* Math.pow((double) newPopulationRailStationZone / oldPopulationRailStationZone, elasticities.get(ElasticityTypes.POPULATION))
-					* Math.pow((double) newGVARailStationZone / oldGVARailStationZone, elasticities.get(ElasticityTypes.GVA))
-					* Math.pow((double) newCarCostsRailStationZone / oldCarCostsRailStationZone, elasticities.get(ElasticityTypes.COST_CAR))
-					* Math.pow((double) newFaresRailStation / oldFaresRailStation, elasticities.get(ElasticityTypes.COST_RAIL))
-					* Math.pow((double) newGJTRailStationZone / oldGJTRailStationZone, elasticities.get(ElasticityTypes.TIME)));
+			int predictedUsage = (int) Math.round(oldUsage * Math.pow((double) newPopulationRailStationZone / oldPopulationRailStationZone, elasticities.get(ElasticityTypes.POPULATION).get(station.getArea()))
+															* Math.pow((double) newGVARailStationZone / oldGVARailStationZone, elasticities.get(ElasticityTypes.GVA).get(station.getArea()))
+															* Math.pow((double) newCarCostsRailStationZone / oldCarCostsRailStationZone, elasticities.get(ElasticityTypes.COST_CAR).get(station.getArea()))
+															* Math.pow((double) newFaresRailStation / oldFaresRailStation, elasticities.get(ElasticityTypes.COST_RAIL).get(station.getArea()))
+															* Math.pow((double) newGJTRailStationZone / oldGJTRailStationZone, elasticities.get(ElasticityTypes.TIME).get(station.getArea())));
 
 			if (predictedUsage == 0 && oldUsage != 0) 
 				predictedUsage = 1; //stops demand from disappearing (unless oldUsage was also 0)
@@ -448,7 +456,6 @@ public class RailDemandModel {
 		//print from demand and predicted demand
 		fromDemand.printRailDemandNLCSorted("From demand:");
 		predictedDemand.printRailDemandNLCSorted("Predicted demand:");
-		
 	}
 	
 	/**

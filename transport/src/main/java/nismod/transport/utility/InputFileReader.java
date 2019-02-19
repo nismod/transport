@@ -24,6 +24,7 @@ import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.network.road.Route.WebTAG;
 import nismod.transport.rail.RailDemandModel;
+import nismod.transport.rail.RailDemandModel.ElasticityArea;
 
 /**
  * InputFileReader reads input files and provides them as various data structures required by other classes.
@@ -170,9 +171,9 @@ public class InputFileReader {
 	 * @param fileName File name.
 	 * @return Map with elasticity parameters.
 	 */
-	public static Map<RailDemandModel.ElasticityTypes, Double> readRailElasticitiesFile (String fileName) {
+	public static Map<RailDemandModel.ElasticityTypes, Map<RailDemandModel.ElasticityArea, Double>> readRailElasticitiesFile (String fileName) {
 
-		Map<RailDemandModel.ElasticityTypes, Double> map = new EnumMap<>(RailDemandModel.ElasticityTypes.class);
+		Map<RailDemandModel.ElasticityTypes, Map<ElasticityArea, Double>> map = new EnumMap<>(RailDemandModel.ElasticityTypes.class);
 		CSVParser parser = null;
 		try {
 			parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
@@ -182,8 +183,16 @@ public class InputFileReader {
 			for (CSVRecord record : parser) {
 				//System.out.println(record);
 				RailDemandModel.ElasticityTypes et = RailDemandModel.ElasticityTypes.valueOf(record.get(0));
-				Double elasticity = Double.parseDouble(record.get(1));		
-				map.put(et, elasticity);
+				ElasticityArea ea = ElasticityArea.valueOf(record.get(1));
+				Double elasticity = Double.parseDouble(record.get(2));
+				
+				//fetch map
+				Map<ElasticityArea, Double> fm = map.get(et);
+				if (fm == null) { 
+					fm = new EnumMap<>(ElasticityArea.class);
+					map.put(et,  fm);
+				}
+				fm.put(ea, elasticity);
 			}
 		} catch (FileNotFoundException e) {
 			LOGGER.error(e);

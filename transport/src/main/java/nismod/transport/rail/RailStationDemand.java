@@ -18,6 +18,7 @@ import org.apache.commons.csv.CSVRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import nismod.transport.rail.RailDemandModel.ElasticityArea;
 import nismod.transport.rail.RailStation.RailModeType;
 
 /**
@@ -59,9 +60,10 @@ public class RailStationDemand {
 			int runDays = Integer.parseInt(record.get("RunDays"));
 			String ladCode = record.get("LADcode");
 			String ladName = record.get("LADname");
+			ElasticityArea area = ElasticityArea.valueOf(record.get("Area"));
 
 			//create station object and store into map and list
-			RailStation station = new RailStation(nlc, mode, stationName, naptanName, easting, northing, yearUsage, dayUsage, runDays, ladCode, ladName);
+			RailStation station = new RailStation(nlc, mode, stationName, naptanName, easting, northing, yearUsage, dayUsage, runDays, ladCode, ladName, area);
 			this.railDemandMap.put(nlc, station);
 			this.railDemandList.add(station);
 		}
@@ -222,6 +224,7 @@ public class RailStationDemand {
 				record.add(String.valueOf(station.getRunDays()));
 				record.add(station.getLADCode());
 				record.add(station.getLADName());
+				record.add(String.valueOf(station.getArea()));
 
 				csvFilePrinter.printRecord(record);	
 			}		
