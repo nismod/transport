@@ -503,6 +503,10 @@ public class RailDemandModel {
 		
 		String outputFile = file.getPath() + File.separator + predictedRailDemandFile;
 		this.yearToRailDemand.get(year).saveRailStationDemand(year, outputFile);
+		
+		String zonalRailDemandFile = props.getProperty("zonalRailDemandFile");
+		outputFile = file.getPath() + File.separator + zonalRailDemandFile;
+		this.yearToRailDemand.get(year).saveZonalRailStationDemand(year, outputFile);
 	}
 
 	/**
@@ -523,5 +527,15 @@ public class RailDemandModel {
 	public void saveRailStationDemand(int year, String outputFile) {
 		
 		this.yearToRailDemand.get(year).saveRailStationDemand(year, outputFile);
+	}
+	
+	/**
+	 * Saves zonal rail station demand to an output file.
+	 * @param year Year of the data.
+	 * @param outputFile Output file name (with path).
+	 */
+	public void saveZonalRailStationDemand(int year, String outputFile) {
+		
+		this.yearToRailDemand.get(year).saveZonalRailStationDemand(year, outputFile);
 	}
 }

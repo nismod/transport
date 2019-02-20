@@ -170,6 +170,164 @@ public class RailStationDemand {
 		for (RailStation station: this.railDemandList)
 			System.out.println(station.toString());
 	}
+	
+	/**
+	 * Calculates yearly zonal usage (the sum for all stations within LAD).
+	 * @return Yearly zonal usage.
+	 */
+	public HashMap<String, Integer> calculateYearlyZonalUsageTotal() {
+		
+		HashMap<String, Integer> zonalUsage = new HashMap<String, Integer>();
+		
+		for (RailStation station: this.railDemandList) {
+			
+			String zone = station.getLADCode();
+			
+			//fetch current usage
+			Integer usage = zonalUsage.get(zone);
+			if (usage == null) usage = 0;
+			
+			//add station usage
+			usage += station.getYearlyUsage();
+			zonalUsage.put(zone, usage);
+		}
+		
+		return zonalUsage;
+	}
+	
+	/**
+	 * Calculates yearly zonal usage (the average for all stations within LAD).
+	 * @return Yearly zonal usage per station.
+	 */
+	public HashMap<String, Integer> calculateYearlyZonalUsageAverage() {
+		
+		HashMap<String, Integer> zonalUsageTotal = new HashMap<String, Integer>();
+		HashMap<String, Integer> numberOfStationsPerLAD = new HashMap<String, Integer>();
+		HashMap<String, Integer> zonalUsageAverage = new HashMap<String, Integer>();
+	
+		//calculate number of stations per LAD and total zonal usage
+		for (RailStation station: this.railDemandList) {
+			
+			String zone = station.getLADCode();
+			
+			//fetch current usage
+			Integer usage = zonalUsageTotal.get(zone);
+			if (usage == null) usage = 0;
+			
+			//add station usage
+			usage += station.getYearlyUsage();
+			zonalUsageTotal.put(zone, usage);
+			
+			//fetch current number of stations
+			Integer number = numberOfStationsPerLAD.get(zone);
+			if (number == null) number = 0;
+			
+			//increase number of stations
+			number++;
+			numberOfStationsPerLAD.put(zone, number);
+		}
+		
+		//calculate average zonal usage
+		for (String zone: numberOfStationsPerLAD.keySet()) {
+			
+			Integer averageUsage = (int) Math.round((double) zonalUsageTotal.get(zone) / numberOfStationsPerLAD.get(zone));
+			zonalUsageAverage.put(zone, averageUsage);
+		}
+		
+		return zonalUsageAverage;
+	}
+	
+	/**
+	 * Calculates daily zonal usage (the sum for all stations within LAD).
+	 * @return Daily zonal usage.
+	 */
+	public HashMap<String, Double> calculateDailyZonalUsageTotal() {
+		
+		HashMap<String, Double> zonalUsage = new HashMap<String, Double>();
+		
+		for (RailStation station: this.railDemandList) {
+			
+			String zone = station.getLADCode();
+			
+			//fetch current usage
+			Double usage = zonalUsage.get(zone);
+			if (usage == null) usage = 0.0;
+			
+			//add station usage
+			usage += station.getDayUsage();
+			zonalUsage.put(zone, usage);
+		}
+		
+		return zonalUsage;
+	}
+	
+	/**
+	 * Calculates daily zonal usage (the average for all stations within LAD).
+	 * @return Daily zonal usage per station.
+	 */
+	public HashMap<String, Double> calculateDailyZonalUsageAverage() {
+		
+		HashMap<String, Double> zonalUsageTotal = new HashMap<String, Double>();
+		HashMap<String, Integer> numberOfStationsPerLAD = new HashMap<String, Integer>();
+		HashMap<String, Double> zonalUsageAverage = new HashMap<String, Double>();
+	
+		//calculate number of stations per LAD and total zonal usage
+		for (RailStation station: this.railDemandList) {
+			
+			String zone = station.getLADCode();
+			
+			//fetch current usage
+			Double usage = zonalUsageTotal.get(zone);
+			if (usage == null) usage = 0.0;
+			
+			//add station usage
+			usage += station.getDayUsage();
+			zonalUsageTotal.put(zone, usage);
+			
+			//fetch current number of stations
+			Integer number = numberOfStationsPerLAD.get(zone);
+			if (number == null) number = 0;
+			
+			//increase number of stations
+			number++;
+			numberOfStationsPerLAD.put(zone, number);
+		}
+		
+		//calculate average zonal usage
+		for (String zone: numberOfStationsPerLAD.keySet()) {
+			
+			Double averageUsage = zonalUsageTotal.get(zone) / numberOfStationsPerLAD.get(zone);
+			zonalUsageAverage.put(zone, averageUsage);
+		}
+		
+		return zonalUsageAverage;
+	}
+	
+	/**
+	 * Creates a list of stations within each LAD.
+	 * @return List of stations within each LAD.
+	 */
+	public HashMap<String, List<RailStation>> createListOfStationsWithinEachLAD() {
+		
+		HashMap<String, List<RailStation>> map = new HashMap<String, List<RailStation>>();
+		
+		for (RailStation station: this.railDemandList) {
+			
+			String zone = station.getLADCode();
+			
+			//fetch current list
+			List<RailStation> list = map.get(zone);
+			if (list == null) {
+				list = new ArrayList<RailStation>();
+				map.put(zone,  list);
+			}
+			
+			//add station to the right list
+			list.add(station);
+		}
+		
+		return map;
+	}
 
 	/**
 	 * Sorts stations on NLC in an ascending order.
@@ -241,6 +399,65 @@ public class RailStationDemand {
 		}
 	}
 
+	/**
+	 * Saves zonal rail station demand to an output file.
+	 * @param year Year of the data.
+	 * @param outputFile Output file name (with path).
+	 */
+	public void saveZonalRailStationDemand(int year, String outputFile) {
+
+		LOGGER.debug("Saving zonal rail station demand to a file.");
+		
+		HashMap<String, Integer> zonalUsageTotal = this.calculateYearlyZonalUsageTotal();
+		HashMap<String, Integer> zonalUsageAverage = this.calculateYearlyZonalUsageAverage();
+		HashMap<String, Double> dailyZonalUsageTotal = this.calculateDailyZonalUsageTotal();
+		HashMap<String, Double> dailyZonalUsageAverage = this.calculateDailyZonalUsageAverage();
+		HashMap<String, List<RailStation>> zoneToList = this.createListOfStationsWithinEachLAD();
+
+		String NEW_LINE_SEPARATOR = "\n";
+		ArrayList<String> outputHeader = new ArrayList<String>();
+		outputHeader.add("year");
+		outputHeader.add("LADcode");
+		outputHeader.add("yearTotal");
+		outputHeader.add("yearAvg");
+		outputHeader.add("dayTotal");
+		outputHeader.add("dayAvg");
+		outputHeader.add("stationsNo");
+		
+		FileWriter fileWriter = null;
+		CSVPrinter csvFilePrinter = null;
+		CSVFormat csvFileFormat = CSVFormat.DEFAULT.withRecordSeparator(NEW_LINE_SEPARATOR);
+		try {
+			fileWriter = new FileWriter(outputFile);
+			csvFilePrinter = new CSVPrinter(fileWriter, csvFileFormat);
+			csvFilePrinter.printRecord(outputHeader);
+			ArrayList<String> record = new ArrayList<String>();
+
+			for (String zone: zonalUsageTotal.keySet()) {
+				record.clear();
+				record.add(Integer.toString(year));
+				record.add(zone);
+				record.add(Integer.toString(zonalUsageTotal.get(zone)));
+				record.add(Double.toString(zonalUsageAverage.get(zone)));
+				record.add(Double.toString(dailyZonalUsageTotal.get(zone)));
+				record.add(Double.toString(dailyZonalUsageAverage.get(zone)));
+				record.add(Integer.toString(zoneToList.get(zone).size()));
+				
+				csvFilePrinter.printRecord(record);	
+			}		
+		} catch (Exception e) {
+			LOGGER.error(e);
+		} finally {
+			try {
+				fileWriter.flush();
+				fileWriter.close();
+				csvFilePrinter.close();
+			} catch (IOException e) {
+				LOGGER.error(e);
+			}
+		}
+	}
+	
 	/**
 	 * Sorts stations on station name in an ascending order.
 	 */

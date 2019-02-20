@@ -107,7 +107,8 @@ public class RailDemandModelTest {
 		
 		rdm.saveRailStationDemand(2015, "./temp/miniRailDemand2015.csv");
 		rdm.saveRailStationDemand(2020, "./temp/miniRailDemand2020.csv");
-		
+		rdm.saveZonalRailStationDemand(2015, "./temp/miniZonalRailDemand2015.csv");
+		rdm.saveZonalRailStationDemand(2020, "./temp/miniZonalRailDemand2020.csv");
 	}
 
 	@Test
@@ -145,5 +146,7 @@ public class RailDemandModelTest {
 		
 		rdm.saveRailStationDemand(2015, "./temp/railDemand2015.csv");
 		rdm.saveRailStationDemand(2020, "./temp/railDemand2020.csv");
+		rdm.saveZonalRailStationDemand(2015, "./temp/zonalRailDemand2015.csv");
+		rdm.saveZonalRailStationDemand(2020, "./temp/zonalRailDemand2020.csv");
 	}
 }
