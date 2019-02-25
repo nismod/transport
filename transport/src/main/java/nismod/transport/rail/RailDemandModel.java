@@ -25,8 +25,7 @@ public class RailDemandModel {
 
 	private final static Logger LOGGER = LogManager.getLogger(RailDemandModel.class);
 
-	public final int baseYear;
-	//public final int predictionIterations;
+	public static int baseYear;
 
 	public static enum ElasticityTypes {
 		POPULATION, //population
@@ -118,6 +117,12 @@ public class RailDemandModel {
 		
 		//save base-year passenger rail demand to output folder
 		this.saveAllResults(baseYear);
+		
+		//install interventions (if not already installed)
+		if (interventions != null) 
+			for (Intervention i: interventions)
+				if (!i.getState())				
+					i.install(this);
 	}
 
 	/**
@@ -128,9 +133,9 @@ public class RailDemandModel {
 	 */
 	public void predictRailwayDemands(int toYear, int baseYear) {
 
-		Boolean flagPredictIntermediateYears = Boolean.parseBoolean(this.props.getProperty("FLAG_PREDICT_INTERMEDIATE_YEARS"));
+		Boolean flagPredictIntermediateYearsRail = Boolean.parseBoolean(this.props.getProperty("FLAG_PREDICT_INTERMEDIATE_YEARS_RAIL"));
 
-		if (flagPredictIntermediateYears) { //predict all intermediate years
+		if (flagPredictIntermediateYearsRail) { //predict all intermediate years
 			for (int year = baseYear; year <= toYear - 1; year++) {
 				this.predictRailwayDemand(year + 1, year);
 			}
@@ -162,19 +167,18 @@ public class RailDemandModel {
 
 		if (predictedYear == fromYear) return; //skip the rest if predicting the same year
 
-		//check if the right interventions have been installed
-		if (interventions != null) 
-			for (Intervention i: interventions) {
-				if (i.getStartYear() <= predictedYear && i.getEndYear() >= predictedYear && !i.getState())				i.install(this);
-				if (i.getEndYear() < predictedYear && i.getState() || i.getStartYear() > predictedYear && i.getState()) i.uninstall(this);
-			}
-
-
 		//old demand
 		RailStationDemand fromDemand = this.yearToRailDemand.get(fromYear);
+		if (fromDemand == null) {
+			LOGGER.error("Rail demand for year {} does not exist!", fromYear);
+			return;
+		}
 
 		//predicted demand	
-		RailStationDemand predictedDemand = new RailStationDemand(fromDemand.getHeader());
+		RailStationDemand predictedDemand = this.yearToRailDemand.get(predictedYear);
+		if (predictedDemand == null) {
+			predictedDemand = new RailStationDemand(fromDemand.getHeader());	
+		}
 		
 		//check if car travel costs should be used from the input file or from the output of the road traffic model
 		boolean flagUseCarCostsFromRoadModel = Boolean.parseBoolean(this.props.getProperty("FLAG_USE_CAR_COST_FROM_ROAD_MODEL"));
@@ -247,7 +251,7 @@ public class RailDemandModel {
 			int oldUsage = station.getYearlyUsage();
 			int nlc = station.getNLC();
 			String zone = station.getLADCode();
-
+			
 			int oldPopulationRailStationZone = this.yearToZoneToPopulation.get(fromYear).get(zone);
 			int newPopulationRailStationZone = this.yearToZoneToPopulation.get(predictedYear).get(zone);
 
@@ -293,8 +297,8 @@ public class RailDemandModel {
 		LOGGER.debug("Finished predicting {} railway demand from {} demand.", predictedYear, fromYear);
 
 		//print from demand and predicted demand
-		fromDemand.printRailDemandNLCSorted("From demand:");
-		predictedDemand.printRailDemandNLCSorted("Predicted demand:");
+		fromDemand.printRailDemandNLCSorted("From demand (year " + fromYear + "):");
+		predictedDemand.printRailDemandNLCSorted("Predicted demand (year " + predictedYear + "):");
 	}
 	
 	/**
@@ -335,19 +339,19 @@ public class RailDemandModel {
 			return;
 		}
 		
-		//check if the right interventions have been installed
-		if (interventions != null) 
-			for (Intervention i: interventions) {
-				if (i.getStartYear() <= predictedYear && i.getEndYear() >= predictedYear && !i.getState())				i.install(this);
-				if (i.getEndYear() < predictedYear && i.getState() || i.getStartYear() > predictedYear && i.getState()) i.uninstall(this);
-			}
-				
 		//old demand
 		RailStationDemand fromDemand = this.yearToRailDemand.get(fromYear);
+		if (fromDemand == null) {
+			LOGGER.error("Rail demand for year {} does not exist!", fromYear);
+			return;
+		}
 
 		//predicted demand	
-		RailStationDemand predictedDemand = new RailStationDemand(fromDemand.getHeader());
-
+		RailStationDemand predictedDemand = this.yearToRailDemand.get(predictedYear);
+		if (predictedDemand == null) {
+			predictedDemand = new RailStationDemand(fromDemand.getHeader());	
+		}
+		
 		//check if car travel costs should be used from the input file or from the output of the road traffic model
 		boolean flagUseCarCostsFromRoadModel = Boolean.parseBoolean(this.props.getProperty("FLAG_USE_CAR_COST_FROM_ROAD_MODEL"));
 		if (flagUseCarCostsFromRoadModel) {
@@ -469,8 +473,8 @@ public class RailDemandModel {
 		LOGGER.debug("Finished predicting {} railway demand from {} demand.", predictedYear, fromYear);
 
 		//print from demand and predicted demand
-		fromDemand.printRailDemandNLCSorted("From demand:");
-		predictedDemand.printRailDemandNLCSorted("Predicted demand:");
+		fromDemand.printRailDemandNLCSorted("From demand (year " + fromYear + "):");
+		predictedDemand.printRailDemandNLCSorted("Predicted demand (year " + predictedYear + "):");
 	}
 	
 	/**
@@ -517,6 +521,16 @@ public class RailDemandModel {
 	public RailStationDemand getRailStationDemand (int year) {
 
 		return this.yearToRailDemand.get(year);
+	}
+	
+	/**
+	 * Setter method for the passenger rail station demand in a given year.
+	 * @param year Year for which the demand is set.
+	 * @param demand Rail station demand.
+	 */
+	public void setRailStationDemand (int year, RailStationDemand demand) {
+
+		this.yearToRailDemand.put(year, demand);
 	}
 
 	/**

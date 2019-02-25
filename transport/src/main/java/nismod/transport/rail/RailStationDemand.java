@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -84,13 +85,50 @@ public class RailStationDemand {
 	}
 
 	/**
-	 * Add a rail station data to the rail demand.
+	 * Add a rail station data to the rail demand (overwrites existing one).
 	 * @param station
 	 */
 	public void addStation(RailStation station) {
 
+		//this will overwrite existing one
 		this.railDemandMap.put(station.getNLC(), station);
+		
+		//remove potentially existing one (so as not to add doubles)
+		Iterator<RailStation> iterator = this.railDemandList.iterator();
+		while(iterator.hasNext()) {
+			RailStation st = iterator.next();
+			if (st.getNLC() == station.getNLC()) {
+				iterator.remove();
+			}
+		}
 		this.railDemandList.add(station);
+	}
+	
+	/**
+	 * Remove station with a given NLC code.
+	 * @param NLC Station code.
+	 * @return true if station existed in demand and was successfully removed.
+	 */
+	public boolean removeStation(int NLC) {
+		
+		boolean mapRemoval = false;
+		boolean listRemoval = false;
+		
+		if (this.railDemandMap.containsKey(NLC)) {
+			this.railDemandMap.remove(NLC);
+			mapRemoval = true;
+		}
+		
+		Iterator<RailStation> iterator = this.railDemandList.iterator();
+		while(iterator.hasNext()) {
+			RailStation station = iterator.next();
+			if (station.getNLC() == NLC) {
+				iterator.remove();
+				listRemoval = true;
+			}
+		}
+		
+		return (mapRemoval && listRemoval);
 	}
 
 	/**

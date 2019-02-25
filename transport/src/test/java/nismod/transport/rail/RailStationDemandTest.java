@@ -107,5 +107,34 @@ public class RailStationDemandTest {
 			
 			assertEquals("Average usage uses correct number of stations", list.size(), (int) Math.round(total/average));
 		}
+		
+		int size1 = rsd.getRailDemandList().size();
+		int size2 = rsd.getRailDemandMap().size();
+		System.out.println("Number of stations: " + size1);
+		System.out.println("Number of stations: " + size2);
+		assertEquals("Number of stations is equal", size1, size2);
+		
+		//add station
+		rsd.addStation(st1);
+		rsd.addStation(st1); //it should not add duplicate
+		rsd.addStation(st1); //it should not add duplicate
+		int size3 = rsd.getRailDemandList().size();
+		int size4 = rsd.getRailDemandMap().size();
+		System.out.println("Number of stations: " + size3);
+		System.out.println("Number of stations: " + size4);
+		assertEquals("Number of stations is equal", size3, size4);
+		assertEquals("Number of stations is correct", size1+1, size3);
+		
+		//remove station
+		boolean result = rsd.removeStation(0);
+		if (result) System.out.println("Station removed.");
+		result = rsd.removeStation(0);
+		if (result) System.out.println("Station removed."); //it should not print (already removed)
+		int size5 = rsd.getRailDemandList().size();
+		int size6 = rsd.getRailDemandMap().size();
+		System.out.println("Number of stations: " + size5);
+		System.out.println("Number of stations: " + size6);
+		assertEquals("Number of stations is equal", size5, size6);
+		assertEquals("Number of stations is correct", size1, size5);
 	}
 }

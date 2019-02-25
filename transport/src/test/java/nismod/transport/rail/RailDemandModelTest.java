@@ -2,11 +2,15 @@ package nismod.transport.rail;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import nismod.transport.decision.Intervention;
+import nismod.transport.decision.NewRailStation;
 import nismod.transport.utility.ConfigReader;
 
 /**
@@ -91,6 +95,11 @@ public class RailDemandModelTest {
 		final String railTripRatesFile = props.getProperty("railTripRatesFile");
 		
 		props.setProperty("FLAG_USE_CAR_COST_FROM_ROAD_MODEL", "false");
+
+		final String newRailStationFile = props.getProperty("newRailStationFile");
+		Intervention nrs = new NewRailStation(newRailStationFile);
+		List<Intervention> interventionList = new ArrayList<Intervention>();
+		interventionList.add(nrs);
 		
 		RailDemandModel rdm = new RailDemandModel(railStationDemandFileName,
 													populationFile,
@@ -100,10 +109,12 @@ public class RailDemandModelTest {
 													railStationGeneralisedJourneyTimesFile,
 													carZonalJourneyCostsFile,
 													railTripRatesFile,
-													null,
+													interventionList,
 													props);
 		
-		rdm.predictRailwayDemand(2020, 2015);
+		rdm.predictRailwayDemandUsingResultsOfFromYear(2018, 2015);
+		rdm.saveAllResults(2018);
+		rdm.predictRailwayDemandUsingResultsOfFromYear(2020, 2018);
 		
 		rdm.saveRailStationDemand(2015, "./temp/miniRailDemand2015.csv");
 		rdm.saveRailStationDemand(2020, "./temp/miniRailDemand2020.csv");
@@ -139,14 +150,18 @@ public class RailDemandModelTest {
 													railTripRatesFile,
 													null,
 													props);
+
+		final String newRailStationFile = props.getProperty("newRailStationFile");
+		Intervention nrs = new NewRailStation(newRailStationFile);
+		nrs.install(rdm);
 		
-		
-		
-		rdm.predictRailwayDemand(2020, 2015);
+		rdm.predictRailwayDemands(2020, 2015);
+		rdm.getRailStationDemand(2018).printRailDemand("2018 demand:");
+		rdm.getRailStationDemand(2020).printRailDemand("2020 demand:");
 		
 		rdm.saveRailStationDemand(2015, "./temp/railDemand2015.csv");
 		rdm.saveRailStationDemand(2020, "./temp/railDemand2020.csv");
 		rdm.saveZonalRailStationDemand(2015, "./temp/zonalRailDemand2015.csv");
-		rdm.saveZonalRailStationDemand(2020, "./temp/zonalRailDemand2020.csv");
+		rdm.saveZonalRailStationDemand(2020, "./temp/zonalRailDemand2020.csv");		
 	}
 }
