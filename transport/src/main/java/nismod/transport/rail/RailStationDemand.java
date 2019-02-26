@@ -370,7 +370,7 @@ public class RailStationDemand {
 	/**
 	 * Sorts stations on NLC in an ascending order.
 	 */
-	private void sortStationsOnNLC() {
+	public void sortStationsOnNLC() {
 
 		Comparator<RailStation> c = new Comparator<RailStation>() {
 			public int compare(RailStation s, RailStation s2) {
@@ -499,7 +499,7 @@ public class RailStationDemand {
 	/**
 	 * Sorts stations on station name in an ascending order.
 	 */
-	private void sortStationsOnName() {
+	public void sortStationsOnName() {
 
 		Comparator<RailStation> c = new Comparator<RailStation>() {
 			public int compare(RailStation s, RailStation s2) {
@@ -515,7 +515,7 @@ public class RailStationDemand {
 	/**
 	 * Sorts stations on usage in a descending order.
 	 */
-	private void sortStationsOnUsage() {
+	public void sortStationsOnUsage() {
 
 		Comparator<RailStation> c = new Comparator<RailStation>() {
 			public int compare(RailStation s, RailStation s2) {

@@ -146,6 +146,7 @@ public class RailDemandModel {
 
 	/**
 	 * Predicts passenger railway demand (passenger counts at each station).
+	 * Rail station demand for fromYear needs to be contained in the memory.
 	 * @param predictedYear The year for which the demand is predicted.
 	 * @param fromYear The year from which demand the prediction is made.
 	 */
@@ -241,8 +242,10 @@ public class RailDemandModel {
 			this.yearToCarCosts.put(predictedYear, predictedYearCarCosts);
 		}
 		
-		//get trip rate for predicted year
-		double tripRate = this.yearToTripRate.get(predictedYear);
+		//trip rate factor is calculated my multiplying all relative changes from (fromYear+1) to predictedYear.
+		double tripRate = 1.0; 
+		for (int year = fromYear+1; year <= predictedYear; year++)		
+				tripRate *= this.yearToTripRate.get(year);
 					
 		//PREDICTION
 		//for each station predict changes from the variables
@@ -297,13 +300,13 @@ public class RailDemandModel {
 		LOGGER.debug("Finished predicting {} railway demand from {} demand.", predictedYear, fromYear);
 
 		//print from demand and predicted demand
-		fromDemand.printRailDemandNLCSorted("From demand (year " + fromYear + "):");
-		predictedDemand.printRailDemandNLCSorted("Predicted demand (year " + predictedYear + "):");
+		//fromDemand.printRailDemandNLCSorted("From demand (year " + fromYear + "):");
+		//predictedDemand.printRailDemandNLCSorted("Predicted demand (year " + predictedYear + "):");
 	}
 	
 	/**
 	 * Predicts passenger railway demand (passenger counts at each station).
-	 * Uses already existing results of the fromYear.
+	 * Uses already existing results of the fromYear, from the output folder.
 	 * @param predictedYear The year for which the demand is predicted.
 	 * @param fromYear The year from which demand the prediction is made.
 	 */
@@ -417,8 +420,10 @@ public class RailDemandModel {
 			this.yearToCarCosts.put(predictedYear, predictedYearCarCosts);
 		}
 		
-		//get trip rate for predicted year
-		double tripRate = this.yearToTripRate.get(predictedYear);
+		//trip rate factor is calculated my multiplying all relative changes from (fromYear+1) to predictedYear.
+		double tripRate = 1.0; 
+		for (int year = fromYear+1; year <= predictedYear; year++)		
+				tripRate *= this.yearToTripRate.get(year);
 					
 		//PREDICTION
 		//for each station predict changes from the variables
@@ -473,8 +478,8 @@ public class RailDemandModel {
 		LOGGER.debug("Finished predicting {} railway demand from {} demand.", predictedYear, fromYear);
 
 		//print from demand and predicted demand
-		fromDemand.printRailDemandNLCSorted("From demand (year " + fromYear + "):");
-		predictedDemand.printRailDemandNLCSorted("Predicted demand (year " + predictedYear + "):");
+		//fromDemand.printRailDemandNLCSorted("From demand (year " + fromYear + "):");
+		//predictedDemand.printRailDemandNLCSorted("Predicted demand (year " + predictedYear + "):");
 	}
 	
 	/**
@@ -506,6 +511,7 @@ public class RailDemandModel {
 		}
 		
 		String outputFile = file.getPath() + File.separator + predictedRailDemandFile;
+		this.yearToRailDemand.get(year).sortStationsOnNLC();
 		this.yearToRailDemand.get(year).saveRailStationDemand(year, outputFile);
 		
 		String zonalRailDemandFile = props.getProperty("zonalRailDemandFile");
@@ -540,6 +546,7 @@ public class RailDemandModel {
 	 */
 	public void saveRailStationDemand(int year, String outputFile) {
 		
+		this.yearToRailDemand.get(year).sortStationsOnNLC();
 		this.yearToRailDemand.get(year).saveRailStationDemand(year, outputFile);
 	}
 	
