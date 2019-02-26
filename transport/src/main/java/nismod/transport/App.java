@@ -692,6 +692,42 @@ public class App {
 				final String carZonalJourneyCostsFile = props.getProperty("carZonalJourneyCostsFile");
 				final String railTripRatesFile = props.getProperty("railTripRatesFile");
 				
+				//load rail interventions
+				List<Intervention> interventions = new ArrayList<Intervention>();
+				
+				for (Object o: props.keySet()) {
+					String key = (String) o;
+					if (key.startsWith("railInterventionFile")) {
+						//System.out.println(key);
+						String interventionFile = props.getProperty(key);
+						Properties p = PropertiesReader.getProperties(interventionFile);
+						String type = p.getProperty("type");
+						//System.out.println(type);
+						
+						//check if the intervention type is among allowed intervention types
+						boolean typeFound = false;
+						for (InterventionType it: Intervention.InterventionType.values())
+							if (it.name().equals(type)) {
+								typeFound = true;
+								break;
+							}
+						if (!typeFound) {
+							LOGGER.error("Type of intervention '{}' is not among allowed interventon types.", type);
+							return;
+						}
+												
+						//create appropriate intervention object through reflection
+						Class<?> clazz = Class.forName("nismod.transport.decision." + type);
+						Constructor<?> constructor = clazz.getConstructor(String.class);
+						Object instance = constructor.newInstance(interventionFile);
+											
+						//add intervention to the list of interventions
+						interventions.add((Intervention)instance);
+						
+						LOGGER.info("{} intervention added to the intervention list. Path to the intervention file: {}", type, interventionFile);
+					}
+				}
+				
 				RailDemandModel rdm = new RailDemandModel(railStationDemandFileName,
 						populationFile,
 						GVAFile,

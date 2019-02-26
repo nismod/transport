@@ -96,7 +96,7 @@ public class RailDemandModelTest {
 		
 		props.setProperty("FLAG_USE_CAR_COST_FROM_ROAD_MODEL", "false");
 
-		final String newRailStationFile = props.getProperty("newRailStationFile");
+		final String newRailStationFile = props.getProperty("railInterventionFile1");
 		Intervention nrs = new NewRailStation(newRailStationFile);
 		List<Intervention> interventionList = new ArrayList<Intervention>();
 		interventionList.add(nrs);
@@ -139,6 +139,16 @@ public class RailDemandModelTest {
 		final String railTripRatesFile = props.getProperty("railTripRatesFile");
 		
 		props.setProperty("FLAG_USE_CAR_COST_FROM_ROAD_MODEL", "false");
+		
+		final String newRailStationFile = props.getProperty("railInterventionFile1");
+		Intervention nrs = new NewRailStation(newRailStationFile);
+		
+		final String newRailStationFile2 = props.getProperty("railInterventionFile2");
+		Intervention nrs2 = new NewRailStation(newRailStationFile2);
+		
+		List<Intervention> interventionList = new ArrayList<Intervention>();
+		interventionList.add(nrs);
+		interventionList.add(nrs2);
 			        
 		RailDemandModel rdm = new RailDemandModel(railStationDemandFileName,
 													populationFile,
@@ -150,10 +160,6 @@ public class RailDemandModelTest {
 													railTripRatesFile,
 													null,
 													props);
-
-		final String newRailStationFile = props.getProperty("newRailStationFile");
-		Intervention nrs = new NewRailStation(newRailStationFile);
-		nrs.install(rdm);
 		
 		rdm.predictRailwayDemands(2020, 2015);
 		rdm.getRailStationDemand(2018).printRailDemand("2018 demand:");

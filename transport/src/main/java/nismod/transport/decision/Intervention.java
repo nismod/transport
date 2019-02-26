@@ -25,7 +25,7 @@ public abstract class Intervention {
 	
 	//enumerate possible intervention types
 	public static enum InterventionType {
-		RoadExpansion, RoadDevelopment, CongestionCharging
+		RoadExpansion, RoadDevelopment, CongestionCharging, NewRailStation
 	}
 	
 	protected Intervention (Properties props) {
