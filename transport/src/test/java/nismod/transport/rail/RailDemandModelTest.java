@@ -158,7 +158,7 @@ public class RailDemandModelTest {
 													railStationGeneralisedJourneyTimesFile,
 													carZonalJourneyCostsFile,
 													railTripRatesFile,
-													null,
+													interventionList,
 													props);
 		
 		rdm.predictRailwayDemands(2020, 2015);

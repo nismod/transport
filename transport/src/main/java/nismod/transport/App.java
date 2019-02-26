@@ -736,7 +736,7 @@ public class App {
 						railStationGeneralisedJourneyTimesFile,
 						carZonalJourneyCostsFile,
 						railTripRatesFile,
-						null,
+						interventions,
 						props);
 
 				rdm.predictRailwayDemandUsingResultsOfFromYear(Integer.parseInt(predictedYear), Integer.parseInt(fromYear));

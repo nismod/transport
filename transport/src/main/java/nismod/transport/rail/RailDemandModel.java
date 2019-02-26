@@ -3,10 +3,13 @@ package nismod.transport.rail;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -58,6 +61,10 @@ public class RailDemandModel {
 	//trip rates
 	private HashMap<Integer, Double> yearToTripRate; //trip rates
 
+	//to store information about new rail station developments (from interventions)
+	private Set<Integer> yearsWithStationDevelopment;
+	private List<Integer> newStationNLCs;
+	
 	private List<Intervention> interventions;
 	private Properties props;
 
@@ -80,6 +87,9 @@ public class RailDemandModel {
 
 		this.interventions = interventions;
 		this.props = props;
+		
+		this.yearsWithStationDevelopment = new HashSet<Integer>(); 
+		this.newStationNLCs = new ArrayList<Integer>();
 		
 		//read all year population predictions
 		this.yearToZoneToPopulation = InputFileReader.readPopulationFile(populationFile);
@@ -123,6 +133,9 @@ public class RailDemandModel {
 			for (Intervention i: interventions)
 				if (!i.getState())				
 					i.install(this);
+		
+		this.printNLCsOfNewStations();
+		this.printYearsOfNewStations();
 	}
 
 	/**
@@ -167,7 +180,12 @@ public class RailDemandModel {
 		}
 
 		if (predictedYear == fromYear) return; //skip the rest if predicting the same year
-
+		
+		//check if new rail station development takes place in between years fromYear and predictedYear
+		for (int year = fromYear + 1; year < predictedYear; year++)
+			if (this.yearsWithStationDevelopment.contains(year))
+				LOGGER.warn("Predicting {} rail demand from {} demand, but new station was built in {}! Set flag to predict intermediate years.", predictedYear, fromYear, year);
+		
 		//old demand
 		RailStationDemand fromDemand = this.yearToRailDemand.get(fromYear);
 		if (fromDemand == null) {
@@ -320,7 +338,12 @@ public class RailDemandModel {
 		} 
 		
 		if (predictedYear == fromYear) return; //skip the rest if predicting the same year
-
+		
+		//check if new rail station development takes place in between years fromYear and predictedYear
+		for (int year = fromYear + 1; year < predictedYear; year++)
+			if (this.yearsWithStationDevelopment.contains(year))
+				LOGGER.warn("Predicting {} rail demand from {} demand, but new station was built in {}! Set flag to predict intermediate years.", predictedYear, fromYear, year);
+		
 		//use output folder for input folder
 		String inputFolder = this.props.getProperty("outputFolder") + File.separator + fromYear;
 		
@@ -558,5 +581,39 @@ public class RailDemandModel {
 	public void saveZonalRailStationDemand(int year, String outputFile) {
 		
 		this.yearToRailDemand.get(year).saveZonalRailStationDemand(year, outputFile);
+	}
+	
+	/**
+	 * Adds a year in which a new rail station is built.
+	 * @param year Year in which a new rail station is built.
+	 */
+	public void addYearOfDevelopment(int year) {
+		
+		this.yearsWithStationDevelopment.add(year);
+	}
+	
+	/**
+	 * Adds NLC of a newly built rail station.
+	 * @param NLC Id of a newly built rail station.
+	 */
+	public void addNLCofDevelopedStation(int NLC) {
+		
+		this.newStationNLCs.add(NLC);
+	}
+	
+	/**
+	 * Prints NLCs of new rail stations.
+	 */
+	public void printNLCsOfNewStations() {
+		
+		System.out.println("NLCs of new stations: " + this.newStationNLCs);
+	}
+	
+	/**
+	 * Prints years in which development of new rail stations takes place.
+	 */
+	public void printYearsOfNewStations() {
+		
+		System.out.println("New stations being built in years: " + this.yearsWithStationDevelopment);
 	}
 }

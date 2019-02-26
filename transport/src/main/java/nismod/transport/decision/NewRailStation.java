@@ -99,6 +99,9 @@ public class NewRailStation extends Intervention {
 		
 			this.nlc = nlc;
 			this.installed = true;
+
+			rdm.addNLCofDevelopedStation(nlc);
+			rdm.addYearOfDevelopment(startYear);
 		}
 	}
 
