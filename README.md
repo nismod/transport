@@ -10,7 +10,7 @@ This is the home of the NISMOD v2 Transport Model.
 
 NISMOD v2 Transport Model is a national-scale (*Great Britain*) transport model developed to support policy making regarding the future infrastructure. It forecasts the impact of various endogenous and exogenous factors on transport demand and capacity utilisation, following an elasticity-based simulation methodology similar to the original ITRC model (NISMOD v1). The new model, however, is explicitly network-based, in that that the demand is assigned to the transport network to obtain more accurate predictions of travel times, travel costs and capacity utilisation.
 
-### Key Features
+### Road Model Key Features
 
 *	NISMOD v2 Transport Model predicts vehicle demand (inter-zonal flows) for passenger and freight vehicles, and stochastically simulates road traffic on all major UK roads including A-roads and motorways.
 *	It is currently the only national-scale road traffic model capable of routing-based network assignment and provisioning a national-scale origin-destination matrix (on TEMPRo & LAD spatial zoning levels), while achieving a respectable match with AADF traffic counts, total vehicle kilometres, expected number of car trips, and the observed trip length distribution from the National Travel Survey. 
@@ -25,6 +25,13 @@ NISMOD v2 Transport Model is a national-scale (*Great Britain*) transport model 
 *	Interventions such as new road development, road expansion with new lanes, and congestion charging zones can be dynamically implemented in each simulated year.
 *	The model can output various metrics on the road link level (e.g. road capacity utilisation, peak hour travel times), zonal level (e.g. vehicle kilometres, EV electricity consumption), inter-zonal level (e.g. predicted vehicle flows, average travel times, average travel costs) and national level (e.g. total CO2 emissions, total energy consumptions). The outputs are in csv and shapefile format, allowing them to be visualised with a software of choice.
 
+### Rail Model Key Features
+*	NISMOD v2 Transport Model also includes a national-scale rail model for predicting future station usage demand.
+*  It currently uses station usage data for 3054 stations covering National Rail, London Underground, Docklands Light Railway, London Trams (previously Croydon Tramlink), Manchester Metrolink, and Tyne & Wear (Newcastle) Metro.
+*	Elasticity-based demand model predicts station usage (entry + exit) from exogenous inputs including: population, GVA, rail fare index, generalised journey time (GJT) index and car trip costs.
+*	Car trip costs can be provided as an input or calculated from the outputs of the NISMOD road model.
+*	Elasticities of rail fares and GJT vary per elasticity zone (London Travelcard, South-East, PTE, other).
+*  The model implements a policy intervention for building new rail stations in future years.
 
 The UK transport sector has links with other sectors:
 * *Energy*: energy consumption, fuel price, electrification of vehicles, fuel transport, power outage (rail and air disruption).
@@ -53,10 +60,12 @@ https://github.com/nismod/smif
     * Make sure the Java home environment variable is set for the operating system and pointing to the directory where *Java Development Kit* has been installed.
     * Download maven, install it and set the environment variables: http://maven.apache.org/. Then type:  
        `mvn clean install`
-    * To run the base-year model (2015) type:
+    * To run the base-year *road* model (2015) type:
        `java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -b`
-    * To predict and run a future year (e.g. 2020) using the results of a previously run year (e.g. 2015) type:
-       `java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -r 2020 2015`
+    * To predict and run a future year (e.g. 2020) using the results of a previously run year (e.g. 2015), for *road* model type:
+       `java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -road 2020 2015`
+    * To predict and run a future year (e.g. 2020) using the results of a previously run year (e.g. 2015), for *rail* model type:
+       `java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -rail 2020 2015`
 
     * Options:
 

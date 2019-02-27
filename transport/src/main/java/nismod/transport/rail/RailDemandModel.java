@@ -323,6 +323,27 @@ public class RailDemandModel {
 	}
 	
 	/**
+	 * Predicts rail station demand (total passenger counts at each station)
+	 * up to toYear (if flag is true, also intermediate years) and saves results.
+	 * @param toYear The final year for which the demand is predicted.
+	 * @param fromYear The year from which the predictions are made.
+	 */
+	public void predictAndSaveRailwayDemands(int toYear, int fromYear) {
+
+		Boolean flagPredictIntermediateYearsRail = Boolean.parseBoolean(this.props.getProperty("FLAG_PREDICT_INTERMEDIATE_YEARS_RAIL"));
+
+		if (flagPredictIntermediateYearsRail) { //predict all intermediate years
+			for (int year = fromYear; year <= toYear - 1; year++) {
+				this.predictRailwayDemandUsingResultsOfFromYear(year + 1, year);
+				this.saveAllResults(year+1);
+			}
+		} else { //predict only final year
+			this.predictRailwayDemandUsingResultsOfFromYear(toYear, fromYear);
+			this.saveAllResults(toYear);
+		}
+	}
+	
+	/**
 	 * Predicts passenger railway demand (passenger counts at each station).
 	 * Uses already existing results of the fromYear, from the output folder.
 	 * @param predictedYear The year for which the demand is predicted.
