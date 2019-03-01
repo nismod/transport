@@ -12,8 +12,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.geotools.graph.structure.DirectedNode;
 
+import nismod.transport.decision.PricingPolicy;
 import nismod.transport.network.road.RoadNetworkAssignment.EnergyType;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
+import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.network.road.Route.WebTAG;
 import nismod.transport.utility.RandomSingleton;
@@ -189,18 +191,19 @@ public class RouteSet {
 	 * Re-calculates utilities for all the routes.
 	 * @param vht Vehicle type.
 	 * @param et Engine type.
+	 * @param tod Time of day.
 	 * @param linkTravelTime Link travel times.
 	 * @param energyConsumptionParameters Base year energy consumption parameters.
 	 * @param relativeFuelEfficiency Relative fuel efficiency compared to the base year.
 	 * @param energyUnitCosts Energy unit costs.
-	 * @param linkCharges Congestion charges.
+	 * @param congestionCharges Congestion charges.
 	 * @param params Route choice parameters.
 	 */
-	public void calculateUtilities(VehicleType vht, EngineType et, double[] linkTravelTime, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency, Map<EnergyType, Double> energyUnitCosts, HashMap<String, HashMap<Integer, Double>> linkCharges, Map<RouteChoiceParams, Double> params) {
+	public void calculateUtilities(VehicleType vht, EngineType et, TimeOfDay tod, double[] linkTravelTime, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency, Map<EnergyType, Double> energyUnitCosts, List<PricingPolicy> congestionCharges, Map<RouteChoiceParams, Double> params) {
 		
 		//re-calculate utility for all the routes
 		for (Route r: this.choiceSet)
-			r.calculateUtility(vht, et, linkTravelTime, energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, linkCharges, params);
+			r.calculateUtility(vht, et, tod, linkTravelTime, energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, congestionCharges, params);
 		
 		//correct for correlation with path-size
 		this.correctUtilitiesWithPathSize();

@@ -20,6 +20,7 @@ import org.junit.Test;
 
 import nismod.transport.decision.CongestionCharging;
 import nismod.transport.decision.Intervention;
+import nismod.transport.decision.PricingPolicy;
 import nismod.transport.demand.DemandModel;
 import nismod.transport.network.road.RoadNetworkAssignment.EnergyType;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
@@ -123,7 +124,7 @@ public class RouteTest {
 		System.out.println(energyConsumptionParameters);
 		System.out.println(energyUnitCosts);
 		
-		r1.calculateUtility(VehicleType.CAR, EngineType.PHEV_PETROL, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null, params);
+		r1.calculateUtility(VehicleType.CAR, EngineType.PHEV_PETROL, TimeOfDay.EIGHTAM, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null, params);
 		
 		double time = r1.getTime();
 		double length = r1.getLength();
@@ -166,7 +167,7 @@ public class RouteTest {
 		params.put(RouteChoiceParams.INTERSEC, -0.1);
 		params.put(RouteChoiceParams.DELAY, 0.8);
 			
-		r2.calculateUtility(VehicleType.CAR, EngineType.ICE_PETROL, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null, params);
+		r2.calculateUtility(VehicleType.CAR, EngineType.ICE_PETROL, TimeOfDay.EIGHTAM, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null, params);
 		
 		time = r2.getTime();
 		length = r2.getLength();
@@ -192,7 +193,7 @@ public class RouteTest {
 		r3.addEdge(e7);
 		r3.addEdge(e2);
 		r3.addEdge(e3);
-		r3.calculateUtility(VehicleType.CAR, EngineType.ICE_PETROL, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null, params);
+		r3.calculateUtility(VehicleType.CAR, EngineType.ICE_PETROL, TimeOfDay.EIGHTAM, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null, params);
 		
 //		System.out.println("Route " + r3.getID() + " is valid: " + r3.isValid());
 //		System.out.println("Route " + r3.getID() + ": " + r3.getEdges());
@@ -207,7 +208,7 @@ public class RouteTest {
 		params.put(RouteChoiceParams.INTERSEC, -0.1);
 		params.put(RouteChoiceParams.DELAY, 0.8);
 		
-		r3.calculateUtility(VehicleType.CAR, EngineType.ICE_PETROL, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null, params);
+		r3.calculateUtility(VehicleType.CAR, EngineType.ICE_PETROL, TimeOfDay.EIGHTAM, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null, params);
 		
 		time = r3.getTime();
 		length = r3.getLength();
@@ -248,7 +249,7 @@ public class RouteTest {
 		params.put(RouteChoiceParams.INTERSEC, -0.1);
 		params.put(RouteChoiceParams.DELAY, 0.8);
 		
-		r4.calculateUtility(VehicleType.CAR, EngineType.ICE_PETROL, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null, params);
+		r4.calculateUtility(VehicleType.CAR, EngineType.ICE_PETROL, TimeOfDay.EIGHTAM, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null, params);
 		
 		time = r4.getTime();
 		length = r4.getLength();
@@ -286,9 +287,9 @@ public class RouteTest {
 		
 		r5.calculateLength();
 		r5.calculateTravelTime(roadNetwork.getFreeFlowTravelTime(), 0.8);
-		r5.calculateCost(VehicleType.CAR, EngineType.ICE_PETROL, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null);
+		r5.calculateCost(VehicleType.CAR, EngineType.ICE_PETROL, TimeOfDay.EIGHTAM, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null);
 		System.out.println("Intersections: " + r5.getNumberOfIntersections());
-		r5.calculateUtility(VehicleType.CAR, EngineType.ICE_PETROL, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null, params);
+		r5.calculateUtility(VehicleType.CAR, EngineType.ICE_PETROL, TimeOfDay.EIGHTAM, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null, params);
 		System.out.println("Length: " + r5.getLength());
 		System.out.println("Time: " + r5.getTime());
 		System.out.println("Cost: " + r5.getCost());
@@ -339,11 +340,10 @@ public class RouteTest {
 		
 		//create route
 		Route r6 = new Route(roadNetwork);
-		HashMap<String, HashMap<Integer, Double>> linkCharges = new HashMap<String, HashMap<Integer, Double>>();
-		if (dm.getCongestionCharges(2016) != null) 
-			for (String policyName: dm.getCongestionCharges(2016).keySet())
-				linkCharges.put(policyName, (HashMap<Integer, Double>) dm.getCongestionCharges(2016).get(policyName).get(VehicleType.RIGID, TimeOfDay.EIGHTAM));
+		List<PricingPolicy> congestionCharges = dm.getCongestionCharges(2016);
 		
+		System.out.println(congestionCharges);
+
 		final String baseFuelConsumptionRatesFile = props.getProperty("baseFuelConsumptionRatesFile");
 		final String relativeFuelEfficiencyFile = props.getProperty("relativeFuelEfficiencyFile");
 		
@@ -353,37 +353,37 @@ public class RouteTest {
 		
 		//check if congestion charges are applied properly to a route
 		r6.addEdge((DirectedEdge) roadNetwork.getEdgeIDtoEdge()[702]);
-		r6.calculateCost(VehicleType.RIGID, EngineType.ICE_DIESEL, roadNetwork.getFreeFlowTravelTime(), baseFuelConsumptionRates, yearToRelativeFuelEfficiencies.get(2016), yearToEnergyUnitCosts.get(2016), linkCharges);
+		r6.calculateCost(VehicleType.RIGID, EngineType.ICE_DIESEL, TimeOfDay.EIGHTAM, roadNetwork.getFreeFlowTravelTime(), baseFuelConsumptionRates, yearToRelativeFuelEfficiencies.get(2016), yearToEnergyUnitCosts.get(2016), congestionCharges);
 		System.out.println("Route cost: " + r6.getCost());
 		assertEquals("Route costs are correct", 0.11907393929146934, r6.getCost(), EPSILON); //only fuel cost
 		
 		r6.addEdge((DirectedEdge) roadNetwork.getEdgeIDtoEdge()[719]);
-		r6.calculateCost(VehicleType.RIGID, EngineType.ICE_DIESEL, roadNetwork.getFreeFlowTravelTime(), baseFuelConsumptionRates, yearToRelativeFuelEfficiencies.get(2016), yearToEnergyUnitCosts.get(2016), linkCharges);	
+		r6.calculateCost(VehicleType.RIGID, EngineType.ICE_DIESEL, TimeOfDay.EIGHTAM, roadNetwork.getFreeFlowTravelTime(), baseFuelConsumptionRates, yearToRelativeFuelEfficiencies.get(2016), yearToEnergyUnitCosts.get(2016), congestionCharges);	
 		System.out.println("Route cost: " + r6.getCost());
 		assertEquals("Route costs are correct", 25.178610908937205, r6.getCost(), EPSILON); //with Itchen bridge toll and additional fuel cost
 		
 		r6.addEdge((DirectedEdge) roadNetwork.getEdgeIDtoEdge()[718]);
-		r6.calculateCost(VehicleType.RIGID, EngineType.ICE_DIESEL, roadNetwork.getFreeFlowTravelTime(), baseFuelConsumptionRates, yearToRelativeFuelEfficiencies.get(2016), yearToEnergyUnitCosts.get(2016), linkCharges);	
+		r6.calculateCost(VehicleType.RIGID, EngineType.ICE_DIESEL, TimeOfDay.EIGHTAM, roadNetwork.getFreeFlowTravelTime(), baseFuelConsumptionRates, yearToRelativeFuelEfficiencies.get(2016), yearToEnergyUnitCosts.get(2016), congestionCharges);	
 		System.out.println("Route cost: " + r6.getCost());
 		assertEquals("Route costs are correct", 25.23814787858294, r6.getCost(), EPSILON); //Itchen bridge toll not applied more than once, only additional fuel cost
 		
 		r6.addEdge((DirectedEdge) roadNetwork.getEdgeIDtoEdge()[701]);
-		r6.calculateCost(VehicleType.RIGID, EngineType.ICE_DIESEL, roadNetwork.getFreeFlowTravelTime(), baseFuelConsumptionRates, yearToRelativeFuelEfficiencies.get(2016), yearToEnergyUnitCosts.get(2016), linkCharges);	
+		r6.calculateCost(VehicleType.RIGID, EngineType.ICE_DIESEL, TimeOfDay.EIGHTAM, roadNetwork.getFreeFlowTravelTime(), baseFuelConsumptionRates, yearToRelativeFuelEfficiencies.get(2016), yearToEnergyUnitCosts.get(2016), congestionCharges);	
 		System.out.println("Route cost: " + r6.getCost());
 		assertEquals("Route costs are correct", 25.357221817874407, r6.getCost(), EPSILON); //additional fuel cost
 		
 		r6.addEdge((DirectedEdge) roadNetwork.getEdgeIDtoEdge()[615]);
-		r6.calculateCost(VehicleType.RIGID, EngineType.ICE_DIESEL, roadNetwork.getFreeFlowTravelTime(), baseFuelConsumptionRates, yearToRelativeFuelEfficiencies.get(2016), yearToEnergyUnitCosts.get(2016), linkCharges);	
+		r6.calculateCost(VehicleType.RIGID, EngineType.ICE_DIESEL, TimeOfDay.EIGHTAM, roadNetwork.getFreeFlowTravelTime(), baseFuelConsumptionRates, yearToRelativeFuelEfficiencies.get(2016), yearToEnergyUnitCosts.get(2016), congestionCharges);	
 		System.out.println("Route cost: " + r6.getCost());
 		assertEquals("Route costs are correct", 25.684675150925948, r6.getCost(), EPSILON); //additional fuel cost
 		
 		r6.addEdge((DirectedEdge) roadNetwork.getEdgeIDtoEdge()[504]);
-		r6.calculateCost(VehicleType.RIGID, EngineType.ICE_DIESEL, roadNetwork.getFreeFlowTravelTime(), baseFuelConsumptionRates, yearToRelativeFuelEfficiencies.get(2016), yearToEnergyUnitCosts.get(2016), linkCharges);	
+		r6.calculateCost(VehicleType.RIGID, EngineType.ICE_DIESEL, TimeOfDay.EIGHTAM, roadNetwork.getFreeFlowTravelTime(), baseFuelConsumptionRates, yearToRelativeFuelEfficiencies.get(2016), yearToEnergyUnitCosts.get(2016), congestionCharges);	
 		System.out.println("Route cost: " + r6.getCost());
 		assertEquals("Route costs are correct", 51.547961210789104, r6.getCost(), EPSILON); //with Southampton city toll and additional fuel cost.
 		
 		r6.addEdge((DirectedEdge) roadNetwork.getEdgeIDtoEdge()[603]);
-		r6.calculateCost(VehicleType.RIGID, EngineType.ICE_DIESEL, roadNetwork.getFreeFlowTravelTime(), baseFuelConsumptionRates, yearToRelativeFuelEfficiencies.get(2016), yearToEnergyUnitCosts.get(2016), linkCharges);	
+		r6.calculateCost(VehicleType.RIGID, EngineType.ICE_DIESEL, TimeOfDay.EIGHTAM, roadNetwork.getFreeFlowTravelTime(), baseFuelConsumptionRates, yearToRelativeFuelEfficiencies.get(2016), yearToEnergyUnitCosts.get(2016), congestionCharges);	
 		System.out.println("Route cost: " + r6.getCost());
 		assertEquals("Route costs are correct", 51.637266665257705, r6.getCost(), EPSILON); //Southampton city toll not applied more than once, only additional fuel cost.
 	}

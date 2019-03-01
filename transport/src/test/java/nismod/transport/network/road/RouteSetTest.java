@@ -20,6 +20,7 @@ import org.junit.Test;
 
 import nismod.transport.network.road.RoadNetworkAssignment.EnergyType;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
+import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.network.road.Route.WebTAG;
 import nismod.transport.network.road.RouteSet.RouteChoiceParams;
@@ -151,7 +152,7 @@ public class RouteSetTest {
 		}
 		
 		//rs.calculateUtilities(roadNetwork.getFreeFlowTravelTime(), params);
-		rs.calculateUtilities(VehicleType.CAR, EngineType.PHEV_PETROL, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null, params);
+		rs.calculateUtilities(VehicleType.CAR, EngineType.PHEV_PETROL, TimeOfDay.EIGHTAM, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null, params);
 		rs.printUtilities();
 	
 		for (double utility: rs.getUtilities())
@@ -210,7 +211,7 @@ public class RouteSetTest {
 		rs.printStatistics();
 		//all routes need to have re-calculated utility and path size after the new route is added!
 		rs.calculatePathsizes();
-		rs.calculateUtilities(VehicleType.CAR, EngineType.PHEV_PETROL, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null, params);
+		rs.calculateUtilities(VehicleType.CAR, EngineType.PHEV_PETROL, TimeOfDay.EIGHTAM, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null, params);
 		rs.printUtilities();
 		rs.calculateProbabilities();
 		rs.printProbabilities();
@@ -239,7 +240,7 @@ public class RouteSetTest {
 		rs.printChoiceSet();
 		rs.printStatistics();
 		rs.calculatePathsizes();
-		rs.calculateUtilities(VehicleType.CAR, EngineType.PHEV_PETROL, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null, params);
+		rs.calculateUtilities(VehicleType.CAR, EngineType.PHEV_PETROL, TimeOfDay.EIGHTAM, roadNetwork.getFreeFlowTravelTime(), energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, null, params);
 		rs.printUtilities();
 		rs.calculateProbabilities();
 		rs.printPathsizes();

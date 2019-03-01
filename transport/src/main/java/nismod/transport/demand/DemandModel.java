@@ -6,8 +6,10 @@ package nismod.transport.demand;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -19,6 +21,7 @@ import org.apache.logging.log4j.Logger;
 import org.geotools.data.simple.SimpleFeatureCollection;
 
 import nismod.transport.decision.Intervention;
+import nismod.transport.decision.PricingPolicy;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.network.road.RoadNetworkAssignment.EnergyType;
@@ -70,7 +73,7 @@ public class DemandModel {
 	private HashMap<Integer, Map<VehicleType, Map<EngineType, Double>>> yearToEngineTypeFractions;
 	private HashMap<Integer, Map<VehicleType, Double>> yearToAVFractions;
 	//private HashMap<Integer, HashMap<Integer, Double>> yearToCongestionCharges;
-	private HashMap<Integer, HashMap<String, MultiKeyMap>> yearToCongestionCharges;
+	private HashMap<Integer, List<PricingPolicy>> yearToCongestionCharges;
 	//private SkimMatrix baseYearTimeSkimMatrix,	baseYearCostSkimMatrix;
 	
 	private RouteSetGenerator rsg;
@@ -115,7 +118,7 @@ public class DemandModel {
 		this.yearToUnitCO2Emissions = new HashMap<Integer, Map<EnergyType, Double>>();
 		this.yearToEngineTypeFractions = new HashMap<Integer, Map<VehicleType, Map<EngineType, Double>>>();
 		this.yearToAVFractions = new HashMap<Integer, Map<VehicleType, Double>>();
-		this.yearToCongestionCharges = new HashMap<Integer, HashMap<String, MultiKeyMap>>();
+		this.yearToCongestionCharges = new HashMap<Integer, List<PricingPolicy>>();
 		
 		this.rsg = rsg;
 		this.props = props;
@@ -1196,11 +1199,11 @@ public class DemandModel {
 	}
 	
 	/**
-	 * Setter method for congestion charges (overrides them).
+	 * Setter method for congestion charges (overrides them completely).
 	 * @param year Year of the congestion charges.
 	 * @param congestionCharges Congestion charges.
 	 */
-	public void setCongestionCharges(int year, HashMap<String, MultiKeyMap> congestionCharges) {
+	public void setCongestionCharges(int year, List<PricingPolicy> congestionCharges) {
 		
 		this.yearToCongestionCharges.put(year, congestionCharges);
 	}
@@ -1210,7 +1213,7 @@ public class DemandModel {
 	 * @param year Year of the congestion charges.
 	 * @return Congestion charges.
 	 */
-	public HashMap<String, MultiKeyMap> getCongestionCharges(int year) {
+	public List<PricingPolicy> getCongestionCharges(int year) {
 		
 		return this.yearToCongestionCharges.get(year);
 	}
@@ -1218,43 +1221,55 @@ public class DemandModel {
 	/**
 	 * Adds congestion charges to the list of the existing ones.
 	 * @param year Year of the policy.
-	 * @param policyName Name of the policy.
 	 * @param congestionCharges Congestion charges.
 	 */
-	public void addCongestionCharges(int year, String policyName, MultiKeyMap congestionCharges) {
+	public void addCongestionCharges(int year, PricingPolicy congestionCharges) {
 		
-		HashMap<String, MultiKeyMap> map = this.yearToCongestionCharges.get(year);
+		List<PricingPolicy> list = this.yearToCongestionCharges.get(year);
 		//if there is no congestion charges yet for this year, create the list
-		if (map == null) map = new HashMap<String, MultiKeyMap>();
-		map.put(policyName, congestionCharges); //add the congestion charge
-		this.yearToCongestionCharges.put(year, map);	
+		if (list == null) {
+			list = new ArrayList<PricingPolicy>();
+			this.yearToCongestionCharges.put(year, list);
+		}
+		//add the congestion charge if not already included
+		if (!list.contains(congestionCharges))
+			list.add(congestionCharges);
 	}
 	
 	/**
-	 * Removes congestion charges from the list of existing ones.
+	 * Removes congestion charges from the list of the existing ones.
+	 * @param year Year of the congestion charges.
+	 * @param congestionCharges Congestion charges.
+	 */
+	public void removeCongestionCharges(int year, PricingPolicy congestionCharges) {
+		
+		List<PricingPolicy> list = this.yearToCongestionCharges.get(year);
+
+		//if there is no existing congestion charge, there is nothing to remove
+		if (list == null) {
+				return;
+		} else { //remove the existing ones
+			list.remove(congestionCharges);
+		}
+	}
+	
+	/**
+	 * Removes congestion charges from the list of the existing ones using the policy name.
 	 * @param year Year of the congestion charges.
 	 * @param policyName Name of the policy.
 	 */
 	public void removeCongestionCharges(int year, String policyName) {
 		
-		HashMap<String, MultiKeyMap> map = this.yearToCongestionCharges.get(year);
-		
-//		//if there is no existing congestion charge, there is nothing to remove
-//		if (map == null) {
-//				return;
-//		} else { //remove the existing ones
-//				for (Iterator<?> it = map.iterator(); it.hasNext(); ) {
-//					MultiKeyMap cg = (MultiKeyMap) it.next();
-//				    if (cg.equals(congestionCharges)) it.remove();
-//			}
-//		}
-		
+		List<PricingPolicy> list = this.yearToCongestionCharges.get(year);
 		//if there is no existing congestion charge, there is nothing to remove
-		if (map == null) {
-				return;
-		} else { //remove the existing ones
-			
-			map.remove(policyName);
+		if (list == null) return;
+				
+		//remove the existing ones
+		Iterator<PricingPolicy> iter = list.iterator();
+		while (iter.hasNext()) {
+			PricingPolicy policy = iter.next();
+			if (policy.getPolicyName().equals(policyName))
+				iter.remove();
 		}
 	}
 	
@@ -1263,17 +1278,16 @@ public class DemandModel {
 	 * @param year Year of the data.
 	 * @param outputFile Output file name.
 	 */
-	public void saveAssignmentResults (int year, String outputFile) {
+	public void saveAssignmentResults(int year, String outputFile) {
 
 		this.yearToRoadNetworkAssignment.get(year).saveAssignmentResults(year, outputFile);
 	}
-	
-		
+			
 	/**
 	 * Saves all results into the output folder.
 	 * @param year Year of the data.
 	 */
-	public void saveAllResults (int year) {
+	public void saveAllResults(int year) {
 		
 		LOGGER.info("Outputing all results for year {}.", year);
 

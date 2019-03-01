@@ -13,6 +13,7 @@ import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedNode;
 import org.geotools.graph.structure.Edge;
 
+import nismod.transport.decision.PricingPolicy;
 import nismod.transport.network.road.RoadNetworkAssignment.EnergyType;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
@@ -199,18 +200,12 @@ public class TripTempro extends Trip {
 	}
 	
 	@Override
-	public double getCost(double[] linkTravelTime, double[] distanceFromTemproZoneToNearestNode, double averageAccessEgressSpeed, Map<EnergyType, Double> energyUnitCosts, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency, HashMap<String, MultiKeyMap> congestionCharges, boolean flagIncludeAccessEgress) {
+	public double getCost(double[] linkTravelTime, double[] distanceFromTemproZoneToNearestNode, double averageAccessEgressSpeed, Map<EnergyType, Double> energyUnitCosts, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency, List<PricingPolicy> congestionCharges, boolean flagIncludeAccessEgress) {
 		
 		//double distance = this.getLength(averageAccessEgressMap);
 		//double cost = distance / 100 * energyConsumptionsPer100km.get(this.engine) * energyUnitCosts.get(this.engine);
 		
-		//fetch congestion charge for the vehicle type
-		HashMap<String, HashMap<Integer, Double>> linkCharges = new HashMap<String, HashMap<Integer, Double>>();
-		if (congestionCharges != null) 
-			for (String policyName: congestionCharges.keySet())
-				linkCharges.put(policyName, (HashMap<Integer, Double>) congestionCharges.get(policyName).get(this.vehicle, this.hour));
-				
-		this.route.calculateCost(this.vehicle, this.engine, linkTravelTime, energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, linkCharges);
+		this.route.calculateCost(this.vehicle, this.engine, this.hour, linkTravelTime, energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, congestionCharges);
 		double tripCost = this.route.getCost();
 		
 		//add access/egress cost

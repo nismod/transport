@@ -13,9 +13,11 @@ import org.geotools.graph.structure.Edge;
 import org.geotools.graph.structure.Node;
 
 import gnu.trove.list.array.TIntArrayList;
+import nismod.transport.decision.PricingPolicy;
 import nismod.transport.network.road.RoadNetwork.EdgeType;
 import nismod.transport.network.road.RoadNetworkAssignment.EnergyType;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
+import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.network.road.RouteSet.RouteChoiceParams;
 
@@ -199,13 +201,14 @@ public class Route {
 	 * Calculates the cost of the route.
 	 * @param vht Vehicle type.
 	 * @param et Engine type.
+	 * @param tod Time of day.
 	 * @param linkTravelTime Link travel times.
 	 * @param energyConsumptionParameters Base year energy consumption parameters.
 	 * @param relativeFuelEfficiency Relative fuel efficiency (compared to base year).
 	 * @param energyUnitCosts Energy unit costs.
-	 * @param linkCharges Congestion charges.
+	 * @param congestionCharges Congestion charges.
 	 */
-	public void calculateCost(VehicleType vht, EngineType et, double[] linkTravelTime, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency, Map<EnergyType, Double> energyUnitCosts, HashMap<String, HashMap<Integer, Double>> linkCharges) {
+	public void calculateCost(VehicleType vht, EngineType et, TimeOfDay tod, double[] linkTravelTime, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency, Map<EnergyType, Double> energyUnitCosts, List<PricingPolicy> congestionCharges) {
 
 		double fuelCost = 0.0;
 		Map<EnergyType, Double> routeConsumptions = this.calculateConsumption(vht, et, linkTravelTime, energyConsumptionParameters, relativeFuelEfficiency);
@@ -215,18 +218,18 @@ public class Route {
 		double tollCost = 0.0;
 
 		//if there is a congestion charging policy
-		if (linkCharges != null)
-			for (String policyName: linkCharges.keySet()) {
+		if (congestionCharges != null)
+			for (PricingPolicy policy: congestionCharges) {
 				//fetch link charges for the policy
-				HashMap<Integer, Double> charges = linkCharges.get(policyName);
+				double[] charges = policy.getLinkCharges(vht, tod);
 				if (charges == null) {
-					LOGGER.warn("No link charges for policy {}." , policyName);
+					LOGGER.warn("No link charges for policy {}." , policy.getPolicyName());
 					continue; //skip this policy then
 				}
 				//if any edge has charges, add policy charge and skip checking other edges in the route
 				for (int edgeID: edges.toArray()) {
-					if (charges.containsKey(edgeID)) {
-						tollCost += charges.get(edgeID);
+					if (charges[edgeID] > 0.0) {
+						tollCost += charges[edgeID];
 						break;
 					}
 				}
@@ -361,14 +364,15 @@ public class Route {
 	 * Calculates the utility of the route.
 	 * @param vht Vehicle type.
 	 * @param et Engine type.
+	 * @param tod Time of day.
 	 * @param linkTravelTime Link travel times.
 	 * @param energyConsumptionParameters Energy consumption parameters (A, B, C, D) for a combination of vehicle type and engine type.
 	 * @param relativeFuelEfficiency Relative fuel efficiency compared to the base year.
 	 * @param energyUnitCosts Energy unit costs.
-	 * @param linkCharges Congestion charges.
+	 * @param congestionCharges Congestion charges.
 	 * @param params Route choice parameters.
 	 */
-	public void calculateUtility(VehicleType vht, EngineType et, double[] linkTravelTime, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency, Map<EnergyType, Double> energyUnitCosts, HashMap<String, HashMap<Integer, Double>> linkCharges, Map<RouteChoiceParams, Double> params) {		
+	public void calculateUtility(VehicleType vht, EngineType et, TimeOfDay tod, double[] linkTravelTime, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency, Map<EnergyType, Double> energyUnitCosts, List<PricingPolicy> congestionCharges, Map<RouteChoiceParams, Double> params) {		
 		
 		//if a single node route, utility is zero
 		if (this.edges.isEmpty() && this.singleNode != null) {
@@ -383,7 +387,7 @@ public class Route {
 		double avgIntersectionDelay = params.get(RouteChoiceParams.DELAY);
 	
 		this.calculateTravelTime(linkTravelTime, avgIntersectionDelay); //always (re)calculate
-		this.calculateCost(vht, et, linkTravelTime, energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, linkCharges); //always (re)calculate
+		this.calculateCost(vht, et, tod, linkTravelTime, energyConsumptionParameters, relativeFuelEfficiency, energyUnitCosts, congestionCharges); //always (re)calculate
 		
 		double length = this.getLength();
 		double time = this.getTime();

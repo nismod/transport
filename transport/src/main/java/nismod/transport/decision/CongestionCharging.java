@@ -3,7 +3,10 @@ package nismod.transport.decision;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
@@ -65,6 +68,9 @@ public class CongestionCharging extends Intervention {
 			LOGGER.error("CongestionCharging installation has received an unexpected type. Not installed.");
 			return;
 		}
+		
+		//used for array initialisation
+		int maximumEdgeID = dm.getRoadNetwork().maximumEdgeID;
 	
 		String listOfCongestionChargedEdgeIDs = this.props.getProperty("listOfCongestionChargedEdgeIDs");
 		System.out.println(listOfCongestionChargedEdgeIDs);
@@ -73,16 +79,23 @@ public class CongestionCharging extends Intervention {
 		System.out.println(listOfCongestionChargedEdgeIDsNoTabs);
 		String[] edgeIDs = listOfCongestionChargedEdgeIDsNoTabs.split(",");
 		
-		//double congestionCharge = Double.parseDouble(this.props.getProperty("congestionCharge"));
+		//create list of policy affected edge IDs
+		List<Integer> listOfEdgeIDs = new ArrayList<Integer>();
+		for (String edgeString: edgeIDs) {
+			int edgeID = Integer.parseInt(edgeString);
+			listOfEdgeIDs.add(edgeID);
+		}
+
+		//file with the pricing policy
 		String congestionChargingPricing = this.props.getProperty("congestionChargingPricing");
 
-		MultiKeyMap congestionCharge = null; 
+		PricingPolicy policy = null; 
 		
 		int startYear = Integer.parseInt(props.getProperty("startYear"));
 		int endYear = Integer.parseInt(props.getProperty("endYear"));
 
 		try {
-			congestionCharge = this.readCongestionChargeFile(congestionChargingPricing);
+			policy = new PricingPolicy(name, congestionChargingPricing, maximumEdgeID, listOfEdgeIDs);
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			LOGGER.error(e);
@@ -91,31 +104,12 @@ public class CongestionCharging extends Intervention {
 			LOGGER.error(e);
 		}
 		
-		LOGGER.debug("Congestion charge: {}", congestionCharge.toString());
+		LOGGER.debug("Congestion charging pricing policy: {}", policy.getPolicy());
 		
-		//set congestion charge for all years from startYear to endYear
+		//add policy to all years from startYear to endYear
 		for (int y = startYear; y <= endYear; y++) {
 
-			MultiKeyMap congestionCharges = new MultiKeyMap();
-
-			for (Object mk: congestionCharge.keySet()) {
-
-				VehicleType vht = (VehicleType) ((MultiKey)mk).getKey(0);
-				TimeOfDay hour = (TimeOfDay) ((MultiKey)mk).getKey(1);
-
-				double charge = (double) congestionCharge.get(vht, hour);
-
-				HashMap<Integer, Double> linkCharges = new HashMap<Integer, Double>();
-				for (String edgeString: edgeIDs) {
-					int edgeID = Integer.parseInt(edgeString);
-					linkCharges.put(edgeID, charge);
-				}
-
-				congestionCharges.put(vht, hour, linkCharges);
-			}
-
-			//dm.setCongestionCharges(y, congestionCharges);
-			dm.addCongestionCharges(y, name, congestionCharges);
+			dm.addCongestionCharges(y, policy);
 		}
 
 		this.installed = true;
@@ -145,39 +139,5 @@ public class CongestionCharging extends Intervention {
 			dm.removeCongestionCharges(y, this.name);
 		
 		this.installed = false;
-	}
-	
-	
-	/**
-	 * Reads congestion charge file which contains charges that depend on vehicle type and time of day (hour).
-	 * @param fileName File name.
-	 * @return Map with congestion charges.
-	 * @throws FileNotFoundException if any.
-	 * @throws IOException if any.
-	 */
-	public MultiKeyMap readCongestionChargeFile (String fileName) throws FileNotFoundException, IOException {
-
-		//HashMap<Integer, HashMap<String, Double>> map = new HashMap<Integer, HashMap<String, Double>>();
-		MultiKeyMap map = new MultiKeyMap();
-		
-		CSVParser parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
-		//System.out.println(parser.getHeaderMap().toString());
-		Set<String> keySet = parser.getHeaderMap().keySet();
-		keySet.remove("vehicleType");
-		//System.out.println("keySet = " + keySet);
-		Double charge;
-		for (CSVRecord record : parser) {
-			//System.out.println(record);
-			VehicleType vht = VehicleType.valueOf(record.get(0));
-			for (String time: keySet) {
-				//System.out.println("Time of day = " + time);
-				charge = Double.parseDouble(record.get(time));  
-				map.put(vht, TimeOfDay.valueOf(time), charge);			
-			}
-		}
-		
-		parser.close(); 
-
-		return map;
 	}
 }

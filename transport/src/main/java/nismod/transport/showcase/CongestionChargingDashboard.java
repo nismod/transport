@@ -64,6 +64,7 @@ import org.jfree.data.category.DefaultCategoryDataset;
 
 import nismod.transport.decision.CongestionCharging;
 import nismod.transport.decision.Intervention;
+import nismod.transport.decision.PricingPolicy;
 import nismod.transport.demand.DemandModel;
 import nismod.transport.demand.DemandModel.ElasticityTypes;
 import nismod.transport.demand.ODMatrixMultiKey;
@@ -344,27 +345,31 @@ public class CongestionChargingDashboard extends JFrame {
 
 					cc.install(dm);
 
-					HashMap<String, MultiKeyMap> congestionCharges = dm.getCongestionCharges(2016);
+					List<PricingPolicy> congestionCharges = dm.getCongestionCharges(2016);
 					System.out.println("Policies: " + congestionCharges);
-					String policyName = congestionCharges.keySet().iterator().next();
-					MultiKeyMap specificCharges = (MultiKeyMap) congestionCharges.get(policyName);
-					System.out.println("Southampton policy: " + specificCharges);
+					String policyName = congestionCharges.get(0).getPolicyName();
+					PricingPolicy congestionCharge = congestionCharges.get(0);
+					System.out.println("Southampton policy: " + congestionCharge);
 
 					double peakCharge = slider.getValue();
 					double offPeakCharge = slider_1.getValue();
 
-					for (Object mk: specificCharges.keySet()) {
-
-						VehicleType vht = (VehicleType) ((MultiKey)mk).getKey(0);
-						TimeOfDay hour = (TimeOfDay) ((MultiKey)mk).getKey(1);
-						HashMap<Integer, Double> linkCharges = (HashMap<Integer, Double>) specificCharges.get(vht, hour);
-						if (hour == TimeOfDay.SEVENAM || hour == TimeOfDay.EIGHTAM || hour == TimeOfDay.NINEAM || hour == TimeOfDay.TENAM ||
+					//overwrite charges values
+					for (VehicleType vht: congestionCharge.getPolicy().keySet()) {
+						Map<TimeOfDay, double[]> map = congestionCharge.getPolicy().get(vht);
+						for (TimeOfDay hour: map.keySet()) {
+							double[] linkCharges = map.get(hour);
+							if (hour == TimeOfDay.SEVENAM || hour == TimeOfDay.EIGHTAM || hour == TimeOfDay.NINEAM || hour == TimeOfDay.TENAM ||
 								hour == TimeOfDay.FOURPM || hour == TimeOfDay.FIVEPM || hour == TimeOfDay.SIXPM || hour == TimeOfDay.SEVENPM)
-							for (int edgID: linkCharges.keySet()) linkCharges.put(edgID, peakCharge);
-						else	for (int edgID: linkCharges.keySet()) linkCharges.put(edgID, offPeakCharge);
+								for (int ID: congestionCharge.getPolicyEdges()) 
+									linkCharges[ID] = peakCharge;
+							else
+								for (int ID: congestionCharge.getPolicyEdges()) 
+									linkCharges[ID] = offPeakCharge;
+							
+						}
 					}
-
-					System.out.println("Congestion charges from sliders: " + specificCharges);
+					System.out.println("Congestion charges from sliders: " + congestionCharge.getPolicy());
 
 					props.setProperty("TIME", "-1.5");
 					props.setProperty("LENGTH", "-1.0");

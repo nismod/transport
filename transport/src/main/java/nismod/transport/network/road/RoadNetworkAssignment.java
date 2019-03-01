@@ -32,6 +32,7 @@ import org.geotools.graph.structure.Node;
 import org.locationtech.jts.geom.Point;
 import org.opengis.feature.simple.SimpleFeature;
 
+import nismod.transport.decision.PricingPolicy;
 import nismod.transport.demand.AssignableODMatrix;
 import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.ODMatrixMultiKey;
@@ -153,8 +154,8 @@ public class RoadNetworkAssignment {
 	private HashMap<Integer, Double> startNodeProbabilitiesFreight;
 	//the probability of freight trip ending at a node
 	private HashMap<Integer, Double> endNodeProbabilitiesFreight;
-
-	private HashMap<String, MultiKeyMap> congestionCharges; //String is the policy name, MultiKeyMap is (VehicleType, TimeOfDay) -> list of link charges
+	//list of pricing policies
+	private List<PricingPolicy> congestionCharges;
 
 	private Properties params;
 	
@@ -190,7 +191,7 @@ public class RoadNetworkAssignment {
 			Map<TimeOfDay, Map<Integer, Double>> defaultLinkTravelTime, 
 			HashMap<String, Double> areaCodeProbabilities, 
 			HashMap<String, Double> workplaceZoneProbabilities,
-			HashMap<String, MultiKeyMap> congestionCharges,
+			List<PricingPolicy> congestionCharges,
 			Properties params) {
 
 		this.roadNetwork = roadNetwork;
@@ -912,18 +913,7 @@ public class RoadNetworkAssignment {
 						//if (fetchedRouteSet.getProbabilities() == null) {
 						//probabilities need to be calculated for this route set before a choice can be made
 
-						//fetch congestion charge for the vehicle type
-						//HashMap<String, HashMap<Integer, Double>> linkCharges = null;
-						HashMap<String, HashMap<Integer, Double>> linkCharges = new HashMap<String, HashMap<Integer, Double>>();
-						if (this.congestionCharges != null) 
-							for (String policyName: this.congestionCharges.keySet()) {
-								//System.out.println("Policy = " + policyName);
-								//System.out.println("vht = " + vht + " hour = " + hour);
-								//System.out.println("Congestion charges: " + (HashMap<Integer, Double>) this.congestionCharges.get(policyName).get(vht, hour));
-								linkCharges.put(policyName, (HashMap<Integer, Double>) this.congestionCharges.get(policyName).get(vht, hour));
-							}
-
-						fetchedRouteSet.calculateUtilities(vht, engine, this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions, this.relativeFuelEfficiencies, this.energyUnitCosts, linkCharges, params);
+						fetchedRouteSet.calculateUtilities(vht, engine, hour, this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions, this.relativeFuelEfficiencies, this.energyUnitCosts, this.congestionCharges, params);
 						fetchedRouteSet.calculateProbabilities();
 						//}
 
@@ -2219,13 +2209,7 @@ public class RoadNetworkAssignment {
 						//if (fetchedRouteSet.getProbabilities() == null) {
 						//probabilities need to be calculated for this route set before a choice can be made
 
-						//fetch congestion charge for the vehicle type
-						HashMap<String, HashMap<Integer, Double>> linkCharges = new HashMap<String, HashMap<Integer, Double>>();
-						if (this.congestionCharges != null) 
-							for (String policyName: this.congestionCharges.keySet())
-								linkCharges.put(policyName, (HashMap<Integer, Double>) this.congestionCharges.get(policyName).get(vht, hour));
-
-						fetchedRouteSet.calculateUtilities(vht, engine, this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions, this.relativeFuelEfficiencies, this.energyUnitCosts, linkCharges, params);
+						fetchedRouteSet.calculateUtilities(vht, engine, hour, this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions, this.relativeFuelEfficiencies, this.energyUnitCosts, this.congestionCharges, params);
 						fetchedRouteSet.calculateProbabilities();
 				
 						//choose the route
@@ -5979,14 +5963,7 @@ public class RoadNetworkAssignment {
 				//if (fetchedRouteSet.getProbabilities() == null) {
 				//probabilities need to be calculated for this route set before a choice can be made
 
-				//fetch congestion charge for the vehicle type
-				//HashMap<String, HashMap<Integer, Double>> linkCharges = null;
-				HashMap<String, HashMap<Integer, Double>> linkCharges = new HashMap<String, HashMap<Integer, Double>>();
-				if (this.congestionCharges != null) 
-					for (String policyName: this.congestionCharges.keySet())
-						linkCharges.put(policyName, (HashMap<Integer, Double>) this.congestionCharges.get(policyName).get(vht, hour));
-
-				fetchedRouteSet.calculateUtilities(vht, engine, this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions, this.relativeFuelEfficiencies, this.energyUnitCosts, linkCharges, routeChoiceParameters);
+				fetchedRouteSet.calculateUtilities(vht, engine, hour, this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions, this.relativeFuelEfficiencies, this.energyUnitCosts, this.congestionCharges, routeChoiceParameters);
 				fetchedRouteSet.calculateProbabilities();
 				//}
 
