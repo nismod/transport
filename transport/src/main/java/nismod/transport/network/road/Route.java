@@ -207,34 +207,30 @@ public class Route {
 	 */
 	public void calculateCost(VehicleType vht, EngineType et, double[] linkTravelTime, Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptionParameters, Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiency, Map<EnergyType, Double> energyUnitCosts, HashMap<String, HashMap<Integer, Double>> linkCharges) {
 
-		//temporary map to check if a charging policy has already been applied
-		HashMap<String, Boolean> flags = new HashMap<String, Boolean>();
-		if (linkCharges != null)
-			for (String policyName: linkCharges.keySet()) flags.put(policyName, false);
-		
 		double fuelCost = 0.0;
 		Map<EnergyType, Double> routeConsumptions = this.calculateConsumption(vht, et, linkTravelTime, energyConsumptionParameters, relativeFuelEfficiency);
 		
 		for (EnergyType energy: EnergyType.values()) fuelCost +=  routeConsumptions.get(energy) * energyUnitCosts.get(energy);
 		
 		double tollCost = 0.0;
-		for (int edgeID: edges.toArray()) {
 
-			if (linkCharges != null)
-				for (String policyName: linkCharges.keySet()) {
-					if (flags.get(policyName)) continue; //skip if policy already applied
-					HashMap<Integer, Double> charges = linkCharges.get(policyName);
-					if (charges == null) {
-						LOGGER.warn("No link charges for policy {}." , policyName);
-						flags.put(policyName, true);
-						continue; //skip this policy then
-					}
+		//if there is a congestion charging policy
+		if (linkCharges != null)
+			for (String policyName: linkCharges.keySet()) {
+				//fetch link charges for the policy
+				HashMap<Integer, Double> charges = linkCharges.get(policyName);
+				if (charges == null) {
+					LOGGER.warn("No link charges for policy {}." , policyName);
+					continue; //skip this policy then
+				}
+				//if any edge has charges, add policy charge and skip checking other edges in the route
+				for (int edgeID: edges.toArray()) {
 					if (charges.containsKey(edgeID)) {
 						tollCost += charges.get(edgeID);
-						flags.put(policyName, true);
+						break;
 					}
 				}
-		}
+			}
 				
 		this.cost = fuelCost + tollCost;
 	}

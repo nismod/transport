@@ -6,8 +6,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -16,12 +18,18 @@ import org.geotools.graph.structure.DirectedEdge;
 import org.geotools.graph.structure.DirectedNode;
 import org.junit.Test;
 
+import nismod.transport.decision.CongestionCharging;
+import nismod.transport.decision.Intervention;
+import nismod.transport.demand.DemandModel;
 import nismod.transport.network.road.RoadNetworkAssignment.EnergyType;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
+import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.network.road.Route.WebTAG;
 import nismod.transport.network.road.RouteSet.RouteChoiceParams;
 import nismod.transport.utility.ConfigReader;
+import nismod.transport.utility.InputFileReader;
+import nismod.transport.zone.Zoning;
 
 public class RouteTest {
 
@@ -288,6 +296,95 @@ public class RouteTest {
 		
 		System.out.println("First node: " + r5.getOriginNode());
 		System.out.println("Last node: " + r5.getDestinationNode());
+		
+		//check demand model
+		final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
+		final String unitCO2EmissionsFile = props.getProperty("unitCO2EmissionsFile");
+		final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
+		final String AVFractionsFile = props.getProperty("autonomousVehiclesFile");
+		final String baseYearODMatrixFile = props.getProperty("baseYearODMatrixFile");
+		final String freightMatrixFile = props.getProperty("baseYearFreightMatrixFile");
+		final String populationFile = props.getProperty("populationFile");
+		final String GVAFile = props.getProperty("GVAFile");
+		final String elasticitiesFile = props.getProperty("elasticitiesFile");
+		final String elasticitiesFreightFile = props.getProperty("elasticitiesFreightFile");
+		final String passengerRoutesFile = props.getProperty("passengerRoutesFile");
+		final String freightRoutesFile = props.getProperty("freightRoutesFile");
+		
+		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, props);
+		rsg.readRoutesBinary(passengerRoutesFile);
+		rsg.readRoutesBinary(freightRoutesFile);
+		
+		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
+		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
+
+		final String congestionChargingFile = "./src/test/resources/testdata/interventions/congestionCharging.properties";
+		CongestionCharging cg2 = new CongestionCharging(congestionChargingFile);
+		
+		final String congestionChargingSouthampton =  "./src/test/resources/testdata/interventions/congestionChargingSouthampton.properties";
+		CongestionCharging cg3 = new CongestionCharging(congestionChargingSouthampton);
+		
+		List<Intervention> interventions = new ArrayList<Intervention>();
+		interventions.add(cg2);
+		interventions.add(cg3);
+		
+		//the main demand model
+		DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, freightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, unitCO2EmissionsFile, engineTypeFractionsFile, AVFractionsFile, interventions, rsg, zoning, props);
+		
+		//install interventions
+		for (Intervention i: interventions)
+			i.install(dm);
 			
+		System.out.println(dm.getCongestionCharges(2016));
+		
+		//create route
+		Route r6 = new Route(roadNetwork);
+		HashMap<String, HashMap<Integer, Double>> linkCharges = new HashMap<String, HashMap<Integer, Double>>();
+		if (dm.getCongestionCharges(2016) != null) 
+			for (String policyName: dm.getCongestionCharges(2016).keySet())
+				linkCharges.put(policyName, (HashMap<Integer, Double>) dm.getCongestionCharges(2016).get(policyName).get(VehicleType.RIGID, TimeOfDay.EIGHTAM));
+		
+		final String baseFuelConsumptionRatesFile = props.getProperty("baseFuelConsumptionRatesFile");
+		final String relativeFuelEfficiencyFile = props.getProperty("relativeFuelEfficiencyFile");
+		
+		Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> baseFuelConsumptionRates = InputFileReader.readEnergyConsumptionParamsFile(baseFuelConsumptionRatesFile);
+		HashMap<Integer, Map<VehicleType, Map<EngineType, Double>>> yearToRelativeFuelEfficiencies = InputFileReader.readRelativeFuelEfficiencyFile(relativeFuelEfficiencyFile);
+		HashMap<Integer, Map<EnergyType, Double>> yearToEnergyUnitCosts = InputFileReader.readEnergyUnitCostsFile(energyUnitCostsFile);
+		
+		//check if congestion charges are applied properly to a route
+		r6.addEdge((DirectedEdge) roadNetwork.getEdgeIDtoEdge()[702]);
+		r6.calculateCost(VehicleType.RIGID, EngineType.ICE_DIESEL, roadNetwork.getFreeFlowTravelTime(), baseFuelConsumptionRates, yearToRelativeFuelEfficiencies.get(2016), yearToEnergyUnitCosts.get(2016), linkCharges);
+		System.out.println("Route cost: " + r6.getCost());
+		assertEquals("Route costs are correct", 0.11907393929146934, r6.getCost(), EPSILON); //only fuel cost
+		
+		r6.addEdge((DirectedEdge) roadNetwork.getEdgeIDtoEdge()[719]);
+		r6.calculateCost(VehicleType.RIGID, EngineType.ICE_DIESEL, roadNetwork.getFreeFlowTravelTime(), baseFuelConsumptionRates, yearToRelativeFuelEfficiencies.get(2016), yearToEnergyUnitCosts.get(2016), linkCharges);	
+		System.out.println("Route cost: " + r6.getCost());
+		assertEquals("Route costs are correct", 25.178610908937205, r6.getCost(), EPSILON); //with Itchen bridge toll and additional fuel cost
+		
+		r6.addEdge((DirectedEdge) roadNetwork.getEdgeIDtoEdge()[718]);
+		r6.calculateCost(VehicleType.RIGID, EngineType.ICE_DIESEL, roadNetwork.getFreeFlowTravelTime(), baseFuelConsumptionRates, yearToRelativeFuelEfficiencies.get(2016), yearToEnergyUnitCosts.get(2016), linkCharges);	
+		System.out.println("Route cost: " + r6.getCost());
+		assertEquals("Route costs are correct", 25.23814787858294, r6.getCost(), EPSILON); //Itchen bridge toll not applied more than once, only additional fuel cost
+		
+		r6.addEdge((DirectedEdge) roadNetwork.getEdgeIDtoEdge()[701]);
+		r6.calculateCost(VehicleType.RIGID, EngineType.ICE_DIESEL, roadNetwork.getFreeFlowTravelTime(), baseFuelConsumptionRates, yearToRelativeFuelEfficiencies.get(2016), yearToEnergyUnitCosts.get(2016), linkCharges);	
+		System.out.println("Route cost: " + r6.getCost());
+		assertEquals("Route costs are correct", 25.357221817874407, r6.getCost(), EPSILON); //additional fuel cost
+		
+		r6.addEdge((DirectedEdge) roadNetwork.getEdgeIDtoEdge()[615]);
+		r6.calculateCost(VehicleType.RIGID, EngineType.ICE_DIESEL, roadNetwork.getFreeFlowTravelTime(), baseFuelConsumptionRates, yearToRelativeFuelEfficiencies.get(2016), yearToEnergyUnitCosts.get(2016), linkCharges);	
+		System.out.println("Route cost: " + r6.getCost());
+		assertEquals("Route costs are correct", 25.684675150925948, r6.getCost(), EPSILON); //additional fuel cost
+		
+		r6.addEdge((DirectedEdge) roadNetwork.getEdgeIDtoEdge()[504]);
+		r6.calculateCost(VehicleType.RIGID, EngineType.ICE_DIESEL, roadNetwork.getFreeFlowTravelTime(), baseFuelConsumptionRates, yearToRelativeFuelEfficiencies.get(2016), yearToEnergyUnitCosts.get(2016), linkCharges);	
+		System.out.println("Route cost: " + r6.getCost());
+		assertEquals("Route costs are correct", 51.547961210789104, r6.getCost(), EPSILON); //with Southampton city toll and additional fuel cost.
+		
+		r6.addEdge((DirectedEdge) roadNetwork.getEdgeIDtoEdge()[603]);
+		r6.calculateCost(VehicleType.RIGID, EngineType.ICE_DIESEL, roadNetwork.getFreeFlowTravelTime(), baseFuelConsumptionRates, yearToRelativeFuelEfficiencies.get(2016), yearToEnergyUnitCosts.get(2016), linkCharges);	
+		System.out.println("Route cost: " + r6.getCost());
+		assertEquals("Route costs are correct", 51.637266665257705, r6.getCost(), EPSILON); //Southampton city toll not applied more than once, only additional fuel cost.
 	}
 }
