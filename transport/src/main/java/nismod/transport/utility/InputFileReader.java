@@ -160,8 +160,8 @@ public class InputFileReader {
 			}
 		}
 		
-		LOGGER.debug("Elasticities:");
-		LOGGER.debug(map);
+		LOGGER.debug("Road elasticities read from file.");
+		LOGGER.trace(map);
 
 		return map;
 	}
@@ -206,8 +206,8 @@ public class InputFileReader {
 			}
 		}
 		
-		LOGGER.debug("Elasticities:");
-		LOGGER.debug(map);
+		LOGGER.debug("Rail elasticities read from file.");
+		LOGGER.trace(map);
 
 		return map;
 	}
@@ -244,8 +244,8 @@ public class InputFileReader {
 			}
 		}
 		
-		LOGGER.debug("Vehicle types to PCU:");
-		LOGGER.debug(map);
+		LOGGER.debug("Vehicle types to PCU read from file.");
+		LOGGER.trace(map);
 
 		return map;
 	}
@@ -290,8 +290,8 @@ public class InputFileReader {
 			}
 		}
 		
-		LOGGER.debug("Time of day distribution:");
-		LOGGER.debug(map);
+		LOGGER.debug("Time of day distribution read from file.");
+		LOGGER.trace(map);
 
 		return map;
 	}
@@ -347,8 +347,8 @@ public class InputFileReader {
 			}
 		}
 		
-		LOGGER.debug("Time of day distribution:");
-		LOGGER.debug(map);
+		LOGGER.debug("Time of day freight distribution read from file.");
+		LOGGER.trace(map);
 
 		return map;
 	}
@@ -393,8 +393,8 @@ public class InputFileReader {
 			}
 		}
 
-		LOGGER.debug("Energy unit costs:");
-		LOGGER.debug(map);
+		LOGGER.debug("Energy unit costs read from file.");
+		LOGGER.trace(map);
 
 		return map;
 	}
@@ -439,8 +439,8 @@ public class InputFileReader {
 			}
 		}
 
-		LOGGER.debug("Unit CO2 emissions:");
-		LOGGER.debug(map);
+		LOGGER.debug("Unit CO2 emissions read from file.");
+		LOGGER.trace(map);
 
 		return map;
 	}
@@ -494,8 +494,8 @@ public class InputFileReader {
 			}
 		}
 
-		LOGGER.debug("Energy consumption parameters:");
-		LOGGER.debug(map);
+		LOGGER.debug("Energy consumption parameters read from file.");
+		LOGGER.trace(map);
 		
 		return map;
 	}
@@ -552,8 +552,8 @@ public class InputFileReader {
 			}
 		}
 
-		LOGGER.debug("Year to vehicle engine type fractions:");
-		LOGGER.debug(yearToVehicleToEngineTypeFractions);
+		LOGGER.debug("Year to vehicle engine type fractions file read from file.");
+		LOGGER.trace(yearToVehicleToEngineTypeFractions);
 		
 		return yearToVehicleToEngineTypeFractions;
 	}
@@ -596,8 +596,8 @@ public class InputFileReader {
 			}
 		}
 		
-		LOGGER.debug("Autonomous vehicle fractions:");
-		LOGGER.debug(map);
+		LOGGER.debug("Autonomous vehicle fractions read from file.");
+		LOGGER.trace(map);
 
 		return map;
 	}
@@ -653,8 +653,8 @@ public class InputFileReader {
 			}
 		}
 
-		LOGGER.debug("Relative fuel efficiencies:");
-		LOGGER.debug(yearToRelativeFuelEfficiency);
+		LOGGER.debug("Relative fuel efficiencies read from file.");
+		LOGGER.trace(yearToRelativeFuelEfficiency);
 		
 		return yearToRelativeFuelEfficiency;
 	}
@@ -713,7 +713,7 @@ public class InputFileReader {
 			}
 		}
 		
-		LOGGER.trace("Link travel time:");
+		LOGGER.debug("Link travel times read from file.");
 		LOGGER.trace(yearToLinkTravelTimePerTimeOfDay.get(year));
 
 		return yearToLinkTravelTimePerTimeOfDay.get(year);
@@ -760,7 +760,7 @@ public class InputFileReader {
 			}
 		}
 
-		LOGGER.debug("Zonal car costs file read with data values for {} years and {} zones.", map.keySet().size(), zonesNumber);
+		LOGGER.debug("Zonal car costs read from file with data points for {} years and {} zones.", map.keySet().size(), zonesNumber);
 		//LOGGER.debug("Cost:");
 		//LOGGER.debug(map);
 		
@@ -809,7 +809,7 @@ public class InputFileReader {
 			}
 		}
 
-		LOGGER.debug("Rail station costs file read with data values for {} years and {} stations.", map.keySet().size(), stationNumber);
+		LOGGER.debug("Rail station costs read from file with data points for {} years and {} stations.", map.keySet().size(), stationNumber);
 		//LOGGER.debug("Cost:");
 		//LOGGER.debug(map);
 		
@@ -849,11 +849,10 @@ public class InputFileReader {
 			}
 		}
 
-		LOGGER.debug("Rail station costs file read with data values for {} years.", map.keySet().size());
+		LOGGER.debug("Rail station costs read from file with data points for {} years.", map.keySet().size());
 		//LOGGER.debug("Cost:");
 		//LOGGER.debug(map);
 		
 		return map;
 	}
-	
 }

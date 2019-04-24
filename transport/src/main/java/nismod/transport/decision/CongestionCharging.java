@@ -104,7 +104,7 @@ public class CongestionCharging extends Intervention {
 			LOGGER.error(e);
 		}
 		
-		LOGGER.debug("Congestion charging pricing policy: {}", policy.getPolicy());
+		LOGGER.trace("Congestion charging pricing policy: {}", policy.getPolicy());
 		
 		//add policy to all years from startYear to endYear
 		for (int y = startYear; y <= endYear; y++) {

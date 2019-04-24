@@ -325,6 +325,14 @@ public class Route {
 		} else {
 
 			parameters = energyConsumptionParameters.get(vht).get(et);
+      
+      /*
+      if (relativeFuelEfficiency.get(vht) == null) 
+        LOGGER.error("Cannot fetch relative fuel efficiency for vehicle {}", vht);
+      if (relativeFuelEfficiency.get(vht).get(et) == null) 
+        LOGGER.error("Cannot fetch relative fuel efficiency for vehicle {} and engine type {}", vht, et);
+      */  
+        
 			double relativeEfficiency = relativeFuelEfficiency.get(vht).get(et);
 
 			double consumption = 0.0;
