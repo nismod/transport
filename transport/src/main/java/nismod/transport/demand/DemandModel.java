@@ -830,6 +830,8 @@ public class DemandModel {
 				rsg2.generateRouteSetForODMatrixTemproDistanceBased(odm, this.zoning, 1, 1);
 				rsg2.generateSingleNodeRoutes();
 				LOGGER.debug(rsg2.getStatistics());
+				
+				LOGGER.debug("Route set before addition of new routes: {}", this.rsg.getStatistics());
 
 				LOGGER.debug("Adding new routes into the existing route set.");
 				//add new routes into rsg
@@ -849,7 +851,8 @@ public class DemandModel {
 							for (Route r: rs2.getChoiceSet())
 								rs.addRoute(r);
 						}
-				LOGGER.debug(rsg2.getStatistics());
+				
+				LOGGER.debug("Route set after addition of new routes: {}", this.rsg.getStatistics());
 			}
 		}
 			
