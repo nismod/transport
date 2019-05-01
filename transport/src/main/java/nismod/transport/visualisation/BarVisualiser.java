@@ -26,6 +26,7 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.BarRenderer;
+import org.jfree.chart.renderer.category.StandardBarPainter;
 import org.jfree.data.category.DefaultCategoryDataset;
 
 /**
@@ -76,6 +77,10 @@ public class BarVisualiser extends JFrame {
 	 	chart.getTitle().setPaint(Color.DARK_GRAY);
 	 	
 	 	BarRenderer barRenderer = (BarRenderer)plot.getRenderer();
+		barRenderer.setBarPainter(new StandardBarPainter()); //to remove gradient bar painter
+		barRenderer.setDrawBarOutline(false);
+		barRenderer.setShadowVisible(false);
+		//barRenderer.setMaximumBarWidth(0.30);
 
 		//get brewer palette
 		ColorBrewer brewer = ColorBrewer.instance();
@@ -89,7 +94,7 @@ public class BarVisualiser extends JFrame {
 		}
 		Color[] colors = palette.getColors(numberOfRowKeys);
 		for (int i = 0; i < numberOfRowKeys; i++) {
-			barRenderer.setSeriesPaint(i, colors[i]);
+			barRenderer.setSeriesPaint(i, colors[numberOfRowKeys-1-i]);
 		}
 		 	
 	 	this.pack();

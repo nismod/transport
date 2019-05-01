@@ -450,6 +450,7 @@ public class RouteSetGenerator{
 		}
 		
 		final int generationLimit = Integer.parseInt(props.getProperty("GENERATION_LIMIT"));
+		final int maxRouteLimit = Integer.parseInt(props.getProperty("ROUTE_LIMIT"));
 		
 //		List<Integer> originNodes = this.roadNetwork.getZoneToNodes().get(originLAD);
 //		List<Integer> destinationNodes = this.roadNetwork.getZoneToNodes().get(destinationLAD);
@@ -473,7 +474,7 @@ public class RouteSetGenerator{
 			else if (centroidDistance <= 400000 && centroidDistance > 300000) routeLimit = 2;
 			else if (centroidDistance <= 300000 && centroidDistance > 200000) routeLimit = 3;
 			else if (centroidDistance <= 200000 && centroidDistance > 100000) routeLimit = 4;
-			else if (centroidDistance <= 100000) routeLimit = 5;
+			else if (centroidDistance <= 100000) routeLimit = maxRouteLimit;
 			
 			LOGGER.trace("Route limit for centroidDistance = {} km is: {}", centroidDistance/1000, routeLimit);
 			generateRouteSetWithRandomLinkEliminationRestricted(originNode, destinationNode, routeLimit, generationLimit);

@@ -9,8 +9,10 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -20,11 +22,17 @@ import org.apache.sanselan.ImageWriteException;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import nismod.transport.decision.Intervention;
+import nismod.transport.decision.Intervention.InterventionType;
+import nismod.transport.decision.RoadDevelopment;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
+import nismod.transport.network.road.Route;
+import nismod.transport.network.road.RouteSet;
 import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.utility.ConfigReader;
 import nismod.transport.utility.InputFileReader;
+import nismod.transport.utility.PropertiesReader;
 import nismod.transport.zone.Zoning;
 
 /**
@@ -36,7 +44,7 @@ public class RealODMatrixTemproTest {
 	
 	public static void main( String[] args ) throws FileNotFoundException, IOException, ImageWriteException {
 		
-		final String configFile = "./src/main/full/config/config.properties";
+		final String configFile = "./src/main/full/config/configB1baseline.properties";
 		//final String configFile = "./src/test/config/testConfig.properties";
 		//final String configFile = "./src/test/config/miniTestConfig.properties";
 		Properties props = ConfigReader.getProperties(configFile);
@@ -75,6 +83,276 @@ public class RealODMatrixTemproTest {
 		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
 		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
 		
+		
+		String[] arcZones = new String[]{"E07000008", "E07000177", "E07000099", "E06000055", "E06000056", "E07000012", "E06000032",
+										"E07000179", "E07000004", "E07000180", "E07000181", "E07000155", "E06000042", "E07000178",
+										"E06000030", "E07000151", "E07000154", "E07000156", "E07000009", "E07000242", "E07000011",
+										"E07000243", "E06000037"};
+		
+		Integer[] B1Edges = new Integer[] {90000, 90001, 90002, 90003, 90004, 90005, 90006, 90007, 90008, 90009};
+		List<Integer> B1EdgesList = Arrays.asList(B1Edges);
+		
+		List<String> arcLADZonesList = Arrays.asList(arcZones);
+		List<String> arcTemproZonesList = new ArrayList<String>();
+		
+		int count = 0;
+		for (String lad: arcLADZonesList) {
+			List<String> tempro = zoning.getLADToListOfContainedZones().get(lad);
+			count += tempro.size();
+			arcTemproZonesList.addAll(tempro);
+		}
+		System.out.println("Count of tempro zones: " + count);
+		System.out.println("Size of tempro zones list: " + arcTemproZonesList.size());
+		
+		RealODMatrixTempro odm = new RealODMatrixTempro(temproODMatrixFile, zoning);
+				
+		RealODMatrixTempro odm2 = RealODMatrixTempro.createUnitMatrix(arcTemproZonesList, zoning);
+		System.out.println("Expected size of the unit matrix: " + count*count);
+		System.out.println("Size of the unit matrix: " + odm2.getTotalIntFlow());
+		
+		RealODMatrixTempro odm3 = new RealODMatrixTempro(zoning);
+		
+		for (String originZone: arcTemproZonesList)
+			for (String destinationZone: arcTemproZonesList)
+				if (odm.getIntFlow(originZone, destinationZone) > 0)
+					odm3.setFlow(originZone, destinationZone, 1.0);
+		
+		System.out.println("Size of the arc matrix: " + odm3.getTotalIntFlow());
+		odm3.saveMatrixFormatted2("arcTemproZonesMatrix.csv");
+		
+		//check that all flows are within the arc LAD zones
+		List<String> origins = odm3.getUnsortedOrigins();
+		List<String> destinations = odm3.getUnsortedDestinations();
+		
+		for (String originZone: origins) 
+			for (String destinationZone: destinations) 
+				if (odm3.getIntFlow(originZone, destinationZone) != 0) {
+					
+					String originLAD = zoning.getZoneToLADMap().get(originZone);
+					String destinationLAD = zoning.getZoneToLADMap().get(destinationZone);
+					
+					if (!arcLADZonesList.contains(originLAD) || !arcLADZonesList.contains(destinationLAD))
+						System.err.println("We have an LAD that is not among the Arc onces!");
+					
+					int origin = zoning.getTemproCodeToIDMap().get(originZone);
+					int destination = zoning.getTemproCodeToIDMap().get(destinationZone);
+					
+					int originNode = zoning.getZoneIDToNearestNodeIDMap()[origin];
+					int destinationNode = zoning.getZoneIDToNearestNodeIDMap()[destination];
+					
+					String oLAD = roadNetwork.getNodeToZone().get(originNode);
+					String dLAD = roadNetwork.getNodeToZone().get(destinationNode);
+					
+					if (!oLAD.equals(originLAD)) {
+						System.out.println("The nearest node maps to a different LAD!");
+						System.out.printf("originLAD: %s ", originLAD);
+						System.out.printf("originTemproZone: %s ", originZone);
+						System.out.printf("originTemproZone ID: %d ", origin);
+						System.out.printf("nearest node ID: %d ", originNode);
+						System.out.printf("LAD from roadNetwork: %s \n", oLAD);
+					}
+					
+					if (!dLAD.equals(destinationLAD)) {
+						System.out.println("The nearest node maps to a different LAD!");
+						System.out.printf("destinationLAD: %s ", destinationLAD);
+						System.out.printf("destinationTemproZone: %s ", destinationZone);
+						System.out.printf("destinationTemproZone ID: %d ", destination);
+						System.out.printf("nearest node ID: %d ", destinationNode);
+						System.out.printf("LAD from roadNetwork: %s \n", dLAD);
+					}
+					
+					if (!arcLADZonesList.contains(oLAD))
+						System.out.println("We have LAD outside of Arc LADs: " + oLAD);
+					
+					if (!arcLADZonesList.contains(dLAD))
+						System.out.println("We have LAD outside of Arc LADs: " + dLAD);
+			}
+			
+		//set route generation parameters
+		Properties params = new Properties();
+		params.setProperty("ROUTE_LIMIT", "5");
+		params.setProperty("GENERATION_LIMIT", "20");
+		params.setProperty("INITIAL_ROUTE_CAPACITY", "10");
+		params.setProperty("INITIAL_OUTER_CAPACITY", "18000");
+		params.setProperty("INITIAL_INNER_CAPACITY", "2000");
+		params.setProperty("MAXIMUM_EDGE_ID", "200000");
+		params.setProperty("MAXIMUM_NODE_ID", "13415");
+		params.setProperty("MAXIMUM_TEMPRO_ZONE_ID", "7700");
+		params.setProperty("MAXIMUM_LAD_ZONE_ID", "380");
+		
+		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, params);
+		rsg.generateRouteSetForODMatrixTemproDistanceBased(odm3, zoning, 1, 1);
+		
+		rsg.printStatistics();
+		rsg.generateSingleNodeRoutes();
+		System.out.println("Route set statistics after single nodes:");
+		rsg.printStatistics();
+		
+		System.out.println("Network size before interventions: " + roadNetwork.getNetwork().getEdges().size());
+		
+		//load interventions
+		List<Intervention> interventions = new ArrayList<Intervention>();
+		
+		for (Object o: props.keySet()) {
+			String key = (String) o;
+			if (key.startsWith("interventionFile")) {
+				//System.out.println(key);
+				String interventionFile = props.getProperty(key);
+				Properties p = PropertiesReader.getProperties(interventionFile);
+				String type = p.getProperty("type");
+				//System.out.println(type);
+				
+				if (type.equals(InterventionType.RoadDevelopment.toString())) {
+					Intervention rd = new RoadDevelopment(interventionFile);
+					rd.install(roadNetwork);
+				}
+									
+			}
+		}
+
+		System.out.println("Network size after road development interventions: " + roadNetwork.getNetwork().getEdges().size());
+		
+		String temproOxford = "E02005947";
+		String temproMiltonKeynes = "E02003472";
+		String temproCambridge = "E02003726";
+		
+		int temproOxfordID = zoning.getTemproCodeToIDMap().get(temproOxford);
+		int temproMiltonKeynesID = zoning.getTemproCodeToIDMap().get(temproMiltonKeynes);
+		int temproCambridgeID = zoning.getTemproCodeToIDMap().get(temproCambridge);
+		
+		int nodeOxford = zoning.getZoneIDToNearestNodeIDMap()[temproOxfordID];
+		int nodeMiltonKeynes = zoning.getZoneIDToNearestNodeIDMap()[temproMiltonKeynesID];
+		int nodeCambridge = zoning.getZoneIDToNearestNodeIDMap()[temproCambridgeID];
+		
+		System.out.println("Node Oxford: " + nodeOxford);
+		System.out.println("Node Milton Keynes: " + nodeMiltonKeynes);
+		System.out.println("Node Cambridge: " + nodeCambridge);
+		
+		//generate new route set
+		RouteSetGenerator rsg2 = new RouteSetGenerator(roadNetwork, params);
+		rsg2.generateRouteSetForODMatrixTemproDistanceBased(odm3, zoning, 1, 1);
+		rsg2.printStatistics();
+		rsg2.generateSingleNodeRoutes();
+		System.out.println("Route set statistics after single nodes:");
+		rsg2.printStatistics();
+				
+		int counter = 0;
+		int counterB1 = 0;
+		
+		for (String originZone: origins) 
+			for (String destinationZone: destinations)
+				if (odm3.getIntFlow(originZone, destinationZone) != 0){
+				
+				int origin = zoning.getTemproCodeToIDMap().get(originZone);
+				int destination = zoning.getTemproCodeToIDMap().get(destinationZone);
+				
+				int originNode = zoning.getZoneIDToNearestNodeIDMap()[origin];
+				int destinationNode = zoning.getZoneIDToNearestNodeIDMap()[destination];
+				
+				if (originNode != zoning.getZoneToNearestNodeIDMap().get(originZone)) 
+					System.err.println("Wrong node ID");
+				if (destinationNode != zoning.getZoneToNearestNodeIDMap().get(destinationZone))
+					System.err.println("Wrong node ID");
+
+				RouteSet rs = rsg.getRouteSet(originNode, destinationNode);
+				RouteSet rs2 = rsg2.getRouteSet(originNode, destinationNode);
+				
+				if (rs == null) {
+					System.err.printf("Cannot fetch route set between node %d and node %d from rsg! \n", originNode, destinationNode);
+					
+				}
+				if (rs2 == null) {
+					System.err.printf("Cannot fetch route set between node %d and node %d from rsg2! \n", originNode, destinationNode);
+					
+				}
+				
+				List<Route> list = rs.getChoiceSet();
+				List<Route> list2 = rs2.getChoiceSet();
+				
+				for (Route r: list2)
+					if (!list.contains(r)) {
+						//System.out.println(r.toString());
+						counter++;
+						
+						//check if the route contains any of the B1 edges
+						for (int edge: B1EdgesList) 
+							if (r.getEdges().contains(edge)) {
+								counterB1++;
+								break;
+							}
+					}
+			}
+			
+		System.out.println("Number of new routes after road development: " + counter);
+		System.out.println("Number of new routes that use new road links: " + counterB1);
+				
+		System.out.println("Oxford to Milton Keynes before:");
+		rsg.getRouteSet(nodeOxford, nodeMiltonKeynes).printChoiceSet();
+				
+		System.out.println("Oxford to Milton Keynes after B1:");
+		rsg2.getRouteSet(nodeOxford, nodeMiltonKeynes).printChoiceSet();
+		
+		System.out.println("Milton Keynes to Oxford before:");
+		rsg.getRouteSet(nodeMiltonKeynes, nodeOxford).printChoiceSet();
+				
+		System.out.println("Milton Keynes to Oxford after B1:");
+		rsg2.getRouteSet(nodeMiltonKeynes, nodeOxford).printChoiceSet();
+		
+		System.out.println("Oxford to Cambridge before:");
+		rsg.getRouteSet(nodeOxford, nodeCambridge).printChoiceSet();
+				
+		System.out.println("Oxford to Cambridge after B1:");
+		rsg2.getRouteSet(nodeOxford, nodeCambridge).printChoiceSet();
+		
+		System.out.println("Cambridge to Oxford before:");
+		rsg.getRouteSet(nodeCambridge, nodeOxford).printChoiceSet();
+				
+		System.out.println("Cambridge to Oxford after B1:");
+		rsg2.getRouteSet(nodeCambridge, nodeOxford).printChoiceSet();
+		
+		//copy new routes from rsg2 into rsg
+		
+		for (String originZone: origins) 
+			for (String destinationZone: destinations)
+				if (odm3.getIntFlow(originZone, destinationZone) != 0){
+				
+				int origin = zoning.getTemproCodeToIDMap().get(originZone);
+				int destination = zoning.getTemproCodeToIDMap().get(destinationZone);
+				
+				int originNode = zoning.getZoneIDToNearestNodeIDMap()[origin];
+				int destinationNode = zoning.getZoneIDToNearestNodeIDMap()[destination];
+				
+				if (originNode != zoning.getZoneToNearestNodeIDMap().get(originZone)) 
+					System.err.println("Wrong node ID");
+				if (destinationNode != zoning.getZoneToNearestNodeIDMap().get(destinationZone))
+					System.err.println("Wrong node ID");
+
+				RouteSet rs = rsg.getRouteSet(originNode, destinationNode);
+				RouteSet rs2 = rsg2.getRouteSet(originNode, destinationNode);
+				
+				if (rs == null) {
+					System.err.printf("Cannot fetch route set between node %d and node %d from rsg! \n", originNode, destinationNode);
+					
+				}
+				if (rs2 == null) {
+					System.err.printf("Cannot fetch route set between node %d and node %d from rsg2! \n", originNode, destinationNode);
+					
+				}
+				
+				List<Route> list = rs.getChoiceSet();
+				List<Route> list2 = rs2.getChoiceSet();
+				
+				for (Route r: list2)
+					rs.addRoute(r);
+					
+			}
+		
+		System.out.println("Route set 1 after adding the new routes: ");
+		rsg.printStatistics();
+		
+		
+		
+		/*
 		//RealODMatrixTempro temproODM = new RealODMatrixTempro(temproODMatrixFile, zoning);
 		RealODMatrixTempro temproODM = new RealODMatrixTempro("temproMatrixListBased198WithMinor4.csv", zoning);
 		System.out.println("Sum of flows: " + temproODM.getSumOfFlows());
@@ -83,6 +361,7 @@ public class RealODMatrixTemproTest {
 		
 		System.out.println("Sum of flows: " + lad.getSumOfFlows());
 		lad.saveMatrixFormatted2("ladFromTempro198ODMWithMinor4.csv");
+		*/
 		
 //		RealODMatrixTempro temproODM2 = RealODMatrixTempro.createTEMProFromLadMatrix(lad, temproODM, zoning);
 //		temproODM2.saveMatrixFormatted2("temproWithMinorRecreated.csv");

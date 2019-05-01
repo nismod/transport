@@ -16,8 +16,11 @@ import java.util.Properties;
 import org.geotools.graph.structure.DirectedEdge;
 import org.junit.Test;
 
+import nismod.transport.demand.DemandModel;
 import nismod.transport.network.road.RoadNetwork;
+import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.utility.ConfigReader;
+import nismod.transport.zone.Zoning;
 
 /**
  * @author Milan Lovric
@@ -48,7 +51,7 @@ public class RoadDevelopmentTest {
 		
 		//create a road network
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
-		//roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
+		roadNetwork.replaceNetworkEdgeIDs(networkUrlFixedEdgeIDs);
 		
 		List<Intervention> interventions = new ArrayList<Intervention>();
 		Properties props2 = new Properties();
@@ -130,5 +133,48 @@ public class RoadDevelopmentTest {
 				i.install(roadNetwork);
 		}
 		assertTrue("Intervention should be installed", rd.getState());
+		
+		
+		final String roadDevelopmentFileName2 = "./src/test/resources/testdata/interventions/roadDevelopment2.properties";
+		RoadDevelopment rd3 = new RoadDevelopment(roadDevelopmentFileName2);
+		System.out.println("Road development intervention: " + rd3.toString());
+		List<Intervention> interventions2 = new ArrayList<Intervention>();
+		interventions2.add(rd3);
+		
+		final String energyUnitCostsFile = props.getProperty("energyUnitCostsFile");
+		final String unitCO2EmissionsFile = props.getProperty("unitCO2EmissionsFile");
+		final String engineTypeFractionsFile = props.getProperty("engineTypeFractionsFile");
+		final String AVFractionsFile = props.getProperty("autonomousVehiclesFile");
+
+		final String baseYearODMatrixFile = props.getProperty("baseYearODMatrixFile");
+		final String freightMatrixFile = props.getProperty("baseYearFreightMatrixFile");
+		final String populationFile = props.getProperty("populationFile");
+		final String GVAFile = props.getProperty("GVAFile");
+		final String elasticitiesFile = props.getProperty("elasticitiesFile");
+		final String elasticitiesFreightFile = props.getProperty("elasticitiesFreightFile");
+
+		final String passengerRoutesFile = props.getProperty("passengerRoutesFile");
+		final String freightRoutesFile = props.getProperty("freightRoutesFile");
+		
+		//read routes
+		RouteSetGenerator rsg = new RouteSetGenerator(roadNetwork, props);
+		rsg.readRoutesBinaryWithoutValidityCheck(passengerRoutesFile);
+		rsg.printStatistics();
+		rsg.readRoutesBinaryWithoutValidityCheck(freightRoutesFile);
+		rsg.printStatistics();
+		
+		rsg.generateSingleNodeRoutes();
+		rsg.calculateAllPathsizes();
+		
+		final URL temproZonesUrl = new URL(props.getProperty("temproZonesUrl"));
+		Zoning zoning = new Zoning(temproZonesUrl, nodesUrl, roadNetwork, props);
+		
+		//the main demand model
+		DemandModel dm = new DemandModel(roadNetwork, baseYearODMatrixFile, freightMatrixFile, populationFile, GVAFile, elasticitiesFile, elasticitiesFreightFile, energyUnitCostsFile, unitCO2EmissionsFile, engineTypeFractionsFile, AVFractionsFile, interventions2, rsg, zoning, props);
+		System.out.println(dm.getListsOfLADsForNewRouteGeneration());
+		
+		rd3.install(dm);
+		System.out.println(dm.getListsOfLADsForNewRouteGeneration());
+
 	}
 }
