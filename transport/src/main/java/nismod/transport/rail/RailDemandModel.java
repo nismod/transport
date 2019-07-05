@@ -13,14 +13,9 @@ import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.geotools.data.simple.SimpleFeatureCollection;
 
 import nismod.transport.decision.Intervention;
-import nismod.transport.demand.FreightMatrix;
 import nismod.transport.demand.ODMatrixMultiKey;
-import nismod.transport.demand.SkimMatrix;
-import nismod.transport.demand.SkimMatrixFreight;
-import nismod.transport.demand.SkimMatrixFreightArray;
 import nismod.transport.demand.SkimMatrixMultiKey;
 import nismod.transport.utility.InputFileReader;
 
@@ -468,6 +463,30 @@ public class RailDemandModel {
 		double tripRate = 1.0; 
 		for (int year = fromYear+1; year <= predictedYear; year++)		
 				tripRate *= this.yearToTripRate.get(year);
+		
+		
+		//fetch maps with data used for prediction
+		HashMap<String, Integer> oldPopulation = this.yearToZoneToPopulation.get(fromYear);
+		HashMap<String, Integer> newPopulation = this.yearToZoneToPopulation.get(predictedYear);
+		HashMap<String, Double> oldGVA = this.yearToZoneToGVA.get(fromYear);
+		HashMap<String, Double> newGVA = this.yearToZoneToGVA.get(predictedYear);
+		HashMap<String, Double> oldCarCosts = this.yearToCarCosts.get(fromYear);
+		HashMap<String, Double> newCarCosts = this.yearToCarCosts.get(predictedYear);
+		HashMap<Integer, Double> oldFares = this.yearToStationFares.get(fromYear);
+		HashMap<Integer, Double> newFares = this.yearToStationFares.get(predictedYear);
+		HashMap<Integer, Double> oldGJT = this.yearToStationGJTs.get(fromYear);
+		HashMap<Integer, Double> newGJT = this.yearToStationGJTs.get(predictedYear);
+		
+		if (oldPopulation == null) { LOGGER.error("Missing population data for year {}.", fromYear); return; }
+		if (newPopulation == null) { LOGGER.error("Missing population data for year {}.", predictedYear); return; }
+		if (oldGVA == null) { LOGGER.error("Missing GVA data for year {}.", fromYear); return; }
+		if (newGVA == null) { LOGGER.error("Missing GVA data for year {}.", predictedYear); return; }
+		if (oldCarCosts == null) { LOGGER.error("Missing car costs for year {}.", fromYear); return; }
+		if (newCarCosts == null) { LOGGER.error("Missing car costs for year {}.", predictedYear); return; }
+		if (oldFares == null) { LOGGER.error("Missing rail fares for year {}.", fromYear); return; }
+		if (newFares == null) { LOGGER.error("Missing rail fares for year {}.", predictedYear); return; }
+		if (oldGJT == null) { LOGGER.error("Missing GJT data for year {}.", fromYear); return; }
+		if (newGJT == null) { LOGGER.error("Missing GJT data for year {}.", predictedYear); return; }
 					
 		//PREDICTION
 		//for each station predict changes from the variables
@@ -476,21 +495,30 @@ public class RailDemandModel {
 			int oldUsage = station.getYearlyUsage();
 			int nlc = station.getNLC();
 			String zone = station.getLADCode();
+			
+			if (zone == null) { LOGGER.error("Missing LAD zone information for station with NLC code {}.", nlc); return; }
 
-			int oldPopulationRailStationZone = this.yearToZoneToPopulation.get(fromYear).get(zone);
-			int newPopulationRailStationZone = this.yearToZoneToPopulation.get(predictedYear).get(zone);
-
-			double oldGVARailStationZone = this.yearToZoneToGVA.get(fromYear).get(zone);
-			double newGVARailStationZone = this.yearToZoneToGVA.get(predictedYear).get(zone);
-
-			double oldCarCostsRailStationZone = this.yearToCarCosts.get(fromYear).get(zone);
-			double newCarCostsRailStationZone = this.yearToCarCosts.get(predictedYear).get(zone);
-
-			double oldFaresRailStation = this.yearToStationFares.get(fromYear).get(nlc);
-			double newFaresRailStation = this.yearToStationFares.get(predictedYear).get(nlc);
-
-			double oldGJTRailStationZone = this.yearToStationGJTs.get(fromYear).get(nlc);
-			double newGJTRailStationZone = this.yearToStationGJTs.get(predictedYear).get(nlc);
+			Integer oldPopulationRailStationZone = oldPopulation.get(zone);
+			Integer newPopulationRailStationZone = newPopulation.get(zone);
+			Double oldGVARailStationZone = oldGVA.get(zone);
+			Double newGVARailStationZone = newGVA.get(zone);
+			Double oldCarCostsRailStationZone = oldCarCosts.get(zone);
+			Double newCarCostsRailStationZone = newCarCosts.get(zone);
+			Double oldFaresRailStation = oldFares.get(nlc);
+			Double newFaresRailStation = newFares.get(nlc);
+			Double oldGJTRailStationZone = oldGJT.get(nlc);
+			Double newGJTRailStationZone = newGJT.get(nlc);
+			
+			if (oldPopulationRailStationZone == null) { LOGGER.error("Missing {} population data for zone {}.", fromYear, zone); return; }
+			if (newPopulationRailStationZone == null) { LOGGER.error("Missing {} population data for zone {}.", predictedYear, zone); return; }
+			if (oldGVARailStationZone == null) { LOGGER.error("Missing {} GVA data for zone {}.", fromYear, zone); return; }
+			if (newGVARailStationZone == null) { LOGGER.error("Missing {} GVA data for zone {}.", predictedYear, zone); return; }
+			if (oldCarCostsRailStationZone == null) { LOGGER.error("Missing {} car costs for zone {}.", fromYear, zone); return; }
+			if (newCarCostsRailStationZone == null) { LOGGER.error("Missing {} car costs for zone {}.", predictedYear, zone); return; }
+			if (oldFaresRailStation == null) { LOGGER.error("Missing {} rail fares for zone {}.", fromYear, zone); return; }
+			if (newFaresRailStation == null) { LOGGER.error("Missing {} rail fares for zone {}.", predictedYear, zone); return; }
+			if (oldGJTRailStationZone == null) { LOGGER.error("Missing {} GJT data for year {}.", fromYear, zone); return; }
+			if (newGJTRailStationZone == null) { LOGGER.error("Missing {} GJT data for year {}.", predictedYear, zone); return; }
 
 			//predict station usage
 			int predictedUsage = (int) Math.round(oldUsage * tripRate 
@@ -499,7 +527,7 @@ public class RailDemandModel {
 												* Math.pow((double) newCarCostsRailStationZone / oldCarCostsRailStationZone, elasticities.get(ElasticityTypes.COST_CAR).get(station.getArea()))
 												* Math.pow((double) newFaresRailStation / oldFaresRailStation, elasticities.get(ElasticityTypes.COST_RAIL).get(station.getArea()))
 												* Math.pow((double) newGJTRailStationZone / oldGJTRailStationZone, elasticities.get(ElasticityTypes.TIME).get(station.getArea())));
-
+			
 			if (predictedUsage == 0 && oldUsage != 0) 
 				predictedUsage = 1; //stops demand from disappearing (unless oldUsage was also 0)
 
