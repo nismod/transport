@@ -4,21 +4,21 @@
 package nismod.transport.demand;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.sanselan.ImageWriteException;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
+import org.apache.commons.imaging.ImageWriteException;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -26,12 +26,10 @@ import nismod.transport.decision.Intervention;
 import nismod.transport.decision.Intervention.InterventionType;
 import nismod.transport.decision.RoadDevelopment;
 import nismod.transport.network.road.RoadNetwork;
-import nismod.transport.network.road.RoadNetworkAssignment;
 import nismod.transport.network.road.Route;
 import nismod.transport.network.road.RouteSet;
 import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.utility.ConfigReader;
-import nismod.transport.utility.InputFileReader;
 import nismod.transport.utility.PropertiesReader;
 import nismod.transport.zone.Zoning;
 
@@ -64,17 +62,17 @@ public class RealODMatrixTemproTest {
 
 		final String temproODMatrixFile = props.getProperty("temproODMatrixFile");
 		
-		final String outputFolder = props.getProperty("outputFolder");
-		
-		//create output directory
-	     File file = new File(outputFolder);
-	        if (!file.exists()) {
-	            if (file.mkdirs()) {
-	                System.out.println("Output directory is created.");
-	            } else {
-	                System.err.println("Failed to create output directory.");
-	            }
-	        }
+//		final String outputFolder = props.getProperty("outputFolder");
+//		
+//		//create output directory
+//	     File file = new File(outputFolder);
+//	        if (!file.exists()) {
+//	            if (file.mkdirs()) {
+//	                System.out.println("Output directory is created.");
+//	            } else {
+//	                System.err.println("Failed to create output directory.");
+//	            }
+//	        }
 
 		//create a road network
 		RoadNetwork roadNetwork = new RoadNetwork(zonesUrl, networkUrl, nodesUrl, AADFurl, areaCodeFileName, areaCodeNearestNodeFile, workplaceZoneFileName, workplaceZoneNearestNodeFile, freightZoneToLADfile, freightZoneNearestNodeFile, props);
@@ -105,6 +103,46 @@ public class RealODMatrixTemproTest {
 		System.out.println("Size of tempro zones list: " + arcTemproZonesList.size());
 		
 		RealODMatrixTempro odm = new RealODMatrixTempro(temproODMatrixFile, zoning);
+		
+		HashMap<String, Integer> tripOrigins = odm.calculateTripStarts();
+		HashMap<String, Integer> tripDestinations = odm.calculateTripEnds();
+		
+//		String outputFolder = "./output/main/routechoice/B1/baseline/";
+//		String megaOutputFile = outputFolder + "allRailDemands.csv";
+		String outputFile = "tripEnds.csv";
+		
+		String NEW_LINE_SEPARATOR = "\n";
+			ArrayList<String> outputHeader = new ArrayList<String>();
+			outputHeader.add("temproZone");
+			outputHeader.add("origins");
+			outputHeader.add("destinations");
+
+			FileWriter fileWriter = null;
+			CSVPrinter csvFilePrinter = null;
+			CSVFormat csvFileFormat = CSVFormat.DEFAULT.withRecordSeparator(NEW_LINE_SEPARATOR);
+			try {
+				fileWriter = new FileWriter(outputFile);
+				csvFilePrinter = new CSVPrinter(fileWriter, csvFileFormat);
+				csvFilePrinter.printRecord(outputHeader);
+				ArrayList<String> record = new ArrayList<String>();				
+				
+				for (String zoneID: tripOrigins.keySet()) {
+					record.clear();
+					record.add(zoneID);
+					record.add(Integer.toString(tripOrigins.get(zoneID)));
+					record.add(Integer.toString(tripDestinations.get(zoneID)));
+
+					csvFilePrinter.printRecord(record);	
+				}		
+			} catch (Exception e) {
+			} finally {
+				try {
+					fileWriter.flush();
+					fileWriter.close();
+					csvFilePrinter.close();
+				} catch (IOException e) {
+				}
+			}
 				
 		RealODMatrixTempro odm2 = RealODMatrixTempro.createUnitMatrix(arcTemproZonesList, zoning);
 		System.out.println("Expected size of the unit matrix: " + count*count);

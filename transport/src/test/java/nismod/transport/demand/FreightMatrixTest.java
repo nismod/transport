@@ -10,7 +10,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.sanselan.ImageWriteException;
+import org.apache.commons.imaging.ImageWriteException;
 import org.junit.Test;
 
 /**

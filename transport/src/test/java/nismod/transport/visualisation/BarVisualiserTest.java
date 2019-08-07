@@ -20,7 +20,7 @@ public class BarVisualiserTest {
 		barDataset.addValue(70100.0, "Road expansion", "Number of Trips");
 		barDataset.addValue(70150.0, "Road development", "Number of Trips");
 
-		BarVisualiser bar = new BarVisualiser(barDataset, "Impact of New Infrastructure on Demand", "Set2");
+		BarVisualiser bar = new BarVisualiser(barDataset, "Impact of New Infrastructure on Demand", "Set2", false);
 		bar.setSize(600, 400);
 		bar.setVisible(true);
 		//line.saveToPNG("BarVisualiserTest.png");
@@ -34,7 +34,7 @@ public class BarVisualiserTest {
 		barDataset2.addValue(45.0, "No intervention", "Number of Trips Outside the Zone");
 		barDataset2.addValue(40.0, "Congestion charging", "Number of Trips Outside the Zone");
 		
-		BarVisualiser bar2 = new BarVisualiser(barDataset2, "Impact of Congestion Charging on Demand", "Set2");
+		BarVisualiser bar2 = new BarVisualiser(barDataset2, "Impact of Congestion Charging on Demand", "Set2", true);
 		bar2.setSize(600, 400);
 		bar2.setVisible(true);
 		//line.saveToPNG("BarVisualiserTest2.png");

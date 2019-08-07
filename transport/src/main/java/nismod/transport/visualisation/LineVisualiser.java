@@ -12,11 +12,11 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
+import org.apache.commons.imaging.ImageFormats;
+import org.apache.commons.imaging.ImageWriteException;
+import org.apache.commons.imaging.Imaging;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.sanselan.ImageFormat;
-import org.apache.sanselan.ImageWriteException;
-import org.apache.sanselan.Sanselan;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -64,7 +64,7 @@ public class LineVisualiser extends JFrame {
 		this.setTitle("NISMOD v2");
 		this.setLocationRelativeTo(null);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		
+	
 		//Image myImage = Toolkit.getDefaultToolkit().getImage(getClass().getResource("NISMOD-LP.jpg"));
 		ImageIcon icon = new ImageIcon("NISMOD-LP.jpg");
 		this.setIconImage(icon.getImage());
@@ -77,20 +77,29 @@ public class LineVisualiser extends JFrame {
 		
 		BufferedImage img = new BufferedImage(this.getWidth(), this.getHeight(), BufferedImage.TYPE_INT_RGB);
 		Graphics2D g2d = img.createGraphics();
-
+		
+		//temporarily set undecorated to remove the black frame in the written file
+		this.dispose(); 
+		this.setUndecorated(true); 
+		this.setVisible(true);
+				
 		//this.getContentPane().paint(g2d);
 		//this.printComponents(g2d);
+		//this.paintAll(g2d); //including the frame
+		//this.printAll(g2d); //including the nismod frame
 		this.print(g2d);
-		//this.printAll(g2d);
 		//this.paint(g2d);
 			
 		g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 		g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		
-		Sanselan.writeImage(img, new File(fileName), ImageFormat.IMAGE_FORMAT_PNG , null);
-			
+		Imaging.writeImage(img, new File(fileName), ImageFormats.PNG , null);
 		g2d.dispose();
+		
+		this.dispose();
+		this.setUndecorated(false);
+		this.setVisible(true);
 	}
 
 	private JFreeChart createChart(DefaultCategoryDataset dataset, String title) {

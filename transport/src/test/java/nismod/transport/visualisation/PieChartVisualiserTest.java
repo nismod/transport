@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
-import org.apache.sanselan.ImageWriteException;
+import org.apache.commons.imaging.ImageWriteException;
 import org.jfree.data.general.DefaultPieDataset;
 
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;

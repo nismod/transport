@@ -2,9 +2,8 @@ package nismod.transport.visualisation;
 
 import java.io.IOException;
 
-import org.apache.sanselan.ImageWriteException;
+import org.apache.commons.imaging.ImageWriteException;
 import org.jfree.data.category.DefaultCategoryDataset;
-import org.jfree.data.general.DefaultPieDataset;
 
 /**
  * @author Milan Lovric
