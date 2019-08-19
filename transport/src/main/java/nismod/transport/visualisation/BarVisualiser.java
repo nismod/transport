@@ -1,6 +1,7 @@
 package nismod.transport.visualisation;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
@@ -13,11 +14,11 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
+import org.apache.commons.imaging.ImageFormats;
+import org.apache.commons.imaging.ImageWriteException;
+import org.apache.commons.imaging.Imaging;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.sanselan.ImageFormat;
-import org.apache.sanselan.ImageWriteException;
-import org.apache.sanselan.Sanselan;
 import org.geotools.brewer.color.BrewerPalette;
 import org.geotools.brewer.color.ColorBrewer;
 import org.jfree.chart.ChartFactory;
@@ -26,7 +27,10 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.BarRenderer;
+import org.jfree.chart.renderer.category.StandardBarPainter;
 import org.jfree.data.category.DefaultCategoryDataset;
+
+import nismod.transport.showcase.LandingGUI;
 
 /**
  * For visualising bar charts using JFreeChart.
@@ -39,12 +43,14 @@ public class BarVisualiser extends JFrame {
 	private static DefaultCategoryDataset dataset;
 	private static String title;
 	private static String paletteName;
+	private static boolean invertColours;
 	
-	public BarVisualiser(DefaultCategoryDataset dataset, String title, String paletteName) throws IOException {
+	public BarVisualiser(DefaultCategoryDataset dataset, String title, String paletteName, boolean invertColours) throws IOException {
 
 		BarVisualiser.dataset = dataset;
 		BarVisualiser.title = title;
 		BarVisualiser.paletteName = paletteName;
+		BarVisualiser.invertColours = invertColours;
 				
 		initUI();
 	}
@@ -75,7 +81,30 @@ public class BarVisualiser extends JFrame {
 	 	
 	 	chart.getTitle().setPaint(Color.DARK_GRAY);
 	 	
+		Font titleFont = new Font("Calibri", Font.BOLD, 22);
+		chart.getTitle().setPaint(LandingGUI.DARK_GRAY);
+		chart.getTitle().setFont(titleFont);
+	 	
+		Font font3 = new Font("Tahoma", Font.BOLD, 14); 
+	 	plot.getDomainAxisForDataset(0).setLabelFont(font3);
+	 	plot.getDomainAxis().setLabelFont(font3);
+	 	plot.getDomainAxis(0).setLabelFont(font3);
+	 	plot.getRangeAxis().setLabelFont(font3);
+	 	
+	 	//setting the legend font (NO, B1, B3)
+	 	chart.getLegend().setItemFont(font3);
+	 	
+	 	//setting the below bars font (OX <-> MK)
+	 	plot.getDomainAxis().setTickLabelFont(font3);
+
+	 	//setting the range axis font
+	 	plot.getRangeAxis().setTickLabelFont(font3);
+	 	
 	 	BarRenderer barRenderer = (BarRenderer)plot.getRenderer();
+		barRenderer.setBarPainter(new StandardBarPainter()); //to remove gradient bar painter
+		barRenderer.setDrawBarOutline(false);
+		barRenderer.setShadowVisible(false);
+		//barRenderer.setMaximumBarWidth(0.30);
 
 		//get brewer palette
 		ColorBrewer brewer = ColorBrewer.instance();
@@ -89,7 +118,10 @@ public class BarVisualiser extends JFrame {
 		}
 		Color[] colors = palette.getColors(numberOfRowKeys);
 		for (int i = 0; i < numberOfRowKeys; i++) {
-			barRenderer.setSeriesPaint(i, colors[i]);
+			if (invertColours)
+				barRenderer.setSeriesPaint(i, colors[numberOfRowKeys-1-i]);
+			else
+				barRenderer.setSeriesPaint(i, colors[i]);
 		}
 		 	
 	 	this.pack();
@@ -109,6 +141,11 @@ public class BarVisualiser extends JFrame {
 		
 		BufferedImage img = new BufferedImage(this.getWidth(), this.getHeight(), BufferedImage.TYPE_INT_RGB);
 		Graphics2D g2d = img.createGraphics();
+		
+		//temporarily set undecorated to remove the black frame in the written file
+		this.dispose(); 
+		this.setUndecorated(true); 
+		this.setVisible(true);
 
 		//this.getContentPane().paint(g2d);
 		//this.printComponents(g2d);
@@ -120,9 +157,13 @@ public class BarVisualiser extends JFrame {
 		g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		
-		Sanselan.writeImage(img, new File(fileName), ImageFormat.IMAGE_FORMAT_PNG , null);
-		
+		Imaging.writeImage(img, new File(fileName), ImageFormats.PNG, null);
+				
 		g2d.dispose();
+		
+		this.dispose(); 
+		this.setUndecorated(false); 
+		this.setVisible(true);
 	}
 
 	private JFreeChart createChart(DefaultCategoryDataset dataset, String title) {
@@ -138,7 +179,7 @@ public class BarVisualiser extends JFrame {
 		SwingUtilities.invokeLater(() -> {
 			BarVisualiser pc;
 			try {
-				pc = new BarVisualiser(dataset, title, paletteName);
+				pc = new BarVisualiser(dataset, title, paletteName, invertColours);
 				pc.setVisible(true);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block

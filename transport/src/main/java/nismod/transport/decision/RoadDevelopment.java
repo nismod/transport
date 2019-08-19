@@ -3,6 +3,9 @@
  */
 package nismod.transport.decision;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 
 import org.apache.logging.log4j.LogManager;
@@ -99,6 +102,39 @@ public class RoadDevelopment extends Intervention {
 			
 			//store edge ID
 			this.newEdgeId2 = newEdge2.getID();
+		}
+		
+		//if installed within DemandModel, also check if new routes should be generated
+		if (o instanceof DemandModel) {
+			
+			String LADs = this.props.getProperty("LADs");
+			if (LADs != null) {
+				
+				DemandModel dm = (DemandModel)o;
+				int startYear = this.getStartYear();
+				
+				LOGGER.debug("Found LADs for which routes will need to be re-generated in year {}:", startYear);
+
+				String LADsNoSpace = LADs.replace(" ", ""); //remove space
+				String LADsNoTabs = LADsNoSpace.replace("\t", ""); //remove tabs
+				String[] LADsSplit = LADsNoTabs.split(",");
+				List<String> LADsList = Arrays.asList(LADsSplit);
+				
+				LOGGER.debug(LADsList);
+				
+				//check if RoadNetwork is aware of the provided LAD codes
+				for (String lad: LADsList)
+					if (!rn.getZoneToNodes().containsKey(lad))
+						LOGGER.error("Unrecognised LAD code in RoadDevelopment intervention file: " + lad);
+							
+				List<List<String>> list = dm.getListsOfLADsForNewRouteGeneration().get(startYear);
+				if (list == null) {
+					list = new ArrayList<List<String>>();
+					dm.getListsOfLADsForNewRouteGeneration().put(startYear, list);
+				}
+				//store list of LADs
+				list.add(LADsList);
+			}
 		}
 		
 		this.installed = true;

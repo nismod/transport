@@ -50,9 +50,9 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
+import org.apache.commons.imaging.ImageReadException;
+import org.apache.commons.imaging.Imaging;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.sanselan.ImageReadException;
-import org.apache.sanselan.Sanselan;
 import org.geotools.brewer.color.BrewerPalette;
 import org.geotools.brewer.color.ColorBrewer;
 import org.geotools.graph.structure.DirectedEdge;
@@ -657,7 +657,7 @@ public class RoadExpansionDashboard extends JFrame {
 		File imgRoad = new File("./src/test/resources/images/roadIcon.png");
 		BufferedImage bufferedImageRoad = null;
 		try {
-			bufferedImageRoad = Sanselan.getBufferedImage(imgRoad);
+			bufferedImageRoad = Imaging.getBufferedImage(imgRoad);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -876,7 +876,7 @@ public class RoadExpansionDashboard extends JFrame {
 		File img = new File("./src/test/resources/images/car.png");
 		BufferedImage bufferedImage = null;
 		try {
-			bufferedImage = Sanselan.getBufferedImage(img);
+			bufferedImage = Imaging.getBufferedImage(img);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -1076,7 +1076,7 @@ public class RoadExpansionDashboard extends JFrame {
 		File img = new File("./src/test/resources/images/car.png");
 		BufferedImage bufferedImage = null;
 		try {
-			bufferedImage = Sanselan.getBufferedImage(img);
+			bufferedImage = Imaging.getBufferedImage(img);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -1119,7 +1119,7 @@ public class RoadExpansionDashboard extends JFrame {
 		File imgCars = new File("./src/test/resources/images/cars.png");
 		BufferedImage bufferedImageCars = null;
 		try {
-			bufferedImageCars = Sanselan.getBufferedImage(imgCars);
+			bufferedImageCars = Imaging.getBufferedImage(imgCars);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -1160,7 +1160,7 @@ public class RoadExpansionDashboard extends JFrame {
 		File imgClock = new File("./src/test/resources/images/clock.png");
 		BufferedImage bufferedImageClock = null;
 		try {
-			bufferedImageClock = Sanselan.getBufferedImage(imgClock);
+			bufferedImageClock = Imaging.getBufferedImage(imgClock);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();

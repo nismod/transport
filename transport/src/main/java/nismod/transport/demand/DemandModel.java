@@ -24,10 +24,12 @@ import nismod.transport.decision.Intervention;
 import nismod.transport.decision.PricingPolicy;
 import nismod.transport.network.road.RoadNetwork;
 import nismod.transport.network.road.RoadNetworkAssignment;
+import nismod.transport.network.road.RouteSet;
 import nismod.transport.network.road.RoadNetworkAssignment.EnergyType;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
+import nismod.transport.network.road.Route;
 import nismod.transport.network.road.Route.WebTAG;
 import nismod.transport.network.road.RouteSetGenerator;
 import nismod.transport.utility.InputFileReader;
@@ -75,6 +77,7 @@ public class DemandModel {
 	//private HashMap<Integer, HashMap<Integer, Double>> yearToCongestionCharges;
 	private HashMap<Integer, List<PricingPolicy>> yearToCongestionCharges;
 	//private SkimMatrix baseYearTimeSkimMatrix,	baseYearCostSkimMatrix;
+	private HashMap<Integer, List<List<String>>> yearToListsOfLADsForNewRouteGeneration;
 	
 	private RouteSetGenerator rsg;
 	private Properties props;
@@ -119,6 +122,7 @@ public class DemandModel {
 		this.yearToEngineTypeFractions = new HashMap<Integer, Map<VehicleType, Map<EngineType, Double>>>();
 		this.yearToAVFractions = new HashMap<Integer, Map<VehicleType, Double>>();
 		this.yearToCongestionCharges = new HashMap<Integer, List<PricingPolicy>>();
+		this.yearToListsOfLADsForNewRouteGeneration = new HashMap<Integer, List<List<String>>>();
 		
 		this.rsg = rsg;
 		this.props = props;
@@ -792,6 +796,66 @@ public class DemandModel {
 				if (i.getEndYear() < predictedYear && i.getState() || i.getStartYear() > predictedYear && i.getState()) i.uninstall(this);
 			}
 
+		//check if any new routes need to be generated
+		for (int year: this.yearToListsOfLADsForNewRouteGeneration.keySet()) {
+			
+			LOGGER.info("New route sets to be generated for road development in year {}", year);
+			List<List<String>> lists = this.yearToListsOfLADsForNewRouteGeneration.get(year);
+			LOGGER.info("LADs between which routes need to be generated: ", lists);
+			
+			//for each new set of LADs create new matrix, generate routes, and add into the existing route set
+			for (List<String> LADs: lists) {
+				
+				//get tempro zones within LADs
+				List<String> arcTemproZonesList = new ArrayList<String>();
+				
+				int count = 0;
+				for (String lad: LADs) {
+					List<String> tempro = this.zoning.getLADToListOfContainedZones().get(lad);
+					count += tempro.size();
+					arcTemproZonesList.addAll(tempro);
+				}
+				
+				//create new matrix 
+				RealODMatrixTempro odm = new RealODMatrixTempro(this.zoning);
+				
+				//set flow to 1 only if it exists in the tempro template matrix
+				for (String originZone: arcTemproZonesList)
+					for (String destinationZone: arcTemproZonesList)
+						if (this.temproMatrixTemplate.getIntFlow(originZone, destinationZone) > 0)
+							odm.setFlow(originZone, destinationZone, 1.0);
+				
+				//generate new route set
+				RouteSetGenerator rsg2 = new RouteSetGenerator(this.roadNetwork, this.props);
+				rsg2.generateRouteSetForODMatrixTemproDistanceBased(odm, this.zoning, 1, 1);
+				rsg2.generateSingleNodeRoutes();
+				LOGGER.debug(rsg2.getStatistics());
+				
+				LOGGER.debug("Route set before addition of new routes: {}", this.rsg.getStatistics());
+
+				LOGGER.debug("Adding new routes into the existing route set.");
+				//add new routes into rsg
+				for (String originZone: arcTemproZonesList)
+					for (String destinationZone: arcTemproZonesList)
+						if (this.temproMatrixTemplate.getIntFlow(originZone, destinationZone) > 0) {
+							
+							int origin = this.zoning.getTemproCodeToIDMap().get(originZone);
+							int destination = this.zoning.getTemproCodeToIDMap().get(destinationZone);
+							
+							int originNode = this.zoning.getZoneIDToNearestNodeIDMap()[origin];
+							int destinationNode = this.zoning.getZoneIDToNearestNodeIDMap()[destination];
+							
+							RouteSet rs = this.rsg.getRouteSet(originNode, destinationNode);
+							RouteSet rs2 = rsg2.getRouteSet(originNode, destinationNode);
+							
+							for (Route r: rs2.getChoiceSet())
+								rs.addRoute(r);
+						}
+				
+				LOGGER.debug("Route set after addition of new routes: {}", this.rsg.getStatistics());
+			}
+		}
+			
 		//copy skim matrices from fromYear into predictedYear
 		yearToTimeSkimMatrix.put(predictedYear, yearToTimeSkimMatrix.get(fromYear));
 		yearToCostSkimMatrix.put(predictedYear, yearToCostSkimMatrix.get(fromYear));
@@ -1404,5 +1468,14 @@ public class DemandModel {
 	public RoadNetwork getRoadNetwork() {
 		
 		return this.roadNetwork;
+	}
+	
+	/**
+	 * Getter method for the list of LADs.
+	 * @return Lists of LADs for new route generation.
+	 */
+	public HashMap<Integer, List<List<String>>> getListsOfLADsForNewRouteGeneration () {
+		
+		return this.yearToListsOfLADsForNewRouteGeneration;
 	}
 }

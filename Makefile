@@ -1,4 +1,4 @@
-VERSION=$$(git describe)
+VERSION=$(shell git describe --tags)
 DEPLOYDIR=transport_$(VERSION)
 DATADIR=transport_testdata_$(VERSION)
 
@@ -9,7 +9,7 @@ deploy: $(DEPLOYDIR).zip
 
 $(DEPLOYDIR).zip: deploy_dir build
 	cp README.md $(DEPLOYDIR)/README.md
-	cp transport/target/transport-0.0.1-SNAPSHOT-jar-with-dependencies.jar $(DEPLOYDIR)/transport.jar
+	cp transport/target/transport-0.0.1-SNAPSHOT.jar $(DEPLOYDIR)/transport.jar
 	zip -r $(DEPLOYDIR).zip $(DEPLOYDIR)
 
 deploy_dir:
@@ -24,9 +24,9 @@ $(DATADIR).zip: data_dir
 data_dir:
 	mkdir -p "$(DATADIR)"
 
-build: transport/target/transport-0.0.1-SNAPSHOT-jar-with-dependencies.jar
+build: transport/target/transport-0.0.1-SNAPSHOT.jar
 
-transport/target/transport-0.0.1-SNAPSHOT-jar-with-dependencies.jar:
+transport/target/transport-0.0.1-SNAPSHOT.jar:
 	mvn install -f transport
 
 clean:

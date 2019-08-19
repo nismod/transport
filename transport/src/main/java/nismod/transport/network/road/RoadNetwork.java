@@ -1745,6 +1745,7 @@ public class RoadNetwork {
 	/**
 	 * Builds a directed graph representation of the road network
 	 */
+	@SuppressWarnings("deprecation")
 	private void build() throws IOException {
 
 		//get feature collections from the shapefiles

@@ -13,11 +13,11 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
+import org.apache.commons.imaging.ImageFormats;
+import org.apache.commons.imaging.ImageWriteException;
+import org.apache.commons.imaging.Imaging;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.sanselan.ImageFormat;
-import org.apache.sanselan.ImageWriteException;
-import org.apache.sanselan.Sanselan;
 import org.geotools.brewer.color.BrewerPalette;
 import org.geotools.brewer.color.ColorBrewer;
 import org.jfree.chart.ChartFactory;
@@ -126,6 +126,11 @@ public class PieChartVisualiser extends JFrame {
 		
 		BufferedImage img = new BufferedImage(this.getWidth(), this.getHeight(), BufferedImage.TYPE_INT_RGB);
 		Graphics2D g2d = img.createGraphics();
+		
+		//temporarily set undecorated to remove the black frame in the written file
+		this.dispose(); 
+		this.setUndecorated(true); 
+		this.setVisible(true);
 
 		//this.getContentPane().paint(g2d);
 		//this.printComponents(g2d);
@@ -136,9 +141,13 @@ public class PieChartVisualiser extends JFrame {
 		g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 		g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		Sanselan.writeImage(img, new File(fileName), ImageFormat.IMAGE_FORMAT_PNG , null);
+		Imaging.writeImage(img, new File(fileName), ImageFormats.PNG , null);
 			
 		g2d.dispose();
+		
+		this.dispose(); 
+		this.setUndecorated(false); 
+		this.setVisible(true);
 	}
 
 	private JFreeChart createChart(DefaultPieDataset dataset, String title) {
