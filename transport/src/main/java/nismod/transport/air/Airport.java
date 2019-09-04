@@ -10,29 +10,112 @@ import org.apache.logging.log4j.Logger;
  * @author Milan Lovric
  *
  */
-public class Airport {
+public abstract class Airport {
 	
 	private final static Logger LOGGER = LogManager.getLogger(Airport.class);
 	
 	private String iataCode; // three letter code
 	private String caaName; //airport name in CAA dataset
-	private String naptanName; //longer NaPTAN name (for UK airports only)
 	private String ourAirportsName; //longer name (from ourAirports dataset)
-	private int easting; //for UK airports
-	private int northing; //for UK airports
 	private double longitude;
 	private double latitude;
-	private String ladCode; //for UK airports
-	private String ladName; //for UK airports
 	private Locale country;
+	private AirportGroupCAA airportGroupCAA;
+	private ContinentCode continent;
 	private int terminalCapacity;
 	private int runwayCapacity;
 	
-	public static enum AirportType {
+	/**
+	 * Airport groups by CAA used in the flight movements dataset.
+	 */
+	public static enum AirportGroupCAA {
 		UK, //United Kingdom
 		EU, //International (EU)
 		INT //International (non-EU)
 	}
+	
+	public static enum AirportGroup {
+		DO, //Domestic
+		SH, //Short-haul (Western Europe + Turkey)
+		LH //Long-haul
+	}
+	
+	/**
+	 * ISO 
+	 */
+	public static enum ContinentCode {
+		OC ("Oceania"),
+		SA ("South America"),
+		AS ("Asia"),
+		EU ("Europe"),
+		AF ("Africa"),
+		NA ("North America"),
+		AN ("Antartica");
+		
+	    private final String name;
+
+	    /**
+	     * @param name
+	     */
+	    private ContinentCode (final String name) {
+	        this.name = name;
+	    }
+
+	    /**
+	     * @return
+	     */
+	    public String getName() {
+	        return name;
+	    }
+	}
+	
+	/**
+	 * These are the foreign region groups used by CAA for international internodal passenger demand.
+	 * There is 1:1 mapping between a country and a region (this is unlike the OurAirports data where one country
+	 * could map to multiple regions, e.g. some Russian airports are in Asia, while some are in Europe).
+	 */
+	public static enum ForeignRegionCAA {
+		
+		ATLANTIC_OCEAN_ISLANDS ("ATLANTIC OCEAN ISLANDS"),
+		AUSTRALASIA ("AUSTRALASIA"),
+		CANADA ("CANADA"),
+		CARRIBEAN_AREA ("CARIBBEAN AREA"),
+		CENTRAL_AFRICA ("CENTRAL AFRICA"),
+		CENTRAL_AMERICA ("CENTRAL AMERICA"),
+		EAST_AFRICA ("EAST AFRICA"),
+		EASTERN_EUROPE_OTHER ("EASTERN EUROPE-OTHER"),
+		EASTERN_EUROPE_EU ("EASTERN EUROPE-EU"),
+		FAR_EAST ("FAR EAST"),
+		INDIAN_OCEAN_ISLANDS ("INDIAN OCEAN ISLANDS"),
+		INDIAN_SUB_CONTINENT ("INDIAN SUB-CONTINENT"),
+		MIDDLE_EAST ("MIDDLE EAST"),
+		NEAR_EAST ("NEAR EAST"),
+		NORTH_AFRICA ("NORTH AFRICA"),
+		OIL_RIGS ("OIL RIGS"),
+		PACIFIC_OCEAN_ISLANDS ("PACIFIC OCEAN ISLANDS"),
+		SOUTH_AMERICA ("SOUTH AMERICA"),
+		SOUTHERN_AFRICA ("SOUTHERN AFRICA"),
+		UNITED_STATES_OF_AMERICA ("UNITED STATES OF AMERICA"),
+		WEST_AFRICA ("WEST AFRICA"),
+		WESTERN_EUROPE_EU ("WESTERN EUROPE-EU"),
+		WESTERN_EUROPE_OTHER ("WESTERN-EUROPE-OTHER");
+		
+	    private final String name;
+
+	    /**
+	     * @param name
+	     */
+	    private ForeignRegionCAA (final String name) {
+	        this.name = name;
+	    }
+
+	    /**
+	     * @return
+	     */
+	    public String getName() {
+	        return name;
+	    }
+	} 
 	
 	/**
 	 * Constructor for the airport.
@@ -50,19 +133,13 @@ public class Airport {
 	 * @param terminalCapacity Airport terminal capacity (max number of passengers that can be processed).
 	 * @param runwayCapacity Airport runway capacity (max number of flights that can be processed).
 	 */
-	public Airport(String iataCode, String caaName, String naptanName, String ourAirportsName, int easting, int northing, 
-				   double longitude, double latitude, String ladCode, String ladName, String countryCode, int terminalCapacity, int runwayCapacity) {
+	public Airport(String iataCode, String caaName, String ourAirportsName, double longitude, double latitude, String countryCode, int terminalCapacity, int runwayCapacity) {
 		
 		this.iataCode = iataCode;
 		this.caaName = caaName;
-		this.naptanName = naptanName;
 		this.ourAirportsName = ourAirportsName;
-		this.easting = easting;
-		this.northing = northing;
 		this.longitude = longitude;
 		this.latitude = latitude;
-		this.ladCode = ladCode;
-		this.ladName = ladName;
 		this.country = new Locale("", countryCode);
 		this.terminalCapacity = terminalCapacity;
 		this.runwayCapacity = runwayCapacity;
@@ -74,9 +151,9 @@ public class Airport {
 	 */
 	public Airport(Airport airport) {
 		
-		this(airport.getIataCode(), airport.getCAAName(), airport.getNaPTANName(), airport.getOurAirportsName(),
-			 airport.getEasting(), airport.getNorthing(), airport.getLongitude(), airport.getLatitude(), airport.getLADCode(),
-			 airport.getLADName(), airport.getCountry().getISO3Country(), airport.getTerminalCapacity(), airport.getRunwayCapacity());
+		this(airport.getIataCode(), airport.getCAAName(), airport.getOurAirportsName(),
+			 airport.getLongitude(), airport.getLatitude(), airport.getCountry().getISO3Country(),
+			 airport.getTerminalCapacity(), airport.getRunwayCapacity());
 	}
 	
 	/**
@@ -98,39 +175,12 @@ public class Airport {
 	}
 	
 	/**
-	 * Getter method for the airport NaPTAN name.
-	 * @return NaPTAN name.
-	 */
-	public String getNaPTANName() {
-		
-		return this.naptanName;
-	}
-	
-	/**
 	 * Getter method for the ourAirports name.
 	 * @return OurAirports name.
 	 */
 	public String getOurAirportsName() {
 		
 		return this.ourAirportsName;
-	}
-	
-	/**
-	 * Getter method for easting.
-	 * @return Easting.
-	 */
-	public int getEasting() {
-		
-		return this.easting;
-	}
-	
-	/**
-	 * Getter method for Northing.
-	 * @return Northing.
-	 */
-	public int getNorthing() {
-		
-		return this.northing;
 	}
 	
 	/**
@@ -149,24 +199,6 @@ public class Airport {
 	public double getLatitude() {
 		
 		return this.latitude;
-	}
-	
-	/**
-	 * Getter method for the LAD code in which station is located.
-	 * @return LAD code.
-	 */
-	public String getLADCode() {
-		
-		return this.ladCode;
-	}
-	
-	/**
-	 * Getter method for the LAD name in which station is located.
-	 * @return LAD name.
-	 */
-	public String getLADName() {
-		
-		return this.ladName;
 	}
 	
 	/**
@@ -204,21 +236,11 @@ public class Airport {
 		sb.append(", ");
 		sb.append(this.caaName);
 		sb.append(", ");
-		sb.append(this.naptanName);
-		sb.append(", ");
 		sb.append(this.ourAirportsName);
-		sb.append(", ");
-		sb.append(this.easting);
-		sb.append(", ");
-		sb.append(this.northing);
 		sb.append(", ");
 		sb.append(this.longitude);
 		sb.append(", ");
-		sb.append(String.format("%.2f", this.latitude));
-		sb.append(", ");
-		sb.append(this.ladCode);
-		sb.append(", ");
-		sb.append(this.ladName);
+		sb.append(this.latitude);
 		sb.append(", ");
 		sb.append(this.country.getISO3Country());
 		sb.append(", ");

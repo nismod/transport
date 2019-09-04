@@ -20,9 +20,12 @@ import nismod.transport.utility.ConfigReader;
 public class AirportTest {
 	
 	@Test
-	public void miniTest() throws IOException {
+	public void test() throws IOException {
 
-		Airport airport = new Airport("LHR", "London Heathrow", "London Heathrow Airport", "London Heathrow Airport", 507546, 176188, -0.4528908, 51.47444403, "E09000017", "Hillingdon", "GB", 90000000, 480000);
+		Airport airport = new DomesticAirport("LHR", "London Heathrow", "London Heathrow Airport", "London Heathrow Airport", 507546, 176188, -0.4528908, 51.47444403, "E09000017", "Hillingdon", 90000000, 480000);
 		System.out.println(airport);
+		
+		Airport airport2 = new ForeignAirport("CDG", "Paris (Charles da Gaulle)", "Charles de Gaulle International Airport", 2.55, 49.012798, "FR", 90000000, 480000);
+		System.out.println(airport2);
 	}
 }
