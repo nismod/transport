@@ -3127,14 +3127,14 @@ public class RoadNetworkAssignment {
 		Map<EnergyType, Double> car = calculateCarEnergyConsumptions();
 		double carCO2 = 0.0;
 		for (EnergyType energy: EnergyType.values()) {
-			carCO2 += car.get(energy) + this.unitCO2Emissions.get(energy);
+			carCO2 += car.get(energy) * this.unitCO2Emissions.get(energy);
 		}
 		totalCO2Emissions.put("PASSENGER", carCO2);
 
 		Map<EnergyType, Double> freight = calculateFreightEnergyConsumptions();
 		double freightCO2 = 0.0;
 		for (EnergyType energy: EnergyType.values()) {
-			freightCO2 += freight.get(energy) + this.unitCO2Emissions.get(energy);
+			freightCO2 += freight.get(energy) * this.unitCO2Emissions.get(energy);
 		}
 		totalCO2Emissions.put("FREIGHT", freightCO2);
 
