@@ -3818,8 +3818,11 @@ public class RoadNetworkAssignment {
 
 		//calculate CO2 emissions
 		Map<VehicleType, HashMap<String, Double>> zonalCO2emissions = this.calculateZonalVehicleCO2Emissions(originZoneEnergyWeight);
-		Set<String> zones = this.zoning.getLadCodeToIDMap().keySet();
-
+		
+		System.out.println(zonalCO2emissions);
+		
+		Set<String> zones = this.roadNetwork.getZoneToNodes().keySet(); 
+		
 		String NEW_LINE_SEPARATOR = "\n";
 		ArrayList<String> header = new ArrayList<String>();
 		header.add("year");
@@ -3840,8 +3843,9 @@ public class RoadNetworkAssignment {
 				record.add(zone);
 				for (int i=2; i<header.size(); i++)	{
 					VehicleType vht = VehicleType.valueOf(header.get(i));
-					double consumption = zonalCO2emissions.get(vht).get(zone);
-					record.add(String.format("%.2f", consumption));
+					Double emission = zonalCO2emissions.get(vht).get(zone);
+					if (emission == null) emission = 0.0;
+					record.add(String.format("%.2f", emission));
 				}
 				csvFilePrinter.printRecord(record);
 			}

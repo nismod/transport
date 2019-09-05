@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.Set;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.math3.stat.Frequency;
@@ -1104,6 +1105,28 @@ public class RoadNetworkAssignmentTest {
 		System.out.println("Vehicle kilometres:");
 		rna.updateLinkVolumeInPCU();
 		System.out.println(rna.calculateZonalVehicleKilometresPerVehicleType());
+		
+		
+		Map<VehicleType, HashMap<String, Double>> zonalCO2Emissions = rna.calculateZonalVehicleCO2Emissions(0.5);
+		HashMap<String, Double> groupedCO2Emissions = rna.calculateCO2Emissions();
+		
+		//compare zonal CO2 emissions and grouped emissions
+		double passengerCO2 = 0.0, freightCO2 = 0.0, combinedCO2 = 0.0;
+		for (VehicleType vht: VehicleType.values()) {
+			
+			double sumCO2 = 0.0;
+			for (String zone: zonalCO2Emissions.get(vht).keySet())
+				sumCO2 += zonalCO2Emissions.get(vht).get(zone);
+			
+			if (vht == VehicleType.CAR || vht == VehicleType.CAR_AV) 
+				passengerCO2 += sumCO2;
+			else
+				freightCO2 += freightCO2;
+		}
+		
+		assertEquals("Passenger CO2 emission are correct ", groupedCO2Emissions.get("PASSENGER"), passengerCO2, EPSILON);
+		assertEquals("Freight CO2 emission are correct ", groupedCO2Emissions.get("FREIGHT"), freightCO2, EPSILON);		
+		assertEquals("Combined CO2 emission are correct ", groupedCO2Emissions.get("COMBINED"), passengerCO2 + freightCO2, EPSILON);		
 		
 		//rna.saveZonalCarEnergyConsumptions(2015, 0.85 , "testZonalCarEnergyConsumptions.csv");
 		//rna.saveAssignmentResults(2015, "testAssignmentResults.csv");
