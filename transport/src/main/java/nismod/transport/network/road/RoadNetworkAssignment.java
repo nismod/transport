@@ -2933,10 +2933,6 @@ public class RoadNetworkAssignment {
 			HashMap<String, Double> consumption = new HashMap<String, Double>();
 			zonalConsumptions.put(energy, consumption);
 		}
-		
-		System.out.println(zonalConsumptions);
-		
-		//System.out.println("Trip list size: " + tripList.size());
 
 		for (Trip trip: this.tripList) {
 			
@@ -2972,8 +2968,6 @@ public class RoadNetworkAssignment {
 					zonalConsumptions.get(et).put(destinationLAD, currentConsumptionDestination);
 				}
 		}
-		
-		System.out.println(zonalConsumptions);
 
 		return zonalConsumptions;
 	}
@@ -3070,7 +3064,7 @@ public class RoadNetworkAssignment {
 					Double currentConsumption = currentTemporal.get(hour);
 					if (currentConsumption == null) currentConsumption = 0.0;
 
-					currentConsumption += originZoneEnergyWeight * tripConsumptionElectricity * multiplier;
+					currentConsumption += tripConsumptionElectricity * multiplier;
 
 					currentTemporal.put(hour, currentConsumption);
  

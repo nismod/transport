@@ -1068,7 +1068,7 @@ public class RoadNetworkAssignmentTest {
 		rna.calculateDistanceSkimMatrix().printMatrixFormatted();
 		
 		System.out.println("Zonal car energy consumptions:");
-		Map<EnergyType, HashMap<String, Double>> zonal = rna.calculateZonalCarEnergyConsumptions(1.0);
+		Map<EnergyType, HashMap<String, Double>> zonal = rna.calculateZonalCarEnergyConsumptions(0.85);
 		System.out.println(zonal);
 		
 		System.out.println("Total car energy consumptions:");
@@ -1088,7 +1088,7 @@ public class RoadNetworkAssignmentTest {
 		}
 		
 		//compare total temporal with total zonal
-		HashMap<String, Map<TimeOfDay, Double>> temporal = rna.calculateZonalTemporalCarElectricityConsumptions(1.0);
+		HashMap<String, Map<TimeOfDay, Double>> temporal = rna.calculateZonalTemporalCarElectricityConsumptions(0.85);
 		double carEVsum = 0.0;
 		for (String zone: temporal.keySet())
 			for (TimeOfDay time: TimeOfDay.values()) {
