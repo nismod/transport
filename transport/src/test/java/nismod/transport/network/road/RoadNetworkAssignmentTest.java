@@ -34,6 +34,7 @@ import nismod.transport.demand.ODMatrixMultiKey;
 import nismod.transport.demand.RealODMatrixTempro;
 import nismod.transport.demand.SkimMatrixFreight;
 import nismod.transport.demand.SkimMatrixFreightMultiKey;
+import nismod.transport.network.road.RoadNetworkAssignment.EnergyType;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
 import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
@@ -794,6 +795,40 @@ public class RoadNetworkAssignmentTest {
 		
 		rna.calculateDistanceSkimMatrixTempro().printMatrixFormatted();
 		
+		System.out.println("Zonal car energy consumptions:");
+		Map<EnergyType, HashMap<String, Double>> zonal = rna.calculateZonalCarEnergyConsumptions(1.0);
+		System.out.println(zonal);
+		
+		System.out.println("Total car energy consumptions:");
+		Map<EnergyType, Double> total = rna.calculateCarEnergyConsumptions();
+		System.out.println(total);
+		
+		//compare zonal and total car energy consumptions
+		double carEVconsumption = 0.0;
+		for (EnergyType et: EnergyType.values()) {
+			
+			double sum = 0.0;
+			for (String zone: zonal.get(et).keySet())
+				sum += zonal.get(et).get(zone);
+			
+			if (et == EnergyType.ELECTRICITY) carEVconsumption = sum; //store for later comparison
+			assertEquals("Sum of zonal car " + et + " consumptions should match total car " + et + " consumptions", total.get(et), sum, PRECISION);		
+		}
+		
+		//compare total temporal with total zonal
+		HashMap<String, Map<TimeOfDay, Double>> temporal = rna.calculateZonalTemporalCarElectricityConsumptions(1.0);
+		double carEVsum = 0.0;
+		for (String zone: temporal.keySet())
+			for (TimeOfDay time: TimeOfDay.values()) {
+				Double value = temporal.get(zone).get(time);
+				if (value != null) carEVsum += value;
+			}
+		
+		assertEquals("Sum of zonal car " + EnergyType.ELECTRICITY + " consumptions should match sum of temporal " + EnergyType.ELECTRICITY + " consumptions", carEVconsumption, carEVsum, PRECISION);		
+				
+		System.out.println("Total energy consumptions:");
+		System.out.println(rna.calculateEnergyConsumptions());
+		
 		ODMatrixMultiKey temproODM2 = ODMatrixMultiKey.createUnitMatrix(temproODM.getSortedOrigins());
 		rna.resetTripList();
 		rna.resetLinkVolumes();
@@ -1033,11 +1068,36 @@ public class RoadNetworkAssignmentTest {
 		rna.calculateDistanceSkimMatrix().printMatrixFormatted();
 		
 		System.out.println("Zonal car energy consumptions:");
-		System.out.println(rna.calculateZonalCarEnergyConsumptions(0.85));
+		Map<EnergyType, HashMap<String, Double>> zonal = rna.calculateZonalCarEnergyConsumptions(1.0);
+		System.out.println(zonal);
 		
 		System.out.println("Total car energy consumptions:");
-		System.out.println(rna.calculateCarEnergyConsumptions());
+		Map<EnergyType, Double> total = rna.calculateCarEnergyConsumptions();
+		System.out.println(total);
 		
+		//compare zonal and total car energy consumptions
+		double carEVconsumption = 0.0;
+		for (EnergyType et: EnergyType.values()) {
+			
+			double sum = 0.0;
+			for (String zone: zonal.get(et).keySet())
+				sum += zonal.get(et).get(zone);
+			
+			if (et == EnergyType.ELECTRICITY) carEVconsumption = sum; //store for later comparison
+			assertEquals("Sum of zonal car " + et + " consumptions should match total car " + et + " consumptions", total.get(et), sum, EPSILON);		
+		}
+		
+		//compare total temporal with total zonal
+		HashMap<String, Map<TimeOfDay, Double>> temporal = rna.calculateZonalTemporalCarElectricityConsumptions(1.0);
+		double carEVsum = 0.0;
+		for (String zone: temporal.keySet())
+			for (TimeOfDay time: TimeOfDay.values()) {
+				Double value = temporal.get(zone).get(time);
+				if (value != null) carEVsum += value;
+			}
+		
+		assertEquals("Sum of zonal car " + EnergyType.ELECTRICITY + " consumptions should match sum of temporal " + EnergyType.ELECTRICITY + " consumptions", carEVconsumption, carEVsum, EPSILON);		
+				
 		System.out.println("Total energy consumptions:");
 		System.out.println(rna.calculateEnergyConsumptions());
 		
@@ -1365,6 +1425,7 @@ public class RoadNetworkAssignmentTest {
 		rna.saveOriginDestinationCarElectricityConsumption("./temp/testODCarElectricityConsumption.csv");
 		rna.savePeakLinkPointCapacities(2015, "./temp/testPeakLinkPointCapacities.csv");
 		rna.saveTotalCO2Emissions(2015, "./temp/testTotalCO2Emissions.csv");
+		rna.saveZonalVehicleCO2Emissions(2015, 1.0, "./temp/testZonalCO2Emissions.csv");
 		rna.saveTotalEnergyConsumptions(2015, "./temp/testTotalEnergyConsumptions.csv");
 		rna.saveZonalCarEnergyConsumptions(2015, 0.5, "./temp/testZonalCarEnergyConsumptions.csv");
 		rna.saveZonalVehicleKilometres(2015, "./temp/testZonalVehicleKilometres.csv");

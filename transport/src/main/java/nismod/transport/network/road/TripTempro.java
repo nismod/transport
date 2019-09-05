@@ -187,8 +187,10 @@ public class TripTempro extends Trip {
 		Double time = this.route.getTime();
 
 		if (flagIncludeAccessEgress) {
-			double access = distanceFromTemproZoneToNearestNode[this.origin];
-			double egress = distanceFromTemproZoneToNearestNode[this.destination];
+			//double access = distanceFromTemproZoneToNearestNode[this.origin];
+			//double egress = distanceFromTemproZoneToNearestNode[this.destination];
+			double access = TripTempro.zoning.getZoneIDToNearestNodeDistanceMap()[this.origin];
+			double egress = TripTempro.zoning.getZoneIDToNearestNodeDistanceMap()[this.destination];
 		
 			double averageAccessTime = access / 1000 / averageAccessEgressSpeed * 60;
 			double averageEgressTime = egress / 1000 / averageAccessEgressSpeed * 60;
@@ -251,8 +253,7 @@ public class TripTempro extends Trip {
 		//double distance = this.getLength(averageAccessEgressMap);
 		//double consumption = distance / 100 * energyConsumptionsPer100km.get(this.engine);
 
-		//get consumptions on the route itself
-		Map<EnergyType, Double> accessEgressConsumptions = this.route.calculateConsumption(this.vehicle, this.engine, linkTravelTime, energyConsumptionParameters, relativeFuelEfficiency);
+		Map<EnergyType, Double> accessEgressConsumptions = new EnumMap<>(EnergyType.class);
 
 		//parameters
 		Map<WebTAG, Double> parameters = null, parametersFuel = null, parametersElectricity = null;
@@ -281,10 +282,16 @@ public class TripTempro extends Trip {
 		}
 
 		//get access and egress
+		/*
 		double access = distanceFromTemproZoneToNearestNode[this.origin];
 		//if (access == 0.0) access = 0.0; //TODO use some default access/egress distances?
 		double egress = distanceFromTemproZoneToNearestNode[this.destination];
 		//if (egress == 0.0) egress = 0.0;
+		*/
+		//make sure to use Tempro zoning system to map zone centroid to the nearest node
+		double access = TripTempro.zoning.getZoneIDToNearestNodeDistanceMap()[this.origin];
+		double egress = TripTempro.zoning.getZoneIDToNearestNodeDistanceMap()[this.destination];
+		
 
 		//for PHEVs it is more complicated (depends on urban/rural road type
 		//it is assumed electricity is used on urban road links and fuel on rural road links

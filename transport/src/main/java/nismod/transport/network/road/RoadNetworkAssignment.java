@@ -122,7 +122,7 @@ public class RoadNetworkAssignment {
 
 	private Map<VehicleType, Map<EngineType, Map<WebTAG, Double>>> energyConsumptions;
 	private Map<VehicleType, Map<EngineType, Double>> relativeFuelEfficiencies;
-	
+
 	private Map<VehicleType, Map<EngineType, Double>> engineTypeFractions;
 	private Map<VehicleType, Double> AVFractions;
 
@@ -158,7 +158,7 @@ public class RoadNetworkAssignment {
 	private List<PricingPolicy> congestionCharges;
 
 	private Properties params;
-	
+
 	/**
 	 * @param roadNetwork Road network.
 	 * @param zoning Zoning system.
@@ -208,7 +208,7 @@ public class RoadNetworkAssignment {
 			double[] hourlyTimes = new double[this.roadNetwork.getFreeFlowTravelTime().length];
 			linkTravelTimePerTimeOfDay.put(hour, hourlyTimes);
 		}
-		
+
 		this.tripList = new ArrayList<Trip>();
 
 		if (defaultLinkTravelTime == null) { //use free flow
@@ -378,142 +378,142 @@ public class RoadNetworkAssignment {
 
 		List<String> origins = passengerODM.getUnsortedOrigins();
 		List<String> destinations = passengerODM.getUnsortedDestinations();
-		
+
 		//for each OD pair from the passengerODM
 		for (String originZone: origins)
 			for (String destinationZone: destinations) {
-				
-			if (passengerODM.getIntFlow(originZone, destinationZone) == 0) continue;
-		
-			List<Integer> listOfOriginNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(originZone)); //the list is already sorted
-			List<Integer> listOfDestinationNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(destinationZone)); //the list is already sorted
 
-			//removing blacklisted nodes
-			for (Integer originNode: roadNetwork.getZoneToNodes().get(originZone))
-				//check if any of the nodes is blacklisted
-				if (this.roadNetwork.isBlacklistedAsStartNode(originNode)) 
-					listOfOriginNodes.remove(originNode);
+				if (passengerODM.getIntFlow(originZone, destinationZone) == 0) continue;
 
-			//removing blacklisted nodes
-			for (Integer destinationNode: roadNetwork.getZoneToNodes().get(destinationZone))
-				//check if any of the nodes is blacklisted
-				if (this.roadNetwork.isBlacklistedAsEndNode(destinationNode)) 
-					listOfDestinationNodes.remove(destinationNode);
+				List<Integer> listOfOriginNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(originZone)); //the list is already sorted
+				List<Integer> listOfDestinationNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(destinationZone)); //the list is already sorted
 
-			//calculate number of trip assignments
-			int flow = (int) Math.floor(passengerODM.getIntFlow(originZone, destinationZone) * this.assignmentFraction); //assigned fractionally and later augmented
-			int remainder = passengerODM.getIntFlow(originZone, destinationZone) - (int) Math.round(flow / this.assignmentFraction); //remainder of trips will be assigned individually (each trip)
-			counterTotalFlow += passengerODM.getIntFlow(originZone, destinationZone);
+				//removing blacklisted nodes
+				for (Integer originNode: roadNetwork.getZoneToNodes().get(originZone))
+					//check if any of the nodes is blacklisted
+					if (this.roadNetwork.isBlacklistedAsStartNode(originNode)) 
+						listOfOriginNodes.remove(originNode);
 
-			//for each trip
-			for (int i=0; i < (flow + remainder); i++) {
+				//removing blacklisted nodes
+				for (Integer destinationNode: roadNetwork.getZoneToNodes().get(destinationZone))
+					//check if any of the nodes is blacklisted
+					if (this.roadNetwork.isBlacklistedAsEndNode(destinationNode)) 
+						listOfDestinationNodes.remove(destinationNode);
 
-				//choose time of day
-				TimeOfDay hour = this.chooseTimeOfDay(timeOfDayDistribution);
-				if (hour == null) LOGGER.warn("Time of day not chosen!");
+				//calculate number of trip assignments
+				int flow = (int) Math.floor(passengerODM.getIntFlow(originZone, destinationZone) * this.assignmentFraction); //assigned fractionally and later augmented
+				int remainder = passengerODM.getIntFlow(originZone, destinationZone) - (int) Math.round(flow / this.assignmentFraction); //remainder of trips will be assigned individually (each trip)
+				counterTotalFlow += passengerODM.getIntFlow(originZone, destinationZone);
 
-				//choose vehicle
-				VehicleType vht = this.chooseCarVehicleType(AVFractions);
-				if (vht == null) LOGGER.warn("Vehicle type not chosen!");
+				//for each trip
+				for (int i=0; i < (flow + remainder); i++) {
 
-				//choose engine
-				EngineType engine = this.chooseEngineType(engineTypeFractions.get(vht));
-				if (engine == null) LOGGER.warn("Engine type not chosen!");
+					//choose time of day
+					TimeOfDay hour = this.chooseTimeOfDay(timeOfDayDistribution);
+					if (hour == null) LOGGER.warn("Time of day not chosen!");
 
-				//choose origin/destination nodes based on the gravitating population
-				//the choice with replacement means that possibly: destination node = origin node
-				//the choice without replacement means that destination node has to be different from origin node
+					//choose vehicle
+					VehicleType vht = this.chooseCarVehicleType(AVFractions);
+					if (vht == null) LOGGER.warn("Vehicle type not chosen!");
 
-				//choose origin node
-				double cumulativeProbability = 0.0;
-				Integer originNode = null;
-				double random = rng.nextDouble();
-				for (Integer node: listOfOriginNodes) {
-					cumulativeProbability += startNodeProbabilities.get(node);
-					if (Double.compare(cumulativeProbability, random) > 0) {
-						originNode = node;
-						break;
-					}
-				}
+					//choose engine
+					EngineType engine = this.chooseEngineType(engineTypeFractions.get(vht));
+					if (engine == null) LOGGER.warn("Engine type not chosen!");
 
-				if (originNode == null) LOGGER.warn("Origin node was not chosen!");
+					//choose origin/destination nodes based on the gravitating population
+					//the choice with replacement means that possibly: destination node = origin node
+					//the choice without replacement means that destination node has to be different from origin node
 
-				//choose destination node
-				cumulativeProbability = 0.0;
-				Integer destinationNode = null;
-				random = rng.nextDouble();
-				//if intrazonal trip and replacement is not allowed, the probability of the originNode should be 0 so it cannot be chosen again
-				//also, in that case it is important to rescale other node probabilities (now that the originNode is removed) by dividing with (1.0 - p(originNode))!
-				if (!flagIntrazonalAssignmentReplacement && originZone.equals(destinationZone) && listOfDestinationNodes.contains(originNode)) { //no replacement and intra-zonal trip
-					for (Integer node: listOfDestinationNodes) {
-						if (node.intValue() == originNode.intValue()) continue; //skip if the node is the same as origin
-						cumulativeProbability += endNodeProbabilities.get(node) / (1.0 - endNodeProbabilities.get(originNode));
+					//choose origin node
+					double cumulativeProbability = 0.0;
+					Integer originNode = null;
+					double random = rng.nextDouble();
+					for (Integer node: listOfOriginNodes) {
+						cumulativeProbability += startNodeProbabilities.get(node);
 						if (Double.compare(cumulativeProbability, random) > 0) {
-							destinationNode = node;
+							originNode = node;
 							break;
 						}
 					}
-				} else	{ //inter-zonal trip (or intra-zonal with replacement)
-					for (Integer node: listOfDestinationNodes) {
-						cumulativeProbability += endNodeProbabilities.get(node);
-						if (Double.compare(cumulativeProbability, random) > 0) {
-							destinationNode = node;
-							break;
+
+					if (originNode == null) LOGGER.warn("Origin node was not chosen!");
+
+					//choose destination node
+					cumulativeProbability = 0.0;
+					Integer destinationNode = null;
+					random = rng.nextDouble();
+					//if intrazonal trip and replacement is not allowed, the probability of the originNode should be 0 so it cannot be chosen again
+					//also, in that case it is important to rescale other node probabilities (now that the originNode is removed) by dividing with (1.0 - p(originNode))!
+					if (!flagIntrazonalAssignmentReplacement && originZone.equals(destinationZone) && listOfDestinationNodes.contains(originNode)) { //no replacement and intra-zonal trip
+						for (Integer node: listOfDestinationNodes) {
+							if (node.intValue() == originNode.intValue()) continue; //skip if the node is the same as origin
+							cumulativeProbability += endNodeProbabilities.get(node) / (1.0 - endNodeProbabilities.get(originNode));
+							if (Double.compare(cumulativeProbability, random) > 0) {
+								destinationNode = node;
+								break;
+							}
 						}
-					}
-				}	
+					} else	{ //inter-zonal trip (or intra-zonal with replacement)
+						for (Integer node: listOfDestinationNodes) {
+							cumulativeProbability += endNodeProbabilities.get(node);
+							if (Double.compare(cumulativeProbability, random) > 0) {
+								destinationNode = node;
+								break;
+							}
+						}
+					}	
 
-				if (destinationNode == null) LOGGER.warn("Destination node was not chosen!");
+					if (destinationNode == null) LOGGER.warn("Destination node was not chosen!");
 
-				DirectedGraph rn = roadNetwork.getNetwork();
-				//set source and destination node
-				Node from = roadNetwork.getNodeIDtoNode()[originNode];
-				Node to = roadNetwork.getNodeIDtoNode()[destinationNode];
-				//					System.out.println("from " + from + " to " + to);
-				Route foundRoute = null;
-				try {
+					DirectedGraph rn = roadNetwork.getNetwork();
+					//set source and destination node
+					Node from = roadNetwork.getNodeIDtoNode()[originNode];
+					Node to = roadNetwork.getNodeIDtoNode()[destinationNode];
+					//					System.out.println("from " + from + " to " + to);
+					Route foundRoute = null;
+					try {
 
-					//see if that route already exists in the route storage
-					RouteSet rs = rsg.getRouteSet(originNode, destinationNode);
-					if (rs != null) foundRoute = rs.getChoiceSet().get(0); //take the first route
+						//see if that route already exists in the route storage
+						RouteSet rs = rsg.getRouteSet(originNode, destinationNode);
+						if (rs != null) foundRoute = rs.getChoiceSet().get(0); //take the first route
 
-					//if route does not already exist, get the shortest path from the origin node to the destination node using AStar algorithm
-					if (foundRoute == null) {
-						//System.out.println("The path does not exist in the path storage");
+						//if route does not already exist, get the shortest path from the origin node to the destination node using AStar algorithm
+						if (foundRoute == null) {
+							//System.out.println("The path does not exist in the path storage");
 
-						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[originNode];
-						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[destinationNode];
+							DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[originNode];
+							DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[destinationNode];
 
-						//RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTime);
-						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
-						if (fastestPath == null) {
-							LOGGER.warn("Not even aStar could find a route between node {} and node {}!", originNode, destinationNode);
-							continue;
+							//RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTime);
+							RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
+							if (fastestPath == null) {
+								LOGGER.warn("Not even aStar could find a route between node {} and node {}!", originNode, destinationNode);
+								continue;
+							}
+
+							foundRoute = new Route(fastestPath, roadNetwork);
+							rsg.addRoute(foundRoute); //add to the route set
 						}
 
-						foundRoute = new Route(fastestPath, roadNetwork);
-						rsg.addRoute(foundRoute); //add to the route set
+						int multiplier = 1;
+						if (i < flow) multiplier = (int) Math.round(1 / this.assignmentFraction);
+						counterAssignedTrips += multiplier;
+
+						//get zone IDs for storing into trips
+						int originZoneID = this.zoning.getLadCodeToIDMap().get(originZone);
+						int destinationZoneID = this.zoning.getLadCodeToIDMap().get(destinationZone);
+
+						//store trip in trip list
+						Trip trip = new Trip(vht, engine, foundRoute, hour, originZoneID, destinationZoneID, multiplier);
+						this.tripList.add(trip);
+
+					} catch (Exception e) {
+						LOGGER.error(e);
+						LOGGER.error("Couldn't find path from node {} to node {}!", from.getID(), to.getID());
 					}
+				}//for each trip
+			}//for each destination pair
 
-					int multiplier = 1;
-					if (i < flow) multiplier = (int) Math.round(1 / this.assignmentFraction);
-					counterAssignedTrips += multiplier;
-					
-					//get zone IDs for storing into trips
-					int originZoneID = this.zoning.getLadCodeToIDMap().get(originZone);
-					int destinationZoneID = this.zoning.getLadCodeToIDMap().get(destinationZone);
-
-					//store trip in trip list
-					Trip trip = new Trip(vht, engine, foundRoute, hour, originZoneID, destinationZoneID, multiplier);
-					this.tripList.add(trip);
-
-				} catch (Exception e) {
-					LOGGER.error(e);
-					LOGGER.error("Couldn't find path from node {} to node {}!", from.getID(), to.getID());
-				}
-			}//for each trip
-		}//for each destination pair
-	
 		LOGGER.debug("Total flow: {}", counterTotalFlow);
 		LOGGER.debug("Total assigned trips: {}", counterAssignedTrips);
 		LOGGER.debug("Succesfully assigned trips: {}", 100.0* counterAssignedTrips / counterTotalFlow);
@@ -549,142 +549,142 @@ public class RoadNetworkAssignment {
 
 		List<String> origins = passengerODM.getUnsortedOrigins();
 		List<String> destinations = passengerODM.getUnsortedDestinations();
-		
+
 		//for each OD pair from the passengerODM
 		for (String originZone: origins)
 			for (String destinationZone: destinations) {
-				
-			if (passengerODM.getIntFlow(originZone, destinationZone) == 0) continue;	
-			
-			List<Integer> listOfOriginNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(originZone)); //the list is already sorted
-			List<Integer> listOfDestinationNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(destinationZone)); //the list is already sorted
 
-			//removing blacklisted nodes
-			for (Integer originNode: roadNetwork.getZoneToNodes().get(originZone))
-				//check if any of the nodes is blacklisted
-				if (this.roadNetwork.isBlacklistedAsStartNode(originNode)) 
-					listOfOriginNodes.remove(originNode);
+				if (passengerODM.getIntFlow(originZone, destinationZone) == 0) continue;	
 
-			//removing blacklisted nodes
-			for (Integer destinationNode: roadNetwork.getZoneToNodes().get(destinationZone))
-				//check if any of the nodes is blacklisted
-				if (this.roadNetwork.isBlacklistedAsEndNode(destinationNode)) 
-					listOfDestinationNodes.remove(destinationNode);
+				List<Integer> listOfOriginNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(originZone)); //the list is already sorted
+				List<Integer> listOfDestinationNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(destinationZone)); //the list is already sorted
 
-			//calculate number of trip assignments
-			int flow = (int) Math.floor(passengerODM.getIntFlow(originZone, destinationZone) * this.assignmentFraction); //assigned fractionally and later augmented
-			int remainder = passengerODM.getIntFlow(originZone, destinationZone) - (int) Math.round(flow / this.assignmentFraction); //remainder of trips will be assigned individually (each trip)
-			counterTotalFlow += passengerODM.getIntFlow(originZone, destinationZone);
+				//removing blacklisted nodes
+				for (Integer originNode: roadNetwork.getZoneToNodes().get(originZone))
+					//check if any of the nodes is blacklisted
+					if (this.roadNetwork.isBlacklistedAsStartNode(originNode)) 
+						listOfOriginNodes.remove(originNode);
 
-			//for each trip
-			for (int i=0; i < (flow + remainder); i++) {
+				//removing blacklisted nodes
+				for (Integer destinationNode: roadNetwork.getZoneToNodes().get(destinationZone))
+					//check if any of the nodes is blacklisted
+					if (this.roadNetwork.isBlacklistedAsEndNode(destinationNode)) 
+						listOfDestinationNodes.remove(destinationNode);
 
-				//choose time of day
-				TimeOfDay hour = this.chooseTimeOfDay(timeOfDayDistribution);
-				if (hour == null) LOGGER.warn("Time of day not chosen!");
+				//calculate number of trip assignments
+				int flow = (int) Math.floor(passengerODM.getIntFlow(originZone, destinationZone) * this.assignmentFraction); //assigned fractionally and later augmented
+				int remainder = passengerODM.getIntFlow(originZone, destinationZone) - (int) Math.round(flow / this.assignmentFraction); //remainder of trips will be assigned individually (each trip)
+				counterTotalFlow += passengerODM.getIntFlow(originZone, destinationZone);
 
-				//choose vehicle
-				VehicleType vht = this.chooseCarVehicleType(AVFractions);
-				if (vht == null) LOGGER.warn("Vehicle type not chosen!");
+				//for each trip
+				for (int i=0; i < (flow + remainder); i++) {
 
-				//choose engine
-				EngineType engine = this.chooseEngineType(engineTypeFractions.get(vht));
-				if (engine == null) LOGGER.warn("Engine type not chosen!");
+					//choose time of day
+					TimeOfDay hour = this.chooseTimeOfDay(timeOfDayDistribution);
+					if (hour == null) LOGGER.warn("Time of day not chosen!");
 
-				//choose origin/destination nodes based on the gravitating population
-				//the choice with replacement means that possibly: destination node = origin node
-				//the choice without replacement means that destination node has to be different from origin node
+					//choose vehicle
+					VehicleType vht = this.chooseCarVehicleType(AVFractions);
+					if (vht == null) LOGGER.warn("Vehicle type not chosen!");
 
-				//choose origin node
-				double cumulativeProbability = 0.0;
-				Integer originNode = null;
-				double random = rng.nextDouble();
-				for (Integer node: listOfOriginNodes) {
-					cumulativeProbability += startNodeProbabilities.get(node);
-					if (Double.compare(cumulativeProbability, random) > 0) {
-						originNode = node;
-						break;
-					}
-				}
+					//choose engine
+					EngineType engine = this.chooseEngineType(engineTypeFractions.get(vht));
+					if (engine == null) LOGGER.warn("Engine type not chosen!");
 
-				if (originNode == null) LOGGER.warn("Origin node was not chosen!");
+					//choose origin/destination nodes based on the gravitating population
+					//the choice with replacement means that possibly: destination node = origin node
+					//the choice without replacement means that destination node has to be different from origin node
 
-				//choose destination node
-				cumulativeProbability = 0.0;
-				Integer destinationNode = null;
-				random = rng.nextDouble();
-				//if intrazonal trip and replacement is not allowed, the probability of the originNode should be 0 so it cannot be chosen again
-				//also, in that case it is important to rescale other node probabilities (now that the originNode is removed) by dividing with (1.0 - p(originNode))!
-				if (!flagIntrazonalAssignmentReplacement && originZone.equals(destinationZone) && listOfDestinationNodes.contains(originNode)) { //no replacement and intra-zonal trip
-					for (Integer node: listOfDestinationNodes) {
-						if (node.intValue() == originNode.intValue()) continue; //skip if the node is the same as origin
-						cumulativeProbability += endNodeProbabilities.get(node) / (1.0 - endNodeProbabilities.get(originNode));
+					//choose origin node
+					double cumulativeProbability = 0.0;
+					Integer originNode = null;
+					double random = rng.nextDouble();
+					for (Integer node: listOfOriginNodes) {
+						cumulativeProbability += startNodeProbabilities.get(node);
 						if (Double.compare(cumulativeProbability, random) > 0) {
-							destinationNode = node;
+							originNode = node;
 							break;
 						}
 					}
-				} else	{ //inter-zonal trip (or intra-zonal with replacement)
-					for (Integer node: listOfDestinationNodes) {
-						cumulativeProbability += endNodeProbabilities.get(node);
-						if (Double.compare(cumulativeProbability, random) > 0) {
-							destinationNode = node;
-							break;
+
+					if (originNode == null) LOGGER.warn("Origin node was not chosen!");
+
+					//choose destination node
+					cumulativeProbability = 0.0;
+					Integer destinationNode = null;
+					random = rng.nextDouble();
+					//if intrazonal trip and replacement is not allowed, the probability of the originNode should be 0 so it cannot be chosen again
+					//also, in that case it is important to rescale other node probabilities (now that the originNode is removed) by dividing with (1.0 - p(originNode))!
+					if (!flagIntrazonalAssignmentReplacement && originZone.equals(destinationZone) && listOfDestinationNodes.contains(originNode)) { //no replacement and intra-zonal trip
+						for (Integer node: listOfDestinationNodes) {
+							if (node.intValue() == originNode.intValue()) continue; //skip if the node is the same as origin
+							cumulativeProbability += endNodeProbabilities.get(node) / (1.0 - endNodeProbabilities.get(originNode));
+							if (Double.compare(cumulativeProbability, random) > 0) {
+								destinationNode = node;
+								break;
+							}
 						}
-					}
-				}	
+					} else	{ //inter-zonal trip (or intra-zonal with replacement)
+						for (Integer node: listOfDestinationNodes) {
+							cumulativeProbability += endNodeProbabilities.get(node);
+							if (Double.compare(cumulativeProbability, random) > 0) {
+								destinationNode = node;
+								break;
+							}
+						}
+					}	
 
-				if (destinationNode == null) LOGGER.warn("Destination node was not chosen!");
+					if (destinationNode == null) LOGGER.warn("Destination node was not chosen!");
 
-				DirectedGraph rn = roadNetwork.getNetwork();
-				//set source and destination node
-				Node from = roadNetwork.getNodeIDtoNode()[originNode];
-				Node to = roadNetwork.getNodeIDtoNode()[destinationNode];
-				//					System.out.println("from " + from + " to " + to);
-				Route foundRoute = null;
-				try {
+					DirectedGraph rn = roadNetwork.getNetwork();
+					//set source and destination node
+					Node from = roadNetwork.getNodeIDtoNode()[originNode];
+					Node to = roadNetwork.getNodeIDtoNode()[destinationNode];
+					//					System.out.println("from " + from + " to " + to);
+					Route foundRoute = null;
+					try {
 
-					//see if that route already exists in the route storage
-					RouteSetGenerator rsg = routeStorage.get(hour);
-					RouteSet rs = rsg.getRouteSet(originNode, destinationNode);
-					if (rs != null) foundRoute = rs.getChoiceSet().get(0); //take the first route
+						//see if that route already exists in the route storage
+						RouteSetGenerator rsg = routeStorage.get(hour);
+						RouteSet rs = rsg.getRouteSet(originNode, destinationNode);
+						if (rs != null) foundRoute = rs.getChoiceSet().get(0); //take the first route
 
-					//if route does not already exist, get the shortest path from the origin node to the destination node using AStar algorithm
-					if (foundRoute == null) {
-						//System.out.println("The path does not exist in the path storage");
+						//if route does not already exist, get the shortest path from the origin node to the destination node using AStar algorithm
+						if (foundRoute == null) {
+							//System.out.println("The path does not exist in the path storage");
 
-						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[originNode];
-						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[destinationNode];
+							DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[originNode];
+							DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[destinationNode];
 
-						//RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTime);
-						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
-						if (fastestPath == null) {
-							LOGGER.warn("Not even aStar could find a route between node {} and node {}!", originNode, destinationNode);
-							continue;
+							//RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTime);
+							RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
+							if (fastestPath == null) {
+								LOGGER.warn("Not even aStar could find a route between node {} and node {}!", originNode, destinationNode);
+								continue;
+							}
+
+							foundRoute = new Route(fastestPath, roadNetwork);
+							rsg.addRoute(foundRoute); //add to the route set
 						}
 
-						foundRoute = new Route(fastestPath, roadNetwork);
-						rsg.addRoute(foundRoute); //add to the route set
+						int multiplier = 1;
+						if (i < flow) multiplier = (int) Math.round(1 / this.assignmentFraction);
+						counterAssignedTrips += multiplier;
+
+						//get zone IDs for storing into trips
+						int originZoneID = this.zoning.getLadCodeToIDMap().get(originZone);
+						int destinationZoneID = this.zoning.getLadCodeToIDMap().get(destinationZone);
+
+						//store trip in trip list
+						Trip trip = new Trip(vht, engine, foundRoute, hour, originZoneID, destinationZoneID, multiplier);
+						this.tripList.add(trip);
+
+					} catch (Exception e) {
+						LOGGER.error(e);
+						LOGGER.error("Couldnt find path from node {} to node {}!", from.getID(), to.getID());
 					}
-
-					int multiplier = 1;
-					if (i < flow) multiplier = (int) Math.round(1 / this.assignmentFraction);
-					counterAssignedTrips += multiplier;
-					
-					//get zone IDs for storing into trips
-					int originZoneID = this.zoning.getLadCodeToIDMap().get(originZone);
-					int destinationZoneID = this.zoning.getLadCodeToIDMap().get(destinationZone);
-
-					//store trip in trip list
-					Trip trip = new Trip(vht, engine, foundRoute, hour, originZoneID, destinationZoneID, multiplier);
-					this.tripList.add(trip);
-
-				} catch (Exception e) {
-					LOGGER.error(e);
-					LOGGER.error("Couldnt find path from node {} to node {}!", from.getID(), to.getID());
-				}
-			}//for each trip
-		}//for each OD pair
+				}//for each trip
+			}//for each OD pair
 
 		LOGGER.debug("Total flow: {}", + counterTotalFlow);
 		LOGGER.debug("Total assigned trips: {}", counterAssignedTrips);
@@ -706,14 +706,14 @@ public class RoadNetworkAssignment {
 		if (passengerODM == null) { LOGGER.warn("Passenger OD matrix is null! Skipping assignment."); return; }
 		if (rsg == null) { LOGGER.warn("Route set generator is null! Skipping assignment."); return; }
 		if (routeChoiceParameters == null) { LOGGER.warn("Route choice parameters are null! Skipping assignment."); return; }
-		
+
 		//read route choice parameters from the properties file
 		double paramTime = Double.parseDouble(routeChoiceParameters.getProperty("TIME"));
 		double paramLength = Double.parseDouble(routeChoiceParameters.getProperty("LENGTH"));
 		double paramCost = Double.parseDouble(routeChoiceParameters.getProperty("COST"));
 		double paramIntersections = Double.parseDouble(routeChoiceParameters.getProperty("INTERSECTIONS"));
 		double avgIntersectionDelay = Double.parseDouble(routeChoiceParameters.getProperty("AVERAGE_INTERSECTION_DELAY"));
-		
+
 		//set route choice parameters
 		Map<RouteChoiceParams, Double> params = new EnumMap<>(RouteChoiceParams.class);
 		params.put(RouteChoiceParams.TIME, paramTime);
@@ -721,7 +721,7 @@ public class RoadNetworkAssignment {
 		params.put(RouteChoiceParams.COST, paramCost);
 		params.put(RouteChoiceParams.INTERSEC, paramIntersections);
 		params.put(RouteChoiceParams.DELAY, avgIntersectionDelay);
-		
+
 		final int totalExpectedFlow = passengerODM.getTotalIntFlow();
 		this.tripList = new ArrayList<Trip>((int)Math.ceil(totalExpectedFlow / 0.75)); //use expected flow divided by load factor as array list initial capacity
 
@@ -734,99 +734,99 @@ public class RoadNetworkAssignment {
 
 		List<String> origins = passengerODM.getUnsortedOrigins();
 		List<String> destinations = passengerODM.getUnsortedDestinations();
-		
+
 		//for each OD pair from the passengerODM
 		for (String originZone: origins)
 			for (String destinationZone: destinations) {
-				
-			if (passengerODM.getIntFlow(originZone, destinationZone) == 0) continue;	
-	
-			List<Integer> listOfOriginNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(originZone)); //the list is already sorted
-			List<Integer> listOfDestinationNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(destinationZone)); //the list is already sorted
 
-			//removing blacklisted nodes
-			for (Integer originNode: roadNetwork.getZoneToNodes().get(originZone))
-				//check if any of the nodes is blacklisted
-				if (this.roadNetwork.getStartNodeBlacklist()[originNode]) 
-					listOfOriginNodes.remove(originNode);
+				if (passengerODM.getIntFlow(originZone, destinationZone) == 0) continue;	
 
-			//removing blacklisted nodes
-			for (Integer destinationNode: roadNetwork.getZoneToNodes().get(destinationZone))
-				//check if any of the nodes is blacklisted
-				if (this.roadNetwork.getEndNodeBlacklist()[destinationNode]) 
-					listOfDestinationNodes.remove(destinationNode);
+				List<Integer> listOfOriginNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(originZone)); //the list is already sorted
+				List<Integer> listOfDestinationNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(destinationZone)); //the list is already sorted
 
-			//calculate number of trip assignments
-			int flow = (int) Math.floor(passengerODM.getIntFlow(originZone, destinationZone) * this.assignmentFraction); //assigned fractionally and later augmented
-			int remainder = passengerODM.getIntFlow(originZone, destinationZone) - (int) Math.round(flow / this.assignmentFraction); //remainder of trips will be assigned individually (each trip)
-			counterTotalFlow += passengerODM.getIntFlow(originZone, destinationZone);
+				//removing blacklisted nodes
+				for (Integer originNode: roadNetwork.getZoneToNodes().get(originZone))
+					//check if any of the nodes is blacklisted
+					if (this.roadNetwork.getStartNodeBlacklist()[originNode]) 
+						listOfOriginNodes.remove(originNode);
 
-			//for each trip
-			for (int i=0; i < (flow + remainder); i++) {
+				//removing blacklisted nodes
+				for (Integer destinationNode: roadNetwork.getZoneToNodes().get(destinationZone))
+					//check if any of the nodes is blacklisted
+					if (this.roadNetwork.getEndNodeBlacklist()[destinationNode]) 
+						listOfDestinationNodes.remove(destinationNode);
 
-				//choose time of day
-				TimeOfDay hour = this.chooseTimeOfDay(timeOfDayDistribution);
-				if (hour == null) LOGGER.warn("Time of day not chosen!");
+				//calculate number of trip assignments
+				int flow = (int) Math.floor(passengerODM.getIntFlow(originZone, destinationZone) * this.assignmentFraction); //assigned fractionally and later augmented
+				int remainder = passengerODM.getIntFlow(originZone, destinationZone) - (int) Math.round(flow / this.assignmentFraction); //remainder of trips will be assigned individually (each trip)
+				counterTotalFlow += passengerODM.getIntFlow(originZone, destinationZone);
 
-				//choose vehicle
-				VehicleType vht = this.chooseCarVehicleType(AVFractions);
-				if (vht == null) LOGGER.warn("Vehicle type not chosen!");
+				//for each trip
+				for (int i=0; i < (flow + remainder); i++) {
 
-				//choose engine
-				EngineType engine = this.chooseEngineType(engineTypeFractions.get(vht));
-				if (engine == null) LOGGER.warn("Engine type not chosen!");
+					//choose time of day
+					TimeOfDay hour = this.chooseTimeOfDay(timeOfDayDistribution);
+					if (hour == null) LOGGER.warn("Time of day not chosen!");
 
-				//choose origin/destination nodes based on the gravitating population
-				//the choice with replacement means that possibly: destination node = origin node
-				//the choice without replacement means that destination node has to be different from origin node
+					//choose vehicle
+					VehicleType vht = this.chooseCarVehicleType(AVFractions);
+					if (vht == null) LOGGER.warn("Vehicle type not chosen!");
 
-				Integer originNode = null;
-				Integer destinationNode = null;
+					//choose engine
+					EngineType engine = this.chooseEngineType(engineTypeFractions.get(vht));
+					if (engine == null) LOGGER.warn("Engine type not chosen!");
 
-				if (originZone.equals(destinationZone)) { //if intra-zonal
+					//choose origin/destination nodes based on the gravitating population
+					//the choice with replacement means that possibly: destination node = origin node
+					//the choice without replacement means that destination node has to be different from origin node
 
-					//choose origin node
-					double cumulativeProbability = 0.0;
-					double random = rng.nextDouble();
-					for (Integer node: listOfOriginNodes) {
-						cumulativeProbability += startNodeProbabilities.get(node);
-						if (Double.compare(cumulativeProbability, random) > 0) {
-							originNode = node;
-							break;
-						}
-					}
+					Integer originNode = null;
+					Integer destinationNode = null;
 
-					if (originNode == null) LOGGER.warn("Origin node for intra-zonal trip was not chosen!");
+					if (originZone.equals(destinationZone)) { //if intra-zonal
 
-					//choose destination node
-					cumulativeProbability = 0.0;
-					random = rng.nextDouble();
-					//if intrazonal trip and replacement is not allowed, the probability of the originNode should be 0 so it cannot be chosen again
-					//also, in that case it is important to rescale other node probabilities (now that the originNode is removed) by dividing with (1.0 - p(originNode))!
-					if (!flagIntrazonalAssignmentReplacement && listOfDestinationNodes.contains(originNode)) { //no replacement
-						for (Integer node: listOfDestinationNodes) {
-							if (node.intValue() == originNode.intValue()) continue; //skip if the node is the same as origin
-							cumulativeProbability += endNodeProbabilities.get(node) / (1.0 - endNodeProbabilities.get(originNode));
+						//choose origin node
+						double cumulativeProbability = 0.0;
+						double random = rng.nextDouble();
+						for (Integer node: listOfOriginNodes) {
+							cumulativeProbability += startNodeProbabilities.get(node);
 							if (Double.compare(cumulativeProbability, random) > 0) {
-								destinationNode = node;
+								originNode = node;
 								break;
 							}
 						}
-					} else	{ //with replacement
-						for (Integer node: listOfDestinationNodes) {
-							cumulativeProbability += endNodeProbabilities.get(node);
-							if (Double.compare(cumulativeProbability, random) > 0) {
-								destinationNode = node;
-								break;
+
+						if (originNode == null) LOGGER.warn("Origin node for intra-zonal trip was not chosen!");
+
+						//choose destination node
+						cumulativeProbability = 0.0;
+						random = rng.nextDouble();
+						//if intrazonal trip and replacement is not allowed, the probability of the originNode should be 0 so it cannot be chosen again
+						//also, in that case it is important to rescale other node probabilities (now that the originNode is removed) by dividing with (1.0 - p(originNode))!
+						if (!flagIntrazonalAssignmentReplacement && listOfDestinationNodes.contains(originNode)) { //no replacement
+							for (Integer node: listOfDestinationNodes) {
+								if (node.intValue() == originNode.intValue()) continue; //skip if the node is the same as origin
+								cumulativeProbability += endNodeProbabilities.get(node) / (1.0 - endNodeProbabilities.get(originNode));
+								if (Double.compare(cumulativeProbability, random) > 0) {
+									destinationNode = node;
+									break;
+								}
 							}
-						}
-					}	
+						} else	{ //with replacement
+							for (Integer node: listOfDestinationNodes) {
+								cumulativeProbability += endNodeProbabilities.get(node);
+								if (Double.compare(cumulativeProbability, random) > 0) {
+									destinationNode = node;
+									break;
+								}
+							}
+						}	
 
-					if (destinationNode == null) LOGGER.warn("Destination for intra-zonal trip node was not chosen!");
+						if (destinationNode == null) LOGGER.warn("Destination for intra-zonal trip node was not chosen!");
 
-				} else { //inter-zonal
+					} else { //inter-zonal
 
-					/*
+						/*
 					//for (int nodeIndex=0; nodeIndex < INTERZONAL_TOP_NODES && listOfOriginNodes.size(); nodeIndex++)
 					//choose random from top_nodes regardless of population size
 					int indexOrigin = rng.nextInt(INTERZONAL_TOP_NODES<listOfOriginNodes.size()?INTERZONAL_TOP_NODES:listOfOriginNodes.size());
@@ -835,117 +835,117 @@ public class RoadNetworkAssignment {
 					//System.out.println("Index of destination node: " + indexDestination);
 					originNode = listOfOriginNodes.get(indexOrigin);					
 					destinationNode = listOfDestinationNodes.get(indexDestination);
-					 */
+						 */
 
-					//make a choice based on the gravitating population size
-					int originNodesToConsider = interzonalTopNodes<listOfOriginNodes.size()?interzonalTopNodes:listOfOriginNodes.size();
-					int destinationNodesToConsider = interzonalTopNodes<listOfDestinationNodes.size()?interzonalTopNodes:listOfDestinationNodes.size();
-					//sums of gravitating population
+						//make a choice based on the gravitating population size
+						int originNodesToConsider = interzonalTopNodes<listOfOriginNodes.size()?interzonalTopNodes:listOfOriginNodes.size();
+						int destinationNodesToConsider = interzonalTopNodes<listOfDestinationNodes.size()?interzonalTopNodes:listOfDestinationNodes.size();
+						//sums of gravitating population
 
-					double sum = 0.0;
-					for (int j=0; j<originNodesToConsider; j++) sum += startNodeProbabilities.get(listOfOriginNodes.get(j)); 
-					//choose origin node
-					double cumulativeProbability = 0.0;
-					double random = rng.nextDouble();
-					for (Integer node: listOfOriginNodes) {
-						cumulativeProbability += startNodeProbabilities.get(node) / sum; //scale with sum
-						if (Double.compare(cumulativeProbability, random) > 0) {
-							originNode = node;
-							break;
+						double sum = 0.0;
+						for (int j=0; j<originNodesToConsider; j++) sum += startNodeProbabilities.get(listOfOriginNodes.get(j)); 
+						//choose origin node
+						double cumulativeProbability = 0.0;
+						double random = rng.nextDouble();
+						for (Integer node: listOfOriginNodes) {
+							cumulativeProbability += startNodeProbabilities.get(node) / sum; //scale with sum
+							if (Double.compare(cumulativeProbability, random) > 0) {
+								originNode = node;
+								break;
+							}
 						}
+
+						sum = 0.0;
+						for (int j=0; j<destinationNodesToConsider; j++) sum += endNodeProbabilities.get(listOfDestinationNodes.get(j)); 
+						//choose destination node
+						cumulativeProbability = 0.0;
+						random = rng.nextDouble();
+						for (Integer node: listOfDestinationNodes) {
+							cumulativeProbability += endNodeProbabilities.get(node) / sum; //scale with sum
+							if (Double.compare(cumulativeProbability, random) > 0) {
+								destinationNode = node;
+								break;
+							}
+						}
+
+						if (originNode == null) LOGGER.warn("Origin node for inter-zonal trip was not chosen!");
+						if (destinationNode == null) LOGGER.warn("Destination node for inter-zonal trip was not chosen!");
 					}
 
-					sum = 0.0;
-					for (int j=0; j<destinationNodesToConsider; j++) sum += endNodeProbabilities.get(listOfDestinationNodes.get(j)); 
-					//choose destination node
-					cumulativeProbability = 0.0;
-					random = rng.nextDouble();
-					for (Integer node: listOfDestinationNodes) {
-						cumulativeProbability += endNodeProbabilities.get(node) / sum; //scale with sum
-						if (Double.compare(cumulativeProbability, random) > 0) {
-							destinationNode = node;
-							break;
+					Route chosenRoute = null;
+					RouteSet fetchedRouteSet = rsg.getRouteSet(originNode.intValue(), destinationNode.intValue());
+					if (fetchedRouteSet == null) {
+						//					LOGGER.warn("Can't fetch the route set between nodes {} and {}!", originNode, destinationNode);
+
+						if (!flagAStarIfEmptyRouteSet)	continue;
+						else { //try finding a path with aStar
+							//						LOGGER.debug("Trying the astar!");
+
+							DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[originNode];
+							DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[destinationNode];
+
+							//RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTime);
+							RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
+							if (fastestPath == null) {
+								LOGGER.warn("Not even aStar could find a route between node {} and node {}!", originNode, destinationNode);
+								continue;
+							}
+							chosenRoute = new Route(fastestPath, roadNetwork);
+							if (chosenRoute.isEmpty()) {
+								LOGGER.warn("Empty route between nodes {} and {}!", originNode, destinationNode);
+								continue;
+							}
+							//store generated route into the rsg!
+							rsg.addRoute(chosenRoute);
 						}
-					}
+					} else { //there is a route set
 
-					if (originNode == null) LOGGER.warn("Origin node for inter-zonal trip was not chosen!");
-					if (destinationNode == null) LOGGER.warn("Destination node for inter-zonal trip was not chosen!");
-				}
+						//if only one route in the route set, do not calculate utilities and probabilities, but choose that route
+						if (fetchedRouteSet.getSize() == 1) {
 
-				Route chosenRoute = null;
-				RouteSet fetchedRouteSet = rsg.getRouteSet(originNode.intValue(), destinationNode.intValue());
-				if (fetchedRouteSet == null) {
-					//					LOGGER.warn("Can't fetch the route set between nodes {} and {}!", originNode, destinationNode);
+							LOGGER.trace("There is just one route in the route set, so choosing that route.");
+							//choose that route
+							chosenRoute = fetchedRouteSet.getChoiceSet().get(0);
 
-					if (!flagAStarIfEmptyRouteSet)	continue;
-					else { //try finding a path with aStar
-						//						LOGGER.debug("Trying the astar!");
+						} else { //choose a route using a discrete-choice model
 
-						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[originNode];
-						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[destinationNode];
+							LOGGER.trace("There are multiple route in the route set, so choosing with a route-choice model.");
+							//if (fetchedRouteSet.getProbabilities() == null) {
+							//probabilities need to be calculated for this route set before a choice can be made
 
-						//RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTime);
-						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
-						if (fastestPath == null) {
-							LOGGER.warn("Not even aStar could find a route between node {} and node {}!", originNode, destinationNode);
+							fetchedRouteSet.calculateUtilities(vht, engine, hour, this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions, this.relativeFuelEfficiencies, this.energyUnitCosts, this.congestionCharges, params);
+							fetchedRouteSet.calculateProbabilities();
+							//}
+
+							//choose the route
+							chosenRoute = fetchedRouteSet.choose();
+						}
+
+						if (chosenRoute == null) {
+							LOGGER.warn("No chosen route between nodes {} and {}!", originNode, destinationNode);
 							continue;
 						}
-						chosenRoute = new Route(fastestPath, roadNetwork);
-						if (chosenRoute.isEmpty()) {
-							LOGGER.warn("Empty route between nodes {} and {}!", originNode, destinationNode);
-							continue;
-						}
-						//store generated route into the rsg!
-						rsg.addRoute(chosenRoute);
-					}
-				} else { //there is a route set
-
-					//if only one route in the route set, do not calculate utilities and probabilities, but choose that route
-					if (fetchedRouteSet.getSize() == 1) {
-
-						LOGGER.trace("There is just one route in the route set, so choosing that route.");
-						//choose that route
-						chosenRoute = fetchedRouteSet.getChoiceSet().get(0);
-
-					} else { //choose a route using a discrete-choice model
-
-						LOGGER.trace("There are multiple route in the route set, so choosing with a route-choice model.");
-						//if (fetchedRouteSet.getProbabilities() == null) {
-						//probabilities need to be calculated for this route set before a choice can be made
-
-						fetchedRouteSet.calculateUtilities(vht, engine, hour, this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions, this.relativeFuelEfficiencies, this.energyUnitCosts, this.congestionCharges, params);
-						fetchedRouteSet.calculateProbabilities();
-						//}
-
-						//choose the route
-						chosenRoute = fetchedRouteSet.choose();
 					}
 
-					if (chosenRoute == null) {
-						LOGGER.warn("No chosen route between nodes {} and {}!", originNode, destinationNode);
+					if (chosenRoute.isEmpty()) {
+						LOGGER.warn("The chosen route is empty, skipping this trip!");
 						continue;
 					}
-				}
 
-				if (chosenRoute.isEmpty()) {
-					LOGGER.warn("The chosen route is empty, skipping this trip!");
-					continue;
-				}
+					int multiplier = 1;
+					if (i < flow) multiplier = (int) Math.round(1 / this.assignmentFraction);
+					counterAssignedTrips += multiplier;
 
-				int multiplier = 1;
-				if (i < flow) multiplier = (int) Math.round(1 / this.assignmentFraction);
-				counterAssignedTrips += multiplier;
-				
-				//get zone IDs for storing into trips
-				int originZoneID = this.zoning.getLadCodeToIDMap().get(originZone);
-				int destinationZoneID = this.zoning.getLadCodeToIDMap().get(destinationZone);
+					//get zone IDs for storing into trips
+					int originZoneID = this.zoning.getLadCodeToIDMap().get(originZone);
+					int destinationZoneID = this.zoning.getLadCodeToIDMap().get(destinationZone);
 
-				//store trip in trip list
-				Trip trip = new Trip(vht, engine, chosenRoute, hour, originZoneID, destinationZoneID, multiplier);
-				this.tripList.add(trip);
+					//store trip in trip list
+					Trip trip = new Trip(vht, engine, chosenRoute, hour, originZoneID, destinationZoneID, multiplier);
+					this.tripList.add(trip);
 
-			}//for each trip
-		}//for each OD pair
+				}//for each trip
+			}//for each OD pair
 
 		LOGGER.debug("Total flow: " + counterTotalFlow);
 		LOGGER.debug("Total assigned trips: " + counterAssignedTrips);
@@ -975,15 +975,15 @@ public class RoadNetworkAssignment {
 
 		List<String> origins = passengerODM.getUnsortedOrigins();
 		List<String> destinations = passengerODM.getUnsortedDestinations();
-		
+
 		//for each OD pair from the passengerODM
 		for (String originZone: origins)
 			for (String destinationZone: destinations) {
-				
-			if (passengerODM.getIntFlow(originZone, destinationZone) == 0) continue;	
-			
 
-			/*
+				if (passengerODM.getIntFlow(originZone, destinationZone) == 0) continue;	
+
+
+				/*
 			List<Integer> listOfOriginNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(originZone)); //the list is already sorted
 			List<Integer> listOfDestinationNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(destinationZone)); //the list is already sorted
 
@@ -999,55 +999,55 @@ public class RoadNetworkAssignment {
 				if (this.roadNetwork.isBlacklistedAsEndNode(destinationNode)) 
 					listOfDestinationNodes.remove(destinationNode);
 
-			 */
+				 */
 
-			//calculate number of trip assignments
-			int flow = (int) Math.floor(passengerODM.getIntFlow(originZone, destinationZone) * this.assignmentFraction); //assigned fractionally and later augmented
-			int remainder = passengerODM.getIntFlow(originZone, destinationZone) - (int) Math.round(flow / this.assignmentFraction); //remainder of trips will be assigned individually (each trip)
-			counterTotalFlow += passengerODM.getIntFlow(originZone, destinationZone);
+				//calculate number of trip assignments
+				int flow = (int) Math.floor(passengerODM.getIntFlow(originZone, destinationZone) * this.assignmentFraction); //assigned fractionally and later augmented
+				int remainder = passengerODM.getIntFlow(originZone, destinationZone) - (int) Math.round(flow / this.assignmentFraction); //remainder of trips will be assigned individually (each trip)
+				counterTotalFlow += passengerODM.getIntFlow(originZone, destinationZone);
 
-			//for each trip
-			for (int i=0; i < (flow + remainder); i++) {
+				//for each trip
+				for (int i=0; i < (flow + remainder); i++) {
 
-				TimeOfDay hour = this.chooseTimeOfDay(timeOfDayDistribution);
-				if (hour == null) LOGGER.warn("Time of day not chosen!");
+					TimeOfDay hour = this.chooseTimeOfDay(timeOfDayDistribution);
+					if (hour == null) LOGGER.warn("Time of day not chosen!");
 
-				//choose vehicle
-				VehicleType vht = this.chooseCarVehicleType(AVFractions);
-				if (vht == null) LOGGER.warn("Vehicle type not chosen!");
+					//choose vehicle
+					VehicleType vht = this.chooseCarVehicleType(AVFractions);
+					if (vht == null) LOGGER.warn("Vehicle type not chosen!");
 
-				//choose engine
-				EngineType engine = this.chooseEngineType(engineTypeFractions.get(vht));
-				if (engine == null) LOGGER.warn("Engine type not chosen!");
+					//choose engine
+					EngineType engine = this.chooseEngineType(engineTypeFractions.get(vht));
+					if (engine == null) LOGGER.warn("Engine type not chosen!");
 
-				//choose origin/destination nodes based on the gravitating population
-				//the choice with replacement means that possibly: destination node = origin node
-				//the choice without replacement means that destination node has to be different from origin node
+					//choose origin/destination nodes based on the gravitating population
+					//the choice with replacement means that possibly: destination node = origin node
+					//the choice without replacement means that destination node has to be different from origin node
 
-				//choose origin/destination node
-				Integer originNode = null;
-				Integer destinationNode = null;
+					//choose origin/destination node
+					Integer originNode = null;
+					Integer destinationNode = null;
 
-				if (originZone.equals(destinationZone)) { 	//if inter-zonal, pick random node within the zone (based on gravitating population is better)
+					if (originZone.equals(destinationZone)) { 	//if inter-zonal, pick random node within the zone (based on gravitating population is better)
 
-					List<Integer> listOfContainedNodes = zoning.getZoneToListOfContainedNodes().get(originZone);
+						List<Integer> listOfContainedNodes = zoning.getZoneToListOfContainedNodes().get(originZone);
 
-					//if there are no zones in that node, simply pick the closest node
-					if (listOfContainedNodes == null) { 
-						originNode = zoning.getZoneToNearestNodeIDMap().get(originZone);
-						destinationNode = originNode;
-					} else if (listOfContainedNodes.size() == 1) { //if there is just one contained node, use it
-						originNode = listOfContainedNodes.get(0);
-						destinationNode = originNode;
-					} else	{
-
-
-						//simply pick random
-						originNode = listOfContainedNodes.get(rng.nextInt(listOfContainedNodes.size()));
-						destinationNode = listOfContainedNodes.get(rng.nextInt(listOfContainedNodes.size()));
+						//if there are no zones in that node, simply pick the closest node
+						if (listOfContainedNodes == null) { 
+							originNode = zoning.getZoneToNearestNodeIDMap().get(originZone);
+							destinationNode = originNode;
+						} else if (listOfContainedNodes.size() == 1) { //if there is just one contained node, use it
+							originNode = listOfContainedNodes.get(0);
+							destinationNode = originNode;
+						} else	{
 
 
-						/*
+							//simply pick random
+							originNode = listOfContainedNodes.get(rng.nextInt(listOfContainedNodes.size()));
+							destinationNode = listOfContainedNodes.get(rng.nextInt(listOfContainedNodes.size()));
+
+
+							/*
 						//choose based on gravitating population
 						double sumOfGravitatingPopulation = 0.0;
 						for (Integer nodeID: listOfContainedNodes) sumOfGravitatingPopulation += this.roadNetwork.getGravitatingPopulation(nodeID); 
@@ -1069,9 +1069,9 @@ public class RoadNetworkAssignment {
 								break;
 							}
 						}
-						 */
+							 */
 
-						/*
+							/*
 						//pick OD pair based on NodeMatrix
 						NodeMatrix nm = zoning.getZoneToNodeMatrix().get(originZone);
 						cumulativeProbability = 0.0;
@@ -1086,117 +1086,117 @@ public class RoadNetworkAssignment {
 								break;
 							}
 						}
-						 */
-					}
-
-					if (originNode == null) LOGGER.warn("Origin node was not chosen for zone {}", originZone);
-					if (destinationNode == null) LOGGER.warn("Destination node was not chosen!");
-
-				} else { //if not interzonal, choose from topnodes based on the distance from zone centroid
-
-					//choose origin node
-					List<Pair<Integer, Double>> listOfOriginNodes = zoning.getZoneToSortedListOfNodeAndDistancePairs().get(originZone);
-					//consider only top tempro nodes
-					List<Pair<Integer, Double>> listOfTopOriginNodes = listOfOriginNodes.subList(0, this.topTemproNodes);
-
-					double sumOfDistances = 0.0;
-					for (Pair<Integer, Double> pair: listOfTopOriginNodes) sumOfDistances += pair.getValue(); 
-					double cumulativeProbability = 0.0;
-					//Integer originNode = null;
-					double random = rng.nextDouble();
-					for (Pair<Integer, Double> pair: listOfTopOriginNodes) {
-						cumulativeProbability += pair.getRight() / sumOfDistances;
-						if (Double.compare(cumulativeProbability, random) > 0) {
-							originNode = pair.getKey();
-							break;
-						}
-					}
-
-					if (originNode == null) LOGGER.warn("Origin node was not chosen for zone {}", originZone);
-
-					//take the nearest node!
-					//Integer originNode = zoning.getZoneToNearestNodeIDMap().get(originZone);
-					//if (originNode == null) System.err.println("Origin node was not chosen for zone " + originZone);
-
-					if (this.roadNetwork.isBlacklistedAsStartNode(originNode)) 
-						LOGGER.warn("Origin node is blacklisted! node: {}", originNode);
-
-
-					//choose destination node
-					List<Pair<Integer, Double>> listOfDestinationNodes = zoning.getZoneToSortedListOfNodeAndDistancePairs().get(destinationZone);
-					//consider only top tempro nodes
-					List<Pair<Integer, Double>> listOfTopDestinationNodes = listOfDestinationNodes.subList(0, this.topTemproNodes);
-
-					sumOfDistances = 0.0;
-					for (Pair<Integer, Double> pair: listOfTopDestinationNodes) sumOfDistances += pair.getValue(); 
-					cumulativeProbability = 0.0;
-					//Integer destinationNode = null;
-					random = rng.nextDouble();
-					for (Pair<Integer, Double> pair: listOfTopDestinationNodes) {
-						cumulativeProbability += pair.getRight() / sumOfDistances;
-						if (Double.compare(cumulativeProbability, random) > 0) {
-							destinationNode = pair.getKey();
-							break;
-						}
-					}
-
-					if (destinationNode == null) LOGGER.warn("Destination node was not chosen!");
-
-					//take just the nearest one
-					//Integer destinationNode = zoning.getZoneToNearestNodeIDMap().get(destinationZone);
-					//if (destinationNode == null) System.err.println("Destination node was not chosen for zone " + destinationZone);
-
-					if (this.roadNetwork.isBlacklistedAsEndNode(destinationNode)) 
-						LOGGER.warn("Destination node is blacklisted! node: {}", destinationNode);
-
-				}
-
-				DirectedGraph rn = roadNetwork.getNetwork();
-				//set source and destination node
-				Node from = roadNetwork.getNodeIDtoNode()[originNode];
-				Node to = roadNetwork.getNodeIDtoNode()[destinationNode];
-				//					System.out.println("from " + from + " to " + to);
-				Route foundRoute = null;
-				try {
-
-					//see if that route already exists in the route storage
-					RouteSet rs = rsg.getRouteSet(originNode, destinationNode);
-					if (rs != null) foundRoute = rs.getChoiceSet().get(0); //take the first route
-
-					//if route does not already exist, get the shortest path from the origin node to the destination node using AStar algorithm
-					if (foundRoute == null) {
-						//System.out.println("The path does not exist in the path storage");
-
-						DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[originNode];
-						DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[destinationNode];
-
-						//RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTime);
-						RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
-						if (fastestPath == null) {
-//							LOGGER.warn("Not even aStar could find a route between node {} and node {}!", originNode, destinationNode);
-							continue;
+							 */
 						}
 
-						foundRoute = new Route(fastestPath, roadNetwork);
-						rsg.addRoute(foundRoute); //add to the route set
+						if (originNode == null) LOGGER.warn("Origin node was not chosen for zone {}", originZone);
+						if (destinationNode == null) LOGGER.warn("Destination node was not chosen!");
+
+					} else { //if not interzonal, choose from topnodes based on the distance from zone centroid
+
+						//choose origin node
+						List<Pair<Integer, Double>> listOfOriginNodes = zoning.getZoneToSortedListOfNodeAndDistancePairs().get(originZone);
+						//consider only top tempro nodes
+						List<Pair<Integer, Double>> listOfTopOriginNodes = listOfOriginNodes.subList(0, this.topTemproNodes);
+
+						double sumOfDistances = 0.0;
+						for (Pair<Integer, Double> pair: listOfTopOriginNodes) sumOfDistances += pair.getValue(); 
+						double cumulativeProbability = 0.0;
+						//Integer originNode = null;
+						double random = rng.nextDouble();
+						for (Pair<Integer, Double> pair: listOfTopOriginNodes) {
+							cumulativeProbability += pair.getRight() / sumOfDistances;
+							if (Double.compare(cumulativeProbability, random) > 0) {
+								originNode = pair.getKey();
+								break;
+							}
+						}
+
+						if (originNode == null) LOGGER.warn("Origin node was not chosen for zone {}", originZone);
+
+						//take the nearest node!
+						//Integer originNode = zoning.getZoneToNearestNodeIDMap().get(originZone);
+						//if (originNode == null) System.err.println("Origin node was not chosen for zone " + originZone);
+
+						if (this.roadNetwork.isBlacklistedAsStartNode(originNode)) 
+							LOGGER.warn("Origin node is blacklisted! node: {}", originNode);
+
+
+						//choose destination node
+						List<Pair<Integer, Double>> listOfDestinationNodes = zoning.getZoneToSortedListOfNodeAndDistancePairs().get(destinationZone);
+						//consider only top tempro nodes
+						List<Pair<Integer, Double>> listOfTopDestinationNodes = listOfDestinationNodes.subList(0, this.topTemproNodes);
+
+						sumOfDistances = 0.0;
+						for (Pair<Integer, Double> pair: listOfTopDestinationNodes) sumOfDistances += pair.getValue(); 
+						cumulativeProbability = 0.0;
+						//Integer destinationNode = null;
+						random = rng.nextDouble();
+						for (Pair<Integer, Double> pair: listOfTopDestinationNodes) {
+							cumulativeProbability += pair.getRight() / sumOfDistances;
+							if (Double.compare(cumulativeProbability, random) > 0) {
+								destinationNode = pair.getKey();
+								break;
+							}
+						}
+
+						if (destinationNode == null) LOGGER.warn("Destination node was not chosen!");
+
+						//take just the nearest one
+						//Integer destinationNode = zoning.getZoneToNearestNodeIDMap().get(destinationZone);
+						//if (destinationNode == null) System.err.println("Destination node was not chosen for zone " + destinationZone);
+
+						if (this.roadNetwork.isBlacklistedAsEndNode(destinationNode)) 
+							LOGGER.warn("Destination node is blacklisted! node: {}", destinationNode);
+
 					}
 
-					int multiplier = 1;
-					if (i < flow) multiplier = (int) Math.round(1 / this.assignmentFraction);
-					counterAssignedTrips += multiplier;
+					DirectedGraph rn = roadNetwork.getNetwork();
+					//set source and destination node
+					Node from = roadNetwork.getNodeIDtoNode()[originNode];
+					Node to = roadNetwork.getNodeIDtoNode()[destinationNode];
+					//					System.out.println("from " + from + " to " + to);
+					Route foundRoute = null;
+					try {
 
-					//store trip in trip list
-					Integer originZoneID = zoning.getTemproCodeToIDMap().get(originZone);
-					Integer destinationZoneID = zoning.getTemproCodeToIDMap().get(destinationZone);
-					Trip trip = new TripTempro(vht, engine, foundRoute, hour, originZoneID, destinationZoneID, zoning, multiplier);
-					this.tripList.add(trip);
+						//see if that route already exists in the route storage
+						RouteSet rs = rsg.getRouteSet(originNode, destinationNode);
+						if (rs != null) foundRoute = rs.getChoiceSet().get(0); //take the first route
 
-				} catch (Exception e) {
-					LOGGER.error(e);
-					LOGGER.error("Couldnt find path from node {} to node {}!", from.getID(), to.getID());
-				}
-			}//for each trip
-		}//for each OD pair
+						//if route does not already exist, get the shortest path from the origin node to the destination node using AStar algorithm
+						if (foundRoute == null) {
+							//System.out.println("The path does not exist in the path storage");
+
+							DirectedNode directedOriginNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[originNode];
+							DirectedNode directedDestinationNode = (DirectedNode) this.roadNetwork.getNodeIDtoNode()[destinationNode];
+
+							//RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTime);
+							RoadPath fastestPath = this.roadNetwork.getFastestPath(directedOriginNode, directedDestinationNode, this.linkTravelTimePerTimeOfDay.get(hour));
+							if (fastestPath == null) {
+								//							LOGGER.warn("Not even aStar could find a route between node {} and node {}!", originNode, destinationNode);
+								continue;
+							}
+
+							foundRoute = new Route(fastestPath, roadNetwork);
+							rsg.addRoute(foundRoute); //add to the route set
+						}
+
+						int multiplier = 1;
+						if (i < flow) multiplier = (int) Math.round(1 / this.assignmentFraction);
+						counterAssignedTrips += multiplier;
+
+						//store trip in trip list
+						Integer originZoneID = zoning.getTemproCodeToIDMap().get(originZone);
+						Integer destinationZoneID = zoning.getTemproCodeToIDMap().get(destinationZone);
+						Trip trip = new TripTempro(vht, engine, foundRoute, hour, originZoneID, destinationZoneID, zoning, multiplier);
+						this.tripList.add(trip);
+
+					} catch (Exception e) {
+						LOGGER.error(e);
+						LOGGER.error("Couldnt find path from node {} to node {}!", from.getID(), to.getID());
+					}
+				}//for each trip
+			}//for each OD pair
 
 		LOGGER.debug("Total flow: " + counterTotalFlow);
 		LOGGER.debug("Total assigned trips: " + counterAssignedTrips);
@@ -1219,14 +1219,14 @@ public class RoadNetworkAssignment {
 		//to store routes generated during the assignment
 		//RouteSetGenerator rsg = new RouteSetGenerator(this.roadNetwork);
 		if (rsg == null) rsg = new RouteSetGenerator(this.roadNetwork, routeChoiceParameters);
-		
+
 		//read route choice parameters from the properties file
 		double paramTime = Double.parseDouble(routeChoiceParameters.getProperty("TIME"));
 		double paramLength = Double.parseDouble(routeChoiceParameters.getProperty("LENGTH"));
 		double paramCost = Double.parseDouble(routeChoiceParameters.getProperty("COST"));
 		double paramIntersections = Double.parseDouble(routeChoiceParameters.getProperty("INTERSECTIONS"));
 		double avgIntersectionDelay = Double.parseDouble(routeChoiceParameters.getProperty("AVERAGE_INTERSECTION_DELAY"));
-		
+
 		//set route choice parameters
 		Map<RouteChoiceParams, Double> params = new EnumMap<>(RouteChoiceParams.class);
 		params.put(RouteChoiceParams.TIME, paramTime);
@@ -1241,71 +1241,71 @@ public class RoadNetworkAssignment {
 
 		List<String> origins = passengerODM.getUnsortedOrigins();
 		List<String> destinations = passengerODM.getUnsortedDestinations();
-		
+
 		//for each OD pair from the passengerODM
 		for (String originZone: origins)
 			for (String destinationZone: destinations) {
-				
-			if (passengerODM.getIntFlow(originZone, destinationZone) == 0) continue;	
 
-			//calculate number of trip assignments
-			int flow = (int) Math.floor(passengerODM.getIntFlow(originZone, destinationZone) * this.assignmentFraction); //assigned fractionally and later augmented
-			int remainder = passengerODM.getIntFlow(originZone, destinationZone) - (int) Math.round(flow / this.assignmentFraction); //remainder of trips will be assigned individually (each trip)
-			counterTotalFlow += passengerODM.getIntFlow(originZone, destinationZone);
-			
-			//get zone IDs
-			Integer originZoneID = zoning.getTemproCodeToIDMap().get(originZone);
-			Integer destinationZoneID = zoning.getTemproCodeToIDMap().get(destinationZone);
+				if (passengerODM.getIntFlow(originZone, destinationZone) == 0) continue;	
 
-			//for each trip
-			for (int i=0; i < (flow + remainder); i++) {
+				//calculate number of trip assignments
+				int flow = (int) Math.floor(passengerODM.getIntFlow(originZone, destinationZone) * this.assignmentFraction); //assigned fractionally and later augmented
+				int remainder = passengerODM.getIntFlow(originZone, destinationZone) - (int) Math.round(flow / this.assignmentFraction); //remainder of trips will be assigned individually (each trip)
+				counterTotalFlow += passengerODM.getIntFlow(originZone, destinationZone);
 
-				//choose time of day
-				TimeOfDay hour = this.chooseTimeOfDay(timeOfDayDistribution);
-				if (hour == null) LOGGER.warn("Time of day not chosen!");
+				//get zone IDs
+				Integer originZoneID = zoning.getTemproCodeToIDMap().get(originZone);
+				Integer destinationZoneID = zoning.getTemproCodeToIDMap().get(destinationZone);
 
-				//choose vehicle
-				VehicleType vht = this.chooseCarVehicleType(AVFractions);
-				if (vht == null) LOGGER.warn("Vehicle type not chosen!");
+				//for each trip
+				for (int i=0; i < (flow + remainder); i++) {
 
-				//choose engine
-				EngineType engine = this.chooseEngineType(engineTypeFractions.get(vht));
-				if (engine == null) LOGGER.warn("Engine type not chosen!");
+					//choose time of day
+					TimeOfDay hour = this.chooseTimeOfDay(timeOfDayDistribution);
+					if (hour == null) LOGGER.warn("Time of day not chosen!");
 
-				//choose origin node
-				int originNode = zoning.getZoneIDToNearestNodeIDMap()[originZoneID];
-				if (originNode == 0) LOGGER.warn("Origin node was not chosen for zone {}", originZone);
+					//choose vehicle
+					VehicleType vht = this.chooseCarVehicleType(AVFractions);
+					if (vht == null) LOGGER.warn("Vehicle type not chosen!");
 
-				if (this.roadNetwork.isBlacklistedAsStartNode(originNode)) 
-					LOGGER.warn("Origin node is blacklisted! node: {}", originNode);
+					//choose engine
+					EngineType engine = this.chooseEngineType(engineTypeFractions.get(vht));
+					if (engine == null) LOGGER.warn("Engine type not chosen!");
 
-				//choose destination node
-				int destinationNode = zoning.getZoneIDToNearestNodeIDMap()[destinationZoneID];
-				if (destinationNode == 0) LOGGER.warn("Destination node was not chosen for zone {}", destinationZone);
+					//choose origin node
+					int originNode = zoning.getZoneIDToNearestNodeIDMap()[originZoneID];
+					if (originNode == 0) LOGGER.warn("Origin node was not chosen for zone {}", originZone);
 
-				if (this.roadNetwork.isBlacklistedAsEndNode(destinationNode)) 
-					LOGGER.warn("Destination node is blacklisted! node: {}", destinationNode);
+					if (this.roadNetwork.isBlacklistedAsStartNode(originNode)) 
+						LOGGER.warn("Origin node is blacklisted! node: {}", originNode);
 
-				//choose the route
-				Route chosenRoute = this.chooseRoute(originNode, destinationNode, vht, engine, hour, rsg, params);
-				if (chosenRoute == null) {
-					LOGGER.warn("No chosen route between nodes {} and {}", originNode, destinationNode);
-					continue;
-				}
-				if (chosenRoute.isEmpty()) {
-					LOGGER.warn("The chosen route is empty, skipping this trip!");
-					continue;
-				}
+					//choose destination node
+					int destinationNode = zoning.getZoneIDToNearestNodeIDMap()[destinationZoneID];
+					if (destinationNode == 0) LOGGER.warn("Destination node was not chosen for zone {}", destinationZone);
 
-				int multiplier = 1;
-				if (i < flow) multiplier = (int) Math.round(1 / this.assignmentFraction);
-				counterAssignedTrips += multiplier;
+					if (this.roadNetwork.isBlacklistedAsEndNode(destinationNode)) 
+						LOGGER.warn("Destination node is blacklisted! node: {}", destinationNode);
 
-				Trip trip = new TripTempro(vht, engine, chosenRoute, hour, originZoneID, destinationZoneID, zoning, multiplier);
-				this.tripList.add(trip);
+					//choose the route
+					Route chosenRoute = this.chooseRoute(originNode, destinationNode, vht, engine, hour, rsg, params);
+					if (chosenRoute == null) {
+						LOGGER.warn("No chosen route between nodes {} and {}", originNode, destinationNode);
+						continue;
+					}
+					if (chosenRoute.isEmpty()) {
+						LOGGER.warn("The chosen route is empty, skipping this trip!");
+						continue;
+					}
 
-			}//for each trip
-		}//for each OD pair
+					int multiplier = 1;
+					if (i < flow) multiplier = (int) Math.round(1 / this.assignmentFraction);
+					counterAssignedTrips += multiplier;
+
+					Trip trip = new TripTempro(vht, engine, chosenRoute, hour, originZoneID, destinationZoneID, zoning, multiplier);
+					this.tripList.add(trip);
+
+				}//for each trip
+			}//for each OD pair
 
 		LOGGER.debug("Total flow: {}", counterTotalFlow);
 		LOGGER.debug("Total assigned trips: {}", counterAssignedTrips);
@@ -1335,7 +1335,7 @@ public class RoadNetworkAssignment {
 		final double paramCost = Double.parseDouble(routeChoiceParameters.getProperty("COST"));
 		final double paramIntersections = Double.parseDouble(routeChoiceParameters.getProperty("INTERSECTIONS"));
 		final double avgIntersectionDelay = Double.parseDouble(routeChoiceParameters.getProperty("AVERAGE_INTERSECTION_DELAY"));
-		
+
 		//set route choice parameters
 		Map<RouteChoiceParams, Double> params = new EnumMap<>(RouteChoiceParams.class);
 		params.put(RouteChoiceParams.TIME, paramTime);
@@ -1514,7 +1514,7 @@ public class RoadNetworkAssignment {
 				//choose time of day
 				TimeOfDay hour = this.chooseTimeOfDay(timeOfDayDistributionFreight.get(fvht));
 				if (hour == null) LOGGER.warn("Time of day not chosen!");
-				
+
 				//choose engine
 				EngineType engine = this.chooseEngineType(engineTypeFractions.get(vht));
 				if (engine == null) LOGGER.warn("Engine type not chosen!");
@@ -1729,7 +1729,7 @@ public class RoadNetworkAssignment {
 				//choose time of day
 				TimeOfDay hour = this.chooseTimeOfDay(timeOfDayDistributionFreight.get(fvht));
 				if (hour == null) LOGGER.warn("Time of day not chosen!");
-				
+
 				//choose engine
 				EngineType engine = this.chooseEngineType(engineTypeFractions.get(vht));
 				if (engine == null) LOGGER.warn("Engine type not chosen!");
@@ -1901,14 +1901,14 @@ public class RoadNetworkAssignment {
 	public void assignFreightFlowsRouteChoice(FreightMatrix freightMatrix, RouteSetGenerator rsg, Properties routeChoiceParameters) {
 
 		LOGGER.info("Assigning the vehicle flows from the freight matrix...");
-		
+
 		//read route choice parameters from the properties file
 		double paramTime = Double.parseDouble(routeChoiceParameters.getProperty("TIME"));
 		double paramLength = Double.parseDouble(routeChoiceParameters.getProperty("LENGTH"));
 		double paramCost = Double.parseDouble(routeChoiceParameters.getProperty("COST"));
 		double paramIntersections = Double.parseDouble(routeChoiceParameters.getProperty("INTERSECTIONS"));
 		double avgIntersectionDelay = Double.parseDouble(routeChoiceParameters.getProperty("AVERAGE_INTERSECTION_DELAY"));
-		
+
 		//set route choice parameters
 		Map<RouteChoiceParams, Double> params = new EnumMap<>(RouteChoiceParams.class);
 		params.put(RouteChoiceParams.TIME, paramTime);
@@ -1987,14 +1987,14 @@ public class RoadNetworkAssignment {
 						//check if any of the nodes is blacklisted
 						if (this.roadNetwork.isBlacklistedAsStartNode(node)) 
 							listOfOriginNodes.remove(node);
-							
+
 					List<Integer> listOfDestinationNodes = new ArrayList<Integer>(roadNetwork.getZoneToNodes().get(destinationLAD)); //the list is already sorted
 					//removing blacklisted nodes
 					for (Integer node: roadNetwork.getZoneToNodes().get(destinationLAD))
 						//check if any of the nodes is blacklisted
 						if (this.roadNetwork.isBlacklistedAsEndNode(node))
 							listOfDestinationNodes.remove(node);
-							
+
 					if (originLAD == destinationLAD) { //intra-zonal trip!
 
 						//choose any origin node
@@ -2037,7 +2037,7 @@ public class RoadNetworkAssignment {
 						//make a choice based on the gravitating workzone population size
 						int originNodesToConsider = interzonalTopNodes<listOfOriginNodes.size()?interzonalTopNodes:listOfOriginNodes.size();
 						int destinationNodesToConsider = interzonalTopNodes<listOfDestinationNodes.size()?interzonalTopNodes:listOfDestinationNodes.size();
-						
+
 						originNode = null;
 						//sums of gravitating population
 						double sum = 0.0;
@@ -2052,7 +2052,7 @@ public class RoadNetworkAssignment {
 								break;
 							}
 						}
-					
+
 						destinationNode = null;
 						sum = 0.0;
 						for (int j=0; j<destinationNodesToConsider; j++) sum += endNodeProbabilitiesFreight.get(listOfDestinationNodes.get(j)); 
@@ -2211,7 +2211,7 @@ public class RoadNetworkAssignment {
 
 						fetchedRouteSet.calculateUtilities(vht, engine, hour, this.linkTravelTimePerTimeOfDay.get(hour), this.energyConsumptions, this.relativeFuelEfficiencies, this.energyUnitCosts, this.congestionCharges, params);
 						fetchedRouteSet.calculateProbabilities();
-				
+
 						//choose the route
 						chosenRoute = fetchedRouteSet.choose();
 					}
@@ -2277,7 +2277,7 @@ public class RoadNetworkAssignment {
 
 				double[] hourlyVolumes = this.linkVolumesInPCUPerTimeOfDay.get(hour);
 				double linkVolumeInPCU = hourlyVolumes[edgeID];
-				
+
 				/*
 				//Bureau of Public Roads (1964) formulation
 				if (roadNumber.charAt(0) == 'M') //motorway
@@ -2328,17 +2328,17 @@ public class RoadNetworkAssignment {
 
 				double[] hourlyTimes = this.linkTravelTimePerTimeOfDay.get(hour);
 				if (hourlyTimes == null) LOGGER.error("No hourly travel times for hour {}", hour);
-				
+
 				double oldLinkTravelTime = hourlyTimes[edgeID];
 				if (oldLinkTravelTime == 0.0) {
 					//fetch from the road network, which was likely modified by a road development intervention
 					oldLinkTravelTime = this.roadNetwork.getFreeFlowTravelTime()[edgeID];
 					if (oldLinkTravelTime == 0.0) LOGGER.error("No link travel time for edge {}", edgeID);
 				}
-				
+
 				double averagedCongestedTravelTime = weight * congestedTravelTime + (1 - weight) * oldLinkTravelTime; //averaging
 				hourlyTimes[edgeID] = averagedCongestedTravelTime;
-				
+
 			}//for time of day
 		}//while edges
 	}
@@ -2402,14 +2402,14 @@ public class RoadNetworkAssignment {
 			LOGGER.error("Unkown assignment type in the config file. Allowed values: 'lad', 'tempro', 'combined'");
 			return;
 		}
-		
+
 		//assign freight demand
 		if (flagUseRouteChoiceModel) {
 			this.assignFreightFlowsRouteChoice(freightODM, rsg, params);
 		} else {
 			this.assignFreightFlowsRouting(freightODM, rsg, params);
 		}
-		
+
 		this.updateLinkVolumeInPCU();
 		this.updateLinkVolumeInPCUPerTimeOfDay();
 		this.updateLinkVolumePerVehicleType();
@@ -2452,7 +2452,7 @@ public class RoadNetworkAssignment {
 			this.assignFlowsAndUpdateLinkTravelTimes(passengerODM, freightODM, rsg, zoning, params, weight);
 		}
 	}
-	
+
 	/**
 	 * Calculate assigned OD matrix from trip list.
 	 * @return ODMatrixMultiKey OD matrix.
@@ -2468,17 +2468,17 @@ public class RoadNetworkAssignment {
 			int originLadID = trip.getOriginLadID();
 			int destinationLadID = trip.getDestinationLadID();
 			int multiplier = trip.getMultiplier();
-			
+
 			String originLAD = this.zoning.getLadIDToCodeMap()[originLadID];
 			String destinationLAD = this.zoning.getLadIDToCodeMap()[destinationLadID];
-			
+
 			int count = counter.getFlow(originLAD, destinationLAD);
 			counter.setFlow(originLAD, destinationLAD, count + multiplier);
 		}
-		
+
 		return counter;
 	}
-	
+
 	/**
 	 * Calculate freight OD matrix from trip list.
 	 * @return Freight matrix.
@@ -2495,14 +2495,14 @@ public class RoadNetworkAssignment {
 			int destination = trip.getDestination();
 			int vehicleType = trip.getVehicle().value;
 			int multiplier = trip.getMultiplier();
-			
+
 			int count = counter.getFlow(origin, destination, vehicleType);
 			counter.setFlow(origin, destination, vehicleType, count + multiplier);
 		}
-		
+
 		return counter;
 	}
-	
+
 	/**
 	 * Updates travel time skim matrix (zone-to-zone travel times).
 	 * @param timeSkimMatrix Inter-zonal skim matrix (time).
@@ -2520,7 +2520,7 @@ public class RoadNetworkAssignment {
 			int originLAD = trip.getOriginLadID();
 			int destinationLAD = trip.getDestinationLadID();
 			int multiplier = trip.getMultiplier();
-				
+
 			double count = counter.getCost(originLAD, destinationLAD);
 			counter.setCost(originLAD, destinationLAD, count + multiplier);
 
@@ -2528,14 +2528,14 @@ public class RoadNetworkAssignment {
 			double tripTravelTime = trip.getTravelTime(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), averageIntersectionDelay, this.roadNetwork.getNodeToAverageAccessEgressDistance(), this.averageAccessEgressSpeedCar, this.flagIncludeAccessEgress);
 			timeSkimMatrix.setCost(originLAD, destinationLAD, sum + tripTravelTime * multiplier);
 		}
-		
+
 		List<String> origins = timeSkimMatrix.getUnsortedOrigins();
 		List<String> destinations = timeSkimMatrix.getUnsortedDestinations();
 		for (String originLAD: origins)
 			for (String destinationLAD: destinations) {
 				double averageODtraveltime = timeSkimMatrix.getCost(originLAD, destinationLAD) / counter.getCost(originLAD, destinationLAD);
 				timeSkimMatrix.setCost(originLAD, destinationLAD, averageODtraveltime);
-		}
+			}
 	}
 
 	/**
@@ -2587,7 +2587,7 @@ public class RoadNetworkAssignment {
 				for (int vehicleType = 1; vehicleType <= SkimMatrixFreightArray.MAX_VEHICLE_ID; vehicleType++) {
 					double averageODtraveltime = timeSkimMatrixFreight.getCost(origin, destination, vehicleType) / counter.getCost(origin, destination, vehicleType);
 					timeSkimMatrixFreight.setCost(origin, destination, vehicleType, averageODtraveltime);
-		}
+				}
 	}
 
 	/**
@@ -2627,14 +2627,14 @@ public class RoadNetworkAssignment {
 			double tripFuelCost = trip.getCost(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistance(), averageAccessEgressSpeedCar, this.energyUnitCosts, this.energyConsumptions, this.relativeFuelEfficiencies, this.congestionCharges, this.flagIncludeAccessEgress);
 			costSkimMatrix.setCost(originLAD, destinationLAD, sum + tripFuelCost * multiplier);
 		}
-		
+
 		List<String> origins = costSkimMatrix.getUnsortedOrigins();
 		List<String> destinations = costSkimMatrix.getUnsortedDestinations();
 		for (String originLAD: origins)
 			for (String destinationLAD: destinations) {
 				double averageODcost = costSkimMatrix.getCost(originLAD, destinationLAD) / counter.getCost(originLAD, destinationLAD);
 				costSkimMatrix.setCost(originLAD, destinationLAD, averageODcost);
-		}
+			}
 
 	}
 
@@ -2681,7 +2681,7 @@ public class RoadNetworkAssignment {
 			for (String destinationLAD: destinations) {
 				double averageODtraveltime = distanceSkimMatrix.getCost(originLAD, destinationLAD) / counter.getCost(originLAD, destinationLAD);
 				distanceSkimMatrix.setCost(originLAD, destinationLAD, averageODtraveltime);
-		}
+			}
 
 
 		return distanceSkimMatrix;
@@ -2715,14 +2715,14 @@ public class RoadNetworkAssignment {
 				distanceSkimMatrix.setCost(originZone, destinationZone, sum + distance * multiplier);
 			}
 		}
-		
+
 		List<String> origins = distanceSkimMatrix.getUnsortedOrigins();
 		List<String> destinations = distanceSkimMatrix.getUnsortedDestinations();
 		for (String origin: origins)
 			for (String destination: destinations) {
 				double averageODtraveltime = distanceSkimMatrix.getCost(origin, destination) / counter.getCost(origin, destination);
 				distanceSkimMatrix.setCost(origin, destination, averageODtraveltime);
-		}
+			}
 
 		return distanceSkimMatrix;
 	}
@@ -2764,11 +2764,11 @@ public class RoadNetworkAssignment {
 				for (int vehicleType = 1; vehicleType <= SkimMatrixFreightArray.MAX_VEHICLE_ID; vehicleType++) {
 					double averageODtraveltime = distanceSkimMatrixFreight.getCost(origin, destination, vehicleType) / counter.getCost(origin, destination, vehicleType);
 					distanceSkimMatrixFreight.setCost(origin, destination, vehicleType, averageODtraveltime);
-		}
+				}
 
 		return distanceSkimMatrixFreight;
 	}
-	
+
 	/**
 	 * Calculates observed trip length frequencies.
 	 * @param binLimitsInKm Bin limits in kilometres.
@@ -2777,33 +2777,33 @@ public class RoadNetworkAssignment {
 	 * @return Observed trip length distribution.
 	 */
 	public double[] getObservedTripLengthFrequencies(double[] binLimitsInKm, boolean flagIncludeAccessEgress, boolean flagIncludeMinorTrips) {
-		
+
 		double[] frequences = new double[binLimitsInKm.length];
-		
+
 		for (Trip trip: this.tripList) {
-			
+
 			if (!(trip.getVehicle() == VehicleType.CAR || trip.getVehicle() == VehicleType.CAR_AV)) continue; //skip freight
-			
+
 			Double tripDistance;
-			
+
 			if (trip instanceof TripMinor) //minor trips
 				if (flagIncludeMinorTrips)
 					tripDistance = ((TripMinor)trip).getLength();
 				else
 					continue;
-			
+
 			else if (trip instanceof TripTempro) //tempro trips
 				if (flagIncludeAccessEgress)
 					tripDistance = ((TripTempro)trip).getLength(); //with access/egress
 				else 
 					tripDistance = trip.getRoute().getLength(); //without access/egress
-			
+
 			else //lad trips
 				if (flagIncludeAccessEgress)
 					tripDistance = trip.getLength(roadNetwork.getNodeToAverageAccessEgressDistance()); //with access/egress
 				else
 					tripDistance = trip.getRoute().getLength(); //without access/egress
-			
+
 			//find in which bin it falls
 			for (int i=1; i<binLimitsInKm.length; i++) {
 				if (tripDistance < binLimitsInKm[i]) {
@@ -2814,7 +2814,7 @@ public class RoadNetworkAssignment {
 					frequences[binLimitsInKm.length-1] += trip.multiplier;
 			}
 		}
-	
+
 		return frequences;
 	}
 
@@ -2827,17 +2827,17 @@ public class RoadNetworkAssignment {
 	 * @return Observed trip length distribution.
 	 */
 	public double[] getObservedTripLengthDistribution(double[] binLimitsInKm, boolean flagIncludeAccessEgress, boolean flagIncludeMinorTrips) {
-		
+
 		double[] distribution = this.getObservedTripLengthFrequencies(binLimitsInKm, flagIncludeAccessEgress, flagIncludeMinorTrips);
-		
+
 		//normalise distribution
 		double sum = 0.0;
 		for (int i=0; i<binLimitsInKm.length; i++) sum += distribution[i];
 		for (int i=0; i<binLimitsInKm.length; i++) distribution[i] /= sum;
-		
+
 		return distribution;
 	}
-	
+
 	/**
 	 * Updates cost skim matrix (zone-to-zone financial costs) for freight.
 	 * @param costSkimMatrixFreight Inter-zonal skim matrix (cost) for freight.
@@ -2881,7 +2881,7 @@ public class RoadNetworkAssignment {
 				for (int vehicleType = 1; vehicleType <= SkimMatrixFreightArray.MAX_VEHICLE_ID; vehicleType++) {
 					double averageODcost = costSkimMatrixFreight.getCost(origin, destination, vehicleType) / counter.getCost(origin, destination, vehicleType);
 					costSkimMatrixFreight.setCost(origin, destination, vehicleType, averageODcost);
-		}
+				}
 	}
 
 	/**
@@ -2919,7 +2919,7 @@ public class RoadNetworkAssignment {
 
 		return consumptions;
 	}
-		
+
 	/**
 	 * Calculates spatial energy consumption for car vehicles for each energy type (in litres/kg for fuels and in kWh for electricity).
 	 * @param originZoneEnergyWeight Percentage of energy consumption assigned to origin zone (the rest assigned to destination zone).
@@ -2933,36 +2933,111 @@ public class RoadNetworkAssignment {
 			HashMap<String, Double> consumption = new HashMap<String, Double>();
 			zonalConsumptions.put(energy, consumption);
 		}
+		
+		System.out.println(zonalConsumptions);
+		
+		//System.out.println("Trip list size: " + tripList.size());
 
 		for (Trip trip: this.tripList) {
-
+			
 			if (trip.getVehicle() != VehicleType.CAR && trip.getVehicle() != VehicleType.CAR_AV) continue; //skip freight vehicles
-
-			Map<EnergyType, Double> tripConsumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyConsumptions, this.relativeFuelEfficiencies, this.flagIncludeAccessEgress);
+			
+			Map<EnergyType, Double> tripConsumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistance(), this.averageAccessEgressSpeedCar, this.energyConsumptions, this.relativeFuelEfficiencies, this.flagIncludeAccessEgress);
 
 			String originLAD = trip.getOriginLAD(this.roadNetwork.getNodeToZone());
 			String destinationLAD = trip.getDestinationLAD(this.roadNetwork.getNodeToZone());
 			int multiplier = trip.getMultiplier();
+			
+			for (EnergyType et: EnergyType.values()) 
+				if (originLAD == destinationLAD) { //store everything in the LAD
+					
+					Double currentConsumption = zonalConsumptions.get(et).get(originLAD);
+					if (currentConsumption == null) currentConsumption = 0.0;
+					
+					currentConsumption += tripConsumption.get(et) * multiplier;
+					zonalConsumptions.get(et).put(originLAD, currentConsumption);
+					
+				} else { //split between origin and destination LAD
 
-			for (EnergyType et: EnergyType.values()) {
+					Double currentConsumptionOrigin = zonalConsumptions.get(et).get(originLAD);
+					if (currentConsumptionOrigin == null) currentConsumptionOrigin = 0.0;
 
-				Double currentConsumptionOrigin = zonalConsumptions.get(et).get(originLAD);
-				if (currentConsumptionOrigin == null) currentConsumptionOrigin = 0.0;
+					Double currentConsumptionDestination = zonalConsumptions.get(et).get(destinationLAD);
+					if (currentConsumptionDestination == null) currentConsumptionDestination = 0.0;
 
-				Double currentConsumptionDestination = zonalConsumptions.get(et).get(destinationLAD);
-				if (currentConsumptionDestination == null) currentConsumptionDestination = 0.0;
+					currentConsumptionOrigin += originZoneEnergyWeight * tripConsumption.get(et) * multiplier;
+					currentConsumptionDestination += (1.0 - originZoneEnergyWeight) * tripConsumption.get(et) * multiplier;
 
-				currentConsumptionOrigin += originZoneEnergyWeight * tripConsumption.get(et) * multiplier;
-				currentConsumptionDestination += (1.0 - originZoneEnergyWeight) * tripConsumption.get(et) * multiplier;
-
-				zonalConsumptions.get(et).put(originLAD, currentConsumptionOrigin);
-				zonalConsumptions.get(et).put(destinationLAD, currentConsumptionDestination);
-			}
+					zonalConsumptions.get(et).put(originLAD, currentConsumptionOrigin);
+					zonalConsumptions.get(et).put(destinationLAD, currentConsumptionDestination);
+				}
 		}
+		
+		System.out.println(zonalConsumptions);
 
 		return zonalConsumptions;
 	}
-	
+
+	/**
+	 * Calculates zonal CO2 emissions (in kg) for each vehicle type (sum across all engine types).
+	 * @param originZoneEnergyWeight Percentage of CO2 emission assigned to origin zone (the rest assigned to destination zone).
+	 * @return Zonal CO2 emissions for each vehicle type.
+	 */
+	public Map<VehicleType, HashMap<String, Double>> calculateZonalVehicleCO2Emissions(final double originZoneEnergyWeight) {
+
+		//initialise hashmaps
+		Map<VehicleType, HashMap<String, Double>> zonalCO2Emissions = new EnumMap<>(VehicleType.class);
+		for (VehicleType vht: VehicleType.values()) {
+			HashMap<String, Double> emissions = new HashMap<String, Double>();
+			zonalCO2Emissions.put(vht, emissions);
+		}
+
+		for (Trip trip: this.tripList) {
+
+			VehicleType vht = trip.getVehicle();
+			Double tripCO2Emission = 0.0;
+
+			//calculate CO2 emission for the trip
+			if ((trip.getVehicle() == VehicleType.CAR || trip.getVehicle() == VehicleType.CAR_AV)) //car trip
+				tripCO2Emission = trip.getCO2emission(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()),  this.roadNetwork.getNodeToAverageAccessEgressDistance(), averageAccessEgressSpeedCar, this.energyConsumptions, this.relativeFuelEfficiencies, this.unitCO2Emissions, this.flagIncludeAccessEgress);
+			else //freight
+				tripCO2Emission = trip.getCO2emission(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()),  this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyConsumptions, this.relativeFuelEfficiencies, this.unitCO2Emissions, this.flagIncludeAccessEgress);
+
+			//fetch trip origin and destination LAD zones
+			String originLAD = trip.getOriginLAD(this.roadNetwork.getNodeToZone());
+			String destinationLAD = trip.getDestinationLAD(this.roadNetwork.getNodeToZone());
+			int multiplier = trip.getMultiplier();
+
+			if (originLAD == destinationLAD) { //update value for that LAD
+				
+				//update emission for the vehicle type
+				Double currentEmission = zonalCO2Emissions.get(vht).get(originLAD);
+				if (currentEmission == null) currentEmission = 0.0;
+
+				currentEmission += tripCO2Emission * multiplier;
+				
+				zonalCO2Emissions.get(vht).put(originLAD, currentEmission);
+			
+			} else { //split between origin and destination LAD
+
+				//update emission for the vehicle type
+				Double currentEmissionOrigin = zonalCO2Emissions.get(vht).get(originLAD);
+				if (currentEmissionOrigin == null) currentEmissionOrigin = 0.0;
+
+				Double currentEmissionDestination = zonalCO2Emissions.get(vht).get(destinationLAD);
+				if (currentEmissionDestination == null) currentEmissionDestination = 0.0;
+
+				currentEmissionOrigin += originZoneEnergyWeight * tripCO2Emission * multiplier;
+				currentEmissionDestination += (1.0 - originZoneEnergyWeight) * tripCO2Emission * multiplier;
+
+				zonalCO2Emissions.get(vht).put(originLAD, currentEmissionOrigin);
+				zonalCO2Emissions.get(vht).put(destinationLAD, currentEmissionDestination);
+			}
+		}
+
+		return zonalCO2Emissions;
+	}
+
 	/**
 	 * Calculates zonal (per LAD) and temporal (per hour) electricity consumption for car vehicles (in kWh).
 	 * @param originZoneEnergyWeight Percentage of energy consumption assigned to origin zone (the rest assigned to destination zone).
@@ -2975,9 +3050,9 @@ public class RoadNetworkAssignment {
 
 		for (Trip trip: this.tripList)
 			if ((trip.getVehicle() == VehicleType.CAR || trip.getVehicle() == VehicleType.CAR_AV) &&
-				(trip.getEngine() == EngineType.BEV || trip.getEngine() == EngineType.PHEV_PETROL || trip.getEngine() == EngineType.PHEV_DIESEL)) {
+					(trip.getEngine() == EngineType.BEV || trip.getEngine() == EngineType.PHEV_PETROL || trip.getEngine() == EngineType.PHEV_DIESEL)) {
 
-				Map<EnergyType, Double> tripConsumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyConsumptions, this.relativeFuelEfficiencies, this.flagIncludeAccessEgress);
+				Map<EnergyType, Double> tripConsumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistance(), averageAccessEgressSpeedCar, this.energyConsumptions, this.relativeFuelEfficiencies, this.flagIncludeAccessEgress);
 				Double tripConsumptionElectricity = tripConsumption.get(EnergyType.ELECTRICITY);
 				if (tripConsumptionElectricity == null) continue; //skip if zero electricity consumption for this trip
 
@@ -2986,25 +3061,41 @@ public class RoadNetworkAssignment {
 				TimeOfDay hour = trip.getTimeOfDay();
 				int multiplier = trip.getMultiplier();
 
-				Map<TimeOfDay, Double> currentTemporalOrigin = zonalConsumptions.get(originLAD);
-				if (currentTemporalOrigin == null) currentTemporalOrigin = new EnumMap<>(TimeOfDay.class);
-				zonalConsumptions.put(originLAD, currentTemporalOrigin);
+				if (originLAD == destinationLAD) { //update that LAD
+					
+					Map<TimeOfDay, Double> currentTemporal = zonalConsumptions.get(originLAD);
+					if (currentTemporal == null) currentTemporal = new EnumMap<>(TimeOfDay.class);
+					zonalConsumptions.put(originLAD, currentTemporal);
 
-				Map<TimeOfDay, Double> currentTemporalDestination = zonalConsumptions.get(destinationLAD);
-				if (currentTemporalDestination == null) currentTemporalDestination = new EnumMap<>(TimeOfDay.class);
-				zonalConsumptions.put(destinationLAD, currentTemporalDestination);
+					Double currentConsumption = currentTemporal.get(hour);
+					if (currentConsumption == null) currentConsumption = 0.0;
 
-				Double currentConsumptionOrigin = currentTemporalOrigin.get(hour);
-				if (currentConsumptionOrigin == null) currentConsumptionOrigin = 0.0;
+					currentConsumption += originZoneEnergyWeight * tripConsumptionElectricity * multiplier;
 
-				Double currentConsumptionDestination = currentTemporalDestination.get(hour);
-				if (currentConsumptionDestination == null) currentConsumptionDestination = 0.0;
+					currentTemporal.put(hour, currentConsumption);
+ 
+				} else { //split between origin and destination LAD
 
-				currentConsumptionOrigin += originZoneEnergyWeight * tripConsumptionElectricity * multiplier;
-				currentConsumptionDestination += (1.0 - originZoneEnergyWeight) * tripConsumptionElectricity * multiplier;
+					Map<TimeOfDay, Double> currentTemporalOrigin = zonalConsumptions.get(originLAD);
+					if (currentTemporalOrigin == null) currentTemporalOrigin = new EnumMap<>(TimeOfDay.class);
+					zonalConsumptions.put(originLAD, currentTemporalOrigin);
 
-				currentTemporalOrigin.put(hour, currentConsumptionOrigin);
-				currentTemporalDestination.put(hour, currentConsumptionDestination);
+					Map<TimeOfDay, Double> currentTemporalDestination = zonalConsumptions.get(destinationLAD);
+					if (currentTemporalDestination == null) currentTemporalDestination = new EnumMap<>(TimeOfDay.class);
+					zonalConsumptions.put(destinationLAD, currentTemporalDestination);
+
+					Double currentConsumptionOrigin = currentTemporalOrigin.get(hour);
+					if (currentConsumptionOrigin == null) currentConsumptionOrigin = 0.0;
+
+					Double currentConsumptionDestination = currentTemporalDestination.get(hour);
+					if (currentConsumptionDestination == null) currentConsumptionDestination = 0.0;
+
+					currentConsumptionOrigin += originZoneEnergyWeight * tripConsumptionElectricity * multiplier;
+					currentConsumptionDestination += (1.0 - originZoneEnergyWeight) * tripConsumptionElectricity * multiplier;
+
+					currentTemporalOrigin.put(hour, currentConsumptionOrigin);
+					currentTemporalDestination.put(hour, currentConsumptionDestination);
+				}
 			}
 
 		return zonalConsumptions;
@@ -3021,15 +3112,15 @@ public class RoadNetworkAssignment {
 
 		for (Trip trip: this.tripList)
 			if ((trip.getVehicle() == VehicleType.CAR || trip.getVehicle() == VehicleType.CAR_AV) &&
-				(trip.getEngine() == EngineType.BEV || trip.getEngine() == EngineType.PHEV_PETROL || trip.getEngine() == EngineType.PHEV_DIESEL)) {
+					(trip.getEngine() == EngineType.BEV || trip.getEngine() == EngineType.PHEV_PETROL || trip.getEngine() == EngineType.PHEV_DIESEL)) {
 				String originLAD = trip.getOriginLAD(this.roadNetwork.getNodeToZone());
 				TimeOfDay hour = trip.getTimeOfDay();
 				int multiplier = trip.getMultiplier();	
-				
+
 				Map<TimeOfDay, Integer> temporalTripStarts = zonalTripStarts.get(originLAD);
 				if (temporalTripStarts == null) temporalTripStarts = new EnumMap<>(TimeOfDay.class);
 				zonalTripStarts.put(originLAD, temporalTripStarts);
-				
+
 				Integer tripStarts = temporalTripStarts.get(hour);
 				if (tripStarts == null) tripStarts = 0;
 				tripStarts += multiplier;
@@ -3038,7 +3129,7 @@ public class RoadNetworkAssignment {
 
 		return zonalTripStarts;
 	}
-	
+
 	/**
 	 * Calculates origin-destination energy consumption for car vehicles for each energy type (in litres/kg for fuels and in kWh for electricity).
 	 * @return Zonal consumption for each energy type.
@@ -3055,7 +3146,7 @@ public class RoadNetworkAssignment {
 		for (Trip trip: this.tripList) {
 			if (trip.getVehicle() != VehicleType.CAR && trip.getVehicle() != VehicleType.CAR_AV) continue; //skip freight vehicles
 
-			Map<EnergyType, Double> tripConsumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyConsumptions, this.relativeFuelEfficiencies, this.flagIncludeAccessEgress);
+			Map<EnergyType, Double> tripConsumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistance(), averageAccessEgressSpeedCar, this.energyConsumptions, this.relativeFuelEfficiencies, this.flagIncludeAccessEgress);
 
 			String originLAD = trip.getOriginLAD(this.roadNetwork.getNodeToZone());
 			String destinationLAD = trip.getDestinationLAD(this.roadNetwork.getNodeToZone());
@@ -3254,7 +3345,7 @@ public class RoadNetworkAssignment {
 
 			peakLinkDensities[edgeID] = density;
 		}
-		
+
 		return peakLinkDensities;
 	}
 
@@ -3326,7 +3417,7 @@ public class RoadNetworkAssignment {
 
 		return linkTravelTimes;
 	}
-	
+
 	/**
 	 * @return The copy of all link travel times as map.
 	 */
@@ -3360,7 +3451,7 @@ public class RoadNetworkAssignment {
 
 		return this.flagUseRouteChoiceModel;
 	}
-	
+
 	/**
 	 * Getter method for the volume to flow factor.
 	 * @return Volume to flow factor.
@@ -3564,7 +3655,7 @@ public class RoadNetworkAssignment {
 	 * @param outputFile Output file name (with path).
 	 */
 	public void saveHourlyCarVolumes(int year, String outputFile) {
-		
+
 		LOGGER.debug("Saving hourly car volumes.");
 
 		String NEW_LINE_SEPARATOR = "\n";
@@ -3722,6 +3813,58 @@ public class RoadNetworkAssignment {
 	}
 
 	/**
+	 * Saves zonal vehicle CO2 emissions to an output file.
+	 * @param year Assignment year.
+	 * @param originZoneEnergyWeight Percentage of CO2 emission assigned to origin zone (the rest assigned to destination zone).
+	 * @param outputFile Output file name (with path).
+	 */
+	public void saveZonalVehicleCO2Emissions(int year, final double originZoneEnergyWeight, String outputFile) {
+
+		LOGGER.debug("Saving zonal vehicle CO2 emissions.");
+
+		//calculate CO2 emissions
+		Map<VehicleType, HashMap<String, Double>> zonalCO2emissions = this.calculateZonalVehicleCO2Emissions(originZoneEnergyWeight);
+		Set<String> zones = this.zoning.getLadCodeToIDMap().keySet();
+
+		String NEW_LINE_SEPARATOR = "\n";
+		ArrayList<String> header = new ArrayList<String>();
+		header.add("year");
+		header.add("zone");
+		for (VehicleType vht: VehicleType.values()) header.add(vht.name());
+
+		FileWriter fileWriter = null;
+		CSVPrinter csvFilePrinter = null;
+		CSVFormat csvFileFormat = CSVFormat.DEFAULT.withRecordSeparator(NEW_LINE_SEPARATOR);
+		try {
+			fileWriter = new FileWriter(outputFile);
+			csvFilePrinter = new CSVPrinter(fileWriter, csvFileFormat);
+			csvFilePrinter.printRecord(header);
+
+			for (String zone: zones) {
+				ArrayList<String> record = new ArrayList<String>();
+				record.add(Integer.toString(year));
+				record.add(zone);
+				for (int i=2; i<header.size(); i++)	{
+					VehicleType vht = VehicleType.valueOf(header.get(i));
+					double consumption = zonalCO2emissions.get(vht).get(zone);
+					record.add(String.format("%.2f", consumption));
+				}
+				csvFilePrinter.printRecord(record);
+			}
+		} catch (Exception e) {
+			LOGGER.error(e);
+		} finally {
+			try {
+				fileWriter.flush();
+				fileWriter.close();
+				csvFilePrinter.close();
+			} catch (IOException e) {
+				LOGGER.error(e);
+			}
+		}
+	}
+
+	/**
 	 * Saves zonal car energy consumptions to an output file.
 	 * @param year Assignment year.
 	 * @param originZoneEnergyWeight Percentage of energy consumption assigned to origin zone (the rest assigned to destination zone).
@@ -3730,11 +3873,11 @@ public class RoadNetworkAssignment {
 	public void saveZonalCarEnergyConsumptions(int year, final double originZoneEnergyWeight, String outputFile) {
 
 		LOGGER.debug("Saving zonal car energy consumptions.");
-		
+
 		//calculate energy consumptions
 		Map<EnergyType, HashMap<String, Double>> energyConsumptions = this.calculateZonalCarEnergyConsumptions(originZoneEnergyWeight);
 		Set<String> zones = energyConsumptions.get(EnergyType.ELECTRICITY).keySet();
-		
+
 		String NEW_LINE_SEPARATOR = "\n";
 		ArrayList<String> header = new ArrayList<String>();
 		header.add("year");
@@ -3772,7 +3915,7 @@ public class RoadNetworkAssignment {
 			}
 		}
 	}
-	
+
 	/**
 	 * Saves zonal (LAD) and temporal (hourly) car electricity consumptions to an output file.
 	 * @param year Assignment year.
@@ -3782,11 +3925,11 @@ public class RoadNetworkAssignment {
 	public void saveZonalTemporalCarElectricity(int year, final double originZoneEnergyWeight, String outputFile) {
 
 		LOGGER.debug("Saving zonal and temporal car electricity consumptions.");
-		
+
 		//calculate energy consumptions
 		HashMap<String, Map<TimeOfDay, Double>> electricityConsumptions = this.calculateZonalTemporalCarElectricityConsumptions(originZoneEnergyWeight);
 		Set<String> zones = electricityConsumptions.keySet();
-		
+
 		String NEW_LINE_SEPARATOR = "\n";
 		ArrayList<String> header = new ArrayList<String>();
 		header.add("year");
@@ -3825,22 +3968,22 @@ public class RoadNetworkAssignment {
 			}
 		}
 	}
-	
+
 	/**
 	 * Saves origin-destination matrix of car electricity consumption.
 	 * @param outputFile Output file name (with path).
 	 */
 	public void saveOriginDestinationCarElectricityConsumption(String outputFile) {
-		
+
 		LOGGER.debug("Saving OD matrix for car electricity consumption.");
-		
+
 		//calculate OD energy consumptions
 		Map<EnergyType, SkimMatrix> energyConsumptions = this.calculateODCarEnergyConsumptions();
-		
+
 		energyConsumptions.get(EnergyType.ELECTRICITY).saveMatrixFormatted(outputFile);
-		
+
 	}
-	
+
 	/**
 	 * Saves zonal (LAD) and temporal (hourly) number of EV trips to an output file.
 	 * @param year Assignment year.
@@ -3849,11 +3992,11 @@ public class RoadNetworkAssignment {
 	public void saveZonalTemporalTripStartsForEVs(int year, String outputFile) {
 
 		LOGGER.debug("Saving number of EV trips starting in each zone in each hour.");
-		
+
 		//calculate energy consumptions
 		HashMap<String, Map<TimeOfDay, Integer>> zonalTemporalTripStartForEVs = this.calculateZonalTemporalTripStartsForElectricVehicles();
 		Set<String> zones = zonalTemporalTripStartForEVs.keySet();
-		
+
 		String NEW_LINE_SEPARATOR = "\n";
 		ArrayList<String> header = new ArrayList<String>();
 		header.add("year");
@@ -3941,7 +4084,7 @@ public class RoadNetworkAssignment {
 			}
 		}
 	}
-	
+
 	/**
 	 * Saves zonal vehicle-kilometres that include access/egress and minor trips
 	 * @param year Assignment year.
@@ -3950,7 +4093,7 @@ public class RoadNetworkAssignment {
 	public void saveZonalVehicleKilometresWithAccessEgress(int year, String outputFile) {
 
 		LOGGER.debug("Saving zonal vehicle-kilometres with access and egress.");
-		
+
 		final String assignmentType = this.params.getProperty("ASSIGNMENT_TYPE").toLowerCase();
 
 		Map<String, Map<VehicleType, Double>> vehicleKilometres;
@@ -3958,7 +4101,7 @@ public class RoadNetworkAssignment {
 			vehicleKilometres = this.calculateZonalVehicleKilometresPerVehicleTypeFromTemproTripList(true, true);
 		else
 			vehicleKilometres = this.calculateZonalVehicleKilometresPerVehicleTypeFromTripList(true);
-		
+
 		String NEW_LINE_SEPARATOR = "\n";
 		ArrayList<String> header = new ArrayList<String>();
 		header.add("year");
@@ -4005,7 +4148,7 @@ public class RoadNetworkAssignment {
 	public void savePeakLinkPointCapacities (int year, String outputFile) {
 
 		LOGGER.debug("Saving peak link point capacities.");
-		
+
 		//calculate capacities
 		double[] capacities = this.calculatePeakLinkPointCapacities();
 
@@ -4092,7 +4235,7 @@ public class RoadNetworkAssignment {
 			}
 		}
 	}
-	
+
 	/**
 	 * Loads link travel times from a file.
 	 * @param year Year of the assignment.
@@ -4101,7 +4244,7 @@ public class RoadNetworkAssignment {
 	public void loadLinkTravelTimes(int year, String fileName) {
 
 		Map<TimeOfDay, Map<Integer, Double>> linkTravelTime = InputFileReader.readLinkTravelTimeFile(year, fileName);
-		
+
 		//store/overwrite into the defaultLinkTravelTime
 		for (TimeOfDay hour: TimeOfDay.values()) {
 			double[] hourlyTimes = this.linkTravelTimePerTimeOfDay.get(hour);
@@ -4325,10 +4468,10 @@ public class RoadNetworkAssignment {
 			VehicleType vht = trip.getVehicle();
 			Route route = trip.getRoute();
 			if (route == null) continue;
-			
+
 			//for each edge of the route add vehkm depending on the zone of the edge
 			for (int edgeID: route.getEdges().toArray()) {
-				
+
 				//link length
 				double length = roadNetwork.getEdgeLength(edgeID);
 
@@ -4347,7 +4490,7 @@ public class RoadNetworkAssignment {
 					if (vehkm == null) vehkm = 0.0;
 					//volume of vehicles is equal to the multiplier
 					vehkm += multiplier * length;
-					
+
 					//store new value
 					vehicleKilometres.get(zone).put(vht, vehkm);
 				} else { //zone == null
@@ -4397,7 +4540,7 @@ public class RoadNetworkAssignment {
 						vehkm += multiplier * length / 2.0;
 						//store new value
 						vehicleKilometres.get(zone1).put(vht, vehkm);
-						
+
 						//fetch current map for the zone
 						map = vehicleKilometres.get(zone2);
 						if (map == null) {
@@ -4422,7 +4565,7 @@ public class RoadNetworkAssignment {
 				if (originNode == null) LOGGER.error("Trip does not have origin node!");
 				double access = roadNetwork.getNodeToAverageAccessEgressDistance()[originNode.getID()] / 1000; //km
 				String accessZone = roadNetwork.getNodeToZone().get(originNode.getID());
-								
+
 				//fetch current map
 				Map<VehicleType, Double> map = vehicleKilometres.get(accessZone);
 				if (map == null) {
@@ -4476,10 +4619,10 @@ public class RoadNetworkAssignment {
 		for (VehicleType vht: VehicleType.values()) {
 			int[] linkVolumes = this.linkVolumesPerVehicleType.get(vht);
 			for (int edgeID = 1; edgeID < linkVolumes.length; edgeID++) {
-				
+
 				DirectedEdge edge = (DirectedEdge)this.roadNetwork.getEdgeIDtoEdge()[edgeID];
 				if (edge == null) continue; //skip if not pointing to an edge
-				
+
 				int volume = linkVolumes[edgeID];
 				//get zone
 				String zone = this.roadNetwork.getEdgeToZone().get(edgeID);
@@ -4571,22 +4714,22 @@ public class RoadNetworkAssignment {
 		Map<String, Map<VehicleType, Double>> vehicleKilometres = new HashMap<String, Map<VehicleType, Double>>();
 
 		for (Trip trip: tripList) {
-			
+
 			int multiplier = trip.getMultiplier();
 			VehicleType vht = trip.getVehicle();
 			Route route = trip.getRoute();
-			
+
 			if (trip instanceof TripMinor && includeMinorTrips) {
-				
+
 				String zone = ((TripMinor)trip).getOriginLAD();
-				
+
 				//fetch current map for the zone
 				Map<VehicleType, Double> map = vehicleKilometres.get(zone);
 				if (map == null) {
 					map = new EnumMap<>(VehicleType.class);
 					vehicleKilometres.put(zone, map);
 				}
-				
+
 				//fetch current value for the vehicle type
 				Double vehkm = vehicleKilometres.get(zone).get(vht);
 				if (vehkm == null) vehkm = 0.0;
@@ -4595,9 +4738,9 @@ public class RoadNetworkAssignment {
 				//store new value
 				vehicleKilometres.get(zone).put(vht, vehkm);
 			}
-		
+
 			if (route == null) continue;
-						
+
 			//for each edge of the route add vehkm depending on the zone of the edge
 			for (int edgeID: route.getEdges().toArray()) {
 
@@ -4649,21 +4792,21 @@ public class RoadNetworkAssignment {
 						break;
 					}
 					}
-					*/
+					 */
 					access = TripTempro.zoning.getZoneIDToNearestNodeDistanceMap()[originTemproZoneID];
 					access /= 1000;
 
 				} else { //LAD-based trip
 
 					accessLAD = trip.getOriginLAD(this.roadNetwork.getNodeToZone());
-					
+
 					if (vht == VehicleType.CAR || vht == VehicleType.CAR_AV)
 						access = this.roadNetwork.getNodeToAverageAccessEgressDistance()[originNode.getID()];
 					else //freight vehicle
 						access = this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight()[originNode.getID()];
 					access /= 1000;
 				}
-								
+
 				//fetch current map
 				Map<VehicleType, Double> map = vehicleKilometres.get(accessLAD);
 				if (map == null) {
@@ -4679,7 +4822,7 @@ public class RoadNetworkAssignment {
 				//store new value
 				vehicleKilometres.get(accessLAD).put(vht, vehkm);
 
-				
+
 				//get destination 
 				Node destinationNode = trip.getDestinationNode();
 				if (destinationNode == null) LOGGER.error("Trip does not have destination node!");
@@ -4700,21 +4843,21 @@ public class RoadNetworkAssignment {
 						break;
 					}
 					}
-					*/
+					 */
 					egress = TripTempro.zoning.getZoneIDToNearestNodeDistanceMap()[destinationTemproZoneID];
 					egress /= 1000;
-					
+
 				} else { //LAD-based trip
 
 					egressLAD = trip.getDestinationLAD(this.roadNetwork.getNodeToZone());
-					
+
 					if (vht == VehicleType.CAR || vht == VehicleType.CAR_AV)
 						egress = this.roadNetwork.getNodeToAverageAccessEgressDistance()[destinationNode.getID()];
 					else //freight vehicle
 						egress = this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight()[destinationNode.getID()];
 					egress /= 1000;
 				}
-								
+
 				//fetch current map
 				map = vehicleKilometres.get(egressLAD);
 				if (map == null) {
@@ -4734,7 +4877,7 @@ public class RoadNetworkAssignment {
 
 		return vehicleKilometres;
 	}
-	
+
 	/**
 	 * Setter method for the electricity unit cost.
 	 * @param electricityUnitCost The cost of 1 kWh in £.
@@ -4775,14 +4918,14 @@ public class RoadNetworkAssignment {
 		this.engineTypeFractions.put(vht, engineTypeFractions);
 	}
 
-//	/**
-//	 * Setter method for fractional assignment.
-//	 * @param assignmentFraction Assignment fraction (&lt;= 1.0).
-//	 */
-//	public void setAssignmentFraction (double assignmentFraction) {
-//
-//		this.assignmentFraction = assignmentFraction;
-//	}
+	//	/**
+	//	 * Setter method for fractional assignment.
+	//	 * @param assignmentFraction Assignment fraction (&lt;= 1.0).
+	//	 */
+	//	public void setAssignmentFraction (double assignmentFraction) {
+	//
+	//		this.assignmentFraction = assignmentFraction;
+	//	}
 
 	/**
 	 * Resets link volumes to zero.
@@ -4798,28 +4941,28 @@ public class RoadNetworkAssignment {
 		//reset link volumes per vehicle type
 		if (this.linkVolumesPerVehicleType == null)
 			this.linkVolumesPerVehicleType = new EnumMap<VehicleType, int[]>(VehicleType.class);
-		for (VehicleType vht: VehicleType.values()) {
-			int[] linkVolumes = this.linkVolumesPerVehicleType.get(vht);
-			if (linkVolumes == null) {
-				linkVolumes = new int[this.roadNetwork.getMaximumEdgeID()];
-				this.linkVolumesPerVehicleType.put(vht, linkVolumes);
+			for (VehicleType vht: VehicleType.values()) {
+				int[] linkVolumes = this.linkVolumesPerVehicleType.get(vht);
+				if (linkVolumes == null) {
+					linkVolumes = new int[this.roadNetwork.getMaximumEdgeID()];
+					this.linkVolumesPerVehicleType.put(vht, linkVolumes);
+				}
+				for (int edgeID = 1; edgeID < linkVolumes.length; edgeID++)
+					linkVolumes[edgeID] = 0;
 			}
-			for (int edgeID = 1; edgeID < linkVolumes.length; edgeID++)
-				linkVolumes[edgeID] = 0;
-		}
 
-		//reset link volumes per time of day
-		if (this.linkVolumesInPCUPerTimeOfDay == null) 
-			this.linkVolumesInPCUPerTimeOfDay = new EnumMap<TimeOfDay, double[]>(TimeOfDay.class);
-		for (TimeOfDay hour: TimeOfDay.values()) {
-			double[] hourlyVolumes = this.linkVolumesInPCUPerTimeOfDay.get(hour);
-			if (hourlyVolumes == null) {
-				hourlyVolumes = new double[this.roadNetwork.getMaximumEdgeID()];
-				this.linkVolumesInPCUPerTimeOfDay.put(hour, hourlyVolumes);
-			}
-			for (int edgeID = 1; edgeID < hourlyVolumes.length; edgeID++)
-				hourlyVolumes[edgeID] = 0.0;
-		}
+			//reset link volumes per time of day
+			if (this.linkVolumesInPCUPerTimeOfDay == null) 
+				this.linkVolumesInPCUPerTimeOfDay = new EnumMap<TimeOfDay, double[]>(TimeOfDay.class);
+				for (TimeOfDay hour: TimeOfDay.values()) {
+					double[] hourlyVolumes = this.linkVolumesInPCUPerTimeOfDay.get(hour);
+					if (hourlyVolumes == null) {
+						hourlyVolumes = new double[this.roadNetwork.getMaximumEdgeID()];
+						this.linkVolumesInPCUPerTimeOfDay.put(hour, hourlyVolumes);
+					}
+					for (int edgeID = 1; edgeID < hourlyVolumes.length; edgeID++)
+						hourlyVolumes[edgeID] = 0.0;
+				}
 	}
 
 	/**
@@ -4830,7 +4973,7 @@ public class RoadNetworkAssignment {
 		this.tripList.clear();
 		//this.tripList = new ArrayList<Trip>();
 	}
-	
+
 	/**
 	 * Initialise trip list for passengers and freight (e.g. expected total sum or passenger and freight flows).
 	 * @param initialCapacity Initial capacity of the trip list.
@@ -4977,7 +5120,7 @@ public class RoadNetworkAssignment {
 		return this.roadNetwork.getAADFCarTrafficCounts();
 
 	}
-	
+
 	/**
 	 * Getter method for AADF freight traffic counts.
 	 * @return Freight traffic counts.
@@ -5006,7 +5149,7 @@ public class RoadNetworkAssignment {
 			EdgeType edgeType = this.roadNetwork.getEdgesType()[edgeID];
 
 			if (edgeType == EdgeType.FERRY) continue; //ferry
-			
+
 			SimpleFeature sf = (SimpleFeature) edge.getObject();
 			Long countPoint = (long) sf.getAttribute("CP");
 			String direction = (String) sf.getAttribute("iDir");
@@ -5017,7 +5160,7 @@ public class RoadNetworkAssignment {
 
 				long carCount = (long) sf.getAttribute("FdCar");
 				long carVolume = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
-				
+
 				absoluteDifferences.put(edgeID, (int) Math.abs(carCount - carVolume));
 			}
 
@@ -5028,11 +5171,11 @@ public class RoadNetworkAssignment {
 
 				//get volumes for this direction
 				long carVolume = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
-		
+
 				//get volumes for other direction (if exists)
 				int edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edgeID];
 				long carVolume2 = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edge2];
-			
+
 				long absoluteDifference = Math.abs(carCount - carVolume - carVolume2) / 2;
 				checkedCP.add(countPoint);
 				absoluteDifferences.put(edgeID, (int) absoluteDifference);
@@ -5123,7 +5266,7 @@ public class RoadNetworkAssignment {
 
 				long carCount = (long) sf.getAttribute("FdCar");
 				long carVolume = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
-			
+
 				differences.put(edgeID, (int) (carCount - carVolume));
 			}
 
@@ -5134,7 +5277,7 @@ public class RoadNetworkAssignment {
 
 				//get volumes for this direction
 				long carVolume = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
-			
+
 				//get volumes for other direction (if exists)
 				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edgeID];
 				long carVolume2 = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edge2];
@@ -5175,7 +5318,7 @@ public class RoadNetworkAssignment {
 			SimpleFeature sf = (SimpleFeature) edge.getObject();
 			Long countPoint = (long) sf.getAttribute("CP");
 			if (countPoint == 0) continue; //new links
-			
+
 			String direction = (String) sf.getAttribute("iDir");
 			char dir = direction.charAt(0);
 
@@ -5184,7 +5327,7 @@ public class RoadNetworkAssignment {
 
 				long carCount = (long) sf.getAttribute("FdCar");
 				long carVolume = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
-		
+
 				double carFlowSimulated = carVolume * volumeToFlowFactor;
 				double carFlowObserved = carCount * volumeToFlowFactor;
 				double geh = Math.abs(carFlowSimulated - carFlowObserved) / Math.sqrt((carFlowSimulated + carFlowObserved) / 2.0);
@@ -5217,13 +5360,13 @@ public class RoadNetworkAssignment {
 
 		return GEH;
 	}
-	
-	
+
+
 	/**
 	 * Prints GEH statistics for comparison between simulated and observed hourly car flows.
 	 */
 	public void printGEHstatistic() {
-		
+
 		this.printGEHstatistic(this.volumeToFlowFactor);
 	}
 
@@ -5250,23 +5393,23 @@ public class RoadNetworkAssignment {
 		LOGGER.info("Percentage of edges with suspicious flows (5.0 <= GEH < 10.0) is: {}%", Math.round((double) suspiciousFlows / counter * 100));
 		LOGGER.info("Percentage of edges with invalid flows (GEH >= 10.0) is: {}%", Math.round((double) invalidFlows / counter * 100));		
 	}
-	
+
 	/**
 	 * Prints GEH statistics for comparison between simulated and observed hourly freight vehicle flows.
 	 */
 	public void printGEHstatisticFreight() {
-		
+
 		this.printGEHstatisticFreight(this.volumeToFlowFactor);
 	}
-	
+
 	/**
 	 * Prints GEH statistics for comparison between simulated and observed hourly freight vehicle flows.
 	 * @param volumeToFlowFactor Converts daily vehicle volume to hourly flow (e.g. 0.1 for peak flow; 1/24.0 for daily average)  
 	 */
 	public void printGEHstatisticFreight(double volumeToFlowFactor) {
-		
+
 		Map<VehicleType, Double[]> freightGEH = this.calculateGEHStatisticForFreightCounts(volumeToFlowFactor);
-		
+
 		Double[] GEH = freightGEH.get(VehicleType.VAN);
 		int counter = 0;
 		int validFlows = 0;
@@ -5282,7 +5425,7 @@ public class RoadNetworkAssignment {
 		LOGGER.info("Percentage of edges with valid van flows (GEH < 5.0) is: {}%", Math.round((double) validFlows / counter * 100));
 		LOGGER.info("Percentage of edges with suspicious van flows (5.0 <= GEH < 10.0) is: {}%", Math.round((double) suspiciousFlows / counter * 100));
 		LOGGER.info("Percentage of edges with invalid van flows (GEH >= 10.0) is: {}%", Math.round((double) invalidFlows / counter * 100));
-		
+
 		GEH = freightGEH.get(VehicleType.RIGID);
 		counter = 0;
 		validFlows = 0;
@@ -5298,7 +5441,7 @@ public class RoadNetworkAssignment {
 		LOGGER.info("Percentage of edges with valid rigid flows (GEH < 5.0) is: {}%", Math.round((double) validFlows / counter * 100));
 		LOGGER.info("Percentage of edges with suspicious rigid flows (5.0 <= GEH < 10.0) is: {}%", Math.round((double) suspiciousFlows / counter * 100));
 		LOGGER.info("Percentage of edges with invalid rigid flows (GEH >= 10.0) is: {}%", Math.round((double) invalidFlows / counter * 100));	
-		
+
 		GEH = freightGEH.get(VehicleType.ARTIC);
 		counter = 0;
 		validFlows = 0;
@@ -5315,7 +5458,7 @@ public class RoadNetworkAssignment {
 		LOGGER.info("Percentage of edges with suspicious artic flows (5.0 <= GEH < 10.0) is: {}%", Math.round((double) suspiciousFlows / counter * 100));
 		LOGGER.info("Percentage of edges with invalid artic flows (GEH >= 10.0) is: {}%", Math.round((double) invalidFlows / counter * 100));	
 	}
-	
+
 	/**
 	 * Calculates GEH statistic for simulated and observed hourly flow.
 	 * It uses linkVolumesInPCUPerTimeOfDay, so make sure only car flows have been assigned. 
@@ -5325,7 +5468,7 @@ public class RoadNetworkAssignment {
 	 * @return GEH statistic for simulated and observed hourly car flows.
 	 */
 	public Double[] calculateGEHStatisticPerTimeOfDay (TimeOfDay hour) {
-		
+
 		Double[] GEH = new Double[this.roadNetwork.getMaximumEdgeID()];
 
 		Iterator iter = this.roadNetwork.getNetwork().getEdges().iterator();
@@ -5348,7 +5491,7 @@ public class RoadNetworkAssignment {
 
 				long carCount = (long) sf.getAttribute("FdCar");
 				double carVolume = this.linkVolumesInPCUPerTimeOfDay.get(hour)[edgeID];
-			
+
 				double carFlowSimulated = carVolume;
 				double carFlowObserved = carCount * this.timeOfDayDistribution.get(hour);
 				double geh = Math.abs(carFlowSimulated - carFlowObserved) / Math.sqrt((carFlowSimulated + carFlowObserved) / 2.0);
@@ -5363,11 +5506,11 @@ public class RoadNetworkAssignment {
 
 				//get volumes for this direction
 				double carVolume = this.linkVolumesInPCUPerTimeOfDay.get(hour)[edgeID];
-	
+
 				//get volumes for other direction (if exists)
 				Integer edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edgeID];
 				double carVolume2 = this.linkVolumesInPCUPerTimeOfDay.get(hour)[edge2];
-	
+
 				checkedCP.add(countPoint);
 
 				double carFlowSimulated = carVolume + carVolume2;
@@ -5381,16 +5524,16 @@ public class RoadNetworkAssignment {
 
 		return GEH;
 	}
-		
+
 	/**
 	 * Prints GEH statistics for comparison between simulated and observed hourly car flows.
 	 */
 	public void printHourlyGEHstatistic() {
-		
+
 		Map<TimeOfDay, Triple<Integer, Integer, Integer>> hourlyGEHTriples = new EnumMap<>(TimeOfDay.class);
 
 		for (TimeOfDay hour: TimeOfDay.values()) {
-			
+
 			Double[] GEH = this.calculateGEHStatisticPerTimeOfDay(hour);
 			int counter = 0;
 			int validFlows = 0;
@@ -5403,25 +5546,25 @@ public class RoadNetworkAssignment {
 				else invalidFlows++;
 				counter++;
 			}
-			
+
 			double valid = (double) validFlows / counter * 100;
 			double suspicious = (double) suspiciousFlows / counter * 100;
 			double invalid = (double) invalidFlows / counter * 100;
-			
+
 			/*
 			LOGGER.info("GEH statistic for hour: {}", hour);
 			LOGGER.info("Percentage of edges with valid flows (GEH < 5.0) is: {}%", Math.round(valid));
 			LOGGER.info("Percentage of edges with suspicious flows (5.0 <= GEH < 10.0) is: {}%", Math.round(suspicious));
 			LOGGER.info("Percentage of edges with invalid flows (GEH >= 10.0) is: {}%", Math.round(invalid));
-			*/
-			
+			 */
+
 			Triple<Integer, Integer, Integer> t = Triple.of((int)Math.round(valid), (int)Math.round(suspicious), (int)Math.round(invalid));
 			hourlyGEHTriples.put(hour, t);
 		}
 		LOGGER.info("GEH statistic per hour (valid %, suspicious %, invalid %):");
 		LOGGER.info(hourlyGEHTriples.toString());
 	}
-	
+
 	/**
 	 * Prints RMSN statistic for comparison between simulated daily car volumes and observed daily traffic counts.
 	 */
@@ -5430,7 +5573,7 @@ public class RoadNetworkAssignment {
 		double RMSN = this.calculateRMSNforSimulatedVolumes();
 		LOGGER.info("RMSN for car traffic counts is: {}%", Math.round(RMSN));
 	}
-	
+
 	/**
 	 * Prints RMSN statistic for comparison between simulated daily freight volumes and observed daily freight traffic counts.
 	 */
@@ -5474,7 +5617,7 @@ public class RoadNetworkAssignment {
 			SimpleFeature sf = (SimpleFeature) edge.getObject(); 
 			Long countPoint = (long) sf.getAttribute("CP");
 			if (countPoint == 0) continue; //new links
-						
+
 			String direction = (String) sf.getAttribute("iDir");
 			char dir = direction.charAt(0);
 
@@ -5483,7 +5626,7 @@ public class RoadNetworkAssignment {
 
 				long carCount = (long) sf.getAttribute("FdCar");
 				long carVolume = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
-	
+
 				//expand simulated volumes with the expansion factor and round
 				carVolume = Math.round(carVolume * expansionFactor);
 
@@ -5499,14 +5642,14 @@ public class RoadNetworkAssignment {
 
 				//get volumes for this direction
 				long carVolume = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
-		
+
 				//expand simulated volumes with the expansion factor and round
 				carVolume = Math.round(carVolume * expansionFactor);
 
 				//get volumes for other direction (if exists)
 				int edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edgeID];
 				long carVolume2 = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edge2];
-			
+
 				//expand simulated volumes with the expansion factor and round
 				carVolume2 = Math.round(carVolume2 * expansionFactor);
 
@@ -5531,11 +5674,11 @@ public class RoadNetworkAssignment {
 	 * @return Normalised root mean square errors for each freight vehicle separately.
 	 */
 	public Map<VehicleType, Double> calculateRMSNforFreightCounts () {
-		
+
 		LOGGER.debug("Calculating RMSN for freight traffic counts");
-		
+
 		Map<VehicleType, Double> RMSN = new EnumMap<VehicleType, Double>(VehicleType.class);
-		
+
 		Iterator iter = this.roadNetwork.getNetwork().getEdges().iterator();
 		int vanCountOfCounts = 0, rigidCountOfCounts = 0, articCountOfCounts = 0;
 		long vanSumOfCounts = 0, rigidSumOfCounts = 0, articSumOfCounts = 0;
@@ -5552,7 +5695,7 @@ public class RoadNetworkAssignment {
 			SimpleFeature sf = (SimpleFeature) edge.getObject(); 
 			Long countPoint = (long) sf.getAttribute("CP");
 			if (countPoint == 0) continue; //new links
-			
+
 			String direction = (String) sf.getAttribute("iDir");
 			char dir = direction.charAt(0);
 
@@ -5570,11 +5713,11 @@ public class RoadNetworkAssignment {
 				vanCountOfCounts++;
 				rigidCountOfCounts++;
 				articCountOfCounts++;
-				
+
 				vanSumOfCounts += vanCount;
 				rigidSumOfCounts += rigidCount;
 				articSumOfCounts += articCount;
-				
+
 				vanSumOfSquaredDiffs += Math.pow(vanCount - vanVolume, 2);
 				rigidSumOfSquaredDiffs += Math.pow(rigidCount - rigidVolume, 2);
 				articSumOfSquaredDiffs += Math.pow(articCount - articVolume, 2);
@@ -5598,19 +5741,19 @@ public class RoadNetworkAssignment {
 				long vanVolume2 = this.linkVolumesPerVehicleType.get(VehicleType.VAN)[edge2];
 				long rigidVolume2 = this.linkVolumesPerVehicleType.get(VehicleType.RIGID)[edge2];
 				long articVolume2 = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC)[edge2];
-	
+
 				vanCountOfCounts++;
 				rigidCountOfCounts++;
 				articCountOfCounts++;
-				
+
 				vanSumOfCounts += vanCount;
 				rigidSumOfCounts += rigidCount;
 				articSumOfCounts += articCount;
-				
+
 				vanSumOfSquaredDiffs += Math.pow(vanCount - vanVolume - vanVolume2, 2);
 				rigidSumOfSquaredDiffs += Math.pow(rigidCount - rigidVolume - rigidVolume2, 2);
 				articSumOfSquaredDiffs += Math.pow(articCount - articVolume - articVolume2, 2);
-								
+
 				checkedCP.add(countPoint);
 			}
 		}
@@ -5622,11 +5765,11 @@ public class RoadNetworkAssignment {
 		double vanAverageTrueCount = (double) vanSumOfCounts / vanCountOfCounts;
 		double rigidAverageTrueCount = (double) rigidSumOfCounts / rigidCountOfCounts;
 		double articAverageTrueCount = (double) articSumOfCounts / articCountOfCounts;
-		
+
 		RMSN.put(VehicleType.VAN, (vanRMSE / vanAverageTrueCount ) * 100);
 		RMSN.put(VehicleType.RIGID, (rigidRMSE / rigidAverageTrueCount ) * 100);
 		RMSN.put(VehicleType.ARTIC, (articRMSE / articAverageTrueCount ) * 100);
-		
+
 		return RMSN;
 	}
 
@@ -5647,7 +5790,7 @@ public class RoadNetworkAssignment {
 		GEH.put(VehicleType.VAN, vanGEH);
 		GEH.put(VehicleType.RIGID, rigidGEH);
 		GEH.put(VehicleType.ARTIC, articGEH);
-		
+
 		Iterator iter = this.roadNetwork.getNetwork().getEdges().iterator();
 		ArrayList<Long> checkedCP = new ArrayList<Long>(); 
 
@@ -5661,7 +5804,7 @@ public class RoadNetworkAssignment {
 			SimpleFeature sf = (SimpleFeature) edge.getObject(); 
 			Long countPoint = (long) sf.getAttribute("CP");
 			if (countPoint == 0) continue; //new links
-			
+
 			String direction = (String) sf.getAttribute("iDir");
 			char dir = direction.charAt(0);
 
@@ -5680,12 +5823,12 @@ public class RoadNetworkAssignment {
 				double vanFlowObserved = vanCount * volumeToFlowFactor;
 				double geh = Math.abs(vanFlowSimulated - vanFlowObserved) / Math.sqrt((vanFlowSimulated + vanFlowObserved) / 2.0);
 				vanGEH[edgeID] = geh;
-				
+
 				double rigidFlowSimulated = rigidVolume * volumeToFlowFactor;
 				double rigidFlowObserved = rigidCount * volumeToFlowFactor;
 				geh = Math.abs(rigidFlowSimulated - rigidFlowObserved) / Math.sqrt((rigidFlowSimulated + rigidFlowObserved) / 2.0);
 				rigidGEH[edgeID] = geh;
-				
+
 				double articFlowSimulated = articVolume * volumeToFlowFactor;
 				double articFlowObserved = articCount * volumeToFlowFactor;
 				geh = Math.abs(articFlowSimulated - articFlowObserved) / Math.sqrt((articFlowSimulated + articFlowObserved) / 2.0);
@@ -5703,13 +5846,13 @@ public class RoadNetworkAssignment {
 				long vanVolume = this.linkVolumesPerVehicleType.get(VehicleType.VAN)[edgeID];
 				long rigidVolume = this.linkVolumesPerVehicleType.get(VehicleType.RIGID)[edgeID];
 				long articVolume = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC)[edgeID];
-	
+
 				//get volumes for other direction (if exists)
 				int edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edgeID];
 				long vanVolume2 = this.linkVolumesPerVehicleType.get(VehicleType.VAN)[edge2];
 				long rigidVolume2 = this.linkVolumesPerVehicleType.get(VehicleType.RIGID)[edge2];
 				long articVolume2 = this.linkVolumesPerVehicleType.get(VehicleType.ARTIC)[edge2];
-				
+
 				checkedCP.add(countPoint);
 
 				double vanFlowSimulated = (vanVolume + vanVolume2) * volumeToFlowFactor;
@@ -5717,13 +5860,13 @@ public class RoadNetworkAssignment {
 				double geh = Math.abs(vanFlowSimulated - vanFlowObserved) / Math.sqrt((vanFlowSimulated + vanFlowObserved) / 2.0);
 				vanGEH[edgeID] = geh;
 				if (edge2 != 0) vanGEH[edge2] = geh; //store in other direction too
-				
+
 				double rigidFlowSimulated = (rigidVolume + rigidVolume2) * volumeToFlowFactor;
 				double rigidFlowObserved = rigidCount * volumeToFlowFactor;
 				geh = Math.abs(rigidFlowSimulated - rigidFlowObserved) / Math.sqrt((rigidFlowSimulated + rigidFlowObserved) / 2.0);
 				rigidGEH[edgeID] = geh;
 				if (edge2 != 0) rigidGEH[edge2] = geh; //store in other direction too
-				
+
 				double articFlowSimulated = (articVolume + articVolume2) * volumeToFlowFactor;
 				double articFlowObserved = articCount * volumeToFlowFactor;
 				geh = Math.abs(articFlowSimulated - articFlowObserved) / Math.sqrt((articFlowSimulated + articFlowObserved) / 2.0);
@@ -5734,7 +5877,7 @@ public class RoadNetworkAssignment {
 
 		return GEH;
 	}
-	
+
 	/**
 	 * Calculate prediction error (mean absolute deviation for expanded simulated volumes and observed traffic counts).
 	 * @param expansionFactor Expansion factor expands simulated volumes.
@@ -5766,7 +5909,7 @@ public class RoadNetworkAssignment {
 
 				long carCount = (long) sf.getAttribute("FdCar");
 				long carVolume = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
-	
+
 				//expand simulated volumes with the expansion factor and round
 				carVolume = Math.round(carVolume * expansionFactor);
 
@@ -5782,14 +5925,14 @@ public class RoadNetworkAssignment {
 
 				//get volumes for this direction
 				long carVolume = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edgeID];
-		
+
 				//expand simulated volumes with the expansion factor and round
 				carVolume = Math.round(carVolume * expansionFactor);
 
 				//get volumes for other direction (if exists)
 				int edge2 = this.roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[edgeID];
 				long carVolume2 = this.linkVolumesPerVehicleType.get(VehicleType.CAR)[edge2];
-	
+
 				//expand simulated volumes with the expansion factor and round
 				carVolume2 = Math.round(carVolume2 * expansionFactor);
 
@@ -5817,14 +5960,14 @@ public class RoadNetworkAssignment {
 
 		return MAD;
 	}
-	
+
 	/**
 	 * Choose time of day.
 	 * @param timOfDayDistribution Time of day distribution.
 	 * @return Chosen time of day (hour).
 	 */
 	private TimeOfDay chooseTimeOfDay(Map<TimeOfDay, Double> timOfDayDistribution) {
-		
+
 		//choose time of day
 		double cumulativeProbability = 0.0;
 		double random = rng.nextDouble();
@@ -5838,17 +5981,17 @@ public class RoadNetworkAssignment {
 				break;
 			}
 		}
-		
+
 		return hour;
 	}
-	
+
 	/**
 	 * Choose car vehicle type (autonomous or non-autonomous).
 	 * @param AVFractions Fraction of autonomous cars.
 	 * @return Chosen car vehicle type.
 	 */
 	private VehicleType chooseCarVehicleType(Map<VehicleType, Double> AVFractions) {
-		
+
 		//choose vehicle type (autonomous or non-autonomous)
 		double random  = rng.nextDouble();
 		VehicleType vht = null;
@@ -5856,10 +5999,10 @@ public class RoadNetworkAssignment {
 			vht = VehicleType.CAR;
 		else 
 			vht = VehicleType.CAR_AV;
-		
+
 		return vht;
 	}
-	
+
 	/**
 	 * Choose freight vehicle type (autonomous or non-autonomous).
 	 * @param fvht Freight vehicle type (non-autonomous).
@@ -5867,7 +6010,7 @@ public class RoadNetworkAssignment {
 	 * @return Chosen freight vehicle type (autonomous or non-autonomous).
 	 */
 	private VehicleType chooseFreightVehicleType(VehicleType fvht, Map<VehicleType, Double> AVFractions) {
-		
+
 		//find autonomous counterpart
 		VehicleType avht = null;
 		if (fvht == VehicleType.VAN) 			avht = VehicleType.VAN_AV;
@@ -5881,10 +6024,10 @@ public class RoadNetworkAssignment {
 			vht = avht; //autonomous version
 		else
 			vht = fvht; //non-autonomous version
-		
+
 		return vht;
 	}
-		
+
 	/**
 	 * Choose engine type.
 	 * @param engineTypeDistribution Engine type distribution (for a given vehicle type).
@@ -5907,7 +6050,7 @@ public class RoadNetworkAssignment {
 		}
 		return engine;
 	}
-	
+
 	/**
 	 * Chooses the route using route choice model.
 	 * @param originNode
