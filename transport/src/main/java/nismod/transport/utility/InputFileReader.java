@@ -855,4 +855,114 @@ public class InputFileReader {
 		
 		return map;
 	}
+	
+	/**
+	 * Reads zonal vehicle CO2 emissions file.
+	 * @param fileName File name.
+	 * @return Map with CO2 emissions data.
+	 */
+	public static HashMap<Integer, HashMap<VehicleType, HashMap<String, Double>>> readZonalVehicleCO2EmissionsFile(String fileName) {
+
+		HashMap<Integer, HashMap<VehicleType, HashMap<String, Double>>> map = new HashMap<Integer, HashMap<VehicleType, HashMap<String, Double>>>();
+		CSVParser parser = null;
+		int zonesNumber = 0;
+		try {
+			parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
+			Set<String> keySet = parser.getHeaderMap().keySet();
+
+			double emission;
+			for (CSVRecord record : parser) {
+				int year = Integer.parseInt(record.get(0));
+				String zone = record.get(1);
+				
+				HashMap<VehicleType, HashMap<String, Double>> yearMap = map.get(year);
+				if (yearMap == null) {
+					yearMap = new HashMap<VehicleType, HashMap<String, Double>>();
+					map.put(year, yearMap);
+				}
+				
+				//for each vehicle
+				for (VehicleType vht: VehicleType.values()) {
+					
+					HashMap<String, Double> zoneMap = yearMap.get(vht);
+					if (zoneMap == null) {
+						zoneMap = new HashMap<String, Double>();
+						yearMap.put(vht, zoneMap);
+					}
+									
+					emission = Double.parseDouble(record.get(vht));
+					zoneMap.put(zone, emission);
+				}
+			}
+		} catch (FileNotFoundException e) {
+			LOGGER.error(e);
+		} catch (IOException e) {
+			LOGGER.error(e);
+		} finally {
+			try {
+				parser.close();
+			} catch (IOException e) {
+				LOGGER.error(e);
+			}
+		}
+
+		LOGGER.debug("Zonal vehicle emissions read from file with data points for {} years and {} zones.", map.keySet().size(), zonesNumber);
+		
+		return map;
+	}
+	
+	/**
+	 * Reads zonal car energy consumptions file.
+	 * @param fileName File name.
+	 * @return Map with zonal energy consumptions data.
+	 */
+	public static HashMap<Integer, HashMap<EnergyType, HashMap<String, Double>>> readZonalCarEnergyConsumptionsFile(String fileName) {
+
+		HashMap<Integer, HashMap<EnergyType, HashMap<String, Double>>> map = new HashMap<Integer, HashMap<EnergyType, HashMap<String, Double>>>();
+		CSVParser parser = null;
+		int zonesNumber = 0;
+		try {
+			parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
+			Set<String> keySet = parser.getHeaderMap().keySet();
+
+			double consumption;
+			for (CSVRecord record : parser) {
+				int year = Integer.parseInt(record.get(0));
+				String zone = record.get(1);
+				
+				HashMap<EnergyType, HashMap<String, Double>> yearMap = map.get(year);
+				if (yearMap == null) {
+					yearMap = new HashMap<EnergyType, HashMap<String, Double>>();
+					map.put(year, yearMap);
+				}
+				
+				//for each energy type
+				for (EnergyType et: EnergyType.values()) {
+					
+					HashMap<String, Double> zoneMap = yearMap.get(et);
+					if (zoneMap == null) {
+						zoneMap = new HashMap<String, Double>();
+						yearMap.put(et, zoneMap);
+					}
+									
+					consumption = Double.parseDouble(record.get(et));
+					zoneMap.put(zone, consumption);
+				}
+			}
+		} catch (FileNotFoundException e) {
+			LOGGER.error(e);
+		} catch (IOException e) {
+			LOGGER.error(e);
+		} finally {
+			try {
+				parser.close();
+			} catch (IOException e) {
+				LOGGER.error(e);
+			}
+		}
+
+		LOGGER.debug("Zonal car energy consumptions read from file with data points for {} years and {} zones.", map.keySet().size(), zonesNumber);
+		
+		return map;
+	}
 }
