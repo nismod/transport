@@ -2,11 +2,16 @@
 Documentation
 =============
 
+**NISMOD v2 Transport Model** is a national-scale (*Great Britain*) transport model developed to support policy making 
+regarding future infrastructure. It forecasts the impact of various endogenous and exogenous factors on transport 
+demand and capacity utilisation, following an elasticity-based simulation methodology. The model consists of three submodels 
+covering the following modes of transport: **road** (passenger and freight vehicle flows), **rail** (total station usage), and **air** (passenger and flight movements).
+
 1. Key Features
 ===============
 
-Road Model
-----------
+1.1 Road Model
+--------------
 
 *	NISMOD v2 Transport Model predicts vehicle demand (inter-zonal flows) for passenger and freight vehicles, and stochastically simulates road traffic on all major UK roads including A-roads and motorways.
 *	It is currently the only national-scale road traffic model capable of routing-based network assignment and provisioning a national-scale origin-destination matrix (on TEMPRo & LAD spatial zoning levels), while achieving a respectable match with AADF traffic counts, total vehicle kilometres, expected number of car trips, and the observed trip length distribution from the National Travel Survey. 
@@ -21,8 +26,8 @@ Road Model
 *	Interventions such as new road development, road expansion with new lanes, and congestion charging zones can be dynamically implemented in each simulated year.
 *	The model can output various metrics on the road link level (e.g. road capacity utilisation, peak hour travel times), zonal level (e.g. vehicle kilometres, EV electricity consumption), inter-zonal level (e.g. predicted vehicle flows, average travel times, average travel costs) and national level (e.g. total CO2 emissions, total energy consumptions). The outputs are in csv and shapefile format, allowing them to be visualised with a software of choice.
 
-Rail Model
-----------
+1.2 Rail Model
+--------------
 
 *	NISMOD v2 Transport Model also includes a national-scale rail model for predicting future station usage demand.
 *	It currently uses station usage data for 3054 stations covering National Rail, London Underground, Docklands Light Railway, London Trams (previously Croydon Tramlink), Manchester Metrolink, and Tyne & Wear (Newcastle) Metro.

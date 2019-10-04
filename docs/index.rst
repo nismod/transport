@@ -8,9 +8,7 @@ NISMOD v2 Transport Model
 =========================
 
 **NISMOD v2 Transport Model** is a national-scale (*Great Britain*) transport model developed to support policy making 
-regarding future infrastructure. It forecasts the impact of various endogenous and exogenous factors on transport 
-demand and capacity utilisation, following an elasticity-based simulation methodology. The model consists of three submodels 
-covering the following modes of transport: **road** (passenger and freight vehicle flows), **rail** (total station usage), and **air** (passenger and flight movements).
+regarding future infrastructure.
 
 Contents
 ========
@@ -19,9 +17,9 @@ Contents
    :maxdepth: 2
 
    Documentation <documentation>
+   Javadoc API <packages>
    Authors <authors>
    License <license>
-   Javadoc <packages>
 
 Indices and tables
 ==================
