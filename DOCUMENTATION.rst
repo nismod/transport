@@ -42,7 +42,7 @@ Rail Model
 4. The classes containing the *main* method can be run as a Java application. The classes containing the methods annotated with *@Test* can be run as *JUnit* tests.
 5. To run the main model in Eclipse, open the *Run Configuration* for *nismod.transport.App.java* and pass the path to the config file as an argument:
 
-[<img alt="Configuration" src="images/configuration.jpg" style="max-width:500px" />](images/configuration.jpg)
+.. image:: images/configuration.jpg
 
 6. Alternatively, to build the project and run the main model in the command prompt:
     * Make sure the Java home environment variable is set for the operating system and pointing to the directory where *Java Development Kit* has been installed.
@@ -65,6 +65,7 @@ Showcase Demo
 -------------
 
 The model provides an interactive showcase demo with three policy interventions in the case study area of South-East England. The interventions are:
+
 * *Road expansion* - expanding existing road links with additional lanes.
 * *Road development* - building new road links between two existing intersections.
 * *Congestion charging* - time-based (peak and off-peak) congestion charging in the policy area.
@@ -72,13 +73,13 @@ The model provides an interactive showcase demo with three policy interventions 
 To run the showcase demo type:
     `java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -d`
 
-[<img alt="Landing GUI" src="images/LandingGUI.png" style="max-width:500px"/>](images/LandingGUI.png)
+.. image:: images/LandingGUI.png
 
-[<img alt="Road expansion" src="images/RoadExpansion.png" style="max-width:500px"/>](images/RoadExpansion.png)
+.. image:: images/RoadExpansion.png
 
-[<img alt="Road development" src="images/RoadDevelopment.png" style="max-width:500px"/>](images/RoadDevelopment.png)
+.. image:: images/RoadDevelopment.png
 
-[<img alt="Congestion charging" src="images/CongestionCharging.png" style="max-width:500px"/>](images/CongestionCharging.png)
+.. image:: images/CongestionCharging.png
 
 
 3. Acknowledgments 
@@ -88,6 +89,7 @@ This work has been undertaken at the *University of Southampton*, as part of the
 https://www.itrc.org.uk/
 
 The test resources contain a sample of data and shapefiles that come with the following licencing and copyright statemens:
+
 * *Open Government Licence:*  
 http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
 * Contains *National Statistics* data © *Crown* copyright and database right 2012.
