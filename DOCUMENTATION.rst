@@ -56,20 +56,23 @@ Rail Model
 * Download maven, install it and set the environment variables: http://maven.apache.org/.
 * To build the project type::
 
-       mvn clean install
-* To run the base-year *road* model (2015) type:
+    mvn clean install
+* To run the base-year **road** model (2015) type::
 
-       `java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -b`
-* To predict and run a future year (e.g. 2020) using the results of a previously run year (e.g. 2015), for *road* model type:
+    java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -b
+* To predict and run a future year (e.g. 2020) using the results of a previously run year (e.g. 2015), for *road* model type::
 
-       ``java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -road 2020 2015``
-* To predict and run a future year (e.g. 2020) using the results of a previously run year (e.g. 2015), for *rail* model type:
+    java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -road 2020 2015
+* To predict and run a future year (e.g. 2020) using the results of a previously run year (e.g. 2015), for the **rail** model type::
 
-       `java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -rail 2020 2015`
+    java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -rail 2020 2015
+
+.. note: Rail model need not be run for the base-year as 2015 station usage data is given as an input.
+
 * Options:
 
-        * To increase the max heap size, run with `java -XX:MaxHeapSize=120g ...`
-        * To enable debug messages, run with `java -Dlog4j2.debug ...`
+    * To increase the max heap size, run with `java -XX:MaxHeapSize=120g ...`
+    * To enable debug messages, run with `java -Dlog4j2.debug ...`
 
 
 2.3 Showcase Demo
@@ -81,9 +84,9 @@ The model provides an interactive showcase demo with three policy interventions 
 * *Road development* - building new road links between two existing intersections.
 * *Congestion charging* - time-based (peak and off-peak) congestion charging in the policy area.
 
-To run the showcase demo type:
+To run the showcase demo type::
 
-    `java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -d`
+    java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -d
 
 .. image:: ../images/LandingGUI.png
 
@@ -93,6 +96,7 @@ To run the showcase demo type:
 
 .. image:: ../images/CongestionCharging.png
 
+.. note: Showcase demo requires a display with a 1920 x 1080 resolution.
 
 3. Cross-sectoral Dependencies
 ==============================
