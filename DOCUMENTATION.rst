@@ -54,15 +54,15 @@ Rail Model
 * Install *Java Development Kit* version 8 from: http://www.oracle.com.
 * Make sure the Java home environment variable is set for the operating system and pointing to the directory where *Java Development Kit* has been installed.
 * Download maven, install it and set the environment variables: http://maven.apache.org/.
-* To build the project type:
+* To build the project type::
 
-       `mvn clean install`
+       mvn clean install
 * To run the base-year *road* model (2015) type:
 
        `java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -b`
 * To predict and run a future year (e.g. 2020) using the results of a previously run year (e.g. 2015), for *road* model type:
 
-       `java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -road 2020 2015`
+       ``java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -road 2020 2015``
 * To predict and run a future year (e.g. 2020) using the results of a previously run year (e.g. 2015), for *rail* model type:
 
        `java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -rail 2020 2015`
@@ -94,7 +94,22 @@ To run the showcase demo type:
 .. image:: ../images/CongestionCharging.png
 
 
-3. Acknowledgments 
+3. Cross-sectoral Dependencies
+==============================
+
+The UK transport sector has various links with other infrastructure sectors:
+
+* *Energy*: energy consumption, fuel price, electrification of vehicles, fuel transport, power outage (rail and air disruption).
+* *Digital Communications*: supporting smart mobility (e.g. mobility as a service, autonomous mobility on demand), coverage and service disruptions.
+* *Water*: floods causing road and rail disruptions.
+* *Solid Waste*: waste transport (e.g. waste exports through seaports).
+
+To enable studies of some of those cross-sectoral interdependencies, the transport model has been integrated into a wider *Simulation Modelling Integration Framework (smif)*:  
+https://github.com/nismod/smif
+
+.. image:: ../images/interdependencies.jpg
+
+4. Acknowledgments 
 ==================
 
 This work has been undertaken at the *University of Southampton*, as part of the ITRC consortium, under grant EP/N017064/1 (MISTRAL: Multi-scale InfraSTRucture systems AnaLytics) of the UK *Engineering and Physical Science Research Council* (EPSRC).  
