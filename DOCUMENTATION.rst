@@ -60,14 +60,14 @@ Rail Model
 * To run the base-year **road** model (2015) type::
 
     java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -b
-* To predict and run a future year (e.g. 2020) using the results of a previously run year (e.g. 2015), for *road* model type::
+* To predict and run a future year (e.g. 2020) using the results of a previously run year (e.g. 2015), for the **road** model type::
 
     java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -road 2020 2015
 * To predict and run a future year (e.g. 2020) using the results of a previously run year (e.g. 2015), for the **rail** model type::
 
     java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -rail 2020 2015
 
-.. note: Rail model need not be run for the base-year as 2015 station usage data is given as an input.
+.. note:: Rail model need not be run for the base-year as 2015 station usage data is given as an input.
 
 * Options:
 
@@ -96,7 +96,7 @@ To run the showcase demo type::
 
 .. image:: ../images/CongestionCharging.png
 
-.. note: Showcase demo requires a display with a 1920 x 1080 resolution.
+.. note:: Showcase demo requires a display with a 1920 x 1080 resolution.
 
 3. Cross-sectoral Dependencies
 ==============================
