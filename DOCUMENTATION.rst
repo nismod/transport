@@ -38,30 +38,35 @@ Rail Model
 2.1 Using Eclipse IDE
 ---------------------
 
-1. Install *Java Development Kit* version 8 from: http://www.oracle.com.
-2. Install *Eclipse IDE for Java Developers*: https://eclipse.org/downloads/.
-3. Run Eclipse and choose the workspace folder.
-4. Import the existing Maven project from the local git folder where the code has been cloned. In Eclipse: *File -> Import -> Maven -> Existing Maven Projects.* Wait until all Maven dependencies (specified in the *pom.xml* file) are downloaded. If the *pom.xml* file has been changed, the Maven project should be first updated (*Alt+F5*).
-5. The classes containing the *main* method can be run as a Java application. The classes containing the methods annotated with *@Test* can be run as *JUnit* tests.
-6. To run the main model in Eclipse, open the *Run Configuration* for *nismod.transport.App.java* and pass the path to the config file as an argument:
+* Install *Java Development Kit* version 8 from: http://www.oracle.com.
+* Install *Eclipse IDE for Java Developers*: https://eclipse.org/downloads/.
+* Run Eclipse and choose the workspace folder.
+* Import the existing Maven project from the local git folder where the code has been cloned. In Eclipse: *File -> Import -> Maven -> Existing Maven Projects*. 
+* Wait until all Maven dependencies (specified in the *pom.xml* file) are downloaded. If the *pom.xml* file has been changed, the Maven project should be first updated (*Alt+F5*).
+* The classes containing the *main* method can be run as a Java application. The classes containing the methods annotated with *@Test* can be run as *JUnit* tests.
+* To run the main model in Eclipse, open the *Run Configuration* for *nismod.transport.App.java* and pass the path to the config file as an argument:
 
-.. image:: /images/configuration.jpg
+.. image:: ../images/configuration.jpg
 
 2.2 Using Command Prompt (Console)
 ----------------------------------
 
-1. Install *Java Development Kit* version 8 from: http://www.oracle.com.
-2. Make sure the Java home environment variable is set for the operating system and pointing to the directory where *Java Development Kit* has been installed.
-3. Download maven, install it and set the environment variables: http://maven.apache.org/.
-4. To build the project type:  
+* Install *Java Development Kit* version 8 from: http://www.oracle.com.
+* Make sure the Java home environment variable is set for the operating system and pointing to the directory where *Java Development Kit* has been installed.
+* Download maven, install it and set the environment variables: http://maven.apache.org/.
+* To build the project type:
+
        `mvn clean install`
-5. To run the base-year *road* model (2015) type:
+* To run the base-year *road* model (2015) type:
+
        `java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -b`
-6. To predict and run a future year (e.g. 2020) using the results of a previously run year (e.g. 2015), for *road* model type:
+* To predict and run a future year (e.g. 2020) using the results of a previously run year (e.g. 2015), for *road* model type:
+
        `java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -road 2020 2015`
-7. To predict and run a future year (e.g. 2020) using the results of a previously run year (e.g. 2015), for *rail* model type:
+* To predict and run a future year (e.g. 2020) using the results of a previously run year (e.g. 2015), for *rail* model type:
+
        `java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -rail 2020 2015`
-8. Options:
+* Options:
 
         * To increase the max heap size, run with `java -XX:MaxHeapSize=120g ...`
         * To enable debug messages, run with `java -Dlog4j2.debug ...`
@@ -77,15 +82,16 @@ The model provides an interactive showcase demo with three policy interventions 
 * *Congestion charging* - time-based (peak and off-peak) congestion charging in the policy area.
 
 To run the showcase demo type:
+
     `java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -d`
 
-.. image:: /images/LandingGUI.png
+.. image:: ../images/LandingGUI.png
 
-.. image:: /images/RoadExpansion.png
+.. image:: ../images/RoadExpansion.png
 
-.. image:: /images/RoadDevelopment.png
+.. image:: ../images/RoadDevelopment.png
 
-.. image:: /images/CongestionCharging.png
+.. image:: ../images/CongestionCharging.png
 
 
 3. Acknowledgments 
