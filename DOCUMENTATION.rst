@@ -35,34 +35,40 @@ Rail Model
 2. How to run the model
 =======================
 
-0. Install *Java Development Kit* version 8 from: http://www.oracle.com.
-1. Install *Eclipse IDE for Java Developers*: https://eclipse.org/downloads/.
-2. Run Eclipse and choose the workspace folder.
-3. Import the existing Maven project from the local git folder where the code has been cloned. In Eclipse: *File -> Import -> Maven -> Existing Maven Projects.* Wait until all Maven dependencies (specified in the *pom.xml* file) are downloaded. If the *pom.xml* file has been changed, the Maven project should be first updated (*Alt+F5*).
-4. The classes containing the *main* method can be run as a Java application. The classes containing the methods annotated with *@Test* can be run as *JUnit* tests.
-5. To run the main model in Eclipse, open the *Run Configuration* for *nismod.transport.App.java* and pass the path to the config file as an argument:
+2.1 Using Eclipse IDE
+---------------------
 
-.. image:: images/configuration.jpg
+1. Install *Java Development Kit* version 8 from: http://www.oracle.com.
+2. Install *Eclipse IDE for Java Developers*: https://eclipse.org/downloads/.
+3. Run Eclipse and choose the workspace folder.
+4. Import the existing Maven project from the local git folder where the code has been cloned. In Eclipse: *File -> Import -> Maven -> Existing Maven Projects.* Wait until all Maven dependencies (specified in the *pom.xml* file) are downloaded. If the *pom.xml* file has been changed, the Maven project should be first updated (*Alt+F5*).
+5. The classes containing the *main* method can be run as a Java application. The classes containing the methods annotated with *@Test* can be run as *JUnit* tests.
+6. To run the main model in Eclipse, open the *Run Configuration* for *nismod.transport.App.java* and pass the path to the config file as an argument:
 
-6. Alternatively, to build the project and run the main model in the command prompt:
-    * Make sure the Java home environment variable is set for the operating system and pointing to the directory where *Java Development Kit* has been installed.
-    * Download maven, install it and set the environment variables: http://maven.apache.org/. Then type:  
+.. image:: /images/configuration.jpg
+
+2.2 Using Command Prompt (Console)
+----------------------------------
+
+1. Install *Java Development Kit* version 8 from: http://www.oracle.com.
+2. Make sure the Java home environment variable is set for the operating system and pointing to the directory where *Java Development Kit* has been installed.
+3. Download maven, install it and set the environment variables: http://maven.apache.org/.
+4. To build the project type:  
        `mvn clean install`
-    * To run the base-year *road* model (2015) type:
+5. To run the base-year *road* model (2015) type:
        `java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -b`
-    * To predict and run a future year (e.g. 2020) using the results of a previously run year (e.g. 2015), for *road* model type:
+6. To predict and run a future year (e.g. 2020) using the results of a previously run year (e.g. 2015), for *road* model type:
        `java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -road 2020 2015`
-    * To predict and run a future year (e.g. 2020) using the results of a previously run year (e.g. 2015), for *rail* model type:
+7. To predict and run a future year (e.g. 2020) using the results of a previously run year (e.g. 2015), for *rail* model type:
        `java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -rail 2020 2015`
-
-    * Options:
+8. Options:
 
         * To increase the max heap size, run with `java -XX:MaxHeapSize=120g ...`
         * To enable debug messages, run with `java -Dlog4j2.debug ...`
 
 
-Showcase Demo
--------------
+2.3 Showcase Demo
+-----------------
 
 The model provides an interactive showcase demo with three policy interventions in the case study area of South-East England. The interventions are:
 
@@ -73,13 +79,13 @@ The model provides an interactive showcase demo with three policy interventions 
 To run the showcase demo type:
     `java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -d`
 
-.. image:: images/LandingGUI.png
+.. image:: /images/LandingGUI.png
 
-.. image:: images/RoadExpansion.png
+.. image:: /images/RoadExpansion.png
 
-.. image:: images/RoadDevelopment.png
+.. image:: /images/RoadDevelopment.png
 
-.. image:: images/CongestionCharging.png
+.. image:: /images/CongestionCharging.png
 
 
 3. Acknowledgments 
@@ -90,8 +96,7 @@ https://www.itrc.org.uk/
 
 The test resources contain a sample of data and shapefiles that come with the following licencing and copyright statemens:
 
-* *Open Government Licence:*  
-http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
+* *Open Government Licence*  http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
 * Contains *National Statistics* data © *Crown* copyright and database right 2012.
 * Contains *Ordnance Survey* data © *Crown* copyright and database right 2012.
 
