@@ -1,22 +1,16 @@
 package nismod.transport.air;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.EnumMap;
 import java.util.Map;
-import java.util.Set;
 
-import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.map.MultiKeyMap;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import nismod.transport.demand.ODMatrixMultiKey;
-
+/**
+ * This class encapsulates internodal (airport to airport) passenger data.
+ * @author Milan Lovric
+ */
 public abstract class InternodalPassengerDemand {
 
 	private final static Logger LOGGER = LogManager.getLogger(InternodalPassengerDemand.class);
@@ -42,4 +36,24 @@ public abstract class InternodalPassengerDemand {
 			System.out.println(entry);
 		}
 	}
+	
+	public Map<Passengers, Long> getDemand(String firstIATA, String secondIATA) {
+	
+		return (Map<Passengers, Long>) this.data.get(firstIATA, secondIATA);
+	}
+	
+	public void setDemand(String firstIATA, String secondIATA, long totalPax, long scheduledPax, long charterPax) {
+		
+		Map<Passengers, Long> map = (Map<Passengers, Long>) this.data.get(firstIATA, secondIATA);
+		if (map == null) {
+				map = new EnumMap<>(Passengers.class);
+				this.data.put(firstIATA, secondIATA, map);
+		}
+
+		map.put(Passengers.TOTAL, totalPax);
+		map.put(Passengers.SCHEDULED, scheduledPax);
+		map.put(Passengers.CHARTER, charterPax);
+	}
+	
+	public abstract void saveAirPassengerDemand(int year, String file);
 }

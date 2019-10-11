@@ -23,6 +23,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jfree.data.category.DefaultCategoryDataset;
 
+import nismod.transport.air.AirDemandModel;
 import nismod.transport.decision.Intervention;
 import nismod.transport.decision.Intervention.InterventionType;
 import nismod.transport.demand.DemandModel;
@@ -92,6 +93,16 @@ public class App {
 				.valueSeparator(' ')
 				.build();
 		options.addOption(runRailModel);
+		
+		Option runAirModel = Option.builder("air")
+				.longOpt("runAirModel")
+				.argName("PREDICTED_YEAR> <FROM_YEAR")
+				.hasArg()
+				.numberOfArgs(2)
+				.desc("Run air model for a future year.")
+				.valueSeparator(' ')
+				.build();
+		options.addOption(runAirModel);
 
 		Option passengerRoutes = Option.builder("p")
 				.longOpt("passengerRoutes")
@@ -744,7 +755,82 @@ public class App {
 
 				rdm.predictRailwayDemandUsingResultsOfFromYear(Integer.parseInt(predictedYear), Integer.parseInt(fromYear));
 				rdm.saveAllResults(Integer.parseInt(predictedYear));
+			
+		} else if (line.hasOption("air")) {
+			
+			LOGGER.info("Running the air model.");
+			
+			String[] values = line.getOptionValues("runAirModel");
+
+			final String predictedYear = values[0];
+			final String fromYear = values[1];
+					
+			final String domesticAirportsFileName = props.getProperty("domesticAirportsFile");
+			final String internationalAirportsFileName = props.getProperty("internationalAirportsFile");
+			final String domesticDemandFileName = props.getProperty("baseYearDomesticInternodalPassengerDemandFile");
+			final String internationalDemandFileName = props.getProperty("baseYearInternationalInternodalPassengerDemandFile");
+			final String populationFile = props.getProperty("populationFile");
+			final String GVAFile = props.getProperty("GVAFile");
+			final String elasticitiesAirFile = props.getProperty("elasticitiesRailFile");
+			final String domesticAirportFaresFile = props.getProperty("domesticAirportFaresFile");
+			final String internationalAirportFaresFile = props.getProperty("internationalAirportFaresFile");
+			final String domesticAirportTripRatesFile = props.getProperty("domesticAirportTripRatesFile");
+			final String internationalAirportTripRatesFile = props.getProperty("internationalAirportTripRatesFile");
+			
+			//load air interventions
+			List<Intervention> interventions = new ArrayList<Intervention>();
+			
+			for (Object o: props.keySet()) {
+				String key = (String) o;
+				if (key.startsWith("airInterventionFile")) {
+					//System.out.println(key);
+					String interventionFile = props.getProperty(key);
+					Properties p = PropertiesReader.getProperties(interventionFile);
+					String type = p.getProperty("type");
+					//System.out.println(type);
+					
+					//check if the intervention type is among allowed intervention types
+					boolean typeFound = false;
+					for (InterventionType it: Intervention.InterventionType.values())
+						if (it.name().equals(type)) {
+							typeFound = true;
+							break;
+						}
+					if (!typeFound) {
+						LOGGER.error("Type of intervention '{}' is not among allowed interventon types.", type);
+						return;
+					}
+											
+					//create appropriate intervention object through reflection
+					Class<?> clazz = Class.forName("nismod.transport.decision." + type);
+					Constructor<?> constructor = clazz.getConstructor(String.class);
+					Object instance = constructor.newInstance(interventionFile);
+										
+					//add intervention to the list of interventions
+					interventions.add((Intervention)instance);
+					
+					LOGGER.info("{} intervention added to the intervention list. Path to the intervention file: {}", type, interventionFile);
+				}
 			}
+			
+			//create an air demand model
+			AirDemandModel adm = new AirDemandModel(domesticAirportsFileName, 
+					internationalAirportsFileName,
+					domesticDemandFileName,
+					internationalDemandFileName,
+					populationFile,
+					GVAFile,
+					elasticitiesAirFile, 
+					domesticAirportFaresFile, 
+					internationalAirportFaresFile, 
+					domesticAirportTripRatesFile, 
+					internationalAirportTripRatesFile, 
+					interventions,
+					props);
+
+			//predict and save air demands
+			adm.predictAndSaveAirDemands(Integer.parseInt(predictedYear), Integer.parseInt(fromYear));
+		}
 			
 			LOGGER.info("Program ended successfully.");
 			System.exit(0);

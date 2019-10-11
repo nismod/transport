@@ -20,13 +20,14 @@ public class ForeignAirport extends Airport {
 	 * @param longitude Longitude coordinate.
 	 * @param latitude Latitude coordinate.
 	 * @param countryCode Code of the country in which the airport is located.
+	 * @param countryCode Code of the continent in which the airport is located.
 	 * @param terminalCapacity Airport terminal capacity (max number of passengers that can be processed).
 	 * @param runwayCapacity Airport runway capacity (max number of flights that can be processed).
 	 */
 	public ForeignAirport(String iataCode, String caaName, String ourAirportsName, double longitude, double latitude,
-						  String countryCode, int terminalCapacity, int runwayCapacity) {
+						  String countryCode, String continentCode, long terminalCapacity, long runwayCapacity) {
 				
-		super(iataCode, caaName, ourAirportsName, longitude, latitude, countryCode, terminalCapacity, runwayCapacity);
+		super(iataCode, caaName, ourAirportsName, longitude, latitude, countryCode, continentCode, terminalCapacity, runwayCapacity);
 	}
 	
 	/**
@@ -36,8 +37,8 @@ public class ForeignAirport extends Airport {
 	public ForeignAirport(ForeignAirport airport) {
 		
 		super(airport.getIataCode(), airport.getCAAName(), airport.getOurAirportsName(),
-			 airport.getLongitude(), airport.getLatitude(), airport.getCountry().getISO3Country(),
-			 airport.getTerminalCapacity(), airport.getRunwayCapacity());
+			 airport.getLongitude(), airport.getLatitude(), airport.getCountry().getCountry(),
+			 airport.getContinent().toString(), airport.getTerminalCapacity(), airport.getRunwayCapacity());
 	}
 	
 	@Override
@@ -54,9 +55,13 @@ public class ForeignAirport extends Airport {
 		sb.append(", ");
 		sb.append(this.getLatitude());
 		sb.append(", ");
-		sb.append(this.getCountry().getISO3Country());
+		sb.append(this.getCountry().getCountry());
 		sb.append(", ");
 		sb.append(this.getCountry().getDisplayName());
+		sb.append(", ");
+		sb.append(this.getContinent());
+		sb.append(", ");
+		sb.append(this.getContinent().getName());
 		sb.append(", ");
 		sb.append(this.getTerminalCapacity());
 		sb.append(", ");

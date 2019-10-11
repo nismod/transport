@@ -108,7 +108,7 @@ public class RailDemandModel {
 		this.yearToStationGJTs = InputFileReader.readRailStationCostsFile(railStationGeneralisedJourneyTimesFile);
 		
 		//read trip rates
-		this.yearToTripRate = InputFileReader.readRailTripRatesFile(railTripRatesFile);
+		this.yearToTripRate = InputFileReader.readTripRatesFile(railTripRatesFile);
 
 		//create map to store rail station demands for all years
 		this.yearToRailDemand = new HashMap<Integer, RailStationDemand>();

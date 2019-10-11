@@ -1,7 +1,5 @@
 package nismod.transport.air;
 
-import java.util.Locale;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -14,6 +12,7 @@ public class DomesticAirport extends Airport {
 	
 	private final static Logger LOGGER = LogManager.getLogger(DomesticAirport.class);
 	
+	private String atcoCode;
 	private String naptanName; //longer NaPTAN name (for UK airports only)
 	private int easting; //for UK airports
 	private int northing; //for UK airports
@@ -23,6 +22,7 @@ public class DomesticAirport extends Airport {
 	/**
 	 * Constructor for the airport.
 	 * @param iataCode Airport IATA code.
+	 * @param atcoCode Airport ATCO code.
 	 * @param caaName Airport name in CCA datasets.
 	 * @param naptanName Airport name in NaPTAN (for UK airpots).
 	 * @param ourAirportsName Airport name in ourAirports dataset.
@@ -32,16 +32,16 @@ public class DomesticAirport extends Airport {
 	 * @param latitude Latitude coordinate.
 	 * @param ladCode LAD code of the zone in which the airport is located (for UK airports).
 	 * @param ladName LAD name of the zone in which the airport is located (for UK airports).
-	 * @param countryCode Code of the country in which the airport is located.
 	 * @param terminalCapacity Airport terminal capacity (max number of passengers that can be processed).
 	 * @param runwayCapacity Airport runway capacity (max number of flights that can be processed).
 	 */
-	public DomesticAirport(String iataCode, String caaName, String naptanName, String ourAirportsName, int easting, int northing, 
-				   double longitude, double latitude, String ladCode, String ladName, int terminalCapacity, int runwayCapacity) {
+	public DomesticAirport(String iataCode, String atcoCode, String caaName, String naptanName, String ourAirportsName, int easting, int northing, 
+				   double longitude, double latitude, String ladCode, String ladName, long terminalCapacity, long runwayCapacity) {
 		
 		
-		super(iataCode, caaName, ourAirportsName, longitude, latitude, "GB", terminalCapacity, runwayCapacity);
+		super(iataCode, caaName, ourAirportsName, longitude, latitude, "GB", "EU", terminalCapacity, runwayCapacity);
 		
+		this.atcoCode = atcoCode;
 		this.naptanName = naptanName;
 		this.easting = easting;
 		this.northing = northing;
@@ -55,9 +55,18 @@ public class DomesticAirport extends Airport {
 	 */
 	public DomesticAirport(DomesticAirport airport) {
 		
-		this(airport.getIataCode(), airport.getCAAName(), airport.getNaPTANName(), airport.getOurAirportsName(),
+		this(airport.getIataCode(), airport.getAtcoCode(), airport.getCAAName(), airport.getNaPTANName(), airport.getOurAirportsName(),
 			 airport.getEasting(), airport.getNorthing(), airport.getLongitude(), airport.getLatitude(), airport.getLADCode(),
 			 airport.getLADName(), airport.getTerminalCapacity(), airport.getRunwayCapacity());
+	}
+	
+	/**
+	 * Getter method for the airport ATCO code.
+	 * @return NaPTAN name.
+	 */
+	public String getAtcoCode() {
+		
+		return this.atcoCode;
 	}
 	
 	/**
@@ -111,6 +120,8 @@ public class DomesticAirport extends Airport {
 		StringBuilder sb = new StringBuilder();
 		sb.append(this.getIataCode());
 		sb.append(", ");
+		sb.append(this.getAtcoCode());
+		sb.append(", ");
 		sb.append(this.getCAAName());
 		sb.append(", ");
 		sb.append(this.naptanName);
@@ -129,9 +140,13 @@ public class DomesticAirport extends Airport {
 		sb.append(", ");
 		sb.append(this.ladName);
 		sb.append(", ");
-		sb.append(this.getCountry().getISO3Country());
+		sb.append(this.getCountry().getCountry());
 		sb.append(", ");
 		sb.append(this.getCountry().getDisplayName());
+		sb.append(", ");
+		sb.append(this.getContinent().toString());
+		sb.append(", ");
+		sb.append(this.getContinent().getName());
 		sb.append(", ");
 		sb.append(this.getTerminalCapacity());
 		sb.append(", ");

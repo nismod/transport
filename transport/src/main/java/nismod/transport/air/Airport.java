@@ -22,8 +22,8 @@ public abstract class Airport {
 	private Locale country;
 	private AirportGroupCAA airportGroupCAA;
 	private ContinentCode continent;
-	private int terminalCapacity;
-	private int runwayCapacity;
+	private long terminalCapacity;
+	private long runwayCapacity;
 	
 	/**
 	 * Airport groups by CAA used in the flight movements dataset.
@@ -130,10 +130,11 @@ public abstract class Airport {
 	 * @param ladCode LAD code of the zone in which the airport is located (for UK airports).
 	 * @param ladName LAD name of the zone in which the airport is located (for UK airports).
 	 * @param countryCode Code of the country in which the airport is located.
+	 * @param continentCode Code of the continent in which the airport is located.
 	 * @param terminalCapacity Airport terminal capacity (max number of passengers that can be processed).
 	 * @param runwayCapacity Airport runway capacity (max number of flights that can be processed).
 	 */
-	public Airport(String iataCode, String caaName, String ourAirportsName, double longitude, double latitude, String countryCode, int terminalCapacity, int runwayCapacity) {
+	public Airport(String iataCode, String caaName, String ourAirportsName, double longitude, double latitude, String countryCode, String continentCode, long terminalCapacity, long runwayCapacity) {
 		
 		this.iataCode = iataCode;
 		this.caaName = caaName;
@@ -141,6 +142,7 @@ public abstract class Airport {
 		this.longitude = longitude;
 		this.latitude = latitude;
 		this.country = new Locale("", countryCode);
+		this.continent = ContinentCode.valueOf(continentCode);
 		this.terminalCapacity = terminalCapacity;
 		this.runwayCapacity = runwayCapacity;
 	}
@@ -153,7 +155,7 @@ public abstract class Airport {
 		
 		this(airport.getIataCode(), airport.getCAAName(), airport.getOurAirportsName(),
 			 airport.getLongitude(), airport.getLatitude(), airport.getCountry().getISO3Country(),
-			 airport.getTerminalCapacity(), airport.getRunwayCapacity());
+			 airport.getContinent().toString(), airport.getTerminalCapacity(), airport.getRunwayCapacity());
 	}
 	
 	/**
@@ -211,10 +213,19 @@ public abstract class Airport {
 	}
 	
 	/**
+	 * Getter method for the continent in which the airport is located.
+	 * @return ContinentCode continent.
+	 */
+	public ContinentCode getContinent() {
+		
+		return this.continent;
+	}
+	
+	/**
 	 * Getter method for the airport terminal capacity.
 	 * @return Terminal capacity.
 	 */
-	public int getTerminalCapacity() {
+	public long getTerminalCapacity() {
 		
 		return this.terminalCapacity;
 	}
@@ -223,7 +234,7 @@ public abstract class Airport {
 	 * Getter method for the airport runway capacity.
 	 * @return Runway capacity.
 	 */
-	public int getRunwayCapacity() {
+	public long getRunwayCapacity() {
 		
 		return this.runwayCapacity;
 	}
@@ -242,9 +253,13 @@ public abstract class Airport {
 		sb.append(", ");
 		sb.append(this.latitude);
 		sb.append(", ");
-		sb.append(this.country.getISO3Country());
+		sb.append(this.country.getCountry());
 		sb.append(", ");
 		sb.append(this.country.getDisplayName());
+		sb.append(", ");
+		sb.append(this.continent);
+		sb.append(", ");
+		sb.append(this.continent.getName());
 		sb.append(", ");
 		sb.append(this.terminalCapacity);
 		sb.append(", ");

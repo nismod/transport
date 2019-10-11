@@ -17,6 +17,10 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import nismod.transport.air.AirDemandModel;
+import nismod.transport.air.Airport;
+import nismod.transport.air.DomesticAirport;
+import nismod.transport.air.ForeignAirport;
 import nismod.transport.demand.DemandModel.ElasticityTypes;
 import nismod.transport.network.road.RoadNetworkAssignment.EnergyType;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
@@ -24,7 +28,9 @@ import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.network.road.Route.WebTAG;
 import nismod.transport.rail.RailDemandModel;
+import nismod.transport.rail.RailStation;
 import nismod.transport.rail.RailDemandModel.ElasticityArea;
+import nismod.transport.rail.RailStation.RailModeType;
 
 /**
  * InputFileReader reads input files and provides them as various data structures required by other classes.
@@ -207,6 +213,44 @@ public class InputFileReader {
 		}
 		
 		LOGGER.debug("Rail elasticities read from file.");
+		LOGGER.trace(map);
+
+		return map;
+	}
+	
+	/**
+	 * Reads air elasticities file.
+	 * @param fileName File name.
+	 * @return Map with elasticity parameters.
+	 */
+	public static Map<AirDemandModel.ElasticityTypes, Double> readAirElasticitiesFile (String fileName) {
+
+		Map<AirDemandModel.ElasticityTypes, Double> map = new EnumMap<>(AirDemandModel.ElasticityTypes.class);
+		CSVParser parser = null;
+		try {
+			parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
+			//System.out.println(parser.getHeaderMap().toString());
+			Set<String> keySet = parser.getHeaderMap().keySet();
+			//System.out.println("keySet = " + keySet);
+			for (CSVRecord record : parser) {
+				//System.out.println(record);
+				AirDemandModel.ElasticityTypes et = AirDemandModel.ElasticityTypes.valueOf(record.get(0));
+				Double elasticity = Double.parseDouble(record.get(1));		
+				map.put(et, elasticity);
+			}
+		} catch (FileNotFoundException e) {
+			LOGGER.error(e);
+		} catch (IOException e) {
+			LOGGER.error(e);
+		} finally {
+			try {
+				parser.close();
+			} catch (IOException e) {
+				LOGGER.error(e);
+			}
+		}
+		
+		LOGGER.debug("Air elasticities read from file.");
 		LOGGER.trace(map);
 
 		return map;
@@ -817,11 +861,11 @@ public class InputFileReader {
 	}
 	
 	/**
-	 * Reads rail trip rates file.
+	 * Reads trip rates file.
 	 * @param fileName File name.
 	 * @return Map with rail trip rates.
 	 */
-	public static HashMap<Integer, Double> readRailTripRatesFile(String fileName) {
+	public static HashMap<Integer, Double> readTripRatesFile(String fileName) {
 
 		HashMap<Integer, Double> map = new HashMap<Integer, Double>();
 		
@@ -849,10 +893,156 @@ public class InputFileReader {
 			}
 		}
 
-		LOGGER.debug("Rail station costs read from file with data points for {} years.", map.keySet().size());
-		//LOGGER.debug("Cost:");
-		//LOGGER.debug(map);
+		LOGGER.debug("Trip rates read from file with data points for {} years.", map.keySet().size());
 		
+		return map;
+	}
+	
+	/**
+	 * Reads airport fare index file.
+	 * @param fileName File name.
+	 * @return Map with airport fare indices.
+	 */
+	public static HashMap<Integer, HashMap<String, Double>> readAirportFareIndexFile(String fileName) {
+
+		HashMap<Integer, HashMap<String, Double>> map = new HashMap<Integer, HashMap<String, Double>>();
+		
+		CSVParser parser = null;
+		int airportNumber = 0;
+		try {
+			parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
+			//System.out.println(parser.getHeaderMap().toString());
+			Set<String> keySet = parser.getHeaderMap().keySet();
+			keySet.remove("year");
+			airportNumber = keySet.size();
+			for (CSVRecord record : parser) {
+				//System.out.println(record);
+				int year = Integer.parseInt(record.get(0));
+				HashMap<String, Double> iataToFare = new HashMap<String, Double>();
+				for (String iata: keySet) {
+					double fare = Double.parseDouble(record.get(iata));
+					iataToFare.put(iata, fare);			
+				}
+				map.put(year, iataToFare);
+			}
+		} catch (FileNotFoundException e) {
+			LOGGER.error(e);
+		} catch (IOException e) {
+			LOGGER.error(e);
+		} catch (Exception e) {
+			LOGGER.error(e);
+		} finally {
+			try {
+				parser.close();
+			} catch (IOException e) {
+				LOGGER.error(e);
+			}
+		}
+
+		LOGGER.debug("Airport fare index read from file with data points for {} years and {} airports.", map.keySet().size(), airportNumber);
+		
+		return map;
+	}
+	
+	/**
+	 * Reads domestic airports file.
+	 * @param fileName File name.
+	 * @return Mapping between IATA code and airport information.
+	 */
+	public static Map<String, Airport> readDomesticAirportsFile(String fileName) {
+
+		Map<String, Airport> map = new HashMap<String, Airport>();
+		CSVParser parser = null;
+		try {
+			parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
+			//Set<String> keySet = parser.getHeaderMap().keySet();
+			//System.out.println("keySet = " + keySet);
+			for (CSVRecord record : parser) {
+				
+				String iataCode = record.get("IataCode");
+				String atcoCode = record.get("AtcoCode");
+				String caaName = record.get("CAAname");
+				String naptanName = record.get("NaPTANname");
+				String ourAirportsName = record.get("OurAirportsName");
+				int easting = Integer.parseInt(record.get("Easting"));
+				int northing = Integer.parseInt(record.get("Northing"));
+				double longitude = Integer.parseInt(record.get("Longitude"));
+				double latitude = Integer.parseInt(record.get("Latitude"));
+				String ladCode = record.get("LadCode");
+				String ladName = record.get("LadName");
+				long terminalCapacity = Integer.parseInt(record.get("TerminalCapacity"));
+				long runwayCapacity = Integer.parseInt(record.get("RunwayCapacity"));
+
+				//create station object and store into the map
+				Airport airport = new DomesticAirport(iataCode, atcoCode, caaName, naptanName, ourAirportsName, easting, northing, 
+						   longitude, latitude, ladCode, ladName, terminalCapacity, runwayCapacity);
+		
+				map.put(iataCode, airport);
+			}
+		} catch (FileNotFoundException e) {
+			LOGGER.error(e);
+		} catch (IOException e) {
+			LOGGER.error(e);
+		} finally {
+			try {
+				parser.close();
+			} catch (IOException e) {
+				LOGGER.error(e);
+			}
+		}
+		
+		LOGGER.debug("Domestic airports read from file.");
+		LOGGER.trace(map);
+
+		return map;
+	}
+	
+	/**
+	 * Reads international airports file.
+	 * @param fileName File name.
+	 * @return Mapping between IATA code and airport information.
+	 */
+	public static Map<String, Airport> readInternationalAirportsFile(String fileName) {
+
+		Map<String, Airport> map = new HashMap<String, Airport>();
+		CSVParser parser = null;
+		try {
+			parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
+			//Set<String> keySet = parser.getHeaderMap().keySet();
+			//System.out.println("keySet = " + keySet);
+			for (CSVRecord record : parser) {
+				
+				String iataCode = record.get("IataCode");
+				String caaName = record.get("CAAname");
+				String ourAirportsName = record.get("OurAirportsName");
+				double longitude = Integer.parseInt(record.get("Longitude"));
+				double latitude = Integer.parseInt(record.get("Latitude"));
+				String countryCode = record.get("CountryCode");
+				String continentCode = record.get("ContinentCode");
+				long terminalCapacity = Integer.parseInt(record.get("TerminalCapacity"));
+				long runwayCapacity = Integer.parseInt(record.get("RunwayCapacity"));
+
+				//create station object and store into the map
+				Airport airport = new ForeignAirport(iataCode, caaName, ourAirportsName,
+						   longitude, latitude, countryCode, continentCode, terminalCapacity, runwayCapacity);
+		
+				map.put(iataCode, airport);
+			}
+		} catch (FileNotFoundException e) {
+			LOGGER.error(e);
+		} catch (IOException e) {
+			LOGGER.error(e);
+		} finally {
+			try {
+				parser.close();
+			} catch (IOException e) {
+				LOGGER.error(e);
+			}
+		}
+		
+		LOGGER.debug("Domestic airports read from file.");
+		LOGGER.trace(map);
+
 		return map;
 	}
 }

@@ -2,21 +2,25 @@ package nismod.transport.air;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
-import org.apache.commons.collections4.map.MultiKeyMap;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import nismod.transport.demand.ODMatrixMultiKey;
-
+/**
+ * This class encapsulates domestic internodal (domestic airport to domestic airport) passenger data.
+ * @author Milan Lovric
+ */
 public class DomesticInternodalPassengerDemand extends InternodalPassengerDemand{
 
 	private final static Logger LOGGER = LogManager.getLogger(DomesticInternodalPassengerDemand.class);
@@ -73,6 +77,59 @@ public class DomesticInternodalPassengerDemand extends InternodalPassengerDemand
 		}
 	
 		LOGGER.debug("Finished reading air demand from file.");
+	}
+	
+	/**
+	 * Saves air passenger demand to an output file.
+	 * @param year Year of the data.
+	 * @param outputFile Output file name (with path).
+	 */
+	public void saveAirPassengerDemand(int year, String outputFile) {
+
+		LOGGER.debug("Saving domestic air passenger demand to a file.");
+
+		String NEW_LINE_SEPARATOR = "\n";
+		ArrayList<String> outputHeader = new ArrayList<String>();
+		outputHeader.add("year");
+		outputHeader.add("AirportOneIATA");
+		outputHeader.add("AirportTwoIATA");
+		outputHeader.add("TotalPax");
+		
+		FileWriter fileWriter = null;
+		CSVPrinter csvFilePrinter = null;
+		CSVFormat csvFileFormat = CSVFormat.DEFAULT.withRecordSeparator(NEW_LINE_SEPARATOR);
+		try {
+			fileWriter = new FileWriter(outputFile);
+			csvFilePrinter = new CSVPrinter(fileWriter, csvFileFormat);
+			csvFilePrinter.printRecord(outputHeader);
+			ArrayList<String> record = new ArrayList<String>();
+
+			for (Object mk: this.data.keySet()) {
+				
+				record.clear();
+				record.add(Integer.toString(year));
+								
+				String firstIATA = (String) ((MultiKey)mk).getKey(0); //domestic
+				String secondIATA = (String) ((MultiKey)mk).getKey(1); //international
+				record.add(firstIATA);
+				record.add(secondIATA);
+				
+				Long totalPax = this.getDemand(firstIATA, secondIATA).get(Passengers.TOTAL);
+				record.add(String.valueOf(totalPax));
+
+				csvFilePrinter.printRecord(record);	
+			}		
+		} catch (Exception e) {
+			LOGGER.error(e);
+		} finally {
+			try {
+				fileWriter.flush();
+				fileWriter.close();
+				csvFilePrinter.close();
+			} catch (IOException e) {
+				LOGGER.error(e);
+			}
+		}
 	}
 	
 	/*
