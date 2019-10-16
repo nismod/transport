@@ -484,7 +484,7 @@ public class Trip {
 	}
 	
 	/**
-	 * Calculates total CO2 emissions per energy type.
+	 * Calculates total CO2 emission for the trip.
 	 * @param linkTravelTime Link travel time.
 	 * @param averageAccessEgressMap Average access/egress distance to a node for LAD-based trips.
 	 * @param averageAccessEgressSpeed Average accces/egress speed.

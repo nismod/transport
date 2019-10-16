@@ -3,15 +3,23 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to transport's documentation!
-=====================================
+=========================
+NISMOD v2 Transport Model
+=========================
+
+**NISMOD v2 Transport Model** is a national-scale (*Great Britain*) transport model developed to support policy making 
+regarding future infrastructure.
+
+Contents
+========
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
 
-   packages
-
+   Documentation <documentation>
+   Javadoc API <packages>
+   Authors <authors>
+   License <license>
 
 Indices and tables
 ==================
