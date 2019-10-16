@@ -20,7 +20,7 @@ import org.apache.logging.log4j.Logger;
 import nismod.transport.air.AirDemandModel;
 import nismod.transport.air.Airport;
 import nismod.transport.air.DomesticAirport;
-import nismod.transport.air.ForeignAirport;
+import nismod.transport.air.InternationalAirport;
 import nismod.transport.demand.DemandModel.ElasticityTypes;
 import nismod.transport.network.road.RoadNetworkAssignment.EnergyType;
 import nismod.transport.network.road.RoadNetworkAssignment.EngineType;
@@ -966,8 +966,8 @@ public class InputFileReader {
 				String ourAirportsName = record.get("OurAirportsName");
 				int easting = Integer.parseInt(record.get("Easting"));
 				int northing = Integer.parseInt(record.get("Northing"));
-				double longitude = Integer.parseInt(record.get("Longitude"));
-				double latitude = Integer.parseInt(record.get("Latitude"));
+				double longitude = Double.parseDouble(record.get("Longitude"));
+				double latitude = Double.parseDouble(record.get("Latitude"));
 				String ladCode = record.get("LadCode");
 				String ladName = record.get("LadName");
 				long terminalCapacity = Integer.parseInt(record.get("TerminalCapacity"));
@@ -1015,15 +1015,15 @@ public class InputFileReader {
 				String iataCode = record.get("IataCode");
 				String caaName = record.get("CAAname");
 				String ourAirportsName = record.get("OurAirportsName");
-				double longitude = Integer.parseInt(record.get("Longitude"));
-				double latitude = Integer.parseInt(record.get("Latitude"));
-				String countryCode = record.get("CountryCode");
+				double longitude = Double.parseDouble(record.get("Longitude"));
+				double latitude = Double.parseDouble(record.get("Latitude"));
+				String countryCode = record.get("CountryIsoCode");
 				String continentCode = record.get("ContinentCode");
 				long terminalCapacity = Integer.parseInt(record.get("TerminalCapacity"));
 				long runwayCapacity = Integer.parseInt(record.get("RunwayCapacity"));
 
 				//create station object and store into the map
-				Airport airport = new ForeignAirport(iataCode, caaName, ourAirportsName,
+				Airport airport = new InternationalAirport(iataCode, caaName, ourAirportsName,
 						   longitude, latitude, countryCode, continentCode, terminalCapacity, runwayCapacity);
 		
 				map.put(iataCode, airport);

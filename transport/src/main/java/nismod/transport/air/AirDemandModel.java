@@ -60,14 +60,17 @@ public class AirDemandModel {
 
 	/**
 	 * Constructor for the air demand model.
-	 * @param baseYearRailStationUsageFile Base year rail station usage file (demand).
+	 * @param domesticAirportsFile List of domestic airports.
+	 * @param internationalAirportsFile List of international airports.
+	 * @param baseYearDomesticPassengerFile Base year domestic air passenger file (demand).
+	 * @param baseYearInternationalPassengerFile Base year international air passenger file (demand).
 	 * @param populationFile Population file.
 	 * @param GVAFile GVA file.
-	 * @param elasticitiesFile Elasticites file.
-	 * @param railStationJourneyFaresFile Rail fares file.
-	 * @param railStationGeneralisedJourneyTimesFile GJT file.
-	 * @param carZonalJourneyCostsFile Zonal car journey costs file.
-	 * @param railTripRatesFile Rail trip rates file.
+	 * @param elasticitiesFile Elasticities file.
+	 * @param domesticAirportFareIndexFile Domestic airport fare index.
+	 * @param internationalAirportFareIndexFile International airport fare index.
+	 * @param domesticTripRatesFile Domestic trip rates file.
+	 * @param internationalTripRatesFile International trip rates file.
 	 * @param interventions List of interventions.
 	 * @param props Properties.
 	 * @throws FileNotFoundException
@@ -80,8 +83,8 @@ public class AirDemandModel {
 		this.interventions = interventions;
 		this.props = props;
 		
-		this.domesticAirports = InputFileReader.readDomesticAirportsFile(domesticAirportsFile);
-		this.internationalAirports = InputFileReader.readInternationalAirportsFile(internationalAirportsFile);
+		domesticAirports = InputFileReader.readDomesticAirportsFile(domesticAirportsFile);
+		internationalAirports = InputFileReader.readInternationalAirportsFile(internationalAirportsFile);
 		
 		//read all year population predictions
 		this.yearToZoneToPopulation = InputFileReader.readPopulationFile(populationFile);
@@ -114,7 +117,7 @@ public class AirDemandModel {
 		this.yearToDomesticPassengerDemand.put(baseYear, baseYearDomesticDemand);
 		this.yearToInternationalPassengerDemand.put(baseYear, baseYearInternationalDemand);
 				
-		//save base-year passenger rail demand to output folder
+		//save base-year passenger air demand to output folder
 		this.saveAllResults(baseYear);
 		
 		//install interventions (if not already installed)
@@ -122,7 +125,6 @@ public class AirDemandModel {
 			for (Intervention i: interventions)
 				if (!i.getState())				
 					i.install(this);
-
 	}
 
 	/**
@@ -133,9 +135,9 @@ public class AirDemandModel {
 	 */
 	public void predictAndSaveAirDemands(int toYear, int fromYear) {
 
-		Boolean flagPredictIntermediateYearsRail = Boolean.parseBoolean(this.props.getProperty("FLAG_PREDICT_INTERMEDIATE_YEARS_AIR"));
+		Boolean flagPredictIntermediateYearsAir = Boolean.parseBoolean(this.props.getProperty("FLAG_PREDICT_INTERMEDIATE_YEARS_AIR"));
 
-		if (flagPredictIntermediateYearsRail) { //predict all intermediate years
+		if (flagPredictIntermediateYearsAir) { //predict all intermediate years
 			for (int year = fromYear; year <= toYear - 1; year++) {
 				this.predictDomesticAirDemandUsingResultsOfFromYear(year + 1, year);
 				this.predictInternationalAirDemandUsingResultsOfFromYear(year + 1, year);
@@ -173,7 +175,7 @@ public class AirDemandModel {
 			predictedAirDemandFile = "baseYearDomesticAirPassengerDemand.csv";
 		}
 		
-		//load rail demand from fromYear
+		//load air demand from fromYear
 		LOGGER.info("Loading output data (air demand) from year {}", fromYear);
 		
 		try {
@@ -212,30 +214,58 @@ public class AirDemandModel {
 			String secondIATA = (String) ((MultiKey)mk).getKey(1);
 			
 			String firstZone = ((DomesticAirport) domesticAirports.get(firstIATA)).getLADCode();
+			String firstZoneName = ((DomesticAirport) domesticAirports.get(firstIATA)).getLADName();
+
 			String secondZone = ((DomesticAirport) domesticAirports.get(secondIATA)).getLADCode();
+			String secondZoneName = ((DomesticAirport) domesticAirports.get(secondIATA)).getLADName();
 			
 			long oldUsage = fromDemand.getDemand(firstIATA, secondIATA).get(Passengers.TOTAL);
 			
-			int oldPopulationFirstZone = this.yearToZoneToPopulation.get(fromYear).get(firstZone);
-			int oldPopulationSecondZone = this.yearToZoneToPopulation.get(fromYear).get(secondZone);
-			int newPopulationFirstZone = this.yearToZoneToPopulation.get(predictedYear).get(firstZone);
-			int newPopulationSecondZone = this.yearToZoneToPopulation.get(predictedYear).get(secondZone);
+			Integer oldPopulationFirstZone = this.yearToZoneToPopulation.get(fromYear).get(firstZone);
+			Integer oldPopulationSecondZone = this.yearToZoneToPopulation.get(fromYear).get(secondZone);
+			Integer newPopulationFirstZone = this.yearToZoneToPopulation.get(predictedYear).get(firstZone);
+			Integer newPopulationSecondZone = this.yearToZoneToPopulation.get(predictedYear).get(secondZone);
 			
-			double oldGVAFirstZone = this.yearToZoneToGVA.get(fromYear).get(firstZone);
-			double oldGVASecondZone = this.yearToZoneToGVA.get(fromYear).get(secondZone);
-			double newGVAFirstZone = this.yearToZoneToGVA.get(predictedYear).get(firstZone);
-			double newGVASecondZone = this.yearToZoneToGVA.get(predictedYear).get(secondZone);
+			if (oldPopulationFirstZone == null) LOGGER.warn("Missing {} population in zone {} ({}).", fromYear, firstZone, firstZoneName);
+			if (oldPopulationSecondZone == null) LOGGER.warn("Missing {} population in zone {} ({}).", fromYear, secondZone, secondZoneName);
+			if (newPopulationFirstZone == null) LOGGER.warn("Missing {} population in zone {} ({}).", predictedYear, firstZone, firstZoneName);
+			if (newPopulationSecondZone == null) LOGGER.warn("Missing {} population in zone {} ({}).", predictedYear, secondZone, secondZoneName);
+			
+			Double oldGVAFirstZone = this.yearToZoneToGVA.get(fromYear).get(firstZone);
+			Double oldGVASecondZone = this.yearToZoneToGVA.get(fromYear).get(secondZone);
+			Double newGVAFirstZone = this.yearToZoneToGVA.get(predictedYear).get(firstZone);
+			Double newGVASecondZone = this.yearToZoneToGVA.get(predictedYear).get(secondZone);
+			
+			if (oldGVAFirstZone == null) LOGGER.warn("Missing {} GVA per head in zone {} ({}).", fromYear, firstZone, firstZoneName);
+			if (oldGVASecondZone == null) LOGGER.warn("Missing {} GVA per head in zone {} ({}).", fromYear, secondZone, secondZoneName);
+			if (newGVAFirstZone == null) LOGGER.warn("Missing {} GVA per head in zone {} ({}).", predictedYear, firstZone, firstZoneName);
+			if (newGVASecondZone == null) LOGGER.warn("Missing {} GVA per head in zone {} ({}).", predictedYear, secondZone, secondZoneName);
+		
+			Double oldFareIndexFirstAirport = this.yearToDomesticAirportFareIndex.get(fromYear).get(firstIATA);
+			Double oldFareIndexSecondAirport = this.yearToDomesticAirportFareIndex.get(fromYear).get(secondIATA);
+			Double newFareIndexFirstAirport = this.yearToDomesticAirportFareIndex.get(predictedYear).get(firstIATA);
+			Double newFareIndexSecondAirport = this.yearToDomesticAirportFareIndex.get(predictedYear).get(secondIATA);
+			
+			//first assume a 1.0 ratio
+			double populationRatio = 1.0;
+			double GVARatio = 1.0;
+			double fareIndexRatio = 1.0;
 
-			double oldFareIndexFirstAirport = this.yearToDomesticAirportFareIndex.get(fromYear).get(firstIATA);
-			double oldFareIndexSecondAirport = this.yearToDomesticAirportFareIndex.get(fromYear).get(secondIATA);
-			double newFareIndexFirstAirport = this.yearToDomesticAirportFareIndex.get(predictedYear).get(firstIATA);
-			double newFareIndexSecondAirport = this.yearToDomesticAirportFareIndex.get(predictedYear).get(secondIATA);
-
+			//if all data is available calculate the actual ratio (otherwise assume 1.0)
+			if (newPopulationFirstZone != null && newPopulationSecondZone != null && oldPopulationFirstZone != null && oldPopulationSecondZone != null)
+				populationRatio = (double) (newPopulationFirstZone + newPopulationSecondZone) / (oldPopulationFirstZone + oldPopulationSecondZone);
+			
+			if (newGVAFirstZone != null && newGVASecondZone != null && oldGVAFirstZone != null && oldGVASecondZone != null)
+				GVARatio = (double) (newGVAFirstZone + newGVASecondZone) / (oldGVAFirstZone + oldGVASecondZone);
+			
+			if (newFareIndexFirstAirport != null && newFareIndexSecondAirport != null && oldFareIndexFirstAirport != null && oldFareIndexSecondAirport != null)
+				fareIndexRatio = (double) (newFareIndexFirstAirport + newFareIndexSecondAirport) / (oldFareIndexFirstAirport + oldFareIndexSecondAirport);
+			
 			//predict station usage
 			long predictedUsage = (long) Math.round(oldUsage * tripRate 
-												* Math.pow((double) (newPopulationFirstZone + newPopulationSecondZone) / (oldPopulationFirstZone + oldPopulationSecondZone), elasticities.get(ElasticityTypes.POPULATION))
-												* Math.pow((double) (newGVAFirstZone + newGVASecondZone) / (oldGVAFirstZone + oldGVASecondZone), elasticities.get(ElasticityTypes.GVA))
-												* Math.pow((double) (newFareIndexFirstAirport + newFareIndexSecondAirport) / (oldFareIndexFirstAirport + oldFareIndexSecondAirport), elasticities.get(ElasticityTypes.COST_DOMESTIC)));
+												* Math.pow(populationRatio, elasticities.get(ElasticityTypes.POPULATION))
+												* Math.pow(GVARatio, elasticities.get(ElasticityTypes.GVA))
+												* Math.pow(fareIndexRatio, elasticities.get(ElasticityTypes.COST_DOMESTIC)));
 
 			if (predictedUsage == 0 && oldUsage != 0) 
 				predictedUsage = 1; //stops demand from disappearing (unless oldUsage was also 0)
@@ -277,7 +307,7 @@ public class AirDemandModel {
 			predictedAirDemandFile = "baseYearInternationalAirPassengerDemand.csv";
 		}
 		
-		//load rail demand from fromYear
+		//load air demand from fromYear
 		LOGGER.info("Loading output data (air demand) from year {}", fromYear);
 		
 		try {
@@ -316,25 +346,47 @@ public class AirDemandModel {
 			String secondIATA = (String) ((MultiKey)mk).getKey(1); //international
 			
 			String firstZone = ((DomesticAirport) domesticAirports.get(firstIATA)).getLADCode();
+			String firstZoneName = ((DomesticAirport) domesticAirports.get(firstIATA)).getLADName();
 					
 			long oldUsage = fromDemand.getDemand(firstIATA, secondIATA).get(Passengers.TOTAL);
 			
-			int oldPopulationFirstZone = this.yearToZoneToPopulation.get(fromYear).get(firstZone);
-			int newPopulationFirstZone = this.yearToZoneToPopulation.get(predictedYear).get(firstZone);
+			Integer oldPopulationFirstZone = this.yearToZoneToPopulation.get(fromYear).get(firstZone);
+			Integer newPopulationFirstZone = this.yearToZoneToPopulation.get(predictedYear).get(firstZone);
 			
-			double oldGVAFirstZone = this.yearToZoneToGVA.get(fromYear).get(firstZone);
-			double newGVAFirstZone = this.yearToZoneToGVA.get(predictedYear).get(firstZone);
+			if (oldPopulationFirstZone == null) LOGGER.warn("Missing {} population in zone {} ({}).", fromYear, firstZone, firstZoneName);
+			if (newPopulationFirstZone == null) LOGGER.warn("Missing {} population in zone {} ({}).", predictedYear, firstZone, firstZoneName);
+		
+			Double oldGVAFirstZone = this.yearToZoneToGVA.get(fromYear).get(firstZone);
+			Double newGVAFirstZone = this.yearToZoneToGVA.get(predictedYear).get(firstZone);
+			
+			if (oldGVAFirstZone == null) LOGGER.warn("Missing {} GVA per head in zone {} ({}).", fromYear, firstZone, firstZoneName);
+			if (newGVAFirstZone == null) LOGGER.warn("Missing {} GVA per head in zone {} ({}).", predictedYear, firstZone, firstZoneName);
 
-			double oldFareIndexFirstAirport = this.yearToDomesticAirportFareIndex.get(fromYear).get(firstIATA);
-			double oldFareIndexSecondAirport = this.yearToInternationalAirportFareIndex.get(fromYear).get(secondIATA);
-			double newFareIndexFirstAirport = this.yearToDomesticAirportFareIndex.get(predictedYear).get(firstIATA);
-			double newFareIndexSecondAirport = this.yearToInternationalAirportFareIndex.get(predictedYear).get(secondIATA);
+			Double oldFareIndexFirstAirport = this.yearToDomesticAirportFareIndex.get(fromYear).get(firstIATA);
+			Double oldFareIndexSecondAirport = this.yearToInternationalAirportFareIndex.get(fromYear).get(secondIATA);
+			Double newFareIndexFirstAirport = this.yearToDomesticAirportFareIndex.get(predictedYear).get(firstIATA);
+			Double newFareIndexSecondAirport = this.yearToInternationalAirportFareIndex.get(predictedYear).get(secondIATA);
+			
+			//first assume a 1.0 ratio
+			double populationRatio = 1.0;
+			double GVARatio = 1.0;
+			double fareIndexRatio = 1.0;
+
+			//if all data is available calculate the actual ratio (otherwise assume 1.0)
+			if (newPopulationFirstZone != null && oldPopulationFirstZone != null)
+				populationRatio = (double) newPopulationFirstZone / oldPopulationFirstZone;
+			
+			if (newGVAFirstZone != null && oldGVAFirstZone != null)
+				GVARatio = (double) (newGVAFirstZone / oldGVAFirstZone);
+			
+			if (newFareIndexFirstAirport != null && newFareIndexSecondAirport != null && oldFareIndexFirstAirport != null && oldFareIndexSecondAirport != null)
+				fareIndexRatio = (double) (newFareIndexFirstAirport + newFareIndexSecondAirport) / (oldFareIndexFirstAirport + oldFareIndexSecondAirport);
 
 			//predict station usage
 			long predictedUsage = (long) Math.round(oldUsage * tripRate 
-												* Math.pow((double) newPopulationFirstZone / oldPopulationFirstZone, elasticities.get(ElasticityTypes.POPULATION))
-												* Math.pow((double) newGVAFirstZone / oldGVAFirstZone, elasticities.get(ElasticityTypes.GVA))
-												* Math.pow((double) (newFareIndexFirstAirport + newFareIndexSecondAirport) / (oldFareIndexFirstAirport + oldFareIndexSecondAirport), elasticities.get(ElasticityTypes.COST_INTERNATIONAL)));
+												* Math.pow(populationRatio, elasticities.get(ElasticityTypes.POPULATION))
+												* Math.pow(GVARatio, elasticities.get(ElasticityTypes.GVA))
+												* Math.pow(fareIndexRatio, elasticities.get(ElasticityTypes.COST_INTERNATIONAL)));
 
 			if (predictedUsage == 0 && oldUsage != 0) 
 				predictedUsage = 1; //stops demand from disappearing (unless oldUsage was also 0)

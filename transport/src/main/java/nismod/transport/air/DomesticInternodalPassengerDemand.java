@@ -46,7 +46,7 @@ public class DomesticInternodalPassengerDemand extends InternodalPassengerDemand
 		//System.out.println(parser.getHeaderMap().toString());
 		Set<String> keySet = parser.getHeaderMap().keySet();
 
-		if (!(keySet.contains("AirportOneIATA") &&  keySet.contains("AirportTwoIATA") && keySet.contains("TotalPax") &&  keySet.contains("ScheduledPax") && keySet.contains("CharterPax"))) {
+		if (!(keySet.contains("AirportOneIATA") && keySet.contains("AirportTwoIATA") && keySet.contains("TotalPax"))) {
 
 			LOGGER.error("Input file {} does not have a correct header.");
 			parser.close();
@@ -55,22 +55,28 @@ public class DomesticInternodalPassengerDemand extends InternodalPassengerDemand
 		} else {
 			
 			for (CSVRecord record : parser) { 
+											
 				String firstIATA = record.get("AirportOneIATA");
 				String secondIATA = record.get("AirportTwoIATA");
 				long totalPax = Long.parseLong(record.get("TotalPax"));
-				long scheduledPax = Long.parseLong(record.get("ScheduledPax"));
-				long charterPax = Long.parseLong(record.get("CharterPax"));
-				
-				if (totalPax != scheduledPax + charterPax) {
-					LOGGER.warn("For IATA pair ({}, {}), total passengers do not equal sum of scheduled and charter passengers!", firstIATA, secondIATA);
-				}
 				
 				//create map with passenger data
 				Map<Passengers, Long> map = new EnumMap<>(Passengers.class);
 				map.put(Passengers.TOTAL, totalPax);
-				map.put(Passengers.SCHEDULED, scheduledPax);
-				map.put(Passengers.CHARTER, charterPax);
-
+				
+				if (keySet.contains("ScheduledPax") && keySet.contains("CharterPax")) {
+				
+					long scheduledPax = Long.parseLong(record.get("ScheduledPax"));
+					long charterPax = Long.parseLong(record.get("CharterPax"));
+				
+					if (totalPax != scheduledPax + charterPax) {
+						LOGGER.warn("For IATA pair ({}, {}), total passengers do not equal sum of scheduled and charter passengers!", firstIATA, secondIATA);
+					}
+					
+					map.put(Passengers.SCHEDULED, scheduledPax);
+					map.put(Passengers.CHARTER, charterPax);
+				}
+				
 				this.data.put(firstIATA, secondIATA, map);
 			}
 			parser.close();

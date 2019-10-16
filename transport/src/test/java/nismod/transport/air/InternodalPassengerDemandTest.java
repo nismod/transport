@@ -22,8 +22,8 @@ public class InternodalPassengerDemandTest {
 	@Test
 	public void test() throws IOException {
 		
-		String path = "./src/test/resources/testdata/csvfiles/DomesticInternodalPassengerBaseYearDemandTest.csv";
-		String path2 = "./src/test/resources/testdata/csvfiles/InternationalInternodalPassengerBaseYearDemandTest.csv";
+		String path = "./src/test/resources/testdata/csvfiles/baseYearDomesticAirPassengerDemandTest.csv";
+		String path2 = "./src/test/resources/testdata/csvfiles/baseYearInternationalAirPassengerDemandTest.csv";
 		
 		InternodalPassengerDemand domestic = new DomesticInternodalPassengerDemand(path);
 		domestic.printDemand();

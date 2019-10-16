@@ -767,13 +767,13 @@ public class App {
 					
 			final String domesticAirportsFileName = props.getProperty("domesticAirportsFile");
 			final String internationalAirportsFileName = props.getProperty("internationalAirportsFile");
-			final String domesticDemandFileName = props.getProperty("baseYearDomesticInternodalPassengerDemandFile");
-			final String internationalDemandFileName = props.getProperty("baseYearInternationalInternodalPassengerDemandFile");
+			final String domesticDemandFileName = props.getProperty("baseYearDomesticAirPassengerDemandFile");
+			final String internationalDemandFileName = props.getProperty("baseYearInternationalAirPassengerDemandFile");
 			final String populationFile = props.getProperty("populationFile");
 			final String GVAFile = props.getProperty("GVAFile");
-			final String elasticitiesAirFile = props.getProperty("elasticitiesRailFile");
-			final String domesticAirportFaresFile = props.getProperty("domesticAirportFaresFile");
-			final String internationalAirportFaresFile = props.getProperty("internationalAirportFaresFile");
+			final String elasticitiesAirFile = props.getProperty("elasticitiesAirFile");
+			final String domesticAirportFaresFile = props.getProperty("domesticAirportFareIndexFile");
+			final String internationalAirportFaresFile = props.getProperty("internationalAirportFareIndexFile");
 			final String domesticAirportTripRatesFile = props.getProperty("domesticAirportTripRatesFile");
 			final String internationalAirportTripRatesFile = props.getProperty("internationalAirportTripRatesFile");
 			

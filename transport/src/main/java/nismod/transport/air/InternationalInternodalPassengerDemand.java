@@ -17,6 +17,8 @@ import org.apache.commons.csv.CSVRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import nismod.transport.air.InternodalPassengerDemand.Passengers;
+
 /**
  * This class encapsulates international internodal (domestic airport to international airport) passenger data.
  * @author Milan Lovric
@@ -46,7 +48,7 @@ public class InternationalInternodalPassengerDemand extends InternodalPassengerD
 		//System.out.println(parser.getHeaderMap().toString());
 		Set<String> keySet = parser.getHeaderMap().keySet();
 
-		if (!(keySet.contains("DomesticIATA") &&  keySet.contains("ForeignIATA") && keySet.contains("ForeignRegionCAA") &&  keySet.contains("CountryCodeISO") && keySet.contains("TotalPax") &&  keySet.contains("ScheduledPax") && keySet.contains("CharterPax"))) {
+		if (!(keySet.contains("DomesticIATA") &&  keySet.contains("ForeignIATA") && keySet.contains("TotalPax"))) {
 
 			LOGGER.error("Input file {} does not have a correct header.");
 			parser.close();
@@ -55,24 +57,30 @@ public class InternationalInternodalPassengerDemand extends InternodalPassengerD
 		} else {
 			
 			for (CSVRecord record : parser) { 
+				
 				String firstIATA = record.get("DomesticIATA");
 				String secondIATA = record.get("ForeignIATA");
 				//String foreignRegion = record.get("ForeignRegion");
 				//String countryCode = record.get("CountryCode");
 				long totalPax = Long.parseLong(record.get("TotalPax"));
-				long scheduledPax = Long.parseLong(record.get("ScheduledPax"));
-				long charterPax = Long.parseLong(record.get("CharterPax"));
-				
-				if (totalPax != scheduledPax + charterPax) {
-					LOGGER.warn("For IATA pair ({}, {}), total passengers do not equal sum of scheduled and charter passengers!", firstIATA, secondIATA);
-				}
 				
 				//create map with passenger data
 				Map<Passengers, Long> map = new EnumMap<>(Passengers.class);
 				map.put(Passengers.TOTAL, totalPax);
-				map.put(Passengers.SCHEDULED, scheduledPax);
-				map.put(Passengers.CHARTER, charterPax);
+				
+				if (keySet.contains("ScheduledPax") && keySet.contains("CharterPax")) {
+				
+					long scheduledPax = Long.parseLong(record.get("ScheduledPax"));
+					long charterPax = Long.parseLong(record.get("CharterPax"));
+				
+					if (totalPax != scheduledPax + charterPax) {
+						LOGGER.warn("For IATA pair ({}, {}), total passengers do not equal sum of scheduled and charter passengers!", firstIATA, secondIATA);
+					}
 
+					map.put(Passengers.SCHEDULED, scheduledPax);
+					map.put(Passengers.CHARTER, charterPax);
+				}
+				
 				this.data.put(firstIATA, secondIATA, map);
 			}
 			parser.close();

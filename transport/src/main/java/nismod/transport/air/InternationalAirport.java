@@ -4,13 +4,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
- * This class stores information about a foreign (non-UK) airport. 
+ * This class stores information about an international (non-UK) airport. 
  * @author Milan Lovric
  *
  */
-public class ForeignAirport extends Airport {
+public class InternationalAirport extends Airport {
 	
-	private final static Logger LOGGER = LogManager.getLogger(ForeignAirport.class);
+	private final static Logger LOGGER = LogManager.getLogger(InternationalAirport.class);
 	
 	/**
 	 * Constructor for the airport.
@@ -24,7 +24,7 @@ public class ForeignAirport extends Airport {
 	 * @param terminalCapacity Airport terminal capacity (max number of passengers that can be processed).
 	 * @param runwayCapacity Airport runway capacity (max number of flights that can be processed).
 	 */
-	public ForeignAirport(String iataCode, String caaName, String ourAirportsName, double longitude, double latitude,
+	public InternationalAirport(String iataCode, String caaName, String ourAirportsName, double longitude, double latitude,
 						  String countryCode, String continentCode, long terminalCapacity, long runwayCapacity) {
 				
 		super(iataCode, caaName, ourAirportsName, longitude, latitude, countryCode, continentCode, terminalCapacity, runwayCapacity);
@@ -34,7 +34,7 @@ public class ForeignAirport extends Airport {
 	 * Constructor for an airport using an existing airport.
 	 * @param airport Airport which data is going to be copied.
 	 */
-	public ForeignAirport(ForeignAirport airport) {
+	public InternationalAirport(InternationalAirport airport) {
 		
 		super(airport.getIataCode(), airport.getCAAName(), airport.getOurAirportsName(),
 			 airport.getLongitude(), airport.getLatitude(), airport.getCountry().getCountry(),

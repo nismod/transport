@@ -34,6 +34,9 @@ public abstract class Airport {
 		INT //International (non-EU)
 	}
 	
+	/**
+	 * Airports grouped by DfT.
+	 */
 	public static enum AirportGroup {
 		DO, //Domestic
 		SH, //Short-haul (Western Europe + Turkey)
@@ -41,7 +44,7 @@ public abstract class Airport {
 	}
 	
 	/**
-	 * ISO 
+	 * ISO continent code
 	 */
 	public static enum ContinentCode {
 		OC ("Oceania"),
@@ -120,15 +123,10 @@ public abstract class Airport {
 	/**
 	 * Constructor for the airport.
 	 * @param iataCode Airport IATA code.
-	 * @param caaName Airport name in CCA datasets.
-	 * @param naptanName Airport name in NaPTAN (for UK airpots).
+	 * @param caaName Airport name in CAA datasets.
 	 * @param ourAirportsName Airport name in ourAirports dataset.
-	 * @param easting Easting coordinate.
-	 * @param northing Northing coordinate.
 	 * @param longitude Longitude coordinate.
 	 * @param latitude Latitude coordinate.
-	 * @param ladCode LAD code of the zone in which the airport is located (for UK airports).
-	 * @param ladName LAD name of the zone in which the airport is located (for UK airports).
 	 * @param countryCode Code of the country in which the airport is located.
 	 * @param continentCode Code of the continent in which the airport is located.
 	 * @param terminalCapacity Airport terminal capacity (max number of passengers that can be processed).
