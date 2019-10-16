@@ -1,4 +1,4 @@
-Year,DomesticIATA,DomesticAirportCAA,ForeignIATA,ForeignAirportCAA,CountryCodeISO,CountryNameISO,ForeignRegionCAA,ForeignCountryCAA,TotalPax,ScheduledPax,CharterPax
+year,DomesticIATA,DomesticAirportCAA,ForeignIATA,ForeignAirportCAA,CountryCodeISO,CountryNameISO,ForeignRegionCAA,ForeignCountryCAA,TotalPax,ScheduledPax,CharterPax
 2015,LTN,LUTON,SAW,ISTANBUL (SABIHA GOKCEN),TR,Turkey,WESTERN-EUROPE-OTHER,TURKEY,2,0,2
 2015,BHX,BIRMINGHAM,SSH,SHARM EL SHEIKH (OPHIRA),EG,Egypt,NORTH AFRICA,EGYPT,127024,60363,66661
 2015,EDI,EDINBURGH,NBE,ENFIDHA - HAMMAMET INTL,TN,Tunisia,NORTH AFRICA,TUNISIA,2903,0,2903

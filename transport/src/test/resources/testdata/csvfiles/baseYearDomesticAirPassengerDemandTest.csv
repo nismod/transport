@@ -1,4 +1,4 @@
-Year,AirportOneIATA,AirportTwoIATA,TotalPax,ScheduledPax,CharterPax,rand
+year,AirportOneIATA,AirportTwoIATA,TotalPax,ScheduledPax,CharterPax,rand
 2015,DSA,IOM,231,231,0,0.005280006
 2015,LTN,JER,80,0,80,0.007709816
 2015,LTN,MME,407,0,407,0.013176512

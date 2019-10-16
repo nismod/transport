@@ -347,7 +347,7 @@ public class AirDemandModel {
 			
 			String firstZone = ((DomesticAirport) domesticAirports.get(firstIATA)).getLADCode();
 			String firstZoneName = ((DomesticAirport) domesticAirports.get(firstIATA)).getLADName();
-					
+			
 			long oldUsage = fromDemand.getDemand(firstIATA, secondIATA).get(Passengers.TOTAL);
 			
 			Integer oldPopulationFirstZone = this.yearToZoneToPopulation.get(fromYear).get(firstZone);

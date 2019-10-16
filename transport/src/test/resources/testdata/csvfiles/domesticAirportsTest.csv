@@ -1,0 +1,53 @@
+IataCode,AtcoCode,CAAname,NaPTANname,OurAirportsName,Easting,Northing,Longitude,Latitude,LadCode,LadName,TerminalCapacity,RunwayCapacity
+ABZ,9200ABZ1,Aberdeen,Aberdeen Airport,Aberdeen Dyce Airport,387850,812250,-2.20272,57.20087,S12000033,Aberdeen City,0,0
+ACI,N/A,N/A,N/A,Alderney Airport,384614,-21562,-2.21472,49.7061,GUER,Guernsey,0,0
+BFS,N/A,Belfast International,N/A,Belfast International Airport,128198,537323,-6.21583,54.6575,N09000001,Antrim and Newtownabbey,0,0
+BHD,N/A,Belfast City (George Best),N/A,George Best Belfast City Airport,150088,531666,-5.8725,54.6181,N09000003,Belfast,0,0
+BHX,9200BHX0,Birmingham,Birmingham International Airport,Birmingham International Airport,418360,283939,-1.73126,52.4531,E08000029,Solihull,0,0
+BLK,9200BLK1,Blackpool,Blackpool International Airport,Blackpool International Airport,331450,431800,-3.04171,53.778,E07000119,Fylde,0,0
+BOH,9200BOH1,Bournemouth,Bournemouth International Airport,Bournemouth Airport,411940,97565,-1.83202,50.77754,E07000048,Christchurch,0,0
+BQH,9200BQH1,Biggin Hill,Biggin Hill Airport,London Biggin Hill Airport,541750,161250,0.03334,51.33268,E09000006,Bromley,0,0
+BRR,9200BRR1,Barra North Bay,Barra North Bay Airport,Barra Airport,69495,805905,-7.44913,57.02541,S12000013,Na h-Eileanan Siar,0,0
+BRS,9200BRS1,Bristol,Bristol International Airport,Bristol Airport,350626,165532,-2.71092,51.38667,E06000024,North Somerset,0,0
+CBG,9200CBG1,Cambridge,Cambridge Airport,Cambridge Airport,548620,259040,0.17369,52.20955,E07000012,South Cambridgeshire,0,0
+CWL,9200CWL1,Cardiff Wales,Cardiff International Airport,Cardiff International Airport,306950,167450,-3.33894,51.39843,W06000014,Vale of Glamorgan,0,0
+DND,9200DND1,Dundee,Dundee City Airport,Dundee Airport,337500,729555,-3.01563,56.45399,S12000042,Dundee City,0,0
+DSA,9200DSA1,Doncaster Sheffield,Robin Hood Doncaster Sheffield Airport,Robin Hood Doncaster Sheffield Airport,465745,398680,-1.01079,53.48075,E08000017,Doncaster,0,0
+EDI,9200EDI1,Edinburgh,Edinburgh Airport,Edinburgh Airport,314939,673588,-3.36361,55.94777,S12000036,City of Edinburgh,0,0
+EMA,9200EMA1,East Midlands International,East Midlands Airport,East Midlands Airport,445255,325694,-1.3298,52.82688,E07000134,North West Leicestershire,0,0
+EOI,9200EOI1,Eday,Eday Airport,Eday Airport,356150,1034250,-2.76927,59.19265,S12000023,Orkney Islands,0,0
+EXT,9200EXT1,Exeter,Exeter International Airport,Exeter International Airport,300120,93340,-3.41659,50.73106,E07000040,East Devon,0,0
+FAB,N/A,Farnborough,N/A,Farnborough Airport,485452,153672,-0.77633,51.2758,E07000092,Rushmoor,0,0
+FIE,9200FIE1,Fair Isle,Fair Isle Airport,Fair Isle Airport,421120,1072220,-1.62836,59.53537,S12000027,Shetland Islands,0,0
+GCI,N/A,Guernsey,N/A,Guernsey Airport,356450,-51551,-2.60197,49.435,GUER,Guernsey,0,0
+GLA,9200GLA1,Glasgow,Glasgow International Airport,Glasgow International Airport,247749,666080,-4.4344,55.86378,S12000038,Renfrewshire,0,0
+HUY,9200HUY1,Humberside,Humberside Airport,Humberside Airport,509420,410880,-0.34865,53.5831,E06000013,North Lincolnshire,0,0
+ILY,9200ILY1,Islay Glenegedal,Islay Glenegedal Airport,Islay Airport,133040,651553,-6.24867,55.68379,S12000035,Argyll and Bute,0,0
+INV,9200INV1,Inverness,Inverness Airport,Inverness Airport,276567,851824,-4.06361,57.53965,S12000017,Highland,0,0
+IOM,N/A,Isle of Man,N/A,Isle of Man Airport,228460,468449,-4.62389,54.0833,IM01,Isle of Man,0,0
+JER,N/A,Jersey,N/A,Jersey Airport,385855,-76955,-2.19551,49.2079,JE01,Jersey,0,0
+KOI,9200KOI1,Kirkwall,Kirkwall (Orkney) Airport,Kirkwall Airport,348175,1007730,-2.90257,58.95363,S12000023,Orkney Islands,0,0
+LBA,9200LBA1,Leeds Bradford,Leeds Bradford International Airport,Leeds Bradford Airport,422450,441450,-1.66008,53.86878,E08000035,Leeds,0,0
+LCY,9200LCY1,London City,London City Airport,London City Airport,542384,180261,0.05006,51.50336,E09000025,Newham,0,0
+LDY,N/A,City of Derry (Eglinton),N/A,City of Derry Airport,70445,584216,-7.16111,55.0428,N09000005,Derry City and Strabane,0,0
+LGW,9200LGW0,Gatwick,London Gatwick Airport,London Gatwick Airport,528575,141320,-0.16282,51.1567,E07000226,Crawley,0,0
+LHR,9200LHR0,Heathrow,London Heathrow Airport,London Heathrow Airport,507546,176188,-0.45289,51.47444,E09000017,Hillingdon,0,0
+LPL,9200LPL1,Liverpool (John Lennon),Liverpool John Lennon Airport,Liverpool John Lennon Airport,343145,382665,-2.85531,53.33782,E08000012,Liverpool,0,0
+LSI,9200LSI1,Sumburgh,Sumburgh Airport,Sumburgh Airport,439915,1110505,-1.28882,59.87776,S12000027,Shetland Islands,0,0
+LTN,9200LTN1,Luton,London Luton Airport,London Luton Airport,511800,221360,-0.37722,51.87961,E06000032,Luton,0,0
+LWK,9200LWK1,Lerwick (Tingwall),Lerwick Tingwall Airport,Lerwick / Tingwall Airport,441920,1145187,-1.24595,60.18894,S12000027,Shetland Islands,0,0
+MAN,9200MAN0,Manchester,Manchester Airport,Manchester Airport,381950,384950,-2.27268,53.36111,E08000003,Manchester,0,0
+MME,9200MME1,Durham Tees Valley,Durham Tees Valley Airport,Durham Tees Valley Airport,436800,513000,-1.43313,54.51098,E06000005,Darlington,0,0
+NCL,9200NCL1,Newcastle,Newcastle International Airport,Newcastle Airport,418650,571450,-1.70972,55.03722,E08000021,Newcastle upon Tyne,0,0
+NDY,9200NDY1,Sanday,Sanday Airport,Sanday Airport,367310,1040810,-2.57494,59.25257,S12000023,Orkney Islands,0,0
+NQY,9200NQY1,Newquay,Newquay St Mawgan Airport,Newquay Cornwall Airport,186735,65143,-5.00526,50.44728,E06000052,Cornwall,0,0
+NWI,9200NWI1,Norwich,Norwich International Airport,Norwich International Airport,621750,313050,1.27823,52.66977,E07000148,Norwich,0,0
+PIK,9200PIK1,Prestwick,Glasgow Prestwick International Airport,Glasgow Prestwick Airport,235210,627005,-4.61104,55.50893,S12000028,South Ayrshire,0,0
+SEN,9200SEN1,Southend,London Southend Airport,Southend Airport,587420,189020,0.70291,51.5689,E07000075,Rochford,0,0
+SOU,9200SOU1,Southampton,Southampton Airport,Southampton Airport,445050,116950,-1.36006,50.95023,E07000086,Eastleigh,0,0
+SOY,9200SOY1,Stronsay,Stronsay Airport,Stronsay Airport,363480,1029860,-2.64024,59.15393,S12000023,Orkney Islands,0,0
+STN,9200STN1,Stansted,London Stansted Airport,London Stansted Airport,555650,223750,0.26044,51.89058,E07000077,Uttlesford,0,0
+SYY,9200SYY1,Stornoway,Stornoway Airport,Stornoway Airport,146262,933176,-6.32189,58.21406,S12000013,Na h-Eileanan Siar,0,0
+TRE,9200TRE1,Tiree,Tiree Airport,Tiree Airport,99850,744750,-6.87932,56.49878,S12000035,Argyll and Bute,0,0
+WHS,9200WHS1,Whalsay,Whalsay Airport,Whalsay Airport,459302,1166548,-0.92632,60.37855,S12000027,Shetland Islands,0,0
+WIC,9200WIC1,Wick John o Groats,Wick Airport,Wick Airport,336350,952150,-3.09233,58.45297,S12000017,Highland,0,0

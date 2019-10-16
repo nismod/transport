@@ -1,0 +1,87 @@
+IataCode,CAAname,CountryCAAname,CountryIsoCode,CountryIsoName,ContinentCode,Latitude,Longitude,OurAirportsName,AirportType,TerminalCapacity,RunwayCapacity
+AES,ALESUND,NORWAY,NO,Norway,EU,62.5625,6.119699955,Ålesund Airport,medium_airport,0,0
+AGP,MALAGA,SPAIN,ES,Spain,EU,36.67490005,-4.499110222,Málaga Airport,large_airport,0,0
+AMS,AMSTERDAM,NETHERLANDS,NL,Netherlands,EU,52.308601,4.76389,Amsterdam Airport Schiphol,large_airport,0,0
+ANU,ANTIGUA,ANTIGUA AND BARBUDA,AG,Antigua and Barbuda,NA,17.1367,-61.792702,V.C. Bird International Airport,medium_airport,0,0
+ARN,STOCKHOLM (ARLANDA),SWEDEN,SE,Sweden,EU,59.65190125,17.91860008,Stockholm-Arlanda Airport,large_airport,0,0
+ATH,ATHENS,GREECE,GR,Greece,EU,37.93640137,23.94449997,Eleftherios Venizelos International Airport,large_airport,0,0
+ATL,ATLANTA,USA,US,United States of America,NA,33.6367,-84.428101,Hartsfield Jackson Atlanta International Airport,large_airport,0,0
+ATQ,AMRITSAR,INDIA,IN,India,AS,31.70960045,74.79730225,Sri Guru Ram Dass Jee International Airport,large_airport,0,0
+AYT,ANTALYA,TURKEY,TR,Turkey,AS,36.898701,30.800501,Antalya International Airport,large_airport,0,0
+BGI,BRIDGETOWN,BARBADOS,BB,Barbados,NA,13.07460022,-59.49250031,Sir Grantley Adams International Airport,medium_airport,0,0
+BIQ,BIARRITZ,FRANCE,FR,France,EU,43.4683333,-1.5311111,Biarritz-Anglet-Bayonne Airport,medium_airport,0,0
+BJV,BODRUM (MILAS),TURKEY,TR,Turkey,AS,37.25059891,27.66430092,Milas Bodrum International Airport,large_airport,0,0
+BMA,STOCKHOLM (BROMMA),SWEDEN,SE,Sweden,EU,59.35440063,17.94169998,Stockholm-Bromma Airport,medium_airport,0,0
+BUF,BUFFALO,USA,US,United States of America,NA,42.94049835,-78.73220062,Buffalo Niagara International Airport,large_airport,0,0
+CAG,CAGLIARI (ELMAS),ITALY,IT,Italy,EU,39.251499,9.05428,Cagliari Elmas Airport,large_airport,0,0
+CFU,CORFU,GREECE,GR,Greece,EU,39.60189819,19.9116993,Ioannis Kapodistrias International Airport,medium_airport,0,0
+CGN,COLOGNE BONN,GERMANY,DE,Germany,EU,50.86589813,7.142739773,Cologne Bonn Airport,large_airport,0,0
+CLT,CHARLOTTE,USA,US,United States of America,NA,35.2140007,-80.94309998,Charlotte Douglas International Airport,large_airport,0,0
+CMF,CHAMBERY,FRANCE,FR,France,EU,45.63809967,5.88022995,Chambéry-Savoie Airport,medium_airport,0,0
+CUN,CANCUN,MEXICO,MX,Mexico,NA,21.03650093,-86.87709808,Cancún International Airport,large_airport,0,0
+DLM,DALAMAN,TURKEY,TR,Turkey,AS,36.71310043,28.79249954,Dalaman International Airport,large_airport,0,0
+DOH,DOHA HAMAD,QATAR,QA,Qatar,AS,25.273056,51.608056,Hamad International Airport,large_airport,0,0
+DTM,DORTMUND,GERMANY,DE,Germany,EU,51.5182991,7.612239838,Dortmund Airport,large_airport,0,0
+EBL,ERBIL INTERNATIONAL,IRAQ,IQ,Iraq,AS,36.23759842,43.96319962,Erbil International Airport,medium_airport,0,0
+EWR,NEW YORK (NEWARK),USA,US,United States of America,NA,40.69250107,-74.16870117,Newark Liberty International Airport,large_airport,0,0
+FAO,FARO,PORTUGAL(EXCLUDING MADEIR,PT,Portugal,EU,37.01440048,-7.965909958,Faro Airport,large_airport,0,0
+FCO,ROME (FIUMICINO),ITALY,IT,Italy,EU,41.8002778,12.2388889,Leonardo da Vinci–Fiumicino Airport,large_airport,0,0
+FDH,FRIEDRICHSHAFEN,GERMANY,DE,Germany,EU,47.67129898,9.511489868,Friedrichshafen Airport,medium_airport,0,0
+FNC,FUNCHAL,PORTUGAL(MADEIRA),PT,Portugal,EU,32.697899,-16.7745,Madeira Airport,medium_airport,0,0
+FUE,FUERTEVENTURA,SPAIN(CANARY ISLANDS),ES,Spain,EU,28.45269966,-13.86380005,Fuerteventura Airport,medium_airport,0,0
+GIB,GIBRALTAR,GIBRALTAR,GI,Gibraltar,EU,36.15119934,-5.34965992,Gibraltar Airport,medium_airport,0,0
+GSE,GOTEBORG (SAVE),SWEDEN,SE,Sweden,EU,57.7747,11.8704,Gothenburg City Airport,medium_airport,0,0
+HEL,HELSINKI,FINLAND,FI,Finland,EU,60.31719971,24.9633007,Helsinki Vantaa Airport,large_airport,0,0
+HER,HERAKLION,GREECE,GR,Greece,EU,35.33969879,25.18029976,Heraklion International Nikos Kazantzakis Airport,large_airport,0,0
+HHN,HAHN,GERMANY,DE,Germany,EU,49.9487,7.26389,Frankfurt-Hahn Airport,medium_airport,0,0
+ILD,LIEIDA,SPAIN,ES,Spain,EU,41.728185,0.535023,Lleida-Alguaire Airport,medium_airport,0,0
+INN,INNSBRUCK,AUSTRIA,AT,Austria,EU,47.260201,11.344,Innsbruck Airport,medium_airport,0,0
+ISB,ISLAMABAD,PAKISTAN,PK,Pakistan,AS,33.560713,72.851613,New Islamabad International Airport,large_airport,0,0
+IST,ISTANBUL,TURKEY,TR,Turkey,AS,40.976898,28.8146,Atatürk International Airport,large_airport,0,0
+JSI,SKIATHOS,GREECE,GR,Greece,EU,39.17710114,23.50370026,Skiathos Island National Airport,medium_airport,0,0
+JTR,THIRA (SANTORINI),GREECE,GR,Greece,EU,36.39920044,25.47929955,Santorini Airport,medium_airport,0,0
+KRK,KRAKOW,POLAND,PL,Poland,EU,50.077702,19.7848,Kraków John Paul II International Airport,large_airport,0,0
+KTT,KITTILA,FINLAND,FI,Finland,EU,67.7009964,24.84679985,Kittilä Airport,medium_airport,0,0
+KTW,KATOWICE,POLAND,PL,Poland,EU,50.4743,19.08,Katowice International Airport,large_airport,0,0
+KUN,KAUNAS,LITHUANIA,LT,Lithuania,EU,54.96390152,24.08480072,Kaunas International Airport,medium_airport,0,0
+KVA,KAVALA,GREECE,GR,Greece,EU,40.91329956,24.61919975,Alexander the Great International Airport,medium_airport,0,0
+LBG,PARIS (LE BOURGET),FRANCE,FR,France,EU,48.9693985,2.441390038,Paris-Le Bourget Airport,medium_airport,0,0
+LCA,LARNACA,CYPRUS,CY,Cyprus,AS,34.87509918,33.62490082,Larnaca International Airport,large_airport,0,0
+LGG,LIEGE,BELGIUM,BE,Belgium,EU,50.63740158,5.443220139,Liège Airport,large_airport,0,0
+LOS,LAGOS,NIGERIA,NG,Nigeria,AF,6.577370167,3.321160078,Murtala Muhammed International Airport,large_airport,0,0
+LPA,LAS PALMAS,SPAIN(CANARY ISLANDS),ES,Spain,EU,27.93190002,-15.38659954,Gran Canaria Airport,large_airport,0,0
+LRH,LA ROCHELLE,FRANCE,FR,France,EU,46.17919922,-1.195279956,La Rochelle-Île de Ré Airport,medium_airport,0,0
+LUX,LUXEMBOURG,LUXEMBOURG,LU,Luxembourg,EU,49.6233333,6.2044444,Luxembourg-Findel International Airport,large_airport,0,0
+LUZ,LUBLIN (PORT LOTNICZY),POLAND,PL,Poland,EU,51.240278,22.713611,Lublin Airport,medium_airport,0,0
+MAH,MAHON,SPAIN,ES,Spain,EU,39.86259842,4.218649864,Menorca Airport,medium_airport,0,0
+MBA,MOMBASA,KENYA,KE,Kenya,AF,-4.034830093,39.59420013,Mombasa Moi International Airport,large_airport,0,0
+MCT,MUSCAT,OMAN,OM,Oman,AS,23.59329987,58.28440094,Muscat International Airport,large_airport,0,0
+MJV,MURCIA SAN JAVIER,SPAIN,ES,Spain,EU,37.77500153,-0.812389016,San Javier Airport,medium_airport,0,0
+NAP,NAPLES,ITALY,IT,Italy,EU,40.886002,14.2908,Naples International Airport,large_airport,0,0
+NBE,ENFIDHA - HAMMAMET INTL,TUNISIA,TN,Tunisia,AF,36.075833,10.438611,Enfidha - Hammamet International Airport,large_airport,0,0
+NRT,TOKYO (NARITA),JAPAN,JP,Japan,AS,35.76470184,140.3860016,Narita International Airport,large_airport,0,0
+NTE,NANTES,FRANCE,FR,France,EU,47.15319824,-1.610730052,Nantes Atlantique Airport,medium_airport,0,0
+NUE,NUREMBERG,GERMANY,DE,Germany,EU,49.498699,11.078056,Nuremberg Airport,large_airport,0,0
+ODE,ODENSE,DENMARK,DK,Denmark,EU,55.47669983,10.33090019,Odense Airport,medium_airport,0,0
+ORY,PARIS (ORLY),FRANCE,FR,France,EU,48.7233333,2.3794444,Paris-Orly Airport,large_airport,0,0
+PFO,PAPHOS,CYPRUS,CY,Cyprus,AS,34.7179985,32.4856987,Paphos International Airport,large_airport,0,0
+PHL,PHILADELPHIA INTERNATIONAL,USA,US,United States of America,NA,39.87189865,-75.2410965,Philadelphia International Airport,large_airport,0,0
+PMI,PALMA DE MALLORCA,SPAIN,ES,Spain,EU,39.55170059,2.738810062,Palma De Mallorca Airport,large_airport,0,0
+POS,PORT OF SPAIN,TRINIDAD AND TOBAGO,TT,Trinidad and Tobago,NA,10.59539986,-61.33720016,Piarco International Airport,medium_airport,0,0
+PXO,PORTO SANTO,PORTUGAL(MADEIRA),PT,Portugal,EU,33.07339859,-16.35000038,Porto Santo Airport,medium_airport,0,0
+RAK,MARRAKESH,MOROCCO,MA,Morocco,AF,31.60689926,-8.036299706,Menara Airport,medium_airport,0,0
+SAW,ISTANBUL (SABIHA GOKCEN),TURKEY,TR,Turkey,AS,40.89860153,29.30920029,Sabiha Gökçen International Airport,large_airport,0,0
+SIN,SINGAPORE,SINGAPORE,SG,Singapore,AS,1.35019,103.994003,Singapore Changi Airport,large_airport,0,0
+SKB,ST KITTS,SAINT KITTS AND NEVIS,KN,Saint Kitts and Nevis,NA,17.31119919,-62.71870041,Robert L. Bradshaw International Airport,medium_airport,0,0
+SOF,SOFIA,BULGARIA,BG,Bulgaria,EU,42.69669342,23.41143608,Sofia Airport,large_airport,0,0
+SSH,SHARM EL SHEIKH (OPHIRA),EGYPT,EG,Egypt,AS,27.97730064,34.39500046,Sharm El Sheikh International Airport,medium_airport,0,0
+SXF,BERLIN (SCHONEFELD),GERMANY,DE,Germany,EU,52.380001,13.5225,Berlin-Schönefeld Airport,large_airport,0,0
+SZG,SALZBURG,AUSTRIA,AT,Austria,EU,47.79330063,13.00430012,Salzburg Airport,medium_airport,0,0
+TBS,TBILISI,GEORGIA,GE,Georgia,AS,41.6692009,44.95470047,Tbilisi International Airport,large_airport,0,0
+TLV,TEL AVIV,ISRAEL,IL,Israel,AS,32.01139832,34.88669968,Ben Gurion International Airport,large_airport,0,0
+TOS,TROMSOE,NORWAY,NO,Norway,EU,69.6832962,18.91889954,Tromsø Airport,large_airport,0,0
+VCE,VENICE,ITALY,IT,Italy,EU,45.505299,12.3519,Venice Marco Polo Airport,large_airport,0,0
+VNO,VILNIUS,LITHUANIA,LT,Lithuania,EU,54.634102,25.285801,Vilnius International Airport,large_airport,0,0
+VRA,VARADERO,CUBA,CU,Cuba,NA,23.03440094,-81.43530273,Juan Gualberto Gomez International Airport,large_airport,0,0
+YUL,MONTREAL (DORVAL),CANADA,CA,Canada,NA,45.47060013,-73.74079895,Montreal / Pierre Elliott Trudeau International Airport,large_airport,0,0
+ZTH,ZAKINTHOS,GREECE,GR,Greece,EU,37.7509,20.8843,"Zakynthos International Airport ""Dionysios Solomos""",medium_airport,0,0
