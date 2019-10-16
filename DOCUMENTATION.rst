@@ -5,7 +5,7 @@ Documentation
 **NISMOD v2 Transport Model** is a national-scale (*Great Britain*) transport model developed to support policy making 
 regarding future infrastructure. It forecasts the impact of various endogenous and exogenous factors on transport 
 demand and capacity utilisation, following an elasticity-based simulation methodology. The model consists of three submodels 
-covering the following modes of transport: **road** (passenger and freight vehicle flows), **rail** (total station usage), and **air** (passenger and flight movements).
+covering the following modes of transport: **road** (passenger and freight vehicle flows), **rail** (total station usage), and **air** (domestic and international passenger movements).
 
 1. Key Features
 ===============
@@ -29,13 +29,21 @@ covering the following modes of transport: **road** (passenger and freight vehic
 1.2 Rail Model
 --------------
 
-*	NISMOD v2 Transport Model also includes a national-scale rail model for predicting future station usage demand.
+*	NISMOD v2 Transport Model includes a national-scale rail model for predicting future station usage demand.
 *	It currently uses station usage data for 3054 stations covering National Rail, London Underground, Docklands Light Railway, London Trams (previously Croydon Tramlink), Manchester Metrolink, and Tyne & Wear (Newcastle) Metro.
-*	Elasticity-based demand model predicts station usage (entry + exit) from exogenous inputs including: population, GVA, rail fare index, generalised journey time (GJT) index and car trip costs.
+*	Elasticity-based demand model predicts station usage (entry + exit) from changes in exogenous inputs including: population, GVA, rail fare index, generalised journey time (GJT) index and car trip costs.
 *	Car trip costs can be provided as an input or calculated from the outputs of the NISMOD road model.
 *	Elasticities of rail fares and GJT vary per elasticity zone (London Travelcard, South-East, PTE, other).
 * 	The model implements a policy intervention for building new rail stations in future years.
 
+1.2 Air Model
+--------------
+
+*	NISMOD v2 Transport Model also includes an air model that predicts domestic and international passenger movements.
+*   Air demand data is inter-nodal, i.e. between individual airports (domestic - between two UK airports, and international - between a UK airport and an international airport).
+*   Base-year (2015) demand data is obtain from the Civil Aviation Authority (CAA), while information about airports is obtained from CAA, NaPTAN, and ourairports.com.
+*   Demand files use IATA codes (or ICAO where IATA is unavailable) to identify airports and ISO 3166 Alpha-2 codes to identify countries.
+*	Elasticity-based demand model predicts passenger movements from changes in exogenous inputs including: population, GVA, domestic and international fare incides, and trip rates.
 
 2. How to run the model
 =======================
@@ -71,8 +79,11 @@ covering the following modes of transport: **road** (passenger and freight vehic
 * To predict and run a future year (e.g. 2020) using the results of a previously run year (e.g. 2015), for the **rail** model type::
 
     java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -rail 2020 2015
+* To predict and run a future year (e.g. 2020) using the results of a previously run year (e.g. 2015), for the **air** model type::
 
-.. note:: Rail model need not be run for the base-year as 2015 station usage data is given as an input.
+    java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -air 2020 2015
+
+.. note:: Rail and air model need not be run for the base-year as 2015 demand data is given as an input.
 
 * Options:
 

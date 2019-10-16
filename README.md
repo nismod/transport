@@ -8,7 +8,7 @@ This is the home of the NISMOD v2 Transport Model.
 
 ## Description
 
-NISMOD v2 Transport Model is a national-scale (*Great Britain*) transport model developed to support policy making regarding the future infrastructure. It forecasts the impact of various endogenous and exogenous factors on transport demand and capacity utilisation, following an elasticity-based simulation methodology. The model consists of three submodels covering the following modes of transport: road (passenger and freight vehicle flows), rail (total station usage), and air (passenger and flight movements).
+NISMOD v2 Transport Model is a national-scale (*Great Britain*) transport model developed to support policy making regarding the future infrastructure. It forecasts the impact of various endogenous and exogenous factors on transport demand and capacity utilisation, following an elasticity-based simulation methodology. The model consists of three submodels covering the following modes of transport: road (passenger and freight vehicle flows), rail (total station usage), and air (domestic and international passenger movements).
 
 ## How to run the model
 
@@ -31,6 +31,8 @@ NISMOD v2 Transport Model is a national-scale (*Great Britain*) transport model 
        `java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -road 2020 2015`
     * To predict and run a future year (e.g. 2020) using the results of a previously run year (e.g. 2015), for *rail* model type:
        `java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -rail 2020 2015`
+   * To predict and run a future year (e.g. 2020) using the results of a previously run year (e.g. 2015), for *air* model type:
+       `java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -air 2020 2015`
     * To run the interactive showcase demo (1920 x 1080 resolution required) type:
        `java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -d`
 
