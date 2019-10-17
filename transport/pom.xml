@@ -234,6 +234,7 @@
         						<exclude>nismod/transport/showcase/**/*</exclude>
         						<exclude>nismod/transport/visualisation/**/*</exclude>
         						<exclude>nismod/transport/optimisation/**/*</exclude>
+        						<exclude>nismod/transport/scripts/**/*</exclude>
 		        				<exclude>nismod/transport/App.class</exclude>
         					  </excludes>
                 			<dataFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</dataFile>
