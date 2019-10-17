@@ -43,8 +43,8 @@ public class AirDemandModelTest {
 		final String elasticitiesAirFile = props.getProperty("elasticitiesAirFile");
 		final String domesticAirportFaresFile = props.getProperty("domesticAirportFareIndexFile");
 		final String internationalAirportFaresFile = props.getProperty("internationalAirportFareIndexFile");
-		final String domesticAirportTripRatesFile = props.getProperty("domesticAirportTripRatesFile");
-		final String internationalAirportTripRatesFile = props.getProperty("internationalAirportTripRatesFile");
+		final String domesticTripRatesFile = props.getProperty("domesticTripRatesFile");
+		final String internationalTripRatesFile = props.getProperty("internationalTripRatesFile");
 		
    
 		//create an air demand model
@@ -57,8 +57,8 @@ public class AirDemandModelTest {
 				elasticitiesAirFile, 
 				domesticAirportFaresFile, 
 				internationalAirportFaresFile, 
-				domesticAirportTripRatesFile, 
-				internationalAirportTripRatesFile, 
+				domesticTripRatesFile, 
+				internationalTripRatesFile, 
 				null,
 				props);
 

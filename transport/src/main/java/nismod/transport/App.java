@@ -774,8 +774,8 @@ public class App {
 			final String elasticitiesAirFile = props.getProperty("elasticitiesAirFile");
 			final String domesticAirportFaresFile = props.getProperty("domesticAirportFareIndexFile");
 			final String internationalAirportFaresFile = props.getProperty("internationalAirportFareIndexFile");
-			final String domesticAirportTripRatesFile = props.getProperty("domesticAirportTripRatesFile");
-			final String internationalAirportTripRatesFile = props.getProperty("internationalAirportTripRatesFile");
+			final String domesticTripRatesFile = props.getProperty("domesticTripRatesFile");
+			final String internationalTripRatesFile = props.getProperty("internationalTripRatesFile");
 			
 			//load air interventions
 			List<Intervention> interventions = new ArrayList<Intervention>();
@@ -823,8 +823,8 @@ public class App {
 					elasticitiesAirFile, 
 					domesticAirportFaresFile, 
 					internationalAirportFaresFile, 
-					domesticAirportTripRatesFile, 
-					internationalAirportTripRatesFile, 
+					domesticTripRatesFile, 
+					internationalTripRatesFile, 
 					interventions,
 					props);
 

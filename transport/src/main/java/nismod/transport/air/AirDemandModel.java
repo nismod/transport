@@ -53,7 +53,7 @@ public class AirDemandModel {
 
 	//trip rates (domestic and international)
 	private HashMap<Integer, Double> yearToDomesticTripRates;
-	private HashMap<Integer, Double> yearToInternationalTripRates;
+	private HashMap<Integer, HashMap<String, Double>> yearToInternationalTripRates;
 
 	private List<Intervention> interventions;
 	private Properties props;
@@ -101,7 +101,7 @@ public class AirDemandModel {
 
 		//read trip rates
 		this.yearToDomesticTripRates = InputFileReader.readTripRatesFile(domesticTripRatesFile);
-		this.yearToInternationalTripRates = InputFileReader.readTripRatesFile(internationalTripRatesFile);
+		this.yearToInternationalTripRates = InputFileReader.readAirportFareIndexFile(internationalTripRatesFile);
 
 		//create map to store air pasenger demands for all years
 		this.yearToDomesticPassengerDemand = new HashMap<Integer, InternodalPassengerDemand>();
@@ -333,11 +333,6 @@ public class AirDemandModel {
 			predictedDemand = new InternationalInternodalPassengerDemand();	
 		}
 		
-		//trip rate factor is calculated by multiplying all relative changes from (fromYear+1) to predictedYear.
-		double tripRate = 1.0; 
-		for (int year = fromYear+1; year <= predictedYear; year++)		
-				tripRate *= this.yearToInternationalTripRates.get(year);
-					
 		//PREDICTION
 		//for each airport pair predict changes from the variables
 		for (Object mk: fromDemand.data.keySet()) {
@@ -349,7 +344,15 @@ public class AirDemandModel {
 			String firstZoneName = ((DomesticAirport) domesticAirports.get(firstIATA)).getLADName();
 			
 			long oldUsage = fromDemand.getDemand(firstIATA, secondIATA).get(Passengers.TOTAL);
+
+			//get country of the international airport for the trip rate calculation
+			String countryCode = ((InternationalAirport) internationalAirports.get(secondIATA)).getCountry().getCountry();
 			
+			//trip rate factor for the country is calculated by multiplying all relative changes from (fromYear+1) to predictedYear.
+			double tripRate = 1.0; 
+			for (int year = fromYear+1; year <= predictedYear; year++)		
+					tripRate *= this.yearToInternationalTripRates.get(year).get(countryCode);
+				
 			Integer oldPopulationFirstZone = this.yearToZoneToPopulation.get(fromYear).get(firstZone);
 			Integer newPopulationFirstZone = this.yearToZoneToPopulation.get(predictedYear).get(firstZone);
 			
