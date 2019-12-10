@@ -3102,9 +3102,80 @@ public class RoadNetworkAssignment {
 
 		return zonalConsumptions;
 	}
+	
+	/**
+	 * Calculates zonal (per LAD) and temporal (per hour) hydrogen consumption for a given vehicle type (in kg).
+	 * @param vht Vehicle type (e.g., if CAR provided, CAR_AV consumption will be added too).
+	 * @param originZoneEnergyWeight Percentage of energy consumption assigned to origin zone (the rest assigned to destination zone).
+	 * @return Electricity consumption per zone and time of day.
+	 */
+	public HashMap<String, Map<TimeOfDay, Double>> calculateZonalTemporalVehicleHydrogenConsumptions(final VehicleType vht, final double originZoneEnergyWeight) {
+
+		//initialise hashmap
+		HashMap<String, Map<TimeOfDay, Double>> zonalConsumptions = new HashMap<String, Map<TimeOfDay, Double>>();
+		
+		//find autonomous version
+		VehicleType avht = null;
+		if (vht == VehicleType.CAR) avht = VehicleType.CAR_AV; 
+		else if (vht == VehicleType.VAN) avht = VehicleType.VAN_AV; 
+		else if (vht == VehicleType.RIGID) avht = VehicleType.RIGID_AV; 
+		else if (vht == VehicleType.ARTIC) avht = VehicleType.ARTIC_AV; 
+
+		for (Trip trip: this.tripList)
+			if ((trip.getVehicle() == vht || trip.getVehicle() == avht) &&
+				(trip.getEngine() == EngineType.ICE_H2 || trip.getEngine() == EngineType.FCEV_H2)) {
+
+				Map<EnergyType, Double> tripConsumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistance(), averageAccessEgressSpeedCar, this.energyConsumptions, this.relativeFuelEfficiencies, this.flagIncludeAccessEgress);
+				Double tripConsumptionHydrogen = tripConsumption.get(EnergyType.HYDROGEN);
+				if (tripConsumptionHydrogen == null) continue; //skip if zero hydrogen consumption for this trip
+
+				String originLAD = trip.getOriginLAD(this.roadNetwork.getNodeToZone());
+				String destinationLAD = trip.getDestinationLAD(this.roadNetwork.getNodeToZone());
+				TimeOfDay hour = trip.getTimeOfDay();
+				int multiplier = trip.getMultiplier();
+
+				if (originLAD == destinationLAD) { //update that LAD
+					
+					Map<TimeOfDay, Double> currentTemporal = zonalConsumptions.get(originLAD);
+					if (currentTemporal == null) currentTemporal = new EnumMap<>(TimeOfDay.class);
+					zonalConsumptions.put(originLAD, currentTemporal);
+
+					Double currentConsumption = currentTemporal.get(hour);
+					if (currentConsumption == null) currentConsumption = 0.0;
+
+					currentConsumption += tripConsumptionHydrogen * multiplier;
+
+					currentTemporal.put(hour, currentConsumption);
+ 
+				} else { //split between origin and destination LAD
+
+					Map<TimeOfDay, Double> currentTemporalOrigin = zonalConsumptions.get(originLAD);
+					if (currentTemporalOrigin == null) currentTemporalOrigin = new EnumMap<>(TimeOfDay.class);
+					zonalConsumptions.put(originLAD, currentTemporalOrigin);
+
+					Map<TimeOfDay, Double> currentTemporalDestination = zonalConsumptions.get(destinationLAD);
+					if (currentTemporalDestination == null) currentTemporalDestination = new EnumMap<>(TimeOfDay.class);
+					zonalConsumptions.put(destinationLAD, currentTemporalDestination);
+
+					Double currentConsumptionOrigin = currentTemporalOrigin.get(hour);
+					if (currentConsumptionOrigin == null) currentConsumptionOrigin = 0.0;
+
+					Double currentConsumptionDestination = currentTemporalDestination.get(hour);
+					if (currentConsumptionDestination == null) currentConsumptionDestination = 0.0;
+
+					currentConsumptionOrigin += originZoneEnergyWeight * tripConsumptionHydrogen * multiplier;
+					currentConsumptionDestination += (1.0 - originZoneEnergyWeight) * tripConsumptionHydrogen * multiplier;
+
+					currentTemporalOrigin.put(hour, currentConsumptionOrigin);
+					currentTemporalDestination.put(hour, currentConsumptionDestination);
+				}
+			}
+
+		return zonalConsumptions;
+	}
 
 	/**
-	 * Calculates the number of electric (BV, PHEV) vehicles of a given type, starting in each LAD in each hour.
+	 * Calculates the number of electric vehicles (BEV, PHEV) of a given type (CAR, VAN, RIGID, ARTIC), starting in each LAD in each hour.
 	 * @param vht Vehicle type (calculation will include the autonomous version of the same vehicle type too).
 	 * @return Number of trips.
 	 */
@@ -3123,6 +3194,43 @@ public class RoadNetworkAssignment {
 		for (Trip trip: this.tripList)
 			if ((trip.getVehicle() == vht || trip.getVehicle() == avht) &&
 					(trip.getEngine() == EngineType.BEV || trip.getEngine() == EngineType.PHEV_PETROL || trip.getEngine() == EngineType.PHEV_DIESEL)) {
+				String originLAD = trip.getOriginLAD(this.roadNetwork.getNodeToZone());
+				TimeOfDay hour = trip.getTimeOfDay();
+				int multiplier = trip.getMultiplier();	
+
+				Map<TimeOfDay, Integer> temporalTripStarts = zonalTripStarts.get(originLAD);
+				if (temporalTripStarts == null) temporalTripStarts = new EnumMap<>(TimeOfDay.class);
+				zonalTripStarts.put(originLAD, temporalTripStarts);
+
+				Integer tripStarts = temporalTripStarts.get(hour);
+				if (tripStarts == null) tripStarts = 0;
+				tripStarts += multiplier;
+				temporalTripStarts.put(hour, tripStarts);
+			}
+
+		return zonalTripStarts;
+	}
+	
+	/**
+	 * Calculates the number of hydrogen vehicles (ICE_H2, FCEV_H2) of a given type (CAR, VAN, RIGID, ARTIC), starting in each LAD in each hour.
+	 * @param vht Vehicle type (calculation will include the autonomous version of the same vehicle type too).
+	 * @return Number of trips.
+	 */
+	public HashMap<String, Map<TimeOfDay, Integer>> calculateZonalTemporalTripStartsForHydrogenVehicles(final VehicleType vht) {
+
+		//initialise hashmap
+		HashMap<String, Map<TimeOfDay, Integer>> zonalTripStarts = new HashMap<String, Map<TimeOfDay, Integer>>();
+		
+		//find autonomous version
+		VehicleType avht = null;
+		if (vht == VehicleType.CAR) avht = VehicleType.CAR_AV; 
+		else if (vht == VehicleType.VAN) avht = VehicleType.VAN_AV; 
+		else if (vht == VehicleType.RIGID) avht = VehicleType.RIGID_AV; 
+		else if (vht == VehicleType.ARTIC) avht = VehicleType.ARTIC_AV; 
+
+		for (Trip trip: this.tripList)
+			if ((trip.getVehicle() == vht || trip.getVehicle() == avht) &&
+					(trip.getEngine() == EngineType.ICE_H2 || trip.getEngine() == EngineType.FCEV_H2)) {
 				String originLAD = trip.getOriginLAD(this.roadNetwork.getNodeToZone());
 				TimeOfDay hour = trip.getTimeOfDay();
 				int multiplier = trip.getMultiplier();	
@@ -3985,6 +4093,61 @@ public class RoadNetworkAssignment {
 	}
 
 	/**
+	 * Saves zonal (LAD) and temporal (hourly) vehicle hydrogen consumptions to an output file.
+	 * @param year Assignment year.
+	 * @param vht Vehicle Type (it will include consumption of autonomous vehicles too).
+	 * @param originZoneEnergyWeight Percentage of energy consumption assigned to origin zone (the rest assigned to destination zone).
+	 * @param outputFile Output file name (with path).
+	 */
+	public void saveZonalTemporalVehicleHydrogen(int year, final VehicleType vht, final double originZoneEnergyWeight, String outputFile) {
+
+		LOGGER.debug("Saving zonal and temporal vehicle hydrogen consumptions for {}.", vht);
+
+		//calculate energy consumptions
+		HashMap<String, Map<TimeOfDay, Double>> hydrogenConsumptions = this.calculateZonalTemporalVehicleHydrogenConsumptions(vht, originZoneEnergyWeight);
+		Set<String> zones = hydrogenConsumptions.keySet();
+
+		String NEW_LINE_SEPARATOR = "\n";
+		ArrayList<String> header = new ArrayList<String>();
+		header.add("year");
+		header.add("zone");
+		for (TimeOfDay hour: TimeOfDay.values()) header.add(hour.name());
+
+		FileWriter fileWriter = null;
+		CSVPrinter csvFilePrinter = null;
+		CSVFormat csvFileFormat = CSVFormat.DEFAULT.withRecordSeparator(NEW_LINE_SEPARATOR);
+		try {
+			fileWriter = new FileWriter(outputFile);
+			csvFilePrinter = new CSVPrinter(fileWriter, csvFileFormat);
+			csvFilePrinter.printRecord(header);
+
+			for (String zone: zones) {
+				ArrayList<String> record = new ArrayList<String>();
+				record.add(Integer.toString(year));
+				record.add(zone);
+				for (int i=2; i<header.size(); i++)	{
+					TimeOfDay hour = TimeOfDay.valueOf(header.get(i));
+					Double consumption = hydrogenConsumptions.get(zone).get(hour);
+					if (consumption == null) consumption = 0.0;
+					record.add(String.format("%.2f", consumption));
+				}
+				csvFilePrinter.printRecord(record);
+			}
+		} catch (Exception e) {
+			LOGGER.error(e);
+		} finally {
+			try {
+				fileWriter.flush();
+				fileWriter.close();
+				csvFilePrinter.close();
+			} catch (IOException e) {
+				LOGGER.error(e);
+			}
+		}
+	}
+
+	
+	/**
 	 * Saves origin-destination matrix of car electricity consumption.
 	 * @param outputFile Output file name (with path).
 	 */
@@ -4034,6 +4197,59 @@ public class RoadNetworkAssignment {
 				for (int i=2; i<header.size(); i++)	{
 					TimeOfDay hour = TimeOfDay.valueOf(header.get(i));
 					Integer trips = zonalTemporalTripStartForEVs.get(zone).get(hour);
+					if (trips == null) trips = 0;
+					record.add(String.format("%d", trips));
+				}
+				csvFilePrinter.printRecord(record);
+			}
+		} catch (Exception e) {
+			LOGGER.error(e);
+		} finally {
+			try {
+				fileWriter.flush();
+				fileWriter.close();
+				csvFilePrinter.close();
+			} catch (IOException e) {
+				LOGGER.error(e);
+			}
+		}
+	}
+	
+	/**
+	 * Saves zonal (LAD) and temporal (hourly) number of H2 fuelled trips to an output file.
+	 * @param year Assignment year.
+	 * @param vht Vehicle Type.
+	 * @param outputFile Output file name (with path).
+	 */
+	public void saveZonalTemporalTripStartsForH2(int year, final VehicleType vht, String outputFile) {
+
+		LOGGER.debug("Saving number of H2 trips starting in each zone in each hour.");
+
+		//calculate energy consumptions
+		HashMap<String, Map<TimeOfDay, Integer>> zonalTemporalTripStartForH2 = this.calculateZonalTemporalTripStartsForHydrogenVehicles(vht);
+		Set<String> zones = zonalTemporalTripStartForH2.keySet();
+
+		String NEW_LINE_SEPARATOR = "\n";
+		ArrayList<String> header = new ArrayList<String>();
+		header.add("year");
+		header.add("zone");
+		for (TimeOfDay hour: TimeOfDay.values()) header.add(hour.name());
+
+		FileWriter fileWriter = null;
+		CSVPrinter csvFilePrinter = null;
+		CSVFormat csvFileFormat = CSVFormat.DEFAULT.withRecordSeparator(NEW_LINE_SEPARATOR);
+		try {
+			fileWriter = new FileWriter(outputFile);
+			csvFilePrinter = new CSVPrinter(fileWriter, csvFileFormat);
+			csvFilePrinter.printRecord(header);
+
+			for (String zone: zones) {
+				ArrayList<String> record = new ArrayList<String>();
+				record.add(Integer.toString(year));
+				record.add(zone);
+				for (int i=2; i<header.size(); i++)	{
+					TimeOfDay hour = TimeOfDay.valueOf(header.get(i));
+					Integer trips = zonalTemporalTripStartForH2.get(zone).get(hour);
 					if (trips == null) trips = 0;
 					record.add(String.format("%d", trips));
 				}

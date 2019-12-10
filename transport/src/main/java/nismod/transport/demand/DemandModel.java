@@ -1382,6 +1382,8 @@ public class DemandModel {
 		String totalCO2EmissionsFile = this.props.getProperty("totalCO2EmissionsFile");
 		String zonalTemporalEVTripStartsFile = this.props.getProperty("zonalTemporalEVTripStartsFile");
 		String zonalTemporalEVTripElectricityFile = this.props.getProperty("zonalTemporalEVTripElectricityFile");
+		String zonalTemporalH2TripStartsFile = this.props.getProperty("zonalTemporalH2TripStartsFile");
+		String zonalTemporalH2TripHydrogenFile = this.props.getProperty("zonalTemporalH2TripHydrogenFile");
 		String tripsFile = this.props.getProperty("tripsFile");
 		String outputNetworkFile = this.props.getProperty("outputNetworkFile");
 	
@@ -1454,6 +1456,32 @@ public class DemandModel {
 		outputFile = file.getPath() + File.separator + zonalTemporalEVTripElectricityFile;
 		outputFile = outputFile.substring(0, outputFile.length()-4) + "ARTIC.csv";
 		this.yearToRoadNetworkAssignment.get(year).saveZonalTemporalVehicleElectricity(year, VehicleType.ARTIC, 1.0, outputFile);
+		
+		outputFile = file.getPath() + File.separator + zonalTemporalH2TripStartsFile;
+		outputFile = outputFile.substring(0, outputFile.length()-4) + "CAR.csv";
+		this.yearToRoadNetworkAssignment.get(year).saveZonalTemporalTripStartsForH2(year, VehicleType.CAR, outputFile);
+		outputFile = file.getPath() + File.separator + zonalTemporalH2TripStartsFile;
+		outputFile = outputFile.substring(0, outputFile.length()-4) + "VAN.csv";
+		this.yearToRoadNetworkAssignment.get(year).saveZonalTemporalTripStartsForH2(year, VehicleType.VAN, outputFile);
+		outputFile = file.getPath() + File.separator + zonalTemporalH2TripStartsFile;
+		outputFile = outputFile.substring(0, outputFile.length()-4) + "RIGID.csv";
+		this.yearToRoadNetworkAssignment.get(year).saveZonalTemporalTripStartsForH2(year, VehicleType.RIGID, outputFile);
+		outputFile = file.getPath() + File.separator + zonalTemporalH2TripStartsFile;
+		outputFile = outputFile.substring(0, outputFile.length()-4) + "ARTIC.csv";
+		this.yearToRoadNetworkAssignment.get(year).saveZonalTemporalTripStartsForH2(year, VehicleType.ARTIC, outputFile);
+		
+		outputFile = file.getPath() + File.separator + zonalTemporalH2TripHydrogenFile;
+		outputFile = outputFile.substring(0, outputFile.length()-4) + "CAR.csv";
+		this.yearToRoadNetworkAssignment.get(year).saveZonalTemporalVehicleHydrogen(year, VehicleType.CAR, 1.0, outputFile);
+		outputFile = file.getPath() + File.separator + zonalTemporalH2TripHydrogenFile;
+		outputFile = outputFile.substring(0, outputFile.length()-4) + "VAN.csv";
+		this.yearToRoadNetworkAssignment.get(year).saveZonalTemporalVehicleHydrogen(year, VehicleType.VAN, 1.0, outputFile);
+		outputFile = file.getPath() + File.separator + zonalTemporalH2TripHydrogenFile;
+		outputFile = outputFile.substring(0, outputFile.length()-4) + "RIGID.csv";
+		this.yearToRoadNetworkAssignment.get(year).saveZonalTemporalVehicleHydrogen(year, VehicleType.RIGID, 1.0, outputFile);
+		outputFile = file.getPath() + File.separator + zonalTemporalH2TripHydrogenFile;
+		outputFile = outputFile.substring(0, outputFile.length()-4) + "ARTIC.csv";
+		this.yearToRoadNetworkAssignment.get(year).saveZonalTemporalVehicleHydrogen(year, VehicleType.ARTIC, 1.0, outputFile);
 		
 		//before saving output network file - make sure correct interventions are installed!
 		if (interventions != null) 
