@@ -3033,18 +3033,26 @@ public class RoadNetworkAssignment {
 	}
 
 	/**
-	 * Calculates zonal (per LAD) and temporal (per hour) electricity consumption for car vehicles (in kWh).
+	 * Calculates zonal (per LAD) and temporal (per hour) electricity consumption for a given vehicle type (in kWh).
+	 * @param vht Vehicle type (e.g., if CAR provided, CAR_AV consumption will be added too).
 	 * @param originZoneEnergyWeight Percentage of energy consumption assigned to origin zone (the rest assigned to destination zone).
 	 * @return Electricity consumption per zone and time of day.
 	 */
-	public HashMap<String, Map<TimeOfDay, Double>> calculateZonalTemporalCarElectricityConsumptions(final double originZoneEnergyWeight) {
+	public HashMap<String, Map<TimeOfDay, Double>> calculateZonalTemporalVehicleElectricityConsumptions(final VehicleType vht, final double originZoneEnergyWeight) {
 
 		//initialise hashmap
 		HashMap<String, Map<TimeOfDay, Double>> zonalConsumptions = new HashMap<String, Map<TimeOfDay, Double>>();
+		
+		//find autonomous version
+		VehicleType avht = null;
+		if (vht == VehicleType.CAR) avht = VehicleType.CAR_AV; 
+		else if (vht == VehicleType.VAN) avht = VehicleType.VAN_AV; 
+		else if (vht == VehicleType.RIGID) avht = VehicleType.RIGID_AV; 
+		else if (vht == VehicleType.ARTIC) avht = VehicleType.ARTIC_AV; 
 
 		for (Trip trip: this.tripList)
-			if ((trip.getVehicle() == VehicleType.CAR || trip.getVehicle() == VehicleType.CAR_AV) &&
-					(trip.getEngine() == EngineType.BEV || trip.getEngine() == EngineType.PHEV_PETROL || trip.getEngine() == EngineType.PHEV_DIESEL)) {
+			if ((trip.getVehicle() == vht || trip.getVehicle() == avht) &&
+				(trip.getEngine() == EngineType.BEV || trip.getEngine() == EngineType.PHEV_PETROL || trip.getEngine() == EngineType.PHEV_DIESEL)) {
 
 				Map<EnergyType, Double> tripConsumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistance(), averageAccessEgressSpeedCar, this.energyConsumptions, this.relativeFuelEfficiencies, this.flagIncludeAccessEgress);
 				Double tripConsumptionElectricity = tripConsumption.get(EnergyType.ELECTRICITY);
@@ -3096,16 +3104,24 @@ public class RoadNetworkAssignment {
 	}
 
 	/**
-	 * Calculates the number of electric (BV, PHEV) passenger (car/AV) trips starting in each LAD in each hour.
+	 * Calculates the number of electric (BV, PHEV) vehicles of a given type, starting in each LAD in each hour.
+	 * @param vht Vehicle type (calculation will include the autonomous version of the same vehicle type too).
 	 * @return Number of trips.
 	 */
-	public HashMap<String, Map<TimeOfDay, Integer>> calculateZonalTemporalTripStartsForElectricVehicles() {
+	public HashMap<String, Map<TimeOfDay, Integer>> calculateZonalTemporalTripStartsForElectricVehicles(final VehicleType vht) {
 
 		//initialise hashmap
 		HashMap<String, Map<TimeOfDay, Integer>> zonalTripStarts = new HashMap<String, Map<TimeOfDay, Integer>>();
+		
+		//find autonomous version
+		VehicleType avht = null;
+		if (vht == VehicleType.CAR) avht = VehicleType.CAR_AV; 
+		else if (vht == VehicleType.VAN) avht = VehicleType.VAN_AV; 
+		else if (vht == VehicleType.RIGID) avht = VehicleType.RIGID_AV; 
+		else if (vht == VehicleType.ARTIC) avht = VehicleType.ARTIC_AV; 
 
 		for (Trip trip: this.tripList)
-			if ((trip.getVehicle() == VehicleType.CAR || trip.getVehicle() == VehicleType.CAR_AV) &&
+			if ((trip.getVehicle() == vht || trip.getVehicle() == avht) &&
 					(trip.getEngine() == EngineType.BEV || trip.getEngine() == EngineType.PHEV_PETROL || trip.getEngine() == EngineType.PHEV_DIESEL)) {
 				String originLAD = trip.getOriginLAD(this.roadNetwork.getNodeToZone());
 				TimeOfDay hour = trip.getTimeOfDay();
@@ -3819,7 +3835,7 @@ public class RoadNetworkAssignment {
 		//calculate CO2 emissions
 		Map<VehicleType, HashMap<String, Double>> zonalCO2emissions = this.calculateZonalVehicleCO2Emissions(originZoneEnergyWeight);
 		
-		System.out.println(zonalCO2emissions);
+		//System.out.println(zonalCO2emissions);
 		
 		Set<String> zones = this.roadNetwork.getZoneToNodes().keySet(); 
 		
@@ -3915,17 +3931,18 @@ public class RoadNetworkAssignment {
 	}
 
 	/**
-	 * Saves zonal (LAD) and temporal (hourly) car electricity consumptions to an output file.
+	 * Saves zonal (LAD) and temporal (hourly) vehicle electricity consumptions to an output file.
 	 * @param year Assignment year.
+	 * @param vht Vehicle Type (it will include consumption of autonomous vehicles too).
 	 * @param originZoneEnergyWeight Percentage of energy consumption assigned to origin zone (the rest assigned to destination zone).
 	 * @param outputFile Output file name (with path).
 	 */
-	public void saveZonalTemporalCarElectricity(int year, final double originZoneEnergyWeight, String outputFile) {
+	public void saveZonalTemporalVehicleElectricity(int year, final VehicleType vht, final double originZoneEnergyWeight, String outputFile) {
 
-		LOGGER.debug("Saving zonal and temporal car electricity consumptions.");
+		LOGGER.debug("Saving zonal and temporal vehicle electricity consumptions for {}.", vht);
 
 		//calculate energy consumptions
-		HashMap<String, Map<TimeOfDay, Double>> electricityConsumptions = this.calculateZonalTemporalCarElectricityConsumptions(originZoneEnergyWeight);
+		HashMap<String, Map<TimeOfDay, Double>> electricityConsumptions = this.calculateZonalTemporalVehicleElectricityConsumptions(vht, originZoneEnergyWeight);
 		Set<String> zones = electricityConsumptions.keySet();
 
 		String NEW_LINE_SEPARATOR = "\n";
@@ -3985,14 +4002,15 @@ public class RoadNetworkAssignment {
 	/**
 	 * Saves zonal (LAD) and temporal (hourly) number of EV trips to an output file.
 	 * @param year Assignment year.
+	 * @param vht Vehicle Type.
 	 * @param outputFile Output file name (with path).
 	 */
-	public void saveZonalTemporalTripStartsForEVs(int year, String outputFile) {
+	public void saveZonalTemporalTripStartsForEVs(int year, final VehicleType vht, String outputFile) {
 
 		LOGGER.debug("Saving number of EV trips starting in each zone in each hour.");
 
 		//calculate energy consumptions
-		HashMap<String, Map<TimeOfDay, Integer>> zonalTemporalTripStartForEVs = this.calculateZonalTemporalTripStartsForElectricVehicles();
+		HashMap<String, Map<TimeOfDay, Integer>> zonalTemporalTripStartForEVs = this.calculateZonalTemporalTripStartsForElectricVehicles(vht);
 		Set<String> zones = zonalTemporalTripStartForEVs.keySet();
 
 		String NEW_LINE_SEPARATOR = "\n";

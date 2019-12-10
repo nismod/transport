@@ -1410,17 +1410,17 @@ public class DemandModel {
 		
 		outputFile = file.getPath() + File.separator +  vehicleKilometresFile;
 		this.yearToRoadNetworkAssignment.get(year).saveZonalVehicleKilometres(year, outputFile);
-		outputFile = outputFile.substring(0, outputFile.length()-5) + "WithAccessEgress.csv";
+		outputFile = outputFile.substring(0, outputFile.length()-4) + "WithAccessEgress.csv";
 		this.yearToRoadNetworkAssignment.get(year).saveZonalVehicleKilometresWithAccessEgress(year, outputFile);
 		
 		outputFile = file.getPath() + File.separator +  energyConsumptionsFile;
 		this.yearToRoadNetworkAssignment.get(year).saveTotalEnergyConsumptions(year, outputFile);
-		outputFile = outputFile.substring(0, outputFile.length()-5) + "ZonalCar.csv";
+		outputFile = outputFile.substring(0, outputFile.length()-4) + "ZonalCar.csv";
 		this.yearToRoadNetworkAssignment.get(year).saveZonalCarEnergyConsumptions(year, 1.0, outputFile);
 		
 		outputFile = file.getPath() + File.separator +  totalCO2EmissionsFile;
 		this.yearToRoadNetworkAssignment.get(year).saveTotalCO2Emissions(year, outputFile);
-		outputFile = outputFile.substring(0, outputFile.length()-5) + "ZonalPerVehicleType.csv";
+		outputFile = outputFile.substring(0, outputFile.length()-4) + "ZonalPerVehicleType.csv";
 		this.yearToRoadNetworkAssignment.get(year).saveZonalVehicleCO2Emissions(year, 0.5, outputFile);
 	
 		outputFile = file.getPath() + File.separator +  assignmentResultsFile;
@@ -1430,10 +1430,30 @@ public class DemandModel {
 		this.yearToRoadNetworkAssignment.get(year).saveLinkTravelTimes(year, outputFile);
 		
 		outputFile = file.getPath() + File.separator + zonalTemporalEVTripStartsFile;
-		this.yearToRoadNetworkAssignment.get(year).saveZonalTemporalTripStartsForEVs(year, outputFile);
+		outputFile = outputFile.substring(0, outputFile.length()-4) + "CAR.csv";
+		this.yearToRoadNetworkAssignment.get(year).saveZonalTemporalTripStartsForEVs(year, VehicleType.CAR, outputFile);
+		outputFile = file.getPath() + File.separator + zonalTemporalEVTripStartsFile;
+		outputFile = outputFile.substring(0, outputFile.length()-4) + "VAN.csv";
+		this.yearToRoadNetworkAssignment.get(year).saveZonalTemporalTripStartsForEVs(year, VehicleType.VAN, outputFile);
+		outputFile = file.getPath() + File.separator + zonalTemporalEVTripStartsFile;
+		outputFile = outputFile.substring(0, outputFile.length()-4) + "RIGID.csv";
+		this.yearToRoadNetworkAssignment.get(year).saveZonalTemporalTripStartsForEVs(year, VehicleType.RIGID, outputFile);
+		outputFile = file.getPath() + File.separator + zonalTemporalEVTripStartsFile;
+		outputFile = outputFile.substring(0, outputFile.length()-4) + "ARTIC.csv";
+		this.yearToRoadNetworkAssignment.get(year).saveZonalTemporalTripStartsForEVs(year, VehicleType.ARTIC, outputFile);
 		
 		outputFile = file.getPath() + File.separator + zonalTemporalEVTripElectricityFile;
-		this.yearToRoadNetworkAssignment.get(year).saveZonalTemporalCarElectricity(year, 1.0, outputFile);
+		outputFile = outputFile.substring(0, outputFile.length()-4) + "CAR.csv";
+		this.yearToRoadNetworkAssignment.get(year).saveZonalTemporalVehicleElectricity(year, VehicleType.CAR, 1.0, outputFile);
+		outputFile = file.getPath() + File.separator + zonalTemporalEVTripElectricityFile;
+		outputFile = outputFile.substring(0, outputFile.length()-4) + "VAN.csv";
+		this.yearToRoadNetworkAssignment.get(year).saveZonalTemporalVehicleElectricity(year, VehicleType.VAN, 1.0, outputFile);
+		outputFile = file.getPath() + File.separator + zonalTemporalEVTripElectricityFile;
+		outputFile = outputFile.substring(0, outputFile.length()-4) + "RIGID.csv";
+		this.yearToRoadNetworkAssignment.get(year).saveZonalTemporalVehicleElectricity(year, VehicleType.RIGID, 1.0, outputFile);
+		outputFile = file.getPath() + File.separator + zonalTemporalEVTripElectricityFile;
+		outputFile = outputFile.substring(0, outputFile.length()-4) + "ARTIC.csv";
+		this.yearToRoadNetworkAssignment.get(year).saveZonalTemporalVehicleElectricity(year, VehicleType.ARTIC, 1.0, outputFile);
 		
 		//before saving output network file - make sure correct interventions are installed!
 		if (interventions != null) 

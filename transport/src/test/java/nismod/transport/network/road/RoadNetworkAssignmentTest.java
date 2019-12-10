@@ -817,7 +817,7 @@ public class RoadNetworkAssignmentTest {
 		}
 		
 		//compare total temporal with total zonal
-		HashMap<String, Map<TimeOfDay, Double>> temporal = rna.calculateZonalTemporalCarElectricityConsumptions(1.0);
+		HashMap<String, Map<TimeOfDay, Double>> temporal = rna.calculateZonalTemporalVehicleElectricityConsumptions(VehicleType.CAR, 1.0);
 		double carEVsum = 0.0;
 		for (String zone: temporal.keySet())
 			for (TimeOfDay time: TimeOfDay.values()) {
@@ -1089,7 +1089,7 @@ public class RoadNetworkAssignmentTest {
 		}
 		
 		//compare total temporal with total zonal
-		HashMap<String, Map<TimeOfDay, Double>> temporal = rna.calculateZonalTemporalCarElectricityConsumptions(0.85);
+		HashMap<String, Map<TimeOfDay, Double>> temporal = rna.calculateZonalTemporalVehicleElectricityConsumptions(VehicleType.CAR, 0.85);
 		double carEVsum = 0.0;
 		for (String zone: temporal.keySet())
 			for (TimeOfDay time: TimeOfDay.values()) {
@@ -1425,8 +1425,8 @@ public class RoadNetworkAssignmentTest {
 		}
 			
 		//test zonal temporal trip starts
-		System.out.println(rna.calculateZonalTemporalTripStartsForElectricVehicles());
-		System.out.println(rna.calculateZonalTemporalCarElectricityConsumptions(1.0));
+		System.out.println(rna.calculateZonalTemporalTripStartsForElectricVehicles(VehicleType.CAR));
+		System.out.println(rna.calculateZonalTemporalVehicleElectricityConsumptions(VehicleType.CAR, 1.0));
 		
 		//observed trip length distribution
 		System.out.println("Trip length distributions:");
@@ -1453,8 +1453,8 @@ public class RoadNetworkAssignmentTest {
 		rna.saveZonalCarEnergyConsumptions(2015, 0.5, "./temp/testZonalCarEnergyConsumptions.csv");
 		rna.saveZonalVehicleKilometres(2015, "./temp/testZonalVehicleKilometres.csv");
 		rna.saveZonalVehicleKilometresWithAccessEgress(2015, "./temp/testZonalVehicleKilometresWithAccessEgress.csv");
-		rna.saveZonalTemporalTripStartsForEVs(2015, "./temp/testZonalTemporalEVTripStarts.csv");
-		rna.saveZonalTemporalCarElectricity(2015, 1.0, "./temp/testZonalTemporalCarElectricityConsumption.csv");
+		rna.saveZonalTemporalTripStartsForEVs(2015, VehicleType.CAR, "./temp/testZonalTemporalEVTripStarts.csv");
+		rna.saveZonalTemporalVehicleElectricity(2015, VehicleType.CAR, 1.0, "./temp/testZonalTemporalCarElectricityConsumption.csv");
 	}
 	
 	@Test
