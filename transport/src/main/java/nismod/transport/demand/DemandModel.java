@@ -1416,7 +1416,9 @@ public class DemandModel {
 		this.yearToRoadNetworkAssignment.get(year).saveZonalVehicleKilometresWithAccessEgress(year, outputFile);
 		
 		outputFile = file.getPath() + File.separator +  energyConsumptionsFile;
-		this.yearToRoadNetworkAssignment.get(year).saveTotalEnergyConsumptions(year, outputFile);
+		outputFile = outputFile.substring(0, outputFile.length()-4) + "PerVehicleType.csv";
+		this.yearToRoadNetworkAssignment.get(year).saveEnergyConsumptionsPerVehicleType(year, outputFile);
+		outputFile = file.getPath() + File.separator +  energyConsumptionsFile;
 		outputFile = outputFile.substring(0, outputFile.length()-4) + "ZonalCar.csv";
 		this.yearToRoadNetworkAssignment.get(year).saveZonalCarEnergyConsumptions(year, 1.0, outputFile);
 		

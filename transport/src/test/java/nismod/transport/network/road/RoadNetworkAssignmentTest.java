@@ -827,9 +827,19 @@ public class RoadNetworkAssignmentTest {
 		
 		assertEquals("Sum of zonal car " + EnergyType.ELECTRICITY + " consumptions should match sum of temporal " + EnergyType.ELECTRICITY + " consumptions", carEVconsumption, carEVsum, PRECISION);		
 				
+		//compare energy consumptions per vehicle type with total energy consumption
+		Map<EnergyType, Double> energyTotal = rna.calculateEnergyConsumptions();
 		System.out.println("Total energy consumptions:");
-		System.out.println(rna.calculateEnergyConsumptions());
-		
+		System.out.println(energyTotal);
+		Map<VehicleType, Map<EnergyType, Double>> energyPerVehicle = rna.calculateEnergyConsumptionsPerVehicleType();
+		for (EnergyType et: EnergyType.values()) {
+			double sum = 0.0;
+			for (VehicleType vht: VehicleType.values()) {
+				sum += energyPerVehicle.get(vht).get(et);
+			}
+			assertEquals("Consumption of " + et + " across vehicle types equals total", energyTotal.get(et), sum, PRECISION);		
+		}
+				
 		ODMatrixMultiKey temproODM2 = ODMatrixMultiKey.createUnitMatrix(temproODM.getSortedOrigins());
 		rna.resetTripList();
 		rna.resetLinkVolumes();

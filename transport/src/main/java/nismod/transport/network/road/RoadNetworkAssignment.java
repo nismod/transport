@@ -3307,6 +3307,44 @@ public class RoadNetworkAssignment {
 
 		return consumptions;
 	}
+	
+	/**
+	 * Calculates total energy consumptions per vehicle type.
+	 * @return Total consumption for each energy type.
+	 */
+	public Map<VehicleType, Map<EnergyType, Double>> calculateEnergyConsumptionsPerVehicleType() {
+
+		//initialise maps
+		Map<VehicleType, Map<EnergyType, Double>> map = new EnumMap<>(VehicleType.class);
+		for (VehicleType vht: VehicleType.values()) {
+			Map<EnergyType, Double> consumptions = new EnumMap<>(EnergyType.class);
+			for (EnergyType energy: EnergyType.values()) {
+				consumptions.put(energy, 0.0);
+			}
+			map.put(vht, consumptions);
+		}
+
+		for (Trip trip: this.tripList) {
+			VehicleType vht = trip.getVehicle();
+			Map<EnergyType, Double> consumption;
+			
+			if (trip.getVehicle() == VehicleType.CAR || trip.getVehicle() == VehicleType.CAR_AV) 
+				consumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistance(), averageAccessEgressSpeedCar, this.energyConsumptions, this.relativeFuelEfficiencies, this.flagIncludeAccessEgress);
+			else //freight
+				consumption = trip.getConsumption(this.linkTravelTimePerTimeOfDay.get(trip.getTimeOfDay()), this.roadNetwork.getNodeToAverageAccessEgressDistanceFreight(), averageAccessEgressSpeedFreight, this.energyConsumptions, this.relativeFuelEfficiencies, this.flagIncludeAccessEgress);
+			
+			int multiplier = trip.getMultiplier();
+
+			for (EnergyType energy: EnergyType.values()) {
+				Double currentConsumption = map.get(vht).get(energy);
+				if (currentConsumption == null) currentConsumption = 0.0;
+				map.get(vht).put(energy, currentConsumption + consumption.get(energy) * multiplier);
+			}
+		}
+
+		return map;
+	}
+	
 
 	/**
 	 * Calculates total energy consumption for each energy type of passenger cars and freight vehicles (in litres for fuels and in kWh for electricity).
@@ -4021,6 +4059,56 @@ public class RoadNetworkAssignment {
 				for (int i=2; i<header.size(); i++)	{
 					EnergyType et = EnergyType.valueOf(header.get(i));
 					double consumption = energyConsumptions.get(et).get(zone);
+					record.add(String.format("%.2f", consumption));
+				}
+				csvFilePrinter.printRecord(record);
+			}
+		} catch (Exception e) {
+			LOGGER.error(e);
+		} finally {
+			try {
+				fileWriter.flush();
+				fileWriter.close();
+				csvFilePrinter.close();
+			} catch (IOException e) {
+				LOGGER.error(e);
+			}
+		}
+	}
+	
+	/**
+	 * Saves energy consumptions per vehicle type to an output file.
+	 * @param year Assignment year.
+	 * @param outputFile Output file name (with path).
+	 */
+	public void saveEnergyConsumptionsPerVehicleType (int year, String outputFile) {
+
+		LOGGER.debug("Saving energy consumptions per vehicle type.");
+
+		//calculate energy consumptions per vehicle type
+		Map<VehicleType, Map<EnergyType, Double>> energyConsumptions = this.calculateEnergyConsumptionsPerVehicleType();
+
+		String NEW_LINE_SEPARATOR = "\n";
+		ArrayList<String> header = new ArrayList<String>();
+		header.add("year");
+		header.add("vehicleType");
+		for (EnergyType et: EnergyType.values()) header.add(et.name());
+
+		FileWriter fileWriter = null;
+		CSVPrinter csvFilePrinter = null;
+		CSVFormat csvFileFormat = CSVFormat.DEFAULT.withRecordSeparator(NEW_LINE_SEPARATOR);
+		try {
+			fileWriter = new FileWriter(outputFile);
+			csvFilePrinter = new CSVPrinter(fileWriter, csvFileFormat);
+			csvFilePrinter.printRecord(header);
+
+			for (VehicleType vht: VehicleType.values()) {
+				ArrayList<String> record = new ArrayList<String>();
+				record.add(Integer.toString(year));
+				record.add(vht.toString());
+				for (int i=2; i<header.size(); i++)	{
+					EnergyType et = EnergyType.valueOf(header.get(i));
+					double consumption = energyConsumptions.get(vht).get(et);
 					record.add(String.format("%.2f", consumption));
 				}
 				csvFilePrinter.printRecord(record);
