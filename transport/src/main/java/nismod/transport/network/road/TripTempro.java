@@ -1,12 +1,9 @@
 package nismod.transport.network.road;
 
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.collections4.map.MultiKeyMap;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.geotools.graph.structure.DirectedEdge;
@@ -396,12 +393,16 @@ public class TripTempro extends Trip {
 		} else if (this.engine == EngineType.ICE_CNG) {
 			accessEgressConsumptions.put(EnergyType.CNG, consumption);
 
-		} else if (this.engine == EngineType.ICE_H2) {
+		} else if (this.engine == EngineType.ICE_LPG) {
+			accessEgressConsumptions.put(EnergyType.LPG, consumption);
+
+		} else if (this.engine == EngineType.ICE_H2 || this.engine == EngineType.FCEV_H2) {
 			accessEgressConsumptions.put(EnergyType.HYDROGEN, consumption);
 
-		}	else if (this.engine == EngineType.BEV) {
+		} else if (this.engine == EngineType.BEV) {
 			accessEgressConsumptions.put(EnergyType.ELECTRICITY, consumption);
-		}
+		} else
+			LOGGER.warn("Unknown engine type {} detected during calculation of tempro trip access/aggress fuel consumption.", this.engine);
 
 		return accessEgressConsumptions;
 	}

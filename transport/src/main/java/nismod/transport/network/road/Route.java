@@ -1,7 +1,6 @@
 package nismod.transport.network.road;
 
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -358,10 +357,14 @@ public class Route {
 				routeConsumptions.put(EnergyType.DIESEL, consumption);
 			else if (et == EngineType.ICE_CNG)
 				routeConsumptions.put(EnergyType.CNG, consumption);
-			else if (et == EngineType.ICE_H2)
+			else if (et == EngineType.ICE_LPG)
+				routeConsumptions.put(EnergyType.LPG, consumption);
+			else if (et == EngineType.ICE_H2 || et == EngineType.FCEV_H2)
 				routeConsumptions.put(EnergyType.HYDROGEN, consumption);
 			else if (et == EngineType.BEV)
 				routeConsumptions.put(EnergyType.ELECTRICITY, consumption);
+			else
+				LOGGER.warn("Unknown engine type {} detected during calculation of route fuel consumption.", et);
 		}
 
 		return routeConsumptions;
