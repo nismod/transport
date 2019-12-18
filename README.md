@@ -3,6 +3,7 @@
 [![Documentation Status](https://readthedocs.org/projects/nt2/badge/?version=latest)](https://nt2.readthedocs.io/en/latest/?badge=latest)
 [![Code Coverage](https://img.shields.io/codecov/c/github/nismod/transport/master.svg)](https://codecov.io/github/nismod/transport?branch=master)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![DOI](https://zenodo.org/badge/66375443.svg)](https://zenodo.org/badge/latestdoi/66375443)
 
 This is the home of the NISMOD v2 Transport Model.
 
@@ -23,7 +24,7 @@ NISMOD v2 Transport Model is a national-scale (*Great Britain*) transport model 
 
 6. Alternatively, to build the project and run the main model in the command prompt:
     * Make sure the Java home environment variable is set for the operating system and pointing to the directory where *Java Development Kit* has been installed.
-    * Download maven, install it and set the environment variables: http://maven.apache.org/. Then type:  
+    * Download maven, install it and set the environment variables: http://maven.apache.org/. Then type:
        `mvn clean install`
     * To run the base-year *road* model (2015) type:
        `java -cp target/transport-0.0.1-SNAPSHOT.jar nismod.transport.App -c ./path/to/config.properties -b`
@@ -49,18 +50,18 @@ NISMOD v2 Transport Model is a national-scale (*Great Britain*) transport model 
 * Manuel Buitrago mbm1d15@soton.ac.uk (Seaports and freight)
 
 
-## Acknowledgments 
+## Acknowledgments
 
-This work has been undertaken at the *University of Southampton*, as part of the ITRC consortium, under grant EP/N017064/1 (MISTRAL: Multi-scale InfraSTRucture systems AnaLytics) of the UK *Engineering and Physical Science Research Council* (EPSRC).  
+This work has been undertaken at the *University of Southampton*, as part of the ITRC consortium, under grant EP/N017064/1 (MISTRAL: Multi-scale InfraSTRucture systems AnaLytics) of the UK *Engineering and Physical Science Research Council* (EPSRC).
 https://www.itrc.org.uk/
 
 The test resources contain a sample of data and shapefiles that come with the following licencing and copyright statemens:
-* *Open Government Licence:*  
+* *Open Government Licence:*
 http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
 * Contains *National Statistics* data © *Crown* copyright and database right 2012.
 * Contains *Ordnance Survey* data © *Crown* copyright and database right 2012.
 
 The authors acknowledge the use of the IRIDIS *High Performance Computing Facility*, and associated support services at the *University of Southampton*, in the completion of this work.
 
-The implementation uses an open source library *GeoTools* for geospatial processing.  
+The implementation uses an open source library *GeoTools* for geospatial processing.
 http://www.geotools.org/about.html
