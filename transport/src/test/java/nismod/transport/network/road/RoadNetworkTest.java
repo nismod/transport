@@ -941,8 +941,9 @@ public class RoadNetworkTest {
 		System.out.println("Nodes " + roadNetwork.getNetwork().getNodes());
 		int nodeNumber = roadNetwork.getNetwork().getNodes().size();
 		System.out.println("Nodes to zones mapping: " + roadNetwork.getNodeToZone());
-		assertEquals("All nodes except node 76 are mapped", nodeNumber-1, roadNetwork.getNodeToZone().size());
-
+		//assertEquals("All nodes except node 76 are mapped", nodeNumber-1, roadNetwork.getNodeToZone().size());
+		assertEquals("All nodes mapped to LAD zones", nodeNumber, roadNetwork.getNodeToZone().size());
+		
 		HashMap<String, List<Integer>> zoneToNodes = roadNetwork.getZoneToNodes();
 		System.out.println("Zone to nodes mapping: " + zoneToNodes);
 		System.out.println("The number of nodes in each zone:");
@@ -951,7 +952,7 @@ public class RoadNetworkTest {
 		}
 		boolean condition = 
 				zoneToNodes.get("E07000091").size() == 38 &&
-				zoneToNodes.get("E06000045").size() == 34 &&
+				zoneToNodes.get("E06000045").size() == 35 &&
 				zoneToNodes.get("E06000046").size() == 31 &&
 				zoneToNodes.get("E07000086").size() == 18;
 		assertTrue("The number of nodes in each zone is correct", condition);
@@ -963,7 +964,7 @@ public class RoadNetworkTest {
 		assertTrue("Nodes are correctly mapped to zone E07000091", Arrays.equals(expectedArray1, array));
 
 		array = (Integer[]) zoneToNodes.get("E06000045").toArray(new Integer[0]);
-		Integer[] expectedArray2 = {1, 2, 7, 8,	9, 10, 11, 12, 19, 26, 27, 30, 31, 37, 40, 45, 46, 47, 48, 55, 58, 59, 60, 61, 68, 82, 83, 86, 87, 95, 96, 102, 105, 109};
+		Integer[] expectedArray2 = {1, 2, 7, 8,	9, 10, 11, 12, 19, 26, 27, 30, 31, 37, 40, 45, 46, 47, 48, 55, 58, 59, 60, 61, 68, 76, 82, 83, 86, 87, 95, 96, 102, 105, 109};
 		Arrays.sort(array);
 		Arrays.sort(expectedArray2);
 		assertTrue("Nodes are correctly mapped to zone E06000045", Arrays.equals(expectedArray2, array));

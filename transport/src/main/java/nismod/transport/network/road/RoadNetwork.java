@@ -2033,7 +2033,7 @@ public class RoadNetwork {
 						Point point = (Point) sfn.getDefaultGeometry();
 						//if the polygon contains the node, put that relationship into the maps
 						if (polygon.contains(point)) {
-							
+
 							nodeToZone.put(node.getID(), (String) sf.getAttribute("CODE"));
 							
 							List<Integer> listOfNodes = zoneToNodes.get((String) sf.getAttribute("CODE"));
@@ -2044,11 +2044,75 @@ public class RoadNetwork {
 							listOfNodes.add(node.getID());
 						}
 				}
-			} 
+			}
+				
 		} finally {
 			//feature iterator is a live connection that must be closed
 			iter.close();
 		}
+			
+		//check that all nodes have been mapped to a zone
+		ArrayList<Integer> unmappedNodes = new ArrayList<Integer>();
+		
+		Iterator nodeIter = (Iterator) network.getNodes().iterator();
+		while (nodeIter.hasNext()) {
+				Node node = (Node) nodeIter.next();
+				if (!this.nodeToZone.containsKey(node.getID()))
+					unmappedNodes.add(node.getID());
+		}
+		
+		if (unmappedNodes.size() > 0) {
+			LOGGER.debug("{} nodes initially mapped to LAD zones.", nodeToZone.size());
+			LOGGER.debug("{} nodes not contained within any LAD zone, so mapping to nearest zones...", unmappedNodes.size());
+					
+			//create node ID to minimum distance map
+			HashMap<Integer, Double> minDistanceMap = new HashMap<Integer, Double>();
+			for (int nodeID: unmappedNodes) {
+				minDistanceMap.put(nodeID, Double.MAX_VALUE);
+				
+				//get point geometry of the node
+				Node node = this.nodeIDtoNode[nodeID];
+				SimpleFeature sfn = (SimpleFeature) node.getObject();
+				Point point = (Point) sfn.getDefaultGeometry();
+
+				//iterate through the zones
+				iter = zonesFeatureCollection.features();
+				try {
+					while (iter.hasNext()) {
+						//get polygon geometry of the zone
+						SimpleFeature sf = iter.next();
+						MultiPolygon polygon = (MultiPolygon) sf.getDefaultGeometry();
+						
+						double distance = polygon.distance(point);
+						if (distance < minDistanceMap.get(nodeID)) {
+						
+							minDistanceMap.put(nodeID, distance);
+							nodeToZone.put(nodeID, (String) sf.getAttribute("CODE"));
+						}
+						
+						
+					}
+
+				} finally {
+					//feature iterator is a live connection that must be closed
+					iter.close();
+				}
+				
+				//also update zone to node lists
+				String lad = nodeToZone.get(nodeID);
+				List<Integer> listOfNodes = zoneToNodes.get(lad);
+				if (listOfNodes == null) {
+					listOfNodes = new ArrayList<Integer>();
+					zoneToNodes.put(lad, listOfNodes);
+				}
+				listOfNodes.add(node.getID());
+				
+				LOGGER.debug("Node {} mapped to zone {} with distance {}.", nodeID, lad, minDistanceMap.get(nodeID));
+				
+			}
+		}
+		
+		LOGGER.info("{} nodes mapped to LAD zones.", nodeToZone.size());
 	}
 	
 	/**

@@ -945,8 +945,8 @@ public class RoadNetworkAssignmentTest {
 		
 		//test the probability of one node from one LAD
 		//assertEquals("The probability of node 60 is correct", (double)1656/234671, rna.getNodeProbabilities().get(60), EPSILON);
-		assertEquals("The probability of node 60 is correct", (double)1656/234671, rna.getStartNodeProbabilities().get(60), EPSILON);
-		assertEquals("The probability of node 60 is correct", (double)1656/234671, rna.getEndNodeProbabilities().get(60), EPSILON);
+		assertEquals("The probability of node 60 is correct", (double)1656/234948, rna.getStartNodeProbabilities().get(60), EPSILON);
+		assertEquals("The probability of node 60 is correct", (double)1656/234948, rna.getEndNodeProbabilities().get(60), EPSILON);
 
 		//test that the sum of probabilities of nodes in each LAD zone is 1.0
 		for (String zone: roadNetwork.getZoneToNodes().keySet()) {
