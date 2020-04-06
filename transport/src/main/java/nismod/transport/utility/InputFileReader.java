@@ -5,15 +5,12 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.EnumMap;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -28,9 +25,7 @@ import nismod.transport.network.road.RoadNetworkAssignment.TimeOfDay;
 import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
 import nismod.transport.network.road.Route.WebTAG;
 import nismod.transport.rail.RailDemandModel;
-import nismod.transport.rail.RailStation;
 import nismod.transport.rail.RailDemandModel.ElasticityArea;
-import nismod.transport.rail.RailStation.RailModeType;
 
 /**
  * InputFileReader reads input files and provides them as various data structures required by other classes.
@@ -863,7 +858,7 @@ public class InputFileReader {
 	/**
 	 * Reads trip rates file.
 	 * @param fileName File name.
-	 * @return Map with rail trip rates.
+	 * @return Map with yearly trip rates.
 	 */
 	public static HashMap<Integer, Double> readTripRatesFile(String fileName) {
 
@@ -894,6 +889,52 @@ public class InputFileReader {
 		}
 
 		LOGGER.debug("Trip rates read from file with data points for {} years.", map.keySet().size());
+		
+		return map;
+	}
+	
+	/**
+	 * Reads freight trip rates file.
+	 * @param fileName File name.
+	 * @return Map with yearly trip rates for freight vehicles.
+	 */
+	public static HashMap<Integer, Map<VehicleType, Double>> readFreightTripRatesFile(String fileName) {
+
+		HashMap<Integer, Map<VehicleType, Double>> map = new HashMap<Integer, Map<VehicleType, Double>>();
+		CSVParser parser = null;
+		try {
+			parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
+			//System.out.println(parser.getHeaderMap().toString());
+			Set<String> keySet = parser.getHeaderMap().keySet();
+			keySet.remove("year");
+			//System.out.println("keySet = " + keySet);
+			double tripRate;
+			for (CSVRecord record : parser) {
+				//System.out.println(record);
+				int year = Integer.parseInt(record.get(0));
+				Map<VehicleType, Double> vehicleTypeToTripRate = new EnumMap<>(VehicleType.class);
+				for (String et: keySet) {
+					VehicleType vht = VehicleType.valueOf(et);
+					tripRate = Double.parseDouble(record.get(vht));
+					vehicleTypeToTripRate.put(vht, tripRate);			
+				}
+				map.put(year, vehicleTypeToTripRate);
+			}
+		} catch (FileNotFoundException e) {
+			LOGGER.error(e);
+		} catch (IOException e) {
+			LOGGER.error(e);
+		} catch (Exception e) {
+			LOGGER.error(e);
+		} finally {
+			try {
+				parser.close();
+			} catch (IOException e) {
+				LOGGER.error(e);
+			}
+		}
+
+		LOGGER.debug("Freight trip rates read from file with data points for {} years.", map.keySet().size());
 		
 		return map;
 	}

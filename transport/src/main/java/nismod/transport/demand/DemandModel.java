@@ -8,6 +8,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -78,6 +79,8 @@ public class DemandModel {
 	private HashMap<Integer, List<PricingPolicy>> yearToCongestionCharges;
 	//private SkimMatrix baseYearTimeSkimMatrix,	baseYearCostSkimMatrix;
 	private HashMap<Integer, List<List<String>>> yearToListsOfLADsForNewRouteGeneration;
+	private HashMap<Integer, Double> yearToTripRate; //passenger trip rates
+	private HashMap<Integer, Map<VehicleType, Double>> yearToFreightTripRate; //freight trip rates
 	
 	private RouteSetGenerator rsg;
 	private Properties props;
@@ -168,13 +171,17 @@ public class DemandModel {
 		final String relativeFuelEfficiencyFile = props.getProperty("relativeFuelEfficiencyFile");
 		final String timeOfDayDistributionFile = props.getProperty("timeOfDayDistributionFile");
 		final String timeOfDayDistributionFreightFile = props.getProperty("timeOfDayDistributionFreightFile");
+		final String roadPassengerTripRatesFile = props.getProperty("roadPassengerTripRatesFile");
+		final String roadFreightTripRatesFile = props.getProperty("roadFreightTripRatesFile");
 		
 		this.vehicleTypeToPCU = InputFileReader.readVehicleTypeToPCUFile(vehicleTypeToPCUFile);
 		this.baseFuelConsumptionRates = InputFileReader.readEnergyConsumptionParamsFile(baseFuelConsumptionRatesFile);
 		this.yearToTimeOfDayDistribution = InputFileReader.readTimeOfDayDistributionFile(timeOfDayDistributionFile);
 		this.yearToTimeOfDayDistributionFreight = InputFileReader.readTimeOfDayDistributionFreightFile(timeOfDayDistributionFreightFile);
 		this.yearToRelativeFuelEfficiencies = InputFileReader.readRelativeFuelEfficiencyFile(relativeFuelEfficiencyFile);
-		
+		this.yearToTripRate = InputFileReader.readTripRatesFile(roadPassengerTripRatesFile);
+		this.yearToFreightTripRate = InputFileReader.readFreightTripRatesFile(roadFreightTripRatesFile);
+				
 		//load Tempro matrix template if necessary
 		final String assignmentType = props.getProperty("ASSIGNMENT_TYPE").toLowerCase();
 		if (assignmentType.equals("tempro") || assignmentType.equals("combined")) {
@@ -336,6 +343,27 @@ public class DemandModel {
 			ODMatrixMultiKey predictedPassengerODMatrix = new ODMatrixMultiKey();
 			FreightMatrix predictedFreightODMatrix = new FreightMatrix();
 			
+			//trip rate factor is calculated my multiplying all relative changes from (fromYear+1) to predictedYear.
+			double tripRateFactor = 1.0; 
+			for (int year = fromYear+1; year <= predictedYear; year++)		
+					tripRateFactor *= this.yearToTripRate.get(year);
+			LOGGER.debug("Trip rate factor from {} (exclusive) to {} (inclusive) for passenger cars is {}", fromYear, predictedYear, tripRateFactor);
+			
+			Map<Integer, Double> freightTripRateFactors = new HashMap<Integer, Double>();
+			double tripRateVan = 1.0, tripRateRigid = 1.0, tripRateArtic = 1.0;
+			for (int year = fromYear+1; year <= predictedYear; year++) {		
+				tripRateVan *= this.yearToFreightTripRate.get(year).get(VehicleType.VAN);
+				tripRateRigid *= this.yearToFreightTripRate.get(year).get(VehicleType.RIGID);
+				tripRateArtic *= this.yearToFreightTripRate.get(year).get(VehicleType.ARTIC);
+
+			}
+			freightTripRateFactors.put(VehicleType.VAN.getValue(), tripRateVan);
+			freightTripRateFactors.put(VehicleType.RIGID.getValue(), tripRateRigid);
+			freightTripRateFactors.put(VehicleType.ARTIC.getValue(), tripRateArtic);
+			LOGGER.debug("Trip rate factor from {} (exclusive) to {} (inclusive) for freight vans is {}", fromYear, predictedYear, tripRateVan);
+			LOGGER.debug("Trip rate factor from {} (exclusive) to {} (inclusive) for freight rigids is {}", fromYear, predictedYear, tripRateRigid);
+			LOGGER.debug("Trip rate factor from {} (exclusive) to {} (inclusive) for freight artics is {}", fromYear, predictedYear, tripRateArtic);
+			
 			//FIRST STAGE PREDICTION (FROM POPULATION AND GVA)
 			
 			//for each OD pair first predict the change in passenger vehicle flows from the changes in population and GVA
@@ -354,7 +382,7 @@ public class DemandModel {
 				double newGVAOriginZone = this.yearToZoneToGVA.get(predictedYear).get(originZone);
 				double newGVADestinationZone = this.yearToZoneToGVA.get(predictedYear).get(destinationZone);
 
-				double predictedFlow = oldFlow * Math.pow((newPopulationOriginZone + newPopulationDestinationZone) / (oldPopulationOriginZone + oldPopulationDestinationZone), elasticities.get(ElasticityTypes.POPULATION)) *
+				double predictedFlow = oldFlow * tripRateFactor * Math.pow((newPopulationOriginZone + newPopulationDestinationZone) / (oldPopulationOriginZone + oldPopulationDestinationZone), elasticities.get(ElasticityTypes.POPULATION)) *
 						Math.pow((newGVAOriginZone + newGVADestinationZone) / (oldGVAOriginZone + oldGVADestinationZone), elasticities.get(ElasticityTypes.GVA));
 				//System.out.printf("%d = %d * (%.0f / %.0f) ^ %.2f * (%.1f / %.1f) ^ %.2f * (%.0f / %.0f) ^ %.2f * (%.1f / %.1f) ^ %.2f\n", (int) Math.round(predictedFlow), (int) Math.round(oldFlow),
 				//newPopulationOriginZone, oldPopulationOriginZone, elasticities.get(ElasticityTypes.POPULATION),
@@ -377,6 +405,7 @@ public class DemandModel {
 
 				double oldFlow = this.yearToFreightODMatrix.get(fromYear).getFlow(origin, destination, vehicleType);
 				double predictedFlow = oldFlow;
+				double tripRateFreightFactor = freightTripRateFactors.get(vehicleType);
 
 				//if origin is a LAD (<= 1032, according to the DfT BYFM model)
 				if (origin <= 1032 && destination > 1032) {
@@ -387,7 +416,7 @@ public class DemandModel {
 					double oldGVAOriginZone = this.yearToZoneToGVA.get(fromYear).get(originZone);
 					double newGVAOriginZone = this.yearToZoneToGVA.get(predictedYear).get(originZone);
 
-					predictedFlow = predictedFlow * Math.pow(newPopulationOriginZone / oldPopulationOriginZone, elasticitiesFreight.get(ElasticityTypes.POPULATION)) *
+					predictedFlow = predictedFlow * tripRateFreightFactor * Math.pow(newPopulationOriginZone / oldPopulationOriginZone, elasticitiesFreight.get(ElasticityTypes.POPULATION)) *
 							Math.pow(newGVAOriginZone / oldGVAOriginZone, elasticitiesFreight.get(ElasticityTypes.GVA));
 				}
 				//if destination is a LAD (<= 1032, according to the DfT BYFM model)
@@ -399,7 +428,7 @@ public class DemandModel {
 					double oldGVADestinationZone = this.yearToZoneToGVA.get(fromYear).get(destinationZone);
 					double newGVADestinationZone = this.yearToZoneToGVA.get(predictedYear).get(destinationZone);
 
-					predictedFlow = predictedFlow *	Math.pow(newPopulationDestinationZone / oldPopulationDestinationZone, elasticitiesFreight.get(ElasticityTypes.POPULATION)) *
+					predictedFlow = predictedFlow *	tripRateFreightFactor * Math.pow(newPopulationDestinationZone / oldPopulationDestinationZone, elasticitiesFreight.get(ElasticityTypes.POPULATION)) *
 							Math.pow(newGVADestinationZone / oldGVADestinationZone, elasticitiesFreight.get(ElasticityTypes.GVA));
 				}
 				//if both origin and destination zone are LADs
@@ -416,7 +445,7 @@ public class DemandModel {
 					double oldGVADestinationZone = this.yearToZoneToGVA.get(fromYear).get(destinationZone);
 					double newGVADestinationZone = this.yearToZoneToGVA.get(predictedYear).get(destinationZone);
 					
-					predictedFlow = predictedFlow *	Math.pow((newPopulationOriginZone + newPopulationDestinationZone) / (oldPopulationOriginZone + oldPopulationDestinationZone), elasticitiesFreight.get(ElasticityTypes.POPULATION)) *
+					predictedFlow = predictedFlow *	tripRateFreightFactor * Math.pow((newPopulationOriginZone + newPopulationDestinationZone) / (oldPopulationOriginZone + oldPopulationDestinationZone), elasticitiesFreight.get(ElasticityTypes.POPULATION)) *
 							Math.pow((newGVAOriginZone + newGVADestinationZone) / (oldGVAOriginZone + oldGVADestinationZone), elasticitiesFreight.get(ElasticityTypes.GVA));
 					
 				}
@@ -865,7 +894,28 @@ public class DemandModel {
 		//predicted demand	
 		ODMatrixMultiKey predictedPassengerODMatrix = new ODMatrixMultiKey();
 		FreightMatrix predictedFreightODMatrix = new FreightMatrix();
+		
+		//trip rate factor is calculated my multiplying all relative changes from (fromYear+1) to predictedYear.
+		double tripRateFactor = 1.0; 
+		for (int year = fromYear+1; year <= predictedYear; year++)		
+			tripRateFactor *= this.yearToTripRate.get(year);
+		LOGGER.debug("Trip rate factor from {} (exclusive) to {} (inclusive) for passenger cars is {}", fromYear, predictedYear, tripRateFactor);
+		
+		Map<Integer, Double> freightTripRateFactors = new HashMap<Integer, Double>();
+		double tripRateVan = 1.0, tripRateRigid = 1.0, tripRateArtic = 1.0;
+		for (int year = fromYear+1; year <= predictedYear; year++) {		
+			tripRateVan *= this.yearToFreightTripRate.get(year).get(VehicleType.VAN);
+			tripRateRigid *= this.yearToFreightTripRate.get(year).get(VehicleType.RIGID);
+			tripRateArtic *= this.yearToFreightTripRate.get(year).get(VehicleType.ARTIC);
 
+		}
+		freightTripRateFactors.put(VehicleType.VAN.getValue(), tripRateVan);
+		freightTripRateFactors.put(VehicleType.RIGID.getValue(), tripRateRigid);
+		freightTripRateFactors.put(VehicleType.ARTIC.getValue(), tripRateArtic);
+		LOGGER.debug("Trip rate factor from {} (exclusive) to {} (inclusive) for freight vans is {}", fromYear, predictedYear, tripRateVan);
+		LOGGER.debug("Trip rate factor from {} (exclusive) to {} (inclusive) for freight rigids is {}", fromYear, predictedYear, tripRateRigid);
+		LOGGER.debug("Trip rate factor from {} (exclusive) to {} (inclusive) for freight artics is {}", fromYear, predictedYear, tripRateArtic);
+	
 		//FIRST STAGE PREDICTION (FROM POPULATION AND GVA)
 
 		//for each OD pair first predict the change in passenger vehicle flows from the changes in population and GVA
@@ -884,7 +934,7 @@ public class DemandModel {
 			double newGVAOriginZone = this.yearToZoneToGVA.get(predictedYear).get(originZone);
 			double newGVADestinationZone = this.yearToZoneToGVA.get(predictedYear).get(destinationZone);
 
-			double predictedFlow = oldFlow * Math.pow((newPopulationOriginZone + newPopulationDestinationZone) / (oldPopulationOriginZone + oldPopulationDestinationZone), elasticities.get(ElasticityTypes.POPULATION)) *
+			double predictedFlow = oldFlow * tripRateFactor * Math.pow((newPopulationOriginZone + newPopulationDestinationZone) / (oldPopulationOriginZone + oldPopulationDestinationZone), elasticities.get(ElasticityTypes.POPULATION)) *
 					Math.pow((newGVAOriginZone + newGVADestinationZone) / (oldGVAOriginZone + oldGVADestinationZone), elasticities.get(ElasticityTypes.GVA));
 			//System.out.printf("%d = %d * (%.0f / %.0f) ^ %.2f * (%.1f / %.1f) ^ %.2f * (%.0f / %.0f) ^ %.2f * (%.1f / %.1f) ^ %.2f\n", (int) Math.round(predictedFlow), (int) Math.round(oldFlow),
 			//newPopulationOriginZone, oldPopulationOriginZone, elasticities.get(ElasticityTypes.POPULATION),
@@ -907,6 +957,7 @@ public class DemandModel {
 
 			double oldFlow = this.yearToFreightODMatrix.get(fromYear).getFlow(origin, destination, vehicleType);
 			double predictedFlow = oldFlow;
+			double tripRateFreightFactor = freightTripRateFactors.get(vehicleType);
 
 			//if origin is a LAD (<= 1032, according to the DfT BYFM model)
 			if (origin <= 1032 && destination > 1032) {
@@ -917,7 +968,7 @@ public class DemandModel {
 				double oldGVAOriginZone = this.yearToZoneToGVA.get(fromYear).get(originZone);
 				double newGVAOriginZone = this.yearToZoneToGVA.get(predictedYear).get(originZone);
 
-				predictedFlow = predictedFlow * Math.pow(newPopulationOriginZone / oldPopulationOriginZone, elasticitiesFreight.get(ElasticityTypes.POPULATION)) *
+				predictedFlow = predictedFlow * tripRateFreightFactor * Math.pow(newPopulationOriginZone / oldPopulationOriginZone, elasticitiesFreight.get(ElasticityTypes.POPULATION)) *
 						Math.pow(newGVAOriginZone / oldGVAOriginZone, elasticitiesFreight.get(ElasticityTypes.GVA));
 			}
 			//if destination is a LAD (<= 1032, according to the DfT BYFM model)
@@ -929,7 +980,7 @@ public class DemandModel {
 				double oldGVADestinationZone = this.yearToZoneToGVA.get(fromYear).get(destinationZone);
 				double newGVADestinationZone = this.yearToZoneToGVA.get(predictedYear).get(destinationZone);
 
-				predictedFlow = predictedFlow *	Math.pow(newPopulationDestinationZone / oldPopulationDestinationZone, elasticitiesFreight.get(ElasticityTypes.POPULATION)) *
+				predictedFlow = predictedFlow * tripRateFreightFactor * Math.pow(newPopulationDestinationZone / oldPopulationDestinationZone, elasticitiesFreight.get(ElasticityTypes.POPULATION)) *
 						Math.pow(newGVADestinationZone / oldGVADestinationZone, elasticitiesFreight.get(ElasticityTypes.GVA));
 			}
 			//if both origin and destination zone are LADs
@@ -946,7 +997,7 @@ public class DemandModel {
 				double oldGVADestinationZone = this.yearToZoneToGVA.get(fromYear).get(destinationZone);
 				double newGVADestinationZone = this.yearToZoneToGVA.get(predictedYear).get(destinationZone);
 
-				predictedFlow = predictedFlow *	Math.pow((newPopulationOriginZone + newPopulationDestinationZone) / (oldPopulationOriginZone + oldPopulationDestinationZone), elasticitiesFreight.get(ElasticityTypes.POPULATION)) *
+				predictedFlow = predictedFlow * tripRateFreightFactor *	Math.pow((newPopulationOriginZone + newPopulationDestinationZone) / (oldPopulationOriginZone + oldPopulationDestinationZone), elasticitiesFreight.get(ElasticityTypes.POPULATION)) *
 						Math.pow((newGVAOriginZone + newGVADestinationZone) / (oldGVAOriginZone + oldGVADestinationZone), elasticitiesFreight.get(ElasticityTypes.GVA));
 
 			}
