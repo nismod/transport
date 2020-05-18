@@ -4,7 +4,7 @@
 
 	<groupId>nismod</groupId>
 	<artifactId>transport</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>2.3.0</version>
 	<packaging>jar</packaging>
 
 	<name>transport</name>
@@ -134,7 +134,7 @@
     		<version>1.16.0-RC1</version>
 		</dependency>
 	</dependencies>
-	
+
 	<repositories>
 		<repository>
 			<id>maven2-repository.dev.java.net</id>
@@ -254,7 +254,7 @@
 			</plugin>
 		</plugins>
 	</build>
-	
+
 	<reporting>
 		<plugins>
 			<plugin>
@@ -270,5 +270,5 @@
 			</plugin>
 		</plugins>
     </reporting>
-    
+
 </project>

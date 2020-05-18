@@ -1,4 +1,4 @@
-VERSION=$(shell git describe --tags)
+VERSION=$(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout -f transport)
 DEPLOYDIR=transport_$(VERSION)
 DATADIR=transport_testdata_$(VERSION)
 
@@ -9,7 +9,7 @@ deploy: $(DEPLOYDIR).zip
 
 $(DEPLOYDIR).zip: deploy_dir build
 	cp README.md $(DEPLOYDIR)/README.md
-	cp transport/target/transport-0.0.1-SNAPSHOT.jar $(DEPLOYDIR)/transport.jar
+	cp transport/target/transport-$(VERSION).jar $(DEPLOYDIR)/transport.jar
 	zip -r $(DEPLOYDIR).zip $(DEPLOYDIR)
 
 deploy_dir:
@@ -24,12 +24,12 @@ $(DATADIR).zip: data_dir
 data_dir:
 	mkdir -p "$(DATADIR)"
 
-build: transport/target/transport-0.0.1-SNAPSHOT.jar
+build: transport/target/transport-$(VERSION).jar
 
-transport/target/transport-0.0.1-SNAPSHOT.jar:
+transport/target/transport-$(VERSION).jar:
 	mvn install -f transport
 
 clean:
 	mvn clean -f transport
-	rm -f transport_v*.zip
-	rm -r transport_v*
+	rm -f transport_*.zip
+	rm -r transport_*

@@ -42,6 +42,15 @@ NISMOD v2 Transport Model is a national-scale (*Great Britain*) transport model 
         * To increase the max heap size, run with `java -XX:MaxHeapSize=120g ...`
         * To enable debug messages, run with `java -Dlog4j2.debug ...`
 
+
+## Release checklist
+
+- [ ] Update the model version in `transport/pom.xml`
+- [ ] Run `make` to build model jar and testdata zip
+- [ ] Tag the latest commit (using `git tag -a` and `git push --tags`)
+- [ ] Make a GitHub release, with notes on fixes and new features
+
+
 ## Contact information
 
 * Milan Lovric lovric.milan@gmail.com / M.Lovric@soton.ac.uk (Modelling and development)
