@@ -152,7 +152,7 @@
 		</repository>
 		<repository>
 			<id>osgeod</id>
-			<name>OSGeo Release Repository Deps</name>
+			<name>OSGeo Release Repository Dependencies</name>
 			<url>https://repo.osgeo.org/repository/release/</url>
 			<snapshots><enabled>false</enabled></snapshots>
 			<releases><enabled>true</enabled></releases>
