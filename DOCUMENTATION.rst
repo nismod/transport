@@ -66,10 +66,11 @@ of day choice, engine type choice, route choice).
 
 The model can also incorporate scenarios for changes in vehicle fuel efficiency
 and changes in market shares of different engine types, including internal
-combustion engines on petrol, diesel, LPG, hydrogen or CNG; hybrid EVs on
-petrol or diesel; plug-in hybrid EVs on petrol or diesel; fuel cell EVs on
-hydrogen, and battery EV. This can be used to test policies such as the fossil
-fuel phase-out.
+combustion engines on petrol, diesel, LPG (liquefied petroleum gas), hydrogen
+or CNG (compressed natural gas); hybrid EVs (electric vehicles) on petrol or
+diesel; plug-in hybrid EVs on petrol or diesel; fuel cell EVs on hydrogen, and
+battery EV. This can be used to test policies such as the fossil fuel
+phase-out.
 
 Electricity and fuel consumptions are calculated using the four-parameter
 formula from WebTAG. Behavioural assumptions are made for plug-in hybrid EVs
@@ -85,6 +86,26 @@ electricity consumption), inter-zonal level (e.g. predicted vehicle flows,
 average travel times, average travel costs) and national level (e.g. total CO2
 emissions, total energy consumptions). The outputs are in csv and shapefile
 format, allowing them to be visualised with a software of choice.
+
+The units for energy consumptions are:
+- PETROL litres (l)
+- DIESEL litres (l)
+- LPG kilograms (kg)
+- ELECTRICITY kilowatt-hours (kWh)
+- HYDROGEN kilograms (kg)
+- CNG kilograms (kg)
+
+The units for other outputs are:
+- cost skim matrices: pounds GBP (£)
+- time skim matrices and link travel times: minutes (min)
+- CO2 emissions: kilgrams (kg)
+- vehicle-kilometres: vehicle-kilometres (vkm)
+- OD matrices: vehicles per day (v/d)
+
+Note that outputs are produced for only one (average) simulated day, so yearly
+values can be obtained by multiplying those values by 365 - in which case it
+may become more appropriate to use kilotonnes or megatonnes instead of
+kilograms, MWh or GWh instead of kWh etc.
 
 
 1.2 Rail Model
