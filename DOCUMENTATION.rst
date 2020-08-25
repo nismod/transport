@@ -88,19 +88,20 @@ emissions, total energy consumptions). The outputs are in csv and shapefile
 format, allowing them to be visualised with a software of choice.
 
 The units for energy consumptions are:
-- PETROL litres (l)
-- DIESEL litres (l)
-- LPG kilograms (kg)
-- ELECTRICITY kilowatt-hours (kWh)
-- HYDROGEN kilograms (kg)
-- CNG kilograms (kg)
+* PETROL litres (l)
+* DIESEL litres (l)
+* DIESEL litres (l)
+* LPG kilograms (kg)
+* ELECTRICITY kilowatt-hours (kWh)
+* HYDROGEN kilograms (kg)
+* CNG kilograms (kg)
 
 The units for other outputs are:
-- cost skim matrices: pounds GBP (£)
-- time skim matrices and link travel times: minutes (min)
-- CO2 emissions: kilgrams (kg)
-- vehicle-kilometres: vehicle-kilometres (vkm)
-- OD matrices: vehicles per day (v/d)
+* cost skim matrices: pounds GBP (£)
+* time skim matrices and link travel times: minutes (min)
+* CO2 emissions: kilgrams (kg)
+* vehicle-kilometres: vehicle-kilometres (vkm)
+* OD matrices: vehicles per day (v/d)
 
 Note that outputs are produced for only one (average) simulated day, so yearly
 values can be obtained by multiplying those values by 365 - in which case it
@@ -222,8 +223,8 @@ run year (e.g. 2015), for the **air** model type::
 
 Options:
 
-    * To increase the max heap size, run with `java -XX:MaxHeapSize=120g ...`
-    * To enable debug messages, run with `java -Dlog4j2.debug ...`
+* To increase the max heap size, run with `java -XX:MaxHeapSize=120g ...`
+* To enable debug messages, run with `java -Dlog4j2.debug ...`
 
 
 2.3 Showcase Demo
