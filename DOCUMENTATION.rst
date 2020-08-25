@@ -88,6 +88,7 @@ emissions, total energy consumptions). The outputs are in csv and shapefile
 format, allowing them to be visualised with a software of choice.
 
 The units for energy consumptions are:
+
 * PETROL litres (l)
 * DIESEL litres (l)
 * DIESEL litres (l)
@@ -97,6 +98,7 @@ The units for energy consumptions are:
 * CNG kilograms (kg)
 
 The units for other outputs are:
+
 * cost skim matrices: pounds GBP (£)
 * time skim matrices and link travel times: minutes (min)
 * CO2 emissions: kilgrams (kg)
