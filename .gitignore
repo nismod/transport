@@ -437,8 +437,10 @@ transport/*.txt
 # Releases
 transport_*/*
 transport_*.zip
+TR_*.zip
 transport_testdata_*/*
 transport_testdata_*.zip
+TR_data_*
 
 # Profiling
 *.jfr
