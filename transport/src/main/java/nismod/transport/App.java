@@ -43,6 +43,7 @@ import nismod.transport.showcase.LandingGUI;
 import nismod.transport.utility.ConfigReader;
 import nismod.transport.utility.InputFileReader;
 import nismod.transport.utility.PropertiesReader;
+import nismod.transport.utility.RandomSingleton;
 import nismod.transport.visualisation.LineVisualiser;
 import nismod.transport.zone.Zoning;
 
@@ -206,6 +207,10 @@ public class App {
 						LOGGER.error("Failed to create output directory.");
 					}
 				}
+
+				//set random number generator seed
+				long seed = Long.parseLong(props.getProperty("SEED"));
+				RandomSingleton.getInstance().setSeed(seed);
 			}
 			
 			//create road network for options that use it
