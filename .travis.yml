@@ -1,12 +1,12 @@
 language: java
 jdk:
-  - oraclejdk8
+  - openjdk11
 dist: trusty
 before_script:
  - "echo $JAVA_OPTS"
  - "export JAVA_OPTS=-Xmx4g"
  - "export _JAVA_OPTIONS=-Xmx4g"
-script: 
+script:
   - cd transport
   - mvn test
 after_success:
