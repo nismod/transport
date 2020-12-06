@@ -887,8 +887,50 @@ public class InputFileReader {
 				LOGGER.error(e);
 			}
 		}
-
+		
 		LOGGER.debug("Trip rates read from file with data points for {} years.", map.keySet().size());
+		
+		return map;
+	}
+	
+	/**
+	 * Reads passenger trip rates file (zonal).
+	 * @param fileName File name.
+	 * @return Map with yearly zonal trip rates.
+	 */
+	public static HashMap<Integer, HashMap<String, Double>> readPassengerTripRatesFile(String fileName) {
+
+		HashMap<Integer, HashMap<String, Double>> map = new HashMap<Integer, HashMap<String, Double>>();
+		CSVParser parser = null;
+		int zonesNumber = 0;
+		try {
+			parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
+			Set<String> keySet = parser.getHeaderMap().keySet();
+			keySet.remove("year");
+			zonesNumber = keySet.size();
+			double tripRate;
+			for (CSVRecord record : parser) {
+				int year = Integer.parseInt(record.get(0));
+				HashMap<String, Double> zoneToTripRate = new HashMap<String, Double>();
+				for (String zone: keySet) {
+					tripRate = Double.parseDouble(record.get(zone));
+					zoneToTripRate.put(zone, tripRate);			
+				}
+				map.put(year, zoneToTripRate);
+			}
+		} catch (FileNotFoundException e) {
+			LOGGER.error(e);
+		} catch (IOException e) {
+			LOGGER.error(e);
+		} finally {
+			try {
+				parser.close();
+			} catch (IOException e) {
+				LOGGER.error(e);
+			}
+		}
+		
+		LOGGER.debug("Trip rates read from file with data points for {} years and {} zones.", map.keySet().size(), zonesNumber);
 		
 		return map;
 	}
