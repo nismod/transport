@@ -938,29 +938,44 @@ public class InputFileReader {
 	/**
 	 * Reads freight trip rates file.
 	 * @param fileName File name.
-	 * @return Map with yearly trip rates for freight vehicles.
+	 * @return Map with yearly zonal trip rates for freight vehicles.
 	 */
-	public static HashMap<Integer, Map<VehicleType, Double>> readFreightTripRatesFile(String fileName) {
+	public static HashMap<Integer, Map<VehicleType, HashMap<Integer, Double>>> readFreightTripRatesFile(String fileName) {
 
-		HashMap<Integer, Map<VehicleType, Double>> map = new HashMap<Integer, Map<VehicleType, Double>>();
+		HashMap<Integer, Map<VehicleType, HashMap<Integer, Double>>> map = new HashMap<Integer, Map<VehicleType, HashMap<Integer, Double>>>();
 		CSVParser parser = null;
 		try {
 			parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
 			//System.out.println(parser.getHeaderMap().toString());
 			Set<String> keySet = parser.getHeaderMap().keySet();
 			keySet.remove("year");
-			//System.out.println("keySet = " + keySet);
+			keySet.remove("vehicle");
 			double tripRate;
 			for (CSVRecord record : parser) {
 				//System.out.println(record);
 				int year = Integer.parseInt(record.get(0));
-				Map<VehicleType, Double> vehicleTypeToTripRate = new EnumMap<>(VehicleType.class);
-				for (String et: keySet) {
-					VehicleType vht = VehicleType.valueOf(et);
-					tripRate = Double.parseDouble(record.get(vht));
-					vehicleTypeToTripRate.put(vht, tripRate);			
+				VehicleType vht = VehicleType.valueOf(record.get(1));
+				
+				//fetch vehicle map for the year
+				Map<VehicleType, HashMap<Integer, Double>> vehicleTypeToZonalMap = map.get(year);
+				if (vehicleTypeToZonalMap == null) {
+					vehicleTypeToZonalMap = new EnumMap<>(VehicleType.class);
+					map.put(year, vehicleTypeToZonalMap);
 				}
-				map.put(year, vehicleTypeToTripRate);
+				
+				//fetch zonal map for the vehicle
+				HashMap<Integer, Double> zonalMap = vehicleTypeToZonalMap.get(vht);
+				if (zonalMap == null) {
+					zonalMap = new HashMap<Integer, Double>();
+					vehicleTypeToZonalMap.put(vht, zonalMap);
+				}
+
+				//read trip rates for all the zones and put in the map
+				for (String zone: keySet) {
+					Integer zoneID = Integer.parseInt(zone);
+					tripRate = Double.parseDouble(record.get(zone));
+					zonalMap.put(zoneID, tripRate);			
+				}
 			}
 		} catch (FileNotFoundException e) {
 			LOGGER.error(e);

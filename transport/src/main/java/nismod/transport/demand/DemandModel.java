@@ -80,7 +80,7 @@ public class DemandModel {
 	//private SkimMatrix baseYearTimeSkimMatrix,	baseYearCostSkimMatrix;
 	private HashMap<Integer, List<List<String>>> yearToListsOfLADsForNewRouteGeneration;
 	private HashMap<Integer, HashMap<String, Double>> yearToPassengerTripRate; //passenger trip rates
-	private HashMap<Integer, Map<VehicleType, Double>> yearToFreightTripRate; //freight trip rates
+	private HashMap<Integer, Map<VehicleType, HashMap<Integer, Double>>> yearToFreightTripRate; //freight trip rates
 	
 	private RouteSetGenerator rsg;
 	private Properties props;
@@ -354,6 +354,7 @@ public class DemandModel {
 				passengerOriginZoneTripRateFactors.put(zone, tripRateFactor);
 			}
 			LOGGER.debug("Zonal (origin) trip rate factors from {} (exclusive) to {} (inclusive) for passenger cars is {}", fromYear, predictedYear, passengerOriginZoneTripRateFactors);
+		
 			//calculating separately for destination zones (just in case as, per ODMatrixMultyKey design, origin and destination zones need not be the same).
 			Map<String, Double> passengerDestinationZoneTripRateFactors = new HashMap<String, Double>();
 			List<String> destinationLADs = this.yearToPassengerODMatrix.get(fromYear).getUnsortedDestinations();
@@ -366,22 +367,57 @@ public class DemandModel {
 			}
 			LOGGER.debug("Zonal (destination) trip rate factors from {} (exclusive) to {} (inclusive) for passenger cars is {}", fromYear, predictedYear, passengerOriginZoneTripRateFactors);
 					
-			//freight trip rate factors are given on national scale, but per vehicle type
-			Map<Integer, Double> freightTripRateFactors = new HashMap<Integer, Double>();
-			double tripRateVan = 1.0, tripRateRigid = 1.0, tripRateArtic = 1.0;
-			//trip rate factor is calculated my multiplying all relative changes from (fromYear+1) to predictedYear.
-			for (int year = fromYear+1; year <= predictedYear; year++) {		
-				tripRateVan *= this.yearToFreightTripRate.get(year).get(VehicleType.VAN);
-				tripRateRigid *= this.yearToFreightTripRate.get(year).get(VehicleType.RIGID);
-				tripRateArtic *= this.yearToFreightTripRate.get(year).get(VehicleType.ARTIC);
-
+			
+			//freight trip rate factors are given on a BYFM freight zonal scale, and per vehicle type
+			HashMap<Integer, Double> freightOriginZoneTripRateFactorsVan = new HashMap<Integer, Double>();
+			HashMap<Integer, Double> freightOriginZoneTripRateFactorsRigid = new HashMap<Integer, Double>();
+			HashMap<Integer, Double> freightOriginZoneTripRateFactorsArtic = new HashMap<Integer, Double>();
+			HashMap<Integer, HashMap<Integer, Double>> freightVehicleToOriginZoneTripRateFactors = new HashMap<Integer, HashMap<Integer, Double>>(); //for three vehicle types
+			List<Integer> originIDs = this.yearToFreightODMatrix.get(fromYear).getUnsortedOrigins();
+			for (Integer zoneID: originIDs) {
+				double tripRateVan = 1.0, tripRateRigid = 1.0, tripRateArtic = 1.0;
+				//trip rate factor is calculated my multiplying all relative changes from (fromYear+1) to predictedYear.
+				for (int year = fromYear+1; year <= predictedYear; year++) {	
+					tripRateVan *= this.yearToFreightTripRate.get(year).get(VehicleType.VAN).get(zoneID);
+					tripRateRigid *= this.yearToFreightTripRate.get(year).get(VehicleType.RIGID).get(zoneID);
+					tripRateArtic *= this.yearToFreightTripRate.get(year).get(VehicleType.ARTIC).get(zoneID);
+				}
+				freightOriginZoneTripRateFactorsVan.put(zoneID, tripRateVan);
+				freightOriginZoneTripRateFactorsRigid.put(zoneID, tripRateRigid);
+				freightOriginZoneTripRateFactorsArtic.put(zoneID, tripRateArtic);
 			}
-			freightTripRateFactors.put(VehicleType.VAN.getValue(), tripRateVan);
-			freightTripRateFactors.put(VehicleType.RIGID.getValue(), tripRateRigid);
-			freightTripRateFactors.put(VehicleType.ARTIC.getValue(), tripRateArtic);
-			LOGGER.debug("Trip rate factor from {} (exclusive) to {} (inclusive) for freight vans is {}", fromYear, predictedYear, tripRateVan);
-			LOGGER.debug("Trip rate factor from {} (exclusive) to {} (inclusive) for freight rigids is {}", fromYear, predictedYear, tripRateRigid);
-			LOGGER.debug("Trip rate factor from {} (exclusive) to {} (inclusive) for freight artics is {}", fromYear, predictedYear, tripRateArtic);
+			freightVehicleToOriginZoneTripRateFactors.put(VehicleType.VAN.getValue(), freightOriginZoneTripRateFactorsVan);
+			freightVehicleToOriginZoneTripRateFactors.put(VehicleType.RIGID.getValue(), freightOriginZoneTripRateFactorsRigid);
+			freightVehicleToOriginZoneTripRateFactors.put(VehicleType.ARTIC.getValue(), freightOriginZoneTripRateFactorsArtic);
+			LOGGER.debug("Zonal (origin) trip rate factors from {} (exclusive) to {} (inclusive) for freight vans is {}", fromYear, predictedYear, freightOriginZoneTripRateFactorsVan);
+			LOGGER.debug("Zonal (origin) trip rate factors from {} (exclusive) to {} (inclusive) for freight rigids is {}", fromYear, predictedYear, freightOriginZoneTripRateFactorsRigid);
+			LOGGER.debug("Zonal (origin) trip rate factors from {} (exclusive) to {} (inclusive) for freight artics is {}", fromYear, predictedYear, freightOriginZoneTripRateFactorsArtic);		
+		
+			//calculating separately for destination zones (just in case as FreightMatrix origin and destination zones need not be the same).
+			HashMap<Integer, Double> freightDestinationZoneTripRateFactorsVan = new HashMap<Integer, Double>();
+			HashMap<Integer, Double> freightDestinationZoneTripRateFactorsRigid = new HashMap<Integer, Double>();
+			HashMap<Integer, Double> freightDestinationZoneTripRateFactorsArtic = new HashMap<Integer, Double>();
+			HashMap<Integer, HashMap<Integer, Double>> freightVehicleToDestinationZoneTripRateFactors = new HashMap<Integer, HashMap<Integer, Double>>(); //for three vehicle types
+			List<Integer> destinationIDs = this.yearToFreightODMatrix.get(fromYear).getUnsortedDestinations();
+			for (Integer zoneID: destinationIDs) {
+				double tripRateVan = 1.0, tripRateRigid = 1.0, tripRateArtic = 1.0;
+				//trip rate factor is calculated my multiplying all relative changes from (fromYear+1) to predictedYear.
+				for (int year = fromYear+1; year <= predictedYear; year++) {	
+					tripRateVan *= this.yearToFreightTripRate.get(year).get(VehicleType.VAN).get(zoneID);
+					tripRateRigid *= this.yearToFreightTripRate.get(year).get(VehicleType.RIGID).get(zoneID);
+					tripRateArtic *= this.yearToFreightTripRate.get(year).get(VehicleType.ARTIC).get(zoneID);
+				}
+				freightDestinationZoneTripRateFactorsVan.put(zoneID, tripRateVan);
+				freightDestinationZoneTripRateFactorsRigid.put(zoneID, tripRateRigid);
+				freightDestinationZoneTripRateFactorsArtic.put(zoneID, tripRateArtic);
+			}
+			freightVehicleToDestinationZoneTripRateFactors.put(VehicleType.VAN.getValue(), freightDestinationZoneTripRateFactorsVan);
+			freightVehicleToDestinationZoneTripRateFactors.put(VehicleType.RIGID.getValue(), freightDestinationZoneTripRateFactorsRigid);
+			freightVehicleToDestinationZoneTripRateFactors.put(VehicleType.ARTIC.getValue(), freightDestinationZoneTripRateFactorsArtic);
+			LOGGER.debug("Zonal (destination) trip rate factors from {} (exclusive) to {} (inclusive) for freight vans is {}", fromYear, predictedYear, freightDestinationZoneTripRateFactorsVan);
+			LOGGER.debug("Zonal (destination) trip rate factors from {} (exclusive) to {} (inclusive) for freight rigids is {}", fromYear, predictedYear, freightDestinationZoneTripRateFactorsRigid);
+			LOGGER.debug("Zonal (destination) trip rate factors from {} (exclusive) to {} (inclusive) for freight artics is {}", fromYear, predictedYear, freightDestinationZoneTripRateFactorsArtic);		
+		
 			
 			//FIRST STAGE PREDICTION (FROM POPULATION AND GVA)
 			
@@ -427,7 +463,10 @@ public class DemandModel {
 
 				double oldFlow = this.yearToFreightODMatrix.get(fromYear).getFlow(origin, destination, vehicleType);
 				double predictedFlow = oldFlow;
-				double tripRateFreightFactor = freightTripRateFactors.get(vehicleType);
+				
+				//trip rate factor is calculated as an arithmetic mean of trip factors for origin and destination zone
+				double tripRateFreightFactor = (freightVehicleToOriginZoneTripRateFactors.get(vehicleType).get(origin) + freightVehicleToDestinationZoneTripRateFactors.get(vehicleType).get(destination)) / 2.0;
+
 
 				//if origin is a LAD (<= 1032, according to the DfT BYFM model)
 				if (origin <= 1032 && destination > 1032) {
@@ -928,6 +967,7 @@ public class DemandModel {
 			passengerOriginZoneTripRateFactors.put(zone, tripRateFactor);
 		}
 		LOGGER.debug("Zonal (origin) trip rate factors from {} (exclusive) to {} (inclusive) for passenger cars is {}", fromYear, predictedYear, passengerOriginZoneTripRateFactors);
+		
 		//calculating separately for destination zones (just in case as, per ODMatrixMultyKey design, origin and destination zones need not be the same).
 		Map<String, Double> passengerDestinationZoneTripRateFactors = new HashMap<String, Double>();
 		List<String> destinationLADs = this.yearToPassengerODMatrix.get(fromYear).getUnsortedDestinations();
@@ -939,24 +979,57 @@ public class DemandModel {
 			passengerDestinationZoneTripRateFactors.put(zone, tripRateFactor);
 		}
 		LOGGER.debug("Zonal (destination) trip rate factors from {} (exclusive) to {} (inclusive) for passenger cars is {}", fromYear, predictedYear, passengerOriginZoneTripRateFactors);
-				
-		//freight trip rate factors are given on national scale, but per vehicle type
-		Map<Integer, Double> freightTripRateFactors = new HashMap<Integer, Double>();
-		double tripRateVan = 1.0, tripRateRigid = 1.0, tripRateArtic = 1.0;
-		//trip rate factor is calculated my multiplying all relative changes from (fromYear+1) to predictedYear.
-		for (int year = fromYear+1; year <= predictedYear; year++) {		
-			tripRateVan *= this.yearToFreightTripRate.get(year).get(VehicleType.VAN);
-			tripRateRigid *= this.yearToFreightTripRate.get(year).get(VehicleType.RIGID);
-			tripRateArtic *= this.yearToFreightTripRate.get(year).get(VehicleType.ARTIC);
-
+		
+		//freight trip rate factors are given on a BYFM freight zonal scale, and per vehicle type
+		HashMap<Integer, Double> freightOriginZoneTripRateFactorsVan = new HashMap<Integer, Double>();
+		HashMap<Integer, Double> freightOriginZoneTripRateFactorsRigid = new HashMap<Integer, Double>();
+		HashMap<Integer, Double> freightOriginZoneTripRateFactorsArtic = new HashMap<Integer, Double>();
+		HashMap<Integer, HashMap<Integer, Double>> freightVehicleToOriginZoneTripRateFactors = new HashMap<Integer, HashMap<Integer, Double>>(); //for three vehicle types
+		List<Integer> originIDs = this.yearToFreightODMatrix.get(fromYear).getUnsortedOrigins();
+		for (Integer zoneID: originIDs) {
+			double tripRateVan = 1.0, tripRateRigid = 1.0, tripRateArtic = 1.0;
+			//trip rate factor is calculated my multiplying all relative changes from (fromYear+1) to predictedYear.
+			for (int year = fromYear+1; year <= predictedYear; year++) {	
+				tripRateVan *= this.yearToFreightTripRate.get(year).get(VehicleType.VAN).get(zoneID);
+				tripRateRigid *= this.yearToFreightTripRate.get(year).get(VehicleType.RIGID).get(zoneID);
+				tripRateArtic *= this.yearToFreightTripRate.get(year).get(VehicleType.ARTIC).get(zoneID);
+			}
+			freightOriginZoneTripRateFactorsVan.put(zoneID, tripRateVan);
+			freightOriginZoneTripRateFactorsRigid.put(zoneID, tripRateRigid);
+			freightOriginZoneTripRateFactorsArtic.put(zoneID, tripRateArtic);
 		}
-		freightTripRateFactors.put(VehicleType.VAN.getValue(), tripRateVan);
-		freightTripRateFactors.put(VehicleType.RIGID.getValue(), tripRateRigid);
-		freightTripRateFactors.put(VehicleType.ARTIC.getValue(), tripRateArtic);
-		LOGGER.debug("Trip rate factor from {} (exclusive) to {} (inclusive) for freight vans is {}", fromYear, predictedYear, tripRateVan);
-		LOGGER.debug("Trip rate factor from {} (exclusive) to {} (inclusive) for freight rigids is {}", fromYear, predictedYear, tripRateRigid);
-		LOGGER.debug("Trip rate factor from {} (exclusive) to {} (inclusive) for freight artics is {}", fromYear, predictedYear, tripRateArtic);
-
+		freightVehicleToOriginZoneTripRateFactors.put(VehicleType.VAN.getValue(), freightOriginZoneTripRateFactorsVan);
+		freightVehicleToOriginZoneTripRateFactors.put(VehicleType.RIGID.getValue(), freightOriginZoneTripRateFactorsRigid);
+		freightVehicleToOriginZoneTripRateFactors.put(VehicleType.ARTIC.getValue(), freightOriginZoneTripRateFactorsArtic);
+		LOGGER.debug("Zonal (origin) trip rate factors from {} (exclusive) to {} (inclusive) for freight vans is {}", fromYear, predictedYear, freightOriginZoneTripRateFactorsVan);
+		LOGGER.debug("Zonal (origin) trip rate factors from {} (exclusive) to {} (inclusive) for freight rigids is {}", fromYear, predictedYear, freightOriginZoneTripRateFactorsRigid);
+		LOGGER.debug("Zonal (origin) trip rate factors from {} (exclusive) to {} (inclusive) for freight artics is {}", fromYear, predictedYear, freightOriginZoneTripRateFactorsArtic);		
+	
+		//calculating separately for destination zones (just in case as FreightMatrix origin and destination zones need not be the same).
+		HashMap<Integer, Double> freightDestinationZoneTripRateFactorsVan = new HashMap<Integer, Double>();
+		HashMap<Integer, Double> freightDestinationZoneTripRateFactorsRigid = new HashMap<Integer, Double>();
+		HashMap<Integer, Double> freightDestinationZoneTripRateFactorsArtic = new HashMap<Integer, Double>();
+		HashMap<Integer, HashMap<Integer, Double>> freightVehicleToDestinationZoneTripRateFactors = new HashMap<Integer, HashMap<Integer, Double>>(); //for three vehicle types
+		List<Integer> destinationIDs = this.yearToFreightODMatrix.get(fromYear).getUnsortedDestinations();
+		for (Integer zoneID: destinationIDs) {
+			double tripRateVan = 1.0, tripRateRigid = 1.0, tripRateArtic = 1.0;
+			//trip rate factor is calculated my multiplying all relative changes from (fromYear+1) to predictedYear.
+			for (int year = fromYear+1; year <= predictedYear; year++) {	
+				tripRateVan *= this.yearToFreightTripRate.get(year).get(VehicleType.VAN).get(zoneID);
+				tripRateRigid *= this.yearToFreightTripRate.get(year).get(VehicleType.RIGID).get(zoneID);
+				tripRateArtic *= this.yearToFreightTripRate.get(year).get(VehicleType.ARTIC).get(zoneID);
+			}
+			freightDestinationZoneTripRateFactorsVan.put(zoneID, tripRateVan);
+			freightDestinationZoneTripRateFactorsRigid.put(zoneID, tripRateRigid);
+			freightDestinationZoneTripRateFactorsArtic.put(zoneID, tripRateArtic);
+		}
+		freightVehicleToDestinationZoneTripRateFactors.put(VehicleType.VAN.getValue(), freightDestinationZoneTripRateFactorsVan);
+		freightVehicleToDestinationZoneTripRateFactors.put(VehicleType.RIGID.getValue(), freightDestinationZoneTripRateFactorsRigid);
+		freightVehicleToDestinationZoneTripRateFactors.put(VehicleType.ARTIC.getValue(), freightDestinationZoneTripRateFactorsArtic);
+		LOGGER.debug("Zonal (destination) trip rate factors from {} (exclusive) to {} (inclusive) for freight vans is {}", fromYear, predictedYear, freightDestinationZoneTripRateFactorsVan);
+		LOGGER.debug("Zonal (destination) trip rate factors from {} (exclusive) to {} (inclusive) for freight rigids is {}", fromYear, predictedYear, freightDestinationZoneTripRateFactorsRigid);
+		LOGGER.debug("Zonal (destination) trip rate factors from {} (exclusive) to {} (inclusive) for freight artics is {}", fromYear, predictedYear, freightDestinationZoneTripRateFactorsArtic);		
+	
 	
 		//FIRST STAGE PREDICTION (FROM POPULATION AND GVA)
 
@@ -1002,7 +1075,9 @@ public class DemandModel {
 
 			double oldFlow = this.yearToFreightODMatrix.get(fromYear).getFlow(origin, destination, vehicleType);
 			double predictedFlow = oldFlow;
-			double tripRateFreightFactor = freightTripRateFactors.get(vehicleType);
+			
+			//trip rate factor is calculated as an arithmetic mean of trip factors for origin and destination zone
+			double tripRateFreightFactor = (freightVehicleToOriginZoneTripRateFactors.get(vehicleType).get(origin) + freightVehicleToDestinationZoneTripRateFactors.get(vehicleType).get(destination)) / 2.0;
 
 			//if origin is a LAD (<= 1032, according to the DfT BYFM model)
 			if (origin <= 1032 && destination > 1032) {
