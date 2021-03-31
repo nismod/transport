@@ -1,10 +1,11 @@
 kind: Model
 apiVersion: v1alpha4
 metadata:
-  displayName: NISMOD - Transport (model v2.3.0 build 1-standalone)
+  displayName: NISMOD - Transport (model v2.3.0 build 2-standalone)
   name: nismod-transport-standalone
   summary: National Infrastructure Systems Model - Transport, standalone
   type: transport
+  source_code: https://github.com/nismod/transport
   description: >
     NISMOD v2 Transport Model is a national-scale (Great Britain) transport model
     developed to support policy making regarding the future infrastructure. It
@@ -22,7 +23,7 @@ metadata:
 spec:
   inputs:
     env:
-      - name: arguments
+      - name: ARGS
         title: Arguments
         desc: Provide command line argument string
         type: string
