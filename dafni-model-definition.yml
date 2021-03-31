@@ -1,0 +1,78 @@
+kind: Model
+apiVersion: v1alpha4
+metadata:
+  displayName: NISMOD - Transport (model v2.3.0 build 1-standalone)
+  name: nismod-transport-standalone
+  summary: National Infrastructure Systems Model - Transport, standalone
+  type: transport
+  description: >
+    NISMOD v2 Transport Model is a national-scale (Great Britain) transport model
+    developed to support policy making regarding the future infrastructure. It
+    forecasts the impact of various endogenous and exogenous factors on transport
+    demand and capacity utilisation, following an elasticity-based simulation
+    methodology. The model consists of three submodels covering the following modes
+    of transport: road (passenger and freight vehicle flows), rail (total station
+    usage), and air (domestic and international passenger movements).
+
+    This configuration runs only the core transport model, without the smif
+    model coupling wrapper which is used in the integrated NISMOD set-up.
+
+    Source code: https://github.com/nismod/transport
+    Documentation: https://nt2.readthedocs.io/en/latest/
+spec:
+  inputs:
+    env:
+      - name: arguments
+        title: Arguments
+        desc: Provide command line argument string
+        type: string
+        default: -c ./inputs/config/config.properties -b
+    dataslots:
+      - name: Config
+        description: >
+          N
+        default:
+          - uid: 1237868f-52ea-416c-9087-eef9dbde429d
+            versionUid: cef750da-b26d-4da1-b67b-871281c3d551
+        path: inputs/config
+        required: true
+      - name: CSV files
+        description: >
+          Scenarios and parameter tables
+        default:
+          - uid: 36adf09d-7657-4e46-a6d8-55dde43cbe51
+            versionUid: 4050b797-0a12-4b86-9ca3-9edfde3aeb6d
+        path: inputs/csvfiles
+        required: true
+      - name: Disruptions
+        description: >
+          Simulate link disruptions
+        default:
+          - uid: 36adf09d-7657-4e46-a6d8-55dde43cbe51
+            versionUid: 4050b797-0a12-4b86-9ca3-9edfde3aeb6d
+        path: inputs/disruptions
+        required: false
+      - name: Interventions
+        description: >
+          Modelled options to simulate as interventions in the network
+        default:
+          - uid: 36adf09d-7657-4e46-a6d8-55dde43cbe51
+            versionUid: 4050b797-0a12-4b86-9ca3-9edfde3aeb6d
+        path: inputs/interventions
+        required: true
+      - name: Routes
+        description: >
+          Pre-calculated route options
+        default:
+          - uid: dbfe6814-3fd3-4e94-8c30-ccfec60c9989
+            versionUid: df234857-a622-4b83-bec1-c72b1c7ed8b6
+        path: inputs/routes
+        required: false
+      - name: ShapeFiles
+        description: >
+          Network and zone definitions
+        default:
+          - uid: 36adf09d-7657-4e46-a6d8-55dde43cbe51
+            versionUid: 4050b797-0a12-4b86-9ca3-9edfde3aeb6d
+        path: inputs/shapefiles
+        required: true

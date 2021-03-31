@@ -441,6 +441,7 @@ TR_*.zip
 transport_testdata_*/*
 transport_testdata_*.zip
 TR_data_*
+transport.tar.gz
 
 # Profiling
 *.jfr
