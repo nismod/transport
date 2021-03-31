@@ -30,49 +30,49 @@ spec:
     dataslots:
       - name: Config
         description: >
-          N
+          Model config.properties file or files
         default:
-          - uid: 1237868f-52ea-416c-9087-eef9dbde429d
-            versionUid: cef750da-b26d-4da1-b67b-871281c3d551
+          - uid: 65d2e04c-9530-4303-9a1d-0454fbdd2ba4
+            versionUid: 8487f025-f6c0-4f48-94ea-683de7648e1c
         path: inputs/config
         required: true
       - name: CSV files
         description: >
           Scenarios and parameter tables
         default:
-          - uid: 36adf09d-7657-4e46-a6d8-55dde43cbe51
-            versionUid: 4050b797-0a12-4b86-9ca3-9edfde3aeb6d
+          - uid: a67a6179-1ca2-4283-9db5-0bf7aa52d8ef
+            versionUid: e0b0e408-401b-42e0-8269-4c5ada2b56d6
         path: inputs/csvfiles
         required: true
       - name: Disruptions
         description: >
-          Simulate link disruptions
+          Simulated link disruptions
         default:
-          - uid: 36adf09d-7657-4e46-a6d8-55dde43cbe51
-            versionUid: 4050b797-0a12-4b86-9ca3-9edfde3aeb6d
+          - uid: 906f677b-4d50-4e5c-83af-ffae9c57b2e1
+            versionUid: 859bb660-287b-474c-a366-f8713b730062
         path: inputs/disruptions
         required: false
       - name: Interventions
         description: >
           Modelled options to simulate as interventions in the network
         default:
-          - uid: 36adf09d-7657-4e46-a6d8-55dde43cbe51
-            versionUid: 4050b797-0a12-4b86-9ca3-9edfde3aeb6d
+          - uid: e56689c7-3e8f-42a7-8ed7-ead262e808a6
+            versionUid: 6405c09e-af1f-4292-a4d7-a50b3f9ea3b8
         path: inputs/interventions
         required: true
       - name: Routes
         description: >
           Pre-calculated route options
         default:
-          - uid: dbfe6814-3fd3-4e94-8c30-ccfec60c9989
-            versionUid: df234857-a622-4b83-bec1-c72b1c7ed8b6
+          - uid: 1232a2c7-8b00-48c1-8b69-25d7141bf854
+            versionUid: 13970367-ab0b-4f6a-824f-38754248936f
         path: inputs/routes
         required: false
       - name: ShapeFiles
         description: >
           Network and zone definitions
         default:
-          - uid: 36adf09d-7657-4e46-a6d8-55dde43cbe51
-            versionUid: 4050b797-0a12-4b86-9ca3-9edfde3aeb6d
+          - uid: 7a39057a-50fb-4045-a45b-93bf29814b06
+            versionUid: c9468b87-25d2-4c6f-99ce-a3b337be3efc
         path: inputs/shapefiles
         required: true
