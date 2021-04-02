@@ -115,6 +115,13 @@ docker run -it \
     -e ARGS='-c /data/inputs/config/testConfig.properties -b' \
     nismod/transport
 
+# run second model step
+docker run -it \
+    -v "$PWD/tmp":/data/outputs \
+    -v "$PWD/transport/src/test/resources/testdata":/data/inputs \
+    -e ARGS='-c /data/inputs/config/testConfig.properties -road 2020 2015' \
+    nismod/transport
+
 # run image, get a bash shell
 docker run -it nismod/transport /bin/bash
 
