@@ -27,7 +27,7 @@ data_dir:
 build: transport/target/transport-$(VERSION).jar
 
 transport/target/transport-$(VERSION).jar:
-	mvn install -f transport
+	mvn package -Dmaven.test.skip=true -f transport
 
 clean:
 	mvn clean -f transport
