@@ -10,7 +10,7 @@ WORKDIR /root/
 COPY --from=builder /root/target/transport-*.jar transport.jar
 
 # Copy run script
-COPY ./dafni-run.sh /root/dafni-run.sh
+COPY ./dafni-run.sh dafni-run.sh
 
 # Run application
 ENV ARGS="-h"
