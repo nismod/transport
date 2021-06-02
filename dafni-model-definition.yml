@@ -32,6 +32,7 @@ spec:
         default: -c ./inputs/config/config.properties -b
       - name: JAVA_OPTS
         title: Java options
+        desc: Java VM configuration
         type: string
         default: "-XX:+UseContainerSupport -XX:MinRAMPercentage=20.0 -XX:MaxRAMPercentage=90.0"
     dataslots:
