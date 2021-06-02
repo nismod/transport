@@ -1,7 +1,7 @@
 kind: Model
 apiVersion: v1alpha4
 metadata:
-  displayName: NISMOD - Transport (model v2.3.0 build 3-standalone)
+  displayName: NISMOD - Transport (model v2.3.0 build 6)
   name: nismod-transport-standalone
   summary: National Infrastructure Systems Model - Transport, standalone
   type: transport
@@ -25,9 +25,15 @@ spec:
     env:
       - name: ARGS
         title: Arguments
-        desc: Provide command line argument string
+        desc: >
+          Provide command line argument string. Config file path should be
+          relative to /data directory
         type: string
         default: -c ./inputs/config/config.properties -b
+      - name: JAVA_OPTS
+        title: Java options
+        type: string
+        default: "-XX:+UseContainerSupport -XX:MinRAMPercentage=20.0 -XX:MaxRAMPercentage=90.0"
     dataslots:
       - name: Config
         description: >
