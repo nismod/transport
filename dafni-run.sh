@@ -2,8 +2,17 @@
 set -e
 set -x
 
-# Run from data directory
-cd /data
+echo "Start dafni-run.sh"
 
-# Run model
-java -cp /root/transport.jar nismod.transport.App $ARGS
+# Run from data directory
+pushd /data
+
+    # Check inputs
+    ls -lah ./inputs/*/*
+
+    # Run model
+    java -cp /root/transport.jar nismod.transport.App $ARGS
+
+popd
+
+echo "End dafni-run.sh"
