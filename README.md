@@ -110,15 +110,15 @@ docker build -t nismod/transport:latest .
 
 # run image using test data, outputs in current directory
 docker run -it \
-    -v "$PWD/tmp":/data/outputs \
-    -v "$PWD/transport/src/test/resources/testdata":/data/inputs \
+    -v "$PWD/tmp_inputs":/data/inputs \
+    -v "$PWD/tmp_outputs":/data/outputs \
     -e ARGS='-c /data/inputs/config/testConfig.properties -b' \
     nismod/transport
 
 # run second model step
 docker run -it \
-    -v "$PWD/tmp":/data/outputs \
-    -v "$PWD/transport/src/test/resources/testdata":/data/inputs \
+    -v "$PWD/tmp_inputs":/data/inputs \
+    -v "$PWD/tmp_outputs":/data/outputs \
     -e ARGS='-c /data/inputs/config/testConfig.properties -road 2020 2015' \
     nismod/transport
 
