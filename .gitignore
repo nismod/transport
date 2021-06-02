@@ -429,6 +429,7 @@ transport/src/main/full/
 ### Output files ###
 transport/output/
 transport/temp/
+tmp*
 
 transport/*.dat
 transport/*.csv
