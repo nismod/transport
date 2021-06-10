@@ -1,0 +1,89 @@
+kind: Model
+apiVersion: v1alpha4
+metadata:
+  displayName: NISMOD - Transport (model v2.3.0, test defaults)
+  name: nismod-transport-standalone-test
+  summary: National Infrastructure Systems Model - Transport, standalone
+  type: transport
+  source_code: https://github.com/nismod/transport
+  description: >
+    This has the defaults set to test data, which should run more quickly than
+    the full GB model.
+
+    NISMOD v2 Transport Model is a national-scale (Great Britain) transport model
+    developed to support policy making regarding the future infrastructure. It
+    forecasts the impact of various endogenous and exogenous factors on transport
+    demand and capacity utilisation, following an elasticity-based simulation
+    methodology. The model consists of three submodels covering the following modes
+    of transport: road (passenger and freight vehicle flows), rail (total station
+    usage), and air (domestic and international passenger movements).
+
+    This configuration runs only the core transport model, without the smif
+    model coupling wrapper which is used in the integrated NISMOD set-up.
+
+    Source code: https://github.com/nismod/transport
+    Documentation: https://nt2.readthedocs.io/en/latest/
+spec:
+  inputs:
+    env:
+      - name: ARGS
+        title: Arguments
+        desc: >
+          Provide command line argument string. Config file path should be
+          relative to /data directory
+        type: string
+        default: -c ./inputs/config/config.properties -b
+      - name: JAVA_OPTS
+        title: Java options
+        desc: Java VM configuration
+        type: string
+        default: "-XX:+UseContainerSupport -XX:MinRAMPercentage=20.0 -XX:MaxRAMPercentage=90.0"
+    dataslots:
+      - name: Config
+        description: >
+          Model config.properties file or files
+        default:
+          - uid: 547e20a2-5594-4a3d-b822-1ba9f56961f7
+            versionUid: 23245df4-01dd-42d9-ad6c-9d55c856878c
+        path: inputs/config
+        required: true
+      - name: CSV files
+        description: >
+          Scenarios and parameter tables
+        default:
+          - uid: c5b50dc4-99af-46f0-b3ec-8ef1517af676
+            versionUid: 16a51f62-f781-4d59-83c9-59e720d52184
+        path: inputs/csvfiles
+        required: true
+      - name: Disruptions
+        description: >
+          Simulated link disruptions
+        default:
+          - uid: 956beb49-e3ba-4d12-9640-2e260a6384b3
+            versionUid: 3d1e2e0a-6c90-45a1-a528-aba2b3a82c66
+        path: inputs/disruptions
+        required: false
+      - name: Interventions
+        description: >
+          Modelled options to simulate as interventions in the network
+        default:
+          - uid: 60ed3f5e-15b2-4820-b5c8-0112bc6a020f
+            versionUid: 27628f67-b69f-412a-bee2-1f20e75971e1
+        path: inputs/interventions
+        required: true
+      - name: Routes
+        description: >
+          Pre-calculated route options
+        default:
+          - uid: 062652e2-7c00-4078-b6bb-e3e59a4a92b7
+            versionUid: 10c461f4-6b7a-431a-a76c-4ecb77dc1c34
+        path: inputs/routes
+        required: false
+      - name: ShapeFiles
+        description: >
+          Network and zone definitions
+        default:
+          - uid: 9b37413b-40f6-4949-a9dd-5f259429b6af
+            versionUid: 0c874563-0d3c-498d-81d2-2d2249a5db8d
+        path: inputs/shapefiles
+        required: true
