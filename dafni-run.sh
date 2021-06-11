@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
-set -e
 set -x
 
-echo "Start dafni-run.sh"
+echo "$(date -I'seconds') Start dafni-run.sh" | tee -a /data/outputs/log.txt
 
 # Run from data directory
 pushd /data
 
     # Check inputs
-    ls -lah ./inputs/*/*
+    ls -lah ./inputs/*/* | tee -a /data/outputs/log.txt
 
     # Run model
-    java -cp /root/transport.jar nismod.transport.App $ARGS
+    echo "$(date -I'seconds') java -cp /root/transport.jar nismod.transport.App $ARGS"  | tee -a /data/outputs/log.txt
+    java -cp /root/transport.jar nismod.transport.App $ARGS | tee -a /data/outputs/log.txt
 
 popd
 
-echo "End dafni-run.sh"
+echo "$(date -I'seconds') End dafni-run.sh" | tee -a /data/outputs/log.txt
