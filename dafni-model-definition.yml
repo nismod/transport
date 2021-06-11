@@ -41,7 +41,7 @@ spec:
           Model config.properties file or files
         default:
           - uid: 65d2e04c-9530-4303-9a1d-0454fbdd2ba4
-            versionUid: 8487f025-f6c0-4f48-94ea-683de7648e1c
+            versionUid: 855ec6c1-6390-486a-9d48-f934baba81cb
         path: inputs/config
         required: true
       - name: CSV files
