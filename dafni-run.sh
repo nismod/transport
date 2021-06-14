@@ -8,6 +8,8 @@ mv /data/inputs/results /data/outputs/results
 
 echo "$(date -I'seconds') Start dafni-run.sh" | tee -a /data/outputs/results/log.txt
 
+java $JAVA_OPTS -XX:+PrintFlagsFinal -version | grep 'HeapSize' | tee -a /data/outputs/results/log.txt
+
 # Run from data directory
 pushd /data
 
@@ -17,7 +19,7 @@ pushd /data
 
     # Run model
     echo "$(date -I'seconds') java -cp /root/transport.jar nismod.transport.App $ARGS"  | tee -a /data/outputs/results/log.txt
-    java -cp /root/transport.jar nismod.transport.App $ARGS | tee -a /data/outputs/results/log.txt
+    java $JAVA_OPTS -cp /root/transport.jar nismod.transport.App $ARGS | tee -a /data/outputs/results/log.txt
 
 popd
 
