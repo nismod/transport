@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-set -x
-
 echo "$(date -I'seconds') Start dafni-run.sh" | tee -a /data/outputs/log.txt
 
 # Run from data directory
