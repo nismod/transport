@@ -5,6 +5,10 @@ COPY ./transport/ ./
 RUN mvn package -Dmaven.test.skip=true
 
 FROM openjdk:11
+# Start application container
+RUN apt-get update \
+    && apt-get install -y tree
+
 # Load jar to image
 WORKDIR /root/
 COPY --from=builder /root/target/transport-*.jar transport.jar
