@@ -108,12 +108,19 @@ To build, test locally, and export:
 # build image
 docker build -t nismod/transport:latest .
 
-# run image using test data, outputs in current directory
+# run image using test data for a first (baseline) model step
 docker run -it \
     -v "$PWD/tmp_inputs":/data/inputs \
     -v "$PWD/tmp_outputs":/data/outputs \
     -e ARGS='-c /data/inputs/config/testConfig.properties -b' \
     nismod/transport
+
+# make output results available in inputs (DAFNI does this automatically)
+docker run \
+    -v "$PWD/tmp_inputs":/data/inputs \
+    -v "$PWD/tmp_outputs":/data/outputs \
+    -it nismod/transport \
+    mv /data/outputs/results /data/inputs/
 
 # run second model step
 docker run -it \
