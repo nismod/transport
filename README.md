@@ -112,6 +112,7 @@ docker build -t nismod/transport:latest .
 docker run -it \
     -v "$PWD/tmp_inputs":/data/inputs \
     -v "$PWD/tmp_outputs":/data/outputs \
+    -e JAVA_OPTS='-XX:+UseContainerSupport -Xmx6g -Xms4g' \
     -e ARGS='-c /data/inputs/config/testConfig.properties -b' \
     nismod/transport
 
@@ -126,6 +127,7 @@ docker run \
 docker run -it \
     -v "$PWD/tmp_inputs":/data/inputs \
     -v "$PWD/tmp_outputs":/data/outputs \
+    -e JAVA_OPTS='-XX:+UseContainerSupport -Xmx6g -Xms4g' \
     -e ARGS='-c /data/inputs/config/testConfig.properties -road 2020 2015' \
     nismod/transport
 

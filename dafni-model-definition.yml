@@ -34,7 +34,7 @@ spec:
         title: Java options
         desc: Java VM configuration
         type: string
-        default: "-XX:+UseContainerSupport -Xmx=60g -Xms=40g"
+        default: "-XX:+UseContainerSupport -Xmx60g -Xms40g"
     dataslots:
       - name: Config
         description: >
