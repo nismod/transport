@@ -1,7 +1,7 @@
 kind: Model
 apiVersion: v1alpha4
 metadata:
-  displayName: NISMOD - Transport (model v2.3.0 build 8)
+  displayName: NISMOD - Transport (model v2.3.0 build 9)
   name: nismod-transport-standalone
   summary: National Infrastructure Systems Model - Transport, standalone
   type: transport
@@ -34,7 +34,7 @@ spec:
         title: Java options
         desc: Java VM configuration
         type: string
-        default: "-XX:+UseContainerSupport -XX:MinRAMPercentage=20.0 -XX:MaxRAMPercentage=95.0"
+        default: "-XX:+UseContainerSupport -Xmx=60g -Xms=40g"
     dataslots:
       - name: Config
         description: >
