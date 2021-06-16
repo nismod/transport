@@ -1,7 +1,7 @@
 kind: Model
 apiVersion: v1alpha4
 metadata:
-  displayName: NISMOD - Transport (model v2.3.0 build 10)
+  displayName: NISMOD - Transport (model v2.3.0 build 11)
   name: nismod-transport-standalone
   summary: National Infrastructure Systems Model - Transport, standalone
   type: transport
@@ -41,7 +41,7 @@ spec:
           Model config.properties file or files
         default:
           - uid: 65d2e04c-9530-4303-9a1d-0454fbdd2ba4
-            versionUid: 852f8254-15e7-4d0f-b136-1356a081f12d
+            versionUid: c1588ecb-0b3e-4238-977b-67fcaaec0848
         path: inputs/config
         required: true
       - name: CSV files
@@ -65,7 +65,7 @@ spec:
           Modelled options to simulate as interventions in the network
         default:
           - uid: e56689c7-3e8f-42a7-8ed7-ead262e808a6
-            versionUid: 6405c09e-af1f-4292-a4d7-a50b3f9ea3b8
+            versionUid: 0ffb13f2-5ed9-46d2-b5da-c395a5e5bda2
         path: inputs/interventions
         required: true
       - name: Routes
