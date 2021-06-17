@@ -924,7 +924,9 @@ public class InputFileReader {
 			LOGGER.error(e);
 		} finally {
 			try {
-				parser.close();
+				if (parser != null){
+					parser.close();
+				}
 			} catch (IOException e) {
 				LOGGER.error(e);
 			}
