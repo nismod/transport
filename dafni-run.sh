@@ -22,6 +22,8 @@ pushd /data
     echo "$(date -I'seconds') java $JAVA_OPTS -cp /root/transport.jar nismod.transport.App $ARGS"  |& tee -a /data/outputs/results/log.txt
     java $JAVA_OPTS -cp /root/transport.jar nismod.transport.App $ARGS |& tee -a /data/outputs/results/log.txt
 
+    # Include model log in outputs
+    mv /data/outputs/modelrun.log /data/outputs/results/
 popd
 
 echo "$(date -I'seconds') End dafni-run.sh" |& tee -a /data/outputs/results/log.txt
