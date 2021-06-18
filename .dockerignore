@@ -1,0 +1,5 @@
+full
+tmp_inputs
+tmp_outputs
+*.tar.gz
+transport_*

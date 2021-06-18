@@ -430,6 +430,7 @@ transport/src/main/full/
 transport/output/
 transport/temp/
 tmp*
+full
 
 transport/*.dat
 transport/*.csv
