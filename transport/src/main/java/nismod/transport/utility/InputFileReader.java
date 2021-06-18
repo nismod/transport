@@ -904,10 +904,13 @@ public class InputFileReader {
 		CSVParser parser = null;
 		int zonesNumber = 0;
 		try {
-			parser = new CSVParser(new FileReader(fileName), CSVFormat.DEFAULT.withHeader());
+			LOGGER.debug("About to read {}", fileName);
+			FileReader filereader = new FileReader(fileName);
+			parser = new CSVParser(filereader, CSVFormat.DEFAULT.withHeader());
 			Set<String> keySet = parser.getHeaderMap().keySet();
 			keySet.remove("year");
 			zonesNumber = keySet.size();
+			LOGGER.debug("Reading {} zones from {}", zonesNumber, fileName);
 			double tripRate;
 			for (CSVRecord record : parser) {
 				int year = Integer.parseInt(record.get(0));
