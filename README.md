@@ -110,23 +110,20 @@ docker build -t nismod/transport:latest .
 
 # run image using test data for a first (baseline) model step
 docker run -it \
-    -v "$PWD/tmp_inputs":/data/inputs \
-    -v "$PWD/tmp_outputs":/data/outputs \
+    -v "$PWD/testrun":/data \
     -e JAVA_OPTS='-XX:+UseContainerSupport -Xmx6g -Xms4g' \
-    -e ARGS='-c /data/inputs/config/testConfig.properties -b' \
+    -e ARGS='-c /data/inputs/config/config.properties -b' \
     nismod/transport
 
 # make output results available in inputs (DAFNI does this automatically)
 docker run \
-    -v "$PWD/tmp_inputs":/data/inputs \
-    -v "$PWD/tmp_outputs":/data/outputs \
+    -v "$PWD/testrun":/data \
     -it nismod/transport \
     mv /data/outputs/results /data/inputs/
 
 # run second model step
 docker run -it \
-    -v "$PWD/tmp_inputs":/data/inputs \
-    -v "$PWD/tmp_outputs":/data/outputs \
+    -v "$PWD/testrun":/data \
     -e JAVA_OPTS='-XX:+UseContainerSupport -Xmx6g -Xms4g' \
     -e ARGS='-c /data/inputs/config/testConfig.properties -road 2020 2015' \
     nismod/transport
