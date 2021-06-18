@@ -431,6 +431,7 @@ transport/output/
 transport/temp/
 tmp*
 full
+testrun
 
 transport/*.dat
 transport/*.csv
