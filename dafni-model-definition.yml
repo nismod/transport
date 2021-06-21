@@ -49,7 +49,7 @@ spec:
           Scenarios and parameter tables
         default:
           - uid: a67a6179-1ca2-4283-9db5-0bf7aa52d8ef
-            versionUid: 6a5fec23-9dcb-4aa8-aec5-b08eda4329b2
+            versionUid: 3c5240a3-03b4-4b8d-aaea-89337122e537
         path: inputs/csvfiles
         required: true
       - name: Disruptions
