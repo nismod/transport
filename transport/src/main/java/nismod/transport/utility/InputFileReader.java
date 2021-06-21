@@ -978,7 +978,6 @@ public class InputFileReader {
 				//read trip rates for all the zones and put in the map
 				for (String zone: keySet) {
 					Integer zoneID = Integer.parseInt(zone);
-					LOGGER.debug("Reading trip rate for zone {} in year {}", zoneID, year);
 					tripRate = Double.parseDouble(record.get(zone));
 					zonalMap.put(zoneID, tripRate);
 				}

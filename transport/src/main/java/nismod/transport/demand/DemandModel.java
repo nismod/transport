@@ -990,7 +990,6 @@ public class DemandModel {
 			double tripRateVan = 1.0, tripRateRigid = 1.0, tripRateArtic = 1.0;
 			//trip rate factor is calculated my multiplying all relative changes from (fromYear+1) to predictedYear.
 			for (int year = fromYear+1; year <= predictedYear; year++) {
-				LOGGER.debug("Loading trip rate for zone {} in year {}", zoneID, year);
 				tripRateVan *= this.yearToFreightTripRate.get(year).get(VehicleType.VAN).get(zoneID);
 				tripRateRigid *= this.yearToFreightTripRate.get(year).get(VehicleType.RIGID).get(zoneID);
 				tripRateArtic *= this.yearToFreightTripRate.get(year).get(VehicleType.ARTIC).get(zoneID);
