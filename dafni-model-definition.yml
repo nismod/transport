@@ -1,7 +1,7 @@
 kind: Model
 apiVersion: v1alpha4
 metadata:
-  displayName: NISMOD - Transport (model v2.3.0 build 12)
+  displayName: NISMOD - Transport (model v2.3.0 build 14)
   name: nismod-transport-standalone
   summary: National Infrastructure Systems Model - Transport, standalone
   type: transport
@@ -41,7 +41,7 @@ spec:
           Model config.properties file or files
         default:
           - uid: 65d2e04c-9530-4303-9a1d-0454fbdd2ba4
-            versionUid: e0a0b7e7-dd37-4336-841e-839f6697e72e
+            versionUid: c184c8bd-66ec-4e23-80a1-0cc222f69802
         path: inputs/config
         required: true
       - name: CSV files
