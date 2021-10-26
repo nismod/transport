@@ -622,13 +622,30 @@ public class RoadNetworkTest {
 		assertEquals("The list of nodes in the shortest path is correct", Arrays.toString(expectedNodeList), path.toString());
 		assertEquals("The list of edges in the shortest path is correct", Arrays.toString(expectedEdgeList), path.getEdges().toString());
 
-		//TEST ADDING NEW ROAD LINKS
+		//TEST ADDING NEW ROAD (AND FERRY) LINKS
 		System.out.println("\n\n*** Testing addition of new links ***");
 
 		Node fromNode = roadNetwork.getNodeIDtoNode()[86];
 		Node toNode = roadNetwork.getNodeIDtoNode()[48];
 
-		DirectedEdge newEdge = (DirectedEdge) roadNetwork.createNewRoadLink(fromNode, toNode, 2, 'A', 0.6, 19000);
+		//create a ferry link
+		DirectedEdge newEdge = (DirectedEdge) roadNetwork.createNewRoadLink(fromNode, toNode, 2, 'F', 0.8, 19000);
+		if (newEdge == null)
+			System.out.println("A new edge could not be created.");
+		
+		roadNetwork.createNewRoadLink(toNode, fromNode, 2, 'F', 0.8, 19001);
+		
+		System.out.println("New edge: " + newEdge.getObject());
+		System.out.println("New edge node A: " + newEdge.getNodeA());
+		System.out.println("New edge node B: " + newEdge.getNodeB());
+
+		int otherEdgeID = roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[19000];
+		System.out.println("Other edge ID: " + otherEdgeID);
+		DirectedEdge otherEdge = (DirectedEdge) roadNetwork.getEdgeIDtoEdge()[otherEdgeID];
+		
+		System.out.println("Other new edge: " + otherEdge.getObject());
+		System.out.println("Other new edge node A: " + otherEdge.getNodeA());
+		System.out.println("Other new edge node B: " + otherEdge.getNodeB());
 
 		//find path from node 86 to node 19
 		from = roadNetwork.getNodeIDtoNode()[86];
@@ -666,22 +683,48 @@ public class RoadNetworkTest {
 			expectedEdgeList = new int[] {newEdge.getID(), 67}; //edge IDs are persistent after edge ID replacement
 			assertEquals("The list of nodes in the shortest path is correct", Arrays.toString(expectedNodeList), aStarPath.toString());
 			assertEquals("The list of edges in the shortest path is correct", Arrays.toString(expectedEdgeList), listOfEdges.toString());
-			assertEquals("The shortest path length is correct", 1.3, sum, EPSILON);
+			assertEquals("The shortest path length is correct", 1.5, sum, EPSILON);
 
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.err.println("Could not find the shortest path using astar.");
 		}
 		
+		//remove ferry link
+		System.out.println("Removing the ferry link.");
+		roadNetwork.removeRoadLink(newEdge);
+		assertNull(roadNetwork.getEdgeIDtoEdge()[19000]);
+		
+		System.out.println("Other edge ID: " + roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[19000]);
+		assertNull(roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[19000]);
+		
+		System.out.println("Other edge ID: " + roadNetwork.getEdgeIDtoOtherDirectionEdgeID()[19001]);
+		roadNetwork.removeRoadLink(roadNetwork.getEdgeIDtoEdge()[19001]);
+		assertNull(roadNetwork.getEdgeIDtoEdge()[19001]);
+		
+		//create a new road link for time-based routing (a ferry link would not work here as it is too slow).
+		newEdge = (DirectedEdge) roadNetwork.createNewRoadLink(fromNode, toNode, 2, 'M', 0.8, 19000);
+		System.out.println("Created a new motorway: " + newEdge.getObject() + " from " + newEdge.getNodeA() + " to " + newEdge.getNodeB());
+		roadNetwork.createNewRoadLink(toNode, fromNode, 2, 'M', 0.8, 19001);
+				
 		//test the AStar fastest path method from the road network
 		path = roadNetwork.getFastestPath((DirectedNode)from, (DirectedNode)to, roadNetwork.getFreeFlowTravelTime());
+		System.out.println("Astar path: " + path.toString());
 		assertEquals("The list of nodes in the shortest path is correct", Arrays.toString(expectedNodeList), path.toString());
 		assertEquals("The list of edges in the shortest path is correct", Arrays.toString(expectedEdgeList), path.getEdges().toString());
 	
+		pathTimeFinder = new DijkstraShortestPathFinder(rn, from, roadNetwork.getDijkstraTimeWeighter(roadNetwork.getFreeFlowTravelTime()));
+		pathTimeFinder.calculate();
+		path2 = pathTimeFinder.getPath(to);
+		path2.reverse();
+		System.out.println(path2);
+		
+		
 		//find the shortest path using time-based Dijkstra
 		System.out.println("Source node: " + from.getID() + " | Destination node: " + to.getID());
 		//pathFinder = new DijkstraShortestPathFinder(rn, from, roadNetwork.getDijkstraTimeWeighter());
-		pathFinder = new DijkstraShortestPathFinder(rn, from, roadNetwork.getDijkstraTimeWeighter(null));
+		//pathFinder = new DijkstraShortestPathFinder(rn, from, roadNetwork.getDijkstraTimeWeighter(null));
+		pathFinder = new DijkstraShortestPathFinder(rn, from, roadNetwork.getDijkstraTimeWeighter(roadNetwork.getFreeFlowTravelTime()));
 		pathFinder.calculate();
 		path = pathFinder.getPath(to);
 		path.reverse();
@@ -690,7 +733,7 @@ public class RoadNetworkTest {
 		System.out.println("The path as a list of edges: " + listOfEdges);
 		System.out.println("Path size in the number of nodes: " + path.size());
 		System.out.println("Path size in the number of edges: " + listOfEdges.size());
-		System.out.printf("Total path length in km: %.3f\n", pathFinder.getCost(to));
+		System.out.printf("Total path cost in min: %.3f\n", pathFinder.getCost(to));
 
 		sum = 0;
 		for (Object o: listOfEdges) {

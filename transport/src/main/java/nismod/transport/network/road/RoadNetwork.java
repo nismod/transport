@@ -866,7 +866,6 @@ public class RoadNetwork {
 		
 		//add edge to list
 		this.edgeIDtoEdge[directedEdge.getID()] = directedEdge;
-		this.numberOfLanes[directedEdge.getID()] = numberOfLanes;
 		
 		//calculate straight line distance between nodes
 		SimpleFeature sf1 = (SimpleFeature)fromNode.getObject();
@@ -885,11 +884,20 @@ public class RoadNetwork {
 			this.edgesType[directedEdge.getID()] = EdgeType.AROAD;
 		else if (roadCategory == 'M')
 			this.edgesType[directedEdge.getID()] = EdgeType.MOTORWAY;
-		else 
+		else if (roadCategory == 'F') {
+			this.edgesType[directedEdge.getID()] = EdgeType.FERRY;
+		} else 
 			LOGGER.warn("Newly created road link does not have correct road category.");
 		
-		//assume new development is rural
-		this.isEdgeUrban[directedEdge.getID()] = false;
+		//set number of lanes (for A and M roads), and 0 lanes otherwise (e.g., for ferry)
+		//assume new development is rural (for A and M roads), null otherwise (e.g., for ferry)
+		if (roadCategory == 'A' || roadCategory == 'M') {
+			this.numberOfLanes[directedEdge.getID()] = numberOfLanes;
+			this.isEdgeUrban[directedEdge.getID()] = false;
+		} else {
+			this.numberOfLanes[directedEdge.getID()] = 0;
+			this.isEdgeUrban[directedEdge.getID()] = null;
+		}
 		
 		//create an object to add to edge
 		//dynamically creates a feature type to describe the shapefile contents
@@ -1016,6 +1024,15 @@ public class RoadNetwork {
 		//update
 		this.edgeIDtoEdge[edge.getID()] = null;
 		//this.numberOfLanes.remove(edge.getID()); //TODO leave it for now, until edge object contains this information
+		
+		//It should also be removed from this.edgeIDtoOtherDirectionEdgeID
+		//Edge ID should not map to anything, and also no other edge should map to this ID
+		this.edgeIDtoOtherDirectionEdgeID[edge.getID()] = null;
+		for (int i=0; i<this.edgeIDtoOtherDirectionEdgeID.length; i++) {
+			Integer edgeID = this.edgeIDtoOtherDirectionEdgeID[i];
+			if (edgeID != null && edgeID == edge.getID())
+				this.edgeIDtoOtherDirectionEdgeID[i] = null;
+		}
 		
 		//this.edgeLengths.remove(edge.getID());
 		this.edgeLengths[edge.getID()] = 0.0; //put zero length
@@ -2241,12 +2258,12 @@ public class RoadNetwork {
 		
 				DirectedEdge edge = (DirectedEdge) edgeIter.next();
 				SimpleFeature sf = (SimpleFeature) edge.getObject();
-				String roadNumber = (String) sf.getAttribute("RoadNumber");
 				long countPoint;
-				if (roadNumber.charAt(0) == 'F')
-								countPoint = Math.round((double) sf.getAttribute("CP"));
-				else
-								countPoint = (long) sf.getAttribute("CP");
+                Object countPointObject = sf.getAttribute("CP");
+                if (countPointObject instanceof Double) 
+                    countPoint = Math.round((double) countPointObject);
+                else 
+                    countPoint = (long) sf.getAttribute("CP");
 				double length1 = (double) sf.getAttribute("LenNet");
 				
 				//get edges from node B to node A
@@ -2257,22 +2274,19 @@ public class RoadNetwork {
 				for (Object o: otherEdges) {
 					DirectedEdge edge2 = (DirectedEdge) o;
 					SimpleFeature sf2 = (SimpleFeature) edge2.getObject();
-					String roadNumber2 = (String) sf2.getAttribute("RoadNumber");
-					double length2 = (double) sf.getAttribute("LenNet");
+					double length2 = (double) sf2.getAttribute("LenNet");
 					long countPoint2;
-					if (roadNumber2.charAt(0) == 'F')
+				    Object countPointObject2 = sf2.getAttribute("CP");
+				    if (countPointObject2 instanceof Double) 
 									countPoint2 = Math.round((double) sf2.getAttribute("CP"));
 					else
 									countPoint2 = (long) sf2.getAttribute("CP");
 				
 					if (countPoint == countPoint2) //if there is a count point match
 						this.edgeIDtoOtherDirectionEdgeID[edge.getID()] = edge2.getID();
-						if (length1 != length2) //if lenghts are different something may be wrong (possible with more edges with 0 CP)
+						if (length1 != length2) //if lengths are different something may be wrong (possible with more edges with 0 CP)
 							LOGGER.warn("Edge to other direction edge have different lengths!");
 				}
-	
-//				if (this.edgeIDtoOtherDirectionEdgeID.get(edge.getID()) == null)
-//					this.edgeIDtoOtherDirectionEdgeID.put(edge.getID(), null);
 		}		
 	}
 	
