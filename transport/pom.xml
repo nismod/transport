@@ -139,7 +139,7 @@
 		<repository>
 			<id>maven2-repository.dev.java.net</id>
 			<name>Java.net repository</name>
-			<url>http://download.java.net/maven/2</url>
+			<url>https://maven.java.net/content/groups/public/</url>
 		</repository>
 		<repository>
 			<id>central</id>
@@ -163,6 +163,12 @@
 			<url>https://repo.osgeo.org/repository/Geoserver-releases/</url>
 			<snapshots><enabled>false</enabled></snapshots>
 			<releases><enabled>true</enabled></releases>
+		</repository>
+		<repository>      
+  			<id>geotools</id>
+  			<name>Geotools repository</name>
+  			<!--<url>http://download.osgeo.org/webdav/geotools/</url>-->
+  			<url>https://repo.osgeo.org/repository/geotools-releases/</url>
 		</repository>
 	</repositories>
 
