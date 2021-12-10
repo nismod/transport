@@ -32,7 +32,7 @@ import nismod.transport.zone.Zoning;
  */
 public class RealODMatrix implements AssignableODMatrix {
 	
-	private final static Logger LOGGER = LogManager.getLogger(RealODMatrix.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 	private MultiKeyMap matrix;
 	

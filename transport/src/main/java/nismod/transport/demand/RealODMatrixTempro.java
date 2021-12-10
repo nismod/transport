@@ -32,7 +32,7 @@ public class RealODMatrixTempro implements AssignableODMatrix {
 	
 	//public static final int MAX_ZONES = 7700;
 	
-	private final static Logger LOGGER = LogManager.getLogger(RealODMatrixTempro.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 	private double[][] matrix;
 	

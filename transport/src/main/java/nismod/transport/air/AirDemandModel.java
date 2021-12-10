@@ -22,7 +22,7 @@ import nismod.transport.utility.InputFileReader;
  */
 public class AirDemandModel {
 
-	private final static Logger LOGGER = LogManager.getLogger(AirDemandModel.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 
 	public static int baseYear;
 	

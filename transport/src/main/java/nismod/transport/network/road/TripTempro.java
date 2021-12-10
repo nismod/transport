@@ -25,7 +25,7 @@ import nismod.transport.zone.Zoning;
  */
 public class TripTempro extends Trip {
 	
-	private final static Logger LOGGER = LogManager.getLogger(TripTempro.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 	public static Zoning zoning;
 

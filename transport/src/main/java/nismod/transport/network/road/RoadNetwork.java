@@ -78,7 +78,7 @@ import org.locationtech.jts.geom.Point;
  */
 public class RoadNetwork {
 	
-	private final static Logger LOGGER = LogManager.getLogger(RoadNetwork.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 
 	private DirectedGraph network;
 	//BasicDirectedLineGraphBuilder graphBuilder;

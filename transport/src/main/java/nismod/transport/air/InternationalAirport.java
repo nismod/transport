@@ -10,7 +10,7 @@ import org.apache.logging.log4j.Logger;
  */
 public class InternationalAirport extends Airport {
 	
-	private final static Logger LOGGER = LogManager.getLogger(InternationalAirport.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 	/**
 	 * Constructor for the airport.

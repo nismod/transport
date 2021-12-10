@@ -23,7 +23,7 @@ import nismod.transport.network.road.RoadNetwork;
  */
 public class RoadDevelopment extends Intervention {
 	
-	private final static Logger LOGGER = LogManager.getLogger(RoadDevelopment.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 	private Integer newEdgeId = null;
 	private Integer newEdgeId2 = null;

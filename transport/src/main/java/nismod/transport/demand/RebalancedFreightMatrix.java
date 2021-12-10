@@ -27,7 +27,7 @@ import nismod.transport.network.road.Trip;
  */
 public class RebalancedFreightMatrix extends FreightMatrix {
 	
-	private final static Logger LOGGER = LogManager.getLogger(RebalancedFreightMatrix.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 	private RoadNetworkAssignment rna;
 	private RouteSetGenerator rsg;

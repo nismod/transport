@@ -22,7 +22,7 @@ import nismod.transport.zone.Zoning;
   */
 public class SPSA4 {
 	
-	private final static Logger LOGGER = LogManager.getLogger(SPSA4.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 	//maximum and minimum values of OD matrix flows (i.e. constraints)
 	public static final double THETA_MAX = 30000.0; //10000000.0;

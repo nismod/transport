@@ -34,7 +34,7 @@ import nismod.transport.zone.Zoning;
  */
 public class ODMatrixArray implements AssignableODMatrix {
 	
-	private final static Logger LOGGER = LogManager.getLogger(ODMatrixArray.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 	private int[][] matrix;
 	

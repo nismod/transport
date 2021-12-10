@@ -25,7 +25,7 @@ import nismod.transport.air.InternodalPassengerDemand.Passengers;
  */
 public class InternationalInternodalPassengerDemand extends InternodalPassengerDemand{
 
-	private final static Logger LOGGER = LogManager.getLogger(InternationalInternodalPassengerDemand.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 	public InternationalInternodalPassengerDemand() {
 

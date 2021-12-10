@@ -29,7 +29,7 @@ import nismod.transport.rail.RailStation.RailModeType;
  */
 public class RailStationDemand {
 
-	private final static Logger LOGGER = LogManager.getLogger(RailStationDemand.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 
 	private Map<Integer, RailStation> railDemandMap; //maps NLC to station object
 	private List<RailStation> railDemandList; //list of station objects

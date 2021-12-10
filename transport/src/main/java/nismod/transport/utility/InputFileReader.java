@@ -33,7 +33,7 @@ import nismod.transport.rail.RailDemandModel.ElasticityArea;
  */
 public class InputFileReader {
 
-	private final static Logger LOGGER = LogManager.getLogger(InputFileReader.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 
 	public InputFileReader() {
 		// TODO Auto-generated constructor stub

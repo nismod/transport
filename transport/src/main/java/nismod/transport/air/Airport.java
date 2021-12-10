@@ -12,7 +12,7 @@ import org.apache.logging.log4j.Logger;
  */
 public abstract class Airport {
 	
-	private final static Logger LOGGER = LogManager.getLogger(Airport.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 	private String iataCode; // three letter code
 	private String caaName; //airport name in CAA dataset

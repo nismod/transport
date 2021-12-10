@@ -22,7 +22,7 @@ import nismod.transport.rail.RailStationDemand;
  */
 public class NewRailStation extends Intervention {
 	
-	private final static Logger LOGGER = LogManager.getLogger(NewRailStation.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 	private Integer nlc = null;
 	

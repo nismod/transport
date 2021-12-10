@@ -15,7 +15,7 @@ import org.apache.logging.log4j.Logger;
  */
 public abstract class Disruption {
 	
-	private final static Logger LOGGER = LogManager.getLogger(Disruption.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 
 	protected Properties props;
 	protected boolean installed;

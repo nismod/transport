@@ -32,7 +32,7 @@ import nismod.transport.network.road.RoadNetworkAssignment.VehicleType;
  */
 public class SkimMatrixFreightArray implements SkimMatrixFreight {
 	
-	private final static Logger LOGGER = LogManager.getLogger(SkimMatrixFreightArray.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 	//private EnumMap<VehicleType, Double>[][] matrix; //cost = [origin][destination].get(vht)
 	private double[][][] matrix; //cost = [origin][destination][vht]

@@ -28,7 +28,7 @@ import nismod.transport.zone.Zoning;
  */
 public class RebalancedTemproODMatrixTest {
 	
-	private final static Logger LOGGER = LogManager.getLogger(RebalancedTemproODMatrixTest.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 	public static void main( String[] args ) throws FileNotFoundException, IOException, ImageWriteException {
 		

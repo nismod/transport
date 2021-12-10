@@ -34,7 +34,7 @@ import nismod.transport.zone.Zoning;
  */
 public class ODMatrixMultiKey implements AssignableODMatrix {
 	
-	private final static Logger LOGGER = LogManager.getLogger(ODMatrixMultiKey.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 	private MultiKeyMap matrix;
 	

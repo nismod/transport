@@ -41,7 +41,7 @@ import nismod.transport.zone.Zoning;
  */
 public class RouteSetGenerator{
 	
-	private final static Logger LOGGER = LogManager.getLogger(RouteSetGenerator.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 	//initial route size
 	public static final int INITIAL_ROUTE_CAPACITY = 13;

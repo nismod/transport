@@ -35,7 +35,7 @@ import org.jfree.data.general.DefaultPieDataset;
   */
 public class PieChartVisualiser extends JFrame {
 	
-	private final static Logger LOGGER = LogManager.getLogger(PieChartVisualiser.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 	private static DefaultPieDataset dataset;
 	private static String title;

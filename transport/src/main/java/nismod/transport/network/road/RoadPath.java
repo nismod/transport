@@ -18,7 +18,7 @@ import org.geotools.graph.structure.DirectedNode;
  */
 public class RoadPath extends Path {
 	
-	private final static Logger LOGGER = LogManager.getLogger(RoadPath.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 
 	public RoadPath() {
 		// TODO Auto-generated constructor stub

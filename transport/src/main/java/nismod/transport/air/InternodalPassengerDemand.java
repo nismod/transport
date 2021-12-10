@@ -13,7 +13,7 @@ import org.apache.logging.log4j.Logger;
  */
 public abstract class InternodalPassengerDemand {
 
-	private final static Logger LOGGER = LogManager.getLogger(InternodalPassengerDemand.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 
 	//private MultiKeyMap<MultiKey<String>, Map<Passengers, Long>> data;
 	protected MultiKeyMap data;

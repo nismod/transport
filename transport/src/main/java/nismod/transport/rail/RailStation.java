@@ -12,7 +12,7 @@ import nismod.transport.rail.RailDemandModel.ElasticityArea;
  */
 public class RailStation {
 	
-	private final static Logger LOGGER = LogManager.getLogger(RailStation.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 	private int nlc; //National Location Code
 	private RailModeType mode;

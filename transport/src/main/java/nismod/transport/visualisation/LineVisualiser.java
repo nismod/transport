@@ -29,7 +29,7 @@ import org.jfree.data.category.DefaultCategoryDataset;
   */
 public class LineVisualiser extends JFrame {
 	
-	private final static Logger LOGGER = LogManager.getLogger(LineVisualiser.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 	private static DefaultCategoryDataset dataset;
 	private static String title;

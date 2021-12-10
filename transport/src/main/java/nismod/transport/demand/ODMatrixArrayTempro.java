@@ -32,7 +32,7 @@ public class ODMatrixArrayTempro implements AssignableODMatrix {
 	
 	//public static final int MAX_ZONES = 7700;
 	
-	private final static Logger LOGGER = LogManager.getLogger(ODMatrixArrayTempro.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 	private int[][] matrix;
 	

@@ -14,7 +14,7 @@ import org.apache.logging.log4j.Logger;
  */
 public class PropertiesReader {
 	
-	private final static Logger LOGGER = LogManager.getLogger(PropertiesReader.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 
 	public PropertiesReader() {
 		// TODO Auto-generated constructor stub

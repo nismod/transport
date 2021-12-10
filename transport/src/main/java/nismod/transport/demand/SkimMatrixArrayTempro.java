@@ -30,7 +30,7 @@ import nismod.transport.zone.Zoning;
  */
 public class SkimMatrixArrayTempro implements SkimMatrix{
 	
-	private final static Logger LOGGER = LogManager.getLogger(SkimMatrixArrayTempro.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 	private double[][] matrix;
 	
