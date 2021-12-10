@@ -30,7 +30,7 @@ import nismod.transport.demand.DemandModel;
  */
 public class CongestionCharging extends Intervention {
 	
-	private final static Logger LOGGER = LogManager.getLogger(CongestionCharging.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 	private String name = null;
 

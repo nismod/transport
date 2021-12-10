@@ -42,7 +42,7 @@ import nismod.transport.zone.Zoning;
   */
 public class DemandModel {
 
-	private final static Logger LOGGER = LogManager.getLogger(DemandModel.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 
 	public final int baseYear;
 	public final int baseYearFreight;

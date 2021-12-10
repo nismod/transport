@@ -21,7 +21,7 @@ import nismod.transport.utility.InputFileReader;
 
 public class RailDemandModel {
 
-	private final static Logger LOGGER = LogManager.getLogger(RailDemandModel.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 
 	public static int baseYear;
 

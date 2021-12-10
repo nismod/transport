@@ -22,7 +22,7 @@ import nismod.transport.utility.RandomSingleton;
   */
 public class SPSA {
 	
-	private final static Logger LOGGER = LogManager.getLogger(SPSA.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 	//maximum and minimum values of OD matrix flows (i.e. constraints)
 	public static final double THETA_MAX = 10000000.0;

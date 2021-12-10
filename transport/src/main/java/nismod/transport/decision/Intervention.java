@@ -18,7 +18,7 @@ import org.apache.logging.log4j.Logger;
  */
 public abstract class Intervention {
 	
-	private final static Logger LOGGER = LogManager.getLogger(Intervention.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 	protected Properties props;
 	protected boolean installed;

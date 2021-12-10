@@ -24,7 +24,7 @@ import nismod.transport.network.road.Trip;
  */
 public class RebalancedODMatrix extends RealODMatrix {
 	
-	private final static Logger LOGGER = LogManager.getLogger(RebalancedODMatrix.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 	private List<String> origins;
 	private List<String> destinations;

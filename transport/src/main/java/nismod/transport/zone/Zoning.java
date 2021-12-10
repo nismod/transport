@@ -35,7 +35,7 @@ public class Zoning {
 	public static int MAX_NEAREST_NODES = 1; //the number of nearest nodes to each Tempro zone to consider
 	public static int TOP_LAD_NODES = 5; //when mapping Tempro zone to top LAD nodes based on the gravitating population
 		
-	private final static Logger LOGGER = LogManager.getLogger(Zoning.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 	private ShapefileDataStore zonesShapefile;
 	private ShapefileDataStore nodesShapefile;

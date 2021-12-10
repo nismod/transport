@@ -27,7 +27,7 @@ import nismod.transport.utility.RandomSingleton;
  */
 public class RouteSet {
 	
-	private final static Logger LOGGER = LogManager.getLogger(RouteSet.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 	//private DirectedNode originNode;
 	//private DirectedNode destinationNode;

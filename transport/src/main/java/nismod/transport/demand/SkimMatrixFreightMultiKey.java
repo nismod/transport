@@ -29,7 +29,7 @@ import org.apache.logging.log4j.Logger;
  */
 public class SkimMatrixFreightMultiKey implements SkimMatrixFreight {
 	
-	private final static Logger LOGGER = LogManager.getLogger(SkimMatrixFreightMultiKey.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	private MultiKeyMap matrix;
 	public SkimMatrixFreightMultiKey() {
 		matrix = new MultiKeyMap();

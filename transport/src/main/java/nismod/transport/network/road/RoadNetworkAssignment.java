@@ -57,7 +57,7 @@ import nismod.transport.zone.Zoning;
  */
 public class RoadNetworkAssignment {
 
-	private final static Logger LOGGER = LogManager.getLogger(RoadNetworkAssignment.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 
 	//public static final double SPEED_LIMIT_M_ROAD = 112.65; //70mph = 31.29mps = 112.65kph
 	//public static final double SPEED_LIMIT_A_ROAD = 96.56; //60mph = 26.82mps = 96.56kph

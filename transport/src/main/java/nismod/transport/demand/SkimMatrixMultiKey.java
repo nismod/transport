@@ -32,7 +32,7 @@ import nismod.transport.zone.Zoning;
  */
 public class SkimMatrixMultiKey implements SkimMatrix {
 	
-	private final static Logger LOGGER = LogManager.getLogger(SkimMatrixMultiKey.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 	private MultiKeyMap matrix;
 	

@@ -16,7 +16,7 @@ import org.apache.logging.log4j.Logger;
  */
 public class RandomSingleton {
 	
-	private final static Logger LOGGER = LogManager.getLogger(RandomSingleton.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 	private static RandomSingleton instance;
 	private Random generator;

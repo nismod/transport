@@ -22,7 +22,7 @@ import nismod.transport.utility.RandomSingleton;
   */
 public class SPSA2 {
 	
-	private final static Logger LOGGER = LogManager.getLogger(SPSA2.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 	//maximum and minimum values of node probabilities (i.e. constraints)
 	public static final double THETA_MAX = 1.0;

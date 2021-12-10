@@ -27,7 +27,7 @@ import nismod.transport.zone.Zoning;
  */
 public class RebalancedTemproODMatrix extends RealODMatrixTempro {
 	
-	private final static Logger LOGGER = LogManager.getLogger(RebalancedTemproODMatrix.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 	private List<String> origins;
 	private List<String> destinations;

@@ -27,7 +27,7 @@ import nismod.transport.network.road.RouteSet.RouteChoiceParams;
  */
 public class Route {
 	
-	private final static Logger LOGGER = LogManager.getLogger(Route.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 //	//default route-choice parameters
 //	public static final double PARAM_TIME = -1.5;

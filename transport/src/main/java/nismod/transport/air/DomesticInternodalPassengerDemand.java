@@ -23,7 +23,7 @@ import org.apache.logging.log4j.Logger;
  */
 public class DomesticInternodalPassengerDemand extends InternodalPassengerDemand{
 
-	private final static Logger LOGGER = LogManager.getLogger(DomesticInternodalPassengerDemand.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 
 	public DomesticInternodalPassengerDemand() {
 

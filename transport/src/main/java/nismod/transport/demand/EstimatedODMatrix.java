@@ -28,7 +28,7 @@ import nismod.transport.network.road.Trip;
  */
 public class EstimatedODMatrix extends RealODMatrix {
 	
-	private final static Logger LOGGER = LogManager.getLogger(EstimatedODMatrix.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 	public static final int[] BIN_LIMITS_MILES = {0, 1, 2, 5, 10, 25, 50, 100, 150, 250, 350};
 	public static final double[] BIN_LIMITS_KM = {0.0, 0.621371, 1.242742, 3.106855, 6.21371, 15.534275, 31.06855, 62.1371, 93.20565, 155.34275, 217.47985};

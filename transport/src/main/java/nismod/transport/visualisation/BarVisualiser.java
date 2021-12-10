@@ -38,7 +38,7 @@ import nismod.transport.showcase.LandingGUI;
   */
 public class BarVisualiser extends JFrame {
 	
-	private final static Logger LOGGER = LogManager.getLogger(BarVisualiser.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 	private static DefaultCategoryDataset dataset;
 	private static String title;

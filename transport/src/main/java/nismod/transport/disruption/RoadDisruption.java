@@ -21,7 +21,7 @@ import nismod.transport.network.road.RouteSetGenerator;
  */
 public class RoadDisruption extends Disruption {
 	
-	private final static Logger LOGGER = LogManager.getLogger(RoadDisruption.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 	private List<Edge> listOfRemovedEdges = null;
 	private List<Route> listOfRemovedRoutes = null;

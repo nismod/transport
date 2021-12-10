@@ -29,7 +29,7 @@ import org.apache.logging.log4j.Logger;
  */
 public class FreightMatrix {
 	
-	private final static Logger LOGGER = LogManager.getLogger(FreightMatrix.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 	public final static int MAX_FREIGHT_ZONE_ID = 1388;
 	public final static int MAX_VEHICLE_ID = 3;

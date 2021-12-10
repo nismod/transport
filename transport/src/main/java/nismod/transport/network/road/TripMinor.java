@@ -22,7 +22,7 @@ import nismod.transport.zone.Zoning;
  */
 public class TripMinor extends Trip {
 	
-	private final static Logger LOGGER = LogManager.getLogger(TripMinor.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 	private double length; //trip length in [km]
 	

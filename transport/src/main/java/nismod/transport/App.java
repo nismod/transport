@@ -53,7 +53,7 @@ import nismod.transport.zone.Zoning;
  */
 public class App {
 
-	private final static Logger LOGGER = LogManager.getLogger(App.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 
 	public static void main( String[] args ) {
 

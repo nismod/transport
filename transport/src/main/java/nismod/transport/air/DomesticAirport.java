@@ -10,7 +10,7 @@ import org.apache.logging.log4j.Logger;
  */
 public class DomesticAirport extends Airport {
 	
-	private final static Logger LOGGER = LogManager.getLogger(DomesticAirport.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 	private String atcoCode;
 	private String naptanName; //longer NaPTAN name (for UK airports only)

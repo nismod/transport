@@ -24,7 +24,7 @@ import nismod.transport.network.road.Route.WebTAG;
  */
 public class Trip {
 	
-	private final static Logger LOGGER = LogManager.getLogger(Trip.class);
+	private final static Logger LOGGER = LogManager.getLogger();
 	
 	protected VehicleType vehicle;
 	protected EngineType engine;
